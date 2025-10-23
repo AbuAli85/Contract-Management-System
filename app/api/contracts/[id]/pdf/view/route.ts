@@ -97,11 +97,14 @@ export const GET = withRBAC(
       try {
         const pdfBuffer = await generateContractPDF(contract);
         
-        return NextResponse.json({
-          success: true,
-          pdf_url: `https://portal.thesmartpro.io/api/contracts/${contractId}/pdf/download`,
-          message: 'PDF view authorized',
-          contract_id: contractId,
+        // Return the actual PDF content
+        return new NextResponse(new Uint8Array(pdfBuffer), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `inline; filename="${contract.contract_number || contractId}-contract.pdf"`,
+            'Cache-Control': 'public, max-age=3600',
+          },
         });
       } catch (pdfError) {
         console.error('❌ PDF generation failed:', pdfError);

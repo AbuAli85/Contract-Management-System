@@ -52,14 +52,16 @@ export class MakeWebhookManager {
     const retries = options?.retries || 2;
 
     for (let attempt = 0; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      let timeoutId: NodeJS.Timeout | null = null;
+      
       try {
         console.log(
           `🔗 Sending ${webhookType} webhook (attempt ${attempt + 1}):`,
           payload
         );
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        timeoutId = setTimeout(() => controller.abort(), timeout);
 
         const response = await fetch(webhookUrl, {
           method: 'POST',
@@ -92,6 +94,10 @@ export class MakeWebhookManager {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
       } catch (error) {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        
         console.error(
           `❌ ${webhookType} webhook failed (attempt ${attempt + 1}):`,
           error

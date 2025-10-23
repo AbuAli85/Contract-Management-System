@@ -21,7 +21,10 @@ export async function downloadContractPDF(
   fileName?: string
 ): Promise<boolean> {
   try {
-    // Determine which URL to use (prefer pdf_url from Supabase)
+    // First try to use our internal PDF view API if available
+    const internalPdfUrl = `/api/contracts/${contract.contract_id}/pdf/view`;
+    
+    // Determine which URL to use (prefer internal API, then pdf_url from Supabase, then Google Drive)
     const downloadUrl = contract.pdf_url || contract.google_drive_url;
 
     if (!downloadUrl) {
@@ -36,8 +39,11 @@ export async function downloadContractPDF(
       description: `Preparing ${contract.contract_number || 'contract'} for download`,
     });
 
+    // Try internal API first, then fallback to external URLs
+    let finalUrl = internalPdfUrl;
+    let useInternalApi = true;
+    
     // If it's a Google Drive URL, convert to direct download link
-    let finalUrl = downloadUrl;
     if (downloadUrl.includes('docs.google.com')) {
       // Extract document ID from Google Drive URL
       const docIdMatch = downloadUrl.match(/\/d\/([^\/]+)/);
@@ -45,23 +51,68 @@ export async function downloadContractPDF(
         const docId = docIdMatch[1];
         // Convert to export URL for PDF download
         finalUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
+        useInternalApi = false;
       }
+    } else if (downloadUrl.includes('supabase.co')) {
+      // Use Supabase URL directly
+      finalUrl = downloadUrl;
+      useInternalApi = false;
     }
 
     // Fetch the PDF
-    const response = await fetch(finalUrl, {
+    let response = await fetch(finalUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/pdf',
       },
     });
 
+    // If internal API fails and we have external URL, try fallback
+    if (!response.ok && useInternalApi && downloadUrl) {
+      console.log('Internal API failed, trying external URL...');
+      finalUrl = downloadUrl;
+      
+      // Convert Google Drive URL if needed
+      if (downloadUrl.includes('docs.google.com')) {
+        const docIdMatch = downloadUrl.match(/\/d\/([^\/]+)/);
+        if (docIdMatch) {
+          const docId = docIdMatch[1];
+          finalUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
+        }
+      }
+      
+      response = await fetch(finalUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+        },
+      });
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    // Check if response is actually a PDF
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/pdf')) {
+      // If it's not a PDF, try to get the text to see what we got
+      const text = await response.text();
+      console.error('Expected PDF but got:', contentType, text.substring(0, 200));
+      throw new Error(`Expected PDF but got ${contentType}. The file may be corrupted or unavailable.`);
+    }
+
     // Create blob from response
     const blob = await response.blob();
+    
+    // Validate blob size and type
+    if (blob.size === 0) {
+      throw new Error('Downloaded file is empty');
+    }
+    
+    if (blob.type && !blob.type.includes('pdf')) {
+      throw new Error(`Downloaded file is not a PDF (type: ${blob.type})`);
+    }
 
     // Create download link
     const url = window.URL.createObjectURL(blob);

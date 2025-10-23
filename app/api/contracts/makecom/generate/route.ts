@@ -614,11 +614,13 @@ export const POST = withAnyRBAC(
             let retrySucceeded = false;
             
             for (let attempt = 1; attempt <= 3; attempt++) {
+              const controller = new AbortController();
+              let timeoutId: NodeJS.Timeout | null = null;
+              
               try {
                 console.log(`🔄 Webhook attempt ${attempt}/3...`);
                 
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
                 const response = await fetch(makecomWebhookUrl, {
                   method: 'POST',
@@ -703,6 +705,10 @@ export const POST = withAnyRBAC(
                   }
                 }
               } catch (fetchError) {
+                if (timeoutId) {
+                  clearTimeout(timeoutId);
+                }
+                
                 console.error(`❌ Webhook request error (attempt ${attempt}):`, fetchError);
                 
                 lastError = {

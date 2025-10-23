@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withRBAC } from '@/lib/rbac/guard';
+import { generateContractPDF } from '@/lib/pdf-generator';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -90,17 +91,28 @@ export const GET = withRBAC(
         );
       }
 
-      console.log('✅ PDF download authorized, returning PDF view URL');
+      console.log('✅ PDF download authorized, generating PDF content');
 
-      // Return the PDF view URL instead of the stored pdf_url to avoid redirect loops
-      const pdfViewUrl = `https://portal.thesmartpro.io/api/contracts/${contractId}/pdf/view`;
-      
-      return NextResponse.json({
-        success: true,
-        pdf_url: pdfViewUrl,
-        message: 'PDF download authorized',
-        contract_id: contractId,
-      });
+      // Generate the actual PDF content using the contract data
+      try {
+        const pdfBuffer = await generateContractPDF(contract);
+        
+        // Return the actual PDF content for download
+        return new NextResponse(new Uint8Array(pdfBuffer), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="${contract.contract_number || contractId}-contract.pdf"`,
+            'Cache-Control': 'public, max-age=3600',
+          },
+        });
+      } catch (pdfError) {
+        console.error('❌ PDF generation failed:', pdfError);
+        return NextResponse.json(
+          { error: 'Failed to generate PDF', details: pdfError instanceof Error ? pdfError.message : 'Unknown error' },
+          { status: 500 }
+        );
+      }
     } catch (error) {
       console.error('❌ Error in GET /api/contracts/[id]/pdf/download:', error);
       return NextResponse.json(
