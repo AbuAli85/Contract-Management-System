@@ -40,6 +40,10 @@ import {
   Upload,
   Eye,
   Download,
+  RefreshCw,
+  Smartphone,
+  Monitor,
+  Tablet
 } from 'lucide-react';
 import { format, parseISO, isPast, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
@@ -63,6 +67,10 @@ import { PromoterRanking } from '@/components/promoter-ranking';
 import { PromoterCRM } from '@/components/promoter-crm';
 import DocumentUpload from '@/components/document-upload';
 import PromoterFilterSection from '@/components/promoter-filter-section';
+
+// Import enhanced components
+import { PromoterDetailsEnhanced } from '@/components/promoters/promoter-details-enhanced';
+import { PromoterDetailsSkeleton } from '@/components/promoters/promoter-details-skeleton';
 
 // Safe date parsing functions to prevent "Invalid time value" errors
 const safeParseISO = (dateString: string | null | undefined): Date | null => {
@@ -200,6 +208,9 @@ export default function PromoterDetailPage() {
   const [documents, setDocuments] = useState<PromoterDocument[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [useEnhancedView, setUseEnhancedView] = useState(true);
+  const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const role = useUserRole();
 
   // Filter section state
@@ -213,6 +224,24 @@ export default function PromoterDetailPage() {
     { id: string; name_en?: string; name_ar?: string }[]
   >([]);
   const [employersLoading, setEmployersLoading] = useState(true);
+
+  // Detect viewport size for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setViewMode('mobile');
+      } else if (width < 1024) {
+        setViewMode('tablet');
+      } else {
+        setViewMode('desktop');
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch all promoters for the filter
   const fetchAllPromoters = useCallback(async () => {
@@ -608,8 +637,14 @@ export default function PromoterDetailPage() {
     setFilteredPromoters(filtered);
   }, [allPromoters, searchTerm, filterStatus, filterCompany, filterDocument]);
 
+  // Handle refresh - reload the page
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    window.location.reload();
+  }, []);
+
   if (isLoading) {
-    return (
+    return useEnhancedView ? <PromoterDetailsSkeleton /> : (
       <div className='flex min-h-screen items-center justify-center'>
         <Loader2 className='h-8 w-8 animate-spin' />
         <span className='ml-2'>Loading promoter...</span>
@@ -630,52 +665,111 @@ export default function PromoterDetailPage() {
     );
   }
 
+  // Use enhanced view if enabled
+  if (useEnhancedView) {
+    return <PromoterDetailsEnhanced />;
+  }
+
   return (
-    <div className='container mx-auto space-y-6 py-6'>
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-3xl font-bold'>Promoter Details</h1>
-          <p className='text-muted-foreground'>
+    <div className={`container mx-auto space-y-6 py-6 ${viewMode === 'mobile' ? 'px-4' : ''}`}>
+      {/* Enhanced Header with View Toggle */}
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+        <div className='flex-1 min-w-0'>
+          <h1 className={`font-bold text-gray-900 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
+            Promoter Details
+          </h1>
+          <p className='text-muted-foreground text-sm sm:text-base'>
             Manage promoter information and profile
           </p>
         </div>
-        <div className='flex gap-2'>
-          <Button variant='outline' onClick={() => router.back()}>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Back
+        
+        {/* View Mode Toggle */}
+        <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-1 bg-gray-100 rounded-lg p-1'>
+            <Button
+              variant={viewMode === 'desktop' ? 'default' : 'ghost'}
+              size='sm'
+              onClick={() => setViewMode('desktop')}
+              className='h-8 w-8 p-0'
+            >
+              <Monitor className='h-4 w-4' />
+            </Button>
+            <Button
+              variant={viewMode === 'tablet' ? 'default' : 'ghost'}
+              size='sm'
+              onClick={() => setViewMode('tablet')}
+              className='h-8 w-8 p-0'
+            >
+              <Tablet className='h-4 w-4' />
+            </Button>
+            <Button
+              variant={viewMode === 'mobile' ? 'default' : 'ghost'}
+              size='sm'
+              onClick={() => setViewMode('mobile')}
+              className='h-8 w-8 p-0'
+            >
+              <Smartphone className='h-4 w-4' />
+            </Button>
+          </div>
+          
+          <Button
+            variant='outline'
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className='flex items-center gap-2'
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {viewMode === 'mobile' ? '' : 'Refresh'}
           </Button>
-          {role === 'admin' && (
-            <>
-              <Button
-                onClick={() =>
-                  router.push(`/${locale}/manage-promoters/${promoterId}/edit`)
-                }
-              >
-                <Edit className='mr-2 h-4 w-4' />
-                Edit
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => router.push(`/${locale}/manage-promoters/new`)}
-              >
-                <Plus className='mr-2 h-4 w-4' />
-                Add New
-              </Button>
-              <Button
-                variant='destructive'
-                onClick={handleDeletePromoter}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                ) : (
-                  <Trash2 className='mr-2 h-4 w-4' />
-                )}
-                Delete
-              </Button>
-            </>
-          )}
+          
+          <Button
+            variant='outline'
+            onClick={() => setUseEnhancedView(!useEnhancedView)}
+            className='flex items-center gap-2'
+          >
+            {useEnhancedView ? 'Classic View' : 'Enhanced View'}
+          </Button>
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className={`flex flex-wrap gap-2 ${viewMode === 'mobile' ? 'justify-center' : 'justify-end'}`}>
+        <Button variant='outline' onClick={() => router.back()} size={viewMode === 'mobile' ? 'sm' : 'default'}>
+          <ArrowLeft className='mr-2 h-4 w-4' />
+          {viewMode === 'mobile' ? 'Back' : 'Back to List'}
+        </Button>
+        {role === 'admin' && (
+          <>
+            <Button
+              onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}/edit`)}
+              size={viewMode === 'mobile' ? 'sm' : 'default'}
+            >
+              <Edit className='mr-2 h-4 w-4' />
+              {viewMode === 'mobile' ? 'Edit' : 'Edit Profile'}
+            </Button>
+            <Button
+              variant='outline'
+              onClick={() => router.push(`/${locale}/manage-promoters/new`)}
+              size={viewMode === 'mobile' ? 'sm' : 'default'}
+            >
+              <Plus className='mr-2 h-4 w-4' />
+              {viewMode === 'mobile' ? 'New' : 'Add New'}
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={handleDeletePromoter}
+              disabled={isDeleting}
+              size={viewMode === 'mobile' ? 'sm' : 'default'}
+            >
+              {isDeleting ? (
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <Trash2 className='mr-2 h-4 w-4' />
+              )}
+              {viewMode === 'mobile' ? 'Delete' : 'Delete Promoter'}
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Quick Promoter Search Section */}
@@ -720,7 +814,7 @@ export default function PromoterDetailPage() {
                   Found {filteredPromoters.length} promoter
                   {filteredPromoters.length !== 1 ? 's' : ''}:
                 </h4>
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-40 overflow-y-auto'>
+                <div className={`grid grid-cols-1 gap-2 max-h-40 overflow-y-auto ${viewMode === 'mobile' ? 'grid-cols-1' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
                   {filteredPromoters
                     .filter(p => p.id !== promoterId)
                     .slice(0, 9)
@@ -839,11 +933,19 @@ export default function PromoterDetailPage() {
         onValueChange={setActiveTab}
         className='space-y-6'
       >
-        <TabsList className='grid w-full grid-cols-4'>
-          <TabsTrigger value='personal'>Personal</TabsTrigger>
-          <TabsTrigger value='professional'>Professional</TabsTrigger>
-          <TabsTrigger value='advanced'>Advanced</TabsTrigger>
-          <TabsTrigger value='activity'>Activity</TabsTrigger>
+        <TabsList className={`grid w-full ${viewMode === 'mobile' ? 'grid-cols-2' : 'grid-cols-4'}`}>
+          <TabsTrigger value='personal' className={viewMode === 'mobile' ? 'text-xs' : ''}>
+            {viewMode === 'mobile' ? 'Personal' : 'Personal Info'}
+          </TabsTrigger>
+          <TabsTrigger value='professional' className={viewMode === 'mobile' ? 'text-xs' : ''}>
+            {viewMode === 'mobile' ? 'Professional' : 'Professional'}
+          </TabsTrigger>
+          <TabsTrigger value='advanced' className={viewMode === 'mobile' ? 'text-xs' : ''}>
+            {viewMode === 'mobile' ? 'Advanced' : 'Advanced'}
+          </TabsTrigger>
+          <TabsTrigger value='activity' className={viewMode === 'mobile' ? 'text-xs' : ''}>
+            {viewMode === 'mobile' ? 'Activity' : 'Activity'}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value='personal' className='space-y-6'>
@@ -889,8 +991,8 @@ export default function PromoterDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className='flex items-start space-x-6'>
-                <Avatar className='h-24 w-24'>
+              <div className={`flex ${viewMode === 'mobile' ? 'flex-col items-center text-center space-y-4' : 'items-start space-x-6'}`}>
+                <Avatar className={`${viewMode === 'mobile' ? 'h-20 w-20' : 'h-24 w-24'}`}>
                   <AvatarImage
                     src={promoterDetails?.profile_picture_url || undefined}
                     alt={promoterDetails?.name_en}
@@ -899,7 +1001,7 @@ export default function PromoterDetailPage() {
                     {promoterDetails?.name_en?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <div className='flex-1 space-y-4'>
+                <div className={`flex-1 space-y-4 ${viewMode === 'mobile' ? 'text-center' : ''}`}>
                   <div>
                     <h2 className='text-2xl font-semibold'>
                       {promoterDetails?.name_en}
@@ -934,7 +1036,7 @@ export default function PromoterDetailPage() {
                       )}
                     </div>
                   </div>
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  <div className={`grid grid-cols-1 gap-4 ${viewMode === 'mobile' ? 'grid-cols-1' : 'md:grid-cols-2'}`}>
                     <DetailItem label='Email' value={promoterDetails?.email} />
                     <DetailItem label='Phone' value={promoterDetails?.phone} />
                     <DetailItem
@@ -1207,7 +1309,7 @@ export default function PromoterDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+              <div className={`grid grid-cols-1 gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'md:grid-cols-3'}`}>
                 <div className='text-center'>
                   <div className='text-2xl font-bold text-blue-600'>
                     {promoterDetails?.contracts?.filter(
@@ -1291,7 +1393,7 @@ export default function PromoterDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+              <div className={`grid grid-cols-1 gap-4 ${viewMode === 'mobile' ? 'grid-cols-1' : 'md:grid-cols-3'}`}>
                 <div className='text-center'>
                   <div className='text-lg font-semibold'>
                     {promoterDetails?.status === 'active'
