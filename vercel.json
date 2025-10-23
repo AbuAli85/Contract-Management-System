@@ -71,7 +71,7 @@
       "destination": "/en/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api).*)",
       "destination": "/en/$1"
     }
   ],
