@@ -90,12 +90,14 @@ export const GET = withRBAC(
         );
       }
 
-      console.log('✅ PDF download authorized, returning PDF URL:', contract.pdf_url);
+      console.log('✅ PDF download authorized, returning PDF view URL');
 
-      // Return the PDF URL instead of redirecting to avoid redirect loops
+      // Return the PDF view URL instead of the stored pdf_url to avoid redirect loops
+      const pdfViewUrl = `https://portal.thesmartpro.io/api/contracts/${contractId}/pdf/view`;
+      
       return NextResponse.json({
         success: true,
-        pdf_url: contract.pdf_url,
+        pdf_url: pdfViewUrl,
         message: 'PDF download authorized',
         contract_id: contractId,
       });
