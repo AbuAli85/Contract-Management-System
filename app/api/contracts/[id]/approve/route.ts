@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withAnyRBAC } from '@/lib/rbac';
+import { withAnyRBAC } from '@/lib/rbac/guard';
 
 // POST: Approve or reject a contract
 export const POST = withAnyRBAC(
