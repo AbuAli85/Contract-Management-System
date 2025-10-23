@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC } from '@/lib/rbac/guard';
+import { withAnyRBAC, withRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
  * - send_to_hr: Send to HR review
  */
 
-export const POST = withRBAC('contract:approve', async (request: NextRequest, context: { params: { id: string } }) => {
+export const POST = withAnyRBAC(['contract:approve', 'contract:approve:all'], async (request: NextRequest, context: { params: { id: string } }) => {
   try {
     const supabase = await createClient();
     const contractId = context.params.id;
