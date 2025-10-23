@@ -91,6 +91,14 @@ import {
   Home,
   Wifi,
   WifiOff,
+  User,
+  UserCheck,
+  UserPlus,
+  Star,
+  Award,
+  Target,
+  Zap,
+  Sparkles,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, differenceInDays, isValid, parse } from 'date-fns';
@@ -161,6 +169,21 @@ interface PartyWithContractCount extends Party {
   contract_count?: number;
   total_contracts?: number;
   active_contracts?: number;
+}
+
+interface Promoter {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  mobile_number: string | null;
+  id_card_number: string;
+  status: string;
+  job_title: string | null;
+  profile_picture_url: string | null;
+  id_card_expiry_date: string | null;
+  passport_expiry_date: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // Enhanced Party interface
@@ -336,6 +359,9 @@ function ManagePartiesContent() {
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [expandedParties, setExpandedParties] = useState<Set<string>>(new Set());
+  const [promotersByEmployer, setPromotersByEmployer] = useState<Record<string, Promoter[]>>({});
+  const [loadingPromoters, setLoadingPromoters] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const isMountedRef = useRef(true);
 
@@ -564,6 +590,62 @@ function ManagePartiesContent() {
   const handleRefresh = useCallback(async () => {
     await handleRetry();
   }, [handleRetry]);
+
+  // Fetch promoters for a specific employer
+  const fetchPromotersForEmployer = useCallback(async (employerId: string) => {
+    if (promotersByEmployer[employerId] || loadingPromoters.has(employerId)) {
+      return; // Already loaded or loading
+    }
+
+    setLoadingPromoters(prev => new Set(prev).add(employerId));
+
+    try {
+      const response = await fetch(`/api/parties/${employerId}/promoters`);
+      const data = await response.json();
+
+      if (data.success) {
+        setPromotersByEmployer(prev => ({
+          ...prev,
+          [employerId]: data.promoters || []
+        }));
+      } else {
+        console.error('Failed to fetch promoters:', data.error);
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch promoters for this employer',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching promoters:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch promoters for this employer',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingPromoters(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(employerId);
+        return newSet;
+      });
+    }
+  }, [promotersByEmployer, loadingPromoters, toast]);
+
+  // Toggle party expansion
+  const togglePartyExpansion = useCallback((partyId: string) => {
+    setExpandedParties(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(partyId)) {
+        newSet.delete(partyId);
+      } else {
+        newSet.add(partyId);
+        // Fetch promoters when expanding
+        fetchPromotersForEmployer(partyId);
+      }
+      return newSet;
+    });
+  }, [fetchPromotersForEmployer]);
 
   // Get error message based on error type
   const getErrorMessage = (error: any): { title: string; message: string; canRetry: boolean } => {
@@ -946,112 +1028,247 @@ function ManagePartiesContent() {
                   </TableHeader>
                 <TableBody>
                   {filteredParties.map((party) => (
-                    <TableRow key={party.id}>
-                      <TableCell>
-                            <Checkbox
-                          checked={selectedParties.includes(party.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedParties(prev => [...prev, party.id]);
-                            } else {
-                              setSelectedParties(prev => prev.filter(id => id !== party.id));
+                    <React.Fragment key={party.id}>
+                      <TableRow>
+                        <TableCell>
+                              <Checkbox
+                            checked={selectedParties.includes(party.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedParties(prev => [...prev, party.id]);
+                              } else {
+                                setSelectedParties(prev => prev.filter(id => id !== party.id));
+                              }
+                            }}
+                              />
+                            </TableCell>
+                        <TableCell>
+                          <div className='flex items-center gap-2'>
+                            <div>
+                              <div className='font-medium'>{party.name_en}</div>
+                              {party.name_ar && (
+                                <div className='text-sm text-muted-foreground'>
+                                    {party.name_ar}
+                                    </div>
+                                  )}
+                              </div>
+                            {party.type === 'Employer' && (
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                onClick={() => togglePartyExpansion(party.id)}
+                                className='ml-2 h-8 w-8 p-0'
+                              >
+                                {expandedParties.has(party.id) ? (
+                                  <ChevronUp className='h-4 w-4' />
+                                ) : (
+                                  <ChevronDown className='h-4 w-4' />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex items-center gap-2'>
+                            <Badge variant='outline'>{party.type}</Badge>
+                            {party.type === 'Employer' && (
+                              <Badge variant='secondary' className='bg-blue-100 text-blue-800'>
+                                <Users className='h-3 w-3 mr-1' />
+                                {promotersByEmployer[party.id]?.length || 0} promoters
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              party.overall_status === 'active'
+                                ? 'default'
+                                : party.overall_status === 'warning'
+                                ? 'secondary'
+                                : 'destructive'
                             }
-                          }}
-                            />
-                          </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className='font-medium'>{party.name_en}</div>
-                          {party.name_ar && (
-                            <div className='text-sm text-muted-foreground'>
-                                  {party.name_ar}
+                          >
+                            {party.status}
+                          </Badge>
+                            </TableCell>
+                        <TableCell>
+                          {party.cr_expiry_date ? (
+                            <div className='text-sm'>
+                              <div>{safeFormatDate(party.cr_expiry_date, 'MMM dd, yyyy')}</div>
+                              <div className={cn(
+                                'text-xs',
+                                party.cr_status === 'expired' && 'text-red-600',
+                                party.cr_status === 'expiring' && 'text-yellow-600',
+                                party.cr_status === 'valid' && 'text-green-600'
+                              )}>
+                                {party.cr_status === 'expired' && 'Expired'}
+                                {party.cr_status === 'expiring' && `${party.days_until_cr_expiry} days left`}
+                                {party.cr_status === 'valid' && 'Valid'}
+                                {party.cr_status === 'missing' && 'Missing'}
+                                    </div>
+                                  </div>
+                          ) : (
+                            <span className='text-muted-foreground'>Not set</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {party.license_expiry ? (
+                            <div className='text-sm'>
+                              <div>{safeFormatDate(party.license_expiry, 'MMM dd, yyyy')}</div>
+                              <div className={cn(
+                                'text-xs',
+                                party.license_status === 'expired' && 'text-red-600',
+                                party.license_status === 'expiring' && 'text-yellow-600',
+                                party.license_status === 'valid' && 'text-green-600'
+                              )}>
+                                {party.license_status === 'expired' && 'Expired'}
+                                {party.license_status === 'expiring' && `${party.days_until_license_expiry} days left`}
+                                {party.license_status === 'valid' && 'Valid'}
+                                {party.license_status === 'missing' && 'Missing'}
+                                  </div>
+                                  </div>
+                          ) : (
+                            <span className='text-muted-foreground'>Not set</span>
+                                )}
+                            </TableCell>
+                        <TableCell>
+                          <Badge variant='outline'>
+                                  {party.contract_count || 0}
+                                </Badge>
+                            </TableCell>
+                        <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant='ghost' size='sm'>
+                                      <MoreHorizontal className='h-4 w-4' />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleEdit(party)}>
+                                      <EditIcon className='mr-2 h-4 w-4' />
+                                Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                              <DropdownMenuItem className='text-red-600'>
+                                      <Trash2 className='mr-2 h-4 w-4' />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                      
+                      {/* Expanded Promoters Row */}
+                      {expandedParties.has(party.id) && party.type === 'Employer' && (
+                        <TableRow>
+                          <TableCell colSpan={8} className='p-0'>
+                            <div className='bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700'>
+                              <div className='p-4'>
+                                <div className='flex items-center gap-2 mb-4'>
+                                  <Users className='h-5 w-5 text-blue-600' />
+                                  <h3 className='text-lg font-semibold text-slate-900 dark:text-slate-100'>
+                                    Assigned Promoters
+                                  </h3>
+                                  <Badge variant='outline' className='bg-blue-100 text-blue-800'>
+                                    {promotersByEmployer[party.id]?.length || 0} Total
+                                  </Badge>
+                                </div>
+                                
+                                {loadingPromoters.has(party.id) ? (
+                                  <div className='flex items-center justify-center py-8'>
+                                    <Loader2 className='h-6 w-6 animate-spin text-blue-600' />
+                                    <span className='ml-2 text-slate-600 dark:text-slate-400'>
+                                      Loading promoters...
+                                    </span>
+                                  </div>
+                                ) : promotersByEmployer[party.id]?.length > 0 ? (
+                                  <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-3'>
+                                    {promotersByEmployer[party.id].map((promoter) => (
+                                      <Card key={promoter.id} className='border-slate-200 dark:border-slate-700'>
+                                        <CardContent className='p-4'>
+                                          <div className='flex items-start gap-3'>
+                                            <div className='flex-shrink-0'>
+                                              {promoter.profile_picture_url ? (
+                                                <img
+                                                  src={promoter.profile_picture_url}
+                                                  alt={promoter.name_en}
+                                                  className='h-10 w-10 rounded-full object-cover'
+                                                />
+                                              ) : (
+                                                <div className='h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center'>
+                                                  <User className='h-5 w-5 text-blue-600 dark:text-blue-400' />
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div className='flex-1 min-w-0'>
+                                              <div className='flex items-center gap-2 mb-1'>
+                                                <h4 className='font-medium text-slate-900 dark:text-slate-100 truncate'>
+                                                  {promoter.name_en}
+                                                </h4>
+                                                <Badge
+                                                  variant={
+                                                    promoter.status === 'active'
+                                                      ? 'default'
+                                                      : promoter.status === 'inactive'
+                                                      ? 'secondary'
+                                                      : 'destructive'
+                                                  }
+                                                  className='text-xs'
+                                                >
+                                                  {promoter.status}
+                                                </Badge>
+                                              </div>
+                                              {promoter.name_ar && (
+                                                <p className='text-sm text-slate-600 dark:text-slate-400 mb-1'>
+                                                  {promoter.name_ar}
+                                                </p>
+                                              )}
+                                              {promoter.job_title && (
+                                                <p className='text-xs text-slate-500 dark:text-slate-500 mb-2'>
+                                                  {promoter.job_title}
+                                                </p>
+                                              )}
+                                              <div className='flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500'>
+                                                {promoter.mobile_number && (
+                                                  <div className='flex items-center gap-1'>
+                                                    <Phone className='h-3 w-3' />
+                                                    {promoter.mobile_number}
+                                                  </div>
+                                                )}
+                                                <div className='flex items-center gap-1'>
+                                                  <Shield className='h-3 w-3' />
+                                                  {promoter.id_card_number}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </CardContent>
+                                      </Card>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className='text-center py-8'>
+                                    <UserCheck className='h-12 w-12 text-slate-400 mx-auto mb-4' />
+                                    <h3 className='text-lg font-medium text-slate-900 dark:text-slate-100 mb-2'>
+                                      No Promoters Assigned
+                                    </h3>
+                                    <p className='text-slate-600 dark:text-slate-400 mb-4'>
+                                      This employer doesn't have any promoters assigned yet.
+                                    </p>
+                                    <Button variant='outline' size='sm'>
+                                      <UserPlus className='h-4 w-4 mr-2' />
+                                      Assign Promoters
+                                    </Button>
                                   </div>
                                 )}
+                              </div>
                             </div>
                           </TableCell>
-                      <TableCell>
-                        <Badge variant='outline'>{party.type}</Badge>
-                          </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            party.overall_status === 'active'
-                              ? 'default'
-                              : party.overall_status === 'warning'
-                              ? 'secondary'
-                              : 'destructive'
-                          }
-                        >
-                          {party.status}
-                        </Badge>
-                          </TableCell>
-                      <TableCell>
-                        {party.cr_expiry_date ? (
-                          <div className='text-sm'>
-                            <div>{safeFormatDate(party.cr_expiry_date, 'MMM dd, yyyy')}</div>
-                            <div className={cn(
-                              'text-xs',
-                              party.cr_status === 'expired' && 'text-red-600',
-                              party.cr_status === 'expiring' && 'text-yellow-600',
-                              party.cr_status === 'valid' && 'text-green-600'
-                            )}>
-                              {party.cr_status === 'expired' && 'Expired'}
-                              {party.cr_status === 'expiring' && `${party.days_until_cr_expiry} days left`}
-                              {party.cr_status === 'valid' && 'Valid'}
-                              {party.cr_status === 'missing' && 'Missing'}
-                                  </div>
-                                </div>
-                        ) : (
-                          <span className='text-muted-foreground'>Not set</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {party.license_expiry ? (
-                          <div className='text-sm'>
-                            <div>{safeFormatDate(party.license_expiry, 'MMM dd, yyyy')}</div>
-                            <div className={cn(
-                              'text-xs',
-                              party.license_status === 'expired' && 'text-red-600',
-                              party.license_status === 'expiring' && 'text-yellow-600',
-                              party.license_status === 'valid' && 'text-green-600'
-                            )}>
-                              {party.license_status === 'expired' && 'Expired'}
-                              {party.license_status === 'expiring' && `${party.days_until_license_expiry} days left`}
-                              {party.license_status === 'valid' && 'Valid'}
-                              {party.license_status === 'missing' && 'Missing'}
-                                </div>
-                                </div>
-                        ) : (
-                          <span className='text-muted-foreground'>Not set</span>
-                              )}
-                          </TableCell>
-                      <TableCell>
-                        <Badge variant='outline'>
-                                {party.contract_count || 0}
-                              </Badge>
-                          </TableCell>
-                      <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant='ghost' size='sm'>
-                                    <MoreHorizontal className='h-4 w-4' />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEdit(party)}>
-                                    <EditIcon className='mr-2 h-4 w-4' />
-                              Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                            <DropdownMenuItem className='text-red-600'>
-                                    <Trash2 className='mr-2 h-4 w-4' />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                          </TableCell>
                         </TableRow>
+                      )}
+                    </React.Fragment>
                   ))}
                   </TableBody>
                 </Table>
