@@ -2,9 +2,14 @@
 -- Date: 2025-10-23
 -- Issue: Trigger functions trying to compare UUID with TEXT causing errors
 
--- Drop the problematic trigger and function if they exist
+-- Drop the problematic triggers first
 DROP TRIGGER IF EXISTS sync_contract_party_ids_trigger ON contracts;
-DROP FUNCTION IF EXISTS sync_contract_party_ids();
+DROP TRIGGER IF EXISTS sync_contract_parties_trigger ON contracts;
+DROP TRIGGER IF EXISTS sync_contract_party_columns_trigger ON contracts;
+
+-- Drop the functions with CASCADE (handles any remaining dependencies)
+DROP FUNCTION IF EXISTS sync_contract_party_ids() CASCADE;
+DROP FUNCTION IF EXISTS sync_contract_party_columns() CASCADE;
 
 -- Recreate the function with proper UUID types
 CREATE OR REPLACE FUNCTION sync_contract_party_ids()
@@ -34,9 +39,7 @@ CREATE TRIGGER sync_contract_party_ids_trigger
   FOR EACH ROW
   EXECUTE FUNCTION sync_contract_party_ids();
 
--- Also update the sync_contract_party_columns function if it exists (from previous migration)
-DROP TRIGGER IF EXISTS sync_contract_party_columns_trigger ON contracts;
-DROP FUNCTION IF EXISTS sync_contract_party_columns() CASCADE;
+-- Note: sync_contract_party_columns already dropped above with CASCADE
 
 -- Recreate with proper UUID handling
 CREATE OR REPLACE FUNCTION sync_contract_party_columns()
