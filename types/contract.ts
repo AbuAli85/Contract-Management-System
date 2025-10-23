@@ -48,6 +48,13 @@ export interface ContractDetail {
     passport_url?: string | null;
     status?: string | null;
   } | null;
+  // Single promoter for backward compatibility
+  promoter?: {
+    id: string;
+    name_en: string;
+    name_ar?: string;
+    email?: string;
+  } | null;
   // Legacy fields for backward compatibility
   employer?: Party;
   client?: Party;

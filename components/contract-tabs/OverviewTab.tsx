@@ -25,14 +25,9 @@ import {
   WORK_LOCATIONS,
   getOptionLabel,
 } from '@/constants/contract-options';
-import type { Database } from '@/types/supabase';
+import type { ContractDetail } from '@/types/contract';
 
-export type ContractWithRelations =
-  Database['public']['Tables']['contracts']['Row'] & {
-    first_party?: any;
-    second_party?: any;
-    promoter?: any;
-  };
+export type ContractWithRelations = ContractDetail;
 
 interface OverviewTabProps {
   contract: ContractWithRelations | null;
@@ -59,7 +54,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
           value={calculateDuration(
             contract?.contract_start_date,
             contract?.contract_end_date
-          )}
+          ).value}
           icon={CalendarIcon}
           colorClass='bg-gradient-to-br from-green-50 to-green-100 border-green-200'
         />
@@ -67,9 +62,9 @@ export function OverviewTab({ contract }: OverviewTabProps) {
         <KeyMetricCard
           title='Value'
           value={formatCurrency(
-            contract?.contract_value ?? undefined,
-            contract?.currency
-          )}
+            contract?.salary ?? undefined,
+            { currency: contract?.currency || 'USD' }
+          ).value}
           icon={TagIcon}
           colorClass='bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
         />
@@ -145,8 +140,8 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     Start Date
                   </label>
                   <p className='mt-1 font-semibold text-gray-900'>
-                    {formatDate(contract?.contract_start_date) !== 'N/A'
-                      ? formatDate(contract?.contract_start_date)
+                    {formatDate(contract?.contract_start_date).value !== 'N/A'
+                      ? formatDate(contract?.contract_start_date).value
                       : '01-01-2025'}
                   </p>
                 </div>
@@ -155,8 +150,8 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     End Date
                   </label>
                   <p className='mt-1 font-semibold text-gray-900'>
-                    {formatDate(contract?.contract_end_date) !== 'N/A'
-                      ? formatDate(contract?.contract_end_date)
+                    {formatDate(contract?.contract_end_date).value !== 'N/A'
+                      ? formatDate(contract?.contract_end_date).value
                       : '01-01-2027'}
                   </p>
                 </div>
@@ -277,7 +272,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     Created At
                   </label>
                   <p className='mt-1 text-sm text-gray-700'>
-                    {formatDateTime(contract?.created_at)}
+                    {formatDateTime(contract?.created_at).value}
                   </p>
                 </div>
                 <div>
@@ -285,7 +280,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     Updated At
                   </label>
                   <p className='mt-1 text-sm text-gray-700'>
-                    {formatDateTime(contract?.updated_at)}
+                    {formatDateTime(contract?.updated_at).value}
                   </p>
                 </div>
               </div>
