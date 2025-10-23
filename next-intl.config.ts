@@ -1,9 +1,9 @@
 import { defineRouting } from 'next-intl/routing';
 import { createNavigation } from 'next-intl/navigation';
-import { getRequestConfig } from 'next-intl/server';
+import { getRequestConfig as createRequestConfig } from 'next-intl/server';
 
 // Can be imported from a shared config
-const locales = ['en', 'ar'];
+const supportedLocales = ['en', 'ar'];
 
 // Import messages statically to avoid dynamic import issues
 import enMessages from './i18n/messages/en.json';
@@ -35,12 +35,12 @@ export const { Link, redirect, usePathname, useRouter } =
   createNavigation(routing);
 
 // Export the request configuration as a named export
-export const getRequestConfig = getRequestConfig(async ({ requestLocale }) => {
+export const getRequestConfig = createRequestConfig(async ({ requestLocale }) => {
   try {
     const locale = await requestLocale;
 
     // Validate that the incoming `locale` parameter is valid
-    if (!locale || !locales.includes(locale as any)) {
+    if (!locale || !supportedLocales.includes(locale as any)) {
       console.warn('Invalid locale:', locale, "falling back to 'en'");
       return {
         locale: 'en',
