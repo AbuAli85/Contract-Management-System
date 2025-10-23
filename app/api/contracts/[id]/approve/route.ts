@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
  * - send_to_hr: Send to HR review
  */
 
-export const POST = withRBAC('contract:approve:all', async (request: NextRequest, context: { params: { id: string } }) => {
+export const POST = withRBAC('contract:approve', async (request: NextRequest, context: { params: { id: string } }) => {
   try {
     const supabase = await createClient();
     const contractId = context.params.id;

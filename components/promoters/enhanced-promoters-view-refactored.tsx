@@ -169,9 +169,10 @@ async function fetchPromoters(
 
   // Set up abort controller for timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
+  let timeoutId: NodeJS.Timeout | null = null;
+  
   try {
+    timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     // Ultra-aggressive caching to prevent ANY refetches
     const response = await fetch(
       `/api/promoters?page=${page}&limit=${limit}`,
@@ -186,7 +187,9 @@ async function fetchPromoters(
       }
     );
 
-    clearTimeout(timeoutId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
 
     console.log('📡 API Response:', {
       status: response.status,
@@ -259,7 +262,9 @@ async function fetchPromoters(
     console.log('✅ Successfully fetched promoters:', payload.promoters.length);
     return payload;
   } catch (error) {
-    clearTimeout(timeoutId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
