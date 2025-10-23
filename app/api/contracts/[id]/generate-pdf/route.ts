@@ -77,7 +77,7 @@ export const POST = async (
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Generate a mock PDF URL (replace with actual PDF generation)
-    const mockPdfUrl = `https://portal.thesmartpro.io/api/contracts/${contractId}/pdf/download`;
+    const mockPdfUrl = `https://portal.thesmartpro.io/api/contracts/${contractId}/pdf/view`;
 
     // Update contract with PDF URL (only if pdf_url column exists)
     try {
