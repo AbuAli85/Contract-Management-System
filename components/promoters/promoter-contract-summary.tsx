@@ -92,13 +92,30 @@ export function PromoterContractSummary({
     const active = contracts.filter(c => c.status === 'active').length;
     const completed = contracts.filter(c => c.status === 'completed').length;
     const pending = contracts.filter(c => c.status === 'pending').length;
+    const approved = contracts.filter(c => c.status === 'approved').length;
     const expired = contracts.filter(c => c.status === 'expired').length;
+    const terminated = contracts.filter(c => c.status === 'terminated').length;
+    const draft = contracts.filter(c => c.status === 'draft').length;
     const total = contracts.length;
     
+    // Financial metrics
     const totalValue = contracts
       .filter(c => c.value && c.status === 'active')
       .reduce((sum, c) => sum + (c.value || 0), 0);
     
+    const completedValue = contracts
+      .filter(c => c.value && c.status === 'completed')
+      .reduce((sum, c) => sum + (c.value || 0), 0);
+    
+    const pendingValue = contracts
+      .filter(c => c.value && c.status === 'pending')
+      .reduce((sum, c) => sum + (c.value || 0), 0);
+    
+    const totalContractValue = contracts
+      .filter(c => c.value)
+      .reduce((sum, c) => sum + (c.value || 0), 0);
+    
+    // Time-based metrics
     const expiringSoon = contracts.filter(c => {
       if (c.status !== 'active' || !c.end_date) return false;
       const endDate = new Date(c.end_date);
@@ -106,14 +123,57 @@ export function PromoterContractSummary({
       return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
     }).length;
 
+    const recentlyCreated = contracts.filter(c => {
+      const createdDate = new Date(c.created_at);
+      const daysSinceCreated = differenceInDays(now, createdDate);
+      return daysSinceCreated <= 7;
+    }).length;
+
+    const recentlyCompleted = contracts.filter(c => {
+      if (c.status !== 'completed' || !c.approved_at) return false;
+      const completedDate = new Date(c.approved_at);
+      const daysSinceCompleted = differenceInDays(now, completedDate);
+      return daysSinceCompleted <= 30;
+    }).length;
+
+    // Performance metrics
+    const averageContractValue = total > 0 ? totalContractValue / total : 0;
+    const completionRate = total > 0 ? (completed / total) * 100 : 0;
+    const activeRate = total > 0 ? (active / total) * 100 : 0;
+
+    // Contract duration analysis
+    const contractDurations = contracts
+      .filter(c => c.start_date && c.end_date && c.status === 'completed')
+      .map(c => {
+        const start = new Date(c.start_date);
+        const end = new Date(c.end_date);
+        return differenceInDays(end, start);
+      });
+
+    const averageDuration = contractDurations.length > 0 
+      ? contractDurations.reduce((sum, duration) => sum + duration, 0) / contractDurations.length 
+      : 0;
+
     return {
       active,
       completed,
       pending,
+      approved,
       expired,
+      terminated,
+      draft,
       total,
       totalValue,
-      expiringSoon
+      completedValue,
+      pendingValue,
+      totalContractValue,
+      averageContractValue,
+      expiringSoon,
+      recentlyCreated,
+      recentlyCompleted,
+      completionRate,
+      activeRate,
+      averageDuration
     };
   };
 
@@ -126,52 +186,102 @@ export function PromoterContractSummary({
     const isActive = contract.status === 'active';
     const isExpired = isAfter(now, endDate);
     const daysRemaining = isActive ? differenceInDays(endDate, now) : 0;
-    const progress = isActive ? Math.max(0, Math.min(100, (differenceInDays(now, startDate) / differenceInDays(endDate, startDate)) * 100)) : 0;
+    const totalDays = differenceInDays(endDate, startDate);
+    const progress = isActive ? Math.max(0, Math.min(100, (differenceInDays(now, startDate) / totalDays) * 100)) : 0;
+    const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 
     return (
-      <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onViewContract(contract.id)}>
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-3">
+      <Card className={`hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 ${
+        isActive ? 'border-l-green-500' : 
+        contract.status === 'completed' ? 'border-l-blue-500' :
+        contract.status === 'pending' ? 'border-l-yellow-500' :
+        'border-l-gray-300'
+      }`} onClick={() => onViewContract(contract.id)}>
+        <CardContent className="p-5">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
             <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-gray-900 truncate">{contract.title}</h4>
-              <p className="text-sm text-gray-500">
+              <h4 className="font-semibold text-gray-900 truncate text-lg">{contract.title}</h4>
+              <p className="text-sm text-gray-500 mt-1">
                 {format(startDate, 'MMM dd, yyyy')} - {format(endDate, 'MMM dd, yyyy')}
               </p>
             </div>
-            <Badge className={`${getStatusColor(contract.status)} flex items-center gap-1`}>
+            <Badge className={`${getStatusColor(contract.status)} flex items-center gap-1 px-3 py-1`}>
               {getStatusIcon(contract.status)}
-              {contract.status}
+              <span className="capitalize">{contract.status}</span>
             </Badge>
           </div>
 
+          {/* Financial Information */}
           {contract.value && (
-            <div className="flex items-center gap-1 mb-3">
-              <DollarSign className="h-4 w-4 text-green-600" />
-              <span className="font-medium text-green-600">
-                {contract.value.toLocaleString()} {contract.currency || 'USD'}
-              </span>
+            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-gray-700">Contract Value</span>
+                </div>
+                <span className="font-bold text-green-600 text-lg">
+                  {contract.value.toLocaleString()} {contract.currency || 'USD'}
+                </span>
+              </div>
             </div>
           )}
 
+          {/* Progress Section for Active Contracts */}
           {isActive && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Progress</span>
-                <span>{Math.round(progress)}%</span>
+            <div className="space-y-3 mb-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Contract Progress</span>
+                <span className="text-sm font-bold text-gray-900">{Math.round(progress)}%</span>
               </div>
-              <Progress value={progress} className="h-2" />
+              <Progress value={progress} className="h-3" />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>Started {format(startDate, 'MMM dd')}</span>
-                <span>{daysRemaining > 0 ? `${daysRemaining} days left` : 'Expired'}</span>
+                <span>Started {format(startDate, 'MMM dd, yyyy')}</span>
+                <span className={isExpiringSoon ? 'text-yellow-600 font-medium' : ''}>
+                  {daysRemaining > 0 ? `${daysRemaining} days left` : 'Expired'}
+                </span>
               </div>
             </div>
           )}
 
-          {contract.approved_at && (
-            <div className="mt-2 text-xs text-gray-500">
-              Approved: {format(new Date(contract.approved_at), 'MMM dd, yyyy')}
+          {/* Status-specific Information */}
+          <div className="space-y-2">
+            {contract.approved_at && (
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <CheckCircle className="h-3 w-3" />
+                <span>Approved: {format(new Date(contract.approved_at), 'MMM dd, yyyy')}</span>
+              </div>
+            )}
+            
+            {isExpiringSoon && (
+              <div className="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
+                <AlertTriangle className="h-3 w-3" />
+                <span className="font-medium">Expires soon</span>
+              </div>
+            )}
+            
+            {contract.status === 'completed' && (
+              <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                <CheckCircle className="h-3 w-3" />
+                <span className="font-medium">Successfully completed</span>
+              </div>
+            )}
+            
+            {contract.status === 'pending' && (
+              <div className="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
+                <Clock className="h-3 w-3" />
+                <span className="font-medium">Awaiting approval</span>
+              </div>
+            )}
+          </div>
+
+          {/* Contract Duration */}
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Duration: {totalDays} days</span>
+              <span>ID: {contract.id.slice(0, 8)}...</span>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -212,50 +322,167 @@ export function PromoterContractSummary({
           </div>
         </CardHeader>
         <CardContent>
+          {/* Primary Metrics Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-              <div className="text-sm text-gray-500">Active</div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-3xl font-bold text-green-600">{stats.active}</div>
+              <div className="text-sm font-medium text-green-800">Active</div>
+              <div className="text-xs text-green-600 mt-1">{stats.activeRate.toFixed(1)}% of total</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.completed}</div>
-              <div className="text-sm text-gray-500">Completed</div>
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-3xl font-bold text-blue-600">{stats.completed}</div>
+              <div className="text-sm font-medium text-blue-800">Completed</div>
+              <div className="text-xs text-blue-600 mt-1">{stats.completionRate.toFixed(1)}% success rate</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-              <div className="text-sm text-gray-500">Pending</div>
+            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+              <div className="text-3xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-sm font-medium text-yellow-800">Pending</div>
+              <div className="text-xs text-yellow-600 mt-1">Awaiting approval</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600">{stats.total}</div>
-              <div className="text-sm text-gray-500">Total</div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-3xl font-bold text-gray-600">{stats.total}</div>
+              <div className="text-sm font-medium text-gray-800">Total</div>
+              <div className="text-xs text-gray-600 mt-1">All contracts</div>
             </div>
           </div>
 
-          {stats.totalValue > 0 && (
-            <div className="bg-green-50 rounded-lg p-4 mb-4">
-              <div className="flex items-center gap-2">
+          {/* Secondary Status Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <div className="text-xl font-bold text-purple-600">{stats.approved}</div>
+              <div className="text-xs font-medium text-purple-800">Approved</div>
+            </div>
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <div className="text-xl font-bold text-red-600">{stats.expired}</div>
+              <div className="text-xs font-medium text-red-800">Expired</div>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="text-xl font-bold text-gray-600">{stats.terminated}</div>
+              <div className="text-xs font-medium text-gray-800">Terminated</div>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="text-xl font-bold text-gray-600">{stats.draft}</div>
+              <div className="text-xs font-medium text-gray-800">Draft</div>
+            </div>
+          </div>
+
+          {/* Financial Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-green-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-5 w-5 text-green-600" />
-                <span className="font-medium text-green-800">Total Active Contract Value</span>
+                <span className="font-medium text-green-800">Active Value</span>
               </div>
-              <div className="text-2xl font-bold text-green-600 mt-1">
+              <div className="text-2xl font-bold text-green-600">
                 {stats.totalValue.toLocaleString()} USD
               </div>
+              <div className="text-xs text-green-600 mt-1">Currently generating revenue</div>
             </div>
-          )}
-
-          {stats.expiringSoon > 0 && (
-            <div className="bg-yellow-50 rounded-lg p-4">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                <span className="font-medium text-yellow-800">
-                  {stats.expiringSoon} contract{stats.expiringSoon !== 1 ? 's' : ''} expiring soon
-                </span>
+            
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <span className="font-medium text-blue-800">Completed Value</span>
               </div>
-              <p className="text-sm text-yellow-700 mt-1">
-                Review and renew contracts before they expire.
-              </p>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.completedValue.toLocaleString()} USD
+              </div>
+              <div className="text-xs text-blue-600 mt-1">Successfully delivered</div>
             </div>
-          )}
+            
+            <div className="bg-yellow-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-5 w-5 text-yellow-600" />
+                <span className="font-medium text-yellow-800">Pending Value</span>
+              </div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pendingValue.toLocaleString()} USD
+              </div>
+              <div className="text-xs text-yellow-600 mt-1">Awaiting approval</div>
+            </div>
+          </div>
+
+          {/* Performance Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-gray-800">Average Contract Value</span>
+                <DollarSign className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="text-xl font-bold text-gray-600">
+                {stats.averageContractValue.toLocaleString()} USD
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Per contract</div>
+            </div>
+            
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-gray-800">Average Duration</span>
+                <Calendar className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="text-xl font-bold text-gray-600">
+                {stats.averageDuration > 0 ? `${Math.round(stats.averageDuration)} days` : 'N/A'}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Completed contracts only</div>
+            </div>
+          </div>
+
+          {/* Alerts and Notifications */}
+          <div className="space-y-3">
+            {stats.expiringSoon > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                  <span className="font-medium text-yellow-800">
+                    {stats.expiringSoon} contract{stats.expiringSoon !== 1 ? 's' : ''} expiring soon
+                  </span>
+                </div>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Review and renew contracts before they expire to maintain continuity.
+                </p>
+              </div>
+            )}
+
+            {stats.recentlyCreated > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-medium text-green-800">
+                    {stats.recentlyCreated} new contract{stats.recentlyCreated !== 1 ? 's' : ''} this week
+                  </span>
+                </div>
+                <p className="text-sm text-green-700 mt-1">
+                  Recent contract activity shows good engagement.
+                </p>
+              </div>
+            )}
+
+            {stats.recentlyCompleted > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium text-blue-800">
+                    {stats.recentlyCompleted} contract{stats.recentlyCompleted !== 1 ? 's' : ''} completed this month
+                  </span>
+                </div>
+                <p className="text-sm text-blue-700 mt-1">
+                  Excellent delivery performance this month.
+                </p>
+              </div>
+            )}
+
+            {stats.total === 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-gray-600" />
+                  <span className="font-medium text-gray-800">No contracts yet</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  This promoter hasn't been assigned any contracts yet.
+                </p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -263,10 +490,15 @@ export function PromoterContractSummary({
       {contracts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Recent Contracts
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Recent Contracts
+              </CardTitle>
+              <div className="text-sm text-gray-500">
+                Showing {Math.min(6, contracts.length)} of {contracts.length} contracts
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -279,11 +511,11 @@ export function PromoterContractSummary({
             </div>
             
             {contracts.length > 6 && (
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-6">
                 <Button
                   variant="outline"
                   onClick={onViewAllContracts}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 px-6 py-2"
                 >
                   <ExternalLink className="h-4 w-4" />
                   View All {contracts.length} Contracts
