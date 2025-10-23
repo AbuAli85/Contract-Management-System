@@ -194,18 +194,10 @@ async function handleContractsRequest(
     let query = supabase.from('contracts').select('*');
 
     // ✅ FIX: Apply status filter if provided
-    if (status && status !== 'all' && status !== 'active') {
+    if (status && status !== 'all') {
       console.log(`🔍 Filtering contracts by status: ${status}`, { requestId });
-      // Handle different status values
-      if (status === 'pending') {
-        // Include all pending-related statuses - only check status field since approval_status doesn't exist yet
-        query = query.in('status', ['pending', 'legal_review', 'hr_review', 'final_approval', 'signature']);
-      } else {
-        query = query.eq('status', status);
-      }
-    } else if (status === 'active') {
-      // Default behavior for active status
-      query = query.eq('status', 'active');
+      // Simple direct status filtering for new workflow
+      query = query.eq('status', status);
     }
 
     // Non-admin users only see contracts they're involved in
@@ -621,12 +613,13 @@ export const POST = withAnyRBAC(
           start_date: startDate,
           end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
-          status: 'draft',
+          status: 'pending', // ✅ WORKFLOW: New contracts start as pending for admin approval
           contract_type: contractType,
           is_current: true,
           priority: 'medium',
           currency,
           value,
+          submitted_for_review_at: new Date().toISOString(),
         },
         // Variant B: UUID-based with contract_type and is_current
         {
@@ -637,9 +630,10 @@ export const POST = withAnyRBAC(
           start_date: startDate,
           end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
-          status: 'draft',
+          status: 'pending', // ✅ WORKFLOW: New contracts start as pending for admin approval
           contract_type: contractType,
           is_current: true,
+          submitted_for_review_at: new Date().toISOString(),
         },
         // Variant C: Basic with contract_type and is_current
         {
@@ -647,17 +641,19 @@ export const POST = withAnyRBAC(
           start_date: startDate,
           end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
-          status: 'draft',
+          status: 'pending', // ✅ WORKFLOW: New contracts start as pending for admin approval
           contract_type: contractType,
           is_current: true,
+          submitted_for_review_at: new Date().toISOString(),
         },
         // Variant D: Minimal with contract_type and is_current
         {
           contract_number: contractNumber,
           title,
-          status: 'draft',
+          status: 'pending', // ✅ WORKFLOW: New contracts start as pending for admin approval
           contract_type: contractType,
           is_current: true,
+          submitted_for_review_at: new Date().toISOString(),
         },
         // Variant E: Legacy schema with 'type' and is_current
         {
@@ -668,17 +664,19 @@ export const POST = withAnyRBAC(
           start_date: startDate,
           end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
-          status: 'draft',
+          status: 'pending', // ✅ WORKFLOW: New contracts start as pending for admin approval
           type: contractType,
           is_current: true,
+          submitted_for_review_at: new Date().toISOString(),
         },
         // Variant F: Legacy minimal with 'type' and is_current
         {
           contract_number: contractNumber,
           title,
-          status: 'pending', // Changed from 'draft' to 'pending' for proper workflow
+          status: 'pending', // ✅ WORKFLOW: New contracts start as pending for admin approval
           type: contractType,
           is_current: true,
+          submitted_for_review_at: new Date().toISOString(), // Track submission time
         },
       ];
 

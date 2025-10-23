@@ -1,181 +1,251 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withAnyRBAC } from '@/lib/rbac/guard';
+import { withRBAC } from '@/lib/rbac/guard';
 
-// POST: Approve or reject a contract
-export const POST = withAnyRBAC(
-  ['contract:approve', 'contract:admin'], // Only admins can approve contracts
-  async (request: NextRequest) => {
-    try {
-      const supabase = await createClient();
-      const body = await request.json();
-      const { contractId, action, reason } = body;
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
 
-      if (!contractId || !action) {
-        return NextResponse.json(
-          { success: false, error: 'Contract ID and action are required' },
-          { status: 400 }
-        );
-      }
+/**
+ * Contract Approval API Endpoint
+ * 
+ * Actions:
+ * - approve: Approve contract (pending → approved)
+ * - reject: Reject contract (pending → rejected)
+ * - request_changes: Request changes (pending → draft)
+ * - send_to_legal: Send to legal review
+ * - send_to_hr: Send to HR review
+ */
 
-      if (!['approve', 'reject'].includes(action)) {
-        return NextResponse.json(
-          { success: false, error: 'Action must be either "approve" or "reject"' },
-          { status: 400 }
-        );
-      }
+export const POST = withRBAC('contract:approve:all', async (request: NextRequest, context: { params: { id: string } }) => {
+  try {
+    const supabase = await createClient();
+    const contractId = context.params.id;
+    
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-      // Get current user
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        return NextResponse.json(
-          { success: false, error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-
-      // Check if contract exists and is in pending status
-      const { data: contract, error: contractError } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('id', contractId)
-        .eq('status', 'pending')
-        .single();
-
-      if (contractError || !contract) {
-        return NextResponse.json(
-          { success: false, error: 'Contract not found or not in pending status' },
-          { status: 404 }
-        );
-      }
-
-      // Prepare update data based on action
-      const updateData: any = {
-        updated_at: new Date().toISOString(),
-      };
-
-      if (action === 'approve') {
-        updateData.status = 'approved';
-        updateData.approved_by = user.id;
-        updateData.approved_at = new Date().toISOString();
-        // Clear any previous rejection data
-        updateData.rejection_reason = null;
-        updateData.rejected_by = null;
-        updateData.rejected_at = null;
-      } else if (action === 'reject') {
-        updateData.status = 'rejected';
-        updateData.rejected_by = user.id;
-        updateData.rejected_at = new Date().toISOString();
-        updateData.rejection_reason = reason || 'No reason provided';
-        // Clear any previous approval data
-        updateData.approved_by = null;
-        updateData.approved_at = null;
-      }
-
-      // Update the contract
-      const { data: updatedContract, error: updateError } = await supabase
-        .from('contracts')
-        .update(updateData)
-        .eq('id', contractId)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error('Contract approval error:', updateError);
-        return NextResponse.json(
-          { success: false, error: 'Failed to update contract status' },
-          { status: 500 }
-        );
-      }
-
-      // Log the action for audit trail
-      await supabase
-        .from('contract_audit_log')
-        .insert({
-          contract_id: contractId,
-          action: action === 'approve' ? 'approved' : 'rejected',
-          performed_by: user.id,
-          details: action === 'reject' ? reason : 'Contract approved',
-          timestamp: new Date().toISOString(),
-        })
-        .catch(err => {
-          // Don't fail the main operation if audit logging fails
-          console.warn('Failed to log contract action:', err);
-        });
-
-      return NextResponse.json({
-        success: true,
-        contract: updatedContract,
-        message: `Contract ${action}d successfully`,
-      });
-
-    } catch (error) {
-      console.error('Contract approval error:', error);
+    if (authError || !user) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Internal server error',
-          details: (error as Error).message,
-        },
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Parse request body
+    const body = await request.json();
+    const { action, reason } = body;
+
+    // Validate action
+    const validActions = ['approve', 'reject', 'request_changes', 'send_to_legal', 'send_to_hr'];
+    if (!action || !validActions.includes(action)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid action. Must be one of: approve, reject, request_changes, send_to_legal, send_to_hr' },
+        { status: 400 }
+      );
+    }
+
+    // Validate reason for certain actions
+    if (['reject', 'request_changes'].includes(action) && (!reason || reason.trim().length === 0)) {
+      return NextResponse.json(
+        { success: false, error: `Reason is required for action: ${action}` },
+        { status: 400 }
+      );
+    }
+
+    // Get contract to validate it exists and check current status
+    const { data: contract, error: fetchError } = await supabase
+      .from('contracts')
+      .select('id, status, contract_number, title')
+      .eq('id', contractId)
+      .single();
+
+    if (fetchError || !contract) {
+      return NextResponse.json(
+        { success: false, error: 'Contract not found' },
+        { status: 404 }
+      );
+    }
+
+    // Prepare update based on action
+    let updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    let successMessage = '';
+
+    switch (action) {
+      case 'approve':
+        // Validate contract is in pending state
+        if (contract.status !== 'pending') {
+          return NextResponse.json(
+            { success: false, error: `Cannot approve contract with status: ${contract.status}. Only pending contracts can be approved.` },
+            { status: 400 }
+          );
+        }
+
+        updateData = {
+          ...updateData,
+          status: 'approved',
+          approved_by: user.id,
+          approved_at: new Date().toISOString(),
+          // Clear any previous rejection data
+          rejected_by: null,
+          rejected_at: null,
+          rejection_reason: null,
+        };
+        successMessage = `Contract ${contract.contract_number || contract.id} has been approved successfully`;
+        break;
+
+      case 'reject':
+        // Validate contract is in pending state
+        if (contract.status !== 'pending') {
+          return NextResponse.json(
+            { success: false, error: `Cannot reject contract with status: ${contract.status}. Only pending contracts can be rejected.` },
+            { status: 400 }
+          );
+        }
+
+        updateData = {
+          ...updateData,
+          status: 'rejected',
+          rejected_by: user.id,
+          rejected_at: new Date().toISOString(),
+          rejection_reason: reason,
+          // Clear any previous approval data
+          approved_by: null,
+          approved_at: null,
+        };
+        successMessage = `Contract ${contract.contract_number || contract.id} has been rejected`;
+        break;
+
+      case 'request_changes':
+        updateData = {
+          ...updateData,
+          status: 'draft', // Send back to draft for edits
+          changes_requested_by: user.id,
+          changes_requested_at: new Date().toISOString(),
+          changes_requested_reason: reason,
+        };
+        successMessage = `Changes requested for contract ${contract.contract_number || contract.id}`;
+        break;
+
+      case 'send_to_legal':
+        updateData = {
+          ...updateData,
+          sent_to_legal_by: user.id,
+          sent_to_legal_at: new Date().toISOString(),
+        };
+        successMessage = `Contract ${contract.contract_number || contract.id} sent to legal review`;
+        break;
+
+      case 'send_to_hr':
+        updateData = {
+          ...updateData,
+          sent_to_hr_by: user.id,
+          sent_to_hr_at: new Date().toISOString(),
+        };
+        successMessage = `Contract ${contract.contract_number || contract.id} sent to HR review`;
+        break;
+    }
+
+    // Update contract
+    const { data: updatedContract, error: updateError } = await supabase
+      .from('contracts')
+      .update(updateData)
+      .eq('id', contractId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating contract:', updateError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to update contract', details: updateError.message },
         { status: 500 }
       );
     }
+
+    // TODO: Send notifications
+    // - Notify contract creator about approval/rejection
+    // - Notify relevant parties about status change
+    // - Send email notifications
+
+    console.log(`✅ Contract ${action} successful:`, {
+      contractId,
+      action,
+      status: updateData.status,
+      userId: user.id,
+      timestamp: new Date().toISOString(),
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: successMessage,
+      contract: updatedContract,
+      action,
+    });
+
+  } catch (error) {
+    console.error('❌ Contract approval error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Internal server error',
+        details: (error as Error).message,
+      },
+      { status: 500 }
+    );
   }
-);
+});
 
-// GET: Get contract approval details
-export const GET = withAnyRBAC(
-  ['contract:read', 'contract:admin'],
-  async (request: NextRequest) => {
-    try {
-      const supabase = await createClient();
-      const { searchParams } = new URL(request.url);
-      const contractId = searchParams.get('contractId');
+// GET endpoint to check approval status
+export const GET = withRBAC('contract:read:own', async (request: NextRequest, context: { params: { id: string } }) => {
+  try {
+    const supabase = await createClient();
+    const contractId = context.params.id;
 
-      if (!contractId) {
-        return NextResponse.json(
-          { success: false, error: 'Contract ID is required' },
-          { status: 400 }
-        );
-      }
+    const { data: contract, error } = await supabase
+      .from('contracts')
+      .select(`
+        id,
+        status,
+        contract_number,
+        approved_by,
+        approved_at,
+        rejected_by,
+        rejected_at,
+        rejection_reason,
+        changes_requested_by,
+        changes_requested_at,
+        changes_requested_reason,
+        submitted_for_review_at
+      `)
+      .eq('id', contractId)
+      .single();
 
-      // Get contract with approval details
-      const { data: contract, error } = await supabase
-        .from('contracts')
-        .select(`
-          *,
-          approved_by_user:approved_by(id, email, full_name),
-          rejected_by_user:rejected_by(id, email, full_name)
-        `)
-        .eq('id', contractId)
-        .single();
-
-      if (error || !contract) {
-        return NextResponse.json(
-          { success: false, error: 'Contract not found' },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        contract,
-      });
-
-    } catch (error) {
-      console.error('Get contract approval error:', error);
+    if (error || !contract) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Internal server error',
-          details: (error as Error).message,
-        },
-        { status: 500 }
+        { success: false, error: 'Contract not found' },
+        { status: 404 }
       );
     }
+
+    return NextResponse.json({
+      success: true,
+      contract,
+    });
+
+  } catch (error) {
+    console.error('Error fetching contract approval status:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Internal server error',
+        details: (error as Error).message,
+      },
+      { status: 500 }
+    );
   }
-);
+});
