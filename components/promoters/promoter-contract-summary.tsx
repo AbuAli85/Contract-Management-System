@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,13 +19,17 @@ import {
   Plus,
   Eye,
   Edit,
-  MoreHorizontal
+  MoreHorizontal,
+  Download,
+  Loader2
 } from 'lucide-react';
 import { format, differenceInDays, isAfter, isBefore } from 'date-fns';
+import { downloadContractPDF, hasPDFAvailable } from '@/lib/utils/pdf-download';
 
 interface Contract {
   id: string;
   title: string;
+  contract_number?: string;
   status: 'draft' | 'pending' | 'approved' | 'active' | 'completed' | 'terminated' | 'expired';
   start_date: string;
   end_date: string;
@@ -33,6 +37,8 @@ interface Contract {
   currency?: string;
   created_at: string;
   approved_at?: string;
+  pdf_url?: string;
+  google_drive_url?: string;
 }
 
 interface PromoterContractSummaryProps {
@@ -50,6 +56,23 @@ export function PromoterContractSummary({
   onViewContract,
   isAdmin
 }: PromoterContractSummaryProps) {
+  const [downloadingContractId, setDownloadingContractId] = useState<string | null>(null);
+
+  const handleDownloadPDF = async (contract: Contract) => {
+    setDownloadingContractId(contract.id);
+    try {
+      await downloadContractPDF({
+        contract_id: contract.id,
+        contract_number: contract.contract_number || contract.id,
+        pdf_url: contract.pdf_url,
+        google_drive_url: contract.google_drive_url,
+        status: contract.status,
+      });
+    } finally {
+      setDownloadingContractId(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -644,7 +667,11 @@ export function PromoterContractSummary({
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreHorizontal className="h-4 w-4" />
+                                  {downloadingContractId === contract.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  )}
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
@@ -652,6 +679,20 @@ export function PromoterContractSummary({
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
+                                {hasPDFAvailable({
+                                  contract_id: contract.id,
+                                  contract_number: contract.contract_number || '',
+                                  pdf_url: contract.pdf_url,
+                                  google_drive_url: contract.google_drive_url,
+                                }) && (
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDownloadPDF(contract)}
+                                    disabled={downloadingContractId === contract.id}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    {downloadingContractId === contract.id ? 'Downloading...' : 'Download PDF'}
+                                  </DropdownMenuItem>
+                                )}
                                 {isAdmin && (
                                   <DropdownMenuItem onClick={() => onViewContract(contract.id)}>
                                     <Edit className="h-4 w-4 mr-2" />
