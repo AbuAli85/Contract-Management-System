@@ -285,7 +285,62 @@ async function handleGET(request: Request) {
       }
     });
 
-    // Transform data to include basic information with validation
+    // Fetch contract counts for all parties
+    const contractCountsStartTime = Date.now();
+    let contractCounts: Record<string, { total: number; active: number }> = {};
+    
+    try {
+      console.log(`[${requestId}] 📊 Fetching contract counts for parties`);
+      
+      // Get party IDs from the current batch
+      const partyIds = parties.map(p => p.id);
+      
+      // Query contracts to count by party
+      // Check all possible foreign key columns: employer_id, client_id, first_party_id, second_party_id
+      const { data: contractData, error: contractError } = await supabase
+        .from('contracts')
+        .select('employer_id, client_id, first_party_id, second_party_id, status');
+      
+      if (contractError) {
+        console.warn(`[${requestId}] ⚠️ Failed to fetch contracts for counting:`, contractError.message);
+      } else if (contractData) {
+        // Count contracts for each party
+        contractData.forEach((contract: any) => {
+          // Check all possible foreign key columns
+          const partyIdFields = [
+            contract.employer_id,
+            contract.client_id,
+            contract.first_party_id,
+            contract.second_party_id,
+          ].filter(id => id && partyIds.includes(id));
+          
+          // Count unique party involvements
+          const uniquePartyIds = [...new Set(partyIdFields)];
+          
+          uniquePartyIds.forEach(partyId => {
+            if (!contractCounts[partyId]) {
+              contractCounts[partyId] = { total: 0, active: 0 };
+            }
+            contractCounts[partyId].total += 1;
+            
+            // Count active contracts (active, pending, or approved status)
+            if (contract.status && ['active', 'pending', 'approved'].includes(contract.status.toLowerCase())) {
+              contractCounts[partyId].active += 1;
+            }
+          });
+        });
+        
+        console.log(`[${requestId}] ✅ Contract counts calculated for ${Object.keys(contractCounts).length} parties`);
+      }
+    } catch (error) {
+      console.error(`[${requestId}] ❌ Error fetching contract counts:`, error instanceof Error ? error.message : 'Unknown error');
+      // Continue with empty counts
+    }
+    
+    const contractCountsDuration = Date.now() - contractCountsStartTime;
+    console.log(`[${requestId}] 📊 Contract counts fetched in ${contractCountsDuration}ms`);
+
+    // Transform data to include contract counts with validation
     const partiesWithCounts = parties.map(party => {
       try {
         // Validate required fields
@@ -296,10 +351,13 @@ async function handleGET(request: Request) {
           console.warn(`[${requestId}] ⚠️ Party missing names:`, party.id);
         }
 
+        // Get contract counts for this party
+        const counts = contractCounts[party.id] || { total: 0, active: 0 };
+
         return {
           ...party,
-          total_contracts: 0, // Will be calculated separately
-          active_contracts: 0, // Will be calculated separately
+          total_contracts: counts.total,
+          active_contracts: counts.active,
         };
       } catch (error) {
         console.error(`[${requestId}] ❌ Error processing party:`, {
@@ -343,6 +401,7 @@ async function handleGET(request: Request) {
         breakdown: {
           auth: `${authDuration}ms`,
           query: `${queryDuration}ms`,
+          contractCounts: `${contractCountsDuration}ms`,
         },
       } : undefined,
     };
