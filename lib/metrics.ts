@@ -205,7 +205,7 @@ export async function getContractMetrics(
 
     // RBAC: Non-admins see only their contracts
     if (userRole !== 'admin' && userId) {
-      query = query.eq('created_by', userId);
+      query = query.or(`first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`);
     }
 
     const { data: contracts, error } = await query;
@@ -221,7 +221,7 @@ export async function getContractMetrics(
       .select('*', { count: 'exact', head: true });
 
     if (userRole !== 'admin' && userId) {
-      countQuery = countQuery.eq('created_by', userId);
+      countQuery = countQuery.or(`first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`);
     }
 
     const { count: totalCount, error: countError } = await countQuery;
@@ -257,10 +257,17 @@ export async function getContractMetrics(
     let contractsWithDuration = 0;
 
     contracts.forEach(contract => {
-      // Count by status
+      // Count by status - handle both status and approval_status fields
       const status = contract.status?.toLowerCase() || 'unknown';
+      const approvalStatus = contract.approval_status?.toLowerCase() || '';
       
-      switch (status) {
+      // Determine the effective status for counting
+      let effectiveStatus = status;
+      if (approvalStatus && ['legal_review', 'hr_review', 'final_approval', 'signature'].includes(approvalStatus)) {
+        effectiveStatus = 'pending';
+      }
+      
+      switch (effectiveStatus) {
         case 'active':
           metrics.active++;
           break;
@@ -281,8 +288,8 @@ export async function getContractMetrics(
           break;
       }
 
-      // Track status distribution
-      metrics.byStatus[status] = (metrics.byStatus[status] || 0) + 1;
+      // Track status distribution using effective status
+      metrics.byStatus[effectiveStatus] = (metrics.byStatus[effectiveStatus] || 0) + 1;
 
       // Sum contract values
       if (contract.contract_value) {

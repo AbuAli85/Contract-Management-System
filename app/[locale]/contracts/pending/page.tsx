@@ -335,6 +335,12 @@ function PendingContractsPageContent() {
         .includes(searchTerm.toLowerCase()) ||
       contract.second_party?.name_en
         ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      contract.promoters?.name_en
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      contract.promoter?.name_en
+        ?.toLowerCase()
         .includes(searchTerm.toLowerCase())
   );
 
@@ -367,6 +373,8 @@ function PendingContractsPageContent() {
         return 'bg-purple-100 text-purple-800';
       case 'signature':
         return 'bg-orange-100 text-orange-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -381,9 +389,11 @@ function PendingContractsPageContent() {
       case 'final_approval':
         return 'Final Approval';
       case 'signature':
-        return 'Signature';
+        return 'Awaiting Signature';
+      case 'pending':
+        return 'Pending Review';
       default:
-        return status;
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
 

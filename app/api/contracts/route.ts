@@ -198,8 +198,8 @@ async function handleContractsRequest(
       console.log(`🔍 Filtering contracts by status: ${status}`, { requestId });
       // Handle different status values
       if (status === 'pending') {
-        // Include all pending-related statuses
-        query = query.in('status', ['pending', 'legal_review', 'hr_review', 'final_approval', 'signature']);
+        // Include all pending-related statuses in both status and approval_status fields
+        query = query.or(`status.in.(${['pending', 'legal_review', 'hr_review', 'final_approval', 'signature'].join(',')}),approval_status.in.(${['pending', 'legal_review', 'hr_review', 'final_approval', 'signature'].join(',')})`);
       } else {
         query = query.eq('status', status);
       }
