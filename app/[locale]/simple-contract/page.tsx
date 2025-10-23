@@ -4,7 +4,7 @@ import { useAuth } from '@/app/providers';
 import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
 import SimpleContractGenerator from '@/components/SimpleContractGenerator';
 
-export default function SimpleContractPage() {
+export default function ExtraContractsPage() {
   const { loading } = useAuth();
   const { userRole, hasPermission, isLoading } = useEnhancedRBAC();
   const isAuthorized = userRole === 'admin' || hasPermission('dashboard.view');
@@ -26,7 +26,7 @@ export default function SimpleContractPage() {
         <div className='text-center'>
           <h1 className='text-2xl font-bold mb-4'>Access Denied</h1>
           <p className='text-muted-foreground'>
-            You don't have permission to access contract generation.
+            You don't have permission to access eXtra contract generation.
           </p>
         </div>
       </div>
@@ -35,7 +35,7 @@ export default function SimpleContractPage() {
 
   return (
     <div className='container mx-auto py-6'>
-      <SimpleContractGenerator />
+      <SimpleContractGenerator pageTitle="eXtra Contracts" />
     </div>
   );
 }

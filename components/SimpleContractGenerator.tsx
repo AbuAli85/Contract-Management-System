@@ -61,6 +61,7 @@ interface ContractFormData {
   first_party_id: string;
   second_party_id: string;
   contract_type: string;
+  contract_name: string; // Contract title/name
   job_title: string;
   department: string;
   work_location: string;
@@ -75,7 +76,11 @@ interface ContractFormData {
   transport_allowance?: number;
 }
 
-export default function SimpleContractGenerator() {
+interface SimpleContractGeneratorProps {
+  pageTitle?: string;
+}
+
+export default function SimpleContractGenerator({ pageTitle = "Quick Contract Generator" }: SimpleContractGeneratorProps) {
   const [promoters, setPromoters] = useState<Promoter[]>([]);
   const [allParties, setAllParties] = useState<Party[]>([]);
   const [clients, setClients] = useState<Party[]>([]);
@@ -90,6 +95,7 @@ export default function SimpleContractGenerator() {
     first_party_id: '',
     second_party_id: '',
     contract_type: 'full-time-permanent',
+    contract_name: '', // Contract title/name
     job_title: '',
     department: '',
     work_location: '',
@@ -286,6 +292,7 @@ export default function SimpleContractGenerator() {
       errors.push('Please select the first party (employer)');
     if (!formData.second_party_id)
       errors.push('Please select the second party (client)');
+    if (!formData.contract_name) errors.push('Contract name is required');
     if (!formData.job_title) errors.push('Job title is required');
     if (!formData.department) errors.push('Department is required');
     if (!formData.work_location) errors.push('Work location is required');
@@ -425,6 +432,7 @@ export default function SimpleContractGenerator() {
           first_party_id: '',
           second_party_id: '',
           contract_type: 'full-time-permanent',
+          contract_name: '',
           job_title: '',
           department: '',
           work_location: '',
@@ -523,7 +531,7 @@ export default function SimpleContractGenerator() {
     <div className='max-w-4xl mx-auto space-y-6'>
       {/* Header */}
       <div className='text-center space-y-2'>
-        <h1 className='text-3xl font-bold'>Generate Contract</h1>
+        <h1 className='text-3xl font-bold'>{pageTitle}</h1>
         <p className='text-muted-foreground'>
           Create professional contracts with automated processing
         </p>
@@ -749,6 +757,27 @@ export default function SimpleContractGenerator() {
                 </Select>
               </div>
 
+              {/* Contract Name - Full Width */}
+              <div className='space-y-2 md:col-span-2'>
+                <Label htmlFor='contract_name'>
+                  Contract Name / Title *
+                  <span className='text-xs text-muted-foreground ml-2 font-normal'>
+                    (Descriptive name for this contract)
+                  </span>
+                </Label>
+                <Input
+                  id='contract_name'
+                  value={formData.contract_name}
+                  onChange={e => handleInputChange('contract_name', e.target.value)}
+                  placeholder='e.g., "eXtra Muscat - Sales Promoter Contract" or "United Electronics - Marketing Specialist"'
+                  disabled={generating}
+                  className='font-medium text-base'
+                />
+                <p className='text-xs text-muted-foreground'>
+                  This name will appear in contract lists, reports, and on the Manage Parties page
+                </p>
+              </div>
+
               {/* Job Title */}
               <div className='space-y-2'>
                 <Label htmlFor='job_title'>Job Title *</Label>
@@ -756,7 +785,7 @@ export default function SimpleContractGenerator() {
                   id='job_title'
                   value={formData.job_title}
                   onChange={e => handleInputChange('job_title', e.target.value)}
-                  placeholder='e.g., Software Engineer'
+                  placeholder='e.g., Sales Promoter, Marketing Specialist'
                   disabled={generating}
                 />
               </div>
