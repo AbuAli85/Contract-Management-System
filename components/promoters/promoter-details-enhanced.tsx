@@ -68,57 +68,38 @@ interface ActivityItem {
   status?: 'success' | 'warning' | 'error' | 'info';
 }
 
-export function PromoterDetailsEnhanced() {
+interface PromoterDetailsEnhancedProps {
+  promoterDetails: any; // Use any to avoid type conflicts
+  isLoading?: boolean;
+  isRefreshing?: boolean;
+  error?: string | null;
+  onRefresh?: () => void;
+}
+
+export function PromoterDetailsEnhanced({ 
+  promoterDetails, 
+  isLoading = false, 
+  isRefreshing = false, 
+  error = null,
+  onRefresh 
+}: PromoterDetailsEnhancedProps) {
   const params = useParams();
   const router = useRouter();
   const promoterId = params?.id as string;
   const locale = params?.locale as string;
   const role = useUserRole();
 
-  const [promoterDetails, setPromoterDetails] = useState<PromoterDetails | null>(null);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch promoter details
-  const fetchPromoterDetails = useCallback(async () => {
-    if (!promoterId) return;
-
-    try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize database connection');
-      }
-
-      const { data: promoterData, error: promoterError } = await supabase
-        .from('promoters')
-        .select('*')
-        .eq('id', promoterId)
-        .single();
-
-      if (promoterError || !promoterData) {
-        throw new Error(promoterError?.message || 'Promoter not found');
-      }
-
-      // Fetch contracts
-      const { data: contractsData } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('promoter_id', promoterId);
-
-      setPromoterDetails({
-        ...promoterData,
-        contracts: contractsData || [],
-        name_en: promoterData.name_en || [promoterData.first_name, promoterData.last_name].filter(Boolean).join(' '),
-      });
-    } catch (error) {
-      console.error('Error fetching promoter details:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch promoter details');
+  // Load additional data when promoter details are available
+  useEffect(() => {
+    if (promoterDetails && promoterId) {
+      fetchPerformanceMetrics();
+      fetchActivities();
     }
-  }, [promoterId]);
+  }, [promoterDetails, promoterId]);
 
   // Fetch performance metrics
   const fetchPerformanceMetrics = useCallback(async () => {
@@ -140,8 +121,8 @@ export function PromoterDetailsEnhanced() {
         lastMonthTasks: 6,
         averageRating: 4.2,
         totalContracts: promoterDetails?.contracts?.length || 0,
-        activeContracts: promoterDetails?.contracts?.filter(c => c.status === 'active').length || 0,
-        completedContracts: promoterDetails?.contracts?.filter(c => c.status === 'completed').length || 0,
+        activeContracts: promoterDetails?.contracts?.filter((c: any) => c.status === 'active').length || 0,
+        completedContracts: promoterDetails?.contracts?.filter((c: any) => c.status === 'completed').length || 0,
       };
       setPerformanceMetrics(mockMetrics);
     } catch (error) {
@@ -202,34 +183,12 @@ export function PromoterDetailsEnhanced() {
     }
   }, [promoterId]);
 
-  // Load all data
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      await Promise.all([
-        fetchPromoterDetails(),
-        fetchPerformanceMetrics(),
-        fetchActivities()
-      ]);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchPromoterDetails, fetchPerformanceMetrics, fetchActivities]);
-
   // Refresh data
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadData();
-    setIsRefreshing(false);
-  }, [loadData]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (onRefresh) {
+      onRefresh();
+    }
+  }, [onRefresh]);
 
   // Action handlers
   const handleEdit = () => {

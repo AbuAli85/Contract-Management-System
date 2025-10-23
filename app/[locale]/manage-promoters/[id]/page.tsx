@@ -493,52 +493,80 @@ export default function PromoterDetailPage() {
 
     async function fetchCVData() {
       if (!promoterId) return;
-      try {
+      
+      // Fetch CV data in parallel without blocking main data loading
+      const fetchPromises = [
         // Fetch skills
-        const skillsResponse = await fetch(
-          `/api/promoters/${promoterId}/skills`
-        );
-        if (skillsResponse.ok) {
-          const skillsData = await skillsResponse.json();
-          setSkills(skillsData.skills || []);
-        }
-
+        fetch(`/api/promoters/${promoterId}/skills`)
+          .then(response => response.ok ? response.json() : null)
+          .then(data => data?.skills || [])
+          .catch(error => {
+            console.warn('Skills API not available:', error.message);
+            return [];
+          }),
+        
         // Fetch experience
-        const experienceResponse = await fetch(
-          `/api/promoters/${promoterId}/experience`
-        );
-        if (experienceResponse.ok) {
-          const experienceData = await experienceResponse.json();
-          setExperience(experienceData.experience || []);
-        }
-
+        fetch(`/api/promoters/${promoterId}/experience`)
+          .then(response => response.ok ? response.json() : null)
+          .then(data => data?.experience || [])
+          .catch(error => {
+            console.warn('Experience API not available:', error.message);
+            return [];
+          }),
+        
         // Fetch education
-        const educationResponse = await fetch(
-          `/api/promoters/${promoterId}/education`
-        );
-        if (educationResponse.ok) {
-          const educationData = await educationResponse.json();
-          setEducation(educationData.education || []);
-        }
-
+        fetch(`/api/promoters/${promoterId}/education`)
+          .then(response => response.ok ? response.json() : null)
+          .then(data => data?.education || [])
+          .catch(error => {
+            console.warn('Education API not available:', error.message);
+            return [];
+          }),
+        
         // Fetch documents
-        const documentsResponse = await fetch(
-          `/api/promoters/${promoterId}/documents`
-        );
-        if (documentsResponse.ok) {
-          const documentsData = await documentsResponse.json();
-          setDocuments(documentsData.documents || []);
-        }
+        fetch(`/api/promoters/${promoterId}/documents`)
+          .then(response => response.ok ? response.json() : null)
+          .then(data => data?.documents || [])
+          .catch(error => {
+            console.warn('Documents API not available:', error.message);
+            return [];
+          })
+      ];
+
+      try {
+        const [skillsData, experienceData, educationData, documentsData] = await Promise.all(fetchPromises);
+        
+        setSkills(skillsData);
+        setExperience(experienceData);
+        setEducation(educationData);
+        setDocuments(documentsData);
+        
+        console.log('CV data loaded successfully:', {
+          skills: skillsData.length,
+          experience: experienceData.length,
+          education: educationData.length,
+          documents: documentsData.length
+        });
       } catch (error) {
-        console.error('Error fetching CV data:', error);
+        console.warn('Some CV data could not be loaded:', error);
+        // Set empty arrays as fallback
+        setSkills([]);
+        setExperience([]);
+        setEducation([]);
+        setDocuments([]);
       }
     }
 
+    // Load main data first (blocking)
     fetchPromoterDetails();
     fetchAuditLogs();
-    fetchCVData();
     fetchAllPromoters();
     fetchEmployers();
+    
+    // Load CV data separately (non-blocking)
+    setTimeout(() => {
+      fetchCVData();
+    }, 100);
   }, [promoterId, role, fetchAllPromoters, fetchEmployers]);
 
   // Filter promoters based on search and filter criteria
@@ -667,7 +695,15 @@ export default function PromoterDetailPage() {
 
   // Use enhanced view if enabled
   if (useEnhancedView) {
-    return <PromoterDetailsEnhanced />;
+    return (
+      <PromoterDetailsEnhanced 
+        promoterDetails={promoterDetails}
+        isLoading={isLoading}
+        isRefreshing={isRefreshing}
+        error={error}
+        onRefresh={handleRefresh}
+      />
+    );
   }
 
   return (
