@@ -12,12 +12,30 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Clock, Search, Filter, Eye, AlertTriangle, ShieldAlert, Mail, RefreshCw, Loader2 } from 'lucide-react';
+import { Clock, Search, Filter, Eye, AlertTriangle, ShieldAlert, Mail, RefreshCw, Loader2, CheckCircle, XCircle, Edit, Send, Users, FileText, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/use-permissions';
 import { ContractsCardSkeleton, ContractsTableSkeleton } from '@/components/contracts/ContractsSkeleton';
 import { ContractsErrorBoundary } from '@/components/error-boundary/ContractsErrorBoundary';
 import { performanceMonitor } from '@/lib/performance-monitor';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 interface Contract {
   id: string;
@@ -42,6 +60,26 @@ function PendingContractsPageContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  
+  // Action states
+  const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
+  const [actionDialog, setActionDialog] = useState<{
+    isOpen: boolean;
+    action: string;
+    contractId?: string;
+    contractIds?: string[];
+    title: string;
+    description: string;
+    requiresReason: boolean;
+  }>({
+    isOpen: false,
+    action: '',
+    title: '',
+    description: '',
+    requiresReason: false,
+  });
+  const [actionReason, setActionReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
   const [showPartialResults, setShowPartialResults] = useState(false);
   const [forceLoad, setForceLoad] = useState(false);
   const fetchAttemptedRef = useRef(false);
@@ -324,6 +362,151 @@ function PendingContractsPageContent() {
     }
   }, []);
 
+  // Action handlers
+  const handleContractAction = useCallback((action: string, contractId: string) => {
+    const actionConfig = {
+      approve: {
+        title: 'Approve Contract',
+        description: 'Are you sure you want to approve this contract? This will activate the contract.',
+        requiresReason: false,
+      },
+      reject: {
+        title: 'Reject Contract',
+        description: 'Are you sure you want to reject this contract? Please provide a reason.',
+        requiresReason: true,
+      },
+      request_changes: {
+        title: 'Request Changes',
+        description: 'Request changes to this contract. Please provide details about what needs to be changed.',
+        requiresReason: true,
+      },
+      send_to_legal: {
+        title: 'Send to Legal Review',
+        description: 'Send this contract to the legal team for review.',
+        requiresReason: false,
+      },
+      send_to_hr: {
+        title: 'Send to HR Review',
+        description: 'Send this contract to the HR team for review.',
+        requiresReason: false,
+      },
+    };
+
+    const config = actionConfig[action as keyof typeof actionConfig];
+    if (config) {
+      setActionDialog({
+        isOpen: true,
+        action,
+        contractId,
+        title: config.title,
+        description: config.description,
+        requiresReason: config.requiresReason,
+      });
+    }
+  }, []);
+
+  const handleBulkAction = useCallback((action: string) => {
+    if (selectedContracts.length === 0) {
+      toast.error('Please select contracts to perform bulk action');
+      return;
+    }
+
+    const actionConfig = {
+      approve: {
+        title: 'Approve Selected Contracts',
+        description: `Are you sure you want to approve ${selectedContracts.length} contracts?`,
+        requiresReason: false,
+      },
+      reject: {
+        title: 'Reject Selected Contracts',
+        description: `Are you sure you want to reject ${selectedContracts.length} contracts? Please provide a reason.`,
+        requiresReason: true,
+      },
+      request_changes: {
+        title: 'Request Changes',
+        description: `Request changes for ${selectedContracts.length} contracts. Please provide details.`,
+        requiresReason: true,
+      },
+      send_to_legal: {
+        title: 'Send to Legal Review',
+        description: `Send ${selectedContracts.length} contracts to the legal team for review.`,
+        requiresReason: false,
+      },
+      send_to_hr: {
+        title: 'Send to HR Review',
+        description: `Send ${selectedContracts.length} contracts to the HR team for review.`,
+        requiresReason: false,
+      },
+    };
+
+    const config = actionConfig[action as keyof typeof actionConfig];
+    if (config) {
+      setActionDialog({
+        isOpen: true,
+        action,
+        contractIds: selectedContracts,
+        title: config.title,
+        description: config.description,
+        requiresReason: config.requiresReason,
+      });
+    }
+  }, [selectedContracts]);
+
+  const executeAction = useCallback(async () => {
+    if (!actionDialog.action) return;
+
+    setActionLoading(true);
+    try {
+      const url = '/api/contracts/actions';
+      const method = actionDialog.contractIds ? 'PUT' : 'POST';
+      const body = actionDialog.contractIds 
+        ? {
+            contractIds: actionDialog.contractIds,
+            action: actionDialog.action,
+            reason: actionReason,
+          }
+        : {
+            contractId: actionDialog.contractId,
+            action: actionDialog.action,
+            reason: actionReason,
+          };
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(data.message);
+        setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
+        setActionReason('');
+        setSelectedContracts([]);
+        // Refresh the contracts list
+        fetchPendingContracts(true);
+      } else {
+        toast.error(data.error || 'Failed to perform action');
+      }
+    } catch (error) {
+      console.error('Error executing action:', error);
+      toast.error('Failed to perform action');
+    } finally {
+      setActionLoading(false);
+    }
+  }, [actionDialog, actionReason, fetchPendingContracts]);
+
+  const handleSelectContract = useCallback((contractId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedContracts(prev => [...prev, contractId]);
+    } else {
+      setSelectedContracts(prev => prev.filter(id => id !== contractId));
+    }
+  }, []);
+
   const filteredContracts = contracts.filter(
     contract =>
       contract.contract_number
@@ -343,6 +526,14 @@ function PendingContractsPageContent() {
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase())
   );
+
+  const handleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelectedContracts(filteredContracts.map(contract => contract.id));
+    } else {
+      setSelectedContracts([]);
+    }
+  }, [filteredContracts]);
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
@@ -585,6 +776,17 @@ function PendingContractsPageContent() {
                     {contracts.length}
                   </Badge>
                 )}
+                {filteredContracts.length > 0 && (
+                  <div className='flex items-center gap-2 ml-4'>
+                    <Checkbox
+                      checked={selectedContracts.length === filteredContracts.length && filteredContracts.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                    <span className='text-sm text-muted-foreground'>
+                      Select All
+                    </span>
+                  </div>
+                )}
               </CardTitle>
               <CardDescription>
                 {filteredContracts.length === contracts.length 
@@ -603,6 +805,55 @@ function PendingContractsPageContent() {
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
+              
+              {/* Bulk Actions */}
+              {selectedContracts.length > 0 && (
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm text-muted-foreground'>
+                    {selectedContracts.length} selected
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant='outline' size='sm'>
+                        <MoreHorizontal className='mr-2 h-4 w-4' />
+                        Bulk Actions
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleBulkAction('approve')}>
+                        <CheckCircle className='mr-2 h-4 w-4' />
+                        Approve Selected
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBulkAction('reject')}>
+                        <XCircle className='mr-2 h-4 w-4' />
+                        Reject Selected
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleBulkAction('send_to_legal')}>
+                        <FileText className='mr-2 h-4 w-4' />
+                        Send to Legal
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBulkAction('send_to_hr')}>
+                        <Users className='mr-2 h-4 w-4' />
+                        Send to HR
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleBulkAction('request_changes')}>
+                        <Edit className='mr-2 h-4 w-4' />
+                        Request Changes
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setSelectedContracts([])}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              )}
+              
               <div className='relative'>
                 <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400' />
                 <Input
@@ -684,42 +935,48 @@ function PendingContractsPageContent() {
                   className='rounded-lg border p-4 transition-shadow hover:shadow-md'
                 >
                   <div className='flex items-center justify-between'>
-                    <div className='flex-1'>
-                      <div className='mb-2 flex items-center gap-3'>
-                        <h3 className='font-semibold'>
-                          {contract.contract_number}
-                        </h3>
-                        <Badge
-                          className={getStatusColor(
-                            contract.approval_status || contract.status
-                          )}
-                        >
-                          {getStatusLabel(
-                            contract.approval_status || contract.status
-                          )}
-                        </Badge>
-                      </div>
-                      <p className='mb-1 text-sm text-muted-foreground'>
-                        {contract.job_title} • {contract.contract_type}
-                      </p>
-                      <div className='flex items-center gap-4 text-xs text-muted-foreground'>
-                        <span>
-                          Client: {contract.first_party?.name_en || 'N/A'}
-                        </span>
-                        <span>
-                          Employer: {contract.second_party?.name_en || 'N/A'}
-                        </span>
-                        <span>
-                          Employee:{' '}
-                          {contract.promoters?.name_en || contract.promoter?.name_en || 'N/A'}
-                        </span>
-                        <span>
-                          Submitted:{' '}
-                          {formatDate(
-                            contract.submitted_for_review_at ||
-                              contract.created_at
-                          )}
-                        </span>
+                    <div className='flex items-center gap-3 flex-1'>
+                      <Checkbox
+                        checked={selectedContracts.includes(contract.id)}
+                        onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                      />
+                      <div className='flex-1'>
+                        <div className='mb-2 flex items-center gap-3'>
+                          <h3 className='font-semibold'>
+                            {contract.contract_number}
+                          </h3>
+                          <Badge
+                            className={getStatusColor(
+                              contract.approval_status || contract.status
+                            )}
+                          >
+                            {getStatusLabel(
+                              contract.approval_status || contract.status
+                            )}
+                          </Badge>
+                        </div>
+                        <p className='mb-1 text-sm text-muted-foreground'>
+                          {contract.job_title} • {contract.contract_type}
+                        </p>
+                        <div className='flex items-center gap-4 text-xs text-muted-foreground'>
+                          <span>
+                            Client: {contract.first_party?.name_en || 'N/A'}
+                          </span>
+                          <span>
+                            Employer: {contract.second_party?.name_en || 'N/A'}
+                          </span>
+                          <span>
+                            Employee:{' '}
+                            {contract.promoters?.name_en || contract.promoter?.name_en || 'N/A'}
+                          </span>
+                          <span>
+                            Submitted:{' '}
+                            {formatDate(
+                              contract.submitted_for_review_at ||
+                                contract.created_at
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className='flex items-center gap-2'>
@@ -729,6 +986,39 @@ function PendingContractsPageContent() {
                           View
                         </Link>
                       </Button>
+                      
+                      {/* Action Menu */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='outline' size='sm'>
+                            <MoreHorizontal className='h-4 w-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuItem onClick={() => handleContractAction('approve', contract.id)}>
+                            <CheckCircle className='mr-2 h-4 w-4' />
+                            Approve
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleContractAction('reject', contract.id)}>
+                            <XCircle className='mr-2 h-4 w-4' />
+                            Reject
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleContractAction('send_to_legal', contract.id)}>
+                            <FileText className='mr-2 h-4 w-4' />
+                            Send to Legal
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleContractAction('send_to_hr', contract.id)}>
+                            <Users className='mr-2 h-4 w-4' />
+                            Send to HR
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleContractAction('request_changes', contract.id)}>
+                            <Edit className='mr-2 h-4 w-4' />
+                            Request Changes
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
@@ -737,6 +1027,62 @@ function PendingContractsPageContent() {
           )}
         </CardContent>
       </Card>
+
+      {/* Action Dialog */}
+      <Dialog open={actionDialog.isOpen} onOpenChange={(open) => {
+        if (!open) {
+          setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
+          setActionReason('');
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{actionDialog.title}</DialogTitle>
+            <DialogDescription>{actionDialog.description}</DialogDescription>
+          </DialogHeader>
+          
+          {actionDialog.requiresReason && (
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>
+                {actionDialog.action === 'reject' ? 'Reason for rejection' : 
+                 actionDialog.action === 'request_changes' ? 'Changes requested' : 'Reason'}
+              </label>
+              <Textarea
+                placeholder={actionDialog.action === 'reject' ? 'Please provide a reason for rejecting this contract...' :
+                           actionDialog.action === 'request_changes' ? 'Please describe what changes are needed...' :
+                           'Please provide additional details...'}
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
+                setActionReason('');
+              }}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={executeAction}
+              disabled={actionLoading || (actionDialog.requiresReason && !actionReason.trim())}
+            >
+              {actionLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+              {actionDialog.action === 'approve' ? 'Approve' :
+               actionDialog.action === 'reject' ? 'Reject' :
+               actionDialog.action === 'request_changes' ? 'Request Changes' :
+               actionDialog.action === 'send_to_legal' ? 'Send to Legal' :
+               actionDialog.action === 'send_to_hr' ? 'Send to HR' : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

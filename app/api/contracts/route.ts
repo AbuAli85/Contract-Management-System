@@ -198,8 +198,8 @@ async function handleContractsRequest(
       console.log(`🔍 Filtering contracts by status: ${status}`, { requestId });
       // Handle different status values
       if (status === 'pending') {
-        // Include all pending-related statuses in both status and approval_status fields
-        query = query.or(`status.in.(${['pending', 'legal_review', 'hr_review', 'final_approval', 'signature'].join(',')}),approval_status.in.(${['pending', 'legal_review', 'hr_review', 'final_approval', 'signature'].join(',')})`);
+        // Include all pending-related statuses - only check status field since approval_status doesn't exist yet
+        query = query.in('status', ['pending', 'legal_review', 'hr_review', 'final_approval', 'signature']);
       } else {
         query = query.eq('status', status);
       }
@@ -210,7 +210,7 @@ async function handleContractsRequest(
 
     // Non-admin users only see contracts they're involved in
     if (!isAdmin) {
-      query = query.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id}`);
+      query = query.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id}`);
     }
 
     const queryStartTime = Date.now();
@@ -234,11 +234,18 @@ async function handleContractsRequest(
           contractsError.message
         );
         // Try a simpler query as fallback
-        const { data: fallbackData, error: fallbackError } = await supabase
+        let fallbackQuery = supabase
           .from('contracts')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(50);
+
+        // Apply RBAC to fallback query too
+        if (!isAdmin) {
+          fallbackQuery = fallbackQuery.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id}`);
+        }
+
+        const { data: fallbackData, error: fallbackError } = await fallbackQuery;
 
         if (fallbackError) {
           console.error(

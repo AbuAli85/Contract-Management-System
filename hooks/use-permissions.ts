@@ -97,6 +97,10 @@ export function usePermissions() {
   const can = (action: Action): boolean => {
     if (loading || authLoading) return false;
     if (role === 'admin') return true;
+    
+    // Allow contract reading for all authenticated users
+    if (action === 'contract:read:own') return true;
+    
     // Add specific permission logic here
     return false;
   };

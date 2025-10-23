@@ -257,13 +257,14 @@ export async function getContractMetrics(
     let contractsWithDuration = 0;
 
     contracts.forEach(contract => {
-      // Count by status - handle both status and approval_status fields
+      // Count by status - only use status field since approval_status doesn't exist yet
       const status = contract.status?.toLowerCase() || 'unknown';
-      const approvalStatus = contract.approval_status?.toLowerCase() || '';
       
       // Determine the effective status for counting
       let effectiveStatus = status;
-      if (approvalStatus && ['legal_review', 'hr_review', 'final_approval', 'signature'].includes(approvalStatus)) {
+      
+      // Map pending-related statuses to 'pending' for consistent counting
+      if (['legal_review', 'hr_review', 'final_approval', 'signature'].includes(status)) {
         effectiveStatus = 'pending';
       }
       
