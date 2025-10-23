@@ -531,33 +531,7 @@ export function EnhancedPromotersViewRefactored({
   });
 
   const metrics = useMemo<DashboardMetrics>(() => {
-    if (apiMetricsData?.metrics) {
-      const apiMetrics = apiMetricsData.metrics;
-      
-      const companies = new Set(
-        dashboardPromoters.map(p => p.employer_id).filter(Boolean) as string[]
-      ).size;
-
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const recentlyAdded = dashboardPromoters.filter(p => {
-        const createdDate = parseDateSafe(p.created_at);
-        return createdDate && createdDate >= sevenDaysAgo;
-      }).length;
-
-      return {
-        total: apiMetrics.total,
-        active: apiMetrics.active,
-        critical: apiMetrics.critical,
-        expiring: apiMetrics.expiring,
-        unassigned: apiMetrics.unassigned,
-        companies,
-        recentlyAdded,
-        complianceRate: apiMetrics.complianceRate,
-      };
-    }
-
-    // Fallback
+    // Always calculate client-side metrics since API doesn't return all required fields
     const total = pagination?.total || dashboardPromoters.length;
     const active = dashboardPromoters.filter(p => p.overallStatus === 'active').length;
     const critical = dashboardPromoters.filter(p =>
@@ -581,7 +555,19 @@ export function EnhancedPromotersViewRefactored({
       ? Math.round((compliant / dashboardPromoters.length) * 100) 
       : 0;
 
-    return { total, active, critical, expiring, unassigned, companies, recentlyAdded, complianceRate };
+    // If API metrics are available, use them for total count (more accurate)
+    const finalTotal = apiMetricsData?.metrics?.total || total;
+
+    return { 
+      total: finalTotal, 
+      active, 
+      critical, 
+      expiring, 
+      unassigned, 
+      companies, 
+      recentlyAdded, 
+      complianceRate 
+    };
   }, [dashboardPromoters, pagination, apiMetricsData]);
 
   const filteredPromoters = useMemo(() => {

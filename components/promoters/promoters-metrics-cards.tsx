@@ -134,51 +134,66 @@ export function PromotersMetricsCards({
   onCardClick,
   activeFilter,
 }: PromotersMetricsCardsProps) {
+  // ✅ Safety: Ensure all metric values are numbers, not undefined or NaN
+  const safeMetrics = {
+    total: Number(metrics.total) || 0,
+    active: Number(metrics.active) || 0,
+    critical: Number(metrics.critical) || 0,
+    expiring: Number(metrics.expiring) || 0,
+    unassigned: Number(metrics.unassigned) || 0,
+    companies: Number(metrics.companies) || 0,
+    recentlyAdded: Number(metrics.recentlyAdded) || 0,
+    complianceRate: Number(metrics.complianceRate) || 0,
+  };
+
+  // Calculate assigned staff safely
+  const assignedStaff = Math.max(0, safeMetrics.total - safeMetrics.unassigned);
+
   return (
     <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
       <EnhancedStatCard
         title='Total promoters'
-        value={metrics.total}
-        helper={`${metrics.active} active right now`}
+        value={safeMetrics.total}
+        helper={`${safeMetrics.active} active right now`}
         icon={Users}
         variant='primary'
         trend={
-          metrics.recentlyAdded > 0
-            ? { value: metrics.recentlyAdded, label: 'new this week' }
+          safeMetrics.recentlyAdded > 0
+            ? { value: safeMetrics.recentlyAdded, label: 'new this week' }
             : undefined
         }
         {...(onCardClick && { onClick: () => onCardClick('all') })}
-        ariaLabel={`Total promoters: ${metrics.total}. Click to view all promoters.`}
+        ariaLabel={`Total promoters: ${safeMetrics.total}. Click to view all promoters.`}
         isActive={activeFilter === 'all'}
       />
       <EnhancedStatCard
         title='Active workforce'
-        value={metrics.active}
-        helper={`${metrics.unassigned} awaiting assignment`}
+        value={safeMetrics.active}
+        helper={`${safeMetrics.unassigned} awaiting assignment`}
         icon={UserCheck}
         variant='neutral'
         {...(onCardClick && { onClick: () => onCardClick('active') })}
-        ariaLabel={`Active workforce: ${metrics.active}. Click to filter by assigned promoters.`}
+        ariaLabel={`Active workforce: ${safeMetrics.active}. Click to filter by assigned promoters.`}
         isActive={activeFilter === 'active'}
       />
       <EnhancedStatCard
         title='Document alerts'
-        value={metrics.critical}
-        helper={`${metrics.expiring} expiring soon`}
+        value={safeMetrics.critical}
+        helper={`${safeMetrics.expiring} expiring soon`}
         icon={ShieldAlert}
-        variant={metrics.critical > 0 ? 'danger' : 'warning'}
+        variant={safeMetrics.critical > 0 ? 'danger' : 'warning'}
         {...(onCardClick && { onClick: () => onCardClick('alerts') })}
-        ariaLabel={`Document alerts: ${metrics.critical} critical, ${metrics.expiring} expiring soon. Click to filter by document issues.`}
+        ariaLabel={`Document alerts: ${safeMetrics.critical} critical, ${safeMetrics.expiring} expiring soon. Click to filter by document issues.`}
         isActive={activeFilter === 'alerts'}
       />
       <EnhancedStatCard
         title='Compliance rate'
-        value={`${metrics.complianceRate}%`}
-        helper={`${metrics.total - metrics.unassigned} assigned staff`}
+        value={`${safeMetrics.complianceRate}%`}
+        helper={`${assignedStaff} assigned staff`}
         icon={CheckCircle}
-        variant={metrics.complianceRate >= 90 ? 'success' : 'warning'}
+        variant={safeMetrics.complianceRate >= 90 ? 'success' : 'warning'}
         {...(onCardClick && { onClick: () => onCardClick('compliance') })}
-        ariaLabel={`Compliance rate: ${metrics.complianceRate}%. Click to view compliant promoters.`}
+        ariaLabel={`Compliance rate: ${safeMetrics.complianceRate}%. Click to view compliant promoters.`}
         isActive={activeFilter === 'compliance'}
       />
     </div>
