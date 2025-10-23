@@ -36,6 +36,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { ContractStatusBadge } from '@/components/contracts/contract-status-badge';
 
 interface Contract {
   id: string;
@@ -457,40 +458,57 @@ function PendingContractsPageContent() {
 
     setActionLoading(true);
     try {
-      const url = '/api/contracts/actions';
-      const method = actionDialog.contractIds ? 'PUT' : 'POST';
-      const body = actionDialog.contractIds 
-        ? {
-            contractIds: actionDialog.contractIds,
+      // Handle individual contract actions
+      if (actionDialog.contractId) {
+        const response = await fetch(`/api/contracts/${actionDialog.contractId}/approve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             action: actionDialog.action,
             reason: actionReason,
-          }
-        : {
-            contractId: actionDialog.contractId,
-            action: actionDialog.action,
-            reason: actionReason,
-          };
+          }),
+        });
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+        const data = await response.json();
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message);
-        setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
-        setActionReason('');
-        setSelectedContracts([]);
-        // Refresh the contracts list
-        fetchPendingContracts(true);
-      } else {
-        toast.error(data.error || 'Failed to perform action');
+        if (data.success) {
+          toast.success(data.message);
+          fetchPendingContracts(); // Refresh the list
+        } else {
+          toast.error(data.error || 'Action failed');
+        }
       }
+      // Handle bulk contract actions
+      else if (actionDialog.contractIds) {
+        const promises = actionDialog.contractIds.map(contractId =>
+          fetch(`/api/contracts/${contractId}/approve`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: actionDialog.action,
+              reason: actionReason,
+            }),
+          }).then(res => res.json())
+        );
+
+        const results = await Promise.all(promises);
+        const successCount = results.filter(r => r.success).length;
+        
+        if (successCount > 0) {
+          toast.success(`${successCount} contract${successCount > 1 ? 's' : ''} ${actionDialog.action}ed successfully`);
+          fetchPendingContracts(); // Refresh the list
+        } else {
+          toast.error('All actions failed');
+        }
+      }
+
+      setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
+      setActionReason('');
+      setSelectedContracts([]);
     } catch (error) {
       console.error('Error executing action:', error);
       toast.error('Failed to perform action');
@@ -945,15 +963,10 @@ function PendingContractsPageContent() {
                           <h3 className='font-semibold'>
                             {contract.contract_number}
                           </h3>
-                          <Badge
-                            className={getStatusColor(
-                              contract.approval_status || contract.status
-                            )}
-                          >
-                            {getStatusLabel(
-                              contract.approval_status || contract.status
-                            )}
-                          </Badge>
+                          <ContractStatusBadge 
+                            status={contract.approval_status || contract.status as any} 
+                            size="sm"
+                          />
                         </div>
                         <p className='mb-1 text-sm text-muted-foreground'>
                           {contract.job_title} • {contract.contract_type}
@@ -997,11 +1010,11 @@ function PendingContractsPageContent() {
                         <DropdownMenuContent align='end'>
                           <DropdownMenuItem onClick={() => handleContractAction('approve', contract.id)}>
                             <CheckCircle className='mr-2 h-4 w-4' />
-                            Approve
+                            Approve Contract
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleContractAction('reject', contract.id)}>
                             <XCircle className='mr-2 h-4 w-4' />
-                            Reject
+                            Reject Contract
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleContractAction('send_to_legal', contract.id)}>

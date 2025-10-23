@@ -9,7 +9,7 @@ export type Action =
   | 'promoter:delete'
   | 'promoter:bulk_delete'
   | 'promoter:export'
-  | 'promoter:archive' // <-- new action
+  | 'promoter:archive'
 
   // Party actions
   | 'party:create'
@@ -18,17 +18,18 @@ export type Action =
   | 'party:delete'
   | 'party:bulk_delete'
   | 'party:export'
-  | 'party:archive' // <-- new action
+  | 'party:archive'
 
   // Contract actions
   | 'contract:create'
   | 'contract:read'
   | 'contract:update'
   | 'contract:delete'
-  | 'contract:generate'
-  | 'contract:approve'
+  | 'contract:bulk_delete'
   | 'contract:export'
-  | 'contract:archive' // <-- new action
+  | 'contract:archive'
+  | 'contract:approve'
+  | 'contract:reject'
 
   // User management actions
   | 'user:create'
@@ -73,10 +74,21 @@ export const PERMISSIONS: Record<EnhancedUserRole, Record<Action, boolean>> = {
     'contract:bulk_delete': true,
     'contract:export': true,
     'contract:archive': true,
+    'contract:approve': true,
+    'contract:reject': true,
+    // User management permissions
+    'user:create': true,
+    'user:read': true,
+    'user:update': true,
+    'user:delete': true,
+    'user:assign_role': true,
+    // System permissions
     'system:analytics': true,
     'system:settings': true,
     'system:backup': true,
     'system:restore': true,
+    'system:audit_logs': true,
+    'system:notifications': true,
   },
   admin: {
     // Promoter permissions - Full access
@@ -103,11 +115,21 @@ export const PERMISSIONS: Record<EnhancedUserRole, Record<Action, boolean>> = {
     'contract:bulk_delete': true,
     'contract:export': true,
     'contract:archive': true,
+    'contract:approve': true,
+    'contract:reject': true,
+    // User management permissions
+    'user:create': true,
+    'user:read': true,
+    'user:update': true,
+    'user:delete': true,
+    'user:assign_role': true,
     // System permissions - Limited
     'system:analytics': true,
     'system:settings': true,
     'system:backup': false,
     'system:restore': false,
+    'system:audit_logs': true,
+    'system:notifications': true,
   },
   manager: {
     // Promoter permissions - Read and update
@@ -134,11 +156,21 @@ export const PERMISSIONS: Record<EnhancedUserRole, Record<Action, boolean>> = {
     'contract:bulk_delete': false,
     'contract:export': true,
     'contract:archive': false,
+    'contract:approve': true,
+    'contract:reject': true,
+    // User management permissions
+    'user:create': false,
+    'user:read': true,
+    'user:update': false,
+    'user:delete': false,
+    'user:assign_role': false,
     // System permissions - Limited
     'system:analytics': true,
     'system:settings': false,
     'system:backup': false,
     'system:restore': false,
+    'system:audit_logs': true,
+    'system:notifications': true,
   },
   provider: {
     // Promoter permissions - Limited
@@ -165,11 +197,21 @@ export const PERMISSIONS: Record<EnhancedUserRole, Record<Action, boolean>> = {
     'contract:bulk_delete': false,
     'contract:export': false,
     'contract:archive': false,
+    'contract:approve': false,
+    'contract:reject': false,
+    // User management permissions
+    'user:create': false,
+    'user:read': true,
+    'user:update': false,
+    'user:delete': false,
+    'user:assign_role': false,
     // System permissions - None
     'system:analytics': false,
     'system:settings': false,
     'system:backup': false,
     'system:restore': false,
+    'system:audit_logs': false,
+    'system:notifications': false,
   },
   client: {
     // Promoter permissions - Limited
@@ -196,11 +238,21 @@ export const PERMISSIONS: Record<EnhancedUserRole, Record<Action, boolean>> = {
     'contract:bulk_delete': false,
     'contract:export': false,
     'contract:archive': false,
+    'contract:approve': false,
+    'contract:reject': false,
+    // User management permissions
+    'user:create': false,
+    'user:read': true,
+    'user:update': false,
+    'user:delete': false,
+    'user:assign_role': false,
     // System permissions - None
     'system:analytics': false,
     'system:settings': false,
     'system:backup': false,
     'system:restore': false,
+    'system:audit_logs': false,
+    'system:notifications': false,
   },
   user: {
     // Promoter permissions - Read only
@@ -227,11 +279,21 @@ export const PERMISSIONS: Record<EnhancedUserRole, Record<Action, boolean>> = {
     'contract:bulk_delete': false,
     'contract:export': false,
     'contract:archive': false,
+    'contract:approve': false,
+    'contract:reject': false,
+    // User management permissions
+    'user:create': false,
+    'user:read': true,
+    'user:update': false,
+    'user:delete': false,
+    'user:assign_role': false,
     // System permissions - None
     'system:analytics': false,
     'system:settings': false,
     'system:backup': false,
     'system:restore': false,
+    'system:audit_logs': false,
+    'system:notifications': false,
   },
   viewer: {
     // Promoter permissions - Read only
@@ -258,11 +320,21 @@ export const PERMISSIONS: Record<EnhancedUserRole, Record<Action, boolean>> = {
     'contract:bulk_delete': false,
     'contract:export': false,
     'contract:archive': false,
+    'contract:approve': false,
+    'contract:reject': false,
+    // User management permissions
+    'user:create': false,
+    'user:read': true,
+    'user:update': false,
+    'user:delete': false,
+    'user:assign_role': false,
     // System permissions - None
     'system:analytics': false,
     'system:settings': false,
     'system:backup': false,
     'system:restore': false,
+    'system:audit_logs': false,
+    'system:notifications': false,
   },
 };
 
@@ -334,7 +406,7 @@ export function canDeleteResource(
 export function getRolePermissions(
   role: EnhancedUserRole
 ): Record<Action, boolean> {
-  return PERMISSIONS[role] ?? {};
+  return PERMISSIONS[role] || {} as Record<Action, boolean>;
 }
 
 // Get all actions a role can perform
@@ -379,10 +451,11 @@ export const ACTIONS: Action[] = [
   'contract:read',
   'contract:update',
   'contract:delete',
-  'contract:generate',
-  'contract:approve',
+  'contract:bulk_delete',
   'contract:export',
   'contract:archive',
+  'contract:approve',
+  'contract:reject',
   // User management actions
   'user:create',
   'user:read',

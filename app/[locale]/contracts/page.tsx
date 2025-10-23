@@ -101,6 +101,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ContractStatusBadge } from '@/components/contracts/contract-status-badge';
 import { useTranslations } from 'next-intl';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
@@ -765,37 +766,21 @@ function ContractsContent() {
   };
 
   const getStatusBadge = (status: ContractStatus) => {
-    const variants = {
-      Active: {
-        variant: 'default' as const,
-        className:
-          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-        icon: CheckCircle,
-      },
-      Expired: {
-        variant: 'destructive' as const,
-        className: '',
-        icon: XCircle,
-      },
-      Upcoming: {
-        variant: 'secondary' as const,
-        className:
-          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        icon: Clock,
-      },
-      Unknown: {
-        variant: 'outline' as const,
-        className: '',
-        icon: AlertTriangle,
-      },
+    // Map old statuses to new workflow statuses
+    const statusMap: Record<string, string> = {
+      'Active': 'active',
+      'Expired': 'expired', 
+      'Upcoming': 'pending',
+      'Unknown': 'draft',
     };
-    const config = variants[status];
-    const Icon = config.icon;
+    
+    const mappedStatus = statusMap[status] || status.toLowerCase();
+    
     return (
-      <Badge variant={config.variant} className={config.className}>
-        <Icon className='mr-1 h-3 w-3' />
-        {status}
-      </Badge>
+      <ContractStatusBadge 
+        status={mappedStatus as any} 
+        size="sm"
+      />
     );
   };
 

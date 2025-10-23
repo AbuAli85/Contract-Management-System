@@ -140,7 +140,7 @@ export const POST = withAnyRBAC(
         end_date: endDate,
         value: body.basic_salary || body.contract_value,
         currency: body.currency || 'USD',
-        status: 'draft', // Use 'draft' instead of 'generating' to match constraint
+        status: 'pending', // Changed from 'draft' to 'pending' for proper workflow
       };
 
       const { data: contract, error } = await supabase

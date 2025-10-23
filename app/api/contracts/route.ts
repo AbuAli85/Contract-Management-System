@@ -676,7 +676,7 @@ export const POST = withAnyRBAC(
         {
           contract_number: contractNumber,
           title,
-          status: 'draft',
+          status: 'pending', // Changed from 'draft' to 'pending' for proper workflow
           type: contractType,
           is_current: true,
         },

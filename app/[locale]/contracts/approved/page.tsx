@@ -16,6 +16,7 @@ import { CheckCircle, Search, Filter, Download, Eye, ShieldAlert, Mail, RefreshC
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/use-permissions';
 import { ContractsCardSkeleton } from '@/components/contracts/ContractsSkeleton';
+import { ContractStatusBadge } from '@/components/contracts/contract-status-badge';
 
 interface Contract {
   id: string;
@@ -94,12 +95,12 @@ export default function ApprovedContractsPage() {
       
       console.log('🔍 Approved Contracts Debug:', {
         timestamp: new Date().toISOString(),
-        endpoint: '/api/contracts?status=active',
+        endpoint: '/api/contracts?status=approved',
         timeout: '10 seconds',
         retryCount
       });
       
-      const response = await fetch('/api/contracts?status=active', {
+      const response = await fetch('/api/contracts?status=approved', {
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
@@ -517,7 +518,7 @@ export default function ApprovedContractsPage() {
               </CardTitle>
               <CardDescription>
                 {filteredContracts.length === contracts.length 
-                  ? `${contracts.length} ${contracts.length === 1 ? 'contract' : 'contracts'} approved and active`
+                  ? `${contracts.length} ${contracts.length === 1 ? 'contract' : 'contracts'} approved`
                   : `Showing ${filteredContracts.length} of ${contracts.length} contracts`}
               </CardDescription>
             </div>
@@ -563,7 +564,7 @@ export default function ApprovedContractsPage() {
                   ) : contracts.length === 0 ? (
                     <>
                       There are currently no approved contracts. 
-                      Contracts with "Active" status will appear here once approved.
+                      Contracts will appear here once they are approved by administrators.
                     </>
                   ) : (
                     'Filters removed all results. Try adjusting your filters.'
@@ -600,7 +601,7 @@ export default function ApprovedContractsPage() {
               {!searchTerm && contracts.length === 0 && (
                 <div className='mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
                   <p className='text-sm text-blue-800 text-center'>
-                    ℹ️ Active contracts are those that have been approved and are currently in effect.
+                    ℹ️ Approved contracts are those that have been reviewed and approved by administrators.
                   </p>
                 </div>
               )}
@@ -618,12 +619,10 @@ export default function ApprovedContractsPage() {
                         <h3 className='font-semibold'>
                           {contract.contract_number}
                         </h3>
-                        <Badge
-                          variant='secondary'
-                          className='bg-green-100 text-green-800'
-                        >
-                          Approved
-                        </Badge>
+                        <ContractStatusBadge 
+                          status={contract.status as any} 
+                          size="sm"
+                        />
                       </div>
                       <p className='mb-1 text-sm text-muted-foreground'>
                         {contract.job_title} • {contract.contract_type}

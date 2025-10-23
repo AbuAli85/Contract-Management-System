@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       end_date: body.contract_end_date || '',
       value: body.basic_salary || 0,
       currency: 'USD',
-      status: 'draft', // Fixed: use 'draft' instead of 'processing'
+      status: 'pending', // Changed from 'draft' to 'pending' for proper workflow
       created_at: new Date().toISOString(),
     };
 
