@@ -1,8 +1,27 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Force dynamic rendering for this API route
-export const dynamic = 'force-dynamic';
+// GET handler for debugging
+export const GET = async (
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  try {
+    const { id: contractId } = await params;
+    return NextResponse.json({
+      success: true,
+      message: 'PDF generation endpoint is working',
+      contractId,
+      methods: ['POST', 'GET', 'OPTIONS'],
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+};
 
 // POST /api/contracts/[id]/generate-pdf - Generate PDF for a contract
 export const POST = async (
@@ -11,6 +30,9 @@ export const POST = async (
 ) => {
   try {
     console.log('🔍 PDF generation API called');
+    console.log('🔍 Request URL:', request.url);
+    console.log('🔍 Request method:', request.method);
+    console.log('🔍 Request headers:', Object.fromEntries(request.headers.entries()));
     
     const supabase = await createClient();
     const { id: contractId } = await params;
