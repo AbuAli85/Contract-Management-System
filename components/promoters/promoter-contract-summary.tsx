@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { 
   FileText, 
   Calendar, 
@@ -14,7 +16,10 @@ import {
   AlertTriangle,
   TrendingUp,
   ExternalLink,
-  Plus
+  Plus,
+  Eye,
+  Edit,
+  MoreHorizontal
 } from 'lucide-react';
 import { format, differenceInDays, isAfter, isBefore } from 'date-fns';
 
@@ -486,7 +491,7 @@ export function PromoterContractSummary({
         </CardContent>
       </Card>
 
-      {/* Recent Contracts */}
+      {/* Recent Contracts Table */}
       {contracts.length > 0 && (
         <Card>
           <CardHeader>
@@ -495,22 +500,175 @@ export function PromoterContractSummary({
                 <Calendar className="h-5 w-5" />
                 Recent Contracts
               </CardTitle>
-              <div className="text-sm text-gray-500">
-                Showing {Math.min(6, contracts.length)} of {contracts.length} contracts
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-500">
+                  Showing {Math.min(10, contracts.length)} of {contracts.length} contracts
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onViewAllContracts}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View All
+                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {contracts
-                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                .slice(0, 6)
-                .map((contract) => (
-                  <ContractCard key={contract.id} contract={contract} />
-                ))}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[300px]">Contract Details</TableHead>
+                    <TableHead className="w-[120px]">Status</TableHead>
+                    <TableHead className="w-[120px]">Value</TableHead>
+                    <TableHead className="w-[140px]">Duration</TableHead>
+                    <TableHead className="w-[100px]">Progress</TableHead>
+                    <TableHead className="w-[120px]">Created</TableHead>
+                    <TableHead className="w-[80px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contracts
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .slice(0, 10)
+                    .map((contract) => {
+                      const now = new Date();
+                      const startDate = new Date(contract.start_date);
+                      const endDate = new Date(contract.end_date);
+                      const isActive = contract.status === 'active';
+                      const daysRemaining = isActive ? differenceInDays(endDate, now) : 0;
+                      const totalDays = differenceInDays(endDate, startDate);
+                      const progress = isActive ? Math.max(0, Math.min(100, (differenceInDays(now, startDate) / totalDays) * 100)) : 0;
+                      const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
+
+                      return (
+                        <TableRow key={contract.id} className="hover:bg-gray-50">
+                          {/* Contract Details */}
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="font-medium text-gray-900 truncate max-w-[280px]">
+                                {contract.title}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                ID: {contract.id.slice(0, 8)}...
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {format(startDate, 'MMM dd, yyyy')} - {format(endDate, 'MMM dd, yyyy')}
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          {/* Status */}
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <Badge className={`${getStatusColor(contract.status)} flex items-center gap-1 w-fit`}>
+                                {getStatusIcon(contract.status)}
+                                <span className="capitalize">{contract.status}</span>
+                              </Badge>
+                              {isExpiringSoon && (
+                                <div className="flex items-center gap-1 text-xs text-yellow-600">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  <span>Expires soon</span>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+
+                          {/* Value */}
+                          <TableCell>
+                            {contract.value ? (
+                              <div className="space-y-1">
+                                <div className="font-medium text-green-600">
+                                  {contract.value.toLocaleString()} {contract.currency || 'USD'}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Contract value
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-sm">No value</span>
+                            )}
+                          </TableCell>
+
+                          {/* Duration */}
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium">
+                                {totalDays} days
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {isActive && daysRemaining > 0 ? (
+                                  <span className={isExpiringSoon ? 'text-yellow-600' : ''}>
+                                    {daysRemaining} days left
+                                  </span>
+                                ) : contract.status === 'completed' ? (
+                                  <span className="text-blue-600">Completed</span>
+                                ) : (
+                                  <span className="text-gray-500">N/A</span>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          {/* Progress */}
+                          <TableCell>
+                            {isActive ? (
+                              <div className="space-y-1">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {Math.round(progress)}%
+                                </div>
+                                <Progress value={progress} className="h-2 w-16" />
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-sm">-</span>
+                            )}
+                          </TableCell>
+
+                          {/* Created Date */}
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="text-sm">
+                                {format(new Date(contract.created_at), 'MMM dd, yyyy')}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {format(new Date(contract.created_at), 'HH:mm')}
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          {/* Actions */}
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onViewContract(contract.id)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                {isAdmin && (
+                                  <DropdownMenuItem onClick={() => onViewContract(contract.id)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit Contract
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                </TableBody>
+              </Table>
             </div>
             
-            {contracts.length > 6 && (
+            {contracts.length > 10 && (
               <div className="flex justify-center mt-6">
                 <Button
                   variant="outline"
