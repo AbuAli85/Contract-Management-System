@@ -6,7 +6,9 @@ export interface Party {
   crn?: string;
   type: 'Employer' | 'Client' | 'Generic';
   role?: string;
-  cr_expiry_date?: string;
+  cr_expiry?: string; // Database field name
+  cr_expiry_date?: string; // Deprecated - use cr_expiry
+  cr_status?: string;
   contact_person?: string;
   contact_email?: string;
   contact_phone?: string;
@@ -14,8 +16,11 @@ export interface Party {
   address_ar?: string;
   tax_number?: string;
   license_number?: string;
-  license_expiry_date?: string;
+  license_expiry?: string; // Database field name
+  license_expiry_date?: string; // Deprecated - use license_expiry
+  license_status?: string;
   status: 'Active' | 'Inactive' | 'Suspended';
+  overall_status?: string;
   notes?: string;
   owner_id?: string;
   created_at?: string;
@@ -100,7 +105,9 @@ export interface PartyInput {
   crn?: string;
   type?: 'Employer' | 'Client' | 'Generic';
   role?: string;
-  cr_expiry_date?: string;
+  cr_expiry?: string;
+  cr_expiry_date?: string; // Deprecated - use cr_expiry
+  cr_status?: string;
   contact_person?: string;
   contact_email?: string;
   contact_phone?: string;
@@ -108,8 +115,11 @@ export interface PartyInput {
   address_ar?: string;
   tax_number?: string;
   license_number?: string;
-  license_expiry_date?: string;
+  license_expiry?: string;
+  license_expiry_date?: string; // Deprecated - use license_expiry
+  license_status?: string;
   status?: 'Active' | 'Inactive' | 'Suspended';
+  overall_status?: string;
   notes?: string;
 }
 

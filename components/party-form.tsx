@@ -67,29 +67,30 @@ export default function PartyForm({
 
   useEffect(() => {
     if (partyToEdit) {
+      const party = partyToEdit as any; // Use any to access cr_expiry
       form.reset({
-        name_en: partyToEdit.name_en || '',
-        name_ar: partyToEdit.name_ar || '',
-        crn: partyToEdit.crn || '',
-        type: (partyToEdit.type as 'Employer' | 'Client') || 'Employer',
-        role: partyToEdit.role || '',
-        cr_expiry_date: partyToEdit.cr_expiry_date
-          ? parseISO(partyToEdit.cr_expiry_date)
+        name_en: party.name_en || '',
+        name_ar: party.name_ar || '',
+        crn: party.crn || '',
+        type: (party.type as 'Employer' | 'Client') || 'Employer',
+        role: party.role || '',
+        cr_expiry_date: party.cr_expiry || party.cr_expiry_date
+          ? parseISO(party.cr_expiry || party.cr_expiry_date)
           : undefined,
-        contact_person: partyToEdit.contact_person || '',
-        contact_email: partyToEdit.contact_email || '',
-        contact_phone: partyToEdit.contact_phone || '',
-        address_en: partyToEdit.address_en || '',
-        // address_ar: partyToEdit.address_ar || "", // Not available in Party type
-        tax_number: partyToEdit.tax_number || '',
-        license_number: partyToEdit.license_number || '',
-        license_expiry_date: partyToEdit.license_expiry
-          ? parseISO(partyToEdit.license_expiry)
+        contact_person: party.contact_person || '',
+        contact_email: party.contact_email || '',
+        contact_phone: party.contact_phone || '',
+        address_en: party.address_en || '',
+        // address_ar: party.address_ar || "", // Not available in Party type
+        tax_number: party.tax_number || '',
+        license_number: party.license_number || '',
+        license_expiry_date: party.license_expiry
+          ? parseISO(party.license_expiry)
           : undefined,
         status:
-          (partyToEdit.status as 'Active' | 'Inactive' | 'Suspended') ||
+          (party.status as 'Active' | 'Inactive' | 'Suspended') ||
           'Active',
-        notes: partyToEdit.notes || '',
+        notes: party.notes || '',
       });
     } else {
       form.reset({
@@ -116,14 +117,14 @@ export default function PartyForm({
   async function onSubmit(values: PartyFormData) {
     setIsSubmitting(true);
     try {
-      const partyData: Omit<Party, 'id' | 'created_at'> = {
+      const partyData: any = {
         name_en: values.name_en || '',
         name_ar: values.name_ar || '',
         crn: values.crn || '',
         type: values.type as 'Employer' | 'Client',
         role: values.role || null,
-        cr_expiry_date: values.cr_expiry_date
-          ? format(values.cr_expiry_date, 'yyyy-MM-dd')
+        cr_expiry: values.cr_expiry_date
+          ? format(values.cr_expiry_date, 'dd-MM-yyyy')
           : null,
         contact_person: values.contact_person || null,
         contact_email: values.contact_email || null,

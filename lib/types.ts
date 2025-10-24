@@ -5,7 +5,9 @@ export interface Party {
   crn: string;
   type?: 'Employer' | 'Client' | 'Generic' | null;
   role?: string | null;
-  cr_expiry_date?: string | null;
+  cr_expiry?: string | null; // Changed from cr_expiry_date to match database
+  cr_expiry_date?: string | null; // Keep for backward compatibility
+  cr_status?: string | null;
   contact_person?: string | null;
   contact_email?: string | null;
   contact_phone?: string | null;
@@ -13,9 +15,12 @@ export interface Party {
   tax_number?: string | null;
   license_number?: string | null;
   license_expiry?: string | null;
+  license_status?: string | null;
   status?: string | null;
+  overall_status?: string | null;
   notes?: string | null;
   created_at?: string | null;
+  updated_at?: string | null;
   owner_id?: string | null;
   email?: string | null;
   phone?: string | null;

@@ -17,7 +17,9 @@ const partySchema = z.object({
   crn: z.string().min(1, 'CRN is required'),
   type: z.enum(['Employer', 'Client', 'Generic']).default('Generic'),
   role: z.string().optional(),
-  cr_expiry_date: z.string().optional(),
+  cr_expiry: z.string().optional(), // Changed from cr_expiry_date
+  cr_expiry_date: z.string().optional(), // Keep for backward compatibility
+  cr_status: z.string().optional(),
   contact_person: z.string().optional(),
   contact_email: z.string().email().optional(),
   contact_phone: z.string().optional(),
@@ -25,8 +27,11 @@ const partySchema = z.object({
   address_ar: z.string().optional(),
   tax_number: z.string().optional(),
   license_number: z.string().optional(),
-  license_expiry_date: z.string().optional(),
+  license_expiry: z.string().optional(),
+  license_expiry_date: z.string().optional(), // Keep for backward compatibility
+  license_status: z.string().optional(),
   status: z.enum(['Active', 'Inactive', 'Suspended']).default('Active'),
+  overall_status: z.string().optional(),
   notes: z.string().optional(),
 });
 
