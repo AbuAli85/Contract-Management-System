@@ -510,10 +510,10 @@ export function PromotersCSVImport() {
                     <TableHead>Name (EN)</TableHead>
                     <TableHead>Name (AR)</TableHead>
                     <TableHead>ID Number</TableHead>
-                    <TableHead>Passport</TableHead>
                     <TableHead>Mobile</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Nationality</TableHead>
+                    <TableHead>Employer</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -523,10 +523,16 @@ export function PromotersCSVImport() {
                       <TableCell>{row?.name_en || '-'}</TableCell>
                       <TableCell className="font-arabic">{row?.name_ar || '-'}</TableCell>
                       <TableCell>{row?.id_card_number || '-'}</TableCell>
-                      <TableCell>{row?.passport_number || '-'}</TableCell>
                       <TableCell>{row?.mobile_number || '-'}</TableCell>
                       <TableCell>{row?.email || '-'}</TableCell>
                       <TableCell>{row?.nationality || '-'}</TableCell>
+                      <TableCell>
+                        {row?.employer_name || (row?.employer_id ? (
+                          <span className="text-xs text-muted-foreground" title={row.employer_id}>
+                            Set via ID
+                          </span>
+                        ) : '-')}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={row?.status === 'active' ? 'default' : 'secondary'}>
                           {row?.status || 'active'}
