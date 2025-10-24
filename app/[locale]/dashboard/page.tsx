@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/components/auth/auth-guard';
+import { useAuth } from '@/lib/auth-service';
 import {
   Tooltip,
   TooltipContent,
@@ -58,6 +59,7 @@ interface PromoterStats {
 }
 
 function DashboardContent() {
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -153,33 +155,31 @@ function DashboardContent() {
 
     checkForAdminSession();
 
-    // Get user info from AuthGuard context
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/check-session');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.authenticated && data.user) {
-            // If this is admin@contractmanagement.com, force redirect
-            if (data.user.email === 'admin@contractmanagement.com') {
-              console.warn('🚫 Blocked admin@contractmanagement.com access');
-              router.push('/en/auth/login');
-              return;
-            }
-            setUser(data.user);
-            // After getting user, fetch dashboard stats
-            await fetchDashboardStats();
-          }
-        }
-      } catch (error) {
-        console.error('Error getting user info:', error);
-      } finally {
-        setLoading(false);
+    // Use auth context instead of API call
+    if (!authLoading && authUser) {
+      // Block admin@contractmanagement.com if needed
+      if (authUser.email === 'admin@contractmanagement.com') {
+        console.warn('🚫 Blocked admin@contractmanagement.com access');
+        router.push('/en/auth/login');
+        return;
       }
-    };
 
-    checkAuth();
-  }, [router, fetchDashboardStats]);
+      // Set user from auth context
+      setUser({
+        id: authUser.id,
+        email: authUser.email || '',
+        role: authUser.user_metadata?.role || 'user',
+        ...(authUser.user_metadata?.full_name && { full_name: authUser.user_metadata.full_name }),
+      });
+
+      // Fetch dashboard stats
+      fetchDashboardStats();
+      setLoading(false);
+    } else if (!authLoading && !authUser) {
+      // Not authenticated, will be handled by AuthenticatedLayout
+      setLoading(false);
+    }
+  }, [router, fetchDashboardStats, authUser, authLoading]);
 
   const handleLogout = async () => {
     try {
