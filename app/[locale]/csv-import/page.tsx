@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Building2, MapPin, Package, Upload, ArrowLeft } from 'lucide-react';
+import { FileText, Building2, MapPin, Package, Upload, ArrowLeft, Shield } from 'lucide-react';
 import { PromotersCSVImport } from '@/components/csv-import/promoters-csv-import';
 import { PartiesCSVImport } from '@/components/csv-import/parties-csv-import';
 import { LocationsCSVImport } from '@/components/csv-import/locations-csv-import';
@@ -13,16 +13,39 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { AuthGuard } from '@/components/auth/auth-guard';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export default function CSVImportPage() {
   const params = useParams();
   const locale = params?.locale as string;
   const [activeTab, setActiveTab] = useState('promoters');
+  const role = useUserRole();
+
+  // Show admin-only notice for non-admin users
+  if (role && role !== 'admin') {
+    return (
+      <div className="container mx-auto py-6">
+        <Alert variant="destructive">
+          <Shield className="h-4 w-4" />
+          <AlertTitle>Admin Access Required</AlertTitle>
+          <AlertDescription>
+            CSV bulk import is only available to administrators. Please contact your system administrator for access.
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4">
+          <Link href={`/${locale}/dashboard`}>
+            <Button variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AuthGuard allowedRoles={['admin']}>
-      <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -175,7 +198,6 @@ export default function CSVImportPage() {
         </CardContent>
       </Card>
     </div>
-    </AuthGuard>
   );
 }
 
