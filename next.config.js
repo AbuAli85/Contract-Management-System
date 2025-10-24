@@ -48,11 +48,7 @@ const nextConfig = {
       // Allow manifests from self
       "manifest-src 'self'",
       // CSP violation reporting endpoint
-      // Option 1: Use Report URI service (https://report-uri.com) - recommended for production
-      // Option 2: Create custom endpoint at /api/csp-report
-      // Uncomment one of the following when ready:
-      // "report-uri https://yoursubdomain.report-uri.com/r/d/csp/enforce",
-      // "report-to csp-endpoint",
+      "report-uri https://portal.thesmartpro.io/api/csp-report",
     ].join('; ');
 
     return [
