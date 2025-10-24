@@ -18,10 +18,43 @@ const nextConfig = {
 
   // Enhanced security headers
   async headers() {
+    // Build Content-Security-Policy
+    const cspDirectives = [
+      "default-src 'self'",
+      // Allow scripts from self and necessary CDNs
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com",
+      // Allow styles from self and Google Fonts
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      // Allow images from self, data URIs, Supabase storage, and analytics
+      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com",
+      // Allow fonts from self and Google Fonts
+      "font-src 'self' data: https://fonts.gstatic.com",
+      // Allow connections to API, Supabase, analytics, and Sentry
+      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io wss://*.supabase.co",
+      // Disallow frames from other origins
+      "frame-ancestors 'none'",
+      // Restrict object embeds
+      "object-src 'none'",
+      // Restrict base URIs
+      "base-uri 'self'",
+      // Upgrade insecure requests
+      "upgrade-insecure-requests",
+      // Restrict form actions
+      "form-action 'self'",
+      // Allow media from self and Supabase
+      "media-src 'self' https://*.supabase.co",
+      // Allow manifests from self
+      "manifest-src 'self'",
+    ].join('; ');
+
     return [
       {
         source: '/(.*)',
         headers: [
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
           {
             key: 'X-Frame-Options',
             value: 'DENY',
@@ -32,16 +65,36 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            value: 'strict-origin-when-cross-origin',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives,
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless', // Using credentialless instead of require-corp for better compatibility
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
           },
         ],
       },
       {
-        // CORS configuration for API routes
+        // CORS configuration for API routes - Restricted to trusted origins only
         source: '/api/:path*',
         headers: [
           {
@@ -63,6 +116,10 @@ const nextConfig = {
           {
             key: 'Access-Control-Max-Age',
             value: '86400', // 24 hours
+          },
+          {
+            key: 'Vary',
+            value: 'Origin',
           },
         ],
       },
