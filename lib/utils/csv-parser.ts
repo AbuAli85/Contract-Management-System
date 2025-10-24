@@ -176,7 +176,7 @@ export function validateAndTransformCSV<T>(
   // Check for missing required columns
   const missingColumns = columns
     .filter(col => col.required)
-    .filter(col => !headerMap.has(col.label.toLowerCase()));
+    .filter(col => !headerMap.has(col.label.toLowerCase()) && !headerMap.has(col.key.toLowerCase()));
 
   if (missingColumns.length > 0) {
     errors.push({
@@ -216,7 +216,11 @@ export function validateAndTransformCSV<T>(
 
     // Process each column
     for (const column of columns) {
-      const headerIndex = headerMap.get(column.label.toLowerCase());
+      // Try to find column by key first, then by label (supports both formats)
+      let headerIndex = headerMap.get(column.key.toLowerCase());
+      if (headerIndex === undefined) {
+        headerIndex = headerMap.get(column.label.toLowerCase());
+      }
       const value = headerIndex !== undefined ? values[headerIndex] : '';
 
       // Check required fields
