@@ -22,6 +22,8 @@ const nextConfig = {
     const cspDirectives = [
       "default-src 'self'",
       // Allow scripts from self and necessary CDNs
+      // NOTE: 'unsafe-eval' and 'unsafe-inline' are required for Next.js functionality
+      // TODO: Replace with nonces for A+ security grade (see CSP_NONCE_IMPLEMENTATION_GUIDE.md)
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com",
       // Allow styles from self and Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -45,6 +47,12 @@ const nextConfig = {
       "media-src 'self' https://*.supabase.co",
       // Allow manifests from self
       "manifest-src 'self'",
+      // CSP violation reporting endpoint
+      // Option 1: Use Report URI service (https://report-uri.com) - recommended for production
+      // Option 2: Create custom endpoint at /api/csp-report
+      // Uncomment one of the following when ready:
+      // "report-uri https://yoursubdomain.report-uri.com/r/d/csp/enforce",
+      // "report-to csp-endpoint",
     ].join('; ');
 
     return [
@@ -90,6 +98,10 @@ const nextConfig = {
           {
             key: 'X-DNS-Prefetch-Control',
             value: 'on',
+          },
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
           },
         ],
       },
