@@ -24,6 +24,12 @@ import { PromoterComplianceTracker } from './promoter-compliance-tracker';
 import { PromoterComparisonView } from './promoter-comparison-view';
 import { PromoterKPITracker } from './promoter-kpi-tracker';
 import { PromoterExportPrint } from './promoter-export-print';
+// Import Intelligence Hub features
+import { PromoterIntelligenceHubLayout } from './promoter-intelligence-hub-layout';
+import { PromoterFinancialSummary } from './promoter-financial-summary';
+import { PromoterPredictiveScore } from './promoter-predictive-score';
+import { PromoterCoachingRecommendations } from './promoter-coaching-recommendations';
+import { PromoterGoalWidget } from './promoter-goal-widget';
 
 interface PromoterDetails {
   id: string;
@@ -587,15 +593,20 @@ export function PromoterDetailsEnhanced({
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-purple-100 text-purple-700">
+            Intelligence Hub
+          </Badge>
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Enhanced Header */}
@@ -608,7 +619,7 @@ export function PromoterDetailsEnhanced({
         isAdmin={role === 'admin'}
       />
 
-      {/* Enhanced Tabs */}
+      {/* Enhanced Tabs with Two-Column Layout */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 lg:grid-cols-10 gap-1">
           <TabsTrigger value="overview" className="text-xs lg:text-sm">Overview</TabsTrigger>
@@ -623,22 +634,12 @@ export function PromoterDetailsEnhanced({
           <TabsTrigger value="activity" className="text-xs lg:text-sm">Activity</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
+        {/* Overview Tab with Two-Column Layout */}
         <TabsContent value="overview" className="space-y-6">
-          {isLoadingMetrics ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              <span>Loading performance metrics...</span>
-            </div>
-          ) : metricsError ? (
-            <div className="flex items-center justify-center p-8 text-red-600">
-              <span>⚠️ {metricsError}</span>
-            </div>
-          ) : performanceMetrics ? (
-            <PromoterPerformanceMetrics metrics={performanceMetrics} />
-          ) : null}
-          <PromoterQuickActions
-            promoter={promoterDetails}
+          <PromoterIntelligenceHubLayout
+            promoterData={promoterDetails}
+            performanceMetrics={performanceMetrics}
+            isAdmin={role === 'admin'}
             onEdit={handleEdit}
             onCall={handleCall}
             onEmail={handleEmail}
@@ -652,10 +653,37 @@ export function PromoterDetailsEnhanced({
             onAddToFavorites={handleAddToFavorites}
             onShare={handleShare}
             onDelete={handleDelete}
-            isAdmin={role === 'admin'}
             hasDocuments={!!(promoterDetails.id_card_url || promoterDetails.passport_url)}
             hasContracts={promoterDetails.contracts.length > 0}
-          />
+          >
+            {/* Main Content Area */}
+            <div className="space-y-6">
+              {isLoadingMetrics ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading performance metrics...</span>
+                </div>
+              ) : metricsError ? (
+                <div className="flex items-center justify-center p-8 text-red-600">
+                  <span>⚠️ {metricsError}</span>
+                </div>
+              ) : performanceMetrics ? (
+                <>
+                  <PromoterGoalWidget
+                    promoterId={promoterId}
+                    performanceMetrics={performanceMetrics}
+                    isAdmin={role === 'admin'}
+                  />
+                  <PromoterPerformanceMetrics metrics={performanceMetrics} />
+                  <PromoterCoachingRecommendations
+                    performanceMetrics={performanceMetrics}
+                    contracts={promoterDetails.contracts}
+                    isAdmin={role === 'admin'}
+                  />
+                </>
+              ) : null}
+            </div>
+          </PromoterIntelligenceHubLayout>
         </TabsContent>
 
         {/* Performance Tab */}
