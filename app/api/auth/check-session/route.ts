@@ -125,20 +125,35 @@ export async function GET(request: NextRequest) {
     }
 
     // Additional validation: check if user exists in database
+    // Try both 'users' and 'profiles' tables for compatibility
     try {
-      const { data: userProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email, role, full_name')
+      // First, try the 'users' table (primary location)
+      let { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select('id, email, role, full_name, status')
         .eq('id', user.id)
         .single();
 
+      // If not found in 'users', try 'profiles' table as fallback
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log('🔐 Auth Check: User not in users table, trying profiles table');
+        const profilesResult = await supabase
+          .from('profiles')
+          .select('id, email, role, full_name')
+          .eq('id', user.id)
+          .single();
+        
+        userProfile = profilesResult.data;
+        profileError = profilesResult.error;
+      }
+
       if (profileError) {
         console.warn(
-          '🔐 Auth Check: User profile not found:',
+          '🔐 Auth Check: User profile not found in any table:',
           profileError.message
         );
 
-        // If profile not found, try to create a basic one or return limited access
+        // If profile not found, return basic user info from auth
         if (profileError.code === 'PGRST116') {
           console.log(
             '🔐 Auth Check: Creating basic user profile for:',
@@ -155,10 +170,8 @@ export async function GET(request: NextRequest) {
               created_at: user.created_at,
               updated_at: user.updated_at,
               user_metadata: user.user_metadata,
-              role: 'user', // Default role
-              full_name:
-                user.user_metadata?.full_name ||
-                `User ${user.id.substring(0, 8)}`,
+              role: user.user_metadata?.role || 'user',
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || `User ${user.id.substring(0, 8)}`,
             },
             session: {
               access_token: null, // Not available with getUser()
@@ -166,7 +179,7 @@ export async function GET(request: NextRequest) {
               expires_at: null, // Not available with getUser()
             },
             warning:
-              'User profile not found in database, using default settings',
+              'User profile not found in database, using auth metadata',
           });
         }
 
@@ -182,10 +195,8 @@ export async function GET(request: NextRequest) {
               created_at: user.created_at,
               updated_at: user.updated_at,
               user_metadata: user.user_metadata,
-              role: 'user', // Default role
-              full_name:
-                user.user_metadata?.full_name ||
-                `User ${user.id.substring(0, 8)}`,
+              role: user.user_metadata?.role || 'user',
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || `User ${user.id.substring(0, 8)}`,
             },
             session: {
               access_token: null, // Not available with getUser()
@@ -206,6 +217,19 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Check if user status is active (if status field exists)
+      if (userProfile?.status && userProfile.status !== 'active') {
+        console.warn('🔐 Auth Check: User account is not active:', userProfile.status);
+        return NextResponse.json(
+          {
+            authenticated: false,
+            user: null,
+            error: `Account is ${userProfile.status}. Please contact an administrator.`,
+          },
+          { status: 200 }
+        );
+      }
+
       console.log(
         '✅ Auth Check: User authenticated successfully:',
         user.email
@@ -220,8 +244,8 @@ export async function GET(request: NextRequest) {
           created_at: user.created_at,
           updated_at: user.updated_at,
           user_metadata: user.user_metadata,
-          role: userProfile?.role || 'user',
-          full_name: userProfile?.full_name || null,
+          role: userProfile?.role || user.user_metadata?.role || 'user',
+          full_name: userProfile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || null,
         },
         session: {
           access_token: null, // Not available with getUser()
@@ -231,16 +255,29 @@ export async function GET(request: NextRequest) {
       });
     } catch (profileError) {
       console.warn(
-        '🔐 Auth Check: Profile validation error treated as unauthenticated'
+        '🔐 Auth Check: Profile validation error, using auth metadata:',
+        profileError
       );
-      return NextResponse.json(
-        {
-          authenticated: false,
-          user: null,
-          error: 'Profile validation failed',
+      
+      // In case of error, return auth data with fallback
+      return NextResponse.json({
+        authenticated: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+          user_metadata: user.user_metadata,
+          role: user.user_metadata?.role || 'user',
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || null,
         },
-        { status: 200 }
-      );
+        session: {
+          access_token: null,
+          refresh_token: null,
+          expires_at: null,
+        },
+        warning: 'Profile query error, using auth metadata',
+      });
     }
   } catch (error) {
     console.warn('🔐 Auth Check: Unexpected error treated as unauthenticated');

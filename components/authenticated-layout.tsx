@@ -82,16 +82,16 @@ export function AuthenticatedLayout({
       return;
     }
 
-    // Check if we just logged in (within last 2 seconds)
+    // Check if we just logged in (within last 5 seconds)
     if (typeof window !== 'undefined') {
       const justLoggedIn = localStorage.getItem('just_logged_in');
       if (justLoggedIn) {
         const loginTime = parseInt(justLoggedIn);
-        if (Date.now() - loginTime < 2000) {
+        if (Date.now() - loginTime < 5000) { // Increased from 2000ms to 5000ms
           console.log('🔍 AuthenticatedLayout: Just logged in, waiting for auth state...');
           return;
         } else {
-          // Clear the flag after 2 seconds
+          // Clear the flag after 5 seconds
           localStorage.removeItem('just_logged_in');
         }
       }
@@ -132,7 +132,7 @@ export function AuthenticatedLayout({
   // For protected pages, show loading state while checking auth
   // But if we just logged in, show a shorter loading message
   const justLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('just_logged_in') : null;
-  const recentLogin = justLoggedIn && (Date.now() - parseInt(justLoggedIn)) < 2000;
+  const recentLogin = justLoggedIn && (Date.now() - parseInt(justLoggedIn)) < 5000; // Increased to 5 seconds
   
   if (!mounted || loading) {
     return (

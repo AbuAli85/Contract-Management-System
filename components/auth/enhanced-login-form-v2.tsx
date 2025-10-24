@@ -183,11 +183,11 @@ export default function EnhancedLoginFormV2() {
         console.warn('⚠️ Could not refresh session, proceeding anyway:', refreshError);
       }
 
-      // Wait a brief moment for React context to update, then redirect
+      // Wait longer for session to fully propagate across all contexts
       console.log('🔐 Redirecting to:', redirectPath);
       setTimeout(() => {
         window.location.replace(redirectPath);
-      }, 500);
+      }, 1000); // Increased from 500ms to 1000ms for better session propagation
     } catch (error) {
       console.error('🔐 Enhanced Login V2 - Exception:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
