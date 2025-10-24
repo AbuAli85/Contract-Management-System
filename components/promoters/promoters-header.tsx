@@ -27,6 +27,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Building2,
+  Upload,
 } from 'lucide-react';
 import type { DashboardMetrics, DashboardPromoter } from './types';
 import { PromotersKeyboardShortcuts } from './promoters-keyboard-shortcuts';
@@ -71,6 +72,19 @@ export function PromotersHeader({
         variant: 'destructive',
         title: 'Navigation Error',
         description: 'Could not navigate to add promoter page.',
+      });
+    }
+  };
+
+  const handleImportPromoters = () => {
+    try {
+      router.push(`/${derivedLocale}/csv-import`);
+    } catch (error) {
+      console.error('Error navigating to import page:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Navigation Error',
+        description: 'Could not navigate to import page.',
       });
     }
   };
@@ -136,6 +150,25 @@ export function PromotersHeader({
               <Plus className='mr-2 h-5 w-5' aria-hidden='true' />
               Add Promoter
             </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleImportPromoters}
+                    variant='secondary'
+                    className='bg-blue-500/20 text-white hover:bg-blue-500/30 border-blue-400/30 font-semibold shadow-lg transition-all hover:shadow-xl focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-slate-900'
+                    size='lg'
+                    aria-label='Import promoters from CSV/Excel file'
+                  >
+                    <Upload className='mr-2 h-5 w-5' aria-hidden='true' />
+                    Import
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className='text-xs'>Import promoters from Excel/CSV file</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
