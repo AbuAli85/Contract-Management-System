@@ -155,17 +155,21 @@ export default function EnhancedLoginFormV2() {
       }
 
       // Store login state if remember me is checked
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', formData.email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
+      if (typeof window !== 'undefined') {
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
       }
 
       // Update last activity
       authSessionManager.updateLastActivity();
 
       // Set flag to prevent AuthenticatedLayout from redirecting during auth state propagation
-      localStorage.setItem('just_logged_in', Date.now().toString());
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('just_logged_in', Date.now().toString());
+      }
 
       // Determine redirect path based on user role
       const redirectPath = getRedirectPath(result.session?.profile?.role || 'user');
@@ -233,10 +237,12 @@ export default function EnhancedLoginFormV2() {
 
   // Load remembered email
   useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberedEmail');
-    if (rememberedEmail) {
-      setFormData(prev => ({ ...prev, email: rememberedEmail }));
-      setRememberMe(true);
+    if (typeof window !== 'undefined') {
+      const rememberedEmail = localStorage.getItem('rememberedEmail');
+      if (rememberedEmail) {
+        setFormData(prev => ({ ...prev, email: rememberedEmail }));
+        setRememberMe(true);
+      }
     }
   }, []);
 
