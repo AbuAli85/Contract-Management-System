@@ -39,15 +39,6 @@ const PUBLIC_PAGES = [
   '/register/provider',
   '/register-new',
 
-  // Promoters pages (for testing without auth)
-  '/promoters',
-  '/manage-promoters',
-
-  // Admin tools (accessible to logged-in users)
-  '/csv-import',
-  '/bulk-import',
-  '/data-import',
-
   // Essential system pages
   '/unauthorized',
   '/logout',
