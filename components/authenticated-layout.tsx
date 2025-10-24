@@ -87,30 +87,9 @@ export function AuthenticatedLayout({
       return;
     }
 
-    // Handle redirect after successful login
-    if (user && !loading) {
-      // Only redirect if user is on auth pages (login, signup, etc.)
-      const isOnAuthPage = pathname?.includes('/auth/login') || 
-                          pathname?.includes('/auth/signup') ||
-                          pathname?.includes('/auth/callback');
-      
-      if (isOnAuthPage) {
-        // Redirect based on user role after login
-        const dashboardMap: Record<string, string> = {
-          admin: '/en/dashboard',
-          provider: '/en/provider-dashboard',
-          client: '/en/client-dashboard',
-          user: '/en/dashboard',
-        };
-
-        const userRole = user?.user_metadata?.role || 'user';
-        const dashboardUrl = dashboardMap[userRole] || '/en/dashboard';
-        
-        console.log('🔍 AuthenticatedLayout: User logged in, redirecting to', dashboardUrl);
-        router.push(dashboardUrl);
-      }
-      // If not on auth page, allow user to stay on current page
-    }
+    // Don't interfere with login page's own redirect logic
+    // The login form handles its own redirect after successful authentication
+    // We only handle protecting pages that require auth
   }, [loading, user, router, pathname]);
 
   const toggleSidebar = () => {
