@@ -43,6 +43,11 @@ const PUBLIC_PAGES = [
   '/promoters',
   '/manage-promoters',
 
+  // Admin tools (accessible to logged-in users)
+  '/csv-import',
+  '/bulk-import',
+  '/data-import',
+
   // Essential system pages
   '/unauthorized',
   '/logout',
@@ -69,27 +74,22 @@ export function AuthenticatedLayout({
   }, []);
 
   useEffect(() => {
+    // Only check authentication status, don't redirect on every page load
     if (!loading && !user) {
-      // Redirect to login if not authenticated
-      router.push('/en/auth/login');
+      // Check if on a public page
+      const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page));
+      
+      if (!isPublicPage) {
+        // Only redirect to login if not on a public page
+        console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
+        router.push('/en/auth/login');
+      }
       return;
     }
 
-    if (user && !loading) {
-      // Redirect based on user role
-      const dashboardMap = {
-        admin: '/en/dashboard',
-        provider: '/en/provider-dashboard',
-        client: '/en/client-dashboard',
-        user: '/en/dashboard',
-      };
-
-      // Access role from user_metadata or default to 'user'
-      const userRole = user?.user_metadata?.role || 'user';
-      router.push(dashboardMap[userRole as keyof typeof dashboardMap] || '/en');
-      return;
-    }
-  }, [loading, user, router]);
+    // Don't redirect authenticated users unless they're on root
+    // This allows them to navigate freely to any page
+  }, [loading, user, router, pathname]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -119,8 +119,11 @@ export function AuthenticatedLayout({
     );
   }
 
+  // Check if current page is public
+  const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page));
+
   // Check if user is not authenticated
-  if (!user) {
+  if (!user && !isPublicPage) {
     console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
     return (
       <div className='flex h-screen items-center justify-center'>
@@ -143,9 +146,6 @@ export function AuthenticatedLayout({
       </div>
     );
   }
-
-  // Check if current page is public
-  const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page));
 
   // If user is authenticated, always show sidebar and navigation
   if (user) {
