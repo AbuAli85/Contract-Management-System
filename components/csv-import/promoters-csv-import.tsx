@@ -39,6 +39,8 @@ interface PromoterCSVRow {
   gender?: string;
   job_title?: string;
   employer_name?: string;
+  employer_id?: string;
+  company_id?: string;
   status?: string;
   id_card_expiry_date?: string;
   passport_number?: string;
@@ -134,6 +136,32 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     required: false,
     transformer: transformers.nullIfEmpty,
     example: 'Falcon Eye Business and Promotion',
+  },
+  {
+    key: 'employer_id',
+    label: 'Employer ID',
+    required: false,
+    validator: (value) => {
+      if (!value) return null;
+      // UUID validation
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(value) ? null : 'Must be a valid UUID';
+    },
+    transformer: transformers.nullIfEmpty,
+    example: '2a581b4b-0775-4728-b957-bd04ca4aba8a',
+  },
+  {
+    key: 'company_id',
+    label: 'Company ID',
+    required: false,
+    validator: (value) => {
+      if (!value) return null;
+      // UUID validation
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(value) ? null : 'Must be a valid UUID';
+    },
+    transformer: transformers.nullIfEmpty,
+    example: '2a581b4b-0775-4728-b957-bd04ca4aba8a',
   },
   {
     key: 'status',
@@ -250,9 +278,17 @@ export function PromotersCSVImport() {
       if (!row) continue;
 
       try {
-        // Find employer ID if employer name is provided
+        // Find employer ID - support both direct UUID and name matching
         let employer_id = null;
-        if (row.employer_name) {
+        
+        // Priority 1: Direct UUID in "Employer ID" or "Company ID" column
+        if (row.employer_id) {
+          employer_id = row.employer_id;
+        } else if (row.company_id) {
+          employer_id = row.company_id;
+        }
+        // Priority 2: Match by employer name
+        else if (row.employer_name) {
           const empName = row.employer_name.toLowerCase();
           employer_id = employerMap.get(empName) || null;
           if (!employer_id) {

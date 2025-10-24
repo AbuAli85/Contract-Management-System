@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { AuthGuard } from '@/components/auth/auth-guard';
 
 export default function CSVImportPage() {
   const params = useParams();
@@ -20,7 +21,8 @@ export default function CSVImportPage() {
   const [activeTab, setActiveTab] = useState('promoters');
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <AuthGuard allowedRoles={['admin']}>
+      <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -46,7 +48,7 @@ export default function CSVImportPage() {
             <li>Download the CSV template for each entity before importing</li>
             <li>Ensure all required fields are filled in</li>
             <li>Use the exact column headers as shown in the template</li>
-            <li>For dates, use the format: YYYY-MM-DD (e.g., 2024-12-31)</li>
+            <li>For dates, use DD-MM-YYYY, DD/MM/YYYY, or YYYY-MM-DD (e.g., 31-12-2024, 31/12/2024, or 2024-12-31)</li>
             <li>For employers/suppliers, make sure they exist in the system before importing</li>
             <li>Review any errors before attempting to fix and re-import</li>
           </ul>
@@ -173,6 +175,10 @@ export default function CSVImportPage() {
         </CardContent>
       </Card>
     </div>
+    </AuthGuard>
   );
 }
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 

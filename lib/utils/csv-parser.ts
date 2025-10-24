@@ -326,8 +326,49 @@ export const validators = {
   },
 
   date: (value: string): string | null => {
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? 'Invalid date format (use YYYY-MM-DD)' : null;
+    if (!value || !value.trim()) return null;
+    
+    // Try multiple date formats
+    const formats = [
+      // DD-MM-YYYY or DD/MM/YYYY
+      /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/,
+      // YYYY-MM-DD
+      /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/,
+    ];
+    
+    for (const format of formats) {
+      const match = value.trim().match(format);
+      if (match && match[1] && match[2] && match[3]) {
+        let day, month, year;
+        
+        if (match[1].length === 4) {
+          // YYYY-MM-DD format
+          year = parseInt(match[1], 10);
+          month = parseInt(match[2], 10);
+          day = parseInt(match[3], 10);
+        } else {
+          // DD-MM-YYYY format
+          day = parseInt(match[1], 10);
+          month = parseInt(match[2], 10);
+          year = parseInt(match[3], 10);
+        }
+        
+        // Validate date parts
+        if (month < 1 || month > 12) return 'Invalid month (must be 1-12)';
+        if (day < 1 || day > 31) return 'Invalid day (must be 1-31)';
+        if (year < 1900 || year > 2100) return 'Invalid year (must be 1900-2100)';
+        
+        // Create date and validate it's real
+        const date = new Date(year, month - 1, day);
+        if (date.getDate() !== day || date.getMonth() !== month - 1) {
+          return 'Invalid date (e.g., 31st Feb doesn\'t exist)';
+        }
+        
+        return null; // Valid date
+      }
+    }
+    
+    return 'Invalid date format (use DD-MM-YYYY, DD/MM/YYYY, or YYYY-MM-DD)';
   },
 
   number: (value: string): string | null => {
@@ -367,8 +408,46 @@ export const transformers = {
   uppercase: (value: string) => value.toUpperCase(),
   
   date: (value: string) => {
+    if (!value || !value.trim()) return null;
+    
+    // Parse multiple date formats and convert to ISO
+    const formats = [
+      // DD-MM-YYYY or DD/MM/YYYY
+      /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/,
+      // YYYY-MM-DD
+      /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/,
+    ];
+    
+    for (const format of formats) {
+      const match = value.trim().match(format);
+      if (match && match[1] && match[2] && match[3]) {
+        let day, month, year;
+        
+        if (match[1].length === 4) {
+          // YYYY-MM-DD format
+          year = parseInt(match[1], 10);
+          month = parseInt(match[2], 10);
+          day = parseInt(match[3], 10);
+        } else {
+          // DD-MM-YYYY format
+          day = parseInt(match[1], 10);
+          month = parseInt(match[2], 10);
+          year = parseInt(match[3], 10);
+        }
+        
+        // Create date object (month is 0-indexed in JS)
+        const date = new Date(year, month - 1, day);
+        
+        // Validate it's a real date
+        if (date.getDate() === day && date.getMonth() === month - 1) {
+          return date.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+        }
+      }
+    }
+    
+    // Try parsing as-is (fallback)
     const date = new Date(value);
-    return isNaN(date.getTime()) ? null : date.toISOString();
+    return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
   },
   
   number: (value: string) => {
