@@ -74,7 +74,8 @@ export async function parseCSV(
       reject(new Error('Failed to read file'));
     };
 
-    reader.readAsText(file);
+    // Explicitly specify UTF-8 encoding to properly handle Arabic and other non-ASCII characters
+    reader.readAsText(file, 'UTF-8');
   });
 }
 
@@ -303,7 +304,10 @@ export function generateCSVTemplate(columns: CSVColumn[]): string {
  */
 export function downloadCSVTemplate(columns: CSVColumn[], filename: string) {
   const csv = generateCSVTemplate(columns);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  // Add UTF-8 BOM (Byte Order Mark) to ensure Excel and other programs properly detect UTF-8 encoding
+  // This is especially important for Arabic and other non-ASCII characters
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   
