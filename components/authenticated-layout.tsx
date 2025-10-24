@@ -69,28 +69,29 @@ export function AuthenticatedLayout({
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
+  // Check if current page is public (don't redirect on these pages)
+  const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page));
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    // Only check authentication status, don't redirect on every page load
-    if (!loading && !user) {
-      // Check if on a public page
-      const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page));
-      
-      if (!isPublicPage) {
-        // Only redirect to login if not on a public page
-        console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
-        router.push('/en/auth/login');
-      }
+    // Skip all auth checks if on public pages (auth pages handle their own logic)
+    if (isPublicPage) {
       return;
     }
 
-    // Don't interfere with login page's own redirect logic
-    // The login form handles its own redirect after successful authentication
-    // We only handle protecting pages that require auth
-  }, [loading, user, router, pathname]);
+    // Only check authentication status for protected pages
+    if (!loading && !user) {
+      // Redirect to login if not authenticated
+      console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
+      router.push('/en/auth/login');
+      return;
+    }
+
+    // Allow authenticated users to access any page without redirecting them
+  }, [loading, user, router, pathname, isPublicPage]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -108,7 +109,12 @@ export function AuthenticatedLayout({
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  // Check if user is authenticated
+  // If on a public page (auth pages), render directly without auth checks
+  if (isPublicPage) {
+    return <>{children}</>;
+  }
+
+  // For protected pages, show loading state while checking auth
   if (!mounted || loading) {
     return (
       <div className='flex h-screen items-center justify-center'>
@@ -120,12 +126,9 @@ export function AuthenticatedLayout({
     );
   }
 
-  // Check if current page is public
-  const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page));
-
-  // Check if user is not authenticated
-  if (!user && !isPublicPage) {
-    console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
+  // Check if user is not authenticated (for protected pages only)
+  if (!user) {
+    console.log('🔍 AuthenticatedLayout: No user, showing login prompt');
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center max-w-md mx-auto p-6'>
@@ -137,10 +140,10 @@ export function AuthenticatedLayout({
           </div>
           <div className='space-y-3'>
             <Button asChild className='w-full'>
-              <Link href='/auth/login'>Sign In</Link>
+              <Link href='/en/auth/login'>Sign In</Link>
             </Button>
             <Button variant='outline' asChild className='w-full'>
-              <Link href='/auth/signup'>Create Account</Link>
+              <Link href='/en/auth/signup'>Create Account</Link>
             </Button>
           </div>
         </div>
@@ -148,7 +151,8 @@ export function AuthenticatedLayout({
     );
   }
 
-  // If user is authenticated, always show sidebar and navigation
+  // If user is authenticated, show sidebar and navigation
+  // (Public pages like login were already returned earlier)
   if (user) {
     return (
       <ThemeProvider

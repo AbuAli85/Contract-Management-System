@@ -9,7 +9,7 @@ interface UniversalLayoutProps {
   locale: string;
 }
 
-// Pages that should NOT show sidebar and header
+// Pages that should NOT show sidebar and header (completely bypass layout)
 const NO_NAVIGATION_PAGES = [
   '/auth/login',
   '/auth/signup',
@@ -20,6 +20,8 @@ const NO_NAVIGATION_PAGES = [
   '/auth/logout',
   '/auth/pending-approval',
   '/auth/profile',
+  '/auth/verify-email',
+  '/auth/update-password',
   '/register/client',
   '/register/provider',
   '/register/provider-simple',
