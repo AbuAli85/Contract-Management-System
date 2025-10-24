@@ -165,9 +165,15 @@ export default function EnhancedLoginFormV2() {
       // Determine redirect path based on user role
       const redirectPath = getRedirectPath(result.session?.profile?.role || 'user');
 
-      // Redirect after a short delay
+      // Redirect after a short delay using window.location for guaranteed redirect
       setTimeout(() => {
+        console.log('🔐 Redirecting to:', redirectPath);
+        // Use both methods for reliability
         router.push(redirectPath);
+        // Fallback to hard redirect if router doesn't work
+        setTimeout(() => {
+          window.location.href = redirectPath;
+        }, 500);
       }, 1500);
     } catch (error) {
       console.error('🔐 Enhanced Login V2 - Exception:', error);
