@@ -43,11 +43,13 @@ import {
   RefreshCw,
   Smartphone,
   Monitor,
-  Tablet
+  Tablet,
+  AlertTriangle
 } from 'lucide-react';
 import { format, parseISO, isPast, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Table,
   TableBody,
@@ -1268,6 +1270,66 @@ export default function PromoterDetailPage() {
         </TabsContent>
 
         <TabsContent value='professional' className='space-y-6'>
+          {/* Orphaned Promoter Warning */}
+          {promoterDetails?.employer_id && 
+           (!promoterDetails?.contracts || promoterDetails.contracts.length === 0) && (
+            <Alert variant="destructive">
+              <AlertTriangle className='h-4 w-4' />
+              <AlertTitle>Data Integrity Issue: No Contract Found</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>
+                  This promoter is assigned to an employer but has no contract on file. This is a 
+                  data integrity issue that should be resolved.
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      router.push(
+                        `/${locale}/generate-contract?promoter=${promoterId}`
+                      )
+                    }
+                  >
+                    <Plus className='mr-2 h-4 w-4' />
+                    Create Contract Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      if (confirm('Remove employer assignment from this promoter?')) {
+                        const supabase = createClient();
+                        if (!supabase) {
+                          alert('Failed to initialize database connection');
+                          return;
+                        }
+                        
+                        try {
+                          const { error } = await supabase
+                            .from('promoters')
+                            .update({ employer_id: null })
+                            .eq('id', promoterId);
+                          
+                          if (error) {
+                            alert('Failed to update: ' + error.message);
+                          } else {
+                            alert('Employer assignment removed');
+                            window.location.reload();
+                          }
+                        } catch (err: unknown) {
+                          const message = err instanceof Error ? err.message : 'Unknown error';
+                          alert('Failed to update: ' + message);
+                        }
+                      }
+                    }}
+                  >
+                    Remove Assignment
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Contract Information Section */}
           <Card>
             <CardHeader>
