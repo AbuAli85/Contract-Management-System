@@ -12,14 +12,17 @@ DECLARE
     orphan_count INTEGER;
     total_active INTEGER;
 BEGIN
-    -- Count orphaned promoters
+    -- Count orphaned promoters (promoters with employer_id but no contracts)
     SELECT COUNT(*) INTO orphan_count
-    FROM promoters p
-    LEFT JOIN contracts c ON c.promoter_id = p.id
-    WHERE p.status = 'active'
-      AND p.employer_id IS NOT NULL
-    GROUP BY p.id
-    HAVING COUNT(c.id) = 0;
+    FROM (
+        SELECT p.id
+        FROM promoters p
+        LEFT JOIN contracts c ON c.promoter_id = p.id
+        WHERE p.status = 'active'
+          AND p.employer_id IS NOT NULL
+        GROUP BY p.id
+        HAVING COUNT(c.id) = 0
+    ) orphans;
     
     -- Count total active promoters
     SELECT COUNT(*) INTO total_active
@@ -65,19 +68,26 @@ ORDER BY p.created_at DESC;
 
 -- STEP 3: EMPLOYER DISTRIBUTION - See which employers have orphaned promoters
 -- ============================================================================
+WITH orphaned_promoters AS (
+  SELECT 
+    p.id,
+    p.name_en,
+    p.employer_id
+  FROM promoters p
+  LEFT JOIN contracts c ON c.promoter_id = p.id
+  WHERE p.status = 'active'
+    AND p.employer_id IS NOT NULL
+  GROUP BY p.id, p.name_en, p.employer_id
+  HAVING COUNT(c.id) = 0
+)
 SELECT 
     '📊 EMPLOYER DISTRIBUTION' AS report_type,
     employer.name_en as employer_name,
     employer.name_ar as employer_name_ar,
-    COUNT(p.id) as orphaned_promoters_count,
-    STRING_AGG(p.name_en, ', ') as promoter_names
-FROM promoters p
-LEFT JOIN parties employer ON employer.id = p.employer_id
-LEFT JOIN contracts c ON c.promoter_id = p.id
-WHERE p.status = 'active'
-  AND p.employer_id IS NOT NULL
-GROUP BY p.id, employer.id, employer.name_en, employer.name_ar
-HAVING COUNT(c.id) = 0
+    COUNT(op.id) as orphaned_promoters_count,
+    STRING_AGG(op.name_en, ', ') as promoter_names
+FROM orphaned_promoters op
+LEFT JOIN parties employer ON employer.id = op.employer_id
 GROUP BY employer.name_en, employer.name_ar
 ORDER BY orphaned_promoters_count DESC;
 
@@ -127,6 +137,7 @@ BEGIN
             first_party_id,
             second_party_id,
             start_date,
+            end_date,
             description,
             created_at,
             updated_at
@@ -140,6 +151,7 @@ BEGIN
             promoter_record.employer_id,  -- Employer as first party
             promoter_record.employer_id,  -- Employer as second party (adjust as needed)
             CURRENT_DATE,
+            CURRENT_DATE + INTERVAL '1 year',  -- Set end date to 1 year from now
             'Auto-generated placeholder contract. Please review and update with actual contract details.',
             NOW(),
             NOW()
@@ -225,6 +237,7 @@ BEGIN
             first_party_id,
             second_party_id,
             start_date,
+            end_date,
             description,
             created_at,
             updated_at
@@ -238,6 +251,7 @@ BEGIN
             promoter_record.employer_id,
             promoter_record.employer_id,
             CURRENT_DATE,
+            CURRENT_DATE + INTERVAL '1 year',  -- Set end date to 1 year from now
             'Auto-generated for recent assignment. Please review and update.',
             NOW(),
             NOW()

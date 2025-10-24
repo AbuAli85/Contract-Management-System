@@ -203,9 +203,9 @@ export default function PromoterFormProfessional(
     passport_url: '',
 
     // Notification settings
-    notify_days_before_id_expiry: PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY,
+    notify_days_before_id_expiry: PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY as number,
     notify_days_before_passport_expiry:
-      PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY,
+      PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY as number,
 
     // Employer assignment
     employer_id: '',
@@ -321,7 +321,7 @@ export default function PromoterFormProfessional(
           'notify_days_before_passport_expiry',
           210
         ),
-        employer_id: safeGetValue(promoterToEdit, 'employer_id') || 'none',
+        employer_id: safeGetValue(promoterToEdit, 'employer_id') || '',
       });
     }
   }, [promoterToEdit, fetchEmployers]);
@@ -482,6 +482,7 @@ export default function PromoterFormProfessional(
 
         // Professional Information
         job_title: formData.job_title?.trim() || null,
+        employer_id: formData.employer_id && formData.employer_id.trim() !== '' ? formData.employer_id : null,
         company: formData.company?.trim() || null,
         department: formData.department?.trim() || null,
         specialization: formData.specialization?.trim() || null,
@@ -1352,15 +1353,62 @@ export default function PromoterFormProfessional(
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='company'>Company</Label>
-                    <Input
-                      id='company'
-                      value={formData.company}
-                      onChange={e =>
-                        handleInputChange('company', e.target.value)
+                    <Label htmlFor='employer_id'>
+                      Employer <span className='text-blue-600'>*</span>
+                    </Label>
+                    <Select
+                      value={formData.employer_id || ''}
+                      onValueChange={value =>
+                        handleInputChange('employer_id', value === 'clear' ? '' : value)
                       }
-                      placeholder='Enter company name'
-                    />
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            employersLoading
+                              ? 'Loading employers...'
+                              : 'Select employer'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formData.employer_id && (
+                          <SelectItem value="clear" className="text-red-600">
+                            Clear Selection
+                          </SelectItem>
+                        )}
+                        {employers.length === 0 && !employersLoading ? (
+                          <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                            No employers found - Add employers in Parties section
+                          </div>
+                        ) : (
+                          <>
+                            {employers.map(employer => (
+                              <SelectItem key={employer.id} value={employer.id}>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{employer.name_en}</span>
+                                    {employer.name_ar && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {employer.name_ar}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className='text-xs text-muted-foreground'>
+                      Select the employer (company) this promoter works for. This prevents assignment mismatches.
+                    </p>
+                    {validationErrors.employer_id && (
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.employer_id}
+                      </p>
+                    )}
                   </div>
 
                   <div className='space-y-2'>
