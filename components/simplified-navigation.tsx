@@ -24,6 +24,7 @@ import {
   UserCog,
   UserPlus,
   ChevronRight,
+  Upload,
 } from 'lucide-react';
 
 interface SimplifiedNavigationProps {
@@ -73,6 +74,13 @@ export function SimplifiedNavigation({
           labelAr: 'إضافة مروج',
           icon: UserPlus,
           description: 'Add a new promoter',
+        },
+        {
+          href: `/${locale}/csv-import`,
+          label: 'Import CSV',
+          labelAr: 'استيراد CSV',
+          icon: Upload,
+          description: 'Bulk import promoters from CSV file',
         },
       ],
     },
