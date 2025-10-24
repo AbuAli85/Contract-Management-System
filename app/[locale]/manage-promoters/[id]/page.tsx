@@ -708,15 +708,31 @@ export default function PromoterDetailPage() {
 
   return (
     <div className={`container mx-auto space-y-6 py-6 ${viewMode === 'mobile' ? 'px-4' : ''}`}>
-      {/* Enhanced Header with View Toggle */}
+      {/* Enhanced Header with Predictive Score */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div className='flex-1 min-w-0'>
-          <h1 className={`font-bold text-gray-900 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
-            Promoter Details
-          </h1>
-          <p className='text-muted-foreground text-sm sm:text-base'>
-            Manage promoter information and profile
-          </p>
+          <div className='flex items-center gap-3'>
+            <h1 className={`font-bold text-gray-900 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
+              {promoterDetails?.name_en}
+            </h1>
+            <Badge variant="outline" className="bg-purple-100 text-purple-700">
+              Intelligence Hub
+            </Badge>
+          </div>
+          <div className='flex items-center gap-3 mt-2'>
+            <Badge
+              variant={
+                promoterDetails?.status === 'active'
+                  ? 'default'
+                  : 'secondary'
+              }
+            >
+              {promoterDetails?.status}
+            </Badge>
+            <div className='text-sm text-muted-foreground'>
+              [Placeholder: Predictive Risk Score - 85/100]
+            </div>
+          </div>
         </div>
         
         {/* View Mode Toggle */}
@@ -892,79 +908,11 @@ export default function PromoterDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Quick Actions Section */}
-      {role === 'admin' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <BriefcaseIcon className='h-5 w-5' />
-              Quick Actions
-            </CardTitle>
-            <CardDescription>Common actions for this promoter</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='flex flex-wrap gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() =>
-                  router.push(`/${locale}/manage-promoters/${promoterId}/edit`)
-                }
-              >
-                <Edit className='mr-2 h-4 w-4' />
-                Edit Promoter
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() =>
-                  router.push(
-                    `/${locale}/generate-contract?promoter=${promoterId}`
-                  )
-                }
-              >
-                <Plus className='mr-2 h-4 w-4' />
-                Create Contract
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() =>
-                  router.push(`/${locale}/contracts?promoter=${promoterId}`)
-                }
-              >
-                <ExternalLinkIcon className='mr-2 h-4 w-4' />
-                View Contracts
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() =>
-                  router.push(`/${locale}/promoter-analysis`)
-                }
-              >
-                <FileTextIcon className='mr-2 h-4 w-4' />
-                View Analytics Dashboard
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleToggleStatus}
-                disabled={isUpdatingStatus}
-              >
-                {isUpdatingStatus ? (
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                ) : (
-                  <Edit className='mr-2 h-4 w-4' />
-                )}
-                Toggle Status
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Tabs
+      {/* TWO-COLUMN INTELLIGENT DASHBOARD LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT COLUMN - Primary Content (2/3 width) */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
         className='space-y-6'
@@ -985,6 +933,25 @@ export default function PromoterDetailPage() {
         </TabsList>
 
         <TabsContent value='personal' className='space-y-6'>
+          {/* Goal Tracking & Progress Widget */}
+          <Card className="border-2 border-indigo-100">
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2'>
+                <BriefcaseIcon className='h-5 w-5 text-indigo-600' />
+                Goal Tracking & Progress
+              </CardTitle>
+              <CardDescription>
+                Monitor progress towards key objectives
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='text-center py-8 text-gray-500'>
+                <p>[Placeholder: Goal Tracking Widget with Circular Progress Rings]</p>
+                <p className='text-xs mt-2'>Top 3 active goals will be displayed here</p>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Personal Information Section */}
           <Card>
             <CardHeader>
@@ -1630,32 +1597,8 @@ export default function PromoterDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Financial Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Information</CardTitle>
-              <CardDescription>Banking and financial details</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                <DetailItem
-                  label='Bank Name'
-                  value={promoterDetails?.bank_name}
-                />
-                <DetailItem
-                  label='Account Number'
-                  value={promoterDetails?.account_number}
-                />
-                <DetailItem label='IBAN' value={promoterDetails?.iban} />
-                <DetailItem
-                  label='SWIFT Code'
-                  value={promoterDetails?.swift_code}
-                />
-                <DetailItem label='Tax ID' value={promoterDetails?.tax_id} />
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Note: Financial Information moved to Right Sidebar */}
+          
           {/* Skills & Certifications */}
           <Card>
             <CardHeader>
@@ -1733,6 +1676,145 @@ export default function PromoterDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+        </div>
+        
+        {/* RIGHT COLUMN - Fixed Sidebar (1/3 width) */}
+        <aside className="lg:col-span-1 space-y-6">
+          {/* Predictive Performance Score Placeholder */}
+          <Card className="border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50">
+            <CardHeader>
+              <CardTitle className='text-base'>Predictive Performance Score</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='text-center py-4'>
+                <div className='text-4xl font-bold text-purple-900'>85</div>
+                <div className='text-sm text-purple-600 mt-1'>/ 100</div>
+                <Badge className='mt-2 bg-green-500'>Low Risk</Badge>
+                <p className='text-xs text-gray-600 mt-3'>
+                  [Placeholder: 30-day forecast and risk analysis]
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Financial & Payout Summary */}
+          <Card className="border-2 border-blue-100">
+            <CardHeader>
+              <CardTitle className='text-base flex items-center gap-2'>
+                <BriefcaseIcon className='h-4 w-4' />
+                Financial & Payout Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-3'>
+              <div className='p-3 bg-green-50 rounded-lg border border-green-200'>
+                <div className='text-xs text-green-700 mb-1'>Total Earned</div>
+                <div className='text-xl font-bold text-green-900'>$28,450</div>
+              </div>
+              <div className='p-3 bg-blue-50 rounded-lg border border-blue-200'>
+                <div className='text-xs text-blue-700 mb-1'>Pending Payout</div>
+                <div className='text-xl font-bold text-blue-900'>[Placeholder: $0.00]</div>
+              </div>
+              <div className='p-3 bg-purple-50 rounded-lg border border-purple-200'>
+                <div className='text-xs text-purple-700 mb-1'>Next Payout Date</div>
+                <div className='text-sm font-semibold text-purple-900'>[Placeholder: Nov 15, 2025]</div>
+              </div>
+              <DetailItem
+                label='Bank Name'
+                value={promoterDetails?.bank_name}
+              />
+              <DetailItem
+                label='Account Number'
+                value={promoterDetails?.account_number}
+              />
+              <DetailItem label='IBAN' value={promoterDetails?.iban} />
+            </CardContent>
+          </Card>
+
+          {/* Document Health Summary */}
+          <Card className="border-2 border-orange-100">
+            <CardHeader>
+              <CardTitle className='text-base flex items-center gap-2'>
+                <FileTextIcon className='h-4 w-4' />
+                Document Health Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-3'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-sm font-medium'>Compliance Score</span>
+                  <span className='text-lg font-bold'>75%</span>
+                </div>
+                <div className='text-xs text-orange-600 mb-2'>
+                  [Placeholder: Urgent Alerts]
+                </div>
+                <div className='p-2 bg-red-50 border border-red-200 rounded'>
+                  <p className='text-xs font-medium text-red-900'>⚠️ ID Card expires in 15 days</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions - Moved from top */}
+          {role === 'admin' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className='text-base flex items-center gap-2'>
+                  <BriefcaseIcon className='h-5 w-5' />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className='space-y-2'>
+                <Button
+                  variant='default'
+                  size='sm'
+                  className='w-full justify-start'
+                  onClick={() =>
+                    router.push(`/${locale}/manage-promoters/${promoterId}/edit`)
+                  }
+                >
+                  <Edit className='mr-2 h-4 w-4' />
+                  Edit Profile
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='w-full justify-start'
+                  onClick={() =>
+                    router.push(
+                      `/${locale}/generate-contract?promoter=${promoterId}`
+                    )
+                  }
+                >
+                  <Plus className='mr-2 h-4 w-4' />
+                  Create Contract
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='w-full justify-start'
+                  onClick={() =>
+                    router.push(`/${locale}/contracts?promoter=${promoterId}`)
+                  }
+                >
+                  <ExternalLinkIcon className='mr-2 h-4 w-4' />
+                  View Contracts
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='w-full justify-start'
+                  onClick={() =>
+                    router.push(`/${locale}/promoter-analysis`)
+                  }
+                >
+                  <FileTextIcon className='mr-2 h-4 w-4' />
+                  View Analytics Dashboard
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }
