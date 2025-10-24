@@ -15,7 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 export default function CSVImportPage() {
   const params = useParams();
-  const locale = params?.locale as string;
+  const locale = (params?.locale as string) || 'en';
   const [activeTab, setActiveTab] = useState('promoters');
 
   return (
@@ -35,10 +35,19 @@ export default function CSVImportPage() {
           </Button>
         </Link>
       </div>
-
-      {/* Important Notes */}
+      
+      {/* Admin Notice */}
       <Alert>
         <Upload className="h-4 w-4" />
+        <AlertTitle>Administrator Tool</AlertTitle>
+        <AlertDescription>
+          This is an administrative tool for bulk data import. Please ensure you have proper backups before importing large datasets.
+        </AlertDescription>
+      </Alert>
+
+      {/* Important Guidelines */}
+      <Alert>
+        <FileText className="h-4 w-4" />
         <AlertTitle>Important Guidelines</AlertTitle>
         <AlertDescription>
           <ul className="list-disc list-inside space-y-1 mt-2">
