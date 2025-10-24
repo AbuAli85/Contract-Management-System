@@ -117,6 +117,12 @@ const safeFormatDate = (dateString: string | null | undefined, formatStr: string
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[];
+  employer?: {
+    id: string;
+    name_en: string;
+    name_ar?: string;
+    type: string;
+  } | null;
 }
 
 function DetailItem({
@@ -465,9 +471,24 @@ export default function PromoterDetailPage() {
         // Don't set error for contracts, just log it
       }
 
+      // Fetch employer information if employer_id exists
+      let employerInfo = null;
+      if (promoterData.employer_id) {
+        const { data: employer, error: employerError } = await supabase
+          .from('parties')
+          .select('id, name_en, name_ar, type')
+          .eq('id', promoterData.employer_id)
+          .single();
+
+        if (!employerError && employer) {
+          employerInfo = employer;
+        }
+      }
+
       setPromoterDetails({
         ...promoterData,
         contracts: (contractsData as any) || [],
+        employer: employerInfo,
         name_en:
           promoterData.name_en ||
           [promoterData.first_name, promoterData.last_name]
@@ -1525,7 +1546,20 @@ export default function PromoterDetailPage() {
                   label='Job Title'
                   value={promoterDetails?.job_title}
                 />
-                <DetailItem label='Company' value={promoterDetails?.company} />
+                <DetailItem 
+                  label='Employer' 
+                  value={
+                    promoterDetails?.employer ? (
+                      <div className="flex flex-col">
+                        <span className="font-medium">{promoterDetails.employer.name_en}</span>
+                        {promoterDetails.employer.name_ar && (
+                          <span className="text-xs text-muted-foreground">{promoterDetails.employer.name_ar}</span>
+                        )}
+                        <Badge variant="outline" className="w-fit mt-1">{promoterDetails.employer.type}</Badge>
+                      </div>
+                    ) : promoterDetails?.company || 'Not assigned'
+                  }
+                />
                 <DetailItem
                   label='Department'
                   value={promoterDetails?.department}
