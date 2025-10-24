@@ -72,11 +72,28 @@
       ]
     },
     {
+      "source": "/:locale(en|ar|es|fr|de)/(dashboard|contracts|promoters|users|settings|profile)/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, no-cache, must-revalidate, max-age=0"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    },
+    {
       "source": "/api/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
+          "value": "private, no-store, no-cache, must-revalidate, max-age=0"
         },
         {
           "key": "Pragma",

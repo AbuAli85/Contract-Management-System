@@ -94,6 +94,24 @@ const nextConfig = {
         ],
       },
       {
+        // Strict caching for authenticated/sensitive pages
+        source: '/:locale(en|ar|es|fr|de)/(dashboard|contracts|promoters|users|settings|profile)/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'private, no-store, no-cache, must-revalidate, max-age=0',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+      },
+      {
         // CORS configuration for API routes - Restricted to trusted origins only
         source: '/api/:path*',
         headers: [
@@ -120,6 +138,10 @@ const nextConfig = {
           {
             key: 'Vary',
             value: 'Origin',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'private, no-store, no-cache, must-revalidate, max-age=0',
           },
         ],
       },
