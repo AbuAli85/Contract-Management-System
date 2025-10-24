@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { LoginErrorHandler } from './login-error-handler';
 import { authSessionManager } from '@/lib/auth-session-manager';
+import { useAuth } from '@/app/providers';
 
 interface LoginFormData {
   email: string;
@@ -52,6 +53,7 @@ export default function EnhancedLoginFormV2() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showErrorHandler, setShowErrorHandler] = useState(false);
   const router = useRouter();
+  const { refreshSession } = useAuth();
 
   // Check API status on mount
   useEffect(() => {
@@ -168,13 +170,20 @@ export default function EnhancedLoginFormV2() {
       // Determine redirect path based on user role
       const redirectPath = getRedirectPath(result.session?.profile?.role || 'user');
 
-      // Wait for auth state to propagate through the app before redirecting
-      // This ensures that AuthProvider has updated and won't redirect back to login
-      console.log('🔐 Waiting for auth state to propagate...');
+      // Force refresh the session in AuthProvider to update React context immediately
+      console.log('🔐 Forcing auth state refresh...');
+      try {
+        await refreshSession();
+        console.log('✅ Auth state refreshed successfully');
+      } catch (refreshError) {
+        console.warn('⚠️ Could not refresh session, proceeding anyway:', refreshError);
+      }
+
+      // Wait a brief moment for React context to update, then redirect
+      console.log('🔐 Redirecting to:', redirectPath);
       setTimeout(() => {
-        console.log('🔐 Redirecting to:', redirectPath);
         window.location.replace(redirectPath);
-      }, 2000);
+      }, 500);
     } catch (error) {
       console.error('🔐 Enhanced Login V2 - Exception:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

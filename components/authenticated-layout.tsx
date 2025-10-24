@@ -82,15 +82,15 @@ export function AuthenticatedLayout({
       return;
     }
 
-    // Check if we just logged in (within last 3 seconds)
+    // Check if we just logged in (within last 2 seconds)
     const justLoggedIn = localStorage.getItem('just_logged_in');
     if (justLoggedIn) {
       const loginTime = parseInt(justLoggedIn);
-      if (Date.now() - loginTime < 3000) {
+      if (Date.now() - loginTime < 2000) {
         console.log('🔍 AuthenticatedLayout: Just logged in, waiting for auth state...');
         return;
       } else {
-        // Clear the flag after 3 seconds
+        // Clear the flag after 2 seconds
         localStorage.removeItem('just_logged_in');
       }
     }
@@ -128,12 +128,31 @@ export function AuthenticatedLayout({
   }
 
   // For protected pages, show loading state while checking auth
+  // But if we just logged in, show a shorter loading message
+  const justLoggedIn = localStorage.getItem('just_logged_in');
+  const recentLogin = justLoggedIn && (Date.now() - parseInt(justLoggedIn)) < 2000;
+  
   if (!mounted || loading) {
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
-          <p className='text-muted-foreground'>Loading...</p>
+          <p className='text-muted-foreground'>
+            {recentLogin ? 'Completing login...' : 'Loading...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If we just logged in and loading is done but user isn't set yet, wait a bit more
+  if (recentLogin && !user) {
+    console.log('🔍 AuthenticatedLayout: Recent login, waiting for user to load...');
+    return (
+      <div className='flex h-screen items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-muted-foreground'>Completing login...</p>
         </div>
       </div>
     );
