@@ -82,6 +82,19 @@ export function AuthenticatedLayout({
       return;
     }
 
+    // Check if we just logged in (within last 3 seconds)
+    const justLoggedIn = localStorage.getItem('just_logged_in');
+    if (justLoggedIn) {
+      const loginTime = parseInt(justLoggedIn);
+      if (Date.now() - loginTime < 3000) {
+        console.log('🔍 AuthenticatedLayout: Just logged in, waiting for auth state...');
+        return;
+      } else {
+        // Clear the flag after 3 seconds
+        localStorage.removeItem('just_logged_in');
+      }
+    }
+
     // Only check authentication status for protected pages
     if (!loading && !user) {
       // Redirect to login if not authenticated

@@ -162,19 +162,19 @@ export default function EnhancedLoginFormV2() {
       // Update last activity
       authSessionManager.updateLastActivity();
 
+      // Set flag to prevent AuthenticatedLayout from redirecting during auth state propagation
+      localStorage.setItem('just_logged_in', Date.now().toString());
+
       // Determine redirect path based on user role
       const redirectPath = getRedirectPath(result.session?.profile?.role || 'user');
 
-      // Redirect after a short delay using window.location for guaranteed redirect
+      // Wait for auth state to propagate through the app before redirecting
+      // This ensures that AuthProvider has updated and won't redirect back to login
+      console.log('🔐 Waiting for auth state to propagate...');
       setTimeout(() => {
         console.log('🔐 Redirecting to:', redirectPath);
-        // Use both methods for reliability
-        router.push(redirectPath);
-        // Fallback to hard redirect if router doesn't work
-        setTimeout(() => {
-          window.location.href = redirectPath;
-        }, 500);
-      }, 1500);
+        window.location.replace(redirectPath);
+      }, 2000);
     } catch (error) {
       console.error('🔐 Enhanced Login V2 - Exception:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
