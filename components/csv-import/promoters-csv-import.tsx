@@ -205,10 +205,12 @@ export function PromotersCSVImport() {
   const [parseResult, setParseResult] = useState<CSVParseResult<PromoterCSVRow> | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
+  const [updateOnConflict, setUpdateOnConflict] = useState(false);
   const [importResult, setImportResult] = useState<{
     success: number;
     failed: number;
     errors: string[];
+    updated?: boolean;
   } | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -313,9 +315,13 @@ export function PromotersCSVImport() {
           id_card_expiry_date: row.id_card_expiry_date,
           passport_number: row.passport_number,
           passport_expiry_date: row.passport_expiry_date,
-          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
+
+        // Only add created_at for new records (not updates)
+        if (!updateOnConflict) {
+          promoterData.created_at = new Date().toISOString();
+        }
 
         // Remove null/undefined values
         Object.keys(promoterData).forEach(key => {
@@ -324,13 +330,42 @@ export function PromotersCSVImport() {
           }
         });
 
-        // Insert into database
-        const { error } = await supabase
-          .from('promoters')
-          .insert(promoterData);
+        // Insert or update into database
+        let result;
+        if (updateOnConflict) {
+          // Check if record exists first
+          const { data: existingPromoter } = await supabase
+            .from('promoters')
+            .select('id')
+            .eq('id_card_number', row.id_card_number)
+            .single();
 
-        if (error) {
-          errors.push(`Row ${i + 2}: ${error.message}`);
+          if (existingPromoter) {
+            // Update existing record
+            result = await supabase
+              .from('promoters')
+              .update(promoterData)
+              .eq('id', existingPromoter.id);
+          } else {
+            // Insert new record
+            result = await supabase
+              .from('promoters')
+              .insert(promoterData);
+          }
+        } else {
+          // Regular insert (will fail on duplicate)
+          result = await supabase
+            .from('promoters')
+            .insert(promoterData);
+        }
+
+        if (result.error) {
+          if (result.error.code === '23505' && !updateOnConflict) {
+            // Duplicate key error - this is expected when updateOnConflict is false
+            errors.push(`Row ${i + 2}: Duplicate ID card number (${row.id_card_number}) - already exists`);
+          } else {
+            errors.push(`Row ${i + 2}: ${result.error.message}`);
+          }
           failedCount++;
         } else {
           successCount++;
@@ -343,7 +378,12 @@ export function PromotersCSVImport() {
       setImportProgress(Math.round(((i + 1) / parseResult.data.length) * 100));
     }
 
-    setImportResult({ success: successCount, failed: failedCount, errors });
+    setImportResult({ 
+      success: successCount, 
+      failed: failedCount, 
+      errors, 
+      updated: updateOnConflict 
+    });
     setIsImporting(false);
   };
 
@@ -439,9 +479,28 @@ export function PromotersCSVImport() {
               </Alert>
             )}
 
-            {/* Import Button */}
+            {/* Import Options */}
             {parseResult.data.length > 0 && (
               <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="updateOnConflict"
+                    checked={updateOnConflict}
+                    onChange={(e) => setUpdateOnConflict(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="updateOnConflict" className="text-sm font-medium text-gray-700">
+                    Update existing promoters if ID card number already exists
+                  </label>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {updateOnConflict 
+                    ? "Existing promoters will be updated with new data from CSV"
+                    : "Import will fail if any promoter with the same ID card number already exists"
+                  }
+                </div>
+
                 <Button
                   onClick={handleImport}
                   disabled={isImporting || parseResult.errors.length > 0}
@@ -477,7 +536,7 @@ export function PromotersCSVImport() {
               <div className="space-y-2">
                 <div className="flex gap-4">
                   <Badge variant="default" className="bg-green-600">
-                    {importResult.success} Succeeded
+                    {importResult.success} {importResult.updated ? 'Updated' : 'Imported'}
                   </Badge>
                   {importResult.failed > 0 && (
                     <Badge variant="destructive">
