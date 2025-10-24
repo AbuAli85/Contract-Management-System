@@ -16,6 +16,14 @@ import { PromoterActivityTimeline } from './promoter-activity-timeline';
 import { PromoterQuickActions } from './promoter-quick-actions';
 import { PromoterContractSummary } from './promoter-contract-summary';
 import { PromoterDetailsSkeleton } from './promoter-details-skeleton';
+// Import new advanced features
+import { PromoterAnalyticsDashboard } from './promoter-analytics-dashboard';
+import { PromoterNotesComments } from './promoter-notes-comments';
+import { PromoterSmartTags } from './promoter-smart-tags';
+import { PromoterComplianceTracker } from './promoter-compliance-tracker';
+import { PromoterComparisonView } from './promoter-comparison-view';
+import { PromoterKPITracker } from './promoter-kpi-tracker';
+import { PromoterExportPrint } from './promoter-export-print';
 
 interface PromoterDetails {
   id: string;
@@ -501,18 +509,18 @@ export function PromoterDetailsEnhanced({
     }
   };
 
-  const handleDocumentUpload = (type: 'id_card' | 'passport') => {
+  const handleDocumentUpload = (type: string) => {
     console.log(`Upload ${type} for:`, promoterDetails?.name_en);
   };
 
-  const handleDocumentView = (type: 'id_card' | 'passport') => {
+  const handleDocumentView = (type: string) => {
     const url = type === 'id_card' ? promoterDetails?.id_card_url : promoterDetails?.passport_url;
     if (url) {
       window.open(url, '_blank');
     }
   };
 
-  const handleDocumentDownload = (type: 'id_card' | 'passport') => {
+  const handleDocumentDownload = (type: string) => {
     const url = type === 'id_card' ? promoterDetails?.id_card_url : promoterDetails?.passport_url;
     if (url) {
       const link = document.createElement('a');
@@ -602,12 +610,17 @@ export function PromoterDetailsEnhanced({
 
       {/* Enhanced Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="contracts">Contracts</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-10 gap-1">
+          <TabsTrigger value="overview" className="text-xs lg:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="performance" className="text-xs lg:text-sm">Performance</TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs lg:text-sm">Analytics</TabsTrigger>
+          <TabsTrigger value="comparison" className="text-xs lg:text-sm">Comparison</TabsTrigger>
+          <TabsTrigger value="kpi" className="text-xs lg:text-sm">KPI & Goals</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs lg:text-sm">Documents</TabsTrigger>
+          <TabsTrigger value="compliance" className="text-xs lg:text-sm">Compliance</TabsTrigger>
+          <TabsTrigger value="contracts" className="text-xs lg:text-sm">Contracts</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs lg:text-sm">Notes</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs lg:text-sm">Activity</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -657,12 +670,63 @@ export function PromoterDetailsEnhanced({
               <span>⚠️ {metricsError}</span>
             </div>
           ) : performanceMetrics ? (
-            <PromoterPerformanceMetrics metrics={performanceMetrics} />
+            <>
+              <PromoterPerformanceMetrics metrics={performanceMetrics} />
+              <PromoterSmartTags 
+                promoterId={promoterId}
+                isAdmin={role === 'admin'}
+                existingTags={promoterDetails.tags || []}
+                onTagsUpdate={(tags) => console.log('Tags updated:', tags)}
+              />
+            </>
           ) : (
             <div className="flex items-center justify-center p-8 text-gray-500">
               <span>No performance data available</span>
             </div>
           )}
+        </TabsContent>
+
+        {/* Analytics Dashboard Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          {isLoadingMetrics ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading analytics...</span>
+            </div>
+          ) : (
+            <PromoterAnalyticsDashboard
+              promoterId={promoterId}
+              promoterData={promoterDetails}
+              performanceMetrics={performanceMetrics || undefined}
+            />
+          )}
+        </TabsContent>
+
+        {/* Comparison View Tab */}
+        <TabsContent value="comparison" className="space-y-6">
+          {isLoadingMetrics ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading comparison data...</span>
+            </div>
+          ) : performanceMetrics ? (
+            <PromoterComparisonView
+              promoterMetrics={performanceMetrics}
+              promoterName={promoterDetails.name_en}
+            />
+          ) : (
+            <div className="flex items-center justify-center p-8 text-gray-500">
+              <span>No comparison data available</span>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* KPI Tracker Tab */}
+        <TabsContent value="kpi" className="space-y-6">
+          <PromoterKPITracker
+            promoterId={promoterId}
+            isAdmin={role === 'admin'}
+          />
         </TabsContent>
 
         {/* Documents Tab */}
@@ -674,6 +738,24 @@ export function PromoterDetailsEnhanced({
             onDownload={handleDocumentDownload}
             isAdmin={role === 'admin'}
           />
+          <PromoterExportPrint
+            promoterId={promoterId}
+            promoterData={promoterDetails}
+            performanceMetrics={performanceMetrics}
+            contracts={promoterDetails.contracts}
+            documents={[]}
+          />
+        </TabsContent>
+
+        {/* Compliance Tab */}
+        <TabsContent value="compliance" className="space-y-6">
+          <PromoterComplianceTracker
+            promoterId={promoterId}
+            promoterData={promoterDetails}
+            isAdmin={role === 'admin'}
+            onDocumentUpload={handleDocumentUpload}
+            onDocumentView={handleDocumentView}
+          />
         </TabsContent>
 
         {/* Contracts Tab */}
@@ -684,6 +766,16 @@ export function PromoterDetailsEnhanced({
             onViewAllContracts={handleViewContracts}
             onViewContract={handleViewContract}
             isAdmin={role === 'admin'}
+          />
+        </TabsContent>
+
+        {/* Notes & Comments Tab */}
+        <TabsContent value="notes" className="space-y-6">
+          <PromoterNotesComments
+            promoterId={promoterId}
+            isAdmin={role === 'admin'}
+            currentUserId="current-user-id"
+            currentUserName={role === 'admin' ? 'Admin User' : 'User'}
           />
         </TabsContent>
 
