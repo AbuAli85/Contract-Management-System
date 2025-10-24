@@ -166,6 +166,7 @@ sagar aranakkal,سجر ارناكال,132891974,y2769195,966xxxxxxxxx,sagar@exam
 4. **Use UTF-8 encoding:**
    - This ensures Arabic text imports correctly
    - Save as "CSV UTF-8" in Excel
+   - If Arabic text shows as `???`, the file was not saved with proper UTF-8 encoding
 
 5. **Check the company ID:**
    - The `employer_id` field should be a valid UUID

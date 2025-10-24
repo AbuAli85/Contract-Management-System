@@ -510,8 +510,10 @@ export function PromotersCSVImport() {
                     <TableHead>Name (EN)</TableHead>
                     <TableHead>Name (AR)</TableHead>
                     <TableHead>ID Number</TableHead>
+                    <TableHead>Passport</TableHead>
+                    <TableHead>Mobile</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Employer</TableHead>
+                    <TableHead>Nationality</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -519,10 +521,12 @@ export function PromotersCSVImport() {
                   {parseResult.data.slice(0, 5).map((row, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{row?.name_en || '-'}</TableCell>
-                      <TableCell>{row?.name_ar || '-'}</TableCell>
+                      <TableCell className="font-arabic">{row?.name_ar || '-'}</TableCell>
                       <TableCell>{row?.id_card_number || '-'}</TableCell>
+                      <TableCell>{row?.passport_number || '-'}</TableCell>
+                      <TableCell>{row?.mobile_number || '-'}</TableCell>
                       <TableCell>{row?.email || '-'}</TableCell>
-                      <TableCell>{row?.employer_name || '-'}</TableCell>
+                      <TableCell>{row?.nationality || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={row?.status === 'active' ? 'default' : 'secondary'}>
                           {row?.status || 'active'}

@@ -180,3 +180,18 @@ body {
 .contract-info {
   @apply rounded-md bg-blue-50 p-4;
 }
+
+/* Arabic text support */
+.font-arabic {
+  font-family: 'Noto Sans Arabic', 'Arial Unicode MS', 'Tahoma', sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Ensure proper Arabic text rendering */
+.arabic-text {
+  font-family: 'Noto Sans Arabic', 'Arial Unicode MS', 'Tahoma', sans-serif;
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: bidi-override;
+}
