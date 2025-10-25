@@ -37,6 +37,9 @@ import { PromotersStatsCharts } from './promoters-stats-charts';
 import { PromotersDocumentExpiryChart } from './promoters-document-expiry-chart';
 import { PromotersAnalyticsCharts } from './promoters-analytics-charts';
 import { WorkforceAnalyticsSummary } from './workforce-analytics-summary';
+import { AnalyticsLoadingSkeleton } from './analytics-loading-skeleton';
+import { AnalyticsToolbar } from './analytics-toolbar';
+import { AnalyticsInsightsPanel } from './analytics-insights-panel';
 import { Button } from '../ui/button';
 
 interface PromotersResponse {
@@ -1501,22 +1504,8 @@ export function EnhancedPromotersViewRefactored({
               </div>
             </div>
 
-            {/* Loading State for Analytics */}
-            {isLoadingAnalytics && (
-              <div className='bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-lg p-8 border border-blue-200 dark:border-blue-800'>
-                <div className='flex items-center justify-center gap-4'>
-                  <div className='w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin'></div>
-                  <div className='text-center'>
-                    <h3 className='font-semibold text-blue-900 dark:text-blue-100 text-lg'>
-                      Loading Complete Workforce Analytics
-                    </h3>
-                    <p className='text-blue-700 dark:text-blue-300 mt-1'>
-                      Fetching all workforce data across multiple pages for comprehensive insights...
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Professional Loading State for Analytics */}
+            {isLoadingAnalytics && <AnalyticsLoadingSkeleton />}
 
             {/* Error State for Analytics */}
             {analyticsError && (
@@ -1546,26 +1535,47 @@ export function EnhancedPromotersViewRefactored({
               </div>
             )}
 
-            {/* Analytics Charts - Using complete workforce data */}
+            {/* Professional Analytics Dashboard */}
             {!isLoadingAnalytics && !analyticsError && allDashboardPromoters.length > 0 && (
-              <>
+              <div className="space-y-6">
+                {/* Analytics Toolbar */}
+                <AnalyticsToolbar
+                  totalRecords={allDashboardPromoters.length}
+                  isLoading={isLoadingAnalytics}
+                  onRefresh={loadAnalyticsData}
+                  onExport={(format) => console.log(`Export ${format}`)}
+                  onPrint={() => window.print()}
+                  onFullScreen={() => document.documentElement.requestFullscreen()}
+                  lastUpdated={allPromotersData?.timestamp || undefined}
+                />
+
+                {/* Workforce Summary */}
                 <WorkforceAnalyticsSummary
                   promoters={allDashboardPromoters}
                   isRealTime={true}
                   lastUpdated={allPromotersData?.timestamp || undefined}
                 />
+
+                {/* Smart Insights Panel */}
+                <AnalyticsInsightsPanel 
+                  promoters={allDashboardPromoters}
+                />
+
+                {/* Document Expiry Analysis */}
                 <PromotersDocumentExpiryChart 
                   promoters={allDashboardPromoters}
                   title="Document Expiry Timeline - Complete Workforce"
                   description={`Monitor document expiration patterns across all ${allDashboardPromoters.length} workforce members`}
                 />
+
+                {/* Comprehensive Analytics Charts */}
                 <PromotersAnalyticsCharts 
                   promoters={allDashboardPromoters}
                   isRealTime={true}
                   onRefresh={loadAnalyticsData}
                   isFetching={isLoadingAnalytics}
                 />
-              </>
+              </div>
             )}
           </div>
         ) : (
