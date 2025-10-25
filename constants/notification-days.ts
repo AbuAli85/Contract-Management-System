@@ -2,8 +2,8 @@
 // This file centralizes all notification day values used throughout the application
 
 export const PROMOTER_NOTIFICATION_DAYS = {
-  ID_EXPIRY: 30,
-  PASSPORT_EXPIRY: 60,
+  ID_EXPIRY: 90,
+  PASSPORT_EXPIRY: 210,
   CONTRACT_EXPIRY: 7,
   DOCUMENT_EXPIRY: 14,
 } as const;

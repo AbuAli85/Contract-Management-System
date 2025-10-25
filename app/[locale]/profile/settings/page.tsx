@@ -192,11 +192,11 @@ export default function ProfileSettingsPage() {
                 <select
                   id='dateFormat'
                   className='w-full rounded-md border p-2'
-                  defaultValue='MM/DD/YYYY'
+                  defaultValue='DD/MM/YYYY'
                   aria-label='Select date format'
                 >
-                  <option value='MM/DD/YYYY'>MM/DD/YYYY</option>
                   <option value='DD/MM/YYYY'>DD/MM/YYYY</option>
+                  <option value='MM/DD/YYYY'>MM/DD/YYYY</option>
                   <option value='YYYY-MM-DD'>YYYY-MM-DD</option>
                 </select>
               </div>

@@ -445,7 +445,7 @@
     "to": "To",
     "selectDate": "Select Date",
     "selectTime": "Select Time",
-    "dateFormat": "MM/DD/YYYY",
+    "dateFormat": "DD/MM/YYYY",
     "timeFormat": "HH:MM AM/PM"
   }
 }

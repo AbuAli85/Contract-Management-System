@@ -445,7 +445,7 @@
     "to": "إلى",
     "selectDate": "اختر التاريخ",
     "selectTime": "اختر الوقت",
-    "dateFormat": "MM/DD/YYYY",
+    "dateFormat": "DD/MM/YYYY",
     "timeFormat": "HH:MM AM/PM"
   }
 }

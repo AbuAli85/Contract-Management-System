@@ -45,10 +45,10 @@ const safeParse = (value: string, preferredFormat: string): Date | null => {
       preferredFormat,
       'dd/MM/yyyy',
       'yyyy-MM-dd',
-      'MM/dd/yyyy',
       'd-M-yyyy',
       'd/M/yyyy',
       'dd.MM.yyyy',
+      'MM/dd/yyyy', // Moved to end to deprioritize
     ];
 
     for (const fmt of candidates) {

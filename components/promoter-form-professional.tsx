@@ -2282,7 +2282,7 @@ export default function PromoterFormProfessional(
                           e.target.value
                         )
                       }
-                      placeholder='30'
+                      placeholder='90'
                     />
                   </div>
 
@@ -2302,7 +2302,7 @@ export default function PromoterFormProfessional(
                           e.target.value
                         )
                       }
-                      placeholder='30'
+                      placeholder='210'
                     />
                   </div>
                 </div>

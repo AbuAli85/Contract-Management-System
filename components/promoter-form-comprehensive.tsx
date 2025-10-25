@@ -1306,7 +1306,7 @@ export function PromoterFormComprehensive({
                 <FormControl>
                   <Input
                     type='number'
-                    placeholder='100'
+                    placeholder='90'
                     {...field}
                     value={field.value || ''}
                     onChange={e =>
