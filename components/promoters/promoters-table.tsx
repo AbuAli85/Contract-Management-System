@@ -28,7 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Users, Plus, RefreshCw, SortAsc, SortDesc } from 'lucide-react';
+import { Users, Plus, RefreshCw, SortAsc, SortDesc, MoreHorizontal } from 'lucide-react';
 import { PromotersTableRow } from './promoters-table-row';
 import { PromotersGridView } from './promoters-grid-view';
 import { PromotersCardsView } from './promoters-cards-view';
@@ -86,39 +86,49 @@ export function PromotersTable({
   const parentRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Card className='overflow-hidden shadow-lg'>
-      <CardHeader className='flex flex-col gap-3 border-b bg-gradient-to-r from-slate-50 to-slate-100 py-4 dark:from-slate-950 dark:to-slate-900 sm:flex-row sm:items-center sm:justify-between'>
-        <div>
-          <CardTitle className='text-2xl font-bold'>Promoter roster</CardTitle>
-          <CardDescription className='mt-1'>
-            <span className='font-semibold text-foreground'>
-              {promoters.length}
-            </span>{' '}
-            {/* Shows current page records, not total system count */}
-            records on this page
-            {pagination && (
-              <span className='text-xs ml-2'>
-                (of {pagination.total} total)
-              </span>
-            )}
-          </CardDescription>
+    <Card className='overflow-hidden shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
+      <CardHeader className='flex flex-col gap-4 border-b border-slate-200/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-slate-50 py-6 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:border-slate-700/60 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='space-y-2'>
+          <div className='flex items-center gap-3'>
+            <div className='p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-lg'>
+              <Users className='h-6 w-6 text-white' />
+            </div>
+            <div>
+              <CardTitle className='text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300'>
+                Promoter Roster
+              </CardTitle>
+              <CardDescription className='mt-1 text-base'>
+                <span className='font-bold text-indigo-600 dark:text-indigo-400 text-lg'>
+                  {promoters.length}
+                </span>{' '}
+                <span className='text-slate-600 dark:text-slate-400'>
+                  active members
+                </span>
+                {pagination && (
+                  <span className='ml-3 px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full'>
+                    {pagination.total.toLocaleString()} total workforce
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+          </div>
         </div>
-        <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3'>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4'>
           {isFetching && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge
                     variant='outline'
-                    className='gap-2 bg-amber-50 text-amber-700 border-amber-200'
+                    className='gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200/80 shadow-sm'
                   >
-                    <RefreshCw className='h-3 w-3 animate-spin' />
-                    Refreshing data
+                    <RefreshCw className='h-3.5 w-3.5 animate-spin' />
+                    <span className='font-medium'>Syncing</span>
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className='text-xs'>
-                    Syncing latest promoter information...
+                  <p className='text-xs font-medium'>
+                    Updating latest promoter information...
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -131,28 +141,28 @@ export function PromotersTable({
             }
             className='ml-auto'
           >
-            <TabsList className='grid w-full grid-cols-4 bg-white/80 dark:bg-slate-800/80'>
+            <TabsList className='grid w-full grid-cols-4 bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm'>
               <TabsTrigger
                 value='table'
-                className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
               >
                 Table
               </TabsTrigger>
               <TabsTrigger
                 value='grid'
-                className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
               >
                 Grid
               </TabsTrigger>
               <TabsTrigger
                 value='cards'
-                className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
               >
                 Cards
               </TabsTrigger>
               <TabsTrigger
                 value='analytics'
-                className='data-[state=active]:bg-purple-500 data-[state=active]:text-white'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
                 aria-label="Analytics view with charts and insights"
               >
                 Analytics
@@ -188,11 +198,11 @@ export function PromotersTable({
           <div className='relative'>
             {/* Table View */}
             {viewMode === 'table' && (
-              <ScrollArea className='h-[520px] animate-in fade-in duration-300' ref={parentRef}>
+              <ScrollArea className='h-[calc(100vh-400px)] min-h-[500px] max-h-[700px] animate-in fade-in duration-300' ref={parentRef}>
                 <Table>
-                  <TableHeader className='sticky top-0 z-10 bg-background/95 backdrop-blur'>
-                    <TableRow className='border-b-2 hover:bg-transparent'>
-                      <TableHead className='w-[50px] text-center'>
+                  <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
+                    <TableRow className='hover:bg-transparent border-0'>
+                      <TableHead className='w-[50px] text-center py-4'>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -201,10 +211,11 @@ export function PromotersTable({
                                   selectedPromoters.size === promoters.length
                                 }
                                 onCheckedChange={onSelectAll}
+                                className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
                               />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className='text-xs'>
+                              <p className='text-xs font-medium'>
                                 Select all visible promoters
                               </p>
                             </TooltipContent>
@@ -212,85 +223,112 @@ export function PromotersTable({
                         </TooltipProvider>
                       </TableHead>
                       <TableHead
-                        className='w-[220px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        className='w-[250px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('name')}
                       >
-                        <div className='flex items-center gap-2 group/header'>
-                          <span>Promoter</span>
+                        <div className='flex items-center gap-2 group/header px-2'>
+                          <Users className='h-4 w-4 text-indigo-500' />
+                          <span className='text-sm'>Team Member</span>
                           {sortField === 'name' ? (
                             sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-blue-500' />
+                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             ) : (
-                              <SortDesc className='h-4 w-4 text-blue-500' />
+                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             )
                           ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                              <SortAsc className='h-4 w-4' />
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                              <SortAsc className='h-4 w-4 text-slate-400' />
                             </div>
                           )}
                         </div>
                       </TableHead>
                       <TableHead
-                        className='w-[200px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        className='w-[220px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('documents')}
                       >
-                        <div className='flex items-center gap-2 group/header'>
-                          <span>Documents</span>
+                        <div className='flex items-center gap-2 group/header px-2'>
+                          <Badge className='bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 p-0.5'>
+                            <Plus className='h-3 w-3' />
+                          </Badge>
+                          <span className='text-sm'>Documentation</span>
                           {sortField === 'documents' ? (
                             sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-blue-500' />
+                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             ) : (
-                              <SortDesc className='h-4 w-4 text-blue-500' />
+                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             )
                           ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                              <SortAsc className='h-4 w-4' />
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                              <SortAsc className='h-4 w-4 text-slate-400' />
                             </div>
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className='font-semibold'>Assignment</TableHead>
-                      <TableHead className='font-semibold'>Contacts</TableHead>
+                      <TableHead className='font-bold text-slate-700 dark:text-slate-200 py-4'>
+                        <div className='flex items-center gap-2 px-2'>
+                          <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5'>
+                            <Plus className='h-3 w-3' />
+                          </Badge>
+                          <span className='text-sm'>Assignment</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className='font-bold text-slate-700 dark:text-slate-200 py-4'>
+                        <div className='flex items-center gap-2 px-2'>
+                          <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5'>
+                            <Plus className='h-3 w-3' />
+                          </Badge>
+                          <span className='text-sm'>Contact Info</span>
+                        </div>
+                      </TableHead>
                       <TableHead
-                        className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        className='cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('created')}
                       >
-                        <div className='flex items-center gap-2 group/header'>
-                          <span>Created</span>
+                        <div className='flex items-center gap-2 group/header px-2'>
+                          <Badge className='bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 p-0.5'>
+                            <Plus className='h-3 w-3' />
+                          </Badge>
+                          <span className='text-sm'>Joined</span>
                           {sortField === 'created' ? (
                             sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-blue-500' />
+                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             ) : (
-                              <SortDesc className='h-4 w-4 text-blue-500' />
+                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             )
                           ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                              <SortAsc className='h-4 w-4' />
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                              <SortAsc className='h-4 w-4 text-slate-400' />
                             </div>
                           )}
                         </div>
                       </TableHead>
                       <TableHead
-                        className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        className='cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('status')}
                       >
-                        <div className='flex items-center gap-2 group/header'>
-                          <span>Status</span>
+                        <div className='flex items-center gap-2 group/header px-2'>
+                          <Badge className='bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 p-0.5'>
+                            <Plus className='h-3 w-3' />
+                          </Badge>
+                          <span className='text-sm'>Status</span>
                           {sortField === 'status' ? (
                             sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-blue-500' />
+                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             ) : (
-                              <SortDesc className='h-4 w-4 text-blue-500' />
+                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
                             )
                           ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                              <SortAsc className='h-4 w-4' />
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                              <SortAsc className='h-4 w-4 text-slate-400' />
                             </div>
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className='text-right font-semibold'>
-                        Actions
+                      <TableHead className='text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
+                        <div className='flex items-center justify-end gap-2 px-2'>
+                          <span className='text-sm'>Actions</span>
+                          <MoreHorizontal className='h-4 w-4 text-slate-400' />
+                        </div>
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -363,7 +401,16 @@ export function PromotersTable({
 
       {/* Pagination Controls */}
       {pagination && pagination.totalPages > 1 && (
-        <CardContent className='border-t pt-4'>
+        <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 pt-6 pb-4'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='text-sm text-slate-600 dark:text-slate-400 font-medium'>
+              Showing <span className='font-bold text-indigo-600 dark:text-indigo-400'>{promoters.length}</span> of{' '}
+              <span className='font-bold text-indigo-600 dark:text-indigo-400'>{pagination.total.toLocaleString()}</span> total members
+            </div>
+            <div className='text-xs text-slate-500 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full'>
+              Page {pagination.page} of {pagination.totalPages}
+            </div>
+          </div>
           <PaginationControls
             currentPage={pagination.page}
             totalPages={pagination.totalPages}

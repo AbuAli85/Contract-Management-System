@@ -120,18 +120,23 @@ function DocumentStatusPill({
   const Icon = DOCUMENT_STATUS_ICONS[health.status];
 
   return (
-    <div className='flex items-center justify-between gap-2'>
+    <div className='flex items-center gap-3'>
       <Badge
         variant='outline'
         className={cn(
-          'flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide',
-          DOCUMENT_STATUS_BADGES[health.status]
+          'flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow-sm transition-all hover:shadow-md',
+          health.status === 'valid' && 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-300 hover:from-emerald-100 hover:to-green-100',
+          health.status === 'expiring' && 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 hover:from-amber-100 hover:to-yellow-100',
+          health.status === 'expired' && 'bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border-red-300 hover:from-red-100 hover:to-rose-100',
+          health.status === 'missing' && 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-300 hover:from-slate-100 hover:to-gray-100'
         )}
       >
-        <Icon className='h-3 w-3' />
+        <Icon className='h-3.5 w-3.5' />
         {label}
       </Badge>
-      <span className='text-[11px] text-muted-foreground'>{health.label}</span>
+      <span className='text-xs text-slate-500 dark:text-slate-400 font-medium min-w-0 flex-1 truncate'>
+        {health.label}
+      </span>
     </div>
   );
 }
@@ -468,56 +473,79 @@ export function PromotersTableRow({
   return (
     <TableRow
       className={cn(
-        'group transition-all duration-200 hover:bg-muted/50',
+        'group transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-indigo-50/30 dark:hover:from-slate-800/50 dark:hover:to-indigo-900/20 border-b border-slate-100 dark:border-slate-800',
         promoter.overallStatus === 'critical' &&
-          'border-l-4 border-l-red-500 bg-red-50/20 hover:bg-red-50/40',
+          'border-l-4 border-l-red-500 bg-gradient-to-r from-red-50/30 to-transparent hover:from-red-50/50 hover:to-red-100/20 dark:from-red-900/20 dark:hover:from-red-900/30',
         promoter.overallStatus === 'warning' &&
-          'border-l-4 border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40',
-        isSelected && 'bg-primary/10 border-l-4 border-l-primary'
+          'border-l-4 border-l-amber-400 bg-gradient-to-r from-amber-50/30 to-transparent hover:from-amber-50/50 hover:to-amber-100/20 dark:from-amber-900/20 dark:hover:from-amber-900/30',
+        isSelected && 'bg-gradient-to-r from-indigo-50/40 to-blue-50/20 border-l-4 border-l-indigo-500 dark:from-indigo-900/20 dark:to-blue-900/10'
       )}
     >
-      <TableCell className='w-[50px]'>
-        <Checkbox checked={isSelected} onCheckedChange={onSelect} />
+      <TableCell className='w-[50px] py-4'>
+        <Checkbox 
+          checked={isSelected} 
+          onCheckedChange={onSelect}
+          className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
+        />
       </TableCell>
-      <TableCell>
+      <TableCell className='py-4'>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className='flex cursor-help items-center gap-3'>
-                <SafeImage
-                  src={promoter.profile_picture_url ?? null}
-                  alt={promoter.displayName}
-                  width={40}
-                  height={40}
-                  className='h-10 w-10 rounded-full border-2 border-white/50 object-cover shadow-sm transition-transform group-hover:scale-105'
-                  fallback={
-                    <div className='flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500'>
-                      <Users className='h-5 w-5' />
-                    </div>
-                  }
-                />
-                <div className='space-y-0.5'>
-                  <div className='font-semibold leading-none text-foreground'>
+              <div className='flex cursor-help items-center gap-4'>
+                <div className='relative'>
+                  <SafeImage
+                    src={promoter.profile_picture_url ?? null}
+                    alt={promoter.displayName}
+                    width={48}
+                    height={48}
+                    className='h-12 w-12 rounded-full border-2 border-white shadow-lg object-cover transition-all duration-200 group-hover:scale-110 group-hover:shadow-xl group-hover:border-indigo-200'
+                    fallback={
+                      <div className='flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-600 shadow-lg transition-all duration-200 group-hover:scale-110 group-hover:shadow-xl'>
+                        <Users className='h-6 w-6' />
+                      </div>
+                    }
+                  />
+                  {/* Status indicator dot */}
+                  <div className={cn(
+                    'absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white shadow-sm',
+                    promoter.overallStatus === 'active' && 'bg-emerald-500',
+                    promoter.overallStatus === 'warning' && 'bg-amber-500',
+                    promoter.overallStatus === 'critical' && 'bg-red-500',
+                    promoter.overallStatus === 'inactive' && 'bg-slate-400'
+                  )} />
+                </div>
+                <div className='space-y-1 min-w-0 flex-1'>
+                  <div className='font-bold text-slate-900 dark:text-slate-100 text-base leading-tight'>
                     {promoter.displayName}
                   </div>
-                  <div className='text-xs text-muted-foreground'>
-                    {promoter.job_title || promoter.work_location || '—'}
+                  <div className='text-sm text-slate-600 dark:text-slate-400 font-medium'>
+                    {promoter.job_title || 'Team Member'}
                   </div>
+                  {promoter.work_location && (
+                    <div className='text-xs text-slate-500 dark:text-slate-500 flex items-center gap-1'>
+                      <MapPin className='h-3 w-3' />
+                      {promoter.work_location}
+                    </div>
+                  )}
                 </div>
               </div>
             </TooltipTrigger>
-            <TooltipContent side='right' className='max-w-xs'>
-              <div className='space-y-1'>
-                <div className='font-semibold'>{promoter.displayName}</div>
-                <div className='text-sm'>{promoter.contactEmail}</div>
-                <div className='text-sm'>{promoter.contactPhone}</div>
+            <TooltipContent side='right' className='max-w-xs bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700'>
+              <div className='space-y-2 p-2'>
+                <div className='font-bold text-slate-900 dark:text-slate-100'>{promoter.displayName}</div>
+                <div className='text-sm text-slate-600 dark:text-slate-400'>{promoter.contactEmail}</div>
+                <div className='text-sm text-slate-600 dark:text-slate-400'>{promoter.contactPhone}</div>
+                <div className='text-xs text-slate-500 dark:text-slate-500 pt-1 border-t border-slate-200 dark:border-slate-700'>
+                  Click to view full profile
+                </div>
               </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </TableCell>
-      <TableCell>
-        <div className='space-y-1'>
+      <TableCell className='py-4'>
+        <div className='space-y-2'>
           <DocumentStatusPill label='ID' health={promoter.idDocument} />
           <DocumentStatusPill
             label='Passport'
@@ -525,56 +553,74 @@ export function PromotersTableRow({
           />
         </div>
       </TableCell>
-      <TableCell>
-        <div className='space-y-1'>
-          <div className='text-sm font-medium text-foreground'>
+      <TableCell className='py-4'>
+        <div className='space-y-2'>
+          <div className='text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight'>
             {promoter.assignmentStatus === 'assigned' 
               ? promoter.organisationLabel 
-              : 'No Assignment'}
+              : 'Unassigned'}
           </div>
           <Badge
             variant='outline'
             className={cn(
-              'w-fit rounded-full border px-2 py-0.5 text-xs font-medium transition-colors',
+              'w-fit rounded-full border px-3 py-1 text-xs font-bold transition-all shadow-sm',
               promoter.assignmentStatus === 'assigned'
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-300 hover:from-emerald-100 hover:to-green-100 hover:shadow-md'
+                : 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-300 hover:from-slate-100 hover:to-gray-100'
             )}
           >
             {promoter.assignmentStatus === 'assigned'
               ? '✓ Assigned'
-              : '○ Unassigned'}
+              : '○ Available'}
           </Badge>
         </div>
       </TableCell>
-      <TableCell>
-        <div className='space-y-1 text-sm text-muted-foreground'>
-          <InfoLine icon={Mail} text={promoter.contactEmail} />
-          <InfoLine icon={Phone} text={promoter.contactPhone} />
-          {promoter.work_location && (
-            <InfoLine icon={MapPin} text={promoter.work_location} />
-          )}
+      <TableCell className='py-4'>
+        <div className='space-y-2 text-sm'>
+          <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
+            <Mail className='h-4 w-4 text-slate-400' />
+            <span className='font-medium truncate min-w-0 flex-1'>
+              {promoter.contactEmail || '—'}
+            </span>
+          </div>
+          <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
+            <Phone className='h-4 w-4 text-slate-400' />
+            <span className='font-medium'>
+              {promoter.contactPhone || '—'}
+            </span>
+          </div>
         </div>
       </TableCell>
-      <TableCell className='text-sm text-muted-foreground'>
-        <InfoLine icon={Calendar} text={promoter.createdLabel} />
+      <TableCell className='py-4'>
+        <div className='flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400'>
+          <Calendar className='h-4 w-4 text-slate-400' />
+          <span className='font-medium'>{promoter.createdLabel}</span>
+        </div>
       </TableCell>
-      <TableCell>
+      <TableCell className='py-4'>
         <Badge
           variant='outline'
           className={cn(
-            'rounded-full px-3 py-1 text-xs font-semibold transition-all',
-            OVERALL_STATUS_BADGES[promoter.overallStatus]
+            'rounded-full px-4 py-2 text-sm font-bold transition-all shadow-md border-2',
+            promoter.overallStatus === 'active' && 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-300 hover:from-emerald-100 hover:to-green-100',
+            promoter.overallStatus === 'warning' && 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 hover:from-amber-100 hover:to-yellow-100',
+            promoter.overallStatus === 'critical' && 'bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border-red-300 hover:from-red-100 hover:to-rose-100',
+            promoter.overallStatus === 'inactive' && 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-300 hover:from-slate-100 hover:to-gray-100'
           )}
         >
-          {promoter.overallStatus === 'critical' && '🔴'}
-          {promoter.overallStatus === 'warning' && '🟡'}
-          {promoter.overallStatus === 'active' && '🟢'}
-          {promoter.overallStatus === 'inactive' && '⚪'}{' '}
-          {OVERALL_STATUS_LABELS[promoter.overallStatus]}
+          <div className='flex items-center gap-2'>
+            <div className={cn(
+              'h-2 w-2 rounded-full',
+              promoter.overallStatus === 'active' && 'bg-emerald-500',
+              promoter.overallStatus === 'warning' && 'bg-amber-500',
+              promoter.overallStatus === 'critical' && 'bg-red-500',
+              promoter.overallStatus === 'inactive' && 'bg-slate-400'
+            )} />
+            {OVERALL_STATUS_LABELS[promoter.overallStatus]}
+          </div>
         </Badge>
       </TableCell>
-      <TableCell className='text-right'>
+      <TableCell className='text-right py-4'>
         <EnhancedActionsMenu
           promoter={promoter}
           onView={onView}
