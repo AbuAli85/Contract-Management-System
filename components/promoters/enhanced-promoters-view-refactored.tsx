@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { differenceInDays, format, parseISO } from 'date-fns';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { toTitleCase } from '@/lib/utils/text-formatting';
 import type { Promoter } from '@/lib/types';
@@ -1206,6 +1207,83 @@ export function EnhancedPromotersViewRefactored({
         {viewMode === 'analytics' ? (
           /* Analytics View */
           <div className='space-y-6'>
+            {/* Analytics View Header with Navigation */}
+            <div className='bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 rounded-xl shadow-xl border-0 p-6'>
+              <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='space-y-2'>
+                  <div className='flex items-center gap-3'>
+                    <div className='p-2 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg'>
+                      <Users className='h-6 w-6 text-white' />
+                    </div>
+                    <div>
+                      <h1 className='text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300'>
+                        Analytics Dashboard
+                      </h1>
+                      <p className='text-base text-slate-600 dark:text-slate-400 mt-1'>
+                        <span className='font-bold text-purple-600 dark:text-purple-400 text-lg'>
+                          {dashboardPromoters.length}
+                        </span>{' '}
+                        <span className='text-slate-600 dark:text-slate-400'>
+                          workforce insights & trends
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* View Mode Selector - Always Visible */}
+                <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4'>
+                  {/* Quick Back to List Button */}
+                  <button
+                    onClick={() => handleViewModeChange('table')}
+                    className='inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shadow-sm'
+                    title="Return to promoter list view"
+                  >
+                    ← Back to List
+                  </button>
+                  {isFetching && (
+                    <Badge
+                      variant='outline'
+                      className='gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200/80 shadow-sm w-fit'
+                    >
+                      <RefreshCw className='h-3.5 w-3.5 animate-spin' />
+                      <span className='font-medium'>Syncing</span>
+                    </Badge>
+                  )}
+                  <div className='bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm rounded-lg p-1'>
+                    <div className='grid grid-cols-4 gap-1'>
+                      <button
+                        onClick={() => handleViewModeChange('table')}
+                        className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
+                      >
+                        Table
+                      </button>
+                      <button
+                        onClick={() => handleViewModeChange('grid')}
+                        className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
+                      >
+                        Grid
+                      </button>
+                      <button
+                        onClick={() => handleViewModeChange('cards')}
+                        className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
+                      >
+                        Cards
+                      </button>
+                      <button
+                        className='px-4 py-2 text-sm font-medium rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md cursor-default'
+                        disabled
+                        title="Currently viewing Analytics"
+                      >
+                        Analytics ✓
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Analytics Charts */}
             <PromotersDocumentExpiryChart 
               promoters={dashboardPromoters}
               title="Document Expiry Timeline"
