@@ -315,9 +315,9 @@ export function EnhancedPromotersViewRefactored({
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  // Get pagination params from URL
-  const page = parseInt(searchParams?.get('page') || '1', 10);
-  const limit = parseInt(searchParams?.get('limit') || '20', 10);
+  // Get pagination params from URL (memoized to prevent re-renders)
+  const page = useMemo(() => parseInt(searchParams?.get('page') || '1', 10), [searchParams]);
+  const limit = useMemo(() => parseInt(searchParams?.get('limit') || '20', 10), [searchParams]);
 
   // State management
   const [searchTerm, setSearchTerm] = useState('');
@@ -363,7 +363,7 @@ export function EnhancedPromotersViewRefactored({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 300); // Reduced to 300ms for more responsive feel
+    }, 400); // Slightly increased to reduce instability
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
@@ -664,11 +664,12 @@ export function EnhancedPromotersViewRefactored({
       .slice(0, 5);
   }, [sortedPromoters]);
 
-  const hasFiltersApplied =
+  const hasFiltersApplied = useMemo(() => 
     statusFilter !== 'all' ||
     documentFilter !== 'all' ||
     assignmentFilter !== 'all' ||
-    searchTerm.trim().length > 0;
+    debouncedSearchTerm.trim().length > 0, // Use debouncedSearchTerm to prevent constant recalculation
+  [statusFilter, documentFilter, assignmentFilter, debouncedSearchTerm]);
 
   // Bulk selection handlers
   const handleSelectAll = useCallback(() => {
@@ -789,7 +790,7 @@ export function EnhancedPromotersViewRefactored({
             const companies = await fetch('/api/parties?type=company').then(res => res.json());
             
             if (!companies.success || !companies.parties?.length) {
-              toast({
+            toast({
                 title: 'No Companies Available',
                 description: 'No companies found to assign promoters to.',
                 variant: 'destructive'
@@ -1310,34 +1311,34 @@ export function EnhancedPromotersViewRefactored({
         ) : (
           /* Table/Grid/Cards View */
           <div className='grid gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(900px,2fr)_minmax(300px,1fr)]'>
-            <PromotersTable
-              promoters={sortedPromoters}
-              selectedPromoters={selectedPromoters}
-              sortField={sortField}
-              sortOrder={sortOrder}
-              viewMode={viewMode}
-              pagination={pagination}
+        <PromotersTable
+          promoters={sortedPromoters}
+          selectedPromoters={selectedPromoters}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          viewMode={viewMode}
+          pagination={pagination}
               isFetching={isDataFetching}
-              hasFiltersApplied={hasFiltersApplied}
-              onSelectAll={handleSelectAll}
-              onSelectPromoter={handleSelectPromoter}
-              onSort={handleSort}
-              onViewModeChange={handleViewModeChange}
-              onViewPromoter={handleViewPromoter}
-              onEditPromoter={handleEditPromoter}
-              onAddPromoter={handleAddPromoter}
-              onResetFilters={handleResetFilters}
-              onPageChange={handlePageChange}
-            />
+          hasFiltersApplied={hasFiltersApplied}
+          onSelectAll={handleSelectAll}
+          onSelectPromoter={handleSelectPromoter}
+          onSort={handleSort}
+          onViewModeChange={handleViewModeChange}
+          onViewPromoter={handleViewPromoter}
+          onEditPromoter={handleEditPromoter}
+          onAddPromoter={handleAddPromoter}
+          onResetFilters={handleResetFilters}
+          onPageChange={handlePageChange}
+        />
 
             {/* Enhanced Alerts Panel - Only show in non-analytics view */}
-            <PromotersAlertsPanel
-              atRiskPromoters={atRiskPromoters}
-              onViewPromoter={handleViewPromoter}
-              onSendReminder={handleSendReminder}
-              onRequestDocument={handleRequestDocument}
-            />
-          </div>
+        <PromotersAlertsPanel
+          atRiskPromoters={atRiskPromoters}
+          onViewPromoter={handleViewPromoter}
+          onSendReminder={handleSendReminder}
+          onRequestDocument={handleRequestDocument}
+        />
+        </div>
         )}
       </section>
     </main>

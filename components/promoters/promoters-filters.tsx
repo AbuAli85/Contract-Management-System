@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,6 +133,70 @@ const DEFAULT_PRESETS: FilterPreset[] = [
     isDefault: true,
   },
 ];
+
+// Memoized search input to prevent re-renders
+const SearchInput = React.memo(({ 
+  searchTerm, 
+  onSearchChange 
+}: { 
+  searchTerm: string; 
+  onSearchChange: (value: string) => void; 
+}) => {
+  const [localValue, setLocalValue] = useState(searchTerm);
+  
+  // Update local value when searchTerm prop changes (external updates only)
+  useEffect(() => {
+    setLocalValue(searchTerm);
+  }, [searchTerm]);
+  
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+    onSearchChange(newValue);
+  }, [onSearchChange]);
+  
+  const handleClear = useCallback(() => {
+    setLocalValue('');
+    onSearchChange('');
+  }, [onSearchChange]);
+
+  return (
+    <div className='space-y-3'>
+      <Label htmlFor='promoter-search' className="text-sm font-medium">Search promoters</Label>
+      <div className='relative'>
+        <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+        <Input
+          id='promoter-search'
+          placeholder='Search by name, contact, ID...'
+          className='pl-10 pr-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+          value={localValue}
+          onChange={handleChange}
+          aria-label='Search promoters by name, contact, or ID'
+          aria-describedby='search-help'
+          autoComplete="off"
+          spellCheck="false"
+          style={{ transition: 'none' }} // Remove all CSS transitions that could cause flickering
+        />
+        <button
+          onClick={handleClear}
+          className={`absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${
+            localValue ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+          style={{ transition: 'opacity 0.15s ease' }} // Only transition opacity
+          aria-label='Clear search'
+          tabIndex={localValue ? 0 : -1}
+        >
+          <X className='h-4 w-4' />
+        </button>
+      </div>
+      <p id='search-help' className='text-xs text-muted-foreground'>
+        Press <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Ctrl+K</kbd> for focus • <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Esc</kbd> to clear
+      </p>
+    </div>
+  );
+});
+
+SearchInput.displayName = 'SearchInput';
 
 export function PromotersFilters({
   searchTerm,
@@ -335,60 +399,30 @@ export function PromotersFilters({
         </div>
 
         <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,2fr)]'>
-          <div className='space-y-3'>
-            <Label htmlFor='promoter-search' className="text-sm font-medium">Search promoters</Label>
-            <div className='relative'>
-              <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
-              <Input
-                id='promoter-search'
-                placeholder='Search by name, contact, ID...'
-                className='pl-10 pr-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors'
-                value={searchTerm}
-                onChange={event => onSearchChange(event.target.value)}
-                aria-label='Search promoters by name, contact, or ID'
-                aria-describedby='search-help'
-                autoComplete="off"
-                spellCheck="false"
-              />
-              <button
-                onClick={() => onSearchChange('')}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-all duration-200 ${
-                  searchTerm ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                }`}
-                aria-label='Clear search'
-                tabIndex={searchTerm ? 0 : -1}
-              >
-                <X className='h-4 w-4' />
-              </button>
-            </div>
-            
-            {/* Recent searches - Use absolute positioning to prevent layout shifts */}
-            {recentSearches.length > 0 && showAdvancedOptions && (
-              <div className='space-y-2 animate-in fade-in duration-200'>
-                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
-                  <History className='h-3 w-3' />
-                  Recent searches
-                </Label>
-                <div className='flex flex-wrap gap-1'>
-                  {recentSearches.map((search, index) => (
-                    <Button
-                      key={`${search}-${index}`}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onSearchChange(search)}
-                      className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
-                    >
-                      {search}
-                    </Button>
-                  ))}
-                </div>
+          <SearchInput searchTerm={searchTerm} onSearchChange={onSearchChange} />
+          
+          {/* Recent searches - Only show when advanced options are enabled */}
+          {recentSearches.length > 0 && showAdvancedOptions && (
+            <div className='space-y-2'>
+              <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                <History className='h-3 w-3' />
+                Recent searches
+              </Label>
+              <div className='flex flex-wrap gap-1'>
+                {recentSearches.map((search, index) => (
+                  <Button
+                    key={`${search}-${index}`}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onSearchChange(search)}
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {search}
+                  </Button>
+                ))}
               </div>
-            )}
-            
-            <p id='search-help' className='text-xs text-muted-foreground'>
-              Press <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Ctrl+K</kbd> for focus • <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Esc</kbd> to clear
-            </p>
-          </div>
+            </div>
+          )}
           <div className='grid gap-4 sm:grid-cols-3'>
             <div className='space-y-2'>
               <Label>Lifecycle</Label>
