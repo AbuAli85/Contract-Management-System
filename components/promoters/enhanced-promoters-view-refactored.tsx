@@ -1234,6 +1234,32 @@ export function EnhancedPromotersViewRefactored({
     [router, derivedLocale]
   );
 
+  const handlePartyAssignmentUpdate = useCallback(
+    async (promoterId: string, partyId: string | null) => {
+      // Update the local promoter data optimistically
+      try {
+        // Show success message
+        toast({
+          title: 'Success',
+          description: partyId 
+            ? 'Party assignment updated successfully'
+            : 'Promoter unassigned from party',
+        });
+        
+        // Refetch data to get updated party information
+        await refetch();
+      } catch (error) {
+        console.error('Error handling party assignment update:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to refresh data after assignment update',
+          variant: 'destructive',
+        });
+      }
+    },
+    [toast, refetch]
+  );
+
   const handleSendReminder = useCallback(
     (promoter: DashboardPromoter) => {
       console.log('[ACTION] Send reminder to:', promoter.displayName);
@@ -1659,6 +1685,8 @@ export function EnhancedPromotersViewRefactored({
           onAddPromoter={handleAddPromoter}
           onResetFilters={handleResetFilters}
           onPageChange={handlePageChange}
+          onPartyAssignmentUpdate={handlePartyAssignmentUpdate}
+          enableEnhancedPartyManagement={true}
         />
 
             {/* Enhanced Alerts Panel - Only show in non-analytics view */}

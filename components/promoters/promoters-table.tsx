@@ -32,6 +32,7 @@ import { Users, Plus, RefreshCw, SortAsc, SortDesc, MoreHorizontal, ArrowRight }
 import { PromotersTableRow } from './promoters-table-row';
 import { PromotersGridView } from './promoters-grid-view';
 import { PromotersCardsView } from './promoters-cards-view';
+import { EnhancedPromotersCardsViewWithPartyEdit } from './enhanced-promoter-card-with-party-edit';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import type {
@@ -62,6 +63,8 @@ interface PromotersTableProps {
   onAddPromoter: () => void;
   onResetFilters: () => void;
   onPageChange: (page: number) => void;
+  onPartyAssignmentUpdate?: (promoterId: string, partyId: string | null) => void;
+  enableEnhancedPartyManagement?: boolean;
 }
 
 export function PromotersTable({
@@ -82,6 +85,8 @@ export function PromotersTable({
   onAddPromoter,
   onResetFilters,
   onPageChange,
+  onPartyAssignmentUpdate,
+  enableEnhancedPartyManagement = false,
 }: PromotersTableProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -392,13 +397,24 @@ export function PromotersTable({
             {/* Cards View */}
             {viewMode === 'cards' && (
               <ScrollArea className='h-[520px] animate-in fade-in duration-300'>
-                <PromotersCardsView
-                  promoters={promoters}
-                  selectedPromoters={selectedPromoters}
-                  onSelectPromoter={onSelectPromoter}
-                  onViewPromoter={onViewPromoter}
-                  onEditPromoter={onEditPromoter}
-                />
+                {enableEnhancedPartyManagement ? (
+                  <EnhancedPromotersCardsViewWithPartyEdit
+                    promoters={promoters}
+                    selectedPromoters={selectedPromoters}
+                    onSelectPromoter={onSelectPromoter}
+                    onViewPromoter={onViewPromoter}
+                    onEditPromoter={onEditPromoter}
+                    {...(onPartyAssignmentUpdate && { onPartyAssignmentUpdate })}
+                  />
+                ) : (
+                  <PromotersCardsView
+                    promoters={promoters}
+                    selectedPromoters={selectedPromoters}
+                    onSelectPromoter={onSelectPromoter}
+                    onViewPromoter={onViewPromoter}
+                    onEditPromoter={onEditPromoter}
+                  />
+                )}
                 {isFetching && promoters.length > 0 && (
                   <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
                     <RefreshCw className='h-4 w-4 animate-spin' />
