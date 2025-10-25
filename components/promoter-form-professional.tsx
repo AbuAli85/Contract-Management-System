@@ -51,6 +51,7 @@ import {
   formatPhoneNumber,
   getPhoneNumberExample,
 } from '@/lib/validation/phone-validator';
+import { DatePickerWithManualInput } from '@/components/date-picker-with-manual-input';
 
 // Simple Label component to avoid the import issue
 const Label = ({ children, className, ...props }: any) => (
@@ -62,26 +63,50 @@ const Label = ({ children, className, ...props }: any) => (
   </label>
 );
 
-// Simple DateInput component to avoid the import issue
+// DateInput wrapper component using DatePickerWithManualInput
 const DateInput = ({
   value,
   onChange,
   placeholder,
+  label,
+  id,
   ...props
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  label?: string;
+  id?: string;
   [key: string]: any;
-}) => (
-  <Input
-    type='date'
-    value={value}
-    onChange={e => onChange(e.target.value)}
-    placeholder={placeholder}
-    {...props}
-  />
-);
+}) => {
+  // Convert string value to Date or undefined
+  const dateValue = value ? new Date(value) : undefined;
+  
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      // Format as YYYY-MM-DD for database storage
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      onChange(`${year}-${month}-${day}`);
+    } else {
+      onChange('');
+    }
+  };
+
+  return (
+    <div className='space-y-2'>
+      {label && <Label htmlFor={id}>{label}</Label>}
+      <DatePickerWithManualInput
+        date={dateValue}
+        onDateChange={handleDateChange}
+        placeholder={placeholder || 'DD/MM/YYYY'}
+        dateFormat='dd/MM/yyyy'
+        {...props}
+      />
+    </div>
+  );
+};
 
 interface PromoterFormProfessionalProps {
   promoterToEdit?: any | null;
@@ -741,16 +766,15 @@ export default function PromoterFormProfessional(
                     )}
                   </div>
 
-                  <div className='space-y-2'>
-                    <Label htmlFor='date_of_birth'>Date of Birth</Label>
-                    <DateInput
-                      value={formData.date_of_birth}
-                      onChange={value =>
-                        handleInputChange('date_of_birth', value)
-                      }
-                      placeholder='DD/MM/YYYY'
-                    />
-                  </div>
+                  <DateInput
+                    id='date_of_birth'
+                    label='Date of Birth'
+                    value={formData.date_of_birth}
+                    onChange={value =>
+                      handleInputChange('date_of_birth', value)
+                    }
+                    placeholder='DD/MM/YYYY'
+                  />
 
                   <div className='space-y-2'>
                     <Label htmlFor='gender'>Gender</Label>
@@ -1069,7 +1093,7 @@ export default function PromoterFormProfessional(
                     )}
                   </div>
 
-                  <div className='space-y-2'>
+                  <div>
                     <DateInput
                       id='id_expiry_date'
                       label='ID Expiry Date'
@@ -1080,7 +1104,7 @@ export default function PromoterFormProfessional(
                       placeholder='DD/MM/YYYY'
                     />
                     {validationErrors.id_expiry_date && (
-                      <p className='text-sm text-red-500'>
+                      <p className='text-sm text-red-500 mt-1'>
                         {validationErrors.id_expiry_date}
                       </p>
                     )}
@@ -1098,7 +1122,7 @@ export default function PromoterFormProfessional(
                     />
                   </div>
 
-                  <div className='space-y-2'>
+                  <div>
                     <DateInput
                       id='passport_expiry_date'
                       label='Passport Expiry Date'
@@ -1109,7 +1133,7 @@ export default function PromoterFormProfessional(
                       placeholder='DD/MM/YYYY'
                     />
                     {validationErrors.passport_expiry_date && (
-                      <p className='text-sm text-red-500'>
+                      <p className='text-sm text-red-500 mt-1'>
                         {validationErrors.passport_expiry_date}
                       </p>
                     )}
@@ -1127,17 +1151,15 @@ export default function PromoterFormProfessional(
                     />
                   </div>
 
-                  <div className='space-y-2'>
-                    <DateInput
-                      id='visa_expiry_date'
-                      label='Visa Expiry Date'
-                      value={formData.visa_expiry_date}
-                      onChange={value =>
-                        handleInputChange('visa_expiry_date', value)
-                      }
-                      placeholder='DD/MM/YYYY'
-                    />
-                  </div>
+                  <DateInput
+                    id='visa_expiry_date'
+                    label='Visa Expiry Date'
+                    value={formData.visa_expiry_date}
+                    onChange={value =>
+                      handleInputChange('visa_expiry_date', value)
+                    }
+                    placeholder='DD/MM/YYYY'
+                  />
 
                   <div className='space-y-2'>
                     <Label htmlFor='work_permit_number'>
@@ -1153,17 +1175,15 @@ export default function PromoterFormProfessional(
                     />
                   </div>
 
-                  <div className='space-y-2'>
-                    <DateInput
-                      id='work_permit_expiry_date'
-                      label='Work Permit Expiry Date'
-                      value={formData.work_permit_expiry_date}
-                      onChange={value =>
-                        handleInputChange('work_permit_expiry_date', value)
-                      }
-                      placeholder='DD/MM/YYYY'
-                    />
-                  </div>
+                  <DateInput
+                    id='work_permit_expiry_date'
+                    label='Work Permit Expiry Date'
+                    value={formData.work_permit_expiry_date}
+                    onChange={value =>
+                      handleInputChange('work_permit_expiry_date', value)
+                    }
+                    placeholder='DD/MM/YYYY'
+                  />
                 </div>
 
                 {/* Document Upload Section */}
