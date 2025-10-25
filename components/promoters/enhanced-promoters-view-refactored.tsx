@@ -407,6 +407,10 @@ export function EnhancedPromotersViewRefactored({
     refetchOnReconnect: true, // Refetch on reconnect
   });
 
+  // Separate search-specific loading state from general data fetching
+  const isSearching = searchTerm !== debouncedSearchTerm && debouncedSearchTerm !== '';
+  const isDataFetching = isFetching && !isSearching;
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading && !response) {
@@ -1122,7 +1126,7 @@ export function EnhancedPromotersViewRefactored({
   }
 
   // Show loading overlay if data is being refreshed
-  const showLoadingOverlay = isFetching && response;
+  const showLoadingOverlay = isDataFetching && response;
 
   return (
     <main className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
@@ -1140,7 +1144,7 @@ export function EnhancedPromotersViewRefactored({
         <PromotersHeader
           metrics={metrics}
           promoters={dashboardPromoters}
-          isFetching={isFetching}
+          isFetching={isDataFetching}
           onRefresh={handleRefresh}
           onAddPromoter={handleAddPromoter}
           locale={derivedLocale}
@@ -1173,7 +1177,7 @@ export function EnhancedPromotersViewRefactored({
       )}
       
       {/* Refresh Indicator */}
-      <RefreshIndicator isFetching={isFetching && !isLoading} showFloating={true} />
+      <RefreshIndicator isFetching={isDataFetching && !isLoading} showFloating={true} />
 
       {/* Enhanced Filters */}
       <section aria-labelledby='filters-heading'>
@@ -1191,7 +1195,7 @@ export function EnhancedPromotersViewRefactored({
           onResetFilters={handleResetFilters}
           onExport={handleExport}
           onRefresh={handleRefresh}
-          isFetching={isFetching}
+          isFetching={isDataFetching}
       />
       </section>
 
@@ -1251,7 +1255,7 @@ export function EnhancedPromotersViewRefactored({
                   >
                     ← Back to List
                   </button>
-                  {isFetching && (
+                  {isDataFetching && (
                     <Badge
                       variant='outline'
                       className='gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200/80 shadow-sm w-fit'
@@ -1313,7 +1317,7 @@ export function EnhancedPromotersViewRefactored({
               sortOrder={sortOrder}
               viewMode={viewMode}
               pagination={pagination}
-              isFetching={isFetching}
+              isFetching={isDataFetching}
               hasFiltersApplied={hasFiltersApplied}
               onSelectAll={handleSelectAll}
               onSelectPromoter={handleSelectPromoter}
