@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -26,6 +27,7 @@ import type { DashboardPromoter } from './types';
 interface AnalyticsInsightsPanelProps {
   promoters: DashboardPromoter[];
   className?: string;
+  locale?: string;
 }
 
 interface Insight {
@@ -43,7 +45,33 @@ interface Insight {
   priority: 'high' | 'medium' | 'low';
 }
 
-export function AnalyticsInsightsPanel({ promoters, className }: AnalyticsInsightsPanelProps) {
+export function AnalyticsInsightsPanel({ promoters, className, locale = 'en' }: AnalyticsInsightsPanelProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Navigation helper functions
+  const navigateToCriticalCases = () => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('status', 'critical');
+    params.set('view', 'table');
+    router.push(`/${locale}/promoters?${params.toString()}`);
+  };
+
+  const navigateToDocumentStatus = () => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('document_filter', 'expired');
+    params.set('view', 'table');
+    router.push(`/${locale}/promoters?${params.toString()}`);
+  };
+
+  const openRenewalScheduler = () => {
+    // Open renewal scheduler - this could be a modal or navigate to a dedicated page
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('document_filter', 'expiring');
+    params.set('view', 'table');
+    params.set('action', 'schedule_renewals');
+    router.push(`/${locale}/promoters?${params.toString()}`);
+  };
   
   const insights = useMemo((): Insight[] => {
     const total = promoters.length;
@@ -79,7 +107,7 @@ export function AnalyticsInsightsPanel({ promoters, className }: AnalyticsInsigh
         priority: 'high',
         action: {
           label: 'Review Critical Cases',
-          onClick: () => console.log('Navigate to critical cases')
+          onClick: navigateToCriticalCases
         }
       });
     }
@@ -95,7 +123,7 @@ export function AnalyticsInsightsPanel({ promoters, className }: AnalyticsInsigh
         priority: 'high',
         action: {
           label: 'View Document Status',
-          onClick: () => console.log('Navigate to document management')
+          onClick: navigateToDocumentStatus
         }
       });
     }
@@ -112,7 +140,7 @@ export function AnalyticsInsightsPanel({ promoters, className }: AnalyticsInsigh
         priority: 'medium',
         action: {
           label: 'Schedule Renewals',
-          onClick: () => console.log('Navigate to renewal scheduling')
+          onClick: openRenewalScheduler
         }
       });
     }
@@ -128,7 +156,13 @@ export function AnalyticsInsightsPanel({ promoters, className }: AnalyticsInsigh
         priority: 'medium',
         action: {
           label: 'Assign to Companies',
-          onClick: () => console.log('Navigate to assignment management')
+          onClick: () => {
+            const params = new URLSearchParams(searchParams?.toString() || '');
+            params.set('assignment_filter', 'unassigned');
+            params.set('view', 'table');
+            params.set('action', 'bulk_assign');
+            router.push(`/${locale}/promoters?${params.toString()}`);
+          }
         }
       });
     }
@@ -172,7 +206,12 @@ export function AnalyticsInsightsPanel({ promoters, className }: AnalyticsInsigh
         priority: 'medium',
         action: {
           label: 'View Recommendations',
-          onClick: () => console.log('Show assignment recommendations')
+          onClick: () => {
+            const params = new URLSearchParams(searchParams?.toString() || '');
+            params.set('view', 'analytics');
+            params.set('tab', 'recommendations');
+            router.push(`/${locale}/promoters?${params.toString()}`);
+          }
         }
       });
     }

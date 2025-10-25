@@ -1559,6 +1559,7 @@ export function EnhancedPromotersViewRefactored({
                 {/* Smart Insights Panel */}
                 <AnalyticsInsightsPanel 
                   promoters={allDashboardPromoters}
+                  locale={locale || 'en'}
                 />
 
                 {/* Document Expiry Analysis */}
