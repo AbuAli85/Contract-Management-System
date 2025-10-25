@@ -164,64 +164,99 @@ function computeOverallStatus(
   return 'active';
 }
 
-// Function to fetch ALL promoters for analytics (no pagination)
+// Function to fetch ALL promoters for analytics (with proper pagination)
 async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
-  console.log('🔄 Fetching ALL promoters for analytics dashboard...');
+  console.log('🔄 Fetching ALL promoters for analytics dashboard with pagination...');
 
   const controller = new AbortController();
   let timeoutId: NodeJS.Timeout | null = null;
   
   try {
-    // Use a very high limit to get all promoters
-    const params = new URLSearchParams({
-      page: '1',
-      limit: '10000', // High limit to get all promoters
-      sortField: 'created_at',
-      sortOrder: 'desc',
-    });
+    const allPromoters: any[] = [];
+    let page = 1;
+    const limit = 100; // Use API's maximum allowed limit
+    let totalPages = 1;
+    let totalCount = 0;
 
-    timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout for large dataset
-    
-    console.log('📞 Making API request for ALL promoters:', params.toString());
-    
-    const response = await fetch(
-      `/api/promoters?${params.toString()}`,
-      {
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-Analytics-Request': 'true', // Flag for analytics request
-        },
+    timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for complete fetch
+
+    // Fetch all pages of data
+    do {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        sortField: 'created_at',
+        sortOrder: 'desc',
+      });
+
+      console.log(`📞 Fetching page ${page}/${totalPages} for analytics...`);
+      
+      const response = await fetch(
+        `/api/promoters?${params.toString()}`,
+        {
+          method: 'GET',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Analytics-Request': 'true',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
       }
-    );
+
+      const payload = await response.json();
+
+      if (payload.success === false) {
+        throw new Error(payload.error || 'Failed to load promoters for analytics.');
+      }
+
+      if (!Array.isArray(payload.promoters)) {
+        throw new Error('Invalid analytics data format');
+      }
+
+      // Add promoters from this page
+      allPromoters.push(...payload.promoters);
+      
+      // Update pagination info from first response
+      if (page === 1) {
+        totalCount = payload.total || payload.pagination?.total || 0;
+        totalPages = Math.ceil(totalCount / limit);
+        console.log(`📊 Total workforce: ${totalCount} members across ${totalPages} pages`);
+      }
+
+      console.log(`✅ Fetched page ${page}: ${payload.promoters.length} promoters (Total so far: ${allPromoters.length}/${totalCount})`);
+      page++;
+
+    } while (page <= totalPages && allPromoters.length < totalCount);
 
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
 
-    if (!response.ok) {
-      console.error('❌ Analytics API request failed:', {
-        status: response.status,
-        statusText: response.statusText,
-      });
-      throw new Error(`API returned ${response.status}: ${response.statusText}`);
-    }
+    // Create final response with all promoters
+    const finalResponse: PromotersResponse = {
+      success: true,
+      promoters: allPromoters,
+      count: allPromoters.length,
+      total: totalCount,
+      pagination: {
+        page: 1,
+        limit: allPromoters.length,
+        total: totalCount,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+      timestamp: new Date().toISOString(),
+    };
 
-    const payload = await response.json();
+    console.log(`🎉 Successfully fetched ALL ${allPromoters.length} promoters for analytics dashboard!`);
+    return finalResponse;
 
-    if (payload.success === false) {
-      console.error('❌ Analytics API returned error:', payload.error);
-      throw new Error(payload.error || 'Failed to load all promoters for analytics.');
-    }
-
-    if (!Array.isArray(payload.promoters)) {
-      throw new Error('Invalid analytics data format');
-    }
-
-    console.log('✅ Successfully fetched ALL promoters for analytics:', payload.promoters.length);
-    return payload;
   } catch (error) {
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -229,7 +264,7 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        throw new Error('Analytics request timeout: Large dataset took too long to load');
+        throw new Error('Analytics request timeout: Complete workforce fetch took too long');
       }
     }
     throw error;
@@ -670,10 +705,19 @@ export function EnhancedPromotersViewRefactored({
     setAnalyticsError(null);
     
     try {
-      console.log('🔄 Loading ALL promoters for analytics dashboard...');
+      console.log('🔄 Loading ALL promoters for analytics dashboard with pagination...');
       const analyticsData = await fetchAllPromotersForAnalytics();
       setAllPromotersData(analyticsData);
-      console.log('✅ Analytics data loaded successfully:', analyticsData.promoters.length, 'total promoters');
+      console.log('✅ Analytics data loaded successfully:', analyticsData.promoters.length, 'out of', analyticsData.total, 'total workforce members');
+      
+      // Verify we got all the data
+      if (analyticsData.promoters.length !== analyticsData.total) {
+        console.warn('⚠️ Potential data mismatch:', {
+          fetched: analyticsData.promoters.length,
+          total: analyticsData.total,
+          difference: analyticsData.total - analyticsData.promoters.length
+        });
+      }
     } catch (error) {
       console.error('❌ Failed to load analytics data:', error);
       setAnalyticsError(error instanceof Error ? error.message : 'Failed to load analytics data');
@@ -1397,7 +1441,7 @@ export function EnhancedPromotersViewRefactored({
                         </span>
                         {allPromotersData && (
                           <span className='block text-sm text-green-600 dark:text-green-400 mt-1'>
-                            ✅ Showing complete workforce data • Last updated: {new Date(allPromotersData.timestamp).toLocaleTimeString()}
+                            ✅ Showing complete workforce data ({allPromotersData.total} members) • Last updated: {new Date(allPromotersData.timestamp).toLocaleTimeString()}
                           </span>
                         )}
                       </p>
@@ -1467,7 +1511,7 @@ export function EnhancedPromotersViewRefactored({
                       Loading Complete Workforce Analytics
                     </h3>
                     <p className='text-blue-700 dark:text-blue-300 mt-1'>
-                      Fetching all workforce data for comprehensive insights...
+                      Fetching all workforce data across multiple pages for comprehensive insights...
                     </p>
                   </div>
                 </div>
