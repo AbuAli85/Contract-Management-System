@@ -104,6 +104,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, differenceInDays, isValid, parse } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ClickablePromoterCard } from '@/components/promoters/clickable-promoter-card';
 import {
   Tooltip,
   TooltipContent,
@@ -1186,66 +1187,12 @@ function ManagePartiesContent() {
                                 ) : promotersByEmployer[party.id] && promotersByEmployer[party.id]!.length > 0 ? (
                                   <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-3'>
                                     {promotersByEmployer[party.id]!.map((promoter) => (
-                                      <Card key={promoter.id} className='border-slate-200 dark:border-slate-700'>
-                                        <CardContent className='p-4'>
-                                          <div className='flex items-start gap-3'>
-                                            <div className='flex-shrink-0'>
-                                              {promoter.profile_picture_url ? (
-                                                <img
-                                                  src={promoter.profile_picture_url}
-                                                  alt={promoter.name_en}
-                                                  className='h-10 w-10 rounded-full object-cover'
-                                                />
-                                              ) : (
-                                                <div className='h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center'>
-                                                  <User className='h-5 w-5 text-blue-600 dark:text-blue-400' />
-                                                </div>
-                                              )}
-                                            </div>
-                                            <div className='flex-1 min-w-0'>
-                                              <div className='flex items-center gap-2 mb-1'>
-                                                <h4 className='font-medium text-slate-900 dark:text-slate-100 truncate'>
-                                                  {promoter.name_en}
-                                                </h4>
-                                                <Badge
-                                                  variant={
-                                                    promoter.status === 'active'
-                                                      ? 'default'
-                                                      : promoter.status === 'inactive'
-                                                      ? 'secondary'
-                                                      : 'destructive'
-                                                  }
-                                                  className='text-xs'
-                                                >
-                                                  {promoter.status}
-                                                </Badge>
-                                              </div>
-                                              {promoter.name_ar && (
-                                                <p className='text-sm text-slate-600 dark:text-slate-400 mb-1'>
-                                                  {promoter.name_ar}
-                                                </p>
-                                              )}
-                                              {promoter.job_title && (
-                                                <p className='text-xs text-slate-500 dark:text-slate-500 mb-2'>
-                                                  {promoter.job_title}
-                                                </p>
-                                              )}
-                                              <div className='flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500'>
-                                                {promoter.mobile_number && (
-                                                  <div className='flex items-center gap-1'>
-                                                    <Phone className='h-3 w-3' />
-                                                    {promoter.mobile_number}
-                                                  </div>
-                                                )}
-                                                <div className='flex items-center gap-1'>
-                                                  <Shield className='h-3 w-3' />
-                                                  {promoter.id_card_number}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </CardContent>
-                                      </Card>
+                                      <ClickablePromoterCard 
+                                        key={promoter.id} 
+                                        promoter={promoter}
+                                        locale="en"
+                                        enableQuickActions={true}
+                                      />
                                     ))}
                                   </div>
                                 ) : (
