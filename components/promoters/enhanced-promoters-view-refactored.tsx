@@ -1232,14 +1232,14 @@ export function EnhancedPromotersViewRefactored({
                     </div>
                     <div>
                       <h1 className='text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300'>
-                        Analytics Dashboard
+                        Workforce Analytics Dashboard
                       </h1>
                       <p className='text-base text-slate-600 dark:text-slate-400 mt-1'>
                         <span className='font-bold text-purple-600 dark:text-purple-400 text-lg'>
                           {dashboardPromoters.length}
                         </span>{' '}
                         <span className='text-slate-600 dark:text-slate-400'>
-                          workforce insights & trends
+                          total workforce members • Real-time insights & trends
                         </span>
                       </p>
                     </div>
@@ -1298,14 +1298,17 @@ export function EnhancedPromotersViewRefactored({
               </div>
             </div>
 
-            {/* Analytics Charts */}
+            {/* Analytics Charts - Using complete transformed workforce data */}
             <PromotersDocumentExpiryChart 
               promoters={dashboardPromoters}
-              title="Document Expiry Timeline"
-              description="Monitor document expiration patterns and upcoming renewals"
+              title="Document Expiry Timeline - All Workforce"
+              description="Monitor document expiration patterns and upcoming renewals across entire workforce"
             />
             <PromotersAnalyticsCharts 
               promoters={dashboardPromoters}
+              isRealTime={true}
+              onRefresh={handleRefresh}
+              isFetching={isDataFetching}
             />
           </div>
         ) : (
