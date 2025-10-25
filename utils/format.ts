@@ -32,7 +32,7 @@ export interface FormatResult {
 
 // Constants for better maintainability
 const DEFAULT_CURRENCY = 'USD';
-const DEFAULT_LOCALE = 'en-US';
+const DEFAULT_LOCALE = 'en-GB'; // Changed to en-GB for DD/MM/YYYY format
 const DEFAULT_DATE_STYLE = 'medium';
 const DEFAULT_TIME_STYLE = 'short';
 
@@ -74,6 +74,7 @@ export const formatCurrency = (
 
 /**
  * Formats date with enhanced type safety and error handling
+ * Returns date in DD/MM/YYYY format
  */
 export const formatDate = (
   dateString?: string | null,
@@ -94,10 +95,12 @@ export const formatDate = (
       };
     }
 
-    const { locale = DEFAULT_LOCALE, dateStyle = DEFAULT_DATE_STYLE } =
-      options || {};
-
-    const formatted = date.toLocaleDateString(locale, { dateStyle });
+    // Use DD/MM/YYYY format
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const formatted = `${day}/${month}/${year}`;
+    
     return { value: formatted, isValid: true };
   } catch (error) {
     return {
@@ -282,7 +285,11 @@ export const formatCurrencyLegacy = (
   amount?: number,
   currency?: string | null
 ): string => {
-  const result = formatCurrency(amount, { currency: currency || undefined });
+  const options: CurrencyFormatOptions = {};
+  if (currency) {
+    options.currency = currency;
+  }
+  const result = formatCurrency(amount, options);
   return result.value;
 };
 

@@ -125,7 +125,13 @@ function DocumentStatusPill({
       </div>
       {health.expiresOn && (
         <span className="text-[10px] text-muted-foreground font-mono">
-          {new Date(health.expiresOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          {(() => {
+            const date = new Date(health.expiresOn);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+          })()}
         </span>
       )}
     </div>
@@ -134,11 +140,11 @@ function DocumentStatusPill({
 
 // Helper function to format date
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 // Helper function to calculate data completeness

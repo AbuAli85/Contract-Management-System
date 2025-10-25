@@ -561,11 +561,11 @@ function PendingContractsPageContent() {
       // Check if date is valid
       if (isNaN(date.getTime())) return 'Invalid Date';
       
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
+      // Return DD/MM/YYYY format
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     } catch (error) {
       console.warn('Error formatting date:', dateString, error);
       return 'Invalid Date';
