@@ -49,14 +49,14 @@ interface PromotersTableProps {
   selectedPromoters: Set<string>;
   sortField: SortField;
   sortOrder: SortOrder;
-  viewMode: 'table' | 'grid' | 'cards';
+  viewMode: 'table' | 'grid' | 'cards' | 'analytics';
   pagination: PaginationInfo | undefined;
   isFetching: boolean;
   hasFiltersApplied: boolean;
   onSelectAll: () => void;
   onSelectPromoter: (promoterId: string) => void;
   onSort: (field: SortField) => void;
-  onViewModeChange: (mode: 'table' | 'grid' | 'cards') => void;
+  onViewModeChange: (mode: 'table' | 'grid' | 'cards' | 'analytics') => void;
   onViewPromoter: (promoter: DashboardPromoter) => void;
   onEditPromoter: (promoter: DashboardPromoter) => void;
   onAddPromoter: () => void;
@@ -127,11 +127,11 @@ export function PromotersTable({
           <Tabs
             value={viewMode}
             onValueChange={value =>
-              onViewModeChange(value as 'table' | 'grid' | 'cards')
+              onViewModeChange(value as 'table' | 'grid' | 'cards' | 'analytics')
             }
             className='ml-auto'
           >
-            <TabsList className='grid w-full grid-cols-3 bg-white/80 dark:bg-slate-800/80'>
+            <TabsList className='grid w-full grid-cols-4 bg-white/80 dark:bg-slate-800/80'>
               <TabsTrigger
                 value='table'
                 className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
@@ -149,6 +149,13 @@ export function PromotersTable({
                 className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
               >
                 Cards
+              </TabsTrigger>
+              <TabsTrigger
+                value='analytics'
+                className='data-[state=active]:bg-purple-500 data-[state=active]:text-white'
+                aria-label="Analytics view with charts and insights"
+              >
+                Analytics
               </TabsTrigger>
             </TabsList>
           </Tabs>

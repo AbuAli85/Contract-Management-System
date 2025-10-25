@@ -178,7 +178,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 
     console.log('👤 Authenticated user:', user.email);
 
-    // Parse pagination from query params
+    // Parse pagination and filters from query params
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = Math.min(
@@ -186,15 +186,23 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       100
     );
     const offset = (page - 1) * limit;
+    
+    // Server-side filtering parameters
+    const searchTerm = url.searchParams.get('search') || '';
+    const statusFilter = url.searchParams.get('status') || '';
+    const documentFilter = url.searchParams.get('documents') || '';
+    const assignmentFilter = url.searchParams.get('assignment') || '';
+    const sortField = url.searchParams.get('sortField') || 'created_at';
+    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
 
-    console.log('📊 Query params:', { page, limit, offset });
+    console.log('📊 Query params:', { 
+      page, limit, offset, searchTerm, statusFilter, 
+      documentFilter, assignmentFilter, sortField, sortOrder 
+    });
 
     // ✅ SECURITY: Query with RLS policies - only returns authorized data
-    const {
-      data: promoters,
-      error,
-      count,
-    } = await supabase
+    // Build the query with server-side filtering
+    let query = supabase
       .from('promoters')
       .select(
         `
@@ -209,9 +217,49 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         )
       `,
         { count: 'exact' }
-      )
-      .range(offset, offset + limit - 1)
-      .order('created_at', { ascending: false });
+      );
+
+    // Apply search filter
+    if (searchTerm) {
+      query = query.or(
+        `name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,mobile_number.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter && statusFilter !== 'all') {
+      if (statusFilter === 'active') {
+        query = query.eq('status', 'active');
+      } else if (statusFilter === 'inactive') {
+        query = query.in('status', ['inactive', 'suspended', 'terminated']);
+      } else if (statusFilter === 'warning') {
+        // Documents expiring soon or other warning conditions
+        query = query.or('status.eq.suspended,status.eq.probation');
+      } else {
+        query = query.eq('status', statusFilter);
+      }
+    }
+
+    // Apply assignment filter
+    if (assignmentFilter && assignmentFilter !== 'all') {
+      if (assignmentFilter === 'assigned') {
+        query = query.not('employer_id', 'is', null);
+      } else if (assignmentFilter === 'unassigned') {
+        query = query.is('employer_id', null);
+      }
+    }
+
+    // Apply sorting
+    const validSortFields = ['name_en', 'name_ar', 'email', 'status', 'created_at', 'updated_at'];
+    const actualSortField = validSortFields.includes(sortField) ? sortField : 'created_at';
+    const actualSortOrder = sortOrder === 'asc' ? true : false;
+    
+    query = query.order(actualSortField, { ascending: actualSortOrder });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: promoters, error, count } = await query;
 
     if (error) {
       console.error('❌ Database error:', {
