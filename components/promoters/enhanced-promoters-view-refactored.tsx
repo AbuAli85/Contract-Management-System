@@ -321,6 +321,7 @@ export function EnhancedPromotersViewRefactored({
 
   // State management
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
     'all'
   );
@@ -358,6 +359,15 @@ export function EnhancedPromotersViewRefactored({
     return 'en';
   }, [locale]);
 
+  // Debounce search term to prevent excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay for search debouncing
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Create filters object for server-side filtering
   const filters = useMemo(() => {
     const result: {
@@ -369,7 +379,7 @@ export function EnhancedPromotersViewRefactored({
       sortOrder?: string;
     } = {};
 
-    if (searchTerm) result.search = searchTerm;
+    if (debouncedSearchTerm) result.search = debouncedSearchTerm;
     if (statusFilter !== 'all') result.status = statusFilter;
     if (documentFilter !== 'all') result.documents = documentFilter;
     if (assignmentFilter !== 'all') result.assignment = assignmentFilter;
@@ -377,7 +387,7 @@ export function EnhancedPromotersViewRefactored({
     if (sortOrder) result.sortOrder = sortOrder;
 
     return result;
-  }, [searchTerm, statusFilter, documentFilter, assignmentFilter, sortField, sortOrder]);
+  }, [debouncedSearchTerm, statusFilter, documentFilter, assignmentFilter, sortField, sortOrder]);
 
   const {
     data: response,

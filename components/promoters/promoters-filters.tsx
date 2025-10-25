@@ -149,27 +149,22 @@ export function PromotersFilters({
   onRefresh,
   isFetching,
 }: PromotersFiltersProps) {
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [advancedSearchCriteria, setAdvancedSearchCriteria] = useState<SearchCriteria[]>([]);
   const [filterPresets, setFilterPresets] = useState<FilterPreset[]>(DEFAULT_PRESETS);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-  // Debounce search input
+  // Add to recent searches when search term changes
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (debouncedSearchTerm !== searchTerm) {
-        onSearchChange(debouncedSearchTerm);
-        
-        // Add to recent searches if not empty and not already in the list
-        if (debouncedSearchTerm.trim() && !recentSearches.includes(debouncedSearchTerm.trim())) {
-          setRecentSearches(prev => [debouncedSearchTerm.trim(), ...prev.slice(0, 4)]);
-        }
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [debouncedSearchTerm, searchTerm, onSearchChange, recentSearches]);
+    if (searchTerm.trim() && !recentSearches.includes(searchTerm.trim())) {
+      const timer = setTimeout(() => {
+        setRecentSearches(prev => [searchTerm.trim(), ...prev.slice(0, 4)]);
+      }, 1000); // Only add to recent searches after user stops typing for 1 second
+      
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [searchTerm, recentSearches]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -181,11 +176,10 @@ export function PromotersFilters({
         searchInput?.focus();
       }
       
-      // Escape to clear search
-      if (e.key === 'Escape' && searchTerm) {
-        setDebouncedSearchTerm('');
-        onSearchChange('');
-      }
+  // Escape to clear search
+  if (e.key === 'Escape' && searchTerm) {
+    onSearchChange('');
+  }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -196,7 +190,6 @@ export function PromotersFilters({
     setAdvancedSearchCriteria(criteria);
     // Convert advanced search criteria to search terms (simplified implementation)
     const searchTerms = criteria.map(c => c.value).join(' ');
-    setDebouncedSearchTerm(searchTerms);
     onSearchChange(searchTerms);
   }, [onSearchChange]);
 
@@ -210,7 +203,6 @@ export function PromotersFilters({
     onDocumentFilterChange(filters.documentFilter);
     onAssignmentFilterChange(filters.assignmentFilter);
     if (filters.searchTerm) {
-      setDebouncedSearchTerm(filters.searchTerm);
       onSearchChange(filters.searchTerm);
     }
   }, [onStatusFilterChange, onDocumentFilterChange, onAssignmentFilterChange, onSearchChange]);
@@ -345,17 +337,14 @@ export function PromotersFilters({
                 id='promoter-search'
                 placeholder='Search by name, contact, ID...'
                 className='pl-10 pr-10 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border-slate-200 dark:border-slate-700'
-                value={debouncedSearchTerm}
-                onChange={event => setDebouncedSearchTerm(event.target.value)}
+                value={searchTerm}
+                onChange={event => onSearchChange(event.target.value)}
                 aria-label='Search promoters by name, contact, or ID'
                 aria-describedby='search-help'
               />
-              {debouncedSearchTerm && (
+              {searchTerm && (
                 <button
-                  onClick={() => {
-                    setDebouncedSearchTerm('');
-                    onSearchChange('');
-                  }}
+                  onClick={() => onSearchChange('')}
                   className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
                   aria-label='Clear search'
                 >
@@ -377,10 +366,7 @@ export function PromotersFilters({
                       key={index}
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setDebouncedSearchTerm(search);
-                        onSearchChange(search);
-                      }}
+                      onClick={() => onSearchChange(search)}
                       className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                     >
                       {search}
@@ -487,7 +473,6 @@ export function PromotersFilters({
                         onClick={() => {
                           onResetFilters();
                           handleClearAdvancedSearch();
-                          setDebouncedSearchTerm('');
                         }}
                         className="hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200"
                         aria-label='Reset all filters to default values'
@@ -557,16 +542,16 @@ export function PromotersFilters({
         </div>
         
         {/* Filter Summary */}
-        {(hasFiltersApplied || advancedSearchCriteria.length > 0 || debouncedSearchTerm) && (
+        {(hasFiltersApplied || advancedSearchCriteria.length > 0 || searchTerm) && (
           <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-start gap-3">
               <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Active Filters Summary</p>
                 <div className="flex flex-wrap gap-1 text-xs">
-                  {debouncedSearchTerm && (
+                  {searchTerm && (
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
-                      Search: "{debouncedSearchTerm}"
+                      Search: "{searchTerm}"
                     </Badge>
                   )}
                   {statusFilter !== 'all' && (
