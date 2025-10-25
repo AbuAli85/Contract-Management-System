@@ -19,6 +19,7 @@ export function useAuth() {
       user: null,
       session: null,
       loading: false,
+      initialLoading: true, // Still loading during SSR
       mounted: false,
       signIn: () => Promise.resolve({ user: null, session: null }),
       signOut: () => Promise.resolve(),
@@ -30,6 +31,7 @@ export function useAuth() {
     user: authData.user,
     session: authData.session,
     loading: authData.loading,
+    initialLoading: authData.initialLoading || false,
     mounted: isClient,
     signIn: async (email: string, password: string) => {
       if (!authData.supabase)

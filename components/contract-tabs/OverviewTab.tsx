@@ -25,9 +25,7 @@ import {
   WORK_LOCATIONS,
   getOptionLabel,
 } from '@/constants/contract-options';
-import type { ContractDetail } from '@/types/contract';
-
-export type ContractWithRelations = ContractDetail;
+import type { ContractWithRelations } from '@/hooks/useContract';
 
 interface OverviewTabProps {
   contract: ContractWithRelations | null;

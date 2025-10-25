@@ -38,6 +38,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  initialLoading?: boolean;
+  isProfileSynced?: boolean;
   supabase: any;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -56,6 +58,8 @@ export const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: false,
+  initialLoading: true,
+  isProfileSynced: false,
   supabase: null,
   signOut: async () => {},
   refreshSession: async () => {},
@@ -74,8 +78,8 @@ export function useSupabase() {
   if (!context) {
     throw new Error('useSupabase must be used within an AuthProvider');
   }
-  const { user, session, loading, supabase } = context;
-  return { user, session, loading, supabase };
+  const { user, session, loading, initialLoading, isProfileSynced, supabase, signOut, refreshSession } = context;
+  return { user, session, loading, initialLoading, isProfileSynced, supabase, signOut, refreshSession };
 }
 
 // Auth Provider
@@ -83,7 +87,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // New state for initial auth check
   const [supabase, setSupabase] = useState<any>(null);
+  const [isProfileSynced, setIsProfileSynced] = useState(false);
 
   // Helper function to get proper login URL with locale
   const getLoginUrl = () => {
@@ -102,11 +108,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     const initSupabase = async () => {
       try {
         setLoading(true);
+        setInitialLoading(true);
         const client = createClient();
 
         if (!client) {
           console.error('Failed to create Supabase client');
           setLoading(false);
+          setInitialLoading(false);
           return;
         }
 
@@ -144,6 +152,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(existingSession);
                 setUser(existingSession.user);
                 setLoading(false);
+                setInitialLoading(false);
                 return;
               }
             } else {
@@ -277,12 +286,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         setLoading(false);
+        setInitialLoading(false); // Mark initial auth check as complete
         return () => subscription.unsubscribe();
       } catch (error) {
         console.error('Error initializing Supabase:', error);
         setSession(null);
         setUser(null);
         setLoading(false);
+        setInitialLoading(false); // Mark initial auth check as complete even on error
         return () => {}; // Return empty cleanup function
       }
     };
@@ -339,12 +350,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       session,
-      loading,
+      loading: loading || initialLoading, // Combined loading state prevents premature redirects
+      initialLoading, // Separate flag for initial auth check
+      isProfileSynced,
       supabase,
       signOut,
       refreshSession,
     }),
-    [user, session, loading] // Removed supabase, signOut, refreshSession from deps
+    [user, session, loading, initialLoading, isProfileSynced] // Added new states to deps
   );
 
   return (

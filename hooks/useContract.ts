@@ -6,9 +6,58 @@ import type { Database } from '@/types/supabase';
 
 export type ContractWithRelations =
   Database['public']['Tables']['contracts']['Row'] & {
-    first_party?: any;
-    second_party?: any;
-    promoter?: any;
+    // Override status to be required
+    status: string;
+    // Additional fields that exist in the database but may not be in the base type
+    pdf_url?: string | null;
+    work_location?: string | null;
+    contract_value?: number | null;
+    email?: string | null;
+    // Relational data
+    first_party?: {
+      id: string;
+      name_en: string;
+      name_ar: string | null;
+      email: string | null;
+      phone: string | null;
+      type?: string | null;
+      crn?: string | null;
+      address?: string | null;
+    } | null;
+    second_party?: {
+      id: string;
+      name_en: string;
+      name_ar: string | null;
+      email: string | null;
+      phone: string | null;
+      type?: string | null;
+      crn?: string | null;
+      address?: string | null;
+    } | null;
+    promoter?: {
+      id: string;
+      name_en: string;
+      name_ar: string | null;
+      email: string | null;
+      phone: string | null;
+      id_card_number: string | null;
+      id_card_url: string | null;
+      passport_url: string | null;
+      status: string | null;
+    } | null;
+    // Legacy fields for backward compatibility
+    promoters?: {
+      id: string;
+      name_en: string;
+      name_ar: string | null; 
+      email: string | null;
+      id_card_number: string | null;
+      id_card_url: string | null;
+      passport_url: string | null;
+      status: string | null;
+    } | null;
+    // Additional contract-specific fields that might come from promoter
+    id_card_number?: string | null;
   };
 
 const fetchContract = async (

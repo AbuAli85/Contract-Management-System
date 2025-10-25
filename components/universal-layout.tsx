@@ -3,6 +3,7 @@
 import React from 'react';
 import { usePathname } from '@/navigation';
 import { AuthenticatedLayout } from './authenticated-layout';
+import { AuthLoadingGuard } from './auth/auth-loading-guard';
 
 interface UniversalLayoutProps {
   children: React.ReactNode;
@@ -37,11 +38,15 @@ export function UniversalLayout({ children, locale }: UniversalLayoutProps) {
     pathname?.includes(page)
   );
 
-  // If it's an auth page, render without navigation
-  if (!shouldShowNavigation) {
-    return <>{children}</>;
-  }
-
-  // For all other pages, show sidebar and header
-  return <AuthenticatedLayout locale={locale}>{children}</AuthenticatedLayout>;
+  return (
+    <AuthLoadingGuard>
+      {/* If it's an auth page, render without navigation */}
+      {!shouldShowNavigation ? (
+        <>{children}</>
+      ) : (
+        /* For all other pages, show sidebar and header */
+        <AuthenticatedLayout locale={locale}>{children}</AuthenticatedLayout>
+      )}
+    </AuthLoadingGuard>
+  );
 }

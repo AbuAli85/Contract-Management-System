@@ -545,7 +545,7 @@ export default function ContractDetailPage() {
 
           {/* Overview Tab - Using our refactored component */}
           <TabsContent value='overview'>
-            <OverviewTab contract={contract} />
+            <OverviewTab contract={contract as any} />
           </TabsContent>
 
           {/* Parties Tab - Enhanced with complete party information */}

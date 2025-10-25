@@ -56,7 +56,7 @@ export function AuthenticatedLayout({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, initialLoading, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
@@ -89,7 +89,8 @@ export function AuthenticatedLayout({
     }
 
     // Only check authentication status for protected pages
-    if (!loading && !user) {
+    // Wait for both regular loading and initial loading to complete
+    if (!loading && !initialLoading && !user) {
       // Redirect to login if not authenticated
       console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
       router.push('/en/auth/login');
@@ -97,7 +98,7 @@ export function AuthenticatedLayout({
     }
 
     // Allow authenticated users to access any page without redirecting them
-  }, [loading, user, router, pathname, isPublicPage]);
+  }, [loading, initialLoading, user, router, pathname, isPublicPage]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);

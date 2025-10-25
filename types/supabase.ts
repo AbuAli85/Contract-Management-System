@@ -39,6 +39,11 @@ export interface Database {
           sent_to_legal_by: string | null
           sent_to_hr_at: string | null
           sent_to_hr_by: string | null
+          // Additional fields used in the application
+          pdf_url: string | null
+          work_location: string | null
+          contract_value: number | null
+          email: string | null
         }
         Insert: {
           id?: string
@@ -69,6 +74,11 @@ export interface Database {
           sent_to_legal_by?: string | null
           sent_to_hr_at?: string | null
           sent_to_hr_by?: string | null
+          // Additional fields used in the application
+          pdf_url?: string | null
+          work_location?: string | null
+          contract_value?: number | null
+          email?: string | null
         }
         Update: {
           id?: string
@@ -99,6 +109,11 @@ export interface Database {
           sent_to_legal_by?: string | null
           sent_to_hr_at?: string | null
           sent_to_hr_by?: string | null
+          // Additional fields used in the application
+          pdf_url?: string | null
+          work_location?: string | null
+          contract_value?: number | null
+          email?: string | null
         }
       }
       parties: {

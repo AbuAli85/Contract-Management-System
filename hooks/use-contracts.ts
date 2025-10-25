@@ -17,7 +17,7 @@ import { useEffect } from 'react';
 export type ContractWithRelations = {
   id: string;
   contract_number: string | null;
-  status: string | null;
+  status: string;  // Make status required to match ContractDetail
   contract_start_date: string | null;
   contract_end_date: string | null;
   job_title: string | null;
@@ -30,6 +30,12 @@ export type ContractWithRelations = {
   promoter_id: string | null;
   created_at: string | null;
   updated_at: string | null;
+  // Additional fields for compatibility
+  approval_status?: string | null;
+  salary?: number | null;
+  currency?: string | null;
+  id_card_number?: string | null;  // Added for contract detail page
+  // Relational data
   first_party: {
     id: string;
     name_en: string | null;
@@ -37,6 +43,8 @@ export type ContractWithRelations = {
     type: 'Employer' | 'Client' | 'Generic' | null;
     status: string | null;
     email: string | null;
+    crn?: string | null;
+    address?: string | null;
   } | null;
   second_party: {
     id: string;
@@ -45,6 +53,8 @@ export type ContractWithRelations = {
     type: 'Employer' | 'Client' | 'Generic' | null;
     status: string | null;
     email: string | null;
+    crn?: string | null;
+    address?: string | null;
   } | null;
   promoters: {
     id: string;
@@ -53,6 +63,7 @@ export type ContractWithRelations = {
     email: string | null;
     mobile_number: string | null;
     job_title: string | null;
+    id_card_number?: string | null;  // Added for compatibility
   } | null;
 };
 // Minimal fields required when creating a new contract
@@ -239,7 +250,8 @@ const createContractInSupabase = async (
   newContract: ContractInsert
 ): Promise<ContractWithRelations> => {
   const data = await createContract(newContract);
-  return data as ContractWithRelations;
+  // The createContract function returns a partial contract, so we need to cast it safely
+  return data as unknown as ContractWithRelations;
 };
 
 // --- Form submission: create contract ---
