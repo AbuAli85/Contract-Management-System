@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,9 +19,43 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Search, Download, RefreshCw, Filter, X } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Search, Download, RefreshCw, Filter, X, Settings, BookmarkPlus, History, Zap } from 'lucide-react';
 import type { OverallStatus } from './types';
 import { Badge } from '@/components/ui/badge';
+import { PromotersAdvancedSearch } from './promoters-advanced-search';
+
+interface SearchCriteria {
+  field: string;
+  operator: string;
+  value: string;
+}
+
+interface FilterPreset {
+  id: string;
+  name: string;
+  description?: string;
+  filters: {
+    statusFilter: OverallStatus | 'all';
+    documentFilter: 'all' | 'expired' | 'expiring' | 'missing';
+    assignmentFilter: 'all' | 'assigned' | 'unassigned';
+    searchTerm?: string;
+  };
+  isDefault?: boolean;
+}
 
 interface PromotersFiltersProps {
   searchTerm: string;
@@ -40,6 +75,65 @@ interface PromotersFiltersProps {
   isFetching: boolean;
 }
 
+// Default filter presets
+const DEFAULT_PRESETS: FilterPreset[] = [
+  {
+    id: 'all-active',
+    name: '🟢 All Active',
+    description: 'Show all operational promoters',
+    filters: {
+      statusFilter: 'active',
+      documentFilter: 'all',
+      assignmentFilter: 'all',
+    },
+    isDefault: true,
+  },
+  {
+    id: 'critical-attention',
+    name: '🔴 Needs Attention',
+    description: 'Critical issues requiring immediate action',
+    filters: {
+      statusFilter: 'critical',
+      documentFilter: 'all',
+      assignmentFilter: 'all',
+    },
+    isDefault: true,
+  },
+  {
+    id: 'document-expiring',
+    name: '📄 Documents Expiring',
+    description: 'Promoters with expiring documents',
+    filters: {
+      statusFilter: 'all',
+      documentFilter: 'expiring',
+      assignmentFilter: 'all',
+    },
+    isDefault: true,
+  },
+  {
+    id: 'unassigned',
+    name: '👤 Unassigned',
+    description: 'Promoters without assignments',
+    filters: {
+      statusFilter: 'all',
+      documentFilter: 'all',
+      assignmentFilter: 'unassigned',
+    },
+    isDefault: true,
+  },
+  {
+    id: 'document-expired',
+    name: '⚠️ Expired Documents',
+    description: 'Promoters with expired documents',
+    filters: {
+      statusFilter: 'all',
+      documentFilter: 'expired',
+      assignmentFilter: 'all',
+    },
+    isDefault: true,
+  },
+];
+
 export function PromotersFilters({
   searchTerm,
   onSearchChange,
@@ -55,6 +149,87 @@ export function PromotersFilters({
   onRefresh,
   isFetching,
 }: PromotersFiltersProps) {
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [advancedSearchCriteria, setAdvancedSearchCriteria] = useState<SearchCriteria[]>([]);
+  const [filterPresets, setFilterPresets] = useState<FilterPreset[]>(DEFAULT_PRESETS);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (debouncedSearchTerm !== searchTerm) {
+        onSearchChange(debouncedSearchTerm);
+        
+        // Add to recent searches if not empty and not already in the list
+        if (debouncedSearchTerm.trim() && !recentSearches.includes(debouncedSearchTerm.trim())) {
+          setRecentSearches(prev => [debouncedSearchTerm.trim(), ...prev.slice(0, 4)]);
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [debouncedSearchTerm, searchTerm, onSearchChange, recentSearches]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K or Cmd+K for quick search focus
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('promoter-search') as HTMLInputElement;
+        searchInput?.focus();
+      }
+      
+      // Escape to clear search
+      if (e.key === 'Escape' && searchTerm) {
+        setDebouncedSearchTerm('');
+        onSearchChange('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchTerm, onSearchChange]);
+
+  const handleAdvancedSearch = useCallback((criteria: SearchCriteria[]) => {
+    setAdvancedSearchCriteria(criteria);
+    // Convert advanced search criteria to search terms (simplified implementation)
+    const searchTerms = criteria.map(c => c.value).join(' ');
+    setDebouncedSearchTerm(searchTerms);
+    onSearchChange(searchTerms);
+  }, [onSearchChange]);
+
+  const handleClearAdvancedSearch = useCallback(() => {
+    setAdvancedSearchCriteria([]);
+  }, []);
+
+  const applyPreset = useCallback((preset: FilterPreset) => {
+    const { filters } = preset;
+    onStatusFilterChange(filters.statusFilter);
+    onDocumentFilterChange(filters.documentFilter);
+    onAssignmentFilterChange(filters.assignmentFilter);
+    if (filters.searchTerm) {
+      setDebouncedSearchTerm(filters.searchTerm);
+      onSearchChange(filters.searchTerm);
+    }
+  }, [onStatusFilterChange, onDocumentFilterChange, onAssignmentFilterChange, onSearchChange]);
+
+  const saveCurrentAsPreset = useCallback(() => {
+    const newPreset: FilterPreset = {
+      id: `custom-${Date.now()}`,
+      name: `Custom Filter ${filterPresets.filter(p => !p.isDefault).length + 1}`,
+      description: 'Custom saved filter',
+      filters: {
+        statusFilter,
+        documentFilter,
+        assignmentFilter,
+        ...(searchTerm && { searchTerm }),
+      },
+    };
+    setFilterPresets(prev => [...prev, newPreset]);
+  }, [statusFilter, documentFilter, assignmentFilter, searchTerm, filterPresets]);
+
   return (
     <Card>
       <CardHeader className='pb-5'>
@@ -80,24 +255,107 @@ export function PromotersFilters({
           )}
         </div>
       </CardHeader>
-      <CardContent className='space-y-4'>
+      <CardContent className='space-y-6'>
+        {/* Quick Filter Presets */}
+        <div className='space-y-3'>
+          <div className='flex items-center justify-between'>
+            <Label className='text-sm font-medium text-slate-700 dark:text-slate-300'>
+              <Zap className='inline h-4 w-4 mr-1.5' />
+              Quick Filters
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <Settings className="h-3 w-3 mr-1" />
+                    {showAdvancedOptions ? 'Less' : 'More'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Toggle advanced filter options</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <div className='flex flex-wrap gap-2'>
+            {filterPresets.slice(0, showAdvancedOptions ? undefined : 5).map((preset) => (
+              <TooltipProvider key={preset.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyPreset(preset)}
+                      className={cn(
+                        "h-8 px-3 text-xs font-medium transition-all duration-200 hover:scale-105",
+                        "bg-gradient-to-r hover:shadow-md",
+                        preset.id === 'all-active' && "from-emerald-50 to-green-50 border-emerald-200 text-emerald-700 hover:from-emerald-100 hover:to-green-100",
+                        preset.id === 'critical-attention' && "from-red-50 to-rose-50 border-red-200 text-red-700 hover:from-red-100 hover:to-rose-100",
+                        preset.id === 'document-expiring' && "from-amber-50 to-orange-50 border-amber-200 text-amber-700 hover:from-amber-100 hover:to-orange-100",
+                        preset.id === 'unassigned' && "from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-indigo-100",
+                        preset.id === 'document-expired' && "from-purple-50 to-violet-50 border-purple-200 text-purple-700 hover:from-purple-100 hover:to-violet-100"
+                      )}
+                    >
+                      {preset.name}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-medium">{preset.name}</p>
+                    <p className="text-xs text-muted-foreground">{preset.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+            
+            {showAdvancedOptions && hasFiltersApplied && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={saveCurrentAsPreset}
+                      className="h-8 px-3 text-xs border-dashed hover:border-solid hover:bg-slate-50"
+                    >
+                      <BookmarkPlus className="h-3 w-3 mr-1" />
+                      Save Current
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Save current filters as a preset</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </div>
+
         <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,2fr)]'>
-          <div className='space-y-2'>
-            <Label htmlFor='promoter-search'>Search promoters</Label>
+          <div className='space-y-3'>
+            <Label htmlFor='promoter-search' className="text-sm font-medium">Search promoters</Label>
             <div className='relative'>
               <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
               <Input
                 id='promoter-search'
                 placeholder='Search by name, contact, ID...'
-                className='pl-10 pr-10'
-                value={searchTerm}
-                onChange={event => onSearchChange(event.target.value)}
+                className='pl-10 pr-10 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border-slate-200 dark:border-slate-700'
+                value={debouncedSearchTerm}
+                onChange={event => setDebouncedSearchTerm(event.target.value)}
                 aria-label='Search promoters by name, contact, or ID'
                 aria-describedby='search-help'
               />
-              {searchTerm && (
+              {debouncedSearchTerm && (
                 <button
-                  onClick={() => onSearchChange('')}
+                  onClick={() => {
+                    setDebouncedSearchTerm('');
+                    onSearchChange('');
+                  }}
                   className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
                   aria-label='Clear search'
                 >
@@ -105,8 +363,35 @@ export function PromotersFilters({
                 </button>
               )}
             </div>
-            <p id='search-help' className='text-xs text-muted-foreground hidden sm:block'>
-              Press <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Ctrl+K</kbd> for quick search
+            
+            {/* Recent searches */}
+            {recentSearches.length > 0 && showAdvancedOptions && (
+              <div className='space-y-2'>
+                <Label className='text-xs text-muted-foreground flex items-center gap-1'>
+                  <History className='h-3 w-3' />
+                  Recent searches
+                </Label>
+                <div className='flex flex-wrap gap-1'>
+                  {recentSearches.map((search, index) => (
+                    <Button
+                      key={index}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setDebouncedSearchTerm(search);
+                        onSearchChange(search);
+                      }}
+                      className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {search}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <p id='search-help' className='text-xs text-muted-foreground'>
+              Press <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Ctrl+K</kbd> for focus • <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Esc</kbd> to clear
             </p>
           </div>
           <div className='grid gap-4 sm:grid-cols-3'>
@@ -172,50 +457,143 @@ export function PromotersFilters({
               </Select>
             </div>
           </div>
-          <div className='flex flex-wrap items-center gap-2'>
-            {hasFiltersApplied && (
-              <Button
-                variant='outline'
-                size="sm"
-                onClick={onResetFilters}
-                className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
-                aria-label='Reset all filters to default values'
-              >
-                <X className='mr-2 h-4 w-4' />
-                <span className='hidden sm:inline'>Clear Filters</span>
-                <span className='sm:hidden'>Clear</span>
-              </Button>
-            )}
-            <Button
-              variant='outline'
-              size="sm"
-              className='flex items-center hover:bg-green-50 hover:border-green-200 hover:text-green-600'
-              onClick={onExport}
-              aria-label='Export current view to file'
-            >
-              <Download className='mr-2 h-4 w-4' aria-hidden='true' />
-              <span className='hidden sm:inline'>Export</span>
-              <span className='sm:hidden'>CSV</span>
-            </Button>
-            <Button
-              onClick={onRefresh}
-              variant='outline'
-              size="sm"
-              disabled={isFetching}
-              className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
-              aria-label={isFetching ? 'Syncing data' : 'Sync data with server'}
-            >
-              <RefreshCw
-                className={cn(
-                  'mr-2 h-4 w-4',
-                  isFetching && 'animate-spin'
+          <div className='flex flex-col gap-3'>
+            {/* Advanced Search Integration */}
+            {showAdvancedOptions && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Advanced Search</Label>
+                <PromotersAdvancedSearch
+                  onSearch={handleAdvancedSearch}
+                  onClear={handleClearAdvancedSearch}
+                  activeCriteria={advancedSearchCriteria}
+                />
+                {advancedSearchCriteria.length > 0 && (
+                  <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-200 dark:border-blue-800">
+                    <strong>Active advanced filters:</strong> {advancedSearchCriteria.length} criteria applied
+                  </div>
                 )}
-                aria-hidden='true'
-              />
-              <span className='hidden sm:inline'>{isFetching ? 'Syncing...' : 'Sync'}</span>
-            </Button>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className='flex flex-wrap items-center gap-2'>
+              {(hasFiltersApplied || advancedSearchCriteria.length > 0) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant='outline'
+                        size="sm"
+                        onClick={() => {
+                          onResetFilters();
+                          handleClearAdvancedSearch();
+                          setDebouncedSearchTerm('');
+                        }}
+                        className="hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200"
+                        aria-label='Reset all filters to default values'
+                      >
+                        <X className='mr-2 h-4 w-4' />
+                        <span className='hidden sm:inline'>Clear All Filters</span>
+                        <span className='sm:hidden'>Clear</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reset all filters and search criteria</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='outline'
+                      size="sm"
+                      className='flex items-center hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-all duration-200'
+                      onClick={onExport}
+                      aria-label='Export current filtered results to CSV file'
+                    >
+                      <Download className='mr-2 h-4 w-4' aria-hidden='true' />
+                      <span className='hidden sm:inline'>Export Results</span>
+                      <span className='sm:hidden'>CSV</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Export filtered promoters to CSV</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={onRefresh}
+                      variant='outline'
+                      size="sm"
+                      disabled={isFetching}
+                      className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-200 disabled:opacity-50"
+                      aria-label={isFetching ? 'Syncing data with server' : 'Refresh promoter data from server'}
+                    >
+                      <RefreshCw
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          isFetching && 'animate-spin'
+                        )}
+                        aria-hidden='true'
+                      />
+                      <span className='hidden sm:inline'>{isFetching ? 'Syncing...' : 'Refresh Data'}</span>
+                      <span className='sm:hidden'>{isFetching ? '...' : 'Sync'}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Refresh promoter data from server</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
+        
+        {/* Filter Summary */}
+        {(hasFiltersApplied || advancedSearchCriteria.length > 0 || debouncedSearchTerm) && (
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-3">
+              <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Active Filters Summary</p>
+                <div className="flex flex-wrap gap-1 text-xs">
+                  {debouncedSearchTerm && (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                      Search: "{debouncedSearchTerm}"
+                    </Badge>
+                  )}
+                  {statusFilter !== 'all' && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                      Status: {statusFilter}
+                    </Badge>
+                  )}
+                  {documentFilter !== 'all' && (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100">
+                      Documents: {documentFilter}
+                    </Badge>
+                  )}
+                  {assignmentFilter !== 'all' && (
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100">
+                      Assignment: {assignmentFilter}
+                    </Badge>
+                  )}
+                  {advancedSearchCriteria.length > 0 && (
+                    <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100">
+                      Advanced: {advancedSearchCriteria.length} criteria
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
