@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { differenceInDays, format, parseISO } from 'date-fns';
-import { RefreshCw, Users } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { toTitleCase } from '@/lib/utils/text-formatting';
@@ -36,6 +36,8 @@ import { RefreshIndicator } from './promoters-refresh-indicator';
 import { PromotersStatsCharts } from './promoters-stats-charts';
 import { PromotersDocumentExpiryChart } from './promoters-document-expiry-chart';
 import { PromotersAnalyticsCharts } from './promoters-analytics-charts';
+import { WorkforceAnalyticsSummary } from './workforce-analytics-summary';
+import { Button } from '../ui/button';
 
 interface PromotersResponse {
   success: boolean;
@@ -160,6 +162,78 @@ function computeOverallStatus(
 
   // All documents are valid
   return 'active';
+}
+
+// Function to fetch ALL promoters for analytics (no pagination)
+async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
+  console.log('🔄 Fetching ALL promoters for analytics dashboard...');
+
+  const controller = new AbortController();
+  let timeoutId: NodeJS.Timeout | null = null;
+  
+  try {
+    // Use a very high limit to get all promoters
+    const params = new URLSearchParams({
+      page: '1',
+      limit: '10000', // High limit to get all promoters
+      sortField: 'created_at',
+      sortOrder: 'desc',
+    });
+
+    timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout for large dataset
+    
+    console.log('📞 Making API request for ALL promoters:', params.toString());
+    
+    const response = await fetch(
+      `/api/promoters?${params.toString()}`,
+      {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-Analytics-Request': 'true', // Flag for analytics request
+        },
+      }
+    );
+
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    if (!response.ok) {
+      console.error('❌ Analytics API request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      throw new Error(`API returned ${response.status}: ${response.statusText}`);
+    }
+
+    const payload = await response.json();
+
+    if (payload.success === false) {
+      console.error('❌ Analytics API returned error:', payload.error);
+      throw new Error(payload.error || 'Failed to load all promoters for analytics.');
+    }
+
+    if (!Array.isArray(payload.promoters)) {
+      throw new Error('Invalid analytics data format');
+    }
+
+    console.log('✅ Successfully fetched ALL promoters for analytics:', payload.promoters.length);
+    return payload;
+  } catch (error) {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Analytics request timeout: Large dataset took too long to load');
+      }
+    }
+    throw error;
+  }
 }
 
 async function fetchPromoters(
@@ -349,6 +423,11 @@ export function EnhancedPromotersViewRefactored({
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
   const [activeMetricFilter, setActiveMetricFilter] = useState<'all' | 'active' | 'alerts' | 'compliance' | null>(null);
+  
+  // Separate state for analytics data (all workforce)
+  const [allPromotersData, setAllPromotersData] = useState<PromotersResponse | null>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
   const derivedLocale = useMemo(() => {
     if (locale && typeof locale === 'string') return locale;
@@ -446,6 +525,7 @@ export function EnhancedPromotersViewRefactored({
     errorMessage: error?.message,
   });
 
+  // Regular dashboard promoters (paginated)
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
     console.log('🔄 Processing promoters for dashboard...');
     console.log('📊 Raw promoter data sample:', promoters.slice(0, 2));
@@ -579,6 +659,80 @@ export function EnhancedPromotersViewRefactored({
       return result;
     });
   }, [promoters]);
+
+  // Load ALL promoters for analytics when analytics view is accessed
+  const loadAnalyticsData = useCallback(async () => {
+    if (allPromotersData && !isLoadingAnalytics) {
+      return; // Already loaded
+    }
+    
+    setIsLoadingAnalytics(true);
+    setAnalyticsError(null);
+    
+    try {
+      console.log('🔄 Loading ALL promoters for analytics dashboard...');
+      const analyticsData = await fetchAllPromotersForAnalytics();
+      setAllPromotersData(analyticsData);
+      console.log('✅ Analytics data loaded successfully:', analyticsData.promoters.length, 'total promoters');
+    } catch (error) {
+      console.error('❌ Failed to load analytics data:', error);
+      setAnalyticsError(error instanceof Error ? error.message : 'Failed to load analytics data');
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  }, [allPromotersData, isLoadingAnalytics]);
+
+  // Auto-load analytics data when switching to analytics view
+  useEffect(() => {
+    if (viewMode === 'analytics') {
+      loadAnalyticsData();
+    }
+  }, [viewMode, loadAnalyticsData]);
+
+  // ALL promoters for analytics (complete workforce)
+  const allDashboardPromoters = useMemo<DashboardPromoter[]>(() => {
+    if (!allPromotersData?.promoters) {
+      return [];
+    }
+    
+    console.log('🔄 Processing ALL promoters for analytics dashboard...');
+    console.log('📊 ALL promoters count:', allPromotersData.promoters.length);
+    
+    return allPromotersData.promoters.map(promoter => {
+      const idDocument = computeDocumentHealth(
+        promoter.id_card_expiry_date ?? null,
+        PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY
+      );
+      const passportDocument = computeDocumentHealth(
+        promoter.passport_expiry_date ?? null,
+        PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY
+      );
+
+      // Same transformation logic as regular dashboard promoters
+      const displayName = (() => {
+        if (promoter.name_en && promoter.name_ar) {
+          return `${toTitleCase(promoter.name_en)} (${promoter.name_ar})`;
+        }
+        return toTitleCase(promoter.name_en || promoter.name_ar || 'Unnamed Promoter');
+      })();
+
+      const assignmentStatus: 'assigned' | 'unassigned' = promoter.employer_id ? 'assigned' : 'unassigned';
+      const organisationLabel = (promoter as any).parties?.name_en || 'Unassigned';
+
+      return {
+        ...promoter,
+        displayName,
+        assignmentStatus,
+        organisationLabel,
+        idDocument,
+        passportDocument,
+        overallStatus: computeOverallStatus(promoter.status, idDocument, passportDocument),
+        nationality: promoter.nationality || 'Unknown',
+        job_title: promoter.job_title || 'General Promoter',
+        created_at: promoter.created_at || new Date().toISOString(),
+      } as DashboardPromoter;
+    });
+  }, [allPromotersData]);
 
   console.log(
     '📈 Dashboard promoters processed:',
@@ -1236,11 +1390,16 @@ export function EnhancedPromotersViewRefactored({
                       </h1>
                       <p className='text-base text-slate-600 dark:text-slate-400 mt-1'>
                         <span className='font-bold text-purple-600 dark:text-purple-400 text-lg'>
-                          {dashboardPromoters.length}
+                          {allDashboardPromoters.length || 'Loading...'}
                         </span>{' '}
                         <span className='text-slate-600 dark:text-slate-400'>
-                          total workforce members • Real-time insights & trends
+                          total workforce members • Complete analytics coverage
                         </span>
+                        {allPromotersData && (
+                          <span className='block text-sm text-green-600 dark:text-green-400 mt-1'>
+                            ✅ Showing complete workforce data • Last updated: {new Date(allPromotersData.timestamp).toLocaleTimeString()}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1298,18 +1457,72 @@ export function EnhancedPromotersViewRefactored({
               </div>
             </div>
 
-            {/* Analytics Charts - Using complete transformed workforce data */}
-            <PromotersDocumentExpiryChart 
-              promoters={dashboardPromoters}
-              title="Document Expiry Timeline - All Workforce"
-              description="Monitor document expiration patterns and upcoming renewals across entire workforce"
-            />
-            <PromotersAnalyticsCharts 
-              promoters={dashboardPromoters}
-              isRealTime={true}
-              onRefresh={handleRefresh}
-              isFetching={isDataFetching}
-            />
+            {/* Loading State for Analytics */}
+            {isLoadingAnalytics && (
+              <div className='bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-lg p-8 border border-blue-200 dark:border-blue-800'>
+                <div className='flex items-center justify-center gap-4'>
+                  <div className='w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin'></div>
+                  <div className='text-center'>
+                    <h3 className='font-semibold text-blue-900 dark:text-blue-100 text-lg'>
+                      Loading Complete Workforce Analytics
+                    </h3>
+                    <p className='text-blue-700 dark:text-blue-300 mt-1'>
+                      Fetching all workforce data for comprehensive insights...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error State for Analytics */}
+            {analyticsError && (
+              <div className='bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-6 border border-red-200 dark:border-red-800'>
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-full bg-red-100 dark:bg-red-900/30'>
+                    <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-400' />
+                  </div>
+                  <div>
+                    <h3 className='font-semibold text-red-900 dark:text-red-100'>
+                      Failed to Load Analytics Data
+                    </h3>
+                    <p className='text-red-700 dark:text-red-300 mt-1'>
+                      {analyticsError}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadAnalyticsData}
+                      className='mt-3 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800'
+                    >
+                      <RefreshCw className='h-4 w-4 mr-2' />
+                      Retry Loading Analytics
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Analytics Charts - Using complete workforce data */}
+            {!isLoadingAnalytics && !analyticsError && allDashboardPromoters.length > 0 && (
+              <>
+                <WorkforceAnalyticsSummary
+                  promoters={allDashboardPromoters}
+                  isRealTime={true}
+                  lastUpdated={allPromotersData?.timestamp || undefined}
+                />
+                <PromotersDocumentExpiryChart 
+                  promoters={allDashboardPromoters}
+                  title="Document Expiry Timeline - Complete Workforce"
+                  description={`Monitor document expiration patterns across all ${allDashboardPromoters.length} workforce members`}
+                />
+                <PromotersAnalyticsCharts 
+                  promoters={allDashboardPromoters}
+                  isRealTime={true}
+                  onRefresh={loadAnalyticsData}
+                  isFetching={isLoadingAnalytics}
+                />
+              </>
+            )}
           </div>
         ) : (
           /* Table/Grid/Cards View */
