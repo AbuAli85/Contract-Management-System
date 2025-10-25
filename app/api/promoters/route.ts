@@ -235,8 +235,33 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       } else if (statusFilter === 'warning') {
         // Documents expiring soon or other warning conditions
         query = query.or('status.eq.suspended,status.eq.probation');
+      } else if (statusFilter === 'critical') {
+        // Critical status: expired documents or suspended/terminated promoters
+        const today = new Date().toISOString().split('T')[0];
+        query = query.or(
+          `status.in.("suspended","terminated","blocked"),id_card_expiry_date.lt.${today},passport_expiry_date.lt.${today}`
+        );
       } else {
         query = query.eq('status', statusFilter);
+      }
+    }
+
+    // Apply document filter
+    if (documentFilter && documentFilter !== 'all') {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      if (documentFilter === 'expired') {
+        // Documents that have already expired
+        query = query.or(`id_card_expiry_date.lt.${today},passport_expiry_date.lt.${today}`);
+      } else if (documentFilter === 'expiring') {
+        // Documents expiring within 30 days
+        query = query.or(
+          `id_card_expiry_date.gte.${today},id_card_expiry_date.lte.${thirtyDaysFromNow},passport_expiry_date.gte.${today},passport_expiry_date.lte.${thirtyDaysFromNow}`
+        );
+      } else if (documentFilter === 'missing') {
+        // Missing document information
+        query = query.or('id_card_expiry_date.is.null,passport_expiry_date.is.null,id_card_number.is.null,passport_number.is.null');
       }
     }
 

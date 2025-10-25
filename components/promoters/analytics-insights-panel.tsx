@@ -59,7 +59,7 @@ export function AnalyticsInsightsPanel({ promoters, className, locale = 'en' }: 
 
   const navigateToDocumentStatus = () => {
     const params = new URLSearchParams(searchParams?.toString() || '');
-    params.set('document_filter', 'expired');
+    params.set('documents', 'expired');
     params.set('view', 'table');
     router.push(`/${locale}/promoters?${params.toString()}`);
   };
@@ -67,7 +67,7 @@ export function AnalyticsInsightsPanel({ promoters, className, locale = 'en' }: 
   const openRenewalScheduler = () => {
     // Open renewal scheduler - this could be a modal or navigate to a dedicated page
     const params = new URLSearchParams(searchParams?.toString() || '');
-    params.set('document_filter', 'expiring');
+    params.set('documents', 'expiring');
     params.set('view', 'table');
     params.set('action', 'schedule_renewals');
     router.push(`/${locale}/promoters?${params.toString()}`);
@@ -158,7 +158,7 @@ export function AnalyticsInsightsPanel({ promoters, className, locale = 'en' }: 
           label: 'Assign to Companies',
           onClick: () => {
             const params = new URLSearchParams(searchParams?.toString() || '');
-            params.set('assignment_filter', 'unassigned');
+            params.set('assignment', 'unassigned');
             params.set('view', 'table');
             params.set('action', 'bulk_assign');
             router.push(`/${locale}/promoters?${params.toString()}`);

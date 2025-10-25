@@ -431,25 +431,44 @@ export function EnhancedPromotersViewRefactored({
   const page = useMemo(() => parseInt(searchParams?.get('page') || '1', 10), [searchParams]);
   const limit = useMemo(() => parseInt(searchParams?.get('limit') || '20', 10), [searchParams]);
 
-  // State management
-  const [searchTerm, setSearchTerm] = useState('');
+  // State management - Initialize from URL parameters
+  const [searchTerm, setSearchTerm] = useState(() => searchParams?.get('search') || '');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
-    'all'
-  );
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(() => {
+    const urlStatus = searchParams?.get('status');
+    return (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning') ? urlStatus : 'all';
+  });
   const [documentFilter, setDocumentFilter] = useState<
     'all' | 'expired' | 'expiring' | 'missing'
-  >('all');
+  >(() => {
+    const urlDocFilter = searchParams?.get('document_filter') || searchParams?.get('documents');
+    return (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing') ? urlDocFilter : 'all';
+  });
   const [assignmentFilter, setAssignmentFilter] = useState<
     'all' | 'assigned' | 'unassigned'
-  >('all');
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  >(() => {
+    const urlAssignment = searchParams?.get('assignment_filter') || searchParams?.get('assignment');
+    return (urlAssignment === 'assigned' || urlAssignment === 'unassigned') ? urlAssignment : 'all';
+  });
+  const [sortField, setSortField] = useState<SortField>(() => {
+    const urlSortField = searchParams?.get('sortField');
+    return (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents') ? urlSortField : 'name';
+  });
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
+    const urlSortOrder = searchParams?.get('sortOrder');
+    return (urlSortOrder === 'asc' || urlSortOrder === 'desc') ? urlSortOrder : 'asc';
+  });
   const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
     new Set()
   );
   const [viewMode, setViewMode] = useState<'table' | 'grid' | 'cards' | 'analytics'>(() => {
-    // Load view preference from localStorage on mount
+    // First check URL parameters, then localStorage
+    const urlView = searchParams?.get('view');
+    if (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics') {
+      return urlView;
+    }
+    
+    // Fallback to localStorage
     if (typeof window !== 'undefined') {
       const savedView = localStorage.getItem('promoters-view-mode');
       if (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics') {
@@ -475,6 +494,46 @@ export function EnhancedPromotersViewRefactored({
     }
     return 'en';
   }, [locale]);
+
+  // Sync URL parameters with state when URL changes
+  useEffect(() => {
+    const urlStatus = searchParams?.get('status');
+    const urlDocFilter = searchParams?.get('document_filter') || searchParams?.get('documents');
+    const urlAssignment = searchParams?.get('assignment_filter') || searchParams?.get('assignment');
+    const urlView = searchParams?.get('view');
+    const urlSearch = searchParams?.get('search');
+
+    // Update status filter from URL
+    if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
+      setStatusFilter(urlStatus);
+    } else if (urlStatus === null) {
+      setStatusFilter('all');
+    }
+
+    // Update document filter from URL
+    if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
+      setDocumentFilter(urlDocFilter);
+    } else if (urlDocFilter === null) {
+      setDocumentFilter('all');
+    }
+
+    // Update assignment filter from URL
+    if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
+      setAssignmentFilter(urlAssignment);
+    } else if (urlAssignment === null) {
+      setAssignmentFilter('all');
+    }
+
+    // Update view mode from URL
+    if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
+      setViewMode(urlView);
+    }
+
+    // Update search term from URL
+    if (urlSearch !== null) {
+      setSearchTerm(urlSearch || '');
+    }
+  }, [searchParams]);
 
   // Debounce search term to prevent excessive API calls
   useEffect(() => {
