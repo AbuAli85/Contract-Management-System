@@ -413,7 +413,7 @@ export function PromotersTable({
 
       {/* Pagination Controls */}
       {pagination && pagination.totalPages > 1 && (
-        <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 pt-4 pb-4'>
+        <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 pt-6 pb-6 px-6'>
           <PaginationControls
             currentPage={pagination.page}
             totalPages={pagination.totalPages}
