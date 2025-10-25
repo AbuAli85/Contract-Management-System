@@ -758,8 +758,9 @@ export function EnhancedPromotersViewRefactored({
   }, [promoters]);
 
   // Load ALL promoters for analytics when analytics view is accessed
-  const loadAnalyticsData = useCallback(async () => {
-    if (allPromotersData && !isLoadingAnalytics) {
+  const loadAnalyticsData = useCallback(async (forceRefresh = false) => {
+    if (allPromotersData && !isLoadingAnalytics && !forceRefresh) {
+      console.log('📊 Using cached analytics data');
       return; // Already loaded
     }
     
@@ -779,6 +780,8 @@ export function EnhancedPromotersViewRefactored({
           total: analyticsData.total,
           difference: analyticsData.total - analyticsData.promoters.length
         });
+      } else {
+        console.log('✅ Data verification passed: All workforce members loaded');
       }
     } catch (error) {
       console.error('❌ Failed to load analytics data:', error);
@@ -1637,7 +1640,7 @@ export function EnhancedPromotersViewRefactored({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={loadAnalyticsData}
+                      onClick={() => loadAnalyticsData(true)}
                       className='mt-3 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800'
                     >
                       <RefreshCw className='h-4 w-4 mr-2' />
@@ -1654,12 +1657,42 @@ export function EnhancedPromotersViewRefactored({
                 {/* Analytics Toolbar */}
                 <AnalyticsToolbar
                   totalRecords={allDashboardPromoters.length}
-                  isLoading={isLoadingAnalytics}
-                  onRefresh={loadAnalyticsData}
+                  isLoading={isLoadingAnalytics || metricsLoading}
+                  onRefresh={async () => {
+                    // Refresh both analytics data and metrics
+                    console.log('🔄 Manual refresh triggered from analytics toolbar');
+                    await Promise.all([
+                      loadAnalyticsData(true), // Force refresh
+                      refetch(), // Refetch metrics
+                    ]);
+                    toast({
+                      title: "✅ Analytics Refreshed",
+                      description: `All data updated • ${allDashboardPromoters.length} workforce members loaded`,
+                    });
+                  }}
                   onExport={(format) => console.log(`Export ${format}`)}
                   onPrint={() => window.print()}
                   onFullScreen={() => document.documentElement.requestFullscreen()}
                   lastUpdated={allPromotersData?.timestamp || undefined}
+                />
+
+                {/* Metrics Overview Cards - System-Wide Data */}
+                <PromotersMetricsCards 
+                  metrics={metrics}
+                  onCardClick={(filterType) => {
+                    // Switch back to table view with filter applied
+                    handleViewModeChange('table');
+                    if (filterType === 'alerts') setStatusFilter('critical');
+                    else if (filterType === 'active') setStatusFilter('active');
+                    else setStatusFilter('all');
+                  }}
+                  activeFilter={null}
+                />
+
+                {/* Stats Charts - Quick Insights */}
+                <PromotersStatsCharts 
+                  metrics={metrics}
+                  promoters={allDashboardPromoters}
                 />
 
                 {/* Workforce Summary */}
