@@ -142,8 +142,9 @@ export async function getPromoterMetrics(): Promise<PromoterMetrics> {
     const expiring = Math.max(expiringIds, expiringPassports);
 
     const compliant = compliantResult.count || 0;
-    // Handle RPC call result - may fail if function doesn't exist
-    const onAssignments = (onAssignmentsResult as any)?.count || 0;
+    // Handle RPC call result - RPC functions return data directly, not wrapped in count
+    // The RPC returns a single BIGINT value
+    const onAssignments = onAssignmentsResult.data || 0;
 
     // Calculate derived metrics
     const assigned = active - unassigned;

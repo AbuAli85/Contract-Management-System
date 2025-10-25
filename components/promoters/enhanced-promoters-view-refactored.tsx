@@ -846,8 +846,9 @@ export function EnhancedPromotersViewRefactored({
     'items'
   );
 
-  // 🎯 FIX for Issue #3: Fetch system-wide metrics from dedicated API
-  const { data: apiMetricsData } = useQuery({
+  // 🎯 FIX: Fetch system-wide metrics from dedicated API
+  // This ensures metrics represent the ENTIRE database, not just the current page
+  const { data: apiMetricsData, isLoading: metricsLoading } = useQuery({
     queryKey: ['promoter-metrics'],
     queryFn: async () => {
       const res = await fetch('/api/dashboard/promoter-metrics');
@@ -859,7 +860,37 @@ export function EnhancedPromotersViewRefactored({
   });
 
   const metrics = useMemo<DashboardMetrics>(() => {
-    // Always calculate client-side metrics since API doesn't return all required fields
+    // ✅ PRIORITY: Use API metrics when available (system-wide data)
+    if (apiMetricsData?.metrics) {
+      const apiMetrics = apiMetricsData.metrics;
+      console.log('✅ Using system-wide metrics from API:', apiMetrics);
+      
+      // Calculate page-specific metrics that don't exist in API
+      const companies = new Set(
+        dashboardPromoters.map(p => p.employer_id).filter(Boolean) as string[]
+      ).size;
+      
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const recentlyAdded = dashboardPromoters.filter(p => {
+        const createdDate = parseDateSafe(p.created_at);
+        return createdDate && createdDate >= sevenDaysAgo;
+      }).length;
+
+      return { 
+        total: apiMetrics.total,                    // ✅ System-wide
+        active: apiMetrics.active,                  // ✅ System-wide
+        critical: apiMetrics.critical,              // ✅ System-wide
+        expiring: apiMetrics.expiring,              // ✅ System-wide
+        unassigned: apiMetrics.unassigned,          // ✅ System-wide
+        companies,                                   // Page-specific (OK for this metric)
+        recentlyAdded,                              // Page-specific (OK for this metric)
+        complianceRate: apiMetrics.complianceRate   // ✅ System-wide
+      };
+    }
+
+    // ⚠️ FALLBACK: Calculate from current page only when API fails
+    console.warn('⚠️ API metrics not available, using page-based calculation (may be inaccurate)');
     const total = pagination?.total || dashboardPromoters.length;
     const active = dashboardPromoters.filter(p => p.overallStatus === 'active').length;
     const critical = dashboardPromoters.filter(p =>
@@ -883,11 +914,8 @@ export function EnhancedPromotersViewRefactored({
       ? Math.round((compliant / dashboardPromoters.length) * 100) 
       : 0;
 
-    // If API metrics are available, use them for total count (more accurate)
-    const finalTotal = apiMetricsData?.metrics?.total || total;
-
     return { 
-      total: finalTotal, 
+      total, 
       active, 
       critical, 
       expiring, 
