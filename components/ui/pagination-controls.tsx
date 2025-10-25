@@ -46,7 +46,7 @@ export function PaginationControls({
 
   const updateURL = useCallback(
     (page: number, limit: number) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParams?.toString() || '');
       params.set('page', page.toString());
       params.set('limit', limit.toString());
       router.push(`${pathname}?${params.toString()}`);
@@ -110,26 +110,36 @@ export function PaginationControls({
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-4">
-        <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium">{startIndex}</span> to{' '}
-          <span className="font-medium">{endIndex}</span> of{' '}
-          <span className="font-medium">{totalItems}</span> results
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+        <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
+          Showing{' '}
+          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+            {startIndex}
+          </span>
+          {' '}to{' '}
+          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+            {endIndex}
+          </span>
+          {' '}of{' '}
+          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+            {totalItems.toLocaleString()}
+          </span>
+          {' '}members
+        </div>
         
         {showPageSizeSelector && (
           <div className="flex items-center gap-2">
-            <label htmlFor="page-size" className="text-sm text-muted-foreground">
+            <span className="text-sm text-slate-500 dark:text-slate-400">
               Per page:
-            </label>
+            </span>
             <Select
               value={pageSize.toString()}
               onValueChange={handlePageSizeChange}
             >
-              <SelectTrigger id="page-size" className="h-8 w-[70px]">
-                <SelectValue placeholder={pageSize} />
+              <SelectTrigger className="h-8 w-[70px] border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800">
+                <SelectValue />
               </SelectTrigger>
-              <SelectContent side="top">
+              <SelectContent>
                 {pageSizeOptions.map((size) => (
                   <SelectItem key={size} value={size.toString()}>
                     {size}
@@ -139,9 +149,13 @@ export function PaginationControls({
             </Select>
           </div>
         )}
+        
+        <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+          Page {currentPage} of {totalPages}
+        </div>
       </div>
 
-      <Pagination>
+      <Pagination className="mx-0">
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
@@ -149,7 +163,7 @@ export function PaginationControls({
               className={
                 currentPage <= 1
                   ? 'pointer-events-none opacity-50'
-                  : 'cursor-pointer'
+                  : 'cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors'
               }
             />
           </PaginationItem>
@@ -162,7 +176,11 @@ export function PaginationControls({
                 <PaginationLink
                   onClick={() => handlePageChange(page as number)}
                   isActive={currentPage === page}
-                  className="cursor-pointer"
+                  className={`cursor-pointer transition-colors ${
+                    currentPage === page
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
+                      : 'hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                  }`}
                 >
                   {page}
                 </PaginationLink>
@@ -176,7 +194,7 @@ export function PaginationControls({
               className={
                 currentPage >= totalPages
                   ? 'pointer-events-none opacity-50'
-                  : 'cursor-pointer'
+                  : 'cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors'
               }
             />
           </PaginationItem>

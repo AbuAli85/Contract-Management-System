@@ -413,16 +413,7 @@ export function PromotersTable({
 
       {/* Pagination Controls */}
       {pagination && pagination.totalPages > 1 && (
-        <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 pt-6 pb-4'>
-          <div className='flex items-center justify-between mb-3'>
-            <div className='text-sm text-slate-600 dark:text-slate-400 font-medium'>
-              Showing <span className='font-bold text-indigo-600 dark:text-indigo-400'>{promoters.length}</span> of{' '}
-              <span className='font-bold text-indigo-600 dark:text-indigo-400'>{pagination.total.toLocaleString()}</span> total members
-            </div>
-            <div className='text-xs text-slate-500 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full'>
-              Page {pagination.page} of {pagination.totalPages}
-            </div>
-          </div>
+        <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 pt-4 pb-4'>
           <PaginationControls
             currentPage={pagination.page}
             totalPages={pagination.totalPages}
