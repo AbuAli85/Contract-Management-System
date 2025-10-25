@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
@@ -28,7 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Users, Plus, RefreshCw, SortAsc, SortDesc, MoreHorizontal } from 'lucide-react';
+import { Users, Plus, RefreshCw, SortAsc, SortDesc, MoreHorizontal, ArrowRight } from 'lucide-react';
 import { PromotersTableRow } from './promoters-table-row';
 import { PromotersGridView } from './promoters-grid-view';
 import { PromotersCardsView } from './promoters-cards-view';
@@ -86,7 +86,7 @@ export function PromotersTable({
   const parentRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Card className='overflow-hidden shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
+    <Card className='shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
       <CardHeader className='flex flex-col gap-4 border-b border-slate-200/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-slate-50 py-6 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:border-slate-700/60 sm:flex-row sm:items-center sm:justify-between'>
         <div className='space-y-2'>
           <div className='flex items-center gap-3'>
@@ -198,9 +198,10 @@ export function PromotersTable({
           <div className='relative'>
             {/* Table View */}
             {viewMode === 'table' && (
-              <ScrollArea className='h-[calc(100vh-400px)] min-h-[500px] max-h-[700px] animate-in fade-in duration-300' ref={parentRef}>
-                <Table>
-                  <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
+              <ScrollArea className='h-[calc(100vh-400px)] min-h-[500px] max-h-[700px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef}>
+                <div className='min-w-[1300px]'>
+                  <Table>
+                    <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
                     <TableRow className='hover:bg-transparent border-0'>
                       <TableHead className='w-[50px] text-center py-4'>
                         <TooltipProvider>
@@ -223,7 +224,7 @@ export function PromotersTable({
                         </TooltipProvider>
                       </TableHead>
                       <TableHead
-                        className='w-[250px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                        className='min-w-[200px] w-[220px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('name')}
                       >
                         <div className='flex items-center gap-2 group/header px-2'>
@@ -243,7 +244,7 @@ export function PromotersTable({
                         </div>
                       </TableHead>
                       <TableHead
-                        className='w-[220px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                        className='min-w-[180px] w-[200px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('documents')}
                       >
                         <div className='flex items-center gap-2 group/header px-2'>
@@ -264,7 +265,7 @@ export function PromotersTable({
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className='font-bold text-slate-700 dark:text-slate-200 py-4'>
+                      <TableHead className='min-w-[140px] w-[160px] font-bold text-slate-700 dark:text-slate-200 py-4'>
                         <div className='flex items-center gap-2 px-2'>
                           <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5'>
                             <Plus className='h-3 w-3' />
@@ -272,7 +273,7 @@ export function PromotersTable({
                           <span className='text-sm'>Assignment</span>
                         </div>
                       </TableHead>
-                      <TableHead className='font-bold text-slate-700 dark:text-slate-200 py-4'>
+                      <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>
                         <div className='flex items-center gap-2 px-2'>
                           <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5'>
                             <Plus className='h-3 w-3' />
@@ -281,7 +282,7 @@ export function PromotersTable({
                         </div>
                       </TableHead>
                       <TableHead
-                        className='cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                        className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('created')}
                       >
                         <div className='flex items-center gap-2 group/header px-2'>
@@ -303,7 +304,7 @@ export function PromotersTable({
                         </div>
                       </TableHead>
                       <TableHead
-                        className='cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                        className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('status')}
                       >
                         <div className='flex items-center gap-2 group/header px-2'>
@@ -324,7 +325,7 @@ export function PromotersTable({
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className='text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
+                      <TableHead className='min-w-[100px] w-[120px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
                         <div className='flex items-center justify-end gap-2 px-2'>
                           <span className='text-sm'>Actions</span>
                           <MoreHorizontal className='h-4 w-4 text-slate-400' />
@@ -355,6 +356,17 @@ export function PromotersTable({
                     )}
                   </TableBody>
                 </Table>
+                </div>
+                <ScrollBar orientation="horizontal" />
+                {/* Horizontal Scroll Hint - Only show when content overflows */}
+                {promoters.length > 0 && (
+                  <div className='pointer-events-none absolute bottom-3 right-3 z-20 opacity-70 transition-opacity duration-500 hover:opacity-90'>
+                    <div className='flex items-center gap-1 rounded-full bg-gradient-to-r from-slate-800/95 to-slate-700/95 px-3 py-1.5 text-xs font-medium text-white shadow-xl backdrop-blur-sm dark:from-slate-200/95 dark:to-slate-300/95 dark:text-slate-900'>
+                      <ArrowRight className='h-3 w-3' />
+                      <span>Scroll horizontally</span>
+                    </div>
+                  </div>
+                )}
               </ScrollArea>
             )}
 

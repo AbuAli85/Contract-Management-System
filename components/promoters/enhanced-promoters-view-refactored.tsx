@@ -1295,7 +1295,7 @@ export function EnhancedPromotersViewRefactored({
           </div>
         ) : (
           /* Table/Grid/Cards View */
-          <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'>
+          <div className='grid gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(900px,2fr)_minmax(300px,1fr)]'>
             <PromotersTable
               promoters={sortedPromoters}
               selectedPromoters={selectedPromoters}
