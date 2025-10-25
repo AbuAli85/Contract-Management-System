@@ -33,7 +33,11 @@ import {
   AlertTriangle,
   HelpCircle,
   MapPin,
+  AlertCircle,
+  CheckCircle2,
+  TrendingUp,
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import type {
   DocumentStatus,
   OverallStatus,
@@ -104,21 +108,94 @@ function DocumentStatusPill({
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <Badge
-        variant="outline"
-        className={cn(
-          'flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide',
-          DOCUMENT_STATUS_BADGES[health.status]
-        )}
-      >
-        <Icon className="h-3 w-3" />
-        {label}
-      </Badge>
-      <span className="text-[11px] text-muted-foreground truncate">
-        {health.label}
-      </span>
+      <div className="flex items-center gap-1.5">
+        <Badge
+          variant="outline"
+          className={cn(
+            'flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide',
+            DOCUMENT_STATUS_BADGES[health.status]
+          )}
+        >
+          <Icon className="h-3 w-3" />
+          {label}
+        </Badge>
+        <span className="text-[11px] text-muted-foreground truncate">
+          {health.label}
+        </span>
+      </div>
+      {health.expiresOn && (
+        <span className="text-[10px] text-muted-foreground font-mono">
+          {new Date(health.expiresOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
+      )}
     </div>
   );
+}
+
+// Helper function to format date
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+// Helper function to calculate data completeness
+function getDataCompleteness(promoter: DashboardPromoter) {
+  const fields = [
+    promoter.name_en,
+    promoter.name_ar,
+    promoter.mobile_number || promoter.contactPhone,
+    promoter.id_card_number,
+    promoter.job_title,
+    promoter.id_card_expiry_date,
+    promoter.passport_expiry_date,
+    promoter.email || promoter.contactEmail,
+  ];
+  
+  const filledFields = fields.filter(field => field && field !== '').length;
+  const totalFields = fields.length;
+  const percentage = Math.round((filledFields / totalFields) * 100);
+  
+  const missingFields = [];
+  if (!promoter.name_ar) missingFields.push('Arabic Name');
+  if (!promoter.mobile_number && !promoter.contactPhone) missingFields.push('Mobile');
+  if (!promoter.job_title) missingFields.push('Job Title');
+  if (!promoter.id_card_expiry_date) missingFields.push('ID Expiry');
+  if (!promoter.passport_expiry_date) missingFields.push('Passport Expiry');
+  if (!promoter.email && !promoter.contactEmail) missingFields.push('Email');
+  
+  return { percentage, filledFields, totalFields, missingFields };
+}
+
+// Helper function to get time since last update
+function getTimeSinceUpdate(updatedAt?: string | null, createdAt?: string | null) {
+  const dateToUse = updatedAt || createdAt;
+  if (!dateToUse) return { text: 'Unknown', isRecent: false };
+  
+  const now = new Date();
+  const updated = new Date(dateToUse);
+  const diffInMs = now.getTime() - updated.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  
+  if (diffInMinutes < 60) {
+    return { text: `${diffInMinutes}m ago`, isRecent: true };
+  } else if (diffInHours < 24) {
+    return { text: `${diffInHours}h ago`, isRecent: true };
+  } else if (diffInDays === 0) {
+    return { text: 'Today', isRecent: true };
+  } else if (diffInDays === 1) {
+    return { text: 'Yesterday', isRecent: true };
+  } else if (diffInDays < 7) {
+    return { text: `${diffInDays}d ago`, isRecent: true };
+  } else if (diffInDays < 30) {
+    return { text: `${Math.floor(diffInDays / 7)}w ago`, isRecent: false };
+  } else {
+    return { text: formatDate(dateToUse), isRecent: false };
+  }
 }
 
 function PromoterCard({
@@ -134,6 +211,9 @@ function PromoterCard({
   onView: () => void;
   onEdit: () => void;
 }) {
+  const completeness = getDataCompleteness(promoter);
+  const lastUpdate = getTimeSinceUpdate(promoter.updated_at, promoter.created_at);
+
   return (
     <Card
       className={cn(
@@ -142,11 +222,66 @@ function PromoterCard({
           'border-l-4 border-l-red-500 bg-red-50/10',
         promoter.overallStatus === 'warning' &&
           'border-l-4 border-l-amber-400 bg-amber-50/10',
+        lastUpdate.isRecent && promoter.overallStatus !== 'critical' && promoter.overallStatus !== 'warning' &&
+          'border-l-4 border-l-green-500',
         isSelected && 'ring-2 ring-primary bg-primary/5'
       )}
       onClick={() => onView()}
     >
       <CardHeader className="pb-3 border-b">
+        {/* Last Updated & Data Completeness Header */}
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Clock className={cn(
+                    'h-3.5 w-3.5',
+                    lastUpdate.isRecent ? 'text-green-600' : 'text-slate-400'
+                  )} />
+                  <span className={cn(
+                    'font-medium',
+                    lastUpdate.isRecent && 'text-green-600'
+                  )}>
+                    {lastUpdate.text}
+                  </span>
+                  {lastUpdate.isRecent && (
+                    <TrendingUp className='h-3 w-3 text-green-600 ml-0.5' />
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Last updated: {promoter.updated_at ? formatDate(promoter.updated_at) : formatDate(promoter.created_at || '')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className='flex items-center gap-1.5'>
+                  {completeness.percentage === 100 ? (
+                    <CheckCircle2 className='h-3.5 w-3.5 text-green-600' />
+                  ) : (
+                    <AlertCircle className='h-3.5 w-3.5 text-amber-600' />
+                  )}
+                  <span className={cn(
+                    'text-xs font-semibold',
+                    completeness.percentage === 100 ? 'text-green-600' : 'text-amber-600'
+                  )}>
+                    {completeness.percentage}%
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Data Completeness: {completeness.filledFields}/{completeness.totalFields} fields</p>
+                {completeness.missingFields.length > 0 && (
+                  <p className='text-xs mt-1'>Missing: {completeness.missingFields.join(', ')}</p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <div className="flex items-start gap-3">
           <Checkbox
             checked={isSelected}
@@ -275,6 +410,25 @@ function PromoterCard({
             {promoter.createdLabel}
           </div>
         </div>
+
+        {/* Data Completeness Progress Bar */}
+        {completeness.percentage < 100 && (
+          <div className='mt-3 pt-3 border-t border-slate-100'>
+            <div className='flex items-center justify-between mb-1.5'>
+              <span className='text-xs font-medium text-slate-500'>Profile Completeness</span>
+              <span className='text-xs font-semibold text-amber-600'>{completeness.percentage}%</span>
+            </div>
+            <Progress value={completeness.percentage} className='h-1.5' />
+            {completeness.missingFields.length > 0 && (
+              <div className='mt-2 flex items-start gap-1'>
+                <AlertCircle className='h-3 w-3 text-amber-500 mt-0.5 flex-shrink-0' />
+                <p className='text-xs text-amber-600 line-clamp-2'>
+                  Missing: {completeness.missingFields.join(', ')}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

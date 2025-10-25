@@ -43,6 +43,7 @@ export interface Promoter {
   notify_days_before_passport_expiry?: number | null;
   notes?: string | null;
   created_at?: string | null;
+  updated_at?: string | null;
   active_contracts_count?: number;
   employer_id?: string | null;
   outsourced_to_id?: string | null;
