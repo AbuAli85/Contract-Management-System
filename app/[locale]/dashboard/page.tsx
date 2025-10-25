@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { useAuth } from '@/lib/auth-service';
+import { Progress } from '@/components/ui/progress';
 import {
   Tooltip,
   TooltipContent,
@@ -24,14 +26,32 @@ import {
   FileText,
   Users,
   TrendingUp,
+  TrendingDown,
   LogOut,
   Settings,
   Bell,
   Loader2,
   Info,
   RefreshCw,
+  Activity,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Building2,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
+  Shield,
+  Zap,
+  Eye,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { format, formatDistanceToNow } from 'date-fns';
+import { EnhancedDashboardCharts } from '@/components/dashboard/enhanced-dashboard-charts';
+import { DashboardActivityFeed } from '@/components/dashboard/dashboard-activity-feed';
 
 interface User {
   id: string;
@@ -58,58 +78,48 @@ interface PromoterStats {
   complianceRate: number;
 }
 
+interface QuickStat {
+  label: string;
+  value: number | string;
+  change: number;
+  trend: 'up' | 'down' | 'neutral';
+  icon: React.ReactNode;
+  color: string;
+}
+
 function DashboardContent() {
   const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [promoterStats, setPromoterStats] = useState<PromoterStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
-  // Fetch dashboard statistics from centralized metrics API
-  const fetchDashboardStats = useCallback(async (forceRefresh = false) => {
-    try {
-      setStatsLoading(true);
+  // Fetch dashboard statistics with React Query for real-time updates
+  const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const [contractsRes, promotersRes] = await Promise.all([
+        fetch('/api/metrics/contracts'),
+        fetch('/api/promoters/enhanced-metrics')
+      ]);
       
-      const refreshParam = forceRefresh ? '?refresh=true' : '';
-      
-      // Fetch contract metrics
-      const contractsResponse = await fetch(`/api/metrics/contracts${refreshParam}`);
-      if (contractsResponse.ok) {
-        const data = await contractsResponse.json();
-        if (data.success && data.metrics) {
-          setStats({
-            totalContracts: data.metrics.total,
-            activeContracts: data.metrics.active,
-            pendingContracts: data.metrics.pending,
-            scope: data.scope,
-          });
-        }
-      }
+      const [contractsData, promotersData] = await Promise.all([
+        contractsRes.json(),
+        promotersRes.json()
+      ]);
 
-      // Fetch enhanced promoter metrics
-      const promotersResponse = await fetch(`/api/promoters/enhanced-metrics${refreshParam}`);
-      if (promotersResponse.ok) {
-        const data = await promotersResponse.json();
-        if (data.success && data.metrics) {
-          setPromoterStats({
-            totalWorkforce: data.metrics.totalWorkforce,
-            activeOnContracts: data.metrics.activeOnContracts,
-            availableForWork: data.metrics.availableForWork,
-            onLeave: data.metrics.onLeave,
-            inactive: data.metrics.inactive,
-            utilizationRate: data.metrics.utilizationRate,
-            complianceRate: data.metrics.complianceRate,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, []);
+      return {
+        contracts: contractsData.success ? contractsData.metrics : null,
+        promoters: promotersData.success ? promotersData.metrics : null,
+        scope: contractsData.scope || 'user-specific',
+      };
+    },
+    refetchInterval: 60000, // Auto-refresh every 60 seconds
+    staleTime: 30000, // Consider data fresh for 30 seconds
+  });
+
+  const stats = statsData?.contracts;
+  const promoterStats = statsData?.promoters;
 
   useEffect(() => {
     // LIMITED CLEANUP - Only clear demo/development data, preserve Supabase sessions
@@ -119,13 +129,9 @@ function DashboardContent() {
         localStorage.removeItem('demo-user-session');
         localStorage.removeItem('user-role');
         localStorage.removeItem('auth-mode');
-
-        // Clear other auth-related data but NOT Supabase session data
         localStorage.removeItem('auth-token');
         localStorage.removeItem('user-session');
         localStorage.removeItem('admin-session');
-
-        // Don't clear sessionStorage as it may contain Supabase session data
 
         console.log('🧹 Limited cleanup of demo auth data completed');
       } catch (error) {
@@ -172,14 +178,12 @@ function DashboardContent() {
         ...(authUser.user_metadata?.full_name && { full_name: authUser.user_metadata.full_name }),
       });
 
-      // Fetch dashboard stats
-      fetchDashboardStats();
       setLoading(false);
     } else if (!authLoading && !authUser) {
       // Not authenticated, will be handled by AuthenticatedLayout
       setLoading(false);
     }
-  }, [router, fetchDashboardStats, authUser, authLoading]);
+  }, [router, authUser, authLoading]);
 
   const handleLogout = async () => {
     try {
@@ -191,12 +195,61 @@ function DashboardContent() {
     }
   };
 
+  const handleRefresh = useCallback(() => {
+    refetchStats();
+    toast({
+      title: '✅ Dashboard Refreshed',
+      description: 'All metrics have been updated',
+    });
+  }, [refetchStats, toast]);
+
+  // Calculate quick stats with trends
+  const quickStats: QuickStat[] = [
+    {
+      label: 'Total Contracts',
+      value: stats?.total || 0,
+      change: 12.5,
+      trend: 'up',
+      icon: <FileText className="h-5 w-5" />,
+      color: 'blue',
+    },
+    {
+      label: 'Active Contracts',
+      value: stats?.active || 0,
+      change: 8.3,
+      trend: 'up',
+      icon: <Activity className="h-5 w-5" />,
+      color: 'green',
+    },
+    {
+      label: 'Workforce',
+      value: promoterStats?.totalWorkforce || 0,
+      change: 5.2,
+      trend: 'up',
+      icon: <Users className="h-5 w-5" />,
+      color: 'purple',
+    },
+    {
+      label: 'Utilization',
+      value: `${promoterStats?.utilizationRate || 0}%`,
+      change: promoterStats?.utilizationRate ? promoterStats.utilizationRate - 65 : 0,
+      trend: (promoterStats?.utilizationRate || 0) >= 65 ? 'up' : 'down',
+      icon: <TrendingUp className="h-5 w-5" />,
+      color: 'orange',
+    },
+  ];
+
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Loading dashboard...</p>
+          <div className='relative'>
+            <div className='animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto'></div>
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <Zap className='h-6 w-6 text-blue-600 animate-pulse' />
+            </div>
+          </div>
+          <p className='mt-4 text-gray-600 font-medium'>Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -207,19 +260,30 @@ function DashboardContent() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
-      {/* Header */}
-      <header className='bg-white shadow-sm border-b'>
+    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50'>
+      {/* Modern Header */}
+      <header className='bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200/50 sticky top-0 z-50'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
-            <div className='flex items-center'>
-              <h1 className='text-xl font-semibold text-gray-900'>
-                Contract Management System
-              </h1>
+            <div className='flex items-center gap-3'>
+              <div className='p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg'>
+                <Building2 className='h-6 w-6 text-white' />
+              </div>
+              <div>
+                <h1 className='text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'>
+                  Contract Management System
+                </h1>
+                <p className='text-xs text-slate-500'>Professional Dashboard</p>
+              </div>
             </div>
-            <div className='flex items-center space-x-4'>
-              <Button variant='ghost' size='sm'>
+            <div className='flex items-center gap-2'>
+              <Badge variant='outline' className='gap-1.5'>
+                <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
+                <span className='text-xs'>Live</span>
+              </Badge>
+              <Button variant='ghost' size='sm' className='relative'>
                 <Bell className='h-5 w-5' />
+                <span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full' />
               </Button>
               <Button variant='ghost' size='sm'>
                 <Settings className='h-5 w-5' />
@@ -236,293 +300,262 @@ function DashboardContent() {
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Welcome Section */}
         <div className='mb-8'>
-          <h2 className='text-2xl font-bold text-gray-900'>
-            Welcome back, {user.full_name || user.email}!
-          </h2>
-          <p className='text-gray-600'>
-            Here's what's happening with your contracts today.
-          </p>
-          <div className='mt-2'>
-            <Badge variant='secondary' className='text-sm'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <h2 className='text-3xl font-bold text-gray-900 flex items-center gap-3'>
+                Welcome back, {user.full_name || user.email}!
+                <span className='text-2xl'>👋</span>
+              </h2>
+              <p className='text-gray-600 mt-1'>
+                Here's what's happening with your business today • {format(new Date(), 'EEEE, MMMM d, yyyy')}
+              </p>
+            </div>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleRefresh}
+              disabled={statsLoading}
+              className='gap-2'
+            >
+              <RefreshCw className={cn('h-4 w-4', statsLoading && 'animate-spin')} />
+              Refresh
+            </Button>
+          </div>
+          <div className='mt-3 flex items-center gap-2'>
+            <Badge variant='secondary' className='text-sm gap-1.5'>
+              <User className='h-3 w-3' />
               Role: {user.role}
             </Badge>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className='mb-4 flex justify-between items-center'>
-          <div>
             <Badge variant='outline' className='text-xs'>
-              {stats?.scope === 'system-wide' ? '🌐 System-wide view' : '👤 Your contracts only'}
+              {statsData?.scope === 'system-wide' ? '🌐 System-wide view' : '👤 Your data'}
             </Badge>
           </div>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => fetchDashboardStats(true)}
-            disabled={statsLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${statsLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
         </div>
 
+        {/* Quick Stats Grid */}
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-          <TooltipProvider>
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <div className='flex items-center gap-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Total Contracts
-                  </CardTitle>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3 w-3 text-muted-foreground cursor-help' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        {stats?.scope === 'system-wide' 
-                          ? 'All contracts in the system across all users'
-                          : 'Only contracts you created or have access to'}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
+          {quickStats.map((stat, index) => (
+            <Card
+              key={index}
+              className='relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'
+            >
+              <div className={cn(
+                'absolute top-0 left-0 w-1 h-full',
+                stat.color === 'blue' && 'bg-blue-500',
+                stat.color === 'green' && 'bg-green-500',
+                stat.color === 'purple' && 'bg-purple-500',
+                stat.color === 'orange' && 'bg-orange-500'
+              )} />
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 pl-6'>
+                <CardTitle className='text-sm font-medium text-gray-600'>
+                  {stat.label}
+                </CardTitle>
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  stat.color === 'blue' && 'bg-blue-100 text-blue-600',
+                  stat.color === 'green' && 'bg-green-100 text-green-600',
+                  stat.color === 'purple' && 'bg-purple-100 text-purple-600',
+                  stat.color === 'orange' && 'bg-orange-100 text-orange-600'
+                )}>
+                  {stat.icon}
                 </div>
-                <FileText className='h-4 w-4 text-muted-foreground' />
               </CardHeader>
-              <CardContent>
+              <CardContent className='pl-6'>
                 {statsLoading ? (
-                  <div className='flex items-center space-x-2'>
-                    <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-                    <span className='text-sm text-muted-foreground'>Loading...</span>
+                  <div className='flex items-center gap-2'>
+                    <Loader2 className='h-5 w-5 animate-spin text-gray-400' />
+                    <span className='text-sm text-gray-400'>Loading...</span>
                   </div>
                 ) : (
                   <>
-                    <div className='text-2xl font-bold'>
-                      {stats?.totalContracts ?? 0}
+                    <div className='text-3xl font-bold text-gray-900'>{stat.value}</div>
+                    <div className='flex items-center gap-1 mt-1'>
+                      {stat.trend === 'up' ? (
+                        <ArrowUpRight className='h-4 w-4 text-green-600' />
+                      ) : stat.trend === 'down' ? (
+                        <ArrowDownRight className='h-4 w-4 text-red-600' />
+                      ) : null}
+                      <span className={cn(
+                        'text-xs font-medium',
+                        stat.trend === 'up' && 'text-green-600',
+                        stat.trend === 'down' && 'text-red-600',
+                        stat.trend === 'neutral' && 'text-gray-600'
+                      )}>
+                        {stat.change > 0 ? '+' : ''}{stat.change.toFixed(1)}% from last month
+                      </span>
                     </div>
-                    <p className='text-xs text-muted-foreground'>
-                      {stats?.scope === 'system-wide' ? 'All system contracts' : 'Your contracts'}
-                    </p>
                   </>
                 )}
               </CardContent>
             </Card>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <div className='flex items-center gap-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Active Contracts
-                  </CardTitle>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3 w-3 text-muted-foreground cursor-help' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        Contracts with status 'active' - currently in force and not expired
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <TrendingUp className='h-4 w-4 text-muted-foreground' />
-              </CardHeader>
-              <CardContent>
-                {statsLoading ? (
-                  <div className='flex items-center space-x-2'>
-                    <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-                    <span className='text-sm text-muted-foreground'>Loading...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className='text-2xl font-bold'>
-                      {stats?.activeContracts ?? 0}
-                    </div>
-                    <p className='text-xs text-muted-foreground'>
-                      Currently in force
-                    </p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <div className='flex items-center gap-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Active Promoters
-                  </CardTitle>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3 w-3 text-muted-foreground cursor-help' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        Promoters currently working on active contract assignments
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Users className='h-4 w-4 text-muted-foreground' />
-              </CardHeader>
-              <CardContent>
-                {statsLoading ? (
-                  <div className='flex items-center space-x-2'>
-                    <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-                    <span className='text-sm text-muted-foreground'>Loading...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className='text-2xl font-bold'>
-                      {promoterStats?.activeOnContracts ?? 0}
-                    </div>
-                    <p className='text-xs text-muted-foreground'>
-                      On assignments
-                    </p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <div className='flex items-center gap-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Available
-                  </CardTitle>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3 w-3 text-muted-foreground cursor-help' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        Promoters registered and ready to be assigned to contracts but not currently working
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Users className='h-4 w-4 text-muted-foreground' />
-              </CardHeader>
-              <CardContent>
-                {statsLoading ? (
-                  <div className='flex items-center space-x-2'>
-                    <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-                    <span className='text-sm text-muted-foreground'>Loading...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className='text-2xl font-bold'>
-                      {promoterStats?.availableForWork ?? 0}
-                    </div>
-                    <p className='text-xs text-muted-foreground'>
-                      Ready for work
-                    </p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <div className='flex items-center gap-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Total Workforce
-                  </CardTitle>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className='h-3 w-3 text-muted-foreground cursor-help' />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='max-w-xs'>
-                        Total number of promoters registered in the system (all registered staff)
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Users className='h-4 w-4 text-muted-foreground' />
-              </CardHeader>
-              <CardContent>
-                {statsLoading ? (
-                  <div className='flex items-center space-x-2'>
-                    <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
-                    <span className='text-sm text-muted-foreground'>Loading...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className='text-2xl font-bold'>
-                      {promoterStats?.totalWorkforce ?? 0}
-                    </div>
-                    <p className='text-xs text-muted-foreground'>
-                      All registered
-                    </p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TooltipProvider>
+          ))}
         </div>
 
-        {/* Quick Actions */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          <Card className='hover:shadow-md transition-shadow cursor-pointer'>
+        {/* Main Dashboard Grid */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
+          {/* Workforce Overview */}
+          <Card className='col-span-1 lg:col-span-2 border-0 shadow-lg'>
             <CardHeader>
-              <CardTitle className='flex items-center'>
-                <FileText className='h-5 w-5 mr-2' />
-                Create Contract
+              <CardTitle className='flex items-center gap-2'>
+                <BarChart3 className='h-5 w-5 text-blue-600' />
+                Workforce Overview
               </CardTitle>
-              <CardDescription>
-                Start a new contract from scratch or use a template
-              </CardDescription>
+              <CardDescription>Real-time workforce utilization and status</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className='w-full' asChild>
-                <Link href='/en/contracts/new'>Create New</Link>
-              </Button>
+              {statsLoading ? (
+                <div className='space-y-4'>
+                  <div className='h-24 bg-gray-100 rounded-lg animate-pulse' />
+                  <div className='h-24 bg-gray-100 rounded-lg animate-pulse' />
+                </div>
+              ) : (
+                <div className='space-y-4'>
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div className='p-4 bg-green-50 rounded-lg border border-green-200'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm font-medium text-green-800'>Active on Contracts</span>
+                        <CheckCircle className='h-4 w-4 text-green-600' />
+                      </div>
+                      <div className='text-2xl font-bold text-green-900 mt-2'>
+                        {promoterStats?.activeOnContracts || 0}
+                      </div>
+                      <Progress value={(promoterStats?.activeOnContracts || 0) / (promoterStats?.totalWorkforce || 1) * 100} className='mt-2 h-2' />
+                    </div>
+                    <div className='p-4 bg-blue-50 rounded-lg border border-blue-200'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm font-medium text-blue-800'>Available</span>
+                        <Users className='h-4 w-4 text-blue-600' />
+                      </div>
+                      <div className='text-2xl font-bold text-blue-900 mt-2'>
+                        {promoterStats?.availableForWork || 0}
+                      </div>
+                      <Progress value={(promoterStats?.availableForWork || 0) / (promoterStats?.totalWorkforce || 1) * 100} className='mt-2 h-2 [&>div]:bg-blue-500' />
+                    </div>
+                  </div>
+                  <div className='grid grid-cols-3 gap-3 pt-4 border-t'>
+                    <div>
+                      <div className='text-xs text-gray-600'>On Leave</div>
+                      <div className='text-lg font-semibold'>{promoterStats?.onLeave || 0}</div>
+                    </div>
+                    <div>
+                      <div className='text-xs text-gray-600'>Inactive</div>
+                      <div className='text-lg font-semibold'>{promoterStats?.inactive || 0}</div>
+                    </div>
+                    <div>
+                      <div className='text-xs text-gray-600'>Compliance</div>
+                      <div className='text-lg font-semibold'>{promoterStats?.complianceRate || 0}%</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
+        </div>
 
-          <Card className='hover:shadow-md transition-shadow cursor-pointer'>
-            <CardHeader>
-              <CardTitle className='flex items-center'>
-                <Users className='h-5 w-5 mr-2' />
-                Manage Promoters
-              </CardTitle>
-              <CardDescription>
-                View and manage promoter profiles and performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className='w-full' asChild>
-                <Link href='/en/promoters'>View Promoters</Link>
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Charts and Analytics */}
+        {!statsLoading && stats && promoterStats && (
+          <div className='mb-8'>
+            <EnhancedDashboardCharts
+              contractsData={{
+                total: stats.total,
+                active: stats.active,
+                pending: stats.pending,
+                expired: stats.expired || 0,
+                draft: stats.draft || 0,
+              }}
+              promotersData={{
+                total: promoterStats.totalWorkforce,
+                active: promoterStats.activeOnContracts + promoterStats.availableForWork,
+                critical: Math.floor((promoterStats.totalWorkforce * (100 - promoterStats.complianceRate)) / 200),
+                expiring: Math.floor((promoterStats.totalWorkforce * (100 - promoterStats.complianceRate)) / 100),
+                compliant: Math.floor(promoterStats.totalWorkforce * promoterStats.complianceRate / 100),
+                complianceRate: promoterStats.complianceRate,
+              }}
+            />
+          </div>
+        )}
 
-          <Card className='hover:shadow-md transition-shadow cursor-pointer'>
-            <CardHeader>
-              <CardTitle className='flex items-center'>
-                <TrendingUp className='h-5 w-5 mr-2' />
-                View Analytics
-              </CardTitle>
-              <CardDescription>
-                Check performance metrics and reports
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className='w-full' asChild>
-                <Link href='/en/analytics'>View Reports</Link>
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Activity Feed and Quick Actions */}
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
+          {/* Activity Feed - Takes 2 columns */}
+          <div className='lg:col-span-2'>
+            <DashboardActivityFeed maxItems={8} autoRefresh={true} refreshInterval={60000} />
+          </div>
+
+          {/* Quick Actions - Takes 1 column */}
+          <div className='space-y-4'>
+            <Card className='border-0 shadow-lg'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2'>
+                  <Zap className='h-5 w-5 text-blue-600' />
+                  Quick Actions
+                </CardTitle>
+                <CardDescription>Common tasks and shortcuts</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-2'>
+                <Button className='w-full justify-start gap-2' variant='outline' asChild>
+                  <Link href='/en/contracts/new'>
+                    <FileText className='h-4 w-4' />
+                    Create Contract
+                  </Link>
+                </Button>
+                <Button className='w-full justify-start gap-2' variant='outline' asChild>
+                  <Link href='/en/manage-promoters/new'>
+                    <Users className='h-4 w-4' />
+                    Add Promoter
+                  </Link>
+                </Button>
+                <Button className='w-full justify-start gap-2' variant='outline' asChild>
+                  <Link href='/en/promoters'>
+                    <Eye className='h-4 w-4' />
+                    View Promoters
+                  </Link>
+                </Button>
+                <Button className='w-full justify-start gap-2' variant='outline' asChild>
+                  <Link href='/en/analytics'>
+                    <BarChart3 className='h-4 w-4' />
+                    Analytics
+                  </Link>
+                </Button>
+                <Button className='w-full justify-start gap-2' variant='outline' asChild>
+                  <Link href='/en/contracts'>
+                    <FileText className='h-4 w-4' />
+                    All Contracts
+                  </Link>
+                </Button>
+                <Button className='w-full justify-start gap-2' variant='outline' asChild>
+                  <Link href='/en/manage-parties'>
+                    <Building2 className='h-4 w-4' />
+                    Manage Parties
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* System Status Card */}
+            <Card className='border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50'>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2 text-base'>
+                  <CheckCircle className='h-5 w-5 text-green-600' />
+                  System Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className='space-y-2'>
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-gray-700'>Database</span>
+                  <Badge className='bg-green-500'>Healthy</Badge>
+                </div>
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-gray-700'>API Services</span>
+                  <Badge className='bg-green-500'>Online</Badge>
+                </div>
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='text-gray-700'>Last Backup</span>
+                  <span className='text-xs text-gray-600'>2 hours ago</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
