@@ -154,17 +154,23 @@ export function PromotersFilters({
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-  // Add to recent searches when search term changes
+  // Add to recent searches when search term changes (removed recentSearches dependency to prevent re-renders)
   useEffect(() => {
-    if (searchTerm.trim() && !recentSearches.includes(searchTerm.trim())) {
+    if (searchTerm.trim()) {
       const timer = setTimeout(() => {
-        setRecentSearches(prev => [searchTerm.trim(), ...prev.slice(0, 4)]);
+        setRecentSearches(prev => {
+          // Only add if not already in the list
+          if (!prev.includes(searchTerm.trim())) {
+            return [searchTerm.trim(), ...prev.slice(0, 4)];
+          }
+          return prev;
+        });
       }, 1000); // Only add to recent searches after user stops typing for 1 second
       
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [searchTerm, recentSearches]);
+  }, [searchTerm]); // Removed recentSearches dependency to prevent re-renders during typing
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -336,26 +342,29 @@ export function PromotersFilters({
               <Input
                 id='promoter-search'
                 placeholder='Search by name, contact, ID...'
-                className='pl-10 pr-10 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border-slate-200 dark:border-slate-700'
+                className='pl-10 pr-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors'
                 value={searchTerm}
                 onChange={event => onSearchChange(event.target.value)}
                 aria-label='Search promoters by name, contact, or ID'
                 aria-describedby='search-help'
+                autoComplete="off"
+                spellCheck="false"
               />
-              {searchTerm && (
-                <button
-                  onClick={() => onSearchChange('')}
-                  className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
-                  aria-label='Clear search'
-                >
-                  <X className='h-4 w-4' />
-                </button>
-              )}
+              <button
+                onClick={() => onSearchChange('')}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-all duration-200 ${
+                  searchTerm ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+                aria-label='Clear search'
+                tabIndex={searchTerm ? 0 : -1}
+              >
+                <X className='h-4 w-4' />
+              </button>
             </div>
             
-            {/* Recent searches */}
+            {/* Recent searches - Use absolute positioning to prevent layout shifts */}
             {recentSearches.length > 0 && showAdvancedOptions && (
-              <div className='space-y-2'>
+              <div className='space-y-2 animate-in fade-in duration-200'>
                 <Label className='text-xs text-muted-foreground flex items-center gap-1'>
                   <History className='h-3 w-3' />
                   Recent searches
@@ -363,11 +372,11 @@ export function PromotersFilters({
                 <div className='flex flex-wrap gap-1'>
                   {recentSearches.map((search, index) => (
                     <Button
-                      key={index}
+                      key={`${search}-${index}`}
                       variant="ghost"
                       size="sm"
                       onClick={() => onSearchChange(search)}
-                      className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                      className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
                     >
                       {search}
                     </Button>

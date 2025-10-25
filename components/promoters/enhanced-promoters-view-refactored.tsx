@@ -363,7 +363,7 @@ export function EnhancedPromotersViewRefactored({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms delay for search debouncing
+    }, 300); // Reduced to 300ms for more responsive feel
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
