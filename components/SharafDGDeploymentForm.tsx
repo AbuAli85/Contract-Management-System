@@ -409,48 +409,61 @@ export default function SharafDGDeploymentForm({
         throw new Error('Supabase client not available');
       }
 
-      // Create contract in database
+      // Create contract in database (only using columns that exist)
+      const contractData = {
+        contract_number: formData.contract_number,
+        title: formData.contract_name || `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
+        description: formData.special_terms || `${formData.job_title} at ${formData.work_location}`,
+        contract_type: formData.contract_type,
+        status: 'draft',
+        promoter_id: formData.promoter_id,
+        employer_id: formData.second_party_id, // Employer is second party
+        client_id: formData.first_party_id, // Client is first party
+        start_date: formData.contract_start_date,
+        end_date: formData.contract_end_date,
+        value: formData.basic_salary || 0,
+        currency: 'OMR',
+        // Store all additional data as JSON in the 'terms' field
+        terms: JSON.stringify({
+          // Employment details
+          job_title: formData.job_title,
+          department: formData.department,
+          work_location: formData.work_location,
+          // Supplier/brand info
+          supplier_brand_id: formData.supplier_brand_id,
+          supplier_brand_name_en: selectedSupplier?.name_en,
+          supplier_brand_name_ar: selectedSupplier?.name_ar,
+          // Employment terms
+          probation_period: formData.probation_period,
+          notice_period: formData.notice_period,
+          working_hours: formData.working_hours,
+          // Allowances
+          housing_allowance: formData.housing_allowance,
+          transport_allowance: formData.transport_allowance,
+          basic_salary: formData.basic_salary,
+        }),
+      };
+
+      // Add pdf_status if column exists (try with, fallback without)
       const { data: newContract, error: createError } = await supabase
         .from('contracts')
         .insert({
-          contract_number: formData.contract_number,
-          title: formData.contract_name || `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
-          contract_type: formData.contract_type,
-          status: 'draft',
-          promoter_id: formData.promoter_id,
-          first_party_id: formData.first_party_id,
-          second_party_id: formData.second_party_id,
-          employer_id: formData.second_party_id, // Fixed: Employer is second party
-          client_id: formData.first_party_id, // Fixed: Client is first party
-          start_date: formData.contract_start_date,
-          end_date: formData.contract_end_date,
-          value: formData.basic_salary || 0,
-          currency: 'OMR',
+          ...contractData,
           pdf_status: 'pending',
-          // Store all additional fields in metadata (not as direct columns)
-          metadata: {
-            // Employment details
-            job_title: formData.job_title,
-            department: formData.department,
-            work_location: formData.work_location,
-            special_terms: formData.special_terms,
-            // Supplier/brand info
-            supplier_brand_id: formData.supplier_brand_id,
-            supplier_brand_name_en: selectedSupplier?.name_en,
-            supplier_brand_name_ar: selectedSupplier?.name_ar,
-            // Employment terms
-            probation_period: formData.probation_period,
-            notice_period: formData.notice_period,
-            working_hours: formData.working_hours,
-            // Allowances
-            housing_allowance: formData.housing_allowance,
-            transport_allowance: formData.transport_allowance,
-            basic_salary: formData.basic_salary,
-          },
-          created_at: new Date().toISOString(),
         })
         .select()
-        .single();
+        .single()
+        .catch(async (err) => {
+          // If pdf_status column doesn't exist, try without it
+          if (err?.message?.includes('pdf_status')) {
+            return await supabase
+              .from('contracts')
+              .insert(contractData)
+              .select()
+              .single();
+          }
+          throw err;
+        });
 
       if (createError) throw createError;
 
