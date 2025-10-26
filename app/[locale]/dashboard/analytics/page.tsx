@@ -24,7 +24,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Loader2, Users, FileText, HardDrive } from 'lucide-react';
+import { Loader2, Users, FileText, HardDrive, AlertTriangle } from 'lucide-react';
 
 const COLORS = [
   '#8884d8',
@@ -191,6 +191,13 @@ export default function AnalyticsPage() {
           >
             <HardDrive className='mr-2 h-4 w-4' />
             Storage Analysis
+          </a>
+          <a
+            href='/analytics/document-reconciliation'
+            className='inline-flex items-center justify-center rounded-md border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-orange-100 text-orange-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+          >
+            <AlertTriangle className='mr-2 h-4 w-4' />
+            Fix Issues
           </a>
         </div>
       </div>
