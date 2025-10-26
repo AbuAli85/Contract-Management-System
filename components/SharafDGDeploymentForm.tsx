@@ -454,38 +454,14 @@ export default function SharafDGDeploymentForm({
         }),
       };
 
-      // Try to insert contract
+      // Insert contract into database (without pdf_status - column doesn't exist)
       console.log('📤 Inserting contract:', contractData);
       
-      let newContract;
-      let createError;
-      
-      // First try with pdf_status
-      const result = await supabase
+      const { data: newContract, error: createError } = await supabase
         .from('contracts')
-        .insert({
-          ...contractData,
-          pdf_status: 'pending',
-        })
+        .insert(contractData)
         .select()
         .single();
-      
-      // Check if pdf_status column error
-      if (result.error && result.error.message?.includes('pdf_status')) {
-        console.log('⚠️ pdf_status column not found, trying without it...');
-        // Retry without pdf_status
-        const retryResult = await supabase
-          .from('contracts')
-          .insert(contractData)
-          .select()
-          .single();
-        
-        newContract = retryResult.data;
-        createError = retryResult.error;
-      } else {
-        newContract = result.data;
-        createError = result.error;
-      }
 
       if (createError) {
         console.error('❌ Database error:', createError);
