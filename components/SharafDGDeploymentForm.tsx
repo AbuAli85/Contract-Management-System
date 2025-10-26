@@ -181,9 +181,34 @@ export default function SharafDGDeploymentForm({
     { value: 'flexible', label: 'Flexible Hours' },
   ];
 
+  // Auto-generate contract number
+  const generateContractNumber = (): string => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `SDG-${year}${month}${day}-${random}`;
+  };
+
+  const handleGenerateContractNumber = () => {
+    const newNumber = generateContractNumber();
+    setFormData(prev => ({ ...prev, contract_number: newNumber }));
+    toast({
+      title: 'Contract Number Generated',
+      description: `Generated: ${newNumber}`,
+    });
+  };
+
   useEffect(() => {
     loadData();
     loadSavedDraft();
+    
+    // Auto-generate contract number on first load if empty
+    if (!formData.contract_number) {
+      const newNumber = generateContractNumber();
+      setFormData(prev => ({ ...prev, contract_number: newNumber }));
+    }
   }, []);
 
   // Auto-save draft
@@ -935,15 +960,29 @@ export default function SharafDGDeploymentForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="contract_number">Contract Number *</Label>
-                <Input
-                  id="contract_number"
-                  value={formData.contract_number}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, contract_number: e.target.value }))
-                  }
-                  placeholder="SDG-2025-001"
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="contract_number"
+                    value={formData.contract_number}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, contract_number: e.target.value }))
+                    }
+                    placeholder="SDG-20250126-001"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGenerateContractNumber}
+                    className="shrink-0"
+                    title="Generate new contract number"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Auto-generated or enter manually. Format: SDG-YYYYMMDD-XXX
+                </p>
               </div>
 
               <div className="space-y-2">
