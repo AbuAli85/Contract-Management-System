@@ -58,6 +58,24 @@ export async function GET(request: NextRequest) {
       forceRefresh,
     });
 
+    // Get previous month metrics for growth calculations
+    const now = new Date();
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    const previousMetrics = await getDashboardMetrics({
+      ...(user?.id && { userId: user.id }),
+      userRole,
+      forceRefresh: true, // Always get fresh data for comparison
+      dateRange: {
+        start: previousMonthStart,
+        end: previousMonthEnd,
+      },
+    }).catch(error => {
+      console.warn('Failed to fetch previous month metrics:', error);
+      return null;
+    });
+
     // Build stats object compatible with existing dashboard
     const stats = {
       // Core metrics from centralized service
@@ -84,6 +102,16 @@ export async function GET(request: NextRequest) {
       // Metadata
       timestamp: metrics.timestamp,
       cacheHit: !forceRefresh,
+
+      // Previous month data for growth calculations
+      previousMonth: previousMetrics ? {
+        totalContracts: previousMetrics.contracts.total,
+        activeContracts: previousMetrics.contracts.active,
+        pendingContracts: previousMetrics.contracts.pending,
+        completedContracts: previousMetrics.contracts.completed,
+        totalPromoters: previousMetrics.promoters.total,
+        activePromoters: previousMetrics.promoters.active,
+      } : null,
 
       // Debug info
       debug: {

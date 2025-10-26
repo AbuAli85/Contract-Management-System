@@ -59,6 +59,10 @@ export interface MetricsOptions {
   includeExpiringSoon?: boolean;
   expiryDaysThreshold?: number;
   forceRefresh?: boolean;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
 }
 
 // ==================== CACHING ====================
@@ -181,6 +185,7 @@ export async function getContractMetrics(
     includeExpiringSoon = true,
     expiryDaysThreshold = 30,
     forceRefresh = false,
+    dateRange,
   } = options;
 
   // Check cache first
@@ -208,6 +213,12 @@ export async function getContractMetrics(
       query = query.or(`first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`);
     }
 
+    // Apply date range filter if provided
+    if (dateRange) {
+      query = query.gte('created_at', dateRange.start.toISOString())
+                   .lte('created_at', dateRange.end.toISOString());
+    }
+
     const { data: contracts, error } = await query;
 
     if (error) {
@@ -222,6 +233,12 @@ export async function getContractMetrics(
 
     if (userRole !== 'admin' && userId) {
       countQuery = countQuery.or(`first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`);
+    }
+
+    // Apply date range filter to count query
+    if (dateRange) {
+      countQuery = countQuery.gte('created_at', dateRange.start.toISOString())
+                             .lte('created_at', dateRange.end.toISOString());
     }
 
     const { count: totalCount, error: countError } = await countQuery;
