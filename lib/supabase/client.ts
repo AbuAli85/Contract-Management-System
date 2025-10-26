@@ -55,7 +55,10 @@ function createSupabaseClient() {
           }
           cookiesToSet.forEach(({ name, value }) => {
             try {
-              document.cookie = `${name}=${value}; path=/; max-age=31536000; secure=false; samesite=lax`;
+              // Build cookie string with proper flags
+              const isProduction = window.location.protocol === 'https:';
+              const secureFlag = isProduction ? '; Secure' : '';
+              document.cookie = `${name}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
             } catch (error) {
               console.error('Error setting cookie:', error);
             }
