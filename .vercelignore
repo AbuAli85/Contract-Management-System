@@ -1,0 +1,100 @@
+# Vercel Ignore File
+# Files and directories to exclude from deployment
+
+# Development files
+*.md
+!README.md
+!CHANGELOG.md
+
+# Documentation (except essential)
+docs/
+COMPLETE_*.md
+FIX_*.md
+IMPLEMENTATION_*.md
+DIAGNOSTIC_*.md
+MAKECOM_*.md
+PRODUCTION_*.md
+SECURITY_*.md
+RBAC_*.md
+PROMOTER_*.md
+CONTRACT_*.md
+API_*.md
+
+# SQL files
+*.sql
+
+# Scripts
+scripts/
+*.js.backup
+debug-*.js
+test-*.js
+check-*.js
+analyze-*.js
+populate-*.js
+create-test-*.js
+diagnose-*.js
+fix-*.js
+
+# Test files
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+cypress/
+.cypress/
+
+# Environment files (will be set in Vercel)
+.env*
+!.env.example
+env.*
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts (except Next.js)
+build/
+dist/
+out/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Storybook
+.storybook/
+storybook-static/
+
+# Husky
+.husky/
+
+# Misc
+*.blueprint.json
+makecom-*.json
+verify-*.js
+ACTION_CHECKLIST.md
+MASTER_INDEX.md
+PROJECT_STATUS.md
+PROGRESS_REPORT.md
+

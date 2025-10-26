@@ -27,12 +27,12 @@ const nextConfig = {
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com",
       // Allow styles from self and Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      // Allow images from self, data URIs, Supabase storage, and analytics
-      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com",
+      // Allow images from self, data URIs, Supabase storage, analytics, and Make.com
+      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://hook.eu2.make.com",
       // Allow fonts from self and Google Fonts
       "font-src 'self' data: https://fonts.gstatic.com",
-      // Allow connections to API, Supabase, analytics, and Sentry
-      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io wss://*.supabase.co",
+      // Allow connections to API, Supabase, analytics, Sentry, and Make.com webhook
+      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io https://hook.eu2.make.com wss://*.supabase.co",
       // Disallow frames from other origins
       "frame-ancestors 'none'",
       // Restrict object embeds
@@ -47,8 +47,6 @@ const nextConfig = {
       "media-src 'self' https://*.supabase.co",
       // Allow manifests from self
       "manifest-src 'self'",
-      // CSP violation reporting endpoint
-      "report-uri https://portal.thesmartpro.io/api/csp-report",
     ].join('; ');
 
     return [
@@ -125,7 +123,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: process.env.ALLOWED_ORIGINS?.split(',')[0] || 'https://portal.thesmartpro.io',
+            value: process.env.ALLOWED_ORIGINS?.split(',')[0] || process.env.NEXT_PUBLIC_APP_URL || '*',
           },
           {
             key: 'Access-Control-Allow-Methods',
