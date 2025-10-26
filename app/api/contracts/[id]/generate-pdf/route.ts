@@ -171,6 +171,19 @@ export async function POST(
       })
       .eq('id', contractId);
 
+    // Extract supplier/brand info from metadata
+    const supplierBrandId = contract.metadata?.supplier_brand_id;
+    let supplierBrandData = null;
+
+    if (supplierBrandId) {
+      const { data: supplier } = await supabase
+        .from('parties')
+        .select('name_en, name_ar')
+        .eq('id', supplierBrandId)
+        .single();
+      supplierBrandData = supplier;
+    }
+
     // 6. Prepare payload for Make.com webhook
     const webhookPayload = {
       contract_id: contract.id,
@@ -201,6 +214,10 @@ export async function POST(
       second_party_crn: contract.second_party.crn,
       second_party_logo: contract.second_party.logo_url,
       
+      // Supplier/Brand information (from parties, shows only names)
+      supplier_brand_name_en: supplierBrandData?.name_en || contract.metadata?.supplier_brand_name_en,
+      supplier_brand_name_ar: supplierBrandData?.name_ar || contract.metadata?.supplier_brand_name_ar,
+      
       // Contract details
       job_title: contract.job_title,
       department: contract.department,
@@ -209,6 +226,13 @@ export async function POST(
       contract_start_date: contract.start_date,
       contract_end_date: contract.end_date,
       special_terms: contract.special_terms,
+      
+      // Employment terms (from metadata)
+      probation_period: contract.metadata?.probation_period,
+      notice_period: contract.metadata?.notice_period,
+      working_hours: contract.metadata?.working_hours,
+      housing_allowance: contract.metadata?.housing_allowance,
+      transport_allowance: contract.metadata?.transport_allowance,
     };
 
     // 7. Call Make.com webhook

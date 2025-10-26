@@ -27,14 +27,17 @@ import {
   Building,
   User,
   Calendar,
+  DollarSign,
   Loader2,
   CheckCircle,
   AlertTriangle,
+  RefreshCw,
   MapPin,
   Briefcase,
   Image as ImageIcon,
   Download,
   ExternalLink,
+  Package,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -52,6 +55,7 @@ interface Promoter {
   passport_url: string | null;
   employer_id?: string | null;
   status?: string;
+  status_enum?: string;
 }
 
 interface Party {
@@ -65,14 +69,16 @@ interface Party {
 }
 
 interface SharafDGFormData {
-  // IDs
+  // Parties - Three selections
   promoter_id: string;
-  first_party_id: string; // Employer (Falcon Eye Group)
-  second_party_id: string; // Client (Sharaf DG)
+  first_party_id: string;      // Employer
+  second_party_id: string;     // Client (Sharaf DG)
+  supplier_brand_id: string;   // Supplier/Brand (from parties, shows only names)
   
   // Contract basics
   contract_number: string;
   contract_type: string;
+  contract_name: string;
   
   // Dates
   contract_start_date: string;
@@ -84,17 +90,37 @@ interface SharafDGFormData {
   work_location: string;
   basic_salary: number | undefined;
   
+  // Employment terms (matching eXtra form)
+  probation_period: string;
+  notice_period: string;
+  working_hours: string;
+  housing_allowance: number | undefined;
+  transport_allowance: number | undefined;
+  
   // Additional terms
   special_terms: string | undefined;
 }
 
-export default function SharafDGDeploymentForm() {
+interface SharafDGDeploymentFormProps {
+  pageTitle?: string;
+}
+
+export default function SharafDGDeploymentForm({ 
+  pageTitle = "Sharaf DG Deployment Contracts" 
+}: SharafDGDeploymentFormProps) {
   const [promoters, setPromoters] = useState<Promoter[]>([]);
+  const [allParties, setAllParties] = useState<Party[]>([]);
   const [employers, setEmployers] = useState<Party[]>([]);
   const [clients, setClients] = useState<Party[]>([]);
+  const [suppliers, setSuppliers] = useState<Party[]>([]);
+  const [allPromoters, setAllPromoters] = useState<Promoter[]>([]);
+  const [promoterSearchTerm, setPromoterSearchTerm] = useState('');
+  
   const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null);
   const [selectedEmployer, setSelectedEmployer] = useState<Party | null>(null);
   const [selectedClient, setSelectedClient] = useState<Party | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Party | null>(null);
+  
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [contractCreated, setContractCreated] = useState(false);
@@ -102,75 +128,153 @@ export default function SharafDGDeploymentForm() {
   const [pdfStatus, setPdfStatus] = useState<'idle' | 'generating' | 'ready' | 'error'>('idle');
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [googleDriveUrl, setGoogleDriveUrl] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const { toast } = useToast();
-  const supabase = createClient();
-  
-  if (!supabase) {
-    throw new Error('Supabase client not initialized');
-  }
 
   const [formData, setFormData] = useState<SharafDGFormData>({
     promoter_id: '',
     first_party_id: '',
     second_party_id: '',
+    supplier_brand_id: '',
     contract_number: '',
     contract_type: 'sharaf-dg-deployment',
+    contract_name: '',
     contract_start_date: '',
     contract_end_date: '',
     job_title: '',
     department: '',
     work_location: '',
     basic_salary: undefined,
-    special_terms: '',
+    probation_period: '3_months',
+    notice_period: '30_days',
+    working_hours: '40_hours',
+    housing_allowance: undefined,
+    transport_allowance: undefined,
+    special_terms: undefined,
   });
 
-  // Fetch data on mount
+  const contractTypes = [
+    { value: 'sharaf-dg-deployment', label: 'Sharaf DG Deployment Letter' },
+    { value: 'sharaf-dg-permanent', label: 'Sharaf DG Permanent Contract' },
+    { value: 'sharaf-dg-temporary', label: 'Sharaf DG Temporary Assignment' },
+  ];
+
+  const probationPeriods = [
+    { value: '0_months', label: 'No Probation' },
+    { value: '1_month', label: '1 Month' },
+    { value: '3_months', label: '3 Months' },
+    { value: '6_months', label: '6 Months' },
+  ];
+
+  const noticePeriods = [
+    { value: '0_days', label: 'No Notice' },
+    { value: '30_days', label: '30 Days' },
+    { value: '60_days', label: '60 Days' },
+    { value: '90_days', label: '90 Days' },
+  ];
+
+  const workingHoursOptions = [
+    { value: '40_hours', label: '40 Hours/Week (Full-time)' },
+    { value: '30_hours', label: '30 Hours/Week' },
+    { value: '20_hours', label: '20 Hours/Week (Part-time)' },
+    { value: 'flexible', label: 'Flexible Hours' },
+  ];
+
   useEffect(() => {
-    fetchPromoters();
-    fetchParties();
+    loadData();
+    loadSavedDraft();
   }, []);
 
-  const fetchPromoters = async () => {
+  // Auto-save draft
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.promoter_id || formData.contract_number) {
+        localStorage.setItem('sharaf-dg-form-draft', JSON.stringify(formData));
+        setLastSaved(new Date());
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [formData]);
+
+  const loadSavedDraft = () => {
     try {
-      const { data, error } = await supabase
+      const savedDraft = localStorage.getItem('sharaf-dg-form-draft');
+      if (savedDraft) {
+        const parsedDraft = JSON.parse(savedDraft);
+        setFormData(parsedDraft);
+        setLastSaved(new Date());
+        toast({
+          title: 'Draft Restored',
+          description: 'Your previous form data has been restored.',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading saved draft:', error);
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const supabase = createClient();
+
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+
+      // Load all parties
+      const { data: partiesData, error: partiesError } = await supabase
+        .from('parties')
+        .select('id, name_en, name_ar, crn, type, logo_url, status')
+        .eq('status', 'Active')
+        .order('name_en');
+
+      if (partiesError) {
+        console.error('Error loading parties:', partiesError);
+        throw new Error(`Failed to load parties: ${partiesError.message}`);
+      }
+
+      const allPartiesList = partiesData || [];
+      const clientsList = allPartiesList.filter(p => p.type === 'Client');
+      const employersList = allPartiesList.filter(p => p.type === 'Employer');
+      
+      // Suppliers can be any party (Employer or Supplier type)
+      const suppliersList = allPartiesList.filter(
+        p => p.type === 'Employer' || p.type === 'Supplier'
+      );
+
+      setAllParties(allPartiesList);
+      setClients(clientsList);
+      setEmployers(employersList);
+      setSuppliers(suppliersList);
+
+      // Load promoters with images
+      const { data: promotersData, error: promotersError } = await supabase
         .from('promoters')
         .select('*')
         .in('status_enum', ['available', 'active'])
         .order('name_en');
 
-      if (error) throw error;
-      setPromoters(data || []);
+      if (promotersError) {
+        console.error('Error loading promoters:', promotersError);
+        throw new Error(`Failed to load promoters: ${promotersError.message}`);
+      }
+
+      setPromoters(promotersData || []);
+      setAllPromoters(promotersData || []);
+
+      console.log(`✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers, ${suppliersList.length} suppliers`);
     } catch (error) {
-      console.error('Error fetching promoters:', error);
+      console.error('Failed to load data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load promoters',
+        description: error instanceof Error ? error.message : 'Failed to load form data',
         variant: 'destructive',
       });
-    }
-  };
-
-  const fetchParties = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('parties')
-        .select('*')
-        .eq('status', 'Active')
-        .order('name_en');
-
-      if (error) throw error;
-
-      const allParties = data || [];
-      setEmployers(allParties.filter(p => p.type === 'Employer'));
-      setClients(allParties.filter(p => p.type === 'Client'));
-    } catch (error) {
-      console.error('Error fetching parties:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load parties',
-        variant: 'destructive',
-      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,13 +296,28 @@ export default function SharafDGDeploymentForm() {
     setFormData(prev => ({ ...prev, second_party_id: clientId }));
   };
 
+  const handleSupplierChange = (supplierId: string) => {
+    const supplier = suppliers.find(s => s.id === supplierId);
+    setSelectedSupplier(supplier || null);
+    setFormData(prev => ({ ...prev, supplier_brand_id: supplierId }));
+  };
+
+  const filteredPromoters = promoterSearchTerm
+    ? allPromoters.filter(
+        p =>
+          p.name_en?.toLowerCase().includes(promoterSearchTerm.toLowerCase()) ||
+          p.name_ar?.toLowerCase().includes(promoterSearchTerm.toLowerCase()) ||
+          p.id_card_number?.toLowerCase().includes(promoterSearchTerm.toLowerCase())
+      )
+    : allPromoters;
+
   const validateForm = (): boolean => {
     const errors: string[] = [];
 
-    // Required fields
     if (!formData.promoter_id) errors.push('Promoter');
-    if (!formData.first_party_id) errors.push('Employer (First Party)');
-    if (!formData.second_party_id) errors.push('Client (Second Party)');
+    if (!formData.first_party_id) errors.push('First Party (Employer)');
+    if (!formData.second_party_id) errors.push('Second Party (Client)');
+    if (!formData.supplier_brand_id) errors.push('Supplier/Brand');
     if (!formData.contract_number) errors.push('Contract Number');
     if (!formData.contract_start_date) errors.push('Start Date');
     if (!formData.contract_end_date) errors.push('End Date');
@@ -214,15 +333,11 @@ export default function SharafDGDeploymentForm() {
     }
 
     // Validate parties have required data
-    if (selectedEmployer) {
-      if (!selectedEmployer.name_ar) errors.push('Employer Arabic Name');
-      if (!selectedEmployer.crn) errors.push('Employer CRN');
-    }
-
-    if (selectedClient) {
-      if (!selectedClient.name_ar) errors.push('Client Arabic Name');
-      if (!selectedClient.crn) errors.push('Client CRN');
-    }
+    if (selectedEmployer && !selectedEmployer.name_ar) errors.push('Employer Arabic Name');
+    if (selectedEmployer && !selectedEmployer.crn) errors.push('Employer CRN');
+    if (selectedClient && !selectedClient.name_ar) errors.push('Client Arabic Name');
+    if (selectedClient && !selectedClient.crn) errors.push('Client CRN');
+    if (selectedSupplier && !selectedSupplier.name_ar) errors.push('Supplier/Brand Arabic Name');
 
     if (errors.length > 0) {
       toast({
@@ -244,12 +359,18 @@ export default function SharafDGDeploymentForm() {
     setLoading(true);
 
     try {
-      // 1. Create contract in database
+      const supabase = createClient();
+
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+
+      // Create contract in database
       const { data: newContract, error: createError } = await supabase
         .from('contracts')
         .insert({
           contract_number: formData.contract_number,
-          title: `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
+          title: formData.contract_name || `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
           contract_type: formData.contract_type,
           status: 'draft',
           promoter_id: formData.promoter_id,
@@ -266,6 +387,17 @@ export default function SharafDGDeploymentForm() {
           currency: 'OMR',
           special_terms: formData.special_terms,
           pdf_status: 'pending',
+          // Store supplier/brand info in metadata
+          metadata: {
+            supplier_brand_id: formData.supplier_brand_id,
+            supplier_brand_name_en: selectedSupplier?.name_en,
+            supplier_brand_name_ar: selectedSupplier?.name_ar,
+            probation_period: formData.probation_period,
+            notice_period: formData.notice_period,
+            working_hours: formData.working_hours,
+            housing_allowance: formData.housing_allowance,
+            transport_allowance: formData.transport_allowance,
+          },
           created_at: new Date().toISOString(),
         })
         .select()
@@ -276,9 +408,12 @@ export default function SharafDGDeploymentForm() {
       setCreatedContractId(newContract.id);
       setContractCreated(true);
 
+      // Clear draft
+      localStorage.removeItem('sharaf-dg-form-draft');
+
       toast({
-        title: 'Contract Created',
-        description: 'Contract saved successfully. Generate PDF to create deployment letter.',
+        title: 'Contract Created Successfully',
+        description: `Contract ${formData.contract_number} has been saved. Now generate the PDF.`,
       });
 
       // Auto-scroll to PDF section
@@ -289,7 +424,7 @@ export default function SharafDGDeploymentForm() {
     } catch (error) {
       console.error('Error creating contract:', error);
       toast({
-        title: 'Error',
+        title: 'Error Creating Contract',
         description: error instanceof Error ? error.message : 'Failed to create contract',
         variant: 'destructive',
       });
@@ -337,6 +472,10 @@ export default function SharafDGDeploymentForm() {
   const pollPDFStatus = () => {
     const interval = setInterval(async () => {
       try {
+        const supabase = createClient();
+        
+        if (!supabase || !createdContractId) return;
+        
         const { data: contract } = await supabase
           .from('contracts')
           .select('pdf_status, pdf_url, google_drive_url, pdf_error_message')
@@ -352,10 +491,6 @@ export default function SharafDGDeploymentForm() {
           toast({
             title: 'PDF Ready!',
             description: 'Your deployment letter has been generated successfully.',
-            action: {
-              label: 'Download',
-              onClick: () => window.open(contract.pdf_url!, '_blank'),
-            } as any,
           });
         } else if (contract?.pdf_status === 'error') {
           clearInterval(interval);
@@ -371,95 +506,173 @@ export default function SharafDGDeploymentForm() {
       }
     }, 3000);
 
-    setTimeout(() => clearInterval(interval), 120000); // Stop after 2 minutes
+    setTimeout(() => clearInterval(interval), 120000);
+  };
+
+  const clearForm = () => {
+    if (confirm('Are you sure you want to clear all form data?')) {
+      setFormData({
+        promoter_id: '',
+        first_party_id: '',
+        second_party_id: '',
+        supplier_brand_id: '',
+        contract_number: '',
+        contract_type: 'sharaf-dg-deployment',
+        contract_name: '',
+        contract_start_date: '',
+        contract_end_date: '',
+        job_title: '',
+        department: '',
+        work_location: '',
+        basic_salary: undefined,
+        probation_period: '3_months',
+        notice_period: '30_days',
+        working_hours: '40_hours',
+        housing_allowance: undefined,
+        transport_allowance: undefined,
+        special_terms: undefined,
+      });
+      setSelectedPromoter(null);
+      setSelectedEmployer(null);
+      setSelectedClient(null);
+      setSelectedSupplier(null);
+      setContractCreated(false);
+      setCreatedContractId(null);
+      setPdfStatus('idle');
+      localStorage.removeItem('sharaf-dg-form-draft');
+      
+      toast({
+        title: 'Form Cleared',
+        description: 'All data has been reset.',
+      });
+    }
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
+    <div className="max-w-5xl mx-auto space-y-6 p-4">
+      {/* Header - Matching eXtra style */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-6 w-6" />
-            Sharaf DG Deployment Letter Generator
-          </CardTitle>
-          <CardDescription>
-            Create deployment letters for promoters assigned to Sharaf DG contracts.
-            The system will automatically generate a bilingual PDF document.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Building className="h-6 w-6" />
+                {pageTitle}
+              </CardTitle>
+              <CardDescription className="mt-2">
+                Generate professional bilingual deployment letters for Sharaf DG with automated PDF creation
+              </CardDescription>
+            </div>
+            {lastSaved && (
+              <div className="text-sm text-muted-foreground">
+                Draft saved: {format(lastSaved, 'HH:mm:ss')}
+              </div>
+            )}
+          </div>
         </CardHeader>
       </Card>
 
-      {/* Main Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* Step 1: Promoter Selection */}
+        {/* Promoter Selection - Matching eXtra style */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Step 1: Select Promoter
+              Promoter Information
             </CardTitle>
             <CardDescription>
-              Choose the promoter to be deployed
+              Select the promoter to be deployed (must have ID card and passport images)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Search promoters */}
             <div className="space-y-2">
-              <Label htmlFor="promoter">Promoter *</Label>
+              <Label htmlFor="promoter-search">Search Promoter</Label>
+              <Input
+                id="promoter-search"
+                placeholder="Search by name or ID card number..."
+                value={promoterSearchTerm}
+                onChange={e => setPromoterSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Promoter dropdown */}
+            <div className="space-y-2">
+              <Label htmlFor="promoter">Select Promoter *</Label>
               <Select
                 value={formData.promoter_id}
                 onValueChange={handlePromoterChange}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select promoter..." />
+                  <SelectValue placeholder="Choose a promoter..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {promoters.map(promoter => (
+                  {filteredPromoters.map(promoter => (
                     <SelectItem key={promoter.id} value={promoter.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{promoter.name_en}</span>
-                        <span className="text-muted-foreground">
-                          ({promoter.name_ar})
+                      <div className="flex flex-col">
+                        <span className="font-medium">{promoter.name_en}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {promoter.name_ar} • ID: {promoter.id_card_number}
                         </span>
-                        <Badge variant="outline" className="ml-2">
-                          {promoter.status || 'available'}
-                        </Badge>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-sm text-muted-foreground">
+                {filteredPromoters.length} promoters available
+              </p>
             </div>
 
-            {/* Promoter Details Preview */}
+            {/* Promoter preview */}
             {selectedPromoter && (
-              <Alert>
+              <Alert className={selectedPromoter.id_card_url && selectedPromoter.passport_url ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}>
                 <User className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-2 text-sm">
-                    <div><strong>Name (EN):</strong> {selectedPromoter.name_en}</div>
-                    <div><strong>Name (AR):</strong> {selectedPromoter.name_ar}</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div><strong>Name (EN):</strong> {selectedPromoter.name_en}</div>
+                      <div className="text-right"><strong>الاسم:</strong> {selectedPromoter.name_ar}</div>
+                    </div>
                     <div><strong>ID Card:</strong> {selectedPromoter.id_card_number}</div>
                     <div><strong>Passport:</strong> {selectedPromoter.passport_number || 'Not provided'}</div>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div><strong>Email:</strong> {selectedPromoter.email || 'Not provided'}</div>
+                    <div><strong>Mobile:</strong> {selectedPromoter.mobile_number || 'Not provided'}</div>
+                    
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t">
                       {selectedPromoter.id_card_url ? (
                         <Badge variant="default" className="gap-1">
-                          <ImageIcon className="h-3 w-3" />
-                          ID Card ✓
+                          <CheckCircle className="h-3 w-3" />
+                          ID Card Image ✓
                         </Badge>
                       ) : (
-                        <Badge variant="destructive">ID Card Missing</Badge>
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          ID Card Missing!
+                        </Badge>
                       )}
                       {selectedPromoter.passport_url ? (
                         <Badge variant="default" className="gap-1">
-                          <ImageIcon className="h-3 w-3" />
-                          Passport ✓
+                          <CheckCircle className="h-3 w-3" />
+                          Passport Image ✓
                         </Badge>
                       ) : (
-                        <Badge variant="destructive">Passport Missing</Badge>
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Passport Missing!
+                        </Badge>
                       )}
                     </div>
+                    
+                    {(!selectedPromoter.id_card_url || !selectedPromoter.passport_url) && (
+                      <Alert variant="destructive" className="mt-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          This promoter is missing required images. Please upload ID card and passport before proceeding.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                 </AlertDescription>
               </Alert>
@@ -467,21 +680,21 @@ export default function SharafDGDeploymentForm() {
           </CardContent>
         </Card>
 
-        {/* Step 2: Parties Selection */}
+        {/* Parties Selection - With Supplier/Brand */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
               <Building className="h-5 w-5" />
-              Step 2: Select Parties
+              Party Information
             </CardTitle>
             <CardDescription>
-              Choose employer (first party) and client (second party - Sharaf DG)
+              Select employer, client, and supplier/brand
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Employer */}
+            {/* First Party (Employer) */}
             <div className="space-y-2">
-              <Label htmlFor="employer">Employer (First Party) *</Label>
+              <Label htmlFor="employer">First Party (Employer) *</Label>
               <Select
                 value={formData.first_party_id}
                 onValueChange={handleEmployerChange}
@@ -492,39 +705,77 @@ export default function SharafDGDeploymentForm() {
                 <SelectContent>
                   {employers.map(employer => (
                     <SelectItem key={employer.id} value={employer.id}>
-                      {employer.name_en} ({employer.name_ar})
+                      <div className="flex flex-col">
+                        <span>{employer.name_en}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {employer.name_ar} • CRN: {employer.crn || 'N/A'}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Client (Sharaf DG) */}
+            {/* Second Party (Client - Sharaf DG) */}
             <div className="space-y-2">
-              <Label htmlFor="client">Client (Sharaf DG) *</Label>
+              <Label htmlFor="client">Second Party (Client) *</Label>
               <Select
                 value={formData.second_party_id}
                 onValueChange={handleClientChange}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Sharaf DG..." />
+                  <SelectValue placeholder="Select client (Sharaf DG)..." />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map(client => (
                     <SelectItem key={client.id} value={client.id}>
-                      {client.name_en} ({client.name_ar})
-                      {client.name_en.toLowerCase().includes('sharaf') && (
-                        <Badge className="ml-2" variant="default">Sharaf DG</Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col">
+                          <span>{client.name_en}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {client.name_ar} • CRN: {client.crn || 'N/A'}
+                          </span>
+                        </div>
+                        {client.name_en.toLowerCase().includes('sharaf') && (
+                          <Badge variant="default" className="ml-auto">Sharaf DG</Badge>
+                        )}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Party Preview */}
-            {(selectedEmployer || selectedClient) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {/* Supplier/Brand (From Parties - Shows only names) */}
+            <div className="space-y-2">
+              <Label htmlFor="supplier">Supplier/Brand Name *</Label>
+              <Select
+                value={formData.supplier_brand_id}
+                onValueChange={handleSupplierChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select supplier/brand..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map(supplier => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      <div className="flex flex-col">
+                        <span>{supplier.name_en}</span>
+                        <span className="text-sm text-muted-foreground">{supplier.name_ar}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                This represents the brand/supplier for the deployment (can be same as employer)
+              </p>
+            </div>
+
+            {/* Parties Preview */}
+            {(selectedEmployer || selectedClient || selectedSupplier) && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 {selectedEmployer && (
                   <Alert>
                     <Building className="h-4 w-4" />
@@ -532,8 +783,8 @@ export default function SharafDGDeploymentForm() {
                       <div className="text-sm space-y-1">
                         <div className="font-semibold">Employer</div>
                         <div>{selectedEmployer.name_en}</div>
-                        <div className="text-right">{selectedEmployer.name_ar}</div>
-                        <div className="text-muted-foreground">
+                        <div className="text-right text-xs">{selectedEmployer.name_ar}</div>
+                        <div className="text-xs text-muted-foreground">
                           CRN: {selectedEmployer.crn || 'Not provided'}
                         </div>
                       </div>
@@ -548,10 +799,23 @@ export default function SharafDGDeploymentForm() {
                       <div className="text-sm space-y-1">
                         <div className="font-semibold">Client</div>
                         <div>{selectedClient.name_en}</div>
-                        <div className="text-right">{selectedClient.name_ar}</div>
-                        <div className="text-muted-foreground">
+                        <div className="text-right text-xs">{selectedClient.name_ar}</div>
+                        <div className="text-xs text-muted-foreground">
                           CRN: {selectedClient.crn || 'Not provided'}
                         </div>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {selectedSupplier && (
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <Package className="h-4 w-4 text-blue-600" />
+                    <AlertDescription>
+                      <div className="text-sm space-y-1">
+                        <div className="font-semibold text-blue-900">Supplier/Brand</div>
+                        <div>{selectedSupplier.name_en}</div>
+                        <div className="text-right text-xs">{selectedSupplier.name_ar}</div>
                       </div>
                     </AlertDescription>
                   </Alert>
@@ -561,39 +825,72 @@ export default function SharafDGDeploymentForm() {
           </CardContent>
         </Card>
 
-        {/* Step 3: Contract Details */}
+        {/* Contract Details - Matching eXtra layout */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Step 3: Contract Details
+              Contract Details
             </CardTitle>
-            <CardDescription>
-              Enter deployment and contract information
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Contract Number */}
+            {/* Contract Number and Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contract_number">Contract Number *</Label>
+                <Input
+                  id="contract_number"
+                  value={formData.contract_number}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, contract_number: e.target.value }))
+                  }
+                  placeholder="SDG-2025-001"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contract_type">Contract Type *</Label>
+                <Select
+                  value={formData.contract_type}
+                  onValueChange={value =>
+                    setFormData(prev => ({ ...prev, contract_type: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contractTypes.map(type => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Contract Name */}
             <div className="space-y-2">
-              <Label htmlFor="contract_number">Contract Number *</Label>
+              <Label htmlFor="contract_name">Contract Title</Label>
               <Input
-                id="contract_number"
-                value={formData.contract_number}
+                id="contract_name"
+                value={formData.contract_name}
                 onChange={e =>
-                  setFormData(prev => ({ ...prev, contract_number: e.target.value }))
+                  setFormData(prev => ({ ...prev, contract_name: e.target.value }))
                 }
-                placeholder="e.g., SDG-2025-001"
-                required
+                placeholder="e.g., Sharaf DG Promoter Deployment Agreement"
               />
-              <p className="text-sm text-muted-foreground">
-                Format: SDG-YYYY-XXX (SDG = Sharaf DG)
-              </p>
             </div>
 
             {/* Dates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="start_date">Deployment Start Date *</Label>
+                <Label htmlFor="start_date" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Start Date *
+                </Label>
                 <Input
                   id="start_date"
                   type="date"
@@ -606,7 +903,10 @@ export default function SharafDGDeploymentForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="end_date">Deployment End Date *</Label>
+                <Label htmlFor="end_date" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  End Date *
+                </Label>
                 <Input
                   id="end_date"
                   type="date"
@@ -622,14 +922,17 @@ export default function SharafDGDeploymentForm() {
             {/* Employment Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="job_title">Job Title / Position *</Label>
+                <Label htmlFor="job_title" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" />
+                  Job Title *
+                </Label>
                 <Input
                   id="job_title"
                   value={formData.job_title}
                   onChange={e =>
                     setFormData(prev => ({ ...prev, job_title: e.target.value }))
                   }
-                  placeholder="e.g., Sales Promoter, Brand Ambassador"
+                  placeholder="Sales Promoter, Brand Ambassador, etc."
                   required
                 />
               </div>
@@ -642,88 +945,237 @@ export default function SharafDGDeploymentForm() {
                   onChange={e =>
                     setFormData(prev => ({ ...prev, department: e.target.value }))
                   }
-                  placeholder="e.g., Electronics, Consumer Goods"
+                  placeholder="Electronics, Consumer Goods, etc."
                 />
               </div>
             </div>
 
             {/* Work Location */}
             <div className="space-y-2">
-              <Label htmlFor="work_location">Work Location *</Label>
+              <Label htmlFor="work_location" className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Work Location *
+              </Label>
               <Input
                 id="work_location"
                 value={formData.work_location}
                 onChange={e =>
                   setFormData(prev => ({ ...prev, work_location: e.target.value }))
                 }
-                placeholder="e.g., Sharaf DG Mall of Oman, Sharaf DG Muscat City Centre"
+                placeholder="Sharaf DG Mall of Oman, Muscat City Centre, etc."
                 required
-              />
-            </div>
-
-            {/* Basic Salary (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="basic_salary">Basic Salary (Optional)</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="basic_salary"
-                  type="number"
-                  value={formData.basic_salary || ''}
-                onChange={e => {
-                  const value = e.target.value ? parseFloat(e.target.value) : undefined;
-                  setFormData(prev => ({
-                    ...prev,
-                    basic_salary: value,
-                  }));
-                }}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                />
-                <Badge variant="outline" className="px-4">OMR</Badge>
-              </div>
-            </div>
-
-            {/* Special Terms */}
-            <div className="space-y-2">
-              <Label htmlFor="special_terms">Special Terms / Notes</Label>
-              <Textarea
-                id="special_terms"
-                value={formData.special_terms}
-                onChange={e =>
-                  setFormData(prev => ({ ...prev, special_terms: e.target.value }))
-                }
-                placeholder="Any special terms, conditions, or notes for this deployment..."
-                rows={4}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Submit Button */}
+        {/* Salary & Allowances - Matching eXtra */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Compensation Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="basic_salary">Basic Salary</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="basic_salary"
+                    type="number"
+                    value={formData.basic_salary || ''}
+                    onChange={e => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                      setFormData(prev => ({
+                        ...prev,
+                        basic_salary: value,
+                      }));
+                    }}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                  <Badge variant="outline" className="px-4">OMR</Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="housing_allowance">Housing Allowance</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="housing_allowance"
+                    type="number"
+                    value={formData.housing_allowance || ''}
+                    onChange={e => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                      setFormData(prev => ({
+                        ...prev,
+                        housing_allowance: value,
+                      }));
+                    }}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                  <Badge variant="outline" className="px-4">OMR</Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="transport_allowance">Transport Allowance</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="transport_allowance"
+                    type="number"
+                    value={formData.transport_allowance || ''}
+                    onChange={e => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                      setFormData(prev => ({
+                        ...prev,
+                        transport_allowance: value,
+                      }));
+                    }}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                  <Badge variant="outline" className="px-4">OMR</Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Employment Terms - Matching eXtra */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Employment Terms
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="probation_period">Probation Period</Label>
+                <Select
+                  value={formData.probation_period}
+                  onValueChange={value =>
+                    setFormData(prev => ({ ...prev, probation_period: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {probationPeriods.map(period => (
+                      <SelectItem key={period.value} value={period.value}>
+                        {period.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notice_period">Notice Period</Label>
+                <Select
+                  value={formData.notice_period}
+                  onValueChange={value =>
+                    setFormData(prev => ({ ...prev, notice_period: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {noticePeriods.map(period => (
+                      <SelectItem key={period.value} value={period.value}>
+                        {period.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="working_hours">Working Hours</Label>
+                <Select
+                  value={formData.working_hours}
+                  onValueChange={value =>
+                    setFormData(prev => ({ ...prev, working_hours: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workingHoursOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Special Terms */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Special Terms & Conditions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              id="special_terms"
+              value={formData.special_terms || ''}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, special_terms: e.target.value }))
+              }
+              placeholder="Any special terms, conditions, or notes for this deployment..."
+              rows={4}
+              className="resize-none"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
         {!contractCreated && (
-          <Card>
-            <CardContent className="pt-6">
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Creating Contract...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="mr-2 h-5 w-5" />
-                    Create Contract
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="flex gap-4">
+            <Button
+              type="submit"
+              size="lg"
+              className="flex-1"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Creating Contract...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-5 w-5" />
+                  Create Contract
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={clearForm}
+              disabled={loading}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Clear Form
+            </Button>
+          </div>
         )}
       </form>
 
@@ -733,32 +1185,54 @@ export default function SharafDGDeploymentForm() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2 text-green-900">
               <CheckCircle className="h-5 w-5" />
-              Contract Created Successfully
+              Contract Created Successfully!
             </CardTitle>
-            <CardDescription>
-              Now generate the deployment letter PDF
+            <CardDescription className="text-green-800">
+              Contract Number: <strong>{formData.contract_number}</strong> has been saved.
+              Now generate the deployment letter PDF.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {pdfStatus === 'idle' && (
-              <Button
-                onClick={handleGeneratePDF}
-                size="lg"
-                disabled={generating}
-                className="w-full"
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Generating PDF...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="mr-2 h-5 w-5" />
-                    Generate Deployment Letter PDF
-                  </>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <Alert className="border-blue-200 bg-blue-50">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-900">
+                    <div className="space-y-2">
+                      <div className="font-semibold">Ready to generate PDF deployment letter</div>
+                      <div className="text-sm">
+                        This will create a professional bilingual document with:
+                        <ul className="list-disc list-inside mt-1 ml-2 space-y-1">
+                          <li>Company logos</li>
+                          <li>Employee details (English & Arabic)</li>
+                          <li>ID card and passport images</li>
+                          <li>Contract terms and conditions</li>
+                          <li>Official stamps and signatures section</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+                
+                <Button
+                  onClick={handleGeneratePDF}
+                  size="lg"
+                  disabled={generating}
+                  className="w-full"
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Generating PDF...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 h-5 w-5" />
+                      Generate Deployment Letter PDF
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
 
             {pdfStatus === 'generating' && (
@@ -767,16 +1241,13 @@ export default function SharafDGDeploymentForm() {
                 <AlertDescription>
                   <div className="space-y-2">
                     <div className="font-semibold">Generating deployment letter...</div>
-                    <div className="text-sm text-muted-foreground">
-                      This process includes:
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Fetching template from Google Drive</li>
-                        <li>Filling promoter and party information</li>
-                        <li>Embedding ID card and passport images</li>
-                        <li>Generating bilingual PDF</li>
-                        <li>Uploading to storage</li>
-                      </ul>
-                      <div className="mt-2">Estimated time: 30-40 seconds</div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div>⏳ Fetching template from Google Drive</div>
+                      <div>📝 Filling employee and company information</div>
+                      <div>🖼️ Embedding ID card and passport images</div>
+                      <div>📄 Generating bilingual PDF document</div>
+                      <div>☁️ Uploading to secure storage</div>
+                      <div className="mt-2 font-medium">Estimated time: 30-40 seconds</div>
                     </div>
                   </div>
                 </AlertDescription>
@@ -788,13 +1259,17 @@ export default function SharafDGDeploymentForm() {
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <AlertDescription>
                   <div className="space-y-3">
-                    <div className="font-semibold text-green-900">
-                      Deployment Letter Ready!
+                    <div className="font-semibold text-green-900 text-lg">
+                      ✅ Deployment Letter Ready!
+                    </div>
+                    <div className="text-sm text-green-800">
+                      Your bilingual PDF has been generated with employee images embedded.
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         onClick={() => window.open(pdfUrl, '_blank')}
                         variant="default"
+                        size="lg"
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Download PDF
@@ -803,6 +1278,7 @@ export default function SharafDGDeploymentForm() {
                         <Button
                           onClick={() => window.open(googleDriveUrl, '_blank')}
                           variant="outline"
+                          size="lg"
                         >
                           <ExternalLink className="mr-2 h-4 w-4" />
                           Open in Google Drive
@@ -811,9 +1287,10 @@ export default function SharafDGDeploymentForm() {
                       <Button
                         onClick={handleGeneratePDF}
                         variant="ghost"
+                        size="lg"
                       >
-                        <FileText className="mr-2 h-4 w-4" />
-                        Regenerate
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Regenerate PDF
                       </Button>
                     </div>
                   </div>
@@ -829,6 +1306,7 @@ export default function SharafDGDeploymentForm() {
                     <div className="font-semibold">PDF Generation Failed</div>
                     <div className="text-sm">
                       Please check that all required data is present and try again.
+                      Ensure promoter has valid ID card and passport images.
                     </div>
                     <Button
                       onClick={handleGeneratePDF}
@@ -836,6 +1314,7 @@ export default function SharafDGDeploymentForm() {
                       size="sm"
                       className="mt-2"
                     >
+                      <RefreshCw className="mr-2 h-4 w-4" />
                       Retry Generation
                     </Button>
                   </div>
@@ -846,7 +1325,7 @@ export default function SharafDGDeploymentForm() {
         </Card>
       )}
 
-      {/* Help Card */}
+      {/* Help Section */}
       <Card className="border-blue-200 bg-blue-50/50">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2 text-blue-900">
@@ -857,23 +1336,32 @@ export default function SharafDGDeploymentForm() {
         <CardContent>
           <div className="text-sm text-blue-900/80 space-y-2">
             <p>
-              This form creates formal deployment letters for promoters assigned to Sharaf DG locations.
-              The generated document includes:
+              This form creates official deployment letters for promoters assigned to Sharaf DG locations.
             </p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Bilingual content (English and Arabic)</li>
-              <li>Company logos (both parties)</li>
-              <li>Promoter identification documents (ID card & passport)</li>
-              <li>Contract terms and conditions</li>
-              <li>Official stamps and signatures area</li>
-            </ul>
-            <p className="mt-3">
-              <strong>Requirements:</strong> Promoter must have valid ID card and passport images uploaded.
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+              <div>
+                <div className="font-semibold mb-1">Document includes:</div>
+                <ul className="list-disc list-inside space-y-1 ml-2 text-xs">
+                  <li>Bilingual content (English & Arabic)</li>
+                  <li>Company logos (employer, client, supplier)</li>
+                  <li>Employee ID card & passport images</li>
+                  <li>Complete contract terms</li>
+                  <li>Official signatures section</li>
+                </ul>
+              </div>
+              <div>
+                <div className="font-semibold mb-1">Requirements:</div>
+                <ul className="list-disc list-inside space-y-1 ml-2 text-xs">
+                  <li>Promoter with uploaded ID card image</li>
+                  <li>Promoter with uploaded passport image</li>
+                  <li>All parties with Arabic names</li>
+                  <li>Valid CRN numbers for companies</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
