@@ -409,7 +409,7 @@ export default function SharafDGDeploymentForm({
         throw new Error('Supabase client not available');
       }
 
-      // Create contract in database (only using columns that exist)
+      // Create contract in database (only using columns that exist in contracts table)
       const contractData = {
         contract_number: formData.contract_number,
         title: formData.contract_name || `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
@@ -423,12 +423,13 @@ export default function SharafDGDeploymentForm({
         end_date: formData.contract_end_date,
         value: formData.basic_salary || 0,
         currency: 'OMR',
-        // Store all additional data as JSON in the 'terms' field
+        // Store all additional data as JSON in the 'terms' field (TEXT column that exists)
         terms: JSON.stringify({
           // Employment details
           job_title: formData.job_title,
           department: formData.department,
           work_location: formData.work_location,
+          special_terms: formData.special_terms,
           // Supplier/brand info
           supplier_brand_id: formData.supplier_brand_id,
           supplier_brand_name_en: selectedSupplier?.name_en,
@@ -440,7 +441,6 @@ export default function SharafDGDeploymentForm({
           // Allowances
           housing_allowance: formData.housing_allowance,
           transport_allowance: formData.transport_allowance,
-          basic_salary: formData.basic_salary,
         }),
       };
 
