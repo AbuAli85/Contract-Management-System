@@ -397,8 +397,15 @@ export default function SharafDGDeploymentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('📝 Form submitted, validating...', formData);
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.error('❌ Validation failed');
+      return;
+    }
+    
+    console.log('✅ Validation passed, creating contract...');
 
     setLoading(true);
 
@@ -406,6 +413,7 @@ export default function SharafDGDeploymentForm({
       const supabase = createClient();
 
       if (!supabase) {
+        console.error('❌ Supabase client not available');
         throw new Error('Supabase client not available');
       }
 
@@ -446,28 +454,45 @@ export default function SharafDGDeploymentForm({
         }),
       };
 
-      // Add pdf_status if column exists (try with, fallback without)
-      const { data: newContract, error: createError } = await supabase
+      // Try to insert contract
+      console.log('📤 Inserting contract:', contractData);
+      
+      let newContract;
+      let createError;
+      
+      // First try with pdf_status
+      const result = await supabase
         .from('contracts')
         .insert({
           ...contractData,
           pdf_status: 'pending',
         })
         .select()
-        .single()
-        .catch(async (err) => {
-          // If pdf_status column doesn't exist, try without it
-          if (err?.message?.includes('pdf_status')) {
-            return await supabase
-              .from('contracts')
-              .insert(contractData)
-              .select()
-              .single();
-          }
-          throw err;
-        });
+        .single();
+      
+      // Check if pdf_status column error
+      if (result.error && result.error.message?.includes('pdf_status')) {
+        console.log('⚠️ pdf_status column not found, trying without it...');
+        // Retry without pdf_status
+        const retryResult = await supabase
+          .from('contracts')
+          .insert(contractData)
+          .select()
+          .single();
+        
+        newContract = retryResult.data;
+        createError = retryResult.error;
+      } else {
+        newContract = result.data;
+        createError = result.error;
+      }
 
-      if (createError) throw createError;
+      if (createError) {
+        console.error('❌ Database error:', createError);
+        throw createError;
+      }
+      
+      console.log('✅ Contract created successfully:', newContract);
 
       setCreatedContractId(newContract.id);
       setContractCreated(true);
@@ -486,10 +511,19 @@ export default function SharafDGDeploymentForm({
       }, 500);
 
     } catch (error) {
-      console.error('Error creating contract:', error);
+      console.error('❌ Error creating contract:', error);
+      
+      // Extract detailed error message
+      let errorMessage = 'Failed to create contract';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      }
+      
       toast({
         title: 'Error Creating Contract',
-        description: error instanceof Error ? error.message : 'Failed to create contract',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
