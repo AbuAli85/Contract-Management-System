@@ -265,9 +265,9 @@ export default function SharafDGDeploymentForm({
       const clientsList = allPartiesList.filter(p => p.type === 'Client');
       const employersList = allPartiesList.filter(p => p.type === 'Employer');
       
-      // Suppliers can be any party (Employer or Supplier type)
+      // Suppliers/Brands should be Client type (same as First Party)
       const suppliersList = allPartiesList.filter(
-        p => p.type === 'Employer' || p.type === 'Supplier'
+        p => p.type === 'Client' || p.type === 'Supplier'
       );
 
       setAllParties(allPartiesList);
@@ -869,7 +869,7 @@ export default function SharafDGDeploymentForm({
               </Select>
             </div>
 
-            {/* Supplier/Brand (From Parties - Shows only names) */}
+            {/* Supplier/Brand (From Parties - Shows Client type) */}
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier/Brand Name *</Label>
               <Select
@@ -891,7 +891,7 @@ export default function SharafDGDeploymentForm({
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
-                This represents the brand/supplier for the deployment (can be same as employer)
+                The brand/supplier (Client type) - can be same as First Party
               </p>
             </div>
 
