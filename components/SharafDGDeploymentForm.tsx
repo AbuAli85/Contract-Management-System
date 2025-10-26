@@ -436,22 +436,119 @@ export default function SharafDGDeploymentForm({
   const handleGeneratePDF = async () => {
     if (!createdContractId) return;
 
+    // Validate required images before proceeding
+    if (!selectedPromoter?.id_card_url || !selectedPromoter?.passport_url) {
+      toast({
+        title: 'Missing Required Images',
+        description: 'Promoter must have both ID card and passport images uploaded.',
+        variant: 'destructive',
+      });
+      setPdfStatus('error');
+      return;
+    }
+
     setGenerating(true);
     setPdfStatus('generating');
 
     try {
-      const response = await fetch(`/api/contracts/${createdContractId}/generate-pdf`, {
-        method: 'POST',
+      // Prepare data for Make.com webhook
+      const webhookData = {
+        contract_id: createdContractId,
+        contract_number: formData.contract_number,
+        contract_type: formData.contract_type,
+        contract_name: formData.contract_name || `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
+        
+        // Promoter details
+        promoter: {
+          id: formData.promoter_id,
+          name_en: selectedPromoter?.name_en || '',
+          name_ar: selectedPromoter?.name_ar || '',
+          id_card_number: selectedPromoter?.id_card_number || '',
+          passport_number: selectedPromoter?.passport_number || '',
+          email: selectedPromoter?.email || '',
+          mobile_number: selectedPromoter?.mobile_number || '',
+          id_card_url: selectedPromoter?.id_card_url || '',
+          passport_url: selectedPromoter?.passport_url || '',
+        },
+        
+        // Parties
+        employer: {
+          id: formData.first_party_id,
+          name_en: selectedEmployer?.name_en || '',
+          name_ar: selectedEmployer?.name_ar || '',
+          crn: selectedEmployer?.crn || '',
+          logo_url: selectedEmployer?.logo_url || '',
+        },
+        
+        client: {
+          id: formData.second_party_id,
+          name_en: selectedClient?.name_en || '',
+          name_ar: selectedClient?.name_ar || '',
+          crn: selectedClient?.crn || '',
+          logo_url: selectedClient?.logo_url || '',
+        },
+        
+        supplier: {
+          id: formData.supplier_brand_id,
+          name_en: selectedSupplier?.name_en || '',
+          name_ar: selectedSupplier?.name_ar || '',
+        },
+        
+        // Contract dates
+        start_date: formData.contract_start_date || '',
+        end_date: formData.contract_end_date || '',
+        
+        // Employment details
+        job_title: formData.job_title || '',
+        department: formData.department || '',
+        work_location: formData.work_location || '',
+        
+        // Compensation
+        basic_salary: formData.basic_salary || 0,
+        housing_allowance: formData.housing_allowance || 0,
+        transport_allowance: formData.transport_allowance || 0,
+        currency: 'OMR',
+        
+        // Terms
+        probation_period: formData.probation_period || '3_months',
+        notice_period: formData.notice_period || '30_days',
+        working_hours: formData.working_hours || '40_hours',
+        special_terms: formData.special_terms || '',
+        
+        // Metadata
+        created_at: new Date().toISOString(),
+      };
+
+      console.log('📤 Sending to Make.com webhook:', {
+        contract_id: webhookData.contract_id,
+        contract_number: webhookData.contract_number,
+        has_id_card: !!webhookData.promoter.id_card_url,
+        has_passport: !!webhookData.promoter.passport_url,
+        has_employer_logo: !!webhookData.employer.logo_url,
+        has_client_logo: !!webhookData.client.logo_url,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to generate PDF');
+      // Send to Make.com webhook
+      const webhookResponse = await fetch('https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
+      });
+
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error('❌ Webhook error response:', errorText);
+        throw new Error(`Make.com webhook failed: ${errorText}`);
       }
+
+      const webhookResult = await webhookResponse.text();
+      console.log('✅ Make.com webhook response:', webhookResult);
 
       toast({
         title: 'PDF Generation Started',
-        description: 'Your deployment letter is being generated. This will take about 30 seconds.',
+        description: 'Your deployment letter is being generated via Make.com. This will take about 30 seconds.',
       });
 
       // Poll for status
