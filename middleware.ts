@@ -63,6 +63,9 @@ function getClientIP(request: NextRequest): string {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIP(request);
+  
+  // Create response object that we'll modify
+  let response: NextResponse;
 
   // Apply CORS validation to all API routes
   if (pathname.startsWith('/api/')) {
@@ -154,12 +157,52 @@ export function middleware(request: NextRequest) {
       console.log(`🔐 Middleware: Processing request for path: ${pathname}`);
     }
 
-    // Continue with the request
-    return NextResponse.next();
+    // Continue with the request but apply cookie security
+    response = NextResponse.next();
+    
+    // Apply cookie security for rate-limited paths too
+    const cookies = request.cookies.getAll();
+    cookies.forEach(cookie => {
+      if (cookie.name.startsWith('sb-')) {
+        response.cookies.set(cookie.name, cookie.value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7,
+        });
+      }
+    });
+    
+    return response;
   }
 
-  // For non-rate-limited paths, just continue
-  return NextResponse.next();
+  // For non-rate-limited paths, create response
+  response = NextResponse.next();
+  
+  // ========== COOKIE SECURITY ENFORCEMENT ==========
+  // Re-set all Supabase cookies with proper security flags
+  // This ensures HttpOnly, Secure, and SameSite flags are set
+  const cookies = request.cookies.getAll();
+  cookies.forEach(cookie => {
+    if (cookie.name.startsWith('sb-')) {
+      response.cookies.set(cookie.name, cookie.value, {
+        httpOnly: true, // Prevent JavaScript access (XSS protection)
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        sameSite: 'strict', // Prevent CSRF
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 7 days (Supabase default)
+      });
+    }
+  });
+  
+  // ========== SECURITY HEADERS ==========
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  return response;
 }
 
 export const config = {
