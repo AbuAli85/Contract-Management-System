@@ -90,6 +90,10 @@ export default function VerifyDocumentUrlsPage() {
 
       for (let i = 0; i < promoters.length; i++) {
         const promoter = promoters[i];
+        
+        // Skip if promoter is undefined (TypeScript safety check)
+        if (!promoter) continue;
+        
         setCurrentPromoter(promoter.name_en);
         setProgress(Math.round(((i + 1) / promoters.length) * 100));
 
@@ -405,4 +409,5 @@ export default function VerifyDocumentUrlsPage() {
     </div>
   );
 }
+
 

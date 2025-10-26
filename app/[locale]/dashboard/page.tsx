@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { EnhancedDashboardCharts } from '@/components/dashboard/enhanced-dashboard-charts';
 import { DashboardActivityFeed } from '@/components/dashboard/dashboard-activity-feed';
+import { calculateGrowthPercentage, determineGrowthTrend } from '@/lib/utils/calculations';
 
 interface User {
   id: string;
@@ -66,6 +67,11 @@ interface DashboardStats {
   activeContracts: number;
   pendingContracts: number;
   scope: 'system-wide' | 'user-specific';
+  previousMonth?: {
+    totalContracts?: number;
+    activeContracts?: number;
+    pendingContracts?: number;
+  };
 }
 
 interface PromoterStats {
@@ -76,6 +82,10 @@ interface PromoterStats {
   inactive: number;
   utilizationRate: number;
   complianceRate: number;
+  previousMonth?: {
+    totalWorkforce?: number;
+    utilizationRate?: number;
+  };
 }
 
 interface QuickStat {
@@ -203,37 +213,54 @@ function DashboardContent() {
     });
   }, [refetchStats, toast]);
 
-  // Calculate quick stats with trends
+  // Calculate quick stats with trends using actual growth calculations
+  const totalContractsChange = calculateGrowthPercentage(
+    stats?.total || 0,
+    stats?.previousMonth?.totalContracts || 0
+  );
+  const activeContractsChange = calculateGrowthPercentage(
+    stats?.active || 0,
+    stats?.previousMonth?.activeContracts || 0
+  );
+  const workforceChange = calculateGrowthPercentage(
+    promoterStats?.totalWorkforce || 0,
+    promoterStats?.previousMonth?.totalWorkforce || 0
+  );
+  const utilizationChange = calculateGrowthPercentage(
+    promoterStats?.utilizationRate || 0,
+    promoterStats?.previousMonth?.utilizationRate || 0
+  );
+
   const quickStats: QuickStat[] = [
     {
       label: 'Total Contracts',
       value: stats?.total || 0,
-      change: 12.5,
-      trend: 'up',
+      change: totalContractsChange,
+      trend: determineGrowthTrend(totalContractsChange),
       icon: <FileText className="h-5 w-5" />,
       color: 'blue',
     },
     {
       label: 'Active Contracts',
       value: stats?.active || 0,
-      change: 8.3,
-      trend: 'up',
+      change: activeContractsChange,
+      trend: determineGrowthTrend(activeContractsChange),
       icon: <Activity className="h-5 w-5" />,
       color: 'green',
     },
     {
       label: 'Workforce',
       value: promoterStats?.totalWorkforce || 0,
-      change: 5.2,
-      trend: 'up',
+      change: workforceChange,
+      trend: determineGrowthTrend(workforceChange),
       icon: <Users className="h-5 w-5" />,
       color: 'purple',
     },
     {
       label: 'Utilization',
       value: `${promoterStats?.utilizationRate || 0}%`,
-      change: promoterStats?.utilizationRate ? promoterStats.utilizationRate - 65 : 0,
-      trend: (promoterStats?.utilizationRate || 0) >= 65 ? 'up' : 'down',
+      change: utilizationChange,
+      trend: determineGrowthTrend(utilizationChange),
       icon: <TrendingUp className="h-5 w-5" />,
       color: 'orange',
     },

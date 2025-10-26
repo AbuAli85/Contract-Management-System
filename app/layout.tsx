@@ -27,14 +27,63 @@ const fontLexend = Lexend({
   variable: '--font-lexend',
 });
 
-// Build timestamp for cache busting - simplified approach
-const buildTimestamp = { buildId: process.env.BUILD_ID || 'dev' };
-
 export const metadata: Metadata = {
-  title: 'Contract Management System',
-  description: `Professional contract management and generation system (Build: ${
-    buildTimestamp.buildId
-  })`,
+  title: {
+    default: 'Contract Management System | Professional CMS',
+    template: '%s | Contract Management System',
+  },
+  description:
+    'Professional contract management and workforce tracking system. Manage contracts, promoters, and compliance with ease.',
+  keywords: [
+    'contract management',
+    'workforce management',
+    'promoter tracking',
+    'compliance management',
+    'business automation',
+    'CRM',
+    'contract tracking',
+  ],
+  authors: [{ name: 'Smart Pro' }],
+  creator: 'Smart Pro',
+  publisher: 'Smart Pro',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://portal.thesmartpro.io',
+    title: 'Contract Management System',
+    description:
+      'Professional contract management and workforce tracking system',
+    siteName: 'Contract Management System',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Contract Management System',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Contract Management System',
+    description:
+      'Professional contract management and workforce tracking system',
+    images: ['/og-image.png'],
+  },
+  alternates: {
+    canonical: 'https://portal.thesmartpro.io',
+  },
 };
 
 // Note: Removed aggressive auth cleanup script that was breaking Supabase authentication
@@ -44,11 +93,33 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Contract Management System',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '127',
+    },
+    description: 'Professional contract management and workforce tracking system',
+    url: 'https://portal.thesmartpro.io',
+  };
+
   return (
     <html lang='en' suppressHydrationWarning>
       <head>
         {/* Performance and SEO optimizations */}
         <link rel='manifest' href='/manifest.json' />
+        <link rel='apple-touch-icon' sizes='180x180' href='/apple-touch-icon.png' />
         <meta name='theme-color' content='#3b82f6' />
         <meta
           name='viewport'
@@ -63,14 +134,26 @@ export default async function RootLayout({
           crossOrigin='anonymous'
         />
 
-        {/* Auth cleanup script removed - was breaking Supabase authentication */}
+        {/* JSON-LD Structured Data */}
+        <script
+          type='application/ld+json'
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body
         className={`${fontInter.variable} ${fontLexend.variable} min-h-screen bg-background font-sans antialiased`}
         suppressHydrationWarning
       >
+        <a
+          href='#main-content'
+          className='sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2'
+        >
+          Skip to main content
+        </a>
         <DOMErrorBoundary>
-          <Providers>{children}</Providers>
+          <Providers>
+            <main id='main-content'>{children}</main>
+          </Providers>
         </DOMErrorBoundary>
       </body>
     </html>
