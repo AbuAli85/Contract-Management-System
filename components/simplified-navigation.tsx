@@ -101,6 +101,13 @@ export function SimplifiedNavigation({
           icon: FileEdit,
         },
         {
+          href: `/${locale}/contracts/sharaf-dg`,
+          label: 'Sharaf DG Deployment',
+          labelAr: 'إلحاق شرف DG',
+          icon: Building2,
+          description: 'Deployment letters with PDF generation',
+        },
+        {
           href: `/${locale}/contracts`,
           label: 'All Contracts',
           labelAr: 'جميع العقود',
