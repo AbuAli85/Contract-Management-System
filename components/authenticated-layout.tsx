@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, type ReactNode } from 'react';
+import React, { useEffect, useState, useMemo, type ReactNode } from 'react';
 import { useAuth } from '@/lib/auth-service';
 // RBACProvider is now handled in app/providers.tsx
 import { ThemeProvider } from '@/components/theme-provider';
@@ -59,9 +59,12 @@ export function AuthenticatedLayout({
   const { user, loading, initialLoading, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const redirectingRef = React.useRef(false); // Prevent duplicate redirects
 
-  // Check if current page is public (don't redirect on these pages)
-  const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page));
+  // Memoize isPublicPage to prevent infinite loops
+  const isPublicPage = useMemo(() => {
+    return PUBLIC_PAGES.some(page => pathname?.includes(page));
+  }, [pathname]);
 
   useEffect(() => {
     setMounted(true);
@@ -70,6 +73,12 @@ export function AuthenticatedLayout({
   useEffect(() => {
     // Skip all auth checks if on public pages (auth pages handle their own logic)
     if (isPublicPage) {
+      redirectingRef.current = false; // Reset redirect flag on public pages
+      return;
+    }
+
+    // Prevent duplicate redirects
+    if (redirectingRef.current) {
       return;
     }
 
@@ -93,12 +102,13 @@ export function AuthenticatedLayout({
     if (!loading && !initialLoading && !user) {
       // Redirect to login if not authenticated
       console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
+      redirectingRef.current = true; // Mark that we're redirecting
       router.push('/en/auth/login');
       return;
     }
 
     // Allow authenticated users to access any page without redirecting them
-  }, [loading, initialLoading, user, router, pathname, isPublicPage]);
+  }, [loading, initialLoading, user, router, isPublicPage]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
