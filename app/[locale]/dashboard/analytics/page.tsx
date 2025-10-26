@@ -24,7 +24,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 
 const COLORS = [
   '#8884d8',
@@ -133,7 +133,7 @@ export default function AnalyticsPage() {
       const promoterIds = Object.keys(promoterCount);
       let promoterNames: Record<string, string> = {};
       if (promoterIds.length > 0) {
-        const { data: promoters } = await getSupabaseClient()
+        const { data: promoters } = await supabase
           .from('promoters')
           .select('id, name_en')
           .in('id', promoterIds);
@@ -163,6 +163,21 @@ export default function AnalyticsPage() {
 
   return (
     <div className='space-y-8 p-6'>
+      <div className='mb-6 flex items-center justify-between'>
+        <div>
+          <h1 className='text-3xl font-bold tracking-tight'>Analytics Dashboard</h1>
+          <p className='text-muted-foreground mt-2'>
+            Overview of contracts, promoters, and company metrics
+          </p>
+        </div>
+        <a
+          href='/analytics/employer-promoters'
+          className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
+        >
+          <Users className='mr-2 h-4 w-4' />
+          Employer-Promoter Analytics
+        </a>
+      </div>
       <div className='mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3'>
         <StatCard label='Total Contracts' value={stats.totalContracts} />
         <StatCard label='Active Contracts' value={stats.activeContracts} />
