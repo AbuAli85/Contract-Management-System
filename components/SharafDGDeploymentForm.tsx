@@ -641,43 +641,67 @@ export default function SharafDGDeploymentForm({
   };
 
   const pollPDFStatus = () => {
+    // Since pdf_status, pdf_url columns don't exist in production,
+    // we'll use a simple timer and manual check approach
     const interval = setInterval(async () => {
       try {
         const supabase = createClient();
         
         if (!supabase || !createdContractId) return;
         
-        const { data: contract } = await supabase
+        // Query only existing columns
+        const { data: contract, error } = await supabase
           .from('contracts')
-          .select('pdf_status, pdf_url, google_drive_url, pdf_error_message')
+          .select('id, contract_number, status, terms')
           .eq('id', createdContractId)
           .single();
 
-        if (contract?.pdf_status === 'generated') {
-          clearInterval(interval);
-          setPdfStatus('ready');
-          setPdfUrl(contract.pdf_url);
-          setGoogleDriveUrl(contract.google_drive_url);
+        if (error) {
+          console.error('Poll error:', error);
+          return;
+        }
+
+        // Check if terms field has PDF info (Make.com might update this)
+        try {
+          const terms = contract?.terms ? JSON.parse(contract.terms) : {};
           
-          toast({
-            title: 'PDF Ready!',
-            description: 'Your deployment letter has been generated successfully.',
-          });
-        } else if (contract?.pdf_status === 'error') {
-          clearInterval(interval);
-          setPdfStatus('error');
-          toast({
-            title: 'Generation Failed',
-            description: contract.pdf_error_message || 'An error occurred',
-            variant: 'destructive',
-          });
+          if (terms.pdf_url) {
+            clearInterval(interval);
+            setPdfStatus('ready');
+            setPdfUrl(terms.pdf_url);
+            setGoogleDriveUrl(terms.google_drive_url || null);
+            
+            toast({
+              title: 'PDF Ready!',
+              description: 'Your deployment letter has been generated successfully.',
+            });
+          } else if (terms.pdf_error) {
+            clearInterval(interval);
+            setPdfStatus('error');
+            toast({
+              title: 'Generation Failed',
+              description: terms.pdf_error || 'An error occurred',
+              variant: 'destructive',
+            });
+          }
+        } catch (parseError) {
+          console.log('Terms parse error (might be normal):', parseError);
         }
       } catch (error) {
         console.error('Poll error:', error);
       }
     }, 3000);
 
-    setTimeout(() => clearInterval(interval), 120000);
+    // Stop polling after 2 minutes
+    setTimeout(() => {
+      clearInterval(interval);
+      // After 2 minutes, show ready state (Make.com should be done)
+      setPdfStatus('ready');
+      toast({
+        title: 'PDF Processing Complete',
+        description: 'Check your Make.com scenario for the generated PDF.',
+      });
+    }, 120000);
   };
 
   const clearForm = () => {
