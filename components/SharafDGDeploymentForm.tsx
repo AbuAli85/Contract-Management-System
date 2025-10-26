@@ -525,57 +525,59 @@ export default function SharafDGDeploymentForm({
     setPdfStatus('generating');
 
     try {
-      // Prepare data for Make.com webhook
+      // Prepare data for Make.com webhook (FLAT structure to match Make.com mappings)
       const webhookData = {
+        // Contract info
         contract_id: createdContractId,
         contract_number: formData.contract_number,
         contract_type: formData.contract_type,
         contract_name: formData.contract_name || `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
+        ref_number: formData.contract_number, // Alias for Make.com
         
-        // Promoter details
-        promoter: {
-          id: formData.promoter_id,
-          name_en: selectedPromoter?.name_en || '',
-          name_ar: selectedPromoter?.name_ar || '',
-          id_card_number: selectedPromoter?.id_card_number || '',
-          passport_number: selectedPromoter?.passport_number || '',
-          email: selectedPromoter?.email || '',
-          mobile_number: selectedPromoter?.mobile_number || '',
-          id_card_url: selectedPromoter?.id_card_url || '',
-          passport_url: selectedPromoter?.passport_url || '',
-        },
+        // Promoter details (FLAT fields for Make.com)
+        promoter_id: formData.promoter_id,
+        promoter_name_en: selectedPromoter?.name_en || '',
+        promoter_name_ar: selectedPromoter?.name_ar || '',
+        promoter_id_card_number: selectedPromoter?.id_card_number || '',
+        promoter_passport_number: selectedPromoter?.passport_number || '',
+        promoter_email: selectedPromoter?.email || '',
+        promoter_mobile_number: selectedPromoter?.mobile_number || '',
+        promoter_id_card_url: selectedPromoter?.id_card_url || '',
+        promoter_passport_url: selectedPromoter?.passport_url || '',
         
-        // Parties
-        employer: {
-          id: formData.first_party_id,
-          name_en: selectedEmployer?.name_en || '',
-          name_ar: selectedEmployer?.name_ar || '',
-          crn: selectedEmployer?.crn || '',
-          logo_url: selectedEmployer?.logo_url || '',
-        },
+        // First Party (Client) - FLAT fields
+        first_party_id: formData.first_party_id,
+        first_party_name_en: selectedClient?.name_en || '',
+        first_party_name_ar: selectedClient?.name_ar || '',
+        first_party_crn: selectedClient?.crn || '',
+        first_party_logo_url: selectedClient?.logo_url || '',
         
-        client: {
-          id: formData.second_party_id,
-          name_en: selectedClient?.name_en || '',
-          name_ar: selectedClient?.name_ar || '',
-          crn: selectedClient?.crn || '',
-          logo_url: selectedClient?.logo_url || '',
-        },
+        // Second Party (Employer) - FLAT fields
+        second_party_id: formData.second_party_id,
+        second_party_name_en: selectedEmployer?.name_en || '',
+        second_party_name_ar: selectedEmployer?.name_ar || '',
+        second_party_crn: selectedEmployer?.crn || '',
+        second_party_logo_url: selectedEmployer?.logo_url || '',
         
-        supplier: {
-          id: formData.supplier_brand_id,
-          name_en: selectedSupplier?.name_en || '',
-          name_ar: selectedSupplier?.name_ar || '',
-        },
+        // Supplier/Brand - FLAT fields
+        supplier_id: formData.supplier_brand_id,
+        supplier_name_en: selectedSupplier?.name_en || '',
+        supplier_name_ar: selectedSupplier?.name_ar || '',
         
         // Contract dates
-        start_date: formData.contract_start_date || '',
-        end_date: formData.contract_end_date || '',
+        contract_start_date: formData.contract_start_date || '',
+        contract_end_date: formData.contract_end_date || '',
         
         // Employment details
         job_title: formData.job_title || '',
         department: formData.department || '',
         work_location: formData.work_location || '',
+        
+        // For Make.com location/product fields (using supplier as product)
+        products_en: selectedSupplier?.name_en || '',
+        products_ar: selectedSupplier?.name_ar || '',
+        location_en: formData.work_location || '',
+        location_ar: formData.work_location || '',
         
         // Compensation
         basic_salary: formData.basic_salary || 0,
@@ -596,10 +598,12 @@ export default function SharafDGDeploymentForm({
       console.log('📤 Sending to Make.com webhook:', {
         contract_id: webhookData.contract_id,
         contract_number: webhookData.contract_number,
-        has_id_card: !!webhookData.promoter.id_card_url,
-        has_passport: !!webhookData.promoter.passport_url,
-        has_employer_logo: !!webhookData.employer.logo_url,
-        has_client_logo: !!webhookData.client.logo_url,
+        promoter_id_card_url: webhookData.promoter_id_card_url,
+        promoter_passport_url: webhookData.promoter_passport_url,
+        has_id_card: !!webhookData.promoter_id_card_url,
+        has_passport: !!webhookData.promoter_passport_url,
+        first_party: webhookData.first_party_name_en,
+        second_party: webhookData.second_party_name_en,
       });
 
       // Send to Make.com webhook
