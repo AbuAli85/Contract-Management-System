@@ -165,6 +165,15 @@ export function PermissionAwareSidebar({
           badgeVariant: 'default',
         },
         {
+          href: `/${locale}/contracts/sharaf-dg`,
+          label: 'Sharaf DG Deployment',
+          labelAr: 'إلحاق شرف DG',
+          icon: Building2,
+          permission: 'contract:create',
+          badge: 'PDF',
+          badgeVariant: 'secondary',
+        },
+        {
           href: `/${locale}/contracts`,
           label: 'View Contracts',
           labelAr: 'عرض العقود',

@@ -153,6 +153,13 @@ function SidebarContent({
           badge: 'New',
         },
         {
+          title: 'Sharaf DG Deployment',
+          href: '/contracts/sharaf-dg',
+          icon: Building2,
+          description: 'Deployment letters with PDF',
+          badge: 'PDF',
+        },
+        {
           title: 'View Contracts',
           href: '/contracts',
           icon: FolderOpen,

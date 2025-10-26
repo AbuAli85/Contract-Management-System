@@ -1,123 +1,277 @@
-import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
-// GET handler for debugging
-export const GET = async (
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) => {
-  try {
-    const { id: contractId } = await params;
-    return NextResponse.json({
-      success: true,
-      message: 'PDF generation endpoint is working',
-      contractId,
-      methods: ['POST', 'GET', 'OPTIONS'],
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-};
+// Make.com webhook URL from environment
+const MAKE_WEBHOOK_URL = process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL;
 
-// POST /api/contracts/[id]/generate-pdf - Generate PDF for a contract
-export const POST = async (
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) => {
+interface ContractData {
+  id: string;
+  contract_number: string;
+  contract_type: string;
+  promoter_id: string;
+  first_party_id: string;
+  second_party_id: string;
+  job_title: string | null;
+  department: string | null;
+  work_location: string | null;
+  basic_salary: number | null;
+  start_date: string;
+  end_date: string;
+  special_terms: string | null;
+  
+  // Promoter data (from join)
+  promoter_name_en: string;
+  promoter_name_ar: string;
+  promoter_mobile_number: string;
+  promoter_email: string;
+  promoter_id_card_number: string;
+  promoter_id_card_url: string | null;
+  promoter_passport_url: string | null;
+  passport_number: string | null;
+  
+  // Party data (from join)
+  first_party_name_en: string;
+  first_party_name_ar: string;
+  first_party_crn: string | null;
+  first_party_logo: string | null;
+  
+  second_party_name_en: string;
+  second_party_name_ar: string;
+  second_party_crn: string | null;
+  second_party_logo: string | null;
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    console.log('🔍 PDF generation API called');
-    console.log('🔍 Request URL:', request.url);
-    console.log('🔍 Request method:', request.method);
-    console.log('🔍 Request headers:', Object.fromEntries(request.headers.entries()));
-    
     const supabase = await createClient();
-    const { id: contractId } = await params;
+    const contractId = params.id;
 
-    console.log('🔍 Contract ID:', contractId);
-
-    // Get current user to check permissions
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    console.log('🔍 Auth check:', { user: user?.id, authError });
-
+    // 1. Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.log('❌ Authentication failed:', authError);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    // Fetch contract
-    const { data: contract, error: contractError } = await supabase
+    // 2. Fetch complete contract data with relations
+    const { data: contract, error: fetchError } = await supabase
       .from('contracts')
-      .select('*')
+      .select(`
+        *,
+        promoters:promoter_id (
+          name_en,
+          name_ar,
+          mobile_number,
+          email,
+          id_card_number,
+          id_card_url,
+          passport_url,
+          passport_number
+        ),
+        first_party:first_party_id (
+          name_en,
+          name_ar,
+          crn,
+          logo_url
+        ),
+        second_party:second_party_id (
+          name_en,
+          name_ar,
+          crn,
+          logo_url
+        )
+      `)
       .eq('id', contractId)
       .single();
 
-    console.log('🔍 Contract fetch result:', { contract: contract?.id, contractError });
-
-    if (contractError || !contract) {
-      console.log('❌ Contract not found:', contractError);
+    if (fetchError || !contract) {
+      console.error('Contract fetch error:', fetchError);
       return NextResponse.json(
         { error: 'Contract not found' },
         { status: 404 }
       );
     }
 
-    // TODO: Implement actual PDF generation logic here
-    // For now, we'll simulate the process
-    console.log(`🔍 Generating PDF for contract ${contractId}...`);
+    // 3. Validate required fields
+    const missingFields: string[] = [];
+    
+    if (!contract.contract_number) missingFields.push('contract_number');
+    if (!contract.promoters) missingFields.push('promoter');
+    if (!contract.first_party) missingFields.push('first_party (employer)');
+    if (!contract.second_party) missingFields.push('second_party (client)');
+    if (!contract.start_date) missingFields.push('start_date');
+    if (!contract.end_date) missingFields.push('end_date');
 
-    // Simulate PDF generation delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Validate promoter data
+    if (contract.promoters) {
+      if (!contract.promoters.name_en) missingFields.push('promoter name (English)');
+      if (!contract.promoters.name_ar) missingFields.push('promoter name (Arabic)');
+      if (!contract.promoters.id_card_number) missingFields.push('promoter ID card number');
+      if (!contract.promoters.id_card_url) missingFields.push('promoter ID card image');
+      if (!contract.promoters.passport_url) missingFields.push('promoter passport image');
+    }
 
-    // Generate a mock PDF URL (replace with actual PDF generation)
-    const mockPdfUrl = `https://portal.thesmartpro.io/api/contracts/${contractId}/pdf/view`;
+    // Validate party data
+    if (contract.first_party) {
+      if (!contract.first_party.name_en) missingFields.push('first party name (English)');
+      if (!contract.first_party.name_ar) missingFields.push('first party name (Arabic)');
+    }
 
-    // Update contract with PDF URL (only if pdf_url column exists)
-    try {
-      const { error: updateError } = await supabase
+    if (contract.second_party) {
+      if (!contract.second_party.name_en) missingFields.push('second party name (English)');
+      if (!contract.second_party.name_ar) missingFields.push('second party name (Arabic)');
+    }
+
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Missing required fields',
+          details: `The following fields are required for PDF generation: ${missingFields.join(', ')}`,
+          missingFields,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 4. Verify image URLs are accessible
+    const imageUrls = [
+      contract.promoters.id_card_url,
+      contract.promoters.passport_url,
+    ].filter(Boolean);
+
+    for (const url of imageUrls) {
+      try {
+        const response = await fetch(url as string, { method: 'HEAD' });
+        if (!response.ok) {
+          return NextResponse.json(
+            { error: `Image not accessible: ${url}` },
+            { status: 400 }
+          );
+        }
+      } catch (error) {
+        console.error(`Image URL check failed for ${url}:`, error);
+        return NextResponse.json(
+          { error: `Cannot access image: ${url}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 5. Update contract status to 'generating'
+    await supabase
+      .from('contracts')
+      .update({
+        pdf_status: 'generating',
+        pdf_error_message: null,
+      })
+      .eq('id', contractId);
+
+    // 6. Prepare payload for Make.com webhook
+    const webhookPayload = {
+      contract_id: contract.id,
+      contract_number: contract.contract_number,
+      contract_type: contract.contract_type,
+      
+      // Promoter information
+      promoter_id: contract.promoter_id,
+      promoter_name_en: contract.promoters.name_en,
+      promoter_name_ar: contract.promoters.name_ar,
+      promoter_mobile_number: contract.promoters.mobile_number,
+      promoter_email: contract.promoters.email,
+      promoter_id_card_number: contract.promoters.id_card_number,
+      promoter_id_card_url: contract.promoters.id_card_url,
+      promoter_passport_url: contract.promoters.passport_url,
+      passport_number: contract.promoters.passport_number,
+      
+      // Party information
+      first_party_id: contract.first_party_id,
+      first_party_name_en: contract.first_party.name_en,
+      first_party_name_ar: contract.first_party.name_ar,
+      first_party_crn: contract.first_party.crn,
+      first_party_logo: contract.first_party.logo_url,
+      
+      second_party_id: contract.second_party_id,
+      second_party_name_en: contract.second_party.name_en,
+      second_party_name_ar: contract.second_party.name_ar,
+      second_party_crn: contract.second_party.crn,
+      second_party_logo: contract.second_party.logo_url,
+      
+      // Contract details
+      job_title: contract.job_title,
+      department: contract.department,
+      work_location: contract.work_location,
+      basic_salary: contract.basic_salary,
+      contract_start_date: contract.start_date,
+      contract_end_date: contract.end_date,
+      special_terms: contract.special_terms,
+    };
+
+    // 7. Call Make.com webhook
+    if (!MAKE_WEBHOOK_URL) {
+      throw new Error('MAKE_CONTRACT_PDF_WEBHOOK_URL environment variable is not set');
+    }
+
+    const webhookResponse = await fetch(MAKE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookPayload),
+    });
+
+    if (!webhookResponse.ok) {
+      const errorText = await webhookResponse.text();
+      console.error('Make.com webhook error:', errorText);
+      
+      // Update contract with error status
+      await supabase
         .from('contracts')
         .update({
-          pdf_url: mockPdfUrl,
-          updated_at: new Date().toISOString(),
+          pdf_status: 'error',
+          pdf_error_message: 'Failed to trigger PDF generation workflow',
         })
         .eq('id', contractId);
 
-      if (updateError) {
-        console.warn('⚠️ Could not update contract with PDF URL (column may not exist):', updateError);
-        // Continue execution even if update fails
-      } else {
-        console.log('✅ Contract updated with PDF URL');
-      }
-    } catch (updateError) {
-      console.warn('⚠️ Error updating contract with PDF URL:', updateError);
-      // Continue execution even if update fails
+      throw new Error(`Webhook failed: ${webhookResponse.statusText}`);
     }
 
-    console.log('✅ PDF generation completed successfully');
+    // 8. Return success response
+    return NextResponse.json({
+      success: true,
+      status: 'generating',
+      message: 'PDF generation started successfully',
+      contractId: contract.id,
+      contractNumber: contract.contract_number,
+    });
+
+  } catch (error) {
+    console.error('PDF generation error:', error);
+
+    // Try to update contract status
+    try {
+      const supabase = await createClient();
+      await supabase
+        .from('contracts')
+        .update({
+          pdf_status: 'error',
+          pdf_error_message: error instanceof Error ? error.message : 'Unknown error',
+        })
+        .eq('id', params.id);
+    } catch (updateError) {
+      console.error('Failed to update error status:', updateError);
+    }
 
     return NextResponse.json(
       {
-        success: true,
-        message: 'PDF generated successfully!',
-        pdf_url: mockPdfUrl,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('❌ Error in POST /api/contracts/[id]/generate-pdf:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: 'PDF generation failed',
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
       },
       { status: 500 }
     );
   }
-};
+}

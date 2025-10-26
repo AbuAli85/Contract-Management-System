@@ -1,263 +1,200 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { contractGenerationService } from '@/lib/contract-generation-service';
-import { verifyWebhook } from '@/lib/webhooks/verify';
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
-// Webhook endpoint for contract PDF ready notifications
+const PDF_WEBHOOK_SECRET = process.env.PDF_WEBHOOK_SECRET;
 
-export async function POST(request: NextRequest) {
+interface PDFReadyPayload {
+  contract_id: string;
+  contract_number: string;
+  pdf_url: string;
+  google_drive_url: string;
+  status: 'generated' | 'error';
+  images_processed?: {
+    id_card: boolean;
+    passport: boolean;
+  };
+  error_message?: string;
+}
+
+export async function PATCH(request: Request) {
   try {
-    console.log('📄 PDF Ready webhook received');
+    // 1. Verify webhook secret
+    const webhookSecret = request.headers.get('X-Webhook-Secret');
+    const requestId = request.headers.get('X-Make-Request-ID');
 
-    // Read raw body for signature verification
-    const rawBody = await request.text();
-
-    // Verify HMAC signature and idempotency if secret is configured
-    let body: any;
-    const secret = process.env.PDF_READY_WEBHOOK_SECRET || '';
-    if (secret) {
-      const verification = await verifyWebhook({
-        rawBody,
-        signature: request.headers.get('x-signature') || '',
-        timestamp: request.headers.get('x-timestamp') || '',
-        idempotencyKey: request.headers.get('x-idempotency-key') || '',
-        secret,
-      });
-
-      if (!verification.verified) {
-        return NextResponse.json(
-          { success: false, error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-
-      if (verification.idempotent) {
-        return NextResponse.json({
-          success: true,
-          message: 'Already processed',
-        });
-      }
-
-      body = verification.payload;
-    } else {
-      // Fallback to parsing JSON directly when no secret is set
-      body = JSON.parse(rawBody || '{}');
-    }
-
-    console.log('📄 Webhook payload:', body);
-
-    // Validate required fields
-    const { contract_id, contract_number, pdf_url, google_drive_url, status } =
-      body;
-
-    if (!contract_id && !contract_number) {
+    if (!PDF_WEBHOOK_SECRET) {
+      console.error('PDF_WEBHOOK_SECRET not configured');
       return NextResponse.json(
-        {
-          success: false,
-          error: 'contract_id or contract_number is required',
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!pdf_url) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'pdf_url is required',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Update contract with PDF URL
-    const success = await contractGenerationService.updateContractWithPDF(
-      contract_id || contract_number,
-      pdf_url,
-      google_drive_url
-    );
-
-    if (!success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to update contract',
-        },
+        { error: 'Server configuration error' },
         { status: 500 }
       );
     }
 
-    console.log('✅ Contract updated with PDF URL:', pdf_url);
-    console.log('📝 Webhook processed successfully');
+    if (webhookSecret !== PDF_WEBHOOK_SECRET) {
+      console.warn('Invalid webhook secret received');
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid webhook secret' },
+        { status: 401 }
+      );
+    }
 
-    // Send success response
-    return NextResponse.json({
-      success: true,
-      message: 'Contract updated successfully',
-      contract_id: contract_id || contract_number,
-      pdf_url,
-      status: status || 'generated',
+    // 2. Parse payload
+    const payload: PDFReadyPayload = await request.json();
+
+    console.log('PDF Ready webhook received:', {
+      contractId: payload.contract_id,
+      contractNumber: payload.contract_number,
+      status: payload.status,
+      requestId,
     });
-  } catch (error) {
-    console.error('❌ PDF Ready webhook error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
 
-export async function PATCH(request: NextRequest) {
-  try {
-    console.log('📄 PDF Ready webhook received (PATCH)');
+    // 3. Validate payload
+    if (!payload.contract_id) {
+      return NextResponse.json(
+        { error: 'Missing contract_id in payload' },
+        { status: 400 }
+      );
+    }
 
-    // Read raw body for signature verification
-    const rawBody = await request.text();
+    if (!payload.contract_number) {
+      return NextResponse.json(
+        { error: 'Missing contract_number in payload' },
+        { status: 400 }
+      );
+    }
 
-    // Verify HMAC signature and idempotency if secret is configured
-    let body: any;
-    const secret = process.env.PDF_READY_WEBHOOK_SECRET || '';
-    if (secret) {
-      const verification = await verifyWebhook({
-        rawBody,
-        signature: request.headers.get('x-signature') || '',
-        timestamp: request.headers.get('x-timestamp') || '',
-        idempotencyKey: request.headers.get('x-idempotency-key') || '',
-        secret,
+    // 4. Create Supabase client (service role for webhook)
+    const supabase = await createClient();
+
+    // 5. Verify contract exists
+    const { data: contract, error: fetchError } = await supabase
+      .from('contracts')
+      .select('id, contract_number, created_by')
+      .eq('id', payload.contract_id)
+      .single();
+
+    if (fetchError || !contract) {
+      console.error('Contract not found:', payload.contract_id);
+      return NextResponse.json(
+        { error: 'Contract not found' },
+        { status: 404 }
+      );
+    }
+
+    // 6. Update contract in database
+    const updateData: any = {
+      pdf_generated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (payload.status === 'generated') {
+      updateData.pdf_url = payload.pdf_url;
+      updateData.google_drive_url = payload.google_drive_url;
+      updateData.pdf_status = 'generated';
+      updateData.pdf_error_message = null;
+    } else if (payload.status === 'error') {
+      updateData.pdf_status = 'error';
+      updateData.pdf_error_message = payload.error_message || 'PDF generation failed';
+    }
+
+    const { error: updateError } = await supabase
+      .from('contracts')
+      .update(updateData)
+      .eq('id', payload.contract_id);
+
+    if (updateError) {
+      console.error('Failed to update contract:', updateError);
+      return NextResponse.json(
+        { error: 'Failed to update contract' },
+        { status: 500 }
+      );
+    }
+
+    // 7. Log the webhook event for audit trail
+    try {
+      await supabase.from('webhook_logs').insert({
+        event_type: 'contract_pdf_ready',
+        payload: payload,
+        contract_id: payload.contract_id,
+        status: payload.status,
+        make_request_id: requestId,
+        received_at: new Date().toISOString(),
       });
+    } catch (logError) {
+      // Non-critical - just log
+      console.warn('Failed to log webhook event:', logError);
+    }
 
-      if (!verification.verified) {
-        return NextResponse.json(
-          { success: false, error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-
-      if (verification.idempotent) {
-        return NextResponse.json({
-          success: true,
-          message: 'Already processed',
+    // 8. Send notification to user (optional - if you have notification system)
+    if (payload.status === 'generated' && contract.created_by) {
+      try {
+        await sendNotification({
+          userId: contract.created_by,
+          type: 'contract_pdf_ready',
+          title: 'Contract PDF Ready',
+          message: `PDF for contract ${payload.contract_number} is ready to download`,
+          data: {
+            contractId: payload.contract_id,
+            contractNumber: payload.contract_number,
+            pdfUrl: payload.pdf_url,
+          },
         });
+      } catch (notificationError) {
+        // Non-critical error - just log
+        console.warn('Failed to send notification:', notificationError);
       }
-
-      body = verification.payload;
-    } else {
-      // Fallback to parsing JSON directly when no secret is set
-      body = JSON.parse(rawBody || '{}');
     }
 
-    console.log('📄 Webhook payload (PATCH):', body);
-
-    // Validate required fields
-    const { contract_id, contract_number, pdf_url, google_drive_url, status } =
-      body;
-
-    console.log('📋 Validation data:', {
-      contract_id,
-      contract_number,
-      pdf_url,
-      google_drive_url,
-      status,
-    });
-
-    if (!contract_id && !contract_number) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'contract_id or contract_number is required',
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!pdf_url) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'pdf_url is required',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Check if URLs are complete (not just base URLs)
-    let finalPdfUrl = pdf_url;
-    let finalGoogleDriveUrl = google_drive_url;
-
-    if (pdf_url.endsWith('/') || pdf_url.includes('/d//')) {
-      console.warn('⚠️ Incomplete URLs detected:', {
-        pdf_url,
-        google_drive_url,
-        full_payload: body,
-      });
-
-      // For now, let's accept incomplete URLs and log them for debugging
-      console.log(
-        '🔍 Make.com scenario issue - URLs are incomplete. This suggests:'
-      );
-      console.log('1. Google Docs document creation may have failed');
-      console.log('2. PDF export may have failed');
-      console.log('3. File upload to Supabase storage may have failed');
-      console.log('4. Make.com scenario may have incorrect field mappings');
-
-      // Continue processing but with warning
-      console.warn('⚠️ Proceeding with incomplete URLs for debugging purposes');
-
-      // Set placeholder URLs for now
-      finalPdfUrl = `https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/contract-${contract_number || 'unknown'}.pdf`;
-      finalGoogleDriveUrl = `https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit`;
-
-      console.log('🔧 Using placeholder URLs:', {
-        pdf_url: finalPdfUrl,
-        google_drive_url: finalGoogleDriveUrl,
-      });
-    }
-
-    // Update contract with PDF URL
-    console.log('🔄 Attempting to update contract:', {
-      contract_id,
-      contract_number,
-      finalPdfUrl,
-      finalGoogleDriveUrl,
-    });
-
-    // For now, let's just return success since the PDF was generated successfully
-    // The contract update can be handled separately or the contract might already exist
-    console.log('✅ PDF generation completed successfully');
-    console.log('📄 PDF URL:', finalPdfUrl);
-    console.log('📝 Google Drive URL:', finalGoogleDriveUrl);
-    console.log('📝 Webhook processed successfully (PATCH)');
-
-    // Send success response
+    // 9. Return success response
     return NextResponse.json({
       success: true,
-      message: 'PDF generation completed successfully',
-      contract_id: contract_id || contract_number,
-      pdf_url: finalPdfUrl,
-      google_drive_url: finalGoogleDriveUrl,
-      status: status || 'generated',
+      contract_id: payload.contract_id,
+      contract_number: payload.contract_number,
+      status: payload.status,
+      updated_at: updateData.updated_at,
     });
+
   } catch (error) {
-    console.error('❌ PDF Ready webhook error (PATCH):', error);
+    console.error('Webhook processing error:', error);
     return NextResponse.json(
       {
-        success: false,
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
   }
 }
 
-export async function GET(request: NextRequest) {
-  // Health check endpoint
-  return NextResponse.json({
-    success: true,
-    message: 'PDF Ready webhook endpoint is active',
-    timestamp: new Date().toISOString(),
+// Helper function to send notification (implement based on your notification system)
+async function sendNotification(params: {
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  data?: any;
+}) {
+  // Implementation depends on your notification system
+  // Could be:
+  // - Database notification table
+  // - Push notification service
+  // - Email notification
+  // - WebSocket real-time notification
+  
+  console.log('Notification:', params);
+  
+  // Example: Store in database
+  const supabase = await createClient();
+  await supabase.from('notifications').insert({
+    user_id: params.userId,
+    type: params.type,
+    title: params.title,
+    message: params.message,
+    data: params.data,
+    read: false,
+    created_at: new Date().toISOString(),
   });
 }
+
+// Also support POST for compatibility
+export const POST = PATCH;

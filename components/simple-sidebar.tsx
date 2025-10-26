@@ -56,6 +56,13 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       badge: 'NEW',
     },
     {
+      label: 'Sharaf DG Deployment',
+      href: '/en/contracts/sharaf-dg',
+      icon: Building2,
+      description: 'Deployment letters with PDF',
+      badge: 'PDF',
+    },
+    {
       label: 'Contracts',
       href: '/en/contracts',
       icon: FileText,
