@@ -420,27 +420,32 @@ export default function SharafDGDeploymentForm({
           promoter_id: formData.promoter_id,
           first_party_id: formData.first_party_id,
           second_party_id: formData.second_party_id,
-          employer_id: formData.first_party_id,
-          client_id: formData.second_party_id,
+          employer_id: formData.second_party_id, // Fixed: Employer is second party
+          client_id: formData.first_party_id, // Fixed: Client is first party
           start_date: formData.contract_start_date,
           end_date: formData.contract_end_date,
-          job_title: formData.job_title,
-          department: formData.department,
-          work_location: formData.work_location,
           value: formData.basic_salary || 0,
           currency: 'OMR',
-          special_terms: formData.special_terms,
           pdf_status: 'pending',
-          // Store supplier/brand info in metadata
+          // Store all additional fields in metadata (not as direct columns)
           metadata: {
+            // Employment details
+            job_title: formData.job_title,
+            department: formData.department,
+            work_location: formData.work_location,
+            special_terms: formData.special_terms,
+            // Supplier/brand info
             supplier_brand_id: formData.supplier_brand_id,
             supplier_brand_name_en: selectedSupplier?.name_en,
             supplier_brand_name_ar: selectedSupplier?.name_ar,
+            // Employment terms
             probation_period: formData.probation_period,
             notice_period: formData.notice_period,
             working_hours: formData.working_hours,
+            // Allowances
             housing_allowance: formData.housing_allowance,
             transport_allowance: formData.transport_allowance,
+            basic_salary: formData.basic_salary,
           },
           created_at: new Date().toISOString(),
         })
