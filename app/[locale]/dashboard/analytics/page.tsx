@@ -24,7 +24,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Loader2, Users } from 'lucide-react';
+import { Loader2, Users, FileText } from 'lucide-react';
 
 const COLORS = [
   '#8884d8',
@@ -170,13 +170,22 @@ export default function AnalyticsPage() {
             Overview of contracts, promoters, and company metrics
           </p>
         </div>
-        <a
-          href='/analytics/employer-promoters'
-          className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
-        >
-          <Users className='mr-2 h-4 w-4' />
-          Employer-Promoter Analytics
-        </a>
+        <div className='flex gap-3'>
+          <a
+            href='/analytics/employer-promoters'
+            className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+          >
+            <Users className='mr-2 h-4 w-4' />
+            Employer-Promoter Analytics
+          </a>
+          <a
+            href='/analytics/promoter-documents-report'
+            className='inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+          >
+            <FileText className='mr-2 h-4 w-4' />
+            Documents Report
+          </a>
+        </div>
       </div>
       <div className='mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3'>
         <StatCard label='Total Contracts' value={stats.totalContracts} />
