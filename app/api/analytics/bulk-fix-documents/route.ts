@@ -27,7 +27,18 @@ export async function POST() {
   try {
     const supabase = await createClient();
 
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required', details: 'Please log in to use this feature' },
+        { status: 401 }
+      );
+    }
+
     // Fetch all promoters with missing URLs
+    // Using service role to bypass RLS for this admin operation
     const { data: promoters, error: promotersError } = await supabase
       .from('promoters')
       .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url');

@@ -200,11 +200,11 @@ export default function AnalyticsPage() {
             Fix Issues
           </a>
           <a
-            href='/analytics/smart-document-fix'
-            className='inline-flex items-center justify-center rounded-md bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:from-green-700 hover:to-emerald-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500'
+            href='/analytics/quick-document-fix'
+            className='inline-flex items-center justify-center rounded-md bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:from-green-700 hover:to-emerald-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 animate-pulse'
           >
             <Zap className='mr-2 h-4 w-4' />
-            Smart Fix (266)
+            ⚡ Quick Fix (266)
           </a>
         </div>
       </div>
