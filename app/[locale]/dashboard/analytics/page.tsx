@@ -24,7 +24,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Loader2, Users, FileText } from 'lucide-react';
+import { Loader2, Users, FileText, HardDrive } from 'lucide-react';
 
 const COLORS = [
   '#8884d8',
@@ -170,7 +170,7 @@ export default function AnalyticsPage() {
             Overview of contracts, promoters, and company metrics
           </p>
         </div>
-        <div className='flex gap-3'>
+        <div className='flex flex-wrap gap-3'>
           <a
             href='/analytics/employer-promoters'
             className='inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
@@ -184,6 +184,13 @@ export default function AnalyticsPage() {
           >
             <FileText className='mr-2 h-4 w-4' />
             Documents Report
+          </a>
+          <a
+            href='/analytics/storage-analysis'
+            className='inline-flex items-center justify-center rounded-md border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-blue-100 text-blue-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+          >
+            <HardDrive className='mr-2 h-4 w-4' />
+            Storage Analysis
           </a>
         </div>
       </div>
