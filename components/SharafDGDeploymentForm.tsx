@@ -312,13 +312,24 @@ export default function SharafDGDeploymentForm({
   const handleEmployerChange = (employerId: string) => {
     const employer = employers.find(e => e.id === employerId);
     setSelectedEmployer(employer || null);
-    setFormData(prev => ({ ...prev, first_party_id: employerId }));
+    setFormData(prev => ({ 
+      ...prev, 
+      second_party_id: employerId,
+      // Clear promoter selection when employer changes
+      promoter_id: '',
+    }));
+    setSelectedPromoter(null);
+    
+    toast({
+      title: 'Employer Selected',
+      description: 'Promoters filtered by selected employer',
+    });
   };
 
   const handleClientChange = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     setSelectedClient(client || null);
-    setFormData(prev => ({ ...prev, second_party_id: clientId }));
+    setFormData(prev => ({ ...prev, first_party_id: clientId }));
   };
 
   const handleSupplierChange = (supplierId: string) => {
@@ -327,14 +338,22 @@ export default function SharafDGDeploymentForm({
     setFormData(prev => ({ ...prev, supplier_brand_id: supplierId }));
   };
 
-  const filteredPromoters = promoterSearchTerm
-    ? allPromoters.filter(
-        p =>
-          p.name_en?.toLowerCase().includes(promoterSearchTerm.toLowerCase()) ||
-          p.name_ar?.toLowerCase().includes(promoterSearchTerm.toLowerCase()) ||
-          p.id_card_number?.toLowerCase().includes(promoterSearchTerm.toLowerCase())
-      )
-    : allPromoters;
+  // Filter promoters by selected employer AND search term
+  const filteredPromoters = allPromoters.filter(p => {
+    // Filter by employer if one is selected
+    const matchesEmployer = formData.second_party_id 
+      ? p.employer_id === formData.second_party_id 
+      : true; // Show all if no employer selected yet
+    
+    // Filter by search term
+    const matchesSearch = promoterSearchTerm
+      ? p.name_en?.toLowerCase().includes(promoterSearchTerm.toLowerCase()) ||
+        p.name_ar?.toLowerCase().includes(promoterSearchTerm.toLowerCase()) ||
+        p.id_card_number?.toLowerCase().includes(promoterSearchTerm.toLowerCase())
+      : true;
+    
+    return matchesEmployer && matchesSearch;
+  });
 
   const validateForm = (): boolean => {
     const errors: string[] = [];
@@ -704,10 +723,20 @@ export default function SharafDGDeploymentForm({
               Promoter Information
             </CardTitle>
             <CardDescription>
-              Select the promoter to be deployed (must have ID card and passport images)
+              Select employer first, then choose promoter from that employer's list (must have ID card and passport images)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Employer selection notice */}
+            {!formData.second_party_id && (
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-900">
+                  Please select <strong>Second Party (Employer)</strong> first to see promoters from that employer.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Search promoters */}
             <div className="space-y-2">
               <Label htmlFor="promoter-search">Search Promoter</Label>
@@ -716,6 +745,7 @@ export default function SharafDGDeploymentForm({
                 placeholder="Search by name or ID card number..."
                 value={promoterSearchTerm}
                 onChange={e => setPromoterSearchTerm(e.target.value)}
+                disabled={!formData.second_party_id}
               />
             </div>
 
@@ -725,25 +755,40 @@ export default function SharafDGDeploymentForm({
               <Select
                 value={formData.promoter_id}
                 onValueChange={handlePromoterChange}
+                disabled={!formData.second_party_id}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a promoter..." />
+                  <SelectValue placeholder={
+                    !formData.second_party_id 
+                      ? "Select employer first..." 
+                      : "Choose a promoter..."
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredPromoters.map(promoter => (
-                    <SelectItem key={promoter.id} value={promoter.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{promoter.name_en}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {promoter.name_ar} • ID: {promoter.id_card_number}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {filteredPromoters.length > 0 ? (
+                    filteredPromoters.map(promoter => (
+                      <SelectItem key={promoter.id} value={promoter.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{promoter.name_en}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {promoter.name_ar} • ID: {promoter.id_card_number}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      {formData.second_party_id 
+                        ? "No promoters found for selected employer" 
+                        : "Select employer first"}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
-                {filteredPromoters.length} promoters available
+                {formData.second_party_id 
+                  ? `${filteredPromoters.length} promoters from ${selectedEmployer?.name_en || 'selected employer'}`
+                  : 'Select employer to see promoters'}
               </p>
             </div>
 
