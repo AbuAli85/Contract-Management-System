@@ -138,7 +138,7 @@ export default function SharafDGDeploymentForm({
     second_party_id: '',
     supplier_brand_id: '',
     contract_number: '',
-    contract_type: 'sharaf-dg-deployment',
+    contract_type: 'employment', // Use database-compliant value
     contract_name: '',
     contract_start_date: '',
     contract_end_date: '',
@@ -155,9 +155,9 @@ export default function SharafDGDeploymentForm({
   });
 
   const contractTypes = [
-    { value: 'sharaf-dg-deployment', label: 'Sharaf DG Deployment Letter' },
-    { value: 'sharaf-dg-permanent', label: 'Sharaf DG Permanent Contract' },
-    { value: 'sharaf-dg-temporary', label: 'Sharaf DG Temporary Assignment' },
+    { value: 'employment', label: 'Sharaf DG Deployment Letter' },
+    { value: 'service', label: 'Sharaf DG Service Contract' },
+    { value: 'consultancy', label: 'Sharaf DG Consultancy' },
   ];
 
   const probationPeriods = [
@@ -425,6 +425,8 @@ export default function SharafDGDeploymentForm({
         currency: 'OMR',
         // Store all additional data as JSON in the 'terms' field (TEXT column that exists)
         terms: JSON.stringify({
+          // Contract subtype
+          contract_subtype: 'sharaf-dg-deployment',
           // Employment details
           job_title: formData.job_title,
           department: formData.department,
@@ -676,7 +678,7 @@ export default function SharafDGDeploymentForm({
         second_party_id: '',
         supplier_brand_id: '',
         contract_number: '',
-        contract_type: 'sharaf-dg-deployment',
+        contract_type: 'employment', // Use database-compliant value
         contract_name: '',
         contract_start_date: '',
         contract_end_date: '',
