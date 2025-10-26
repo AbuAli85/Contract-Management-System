@@ -71,8 +71,8 @@ interface Party {
 interface SharafDGFormData {
   // Parties - Three selections
   promoter_id: string;
-  first_party_id: string;      // Employer
-  second_party_id: string;     // Client (Sharaf DG)
+  first_party_id: string;      // Client (Sharaf DG)
+  second_party_id: string;     // Employer
   supplier_brand_id: string;   // Supplier/Brand (from parties, shows only names)
   
   // Contract basics
@@ -315,8 +315,8 @@ export default function SharafDGDeploymentForm({
     const errors: string[] = [];
 
     if (!formData.promoter_id) errors.push('Promoter');
-    if (!formData.first_party_id) errors.push('First Party (Employer)');
-    if (!formData.second_party_id) errors.push('Second Party (Client)');
+    if (!formData.first_party_id) errors.push('First Party (Client)');
+    if (!formData.second_party_id) errors.push('Second Party (Employer)');
     if (!formData.supplier_brand_id) errors.push('Supplier/Brand');
     if (!formData.contract_number) errors.push('Contract Number');
     if (!formData.contract_start_date) errors.push('Start Date');
@@ -333,10 +333,10 @@ export default function SharafDGDeploymentForm({
     }
 
     // Validate parties have required data
-    if (selectedEmployer && !selectedEmployer.name_ar) errors.push('Employer Arabic Name');
-    if (selectedEmployer && !selectedEmployer.crn) errors.push('Employer CRN');
     if (selectedClient && !selectedClient.name_ar) errors.push('Client Arabic Name');
     if (selectedClient && !selectedClient.crn) errors.push('Client CRN');
+    if (selectedEmployer && !selectedEmployer.name_ar) errors.push('Employer Arabic Name');
+    if (selectedEmployer && !selectedEmployer.crn) errors.push('Employer CRN');
     if (selectedSupplier && !selectedSupplier.name_ar) errors.push('Supplier/Brand Arabic Name');
 
     if (errors.length > 0) {
@@ -785,40 +785,15 @@ export default function SharafDGDeploymentForm({
               Party Information
             </CardTitle>
             <CardDescription>
-              Select employer, client, and supplier/brand
+              Select client, employer, and supplier/brand
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* First Party (Employer) */}
+            {/* First Party (Client - Sharaf DG) */}
             <div className="space-y-2">
-              <Label htmlFor="employer">First Party (Employer) *</Label>
+              <Label htmlFor="client">First Party (Client) *</Label>
               <Select
                 value={formData.first_party_id}
-                onValueChange={handleEmployerChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select employer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {employers.map(employer => (
-                    <SelectItem key={employer.id} value={employer.id}>
-                      <div className="flex flex-col">
-                        <span>{employer.name_en}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {employer.name_ar} • CRN: {employer.crn || 'N/A'}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Second Party (Client - Sharaf DG) */}
-            <div className="space-y-2">
-              <Label htmlFor="client">Second Party (Client) *</Label>
-              <Select
-                value={formData.second_party_id}
                 onValueChange={handleClientChange}
               >
                 <SelectTrigger>
@@ -837,6 +812,31 @@ export default function SharafDGDeploymentForm({
                         {client.name_en.toLowerCase().includes('sharaf') && (
                           <Badge variant="default" className="ml-auto">Sharaf DG</Badge>
                         )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Second Party (Employer) */}
+            <div className="space-y-2">
+              <Label htmlFor="employer">Second Party (Employer) *</Label>
+              <Select
+                value={formData.second_party_id}
+                onValueChange={handleEmployerChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employer..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {employers.map(employer => (
+                    <SelectItem key={employer.id} value={employer.id}>
+                      <div className="flex flex-col">
+                        <span>{employer.name_en}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {employer.name_ar} • CRN: {employer.crn || 'N/A'}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -873,32 +873,32 @@ export default function SharafDGDeploymentForm({
             {/* Parties Preview */}
             {(selectedEmployer || selectedClient || selectedSupplier) && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                {selectedEmployer && (
+                {selectedClient && (
                   <Alert>
                     <Building className="h-4 w-4" />
                     <AlertDescription>
                       <div className="text-sm space-y-1">
-                        <div className="font-semibold">Employer</div>
-                        <div>{selectedEmployer.name_en}</div>
-                        <div className="text-right text-xs">{selectedEmployer.name_ar}</div>
+                        <div className="font-semibold">Client (First Party)</div>
+                        <div>{selectedClient.name_en}</div>
+                        <div className="text-right text-xs">{selectedClient.name_ar}</div>
                         <div className="text-xs text-muted-foreground">
-                          CRN: {selectedEmployer.crn || 'Not provided'}
+                          CRN: {selectedClient.crn || 'Not provided'}
                         </div>
                       </div>
                     </AlertDescription>
                   </Alert>
                 )}
                 
-                {selectedClient && (
+                {selectedEmployer && (
                   <Alert>
                     <Building className="h-4 w-4" />
                     <AlertDescription>
                       <div className="text-sm space-y-1">
-                        <div className="font-semibold">Client</div>
-                        <div>{selectedClient.name_en}</div>
-                        <div className="text-right text-xs">{selectedClient.name_ar}</div>
+                        <div className="font-semibold">Employer (Second Party)</div>
+                        <div>{selectedEmployer.name_en}</div>
+                        <div className="text-right text-xs">{selectedEmployer.name_ar}</div>
                         <div className="text-xs text-muted-foreground">
-                          CRN: {selectedClient.crn || 'Not provided'}
+                          CRN: {selectedEmployer.crn || 'Not provided'}
                         </div>
                       </div>
                     </AlertDescription>
