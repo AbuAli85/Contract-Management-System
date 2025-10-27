@@ -276,15 +276,40 @@ export async function getEnhancedPromoterMetrics(
       },
     };
 
+    // Data validation check
+    const statusSum = statusCounts[PromoterStatus.ACTIVE] + 
+                      statusCounts[PromoterStatus.AVAILABLE] + 
+                      statusCounts[PromoterStatus.ON_LEAVE] + 
+                      statusCounts[PromoterStatus.INACTIVE] + 
+                      statusCounts[PromoterStatus.TERMINATED];
+
+    if (statusSum !== totalWorkforce) {
+      console.warn('⚠️ Promoter Metrics: Status sum mismatch!', {
+        totalWorkforce,
+        statusSum,
+        difference: totalWorkforce - statusSum,
+        breakdown: statusCounts,
+        rawDataLength: statusCountsResult.data?.length,
+      });
+    }
+
     // Cache the results
     metricsCache.set(metrics);
 
     console.log('📊 Promoter Metrics: Calculated', {
       totalWorkforce: metrics.totalWorkforce,
+      statusBreakdown: {
+        active: statusCounts[PromoterStatus.ACTIVE],
+        available: statusCounts[PromoterStatus.AVAILABLE],
+        onLeave: statusCounts[PromoterStatus.ON_LEAVE],
+        inactive: statusCounts[PromoterStatus.INACTIVE],
+        terminated: statusCounts[PromoterStatus.TERMINATED],
+        sum: statusSum,
+      },
       activeOnContracts: metrics.activeOnContracts,
-      availableForWork: metrics.availableForWork,
       utilizationRate: `${metrics.utilizationRate}%`,
       complianceRate: `${metrics.complianceRate}%`,
+      dataIntegrity: statusSum === totalWorkforce ? '✅ Valid' : '⚠️ Mismatch',
     });
 
     return metrics;
