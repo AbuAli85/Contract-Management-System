@@ -1,76 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withRBAC } from '@/lib/rbac/guard';
 import { createClient } from '@/lib/supabase/server';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET - Fetch all permissions
-export const GET = withRBAC(
-  'permission:manage:all',
-  async (request: NextRequest) => {
-    try {
-      const supabase = await createClient();
+export async function GET(request: NextRequest) {
+  try {
+    console.log('🔍 Permissions API: Starting GET request');
+    
+    const supabase = await createClient();
 
-      // Get current user to check permissions
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+    // Get current user to check permissions
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    if (authError) {
+      console.error('❌ Auth error:', authError);
+      return NextResponse.json({ error: 'Unauthorized', details: authError.message }, { status: 401 });
+    }
+    
+    if (!user) {
+      console.error('❌ No user found');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-      // Check if user has admin permissions
-      const { data: userProfile } = await supabase
-        .from('users')
+    console.log('✅ Authenticated user:', user.id);
+
+    // Try to get user profile from users table first, then profiles table
+    let userProfile = null;
+    let tableName = 'users';
+    
+    const { data: usersData, error: usersError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (usersData) {
+      userProfile = usersData;
+      tableName = 'users';
+    } else if (usersError) {
+      console.log('⚠️ Users table query failed, trying profiles...');
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
 
-      if (!userProfile || userProfile.role !== 'admin') {
+      if (profilesData) {
+        userProfile = profilesData;
+        tableName = 'profiles';
+      } else {
+        console.error('❌ Profile not found in either table');
         return NextResponse.json(
-          { error: 'Only admins can view permissions' },
-          { status: 403 }
+          { error: 'User profile not found' },
+          { status: 404 }
         );
       }
+    }
 
-      // Fetch all permissions
-      const { data: permissions, error: permissionsError } = await supabase
-        .from('permissions')
-        .select('*')
-        .order('category')
-        .order('name');
+    console.log('👤 User role:', userProfile?.role, 'from table:', tableName);
 
-      if (permissionsError) {
-        console.error('Error fetching permissions:', permissionsError);
-        return NextResponse.json(
-          { error: 'Failed to fetch permissions' },
-          { status: 500 }
-        );
-      }
-
-      // Transform the data to match the expected format
-      const transformedPermissions =
-        permissions?.map(permission => ({
-          id: permission.id,
-          name: permission.name,
-          description: permission.description,
-          category: permission.category,
-          isSystem: true, // All permissions in the permissions table are system permissions
-        })) || [];
-
-      return NextResponse.json({
-        success: true,
-        permissions: transformedPermissions,
-      });
-    } catch (error) {
-      console.error('Error in GET /api/users/permissions:', error);
+    // Check if user has admin permissions
+    if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
+      console.error('❌ Insufficient permissions. Role:', userProfile?.role);
       return NextResponse.json(
-        { error: 'Internal server error' },
+        { error: 'Only admins can view permissions', currentRole: userProfile?.role },
+        { status: 403 }
+      );
+    }
+
+    console.log('✅ Admin access granted');
+
+    // Fetch all permissions
+    const { data: permissions, error: permissionsError } = await supabase
+      .from('permissions')
+      .select('*')
+      .order('category')
+      .order('name');
+
+    if (permissionsError) {
+      console.error('❌ Error fetching permissions:', permissionsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch permissions', details: permissionsError.message },
         { status: 500 }
       );
     }
+
+    console.log(`✅ Fetched ${permissions?.length || 0} permissions`);
+
+    // Transform the data to match the expected format
+    const transformedPermissions =
+      permissions?.map(permission => ({
+        id: permission.id,
+        name: permission.name,
+        description: permission.description,
+        category: permission.category,
+        isSystem: true, // All permissions in the permissions table are system permissions
+      })) || [];
+
+    return NextResponse.json({
+      success: true,
+      permissions: transformedPermissions,
+    });
+  } catch (error) {
+    console.error('❌ Error in GET /api/users/permissions:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json(
+      { error: 'Internal server error', message: errorMessage },
+      { status: 500 }
+    );
   }
-);
+}

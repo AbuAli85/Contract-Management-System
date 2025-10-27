@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withRBAC } from '@/lib/rbac/guard';
 import { createClient } from '@/lib/supabase/server';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // GET - Fetch all roles with user counts
-export const GET = withRBAC('role:read:all', async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 Roles API: Starting GET request');
+    
     const supabase = await createClient();
 
     // Get current user to check permissions
@@ -13,23 +18,64 @@ export const GET = withRBAC('role:read:all', async (request: NextRequest) => {
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (authError) {
+      console.error('❌ Auth error:', authError);
+      return NextResponse.json({ error: 'Unauthorized', details: authError.message }, { status: 401 });
+    }
+    
+    if (!user) {
+      console.error('❌ No user found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user has admin permissions
-    const { data: userProfile } = await supabase
+    console.log('✅ Authenticated user:', user.id);
+
+    // Try to get user profile from users table first, then profiles table
+    let userProfile = null;
+    let tableName = 'users';
+    
+    const { data: usersData, error: usersError } = await supabase
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (!userProfile || userProfile.role !== 'admin') {
+    if (usersData) {
+      userProfile = usersData;
+      tableName = 'users';
+    } else if (usersError) {
+      console.log('⚠️ Users table query failed, trying profiles...');
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profilesData) {
+        userProfile = profilesData;
+        tableName = 'profiles';
+      } else {
+        console.error('❌ Profile not found in either table');
+        return NextResponse.json(
+          { error: 'User profile not found' },
+          { status: 404 }
+        );
+      }
+    }
+
+    console.log('👤 User role:', userProfile?.role, 'from table:', tableName);
+
+    // Check if user has admin permissions
+    if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
+      console.error('❌ Insufficient permissions. Role:', userProfile?.role);
       return NextResponse.json(
-        { error: 'Only admins can view roles' },
+        { error: 'Only admins can view roles', currentRole: userProfile?.role },
         { status: 403 }
       );
     }
+
+    console.log('✅ Admin access granted');
 
     // Fetch roles with user counts using the roles table
     const { data: roles, error: rolesError } = await supabase
@@ -38,12 +84,14 @@ export const GET = withRBAC('role:read:all', async (request: NextRequest) => {
       .order('name');
 
     if (rolesError) {
-      console.error('Error fetching roles:', rolesError);
+      console.error('❌ Error fetching roles:', rolesError);
       return NextResponse.json(
-        { error: 'Failed to fetch roles' },
+        { error: 'Failed to fetch roles', details: rolesError.message },
         { status: 500 }
       );
     }
+
+    console.log(`✅ Fetched ${roles?.length || 0} roles`);
 
     // Transform the data to match the expected format
     const transformedRoles =
@@ -60,94 +108,137 @@ export const GET = withRBAC('role:read:all', async (request: NextRequest) => {
       roles: transformedRoles,
     });
   } catch (error) {
-    console.error('Error in GET /api/users/roles:', error);
+    console.error('❌ Error in GET /api/users/roles:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', message: errorMessage },
       { status: 500 }
     );
   }
-});
+}
 
 // POST - Create new role
-export const POST = withRBAC(
-  'role:assign:all',
-  async (request: NextRequest) => {
-    try {
-      const supabase = await createClient();
+export async function POST(request: NextRequest) {
+  try {
+    console.log('🔍 Roles API: Starting POST request');
+    
+    const supabase = await createClient();
 
-      // Get current user to check permissions
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+    // Get current user to check permissions
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+    if (authError) {
+      console.error('❌ Auth error:', authError);
+      return NextResponse.json({ error: 'Unauthorized', details: authError.message }, { status: 401 });
+    }
+    
+    if (!user) {
+      console.error('❌ No user found');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-      // Check if user has admin permissions
-      const { data: userProfile } = await supabase
-        .from('users')
+    console.log('✅ Authenticated user:', user.id);
+
+    // Try to get user profile from users table first, then profiles table
+    let userProfile = null;
+    
+    const { data: usersData, error: usersError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (usersData) {
+      userProfile = usersData;
+    } else if (usersError) {
+      console.log('⚠️ Users table query failed, trying profiles...');
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
 
-      if (!userProfile || userProfile.role !== 'admin') {
+      if (profilesData) {
+        userProfile = profilesData;
+      } else {
+        console.error('❌ Profile not found in either table');
         return NextResponse.json(
-          { error: 'Only admins can create roles' },
-          { status: 403 }
+          { error: 'User profile not found' },
+          { status: 404 }
         );
       }
+    }
 
-      const body = await request.json();
-      const { name, description, permissions } = body;
+    console.log('👤 User role:', userProfile?.role);
 
-      if (!name || !description) {
-        return NextResponse.json(
-          { error: 'Name and description are required' },
-          { status: 400 }
-        );
-      }
+    // Check if user has admin permissions
+    if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
+      console.error('❌ Insufficient permissions. Role:', userProfile?.role);
+      return NextResponse.json(
+        { error: 'Only admins can create roles', currentRole: userProfile?.role },
+        { status: 403 }
+      );
+    }
 
-      // Check if role already exists
-      const { data: existingRole } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', name.toLowerCase())
-        .single();
+    console.log('✅ Admin access granted');
 
-      if (existingRole) {
-        return NextResponse.json(
-          { error: 'Role with this name already exists' },
-          { status: 400 }
-        );
-      }
+    const body = await request.json();
+    const { name, description, permissions } = body;
 
-      // Create new role
-      const { data: newRole, error: createError } = await supabase
-        .from('roles')
-        .insert({
-          name: name.toLowerCase(),
-          display_name: name,
-          description,
-          permissions: permissions || [],
-          is_system: false,
-          is_active: true,
-          created_by: user.id,
-          updated_by: user.id,
-        })
-        .select()
-        .single();
+    if (!name || !description) {
+      return NextResponse.json(
+        { error: 'Name and description are required' },
+        { status: 400 }
+      );
+    }
 
-      if (createError) {
-        console.error('Error creating role:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create role' },
-          { status: 500 }
-        );
-      }
+    // Check if role already exists
+    const { data: existingRole } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('name', name.toLowerCase())
+      .single();
 
-      // Log the activity
+    if (existingRole) {
+      console.error('❌ Role already exists:', name);
+      return NextResponse.json(
+        { error: 'Role with this name already exists' },
+        { status: 400 }
+      );
+    }
+
+    // Create new role
+    const { data: newRole, error: createError } = await supabase
+      .from('roles')
+      .insert({
+        name: name.toLowerCase(),
+        display_name: name,
+        description,
+        permissions: permissions || [],
+        is_system: false,
+        is_active: true,
+        created_by: user.id,
+        updated_by: user.id,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('❌ Error creating role:', createError);
+      return NextResponse.json(
+        { error: 'Failed to create role', details: createError.message },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ Role created successfully:', name);
+
+    // Log the activity
+    try {
       await supabase.from('user_activity_log').insert({
         user_id: user.id,
         action: 'role_create',
@@ -159,24 +250,27 @@ export const POST = withRBAC(
           permissions_count: permissions?.length || 0,
         },
       });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Role created successfully',
-        role: {
-          id: newRole.id,
-          name: newRole.name,
-          description: newRole.description,
-          permissions: [],
-          userCount: 0,
-        },
-      });
-    } catch (error) {
-      console.error('Error in POST /api/users/roles:', error);
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      );
+    } catch (logError) {
+      console.warn('⚠️ Failed to log activity (non-critical):', logError);
     }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Role created successfully',
+      role: {
+        id: newRole.id,
+        name: newRole.name,
+        description: newRole.description,
+        permissions: [],
+        userCount: 0,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Error in POST /api/users/roles:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json(
+      { error: 'Internal server error', message: errorMessage },
+      { status: 500 }
+    );
   }
-);
+}
