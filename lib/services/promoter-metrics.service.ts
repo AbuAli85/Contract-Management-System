@@ -149,9 +149,12 @@ export async function getEnhancedPromoterMetrics(
       const status = statusValue ? String(statusValue).toLowerCase() : 'available';
       
       // Map status to enum with comprehensive fallback logic
+      // NOTE: 'active' means employed/active employee, NOT on contracts
+      // We'll determine "Active on Contracts" separately using actual contract data
       switch (status) {
         case 'active':
-          statusCounts[PromoterStatus.ACTIVE]++;
+          // 'active' status means employed, treat as available for work
+          statusCounts[PromoterStatus.AVAILABLE]++;
           break;
         case 'available':
         case 'pending':
@@ -252,6 +255,39 @@ export async function getEnhancedPromoterMetrics(
     const averageContractsPerPromoter = activeOnContracts > 0
       ? Number((activeContractsResult.data?.length || 0) / activeOnContracts).toFixed(2)
       : 0;
+
+    // Validate that all promoters are accounted for
+    const totalCounted = activeOnContracts + 
+                        statusCounts[PromoterStatus.AVAILABLE] +
+                        statusCounts[PromoterStatus.ON_LEAVE] +
+                        statusCounts[PromoterStatus.INACTIVE] +
+                        statusCounts[PromoterStatus.TERMINATED];
+
+    if (totalCounted !== totalWorkforce) {
+      console.error('❌ Promoter count mismatch!', {
+        totalWorkforce,
+        totalCounted,
+        missing: totalWorkforce - totalCounted,
+        breakdown: {
+          activeOnContracts,
+          available: statusCounts[PromoterStatus.AVAILABLE],
+          onLeave: statusCounts[PromoterStatus.ON_LEAVE],
+          inactive: statusCounts[PromoterStatus.INACTIVE],
+          terminated: statusCounts[PromoterStatus.TERMINATED],
+        },
+      });
+    }
+
+    console.log('📊 Promoter Metrics Breakdown:', {
+      total: totalWorkforce,
+      activeOnContracts,
+      available: statusCounts[PromoterStatus.AVAILABLE],
+      onLeave: statusCounts[PromoterStatus.ON_LEAVE],
+      inactive: statusCounts[PromoterStatus.INACTIVE],
+      terminated: statusCounts[PromoterStatus.TERMINATED],
+      sum: totalCounted,
+      valid: totalCounted === totalWorkforce ? '✅' : '❌',
+    });
 
     // Build metrics object
     const metrics: EnhancedPromoterMetrics = {
