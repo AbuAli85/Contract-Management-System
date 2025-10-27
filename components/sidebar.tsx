@@ -68,7 +68,9 @@ import {
   RefreshCw,
   LogOut,
   ChevronRight,
+  ChevronDown,
   Users,
+  Briefcase,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
@@ -89,6 +91,7 @@ function SidebarContent({
   isSidebarCollapsed,
 }: SidebarProps) {
   const [mounted, setMounted] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const params = useSafeParams();
   const pathname = useSafePathname();
   const extractedLocale = useLocaleFromParams();
@@ -99,6 +102,14 @@ function SidebarContent({
   const { theme, setTheme } = useTheme();
   const { unreadCount: notificationCount } = useNotifications();
   const { count: pendingUsersCount = 0 } = usePendingUsersCount();
+  
+  // Toggle expanded menu
+  const toggleMenu = (menuTitle: string) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuTitle]: !prev[menuTitle]
+    }));
+  };
 
   // Debug logging for params issue (removed to prevent infinite loops)
   // The params object changes on every render, causing infinite re-renders
@@ -167,10 +178,35 @@ function SidebarContent({
           badge: 'Active',
         },
         {
-          title: 'Manage Parties',
-          href: '/manage-parties',
-          icon: Users,
-          description: 'Handle contract parties',
+          title: 'Parties & Employers',
+          icon: Building2,
+          description: 'Manage parties and employers',
+          children: [
+            {
+              title: 'Manage Parties',
+              href: '/manage-parties',
+              icon: FilePlus,
+              description: 'Add or edit parties',
+            },
+            {
+              title: 'Employers',
+              href: '/manage-parties/employers',
+              icon: Building2,
+              description: 'View all employers',
+            },
+            {
+              title: 'Clients',
+              href: '/manage-parties/clients',
+              icon: Users,
+              description: 'View all clients',
+            },
+            {
+              title: 'Generic Parties',
+              href: '/manage-parties/generic',
+              icon: Briefcase,
+              description: 'View generic parties',
+            },
+          ],
         },
         {
           title: 'Promoters',
@@ -368,12 +404,12 @@ function SidebarContent({
             </h3>
             {navigationItems.map(item => {
               const IconComponent = item.icon;
-              const isActive = isActiveRoute(item.href);
+              const isActive = item.href ? isActiveRoute(item.href) : false;
 
               return (
                 <Link
                   key={item.title}
-                  href={item.href}
+                  href={item.href || '#'}
                   onClick={onClose}
                   className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
                     isActive
@@ -479,12 +515,66 @@ function SidebarContent({
           {Array.isArray(navigationItems) &&
             navigationItems.map(item => {
               const IconComponent = item.icon;
-              const isActive = isActiveRoute(item.href);
+              const hasChildren = item.children && item.children.length > 0;
+              const isActive = item.href ? isActiveRoute(item.href) : false;
+              
+              // If item has children, render as expandable menu
+              if (hasChildren && !isSidebarCollapsed) {
+                const isExpanded = expandedMenus[item.title] || false;
+                
+                return (
+                  <div key={item.title} className='space-y-1'>
+                    <button
+                      onClick={() => toggleMenu(item.title)}
+                      className='group flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
+                    >
+                      <div className='flex items-center space-x-3'>
+                        <IconComponent className='h-4 w-4 shrink-0' />
+                        <span className='truncate'>{item.title}</span>
+                      </div>
+                      {isExpanded ? (
+                        <ChevronDown className='h-4 w-4 transition-transform' />
+                      ) : (
+                        <ChevronRight className='h-4 w-4 transition-transform' />
+                      )}
+                    </button>
+                    
+                    {/* Children items */}
+                    {isExpanded && (
+                      <div className='ml-4 space-y-1 border-l-2 border-muted pl-3'>
+                        {(item.children || []).map((child: any) => {
+                          const ChildIcon = child.icon;
+                          const isChildActive = child.href ? isActiveRoute(child.href) : false;
+                          
+                          return (
+                            <Link
+                              key={child.title}
+                              href={child.href || '#'}
+                              onClick={onClose}
+                              className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                                isChildActive
+                                  ? 'bg-accent text-accent-foreground font-medium'
+                                  : 'text-muted-foreground'
+                              }`}
+                            >
+                              <div className='flex items-center space-x-2'>
+                                <ChildIcon className='h-3 w-3 shrink-0' />
+                                <span className='truncate text-xs'>{child.title}</span>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
 
+              // Regular menu item without children
               return (
                 <Link
                   key={item.title}
-                  href={item.href}
+                  href={item.href || '#'}
                   onClick={onClose}
                   className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
                     isActive
