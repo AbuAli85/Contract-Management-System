@@ -397,19 +397,27 @@ function DashboardContent() {
                   <>
                     <div className='text-3xl font-bold text-gray-900'>{stat.value}</div>
                     <div className='flex items-center gap-1 mt-1'>
-                      {stat.trend === 'up' ? (
-                        <ArrowUpRight className='h-4 w-4 text-green-600' />
-                      ) : stat.trend === 'down' ? (
-                        <ArrowDownRight className='h-4 w-4 text-red-600' />
-                      ) : null}
-                      <span className={cn(
-                        'text-xs font-medium',
-                        stat.trend === 'up' && 'text-green-600',
-                        stat.trend === 'down' && 'text-red-600',
-                        stat.trend === 'neutral' && 'text-gray-600'
-                      )}>
-                        {stat.change > 0 ? '+' : ''}{stat.change.toFixed(1)}% from last month
-                      </span>
+                      {stat.value === 'N/A' ? (
+                        <span className='text-xs text-gray-500'>
+                          No active contracts yet
+                        </span>
+                      ) : (
+                        <>
+                          {stat.trend === 'up' ? (
+                            <ArrowUpRight className='h-4 w-4 text-green-600' />
+                          ) : stat.trend === 'down' ? (
+                            <ArrowDownRight className='h-4 w-4 text-red-600' />
+                          ) : null}
+                          <span className={cn(
+                            'text-xs font-medium',
+                            stat.trend === 'up' && 'text-green-600',
+                            stat.trend === 'down' && 'text-red-600',
+                            stat.trend === 'neutral' && 'text-gray-600'
+                          )}>
+                            {stat.change > 0 ? '+' : ''}{stat.change.toFixed(1)}% from last month
+                          </span>
+                        </>
+                      )}
                     </div>
                   </>
                 )}
@@ -417,6 +425,73 @@ function DashboardContent() {
             </Card>
           ))}
         </div>
+
+        {/* Assignment Status Clarity Card */}
+        <Card className='border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-base'>
+              <Info className='h-5 w-5 text-blue-600' />
+              Understanding Assignment Metrics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className='p-4 bg-white rounded-lg border-2 border-blue-200 cursor-help'>
+                      <div className='flex items-center justify-between mb-2'>
+                        <span className='text-sm font-semibold text-blue-900'>Available for Work</span>
+                        <CheckCircle className='h-4 w-4 text-blue-600' />
+                      </div>
+                      <div className='text-3xl font-bold text-blue-600'>
+                        {promoterStats?.availableForWork || 0}
+                      </div>
+                      <p className='text-xs text-gray-600 mt-2'>
+                        Promoters with status = "available"
+                      </p>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className='max-w-xs'>
+                    <p className='font-semibold mb-1'>Available for Work</p>
+                    <p className='text-sm'>Promoters specifically marked as "available" status - ready and actively seeking new assignments right now.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className='p-4 bg-white rounded-lg border-2 border-purple-200 cursor-help'>
+                      <div className='flex items-center justify-between mb-2'>
+                        <span className='text-sm font-semibold text-purple-900'>Awaiting Assignment</span>
+                        <Users className='h-4 w-4 text-purple-600' />
+                      </div>
+                      <div className='text-3xl font-bold text-purple-600'>
+                        {((promoterStats?.activeOnContracts || 0) === 0 && promoterStats?.totalWorkforce) 
+                          ? (promoterStats.totalWorkforce - (promoterStats.onLeave || 0) - (promoterStats.inactive || 0) - (promoterStats.terminated || 0))
+                          : (promoterStats?.totalWorkforce || 0) - (promoterStats?.activeOnContracts || 0) - (promoterStats?.onLeave || 0) - (promoterStats?.inactive || 0) - (promoterStats?.terminated || 0)}
+                      </div>
+                      <p className='text-xs text-gray-600 mt-2'>
+                        All promoters without active contracts
+                      </p>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className='max-w-xs'>
+                    <p className='font-semibold mb-1'>Awaiting Assignment</p>
+                    <p className='text-sm'>Total promoters not currently on contracts - includes those with "active" status (employed) + "available" status. Excludes on leave, inactive, and terminated.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className='mt-4 p-3 bg-blue-100 rounded-lg border border-blue-300'>
+              <p className='text-xs text-blue-900'>
+                <strong>Key Difference:</strong> "Available for Work" ({promoterStats?.availableForWork || 0}) shows promoters actively seeking work, 
+                while "Awaiting Assignment" shows all employable promoters not currently assigned to contracts, including those with "active" employment status.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Main Dashboard Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
