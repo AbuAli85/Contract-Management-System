@@ -1292,25 +1292,94 @@ export function EnhancedPromotersViewRefactored({
   );
 
   const handleSendReminder = useCallback(
-    (promoter: DashboardPromoter) => {
+    async (promoter: DashboardPromoter) => {
       console.log('[ACTION] Send reminder to:', promoter.displayName);
-      toast({
-        title: '📧 Reminder Sent',
-        description: `Document reminder sent to ${promoter.displayName}`,
-      });
-      // TODO: Implement actual reminder sending logic
+      
+      try {
+        // Determine which document needs reminder based on expiry status
+        let documentType: 'id_card' | 'passport' = 'id_card';
+        let expiryDate = promoter.id_card_expiry_date;
+        let daysBeforeExpiry = 30;
+
+        // Check passport if ID card is valid or missing
+        if (promoter.idDocument.status === 'valid' && 
+            promoter.passportDocument.status !== 'valid') {
+          documentType = 'passport';
+          expiryDate = promoter.passport_expiry_date;
+        }
+
+        // Calculate days before expiry
+        if (expiryDate) {
+          const expiryDateObj = new Date(expiryDate);
+          const today = new Date();
+          daysBeforeExpiry = Math.ceil((expiryDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        }
+
+        // Import and send reminder
+        const { sendDocumentExpiryReminder } = await import('@/lib/services/promoter-notification.service');
+        
+        if (!expiryDate) {
+          throw new Error('No expiry date available for reminder');
+        }
+
+        const result = await sendDocumentExpiryReminder({
+          promoterId: promoter.id,
+          documentType,
+          expiryDate,
+          daysBeforeExpiry: Math.max(1, daysBeforeExpiry),
+        });
+
+        if (result.success) {
+          toast({
+            title: '📧 Reminder Sent',
+            description: `Document reminder sent to ${promoter.displayName}`,
+          });
+        } else {
+          throw new Error(result.error || 'Failed to send reminder');
+        }
+      } catch (error) {
+        console.error('Error sending reminder:', error);
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to send reminder',
+          variant: 'destructive',
+        });
+      }
     },
     [toast]
   );
 
   const handleRequestDocument = useCallback(
-    (promoter: DashboardPromoter, documentType: 'ID' | 'Passport') => {
+    async (promoter: DashboardPromoter, documentType: 'ID' | 'Passport') => {
       console.log('[ACTION] Request document:', documentType, 'from', promoter.displayName);
-      toast({
-        title: '📋 Document Request Sent',
-        description: `${documentType} request sent to ${promoter.displayName}`,
-      });
-      // TODO: Implement actual document request logic
+      
+      try {
+        // Import and send document request
+        const { sendDocumentRequest } = await import('@/lib/services/promoter-notification.service');
+        
+        const result = await sendDocumentRequest({
+          promoterId: promoter.id,
+          documentType: documentType === 'ID' ? 'id_card' : 'passport',
+          reason: 'Document required for compliance',
+          priority: 'high',
+        });
+
+        if (result.success) {
+          toast({
+            title: '📋 Document Request Sent',
+            description: `${documentType} request sent to ${promoter.displayName}`,
+          });
+        } else {
+          throw new Error(result.error || 'Failed to send document request');
+        }
+      } catch (error) {
+        console.error('Error requesting document:', error);
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to send document request',
+          variant: 'destructive',
+        });
+      }
     },
     [toast]
   );

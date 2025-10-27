@@ -145,23 +145,52 @@ export default function PromoterProfileForm({
         ...rest
       } = values;
 
-      const id_card_url = existing_id_card_url ?? null;
-      const passport_url = existing_passport_url ?? null;
+      let uploadedIdCardUrl = existing_id_card_url ?? null;
+      let uploadedPassportUrl = existing_passport_url ?? null;
 
-      // Upload new files if provided
+      // Generate temporary ID for new promoters (will be replaced with actual ID)
+      const tempPromoterId = promoterToEdit?.id || `temp_${Date.now()}`;
+
+      // Upload new ID card if provided
       if (id_card_image instanceof File) {
-        // TODO: Upload to Supabase Storage and get URL
-        // id_card_url = await uploadFileToSupabase(id_card_image)
+        const { uploadIdCard } = await import('@/lib/promoter-file-upload');
+        const uploadResult = await uploadIdCard(id_card_image, tempPromoterId);
+        
+        if (uploadResult.success && uploadResult.url) {
+          uploadedIdCardUrl = uploadResult.url;
+        } else {
+          toast({
+            title: 'Upload Error',
+            description: uploadResult.error || 'Failed to upload ID card image',
+            variant: 'destructive',
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
+
+      // Upload new passport if provided
       if (passport_image instanceof File) {
-        // TODO: Upload to Supabase Storage and get URL
-        // passport_url = await uploadFileToSupabase(passport_image)
+        const { uploadPassport } = await import('@/lib/promoter-file-upload');
+        const uploadResult = await uploadPassport(passport_image, tempPromoterId);
+        
+        if (uploadResult.success && uploadResult.url) {
+          uploadedPassportUrl = uploadResult.url;
+        } else {
+          toast({
+            title: 'Upload Error',
+            description: uploadResult.error || 'Failed to upload passport image',
+            variant: 'destructive',
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       const submissionData = {
         ...rest,
-        id_card_url,
-        passport_url,
+        id_card_url: uploadedIdCardUrl,
+        passport_url: uploadedPassportUrl,
         contract_valid_until: values.contract_valid_until
           ? format(new Date(values.contract_valid_until), 'yyyy-MM-dd')
           : null,
@@ -191,9 +220,11 @@ export default function PromoterProfileForm({
       }
       onFormSubmitSuccess?.(values);
     } catch (error) {
+      console.error('Form submission error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to submit promoter profile.',
+        description: error instanceof Error ? error.message : 'Failed to submit promoter profile.',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
