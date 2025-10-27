@@ -91,11 +91,22 @@ function SidebarContent({
   isSidebarCollapsed,
 }: SidebarProps) {
   const [mounted, setMounted] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const params = useSafeParams();
   const pathname = useSafePathname();
   const extractedLocale = useLocaleFromParams();
   const locale = propLocale || extractedLocale;
+  
+  // Auto-expand menus based on current path
+  const getInitialExpandedMenus = () => {
+    const expanded: Record<string, boolean> = {};
+    // Auto-expand "Parties & Employers" if on any party management page
+    if (pathname?.includes('/manage-parties')) {
+      expanded['Parties & Employers'] = true;
+    }
+    return expanded;
+  };
+  
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(getInitialExpandedMenus());
   const { user, loading, mounted: authMounted, signOut } = useAuth();
   const { profile: userProfile } = useUserProfile();
   const { roleInfo } = useRolePermissions();
@@ -117,6 +128,16 @@ function SidebarContent({
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // Auto-expand relevant menus when pathname changes
+  useEffect(() => {
+    if (pathname?.includes('/manage-parties')) {
+      setExpandedMenus(prev => ({
+        ...prev,
+        'Parties & Employers': true,
+      }));
+    }
+  }, [pathname]);
 
   // Don't render anything until mounted to prevent hydration issues
   if (!mounted) {
