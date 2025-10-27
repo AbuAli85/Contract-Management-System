@@ -36,6 +36,10 @@ export interface PromoterMetrics {
   inactive: number;
   onAssignments: number;
   available: number;
+  complianceRate: number;
+  critical: number;
+  expiring: number;
+  unassigned: number;
 }
 
 export interface PartyMetrics {
@@ -416,12 +420,59 @@ export async function getPromoterMetrics(
       assignmentData?.map(c => c.promoter_id) || []
     ).size;
 
+    // Calculate compliance metrics
+    const { data: promotersData, error: promotersError } = await supabase
+      .from('promoters')
+      .select('id, id_expiry_date, passport_expiry_date, status');
+
+    if (promotersError) {
+      console.error('Error fetching promoters for compliance:', promotersError);
+    }
+
+    const now = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+    let compliantCount = 0;
+    let criticalCount = 0;
+    let expiringCount = 0;
+
+    if (promotersData) {
+      promotersData.forEach(promoter => {
+        const idExpiry = promoter.id_expiry_date ? new Date(promoter.id_expiry_date) : null;
+        const passportExpiry = promoter.passport_expiry_date ? new Date(promoter.passport_expiry_date) : null;
+
+        const idExpired = idExpiry && idExpiry < now;
+        const passportExpired = passportExpiry && passportExpiry < now;
+        const idExpiring = idExpiry && idExpiry >= now && idExpiry <= thirtyDaysFromNow;
+        const passportExpiring = passportExpiry && passportExpiry >= now && passportExpiry <= thirtyDaysFromNow;
+
+        if (idExpired || passportExpired) {
+          criticalCount++;
+        } else if (idExpiring || passportExpiring) {
+          expiringCount++;
+        } else if (idExpiry && passportExpiry && idExpiry > thirtyDaysFromNow && passportExpiry > thirtyDaysFromNow) {
+          compliantCount++;
+        }
+      });
+    }
+
+    const complianceRate = totalCount && totalCount > 0
+      ? Math.round((compliantCount / totalCount) * 100)
+      : 0;
+
+    const unassignedCount = (activeCount || 0) - uniquePromotersOnAssignments;
+
     const metrics: PromoterMetrics = {
       total: totalCount || 0,
       active: activeCount || 0,
       inactive: (totalCount || 0) - (activeCount || 0),
       onAssignments: uniquePromotersOnAssignments,
       available: (activeCount || 0) - uniquePromotersOnAssignments,
+      complianceRate,
+      critical: criticalCount,
+      expiring: expiringCount,
+      unassigned: unassignedCount,
     };
 
     metricsCache.set(cacheKey, metrics);
