@@ -258,9 +258,11 @@ function DashboardContent() {
     },
     {
       label: 'Utilization',
-      value: `${promoterStats?.utilizationRate || 0}%`,
+      value: stats?.active === 0 
+        ? 'N/A' 
+        : `${promoterStats?.utilizationRate || 0}%`,
       change: utilizationChange,
-      trend: determineGrowthTrend(utilizationChange),
+      trend: stats?.active === 0 ? 'neutral' : determineGrowthTrend(utilizationChange),
       icon: <TrendingUp className="h-5 w-5" />,
       color: 'orange',
     },
