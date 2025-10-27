@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import tailwindcssRtl from 'tailwindcss-rtl';
 
 const config: Config = {
   darkMode: ['class'],
@@ -84,9 +85,16 @@ const config: Config = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      // Add Arabic font family
+      fontFamily: {
+        arabic: ['Cairo', 'Tajawal', 'Almarai', 'sans-serif'],
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    // Enable RTL support
+    tailwindcssRtl,
+  ],
 } satisfies Config;
 
 export default config;

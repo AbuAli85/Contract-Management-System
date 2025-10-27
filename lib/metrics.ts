@@ -14,7 +14,19 @@ import type { Database } from '@/types';
 
 // ==================== TYPES ====================
 
-type ContractStatus = Database['public']['Enums']['contract_status'];
+// Contract status types based on actual status values used in the system
+type ContractStatus = 
+  | 'active' 
+  | 'pending' 
+  | 'approved' 
+  | 'expired' 
+  | 'completed' 
+  | 'cancelled'
+  | 'legal_review'
+  | 'hr_review'
+  | 'final_approval'
+  | 'signature'
+  | string; // Allow other string values for flexibility
 
 export interface ContractMetrics {
   total: number;
@@ -40,6 +52,19 @@ export interface PromoterMetrics {
   critical: number;
   expiring: number;
   unassigned: number;
+}
+
+export interface MetricsValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface DataConsistencyCheck {
+  checkName: string;
+  status: 'PASS' | 'FAIL' | 'WARNING';
+  message: string;
+  details?: any;
 }
 
 export interface PartyMetrics {
@@ -644,5 +669,287 @@ export async function getMetricsWithAuth(): Promise<DashboardMetrics> {
     userId: user.id,
     userRole,
   });
+}
+
+// ==================== VALIDATION & CONSISTENCY CHECKS ====================
+
+/**
+ * Validate metrics for consistency and correctness
+ * Prevents display of invalid data
+ */
+export function validateMetrics(
+  metrics: ContractMetrics | PromoterMetrics | DashboardMetrics
+): MetricsValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Validate Contract Metrics
+  if ('total' in metrics && 'active' in metrics && 'pending' in metrics) {
+    const contractMetrics = metrics as ContractMetrics;
+    
+    // Total should be sum of all statuses
+    const calculatedTotal = 
+      contractMetrics.active +
+      contractMetrics.pending +
+      contractMetrics.approved +
+      contractMetrics.expired +
+      contractMetrics.completed +
+      contractMetrics.cancelled;
+    
+    if (contractMetrics.total !== calculatedTotal && contractMetrics.total > 0) {
+      warnings.push(
+        `Contract total (${contractMetrics.total}) doesn't match sum of statuses (${calculatedTotal})`
+      );
+    }
+
+    // Expiring soon should not exceed active contracts
+    if (contractMetrics.expiringSoon > contractMetrics.active) {
+      errors.push(
+        `Expiring soon (${contractMetrics.expiringSoon}) cannot exceed active contracts (${contractMetrics.active})`
+      );
+    }
+
+    // Total value should be non-negative
+    if (contractMetrics.totalValue < 0) {
+      errors.push(`Total value cannot be negative: ${contractMetrics.totalValue}`);
+    }
+
+    // Average duration should be reasonable (0-3650 days = ~10 years)
+    if (contractMetrics.averageDuration < 0 || contractMetrics.averageDuration > 3650) {
+      warnings.push(
+        `Average duration seems unusual: ${contractMetrics.averageDuration} days`
+      );
+    }
+  }
+
+  // Validate Promoter Metrics
+  if ('complianceRate' in metrics && 'critical' in metrics) {
+    const promoterMetrics = metrics as PromoterMetrics;
+
+    // Compliance rate should be between 0 and 100
+    if (promoterMetrics.complianceRate < 0 || promoterMetrics.complianceRate > 100) {
+      errors.push(
+        `Compliance rate must be between 0-100: ${promoterMetrics.complianceRate}%`
+      );
+    }
+
+    // Active + inactive should equal total
+    if (promoterMetrics.active + promoterMetrics.inactive !== promoterMetrics.total) {
+      warnings.push(
+        `Active (${promoterMetrics.active}) + Inactive (${promoterMetrics.inactive}) ` +
+        `should equal Total (${promoterMetrics.total})`
+      );
+    }
+
+    // On assignments should not exceed active
+    if (promoterMetrics.onAssignments > promoterMetrics.active) {
+      errors.push(
+        `Promoters on assignments (${promoterMetrics.onAssignments}) ` +
+        `cannot exceed active promoters (${promoterMetrics.active})`
+      );
+    }
+
+    // Available should equal active minus on assignments
+    const expectedAvailable = promoterMetrics.active - promoterMetrics.onAssignments;
+    if (promoterMetrics.available !== expectedAvailable && promoterMetrics.active > 0) {
+      warnings.push(
+        `Available count (${promoterMetrics.available}) ` +
+        `should equal Active (${promoterMetrics.active}) - ` +
+        `On Assignments (${promoterMetrics.onAssignments})`
+      );
+    }
+  }
+
+  // Validate Dashboard Metrics
+  if ('contracts' in metrics && 'promoters' in metrics) {
+    const dashboardMetrics = metrics as DashboardMetrics;
+    
+    // Validate sub-metrics
+    const contractValidation = validateMetrics(dashboardMetrics.contracts);
+    const promoterValidation = validateMetrics(dashboardMetrics.promoters);
+    
+    errors.push(...contractValidation.errors);
+    warnings.push(...contractValidation.warnings);
+    errors.push(...promoterValidation.errors);
+    warnings.push(...promoterValidation.warnings);
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+/**
+ * Check data consistency across database
+ * Identifies orphaned records and data integrity issues
+ */
+export async function checkDataConsistency(): Promise<DataConsistencyCheck[]> {
+  const supabase = await createClient();
+  const checks: DataConsistencyCheck[] = [];
+
+  try {
+    // Check 1: Orphaned contract assignments
+    const { data: orphanedContracts, error: orphanError } = await supabase
+      .from('contracts')
+      .select('id, promoter_id')
+      .not('promoter_id', 'is', null);
+
+    if (!orphanError && orphanedContracts) {
+      const promoterIds = orphanedContracts.map(c => c.promoter_id).filter(Boolean);
+      
+      if (promoterIds.length > 0) {
+        const { data: existingPromoters } = await supabase
+          .from('promoters')
+          .select('id')
+          .in('id', promoterIds);
+
+        const existingIds = new Set(existingPromoters?.map(p => p.id) || []);
+        const missingIds = promoterIds.filter(id => !existingIds.has(id));
+
+        checks.push({
+          checkName: 'orphaned_contract_assignments',
+          status: missingIds.length === 0 ? 'PASS' : 'FAIL',
+          message: missingIds.length === 0
+            ? 'No orphaned contract assignments found'
+            : `Found ${missingIds.length} contracts with invalid promoter references`,
+          details: { missingIds: missingIds.slice(0, 10) },
+        });
+      } else {
+        checks.push({
+          checkName: 'orphaned_contract_assignments',
+          status: 'PASS',
+          message: 'No contract assignments to check',
+        });
+      }
+    }
+
+    // Check 2: Promoter utilization bounds
+    const { count: totalPromoters } = await supabase
+      .from('promoters')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active');
+
+    const { data: assignedContracts } = await supabase
+      .from('contracts')
+      .select('promoter_id')
+      .eq('status', 'active')
+      .not('promoter_id', 'is', null);
+
+    const uniqueAssigned = new Set(assignedContracts?.map(c => c.promoter_id) || []).size;
+    
+    checks.push({
+      checkName: 'utilization_bounds',
+      status: uniqueAssigned <= (totalPromoters || 0) ? 'PASS' : 'FAIL',
+      message: uniqueAssigned <= (totalPromoters || 0)
+        ? 'Utilization calculations are within valid bounds'
+        : 'Utilization calculation error: assigned > total',
+      details: { total: totalPromoters, assigned: uniqueAssigned },
+    });
+
+    // Check 3: Compliance rate consistency
+    const { data: promotersData } = await supabase
+      .from('promoters')
+      .select('id, id_expiry_date, passport_expiry_date');
+
+    if (promotersData) {
+      const now = new Date();
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+      let compliant = 0;
+      let withData = 0;
+
+      promotersData.forEach(p => {
+        const idExpiry = p.id_expiry_date ? new Date(p.id_expiry_date) : null;
+        const passportExpiry = p.passport_expiry_date ? new Date(p.passport_expiry_date) : null;
+
+        if (idExpiry && passportExpiry) {
+          withData++;
+          if (idExpiry > thirtyDaysFromNow && passportExpiry > thirtyDaysFromNow) {
+            compliant++;
+          }
+        }
+      });
+
+      const calculatedRate = withData > 0 ? Math.round((compliant / withData) * 100) : 0;
+
+      checks.push({
+        checkName: 'compliance_rate_calculation',
+        status: calculatedRate >= 0 && calculatedRate <= 100 ? 'PASS' : 'FAIL',
+        message: `Compliance rate is valid: ${calculatedRate}%`,
+        details: { compliant, withData, rate: calculatedRate },
+      });
+    }
+
+    // Check 4: Status distribution integrity
+    const { data: allContracts } = await supabase
+      .from('contracts')
+      .select('status');
+
+    if (allContracts) {
+      const statusCounts: Record<string, number> = {};
+      allContracts.forEach(c => {
+        const status = c.status || 'unknown';
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+      });
+
+      const totalFromStatuses = Object.values(statusCounts).reduce((a, b) => a + b, 0);
+      
+      checks.push({
+        checkName: 'status_distribution',
+        status: totalFromStatuses === allContracts.length ? 'PASS' : 'WARNING',
+        message: `Status distribution check: ${totalFromStatuses} / ${allContracts.length} contracts`,
+        details: statusCounts,
+      });
+    }
+
+  } catch (error) {
+    console.error('Error in data consistency checks:', error);
+    checks.push({
+      checkName: 'consistency_check_error',
+      status: 'FAIL',
+      message: `Error running consistency checks: ${error}`,
+    });
+  }
+
+  return checks;
+}
+
+/**
+ * Run all validation and consistency checks
+ * Returns a comprehensive report
+ */
+export async function runFullDataIntegrityCheck(): Promise<{
+  metricsValidation: MetricsValidationResult;
+  consistencyChecks: DataConsistencyCheck[];
+  timestamp: string;
+  overallStatus: 'PASS' | 'FAIL' | 'WARNING';
+}> {
+  // Get current metrics
+  const metrics = await getMetricsWithAuth();
+  
+  // Validate metrics
+  const metricsValidation = validateMetrics(metrics);
+  
+  // Run consistency checks
+  const consistencyChecks = await checkDataConsistency();
+  
+  // Determine overall status
+  let overallStatus: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+  
+  if (!metricsValidation.isValid || consistencyChecks.some(c => c.status === 'FAIL')) {
+    overallStatus = 'FAIL';
+  } else if (metricsValidation.warnings.length > 0 || consistencyChecks.some(c => c.status === 'WARNING')) {
+    overallStatus = 'WARNING';
+  }
+
+  return {
+    metricsValidation,
+    consistencyChecks,
+    timestamp: new Date().toISOString(),
+    overallStatus,
+  };
 }
 

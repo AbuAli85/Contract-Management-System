@@ -1,6 +1,8 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { UniversalLayout } from '@/components/universal-layout';
+import { getDirection, getFontFamily } from '@/lib/i18n/rtl';
+
 export async function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'ar' }];
 }
@@ -31,9 +33,17 @@ export default async function SafeLocaleLayout({
   // Load translation messages
   const messages = (await import(`@/i18n/messages/${locale}.json`)).default;
 
+  // Get RTL/LTR direction and font
+  const direction = getDirection(locale);
+  const fontFamily = getFontFamily(locale);
+
   return (
-    <NextIntlClientProvider messages={messages} locale={locale}>
-      <UniversalLayout locale={locale}>{children}</UniversalLayout>
-    </NextIntlClientProvider>
+    <html lang={locale} dir={direction} className={fontFamily}>
+      <body>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <UniversalLayout locale={locale}>{children}</UniversalLayout>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }

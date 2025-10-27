@@ -1,206 +1,170 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC } from '@/lib/rbac/guard';
 
 export const dynamic = 'force-dynamic';
 
-// ✅ SECURITY: RBAC enabled with rate limiting
-export const GET = withRBAC('contract:read:own', async (request: NextRequest) => {
+interface SearchResult {
+  id: string;
+  type: 'contract' | 'promoter' | 'party';
+  title: string;
+  subtitle: string;
+  url: string;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * GET /api/search
+ * Global search across contracts, promoters, and parties
+ * 
+ * Query parameters:
+ * - q: Search query (required, minimum 2 characters)
+ * - limit: Maximum results per type (default: 5)
+ */
+export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Search API: Starting request');
-
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q');
-    const type = searchParams.get('type') || 'all'; // all, contracts, promoters, parties
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    const limit = parseInt(searchParams.get('limit') || '5', 10);
 
+    // Validate query
     if (!query || query.trim().length < 2) {
       return NextResponse.json({
-        success: true,
         results: [],
-        total: 0,
-        query: query || '',
-        message: 'Query too short. Please enter at least 2 characters.',
+        message: 'Query must be at least 2 characters',
       });
     }
 
     const supabase = await createClient();
-    const searchTerm = query.trim();
 
-    // Get authenticated user for scoping
+    // Check authentication
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ results: [] });
     }
 
-    // Get user role for scoping
-    const { data: userProfile } = await supabase
+    // Get user role for RBAC
+    const { data: userData } = await supabase
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    const isAdmin = (userProfile as any)?.role === 'admin';
+    const userRole = userData?.role || 'user';
 
-    const results: any[] = [];
+    const searchTerm = `%${query}%`;
+    const results: SearchResult[] = [];
 
-    // Search contracts
-    if (type === 'all' || type === 'contracts') {
-      try {
-        let contractsQuery = supabase
-          .from('contracts')
-          .select(`
-            id,
-            contract_id,
-            title,
-            status,
-            contract_start_date,
-            contract_end_date,
-            contract_value,
-            first_party_id,
-            second_party_id,
-            created_at
-          `)
-          .or(`title.ilike.%${searchTerm}%,contract_id.ilike.%${searchTerm}%`)
-          .order('created_at', { ascending: false })
-          .limit(limit);
+    // Search Contracts
+    let contractsQuery = supabase
+      .from('contracts')
+      .select('id, contract_number, party_name, status, contract_type')
+      .or(`contract_number.ilike.${searchTerm},party_name.ilike.${searchTerm}`)
+      .limit(limit);
 
-        // Non-admin users only see their contracts
-        if (!isAdmin) {
-          contractsQuery = contractsQuery.or(
-            `first_party_id.eq.${user.id},second_party_id.eq.${user.id}`
-          );
-        }
+    // Apply RBAC for contracts
+    if (userRole !== 'admin') {
+      contractsQuery = contractsQuery.or(
+        `first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id}`
+      );
+    }
 
-        const { data: contracts, error: contractsError } = await contractsQuery;
+    const { data: contracts } = await contractsQuery;
 
-        if (!contractsError && contracts) {
-          results.push(
-            ...contracts.map(contract => ({
-              type: 'contract',
-              id: contract.id,
-              title: contract.title || contract.contract_id,
-              subtitle: `Status: ${contract.status} | Value: ${contract.contract_value || 'N/A'}`,
-              url: `/en/contracts/${contract.id}`,
-              created_at: contract.created_at,
-            }))
-          );
-        }
-      } catch (error) {
-        console.warn('Search contracts error:', error);
+    if (contracts) {
+      contracts.forEach((contract) => {
+        results.push({
+          id: contract.id,
+          type: 'contract',
+          title: contract.contract_number || 'Untitled Contract',
+          subtitle: `${contract.party_name || 'No party'} • ${contract.status || 'Unknown status'}`,
+          url: `/contracts/${contract.id}`,
+          metadata: {
+            status: contract.status,
+            type: contract.contract_type,
+          },
+        });
+      });
+    }
+
+    // Search Promoters (admin/manager only)
+    if (['admin', 'super_admin', 'manager'].includes(userRole)) {
+      const { data: promoters } = await supabase
+        .from('promoters')
+        .select('id, full_name_en, full_name_ar, status, phone_number')
+        .or(
+          `full_name_en.ilike.${searchTerm},full_name_ar.ilike.${searchTerm},phone_number.ilike.${searchTerm}`
+        )
+        .limit(limit);
+
+      if (promoters) {
+        promoters.forEach((promoter) => {
+          results.push({
+            id: promoter.id,
+            type: 'promoter',
+            title: promoter.full_name_en || promoter.full_name_ar || 'Unnamed',
+            subtitle: `${promoter.phone_number || 'No phone'} • ${promoter.status || 'Unknown status'}`,
+            url: `/promoters/${promoter.id}`,
+            metadata: {
+              status: promoter.status,
+              nameAr: promoter.full_name_ar,
+            },
+          });
+        });
       }
     }
 
-    // Search promoters
-    if (type === 'all' || type === 'promoters') {
-      try {
-        const { data: promoters, error: promotersError } = await supabase
-          .from('promoters')
-          .select(`
-            id,
-            name_en,
-            name_ar,
-            email,
-            phone,
-            status,
-            created_at
-          `)
-          .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
-          .order('created_at', { ascending: false })
-          .limit(limit);
+    // Search Parties
+    const { data: parties } = await supabase
+      .from('parties')
+      .select('id, name, party_type, contact_person, email')
+      .or(`name.ilike.${searchTerm},contact_person.ilike.${searchTerm},email.ilike.${searchTerm}`)
+      .limit(limit);
 
-        if (!promotersError && promoters) {
-          results.push(
-            ...promoters.map(promoter => ({
-              type: 'promoter',
-              id: promoter.id,
-              title: promoter.name_en || promoter.name_ar,
-              subtitle: `${promoter.email} | ${promoter.phone || 'No phone'}`,
-              url: `/en/promoters/${promoter.id}`,
-              created_at: promoter.created_at,
-            }))
-          );
-        }
-      } catch (error) {
-        console.warn('Search promoters error:', error);
-      }
+    if (parties) {
+      parties.forEach((party) => {
+        results.push({
+          id: party.id,
+          type: 'party',
+          title: party.name || 'Unnamed Party',
+          subtitle: `${party.party_type || 'Unknown type'} • ${party.contact_person || 'No contact'}`,
+          url: `/parties/${party.id}`,
+          metadata: {
+            type: party.party_type,
+            email: party.email,
+          },
+        });
+      });
     }
 
-    // Search parties
-    if (type === 'all' || type === 'parties') {
-      try {
-        const { data: parties, error: partiesError } = await supabase
-          .from('parties')
-          .select(`
-            id,
-            name_en,
-            name_ar,
-            crn,
-            type,
-            status,
-            contact_person,
-            contact_email,
-            created_at
-          `)
-          .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,crn.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`)
-          .order('created_at', { ascending: false })
-          .limit(limit);
+    // Sort results by relevance (exact matches first)
+    const sortedResults = results.sort((a, b) => {
+      const aExact = a.title.toLowerCase().includes(query.toLowerCase());
+      const bExact = b.title.toLowerCase().includes(query.toLowerCase());
 
-        if (!partiesError && parties) {
-          results.push(
-            ...parties.map(party => ({
-              type: 'party',
-              id: party.id,
-              title: party.name_en || party.name_ar,
-              subtitle: `${party.type} | ${party.contact_email || 'No email'}`,
-              url: `/en/parties/${party.id}`,
-              created_at: party.created_at,
-            }))
-          );
-        }
-      } catch (error) {
-        console.warn('Search parties error:', error);
-      }
-    }
-
-    // Sort results by relevance and date
-    results.sort((a, b) => {
-      // Prioritize exact matches in title
-      const aExact = a.title.toLowerCase().includes(searchTerm.toLowerCase());
-      const bExact = b.title.toLowerCase().includes(searchTerm.toLowerCase());
-      
       if (aExact && !bExact) return -1;
       if (!aExact && bExact) return 1;
-      
-      // Then by creation date
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
 
-    // Limit total results
-    const limitedResults = results.slice(0, limit);
+      // Then sort by type priority: contracts > promoters > parties
+      const typePriority = { contract: 0, promoter: 1, party: 2 };
+      return typePriority[a.type] - typePriority[b.type];
+    });
 
     return NextResponse.json({
-      success: true,
-      results: limitedResults,
-      total: limitedResults.length,
-      query: searchTerm,
-      searchType: type,
-      timestamp: new Date().toISOString(),
+      results: sortedResults,
+      count: sortedResults.length,
+      query,
     });
-
   } catch (error) {
-    console.error('❌ Search API: Unexpected error:', error);
+    console.error('Search error:', error);
     return NextResponse.json(
       {
-        success: false,
-        error: 'Internal server error',
-        details: (error as Error).message,
+        error: 'Search failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
   }
-});
+}

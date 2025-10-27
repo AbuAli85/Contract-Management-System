@@ -167,11 +167,17 @@ const nextConfig = {
     return config;
   },
 
-  // Experimental features - temporarily disabled for debugging
-  // experimental: {
-  //   // Enable modern features
-  //   optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-  // },
+  // Experimental features for performance
+  experimental: {
+    // Enable modern features
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', '@tanstack/react-query'],
+  },
+  
+  // Enable SWC minification for better performance
+  swcMinify: true,
+  
+  // Production browser source maps (disabled for performance)
+  productionBrowserSourceMaps: false,
 
   // Compiler options
   compiler: {
@@ -189,10 +195,14 @@ const nextConfig = {
     ignoreBuildErrors: true, // Temporarily disabled to allow deployment
   },
 
-  // Image domains with security considerations
+  // Image domains with security considerations and optimization
   images: {
-    formats: ['image/webp', 'image/avif'],
-    domains: ['reootcngcptfogfozlmz.supabase.co'],
+    formats: ['image/avif', 'image/webp'],
+    domains: [
+      'reootcngcptfogfozlmz.supabase.co',
+      'portal.thesmartpro.io',
+      'thesmartpro.io',
+    ],
     remotePatterns: [
       {
         protocol: 'https',
@@ -202,6 +212,10 @@ const nextConfig = {
     // Security: disable dangerous image formats
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Performance: image size optimization
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
   },
 
   // Performance optimizations

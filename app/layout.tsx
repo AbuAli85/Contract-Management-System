@@ -115,7 +115,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang='en' suppressHydrationWarning>
+    <html lang='en' dir='ltr' suppressHydrationWarning>
       <head>
         {/* Performance and SEO optimizations */}
         <link rel='manifest' href='/manifest.json' />
@@ -131,6 +131,12 @@ export default async function RootLayout({
           href='https://fonts.gstatic.com'
           crossOrigin='anonymous'
         />
+        
+        {/* Google Fonts for Arabic support */}
+        <link
+          href='https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap'
+          rel='stylesheet'
+        />
 
         {/* JSON-LD Structured Data */}
         <script
@@ -144,7 +150,7 @@ export default async function RootLayout({
       >
         <a
           href='#main-content'
-          className='sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2'
+          className='sr-only focus:not-sr-only focus:absolute focus:top-4 focus:start-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2'
         >
           Skip to main content
         </a>
