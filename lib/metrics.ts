@@ -448,7 +448,7 @@ export async function getPromoterMetrics(
     // Calculate compliance metrics
     const { data: promotersData, error: promotersError } = await supabase
       .from('promoters')
-      .select('id, id_expiry_date, passport_expiry_date, status');
+      .select('id, id_card_expiry_date, passport_expiry_date, status');
 
     if (promotersError) {
       console.error('Error fetching promoters for compliance:', promotersError);
@@ -464,7 +464,7 @@ export async function getPromoterMetrics(
 
     if (promotersData) {
       promotersData.forEach(promoter => {
-        const idExpiry = promoter.id_expiry_date ? new Date(promoter.id_expiry_date) : null;
+        const idExpiry = promoter.id_card_expiry_date ? new Date(promoter.id_card_expiry_date) : null;
         const passportExpiry = promoter.passport_expiry_date ? new Date(promoter.passport_expiry_date) : null;
 
         const idExpired = idExpiry && idExpiry < now;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContractMetrics } from '@/lib/metrics';
 import { createClient } from '@/lib/supabase/server';
+import { validateContractMetrics } from '@/lib/validation/metrics-validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,11 +77,23 @@ export async function GET(request: NextRequest) {
       ? 'All contracts in system' 
       : 'Your contracts only';
 
+    // Validate metrics before returning
+    const validation = validateContractMetrics(metrics);
+    
+    if (!validation.isValid) {
+      console.error('📊 Metrics API: Validation failed:', validation.errors);
+    }
+    
+    if (validation.warnings.length > 0) {
+      console.warn('📊 Metrics API: Validation warnings:', validation.warnings);
+    }
+
     console.log('📊 Metrics API: Metrics calculated successfully:', {
       total: metrics.total,
       active: metrics.active,
       pending: metrics.pending,
       scope,
+      valid: validation.isValid,
     });
 
     return NextResponse.json({
@@ -90,6 +103,11 @@ export async function GET(request: NextRequest) {
       scopeLabel,
       timestamp: new Date().toISOString(),
       cacheHit: !forceRefresh,
+      validation: {
+        isValid: validation.isValid,
+        errors: validation.errors,
+        warnings: validation.warnings,
+      },
     });
   } catch (error) {
     console.error('📊 Metrics API: Error:', error);
