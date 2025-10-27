@@ -145,6 +145,21 @@ export default function GenericPartiesPage() {
     return 'valid';
   };
 
+  // Helper function to safely format dates
+  const formatDateSafely = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'Not set';
+    try {
+      const parsedDate = parseISO(dateString);
+      if (isNaN(parsedDate.getTime())) {
+        return 'Invalid date';
+      }
+      return format(parsedDate, 'MMM dd, yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'Invalid date';
+    }
+  };
+
   // Filter generic parties
   const filteredGenericParties = useMemo(() => {
     return genericParties.filter(party => {
@@ -389,7 +404,7 @@ export default function GenericPartiesPage() {
                       <TableCell>
                         {party.cr_expiry_date ? (
                           <div className='text-sm'>
-                            <div>{format(parseISO(party.cr_expiry_date), 'MMM dd, yyyy')}</div>
+                            <div>{formatDateSafely(party.cr_expiry_date)}</div>
                             <div className={cn(
                               'text-xs',
                               party.cr_status === 'expired' && 'text-red-600',
@@ -408,7 +423,7 @@ export default function GenericPartiesPage() {
                       <TableCell>
                         {party.license_expiry ? (
                           <div className='text-sm'>
-                            <div>{format(parseISO(party.license_expiry), 'MMM dd, yyyy')}</div>
+                            <div>{formatDateSafely(party.license_expiry)}</div>
                             <div className={cn(
                               'text-xs',
                               party.license_status === 'expired' && 'text-red-600',

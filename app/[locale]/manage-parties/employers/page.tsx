@@ -171,6 +171,21 @@ export default function EmployersPage() {
     return 'valid';
   };
 
+  // Helper function to safely format dates
+  const formatDateSafely = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'Not set';
+    try {
+      const parsedDate = parseISO(dateString);
+      if (isNaN(parsedDate.getTime())) {
+        return 'Invalid date';
+      }
+      return format(parsedDate, 'MMM dd, yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'Invalid date';
+    }
+  };
+
   // Filter employers
   const filteredEmployers = useMemo(() => {
     return employers.filter(employer => {
@@ -456,7 +471,7 @@ export default function EmployersPage() {
                         <TableCell>
                           {employer.cr_expiry_date ? (
                             <div className='text-sm'>
-                              <div>{format(parseISO(employer.cr_expiry_date), 'MMM dd, yyyy')}</div>
+                              <div>{formatDateSafely(employer.cr_expiry_date)}</div>
                               <div className={cn(
                                 'text-xs',
                                 employer.cr_status === 'expired' && 'text-red-600',
@@ -475,7 +490,7 @@ export default function EmployersPage() {
                         <TableCell>
                           {employer.license_expiry ? (
                             <div className='text-sm'>
-                              <div>{format(parseISO(employer.license_expiry), 'MMM dd, yyyy')}</div>
+                              <div>{formatDateSafely(employer.license_expiry)}</div>
                               <div className={cn(
                                 'text-xs',
                                 employer.license_status === 'expired' && 'text-red-600',
