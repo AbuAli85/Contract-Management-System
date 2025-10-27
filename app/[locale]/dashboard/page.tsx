@@ -427,7 +427,9 @@ function DashboardContent() {
                 <BarChart3 className='h-5 w-5 text-blue-600' />
                 Workforce Overview
               </CardTitle>
-              <CardDescription>Real-time workforce utilization and status</CardDescription>
+              <CardDescription>
+                Total workforce: {promoterStats?.totalWorkforce || 0} promoters
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {statsLoading ? (
@@ -437,40 +439,111 @@ function DashboardContent() {
                 </div>
               ) : (
                 <div className='space-y-4'>
-                  <div className='grid grid-cols-2 gap-4'>
-                    <div className='p-4 bg-green-50 rounded-lg border border-green-200'>
-                      <div className='flex items-center justify-between'>
-                        <span className='text-sm font-medium text-green-800'>Active on Contracts</span>
-                        <CheckCircle className='h-4 w-4 text-green-600' />
-                      </div>
-                      <div className='text-2xl font-bold text-green-900 mt-2'>
-                        {promoterStats?.activeOnContracts || 0}
-                      </div>
-                      <Progress value={(promoterStats?.activeOnContracts || 0) / (promoterStats?.totalWorkforce || 1) * 100} className='mt-2 h-2' />
-                    </div>
-                    <div className='p-4 bg-blue-50 rounded-lg border border-blue-200'>
-                      <div className='flex items-center justify-between'>
-                        <span className='text-sm font-medium text-blue-800'>Available</span>
-                        <Users className='h-4 w-4 text-blue-600' />
-                      </div>
-                      <div className='text-2xl font-bold text-blue-900 mt-2'>
-                        {promoterStats?.availableForWork || 0}
-                      </div>
-                      <Progress value={(promoterStats?.availableForWork || 0) / (promoterStats?.totalWorkforce || 1) * 100} className='mt-2 h-2 [&>div]:bg-blue-500' />
+                  {/* Active Workforce */}
+                  <div>
+                    <div className='text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide'>Active Workforce</div>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className='p-4 bg-green-50 rounded-lg border border-green-200 cursor-help'>
+                              <div className='flex items-center justify-between'>
+                                <span className='text-sm font-medium text-green-800'>Active on Contracts</span>
+                                <CheckCircle className='h-4 w-4 text-green-600' />
+                              </div>
+                              <div className='text-2xl font-bold text-green-900 mt-2'>
+                                {promoterStats?.activeOnContracts || 0}
+                              </div>
+                              <Progress value={(promoterStats?.activeOnContracts || 0) / (promoterStats?.totalWorkforce || 1) * 100} className='mt-2 h-2' />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Promoters currently working on active contracts</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className='p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-help'>
+                              <div className='flex items-center justify-between'>
+                                <span className='text-sm font-medium text-blue-800'>Available for Work</span>
+                                <Users className='h-4 w-4 text-blue-600' />
+                              </div>
+                              <div className='text-2xl font-bold text-blue-900 mt-2'>
+                                {promoterStats?.availableForWork || 0}
+                              </div>
+                              <Progress value={(promoterStats?.availableForWork || 0) / (promoterStats?.totalWorkforce || 1) * 100} className='mt-2 h-2 [&>div]:bg-blue-500' />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Promoters ready and available for new assignments</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
-                  <div className='grid grid-cols-3 gap-3 pt-4 border-t'>
-                    <div>
-                      <div className='text-xs text-gray-600'>On Leave</div>
-                      <div className='text-lg font-semibold'>{promoterStats?.onLeave || 0}</div>
-                    </div>
-                    <div>
-                      <div className='text-xs text-gray-600'>Inactive</div>
-                      <div className='text-lg font-semibold'>{promoterStats?.inactive || 0}</div>
-                    </div>
-                    <div>
-                      <div className='text-xs text-gray-600'>Compliance</div>
-                      <div className='text-lg font-semibold'>{promoterStats?.complianceRate || 0}%</div>
+
+                  {/* Other Status */}
+                  <div className='pt-4 border-t'>
+                    <div className='text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide'>Other Status</div>
+                    <div className='grid grid-cols-4 gap-3'>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className='text-center cursor-help'>
+                              <div className='text-xs text-gray-600 mb-1'>On Leave</div>
+                              <div className='text-lg font-semibold'>{promoterStats?.onLeave || 0}</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Promoters temporarily on leave</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className='text-center cursor-help'>
+                              <div className='text-xs text-gray-600 mb-1'>Inactive</div>
+                              <div className='text-lg font-semibold'>{promoterStats?.inactive || 0}</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Promoters marked as inactive</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className='text-center cursor-help'>
+                              <div className='text-xs text-gray-600 mb-1'>Terminated</div>
+                              <div className='text-lg font-semibold'>{promoterStats?.terminated || 0}</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Former promoters who left the company</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className='text-center cursor-help bg-blue-50 rounded-lg p-2'>
+                              <div className='text-xs text-blue-600 mb-1 font-medium'>Compliance</div>
+                              <div className='text-lg font-semibold text-blue-900'>{promoterStats?.complianceRate || 0}%</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Percentage of promoters with all documents valid</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>
