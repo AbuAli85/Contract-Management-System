@@ -106,6 +106,8 @@ import { useTranslations } from 'next-intl';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
+import { ContractsLoadingState, PermissionsLoadingState } from '@/components/contracts/enhanced-loading-state';
+import { EnhancedEmptyState } from '@/components/contracts/enhanced-empty-state';
 
 import { FileTextIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
@@ -947,17 +949,7 @@ function ContractsContent() {
 
   // NOW we can check permissions and return early if needed
   if (permissions.isLoading) {
-    return (
-      <div className='flex h-64 items-center justify-center'>
-        <div className='text-center'>
-          <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
-          <p className='text-muted-foreground'>Loading permissions...</p>
-          <p className='text-xs text-muted-foreground mt-2'>
-            This should only take a moment
-          </p>
-        </div>
-      </div>
-    );
+    return <PermissionsLoadingState />;
   }
 
   // Role-based access control - NOW CALLED AFTER ALL HOOKS
@@ -969,11 +961,8 @@ function ContractsContent() {
 
   if (isLoading) {
     return (
-      <div className='space-y-6 p-4 md:p-6'>
-        <div className='flex items-center justify-center h-64'>
-          <Loader2 className='h-8 w-8 animate-spin' />
-        </div>
-        <TableSkeleton rows={pageSize} columns={10} showCard={true} />
+      <div className='space-y-6 p-4 md:p-6 loading-fade-in'>
+        <ContractsLoadingState />
       </div>
     );
   }
