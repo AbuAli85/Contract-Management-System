@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PromotersPageClient } from './promoters-client';
 
 export const metadata: Metadata = {
-  title: 'Promoters | Contract Management System',
+  title: 'Promoters',
   description:
     'Manage promoters and staff members with advanced analytics and notifications',
 };
