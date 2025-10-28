@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PartyForm from '@/components/party-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Building2, Users, Briefcase, FileText } from 'lucide-react';
+import { ArrowLeft, Building2, Users, Briefcase, FileText, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { createClient } from '@/lib/supabase/client';
+import type { Party } from '@/lib/types';
 
 /**
  * Manage Parties Page - Form Only
@@ -22,6 +24,71 @@ export default function ManagePartiesPage() {
   // Check if we're editing an existing party
   const partyId = searchParams?.get('id');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingParty, setIsLoadingParty] = useState(false);
+  const [partyData, setPartyData] = useState<Party | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Fetch party data when editing
+  useEffect(() => {
+    const fetchPartyData = async () => {
+      if (!partyId) {
+        setPartyData(null);
+        return;
+      }
+
+      setIsLoadingParty(true);
+      setLoadError(null);
+
+      try {
+        const supabase = createClient();
+        if (!supabase) {
+          setLoadError('Failed to initialize database connection');
+          toast({
+            title: 'Error',
+            description: 'Failed to initialize database connection',
+            variant: 'destructive',
+          });
+          return;
+        }
+        
+        const { data, error } = await supabase
+          .from('parties')
+          .select('*')
+          .eq('id', partyId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching party:', error);
+          setLoadError('Failed to load party data');
+          toast({
+            title: 'Error',
+            description: 'Failed to load party data',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (data) {
+          console.log('✅ Party data loaded:', data);
+          setPartyData(data as Party);
+        } else {
+          setLoadError('Party not found');
+          toast({
+            title: 'Error',
+            description: 'Party not found',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Error in fetchPartyData:', error);
+        setLoadError('An unexpected error occurred');
+      } finally {
+        setIsLoadingParty(false);
+      }
+    };
+
+    fetchPartyData();
+  }, [partyId, toast]);
 
   const handleFormSuccess = () => {
     toast({
@@ -34,7 +101,40 @@ export default function ManagePartiesPage() {
     router.push('/en/manage-parties/employers');
   };
 
+  // Show loading state while fetching party data
+  if (partyId && isLoadingParty) {
     return (
+      <div className='container mx-auto px-4 py-8 max-w-5xl'>
+        <Card className='shadow-lg'>
+          <CardContent className='pt-6 flex flex-col items-center justify-center min-h-[400px]'>
+            <Loader2 className='h-8 w-8 animate-spin text-blue-600 mb-4' />
+            <p className='text-muted-foreground'>Loading party data...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error state if party failed to load
+  if (partyId && loadError) {
+    return (
+      <div className='container mx-auto px-4 py-8 max-w-5xl'>
+        <Card className='shadow-lg border-red-200'>
+          <CardContent className='pt-6 flex flex-col items-center justify-center min-h-[400px]'>
+            <div className='text-center'>
+              <p className='text-red-600 font-semibold mb-4'>{loadError}</p>
+              <Button onClick={() => router.push('/en/manage-parties/employers')}>
+                <ArrowLeft className='mr-2 h-4 w-4' />
+                Back to Parties
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
     <div className='container mx-auto px-4 py-8 max-w-5xl'>
       {/* Header Section */}
       <div className='mb-8'>
@@ -129,7 +229,7 @@ export default function ManagePartiesPage() {
         </CardHeader>
         <CardContent className='pt-6'>
           <PartyForm
-            partyToEdit={partyId ? { id: partyId } as any : null}
+            partyToEdit={partyData}
             onFormSubmit={handleFormSuccess}
           />
         </CardContent>
