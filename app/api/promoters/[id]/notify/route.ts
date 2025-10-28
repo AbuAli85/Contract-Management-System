@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { ratelimitStrict, getClientIdentifier } from '@/lib/rate-limit';
+import { ratelimit, getClientIdentifier } from '@/lib/rate-limit'; // Changed from ratelimitStrict (10/min) to ratelimit (60/min)
 import { z } from 'zod';
 
 // Helper function to generate default messages
@@ -155,9 +155,9 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Rate limiting
+    // Rate limiting (60 requests/minute for admin notifications)
     const identifier = getClientIdentifier(request);
-    const { success } = await ratelimitStrict.limit(identifier);
+    const { success } = await ratelimit.limit(identifier);
 
     if (!success) {
       return NextResponse.json(
@@ -232,10 +232,10 @@ export async function POST(
             promoterName: promoter.full_name,
             reason: 'Immediate action required for documents and contracts',
             details: {
-              expiringDocuments: promoterDetails.expiringDocuments,
-              pendingContracts: promoterDetails.pendingContracts,
-              missingDocuments: promoterDetails.missingDocuments,
-              actionItems: promoterDetails.actionItems,
+              ...(promoterDetails.expiringDocuments && { expiringDocuments: promoterDetails.expiringDocuments }),
+              ...(promoterDetails.pendingContracts && { pendingContracts: promoterDetails.pendingContracts }),
+              ...(promoterDetails.missingDocuments && { missingDocuments: promoterDetails.missingDocuments }),
+              ...(promoterDetails.actionItems && { actionItems: promoterDetails.actionItems }),
             },
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
           });
@@ -262,17 +262,19 @@ export async function POST(
             title: validatedData.type === 'warning' ? 'Important Update' : 'Notification',
             message: message,
             details: {
-              contractInfo: promoterDetails.currentContract ? {
-                type: promoterDetails.currentContract.type,
-                employer: promoterDetails.currentContract.employer,
-                startDate: promoterDetails.currentContract.startDate,
-                salary: promoterDetails.currentContract.salary,
-              } : undefined,
+              ...(promoterDetails.currentContract && {
+                contractInfo: {
+                  type: promoterDetails.currentContract.type,
+                  employer: promoterDetails.currentContract.employer,
+                  ...(promoterDetails.currentContract.startDate && { startDate: promoterDetails.currentContract.startDate }),
+                  ...(promoterDetails.currentContract.salary && { salary: promoterDetails.currentContract.salary }),
+                }
+              }),
               documentStatus: {
                 idCardStatus: promoterDetails.idCardStatus,
                 passportStatus: promoterDetails.passportStatus,
-                idCardExpiry: promoterDetails.idCardExpiry,
-                passportExpiry: promoterDetails.passportExpiry,
+                ...(promoterDetails.idCardExpiry && { idCardExpiry: promoterDetails.idCardExpiry }),
+                ...(promoterDetails.passportExpiry && { passportExpiry: promoterDetails.passportExpiry }),
               },
               accountInfo: {
                 status: promoterDetails.status,
