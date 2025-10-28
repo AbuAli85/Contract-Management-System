@@ -114,11 +114,11 @@ function PendingContractsPageContent() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
     
-    let timeoutId: NodeJS.Timeout | null = null;
-    timeoutId = setTimeout(() => {
+    // Setup timeout to abort request after 10 seconds
+    const timeoutId = setTimeout(() => {
       console.warn('⏱️ Request timeout - aborting after 10 seconds');
       controller.abort();
-    }, 10000); // 10 second timeout
+    }, 10000);
 
     // Show "taking longer than expected" message after 3 seconds
     const slowLoadingTimeoutId = setTimeout(() => {

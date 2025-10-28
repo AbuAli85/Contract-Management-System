@@ -304,7 +304,7 @@ export function PromoterDetailsEnhanced({
         // Get document activities (if document tracking exists)
         supabase
           .from('promoter_documents')
-          .select('id, document_type, created_at, updated_at, status')
+          .select('id, document_type, created_at, updated_at')
           .eq('promoter_id', promoterId)
           .order('updated_at', { ascending: false })
           .limit(10),
@@ -312,9 +312,9 @@ export function PromoterDetailsEnhanced({
         // Get communications (if communications table exists)
         supabase
           .from('promoter_communications')
-          .select('id, communication_type, subject, sent_at, status')
+          .select('id, type, subject, communication_time')
           .eq('promoter_id', promoterId)
-          .order('sent_at', { ascending: false })
+          .order('communication_time', { ascending: false })
           .limit(10)
       ]);
 
@@ -389,15 +389,14 @@ export function PromoterDetailsEnhanced({
             id: `comm-${comm.id}`,
             type: 'system',
             action: 'Communication Sent',
-            description: `${comm.communication_type || 'Message'} sent: ${comm.subject || 'No subject'}`,
-            timestamp: comm.sent_at,
+            description: `${comm.type || 'Message'} sent: ${comm.subject || 'No subject'}`,
+            timestamp: comm.communication_time,
             user: 'System',
             metadata: {
-              communicationType: comm.communication_type,
-              subject: comm.subject,
-              status: comm.status
+              communicationType: comm.type,
+              subject: comm.subject
             },
-            status: comm.status === 'delivered' ? 'success' : 'info'
+            status: 'info'
           });
         });
       }

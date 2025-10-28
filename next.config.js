@@ -32,7 +32,9 @@ const nextConfig = {
       // Allow fonts from self and Google Fonts
       "font-src 'self' data: https://fonts.gstatic.com",
       // Allow connections to API, Supabase, analytics, Sentry, and Make.com webhook
-      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io https://hook.eu2.make.com wss://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io https://hook.eu2.make.com wss://*.supabase.co https://vercel.live",
+      // Allow frames from Vercel live preview
+      "frame-src 'self' https://vercel.live",
       // Disallow frames from other origins
       "frame-ancestors 'none'",
       // Restrict object embeds
