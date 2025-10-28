@@ -92,40 +92,40 @@ export function PromotersTable({
 
   return (
     <Card className='shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
-      <CardHeader className='flex flex-col gap-4 border-b border-slate-200/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-slate-50 py-6 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:border-slate-700/60 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='space-y-2'>
-          <div className='flex items-center gap-3'>
-            <div className='p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-lg'>
-              <Users className='h-6 w-6 text-white' />
+      <CardHeader className='flex flex-col gap-4 border-b border-slate-200/60 bg-gradient-to-r from-indigo-50 via-blue-50 to-slate-50 py-4 px-4 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:border-slate-700/60 sm:py-6 sm:px-6 md:flex-row md:items-center md:justify-between'>
+        <div className='space-y-2 flex-1 min-w-0'>
+          <div className='flex items-center gap-2 sm:gap-3'>
+            <div className='p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-lg flex-shrink-0'>
+              <Users className='h-5 w-5 sm:h-6 sm:w-6 text-white' />
             </div>
-            <div>
-              <CardTitle className='text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300'>
+            <div className='min-w-0 flex-1'>
+              <CardTitle className='text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300 truncate'>
                 Promoter Roster
               </CardTitle>
-              <CardDescription className='mt-1 text-base'>
-                <span className='font-bold text-indigo-600 dark:text-indigo-400 text-lg'>
+              <CardDescription className='mt-1 text-sm sm:text-base flex flex-wrap items-center gap-1 sm:gap-2'>
+                <span className='font-bold text-indigo-600 dark:text-indigo-400 text-base sm:text-lg'>
                   {promoters.length}
-                </span>{' '}
+                </span>
                 <span className='text-slate-600 dark:text-slate-400'>
                   active members
                 </span>
                 {pagination && (
-                  <span className='ml-3 px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full'>
-                    {pagination.total.toLocaleString()} total workforce
+                  <span className='inline-block px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full whitespace-nowrap'>
+                    {pagination.total.toLocaleString()} total
                   </span>
                 )}
               </CardDescription>
             </div>
           </div>
         </div>
-        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4'>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 md:ml-4'>
           {isFetching && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge
                     variant='outline'
-                    className='gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200/80 shadow-sm'
+                    className='gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200/80 shadow-sm w-fit'
                   >
                     <RefreshCw className='h-3.5 w-3.5 animate-spin' />
                     <span className='font-medium'>Syncing</span>
@@ -144,30 +144,30 @@ export function PromotersTable({
             onValueChange={value =>
               onViewModeChange(value as 'table' | 'grid' | 'cards' | 'analytics')
             }
-            className='ml-auto'
+            className='w-full sm:w-auto'
           >
-            <TabsList className='grid w-full grid-cols-4 bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm'>
+            <TabsList className='grid w-full grid-cols-4 bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm h-9 sm:h-10'>
               <TabsTrigger
                 value='table'
-                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3'
               >
                 Table
               </TabsTrigger>
               <TabsTrigger
                 value='grid'
-                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3'
               >
                 Grid
               </TabsTrigger>
               <TabsTrigger
                 value='cards'
-                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3'
               >
                 Cards
               </TabsTrigger>
               <TabsTrigger
                 value='analytics'
-                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200'
+                className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3'
                 aria-label="Analytics view with charts and insights"
               >
                 Analytics
@@ -203,8 +203,8 @@ export function PromotersTable({
           <div className='relative'>
             {/* Table View */}
             {viewMode === 'table' && (
-              <ScrollArea className='h-[calc(100vh-400px)] min-h-[500px] max-h-[700px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef}>
-                <div className='min-w-[1300px]'>
+              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef}>
+                <div className='min-w-[1100px] lg:min-w-[1200px] xl:min-w-[1300px]'>
                   <Table>
                     <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
                     <TableRow className='hover:bg-transparent border-0'>
@@ -377,7 +377,7 @@ export function PromotersTable({
 
             {/* Grid View */}
             {viewMode === 'grid' && (
-              <ScrollArea className='h-[520px] animate-in fade-in duration-300'>
+              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
                 <PromotersGridView
                   promoters={promoters}
                   selectedPromoters={selectedPromoters}
@@ -388,7 +388,7 @@ export function PromotersTable({
                 {isFetching && promoters.length > 0 && (
                   <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
                     <RefreshCw className='h-4 w-4 animate-spin' />
-                    <span>Updating data...</span>
+                    <span className='text-sm'>Updating data...</span>
                   </div>
                 )}
               </ScrollArea>
@@ -396,7 +396,7 @@ export function PromotersTable({
 
             {/* Cards View */}
             {viewMode === 'cards' && (
-              <ScrollArea className='h-[520px] animate-in fade-in duration-300'>
+              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
                 {enableEnhancedPartyManagement ? (
                   <EnhancedPromotersCardsViewWithPartyEdit
                     promoters={promoters}
@@ -418,7 +418,7 @@ export function PromotersTable({
                 {isFetching && promoters.length > 0 && (
                   <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
                     <RefreshCw className='h-4 w-4 animate-spin' />
-                    <span>Updating data...</span>
+                    <span className='text-sm'>Updating data...</span>
                   </div>
                 )}
               </ScrollArea>
@@ -429,7 +429,7 @@ export function PromotersTable({
 
       {/* Pagination Controls */}
       {pagination && pagination.totalPages > 1 && (
-        <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 pt-6 pb-6 px-6'>
+        <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 py-4 px-4 sm:py-6 sm:px-6'>
           <PaginationControls
             currentPage={pagination.page}
             totalPages={pagination.totalPages}
