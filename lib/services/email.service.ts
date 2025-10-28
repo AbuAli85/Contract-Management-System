@@ -102,6 +102,48 @@ export async function sendBulkEmails(
 }
 
 /**
+ * Get email status and details by message ID
+ */
+export async function getEmailStatus(messageId: string): Promise<{
+  success: boolean;
+  status?: string;
+  error?: string;
+  details?: any;
+}> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      return {
+        success: false,
+        error: 'Email service not configured',
+      };
+    }
+
+    const { data, error } = await resend.emails.get(messageId);
+
+    if (error) {
+      console.error('❌ Failed to get email status:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to get email status',
+      };
+    }
+
+    console.log('✅ Email status retrieved:', data);
+    return {
+      success: true,
+      status: data?.last_event || 'unknown',
+      details: data,
+    };
+  } catch (error) {
+    console.error('❌ Get email status exception:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
  * Simple HTML stripper for plain text fallback
  */
 function stripHtml(html: string): string {
