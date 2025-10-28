@@ -22,6 +22,126 @@ function generateDefaultMessage(type: string, promoterName: string): string {
   }
 }
 
+// Fetch detailed promoter information for professional emails
+async function fetchPromoterDetails(supabase: any, promoterId: string) {
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  try {
+    // Get promoter basic info
+    const { data: promoter } = await supabase
+      .from('promoters')
+      .select('status, id_card_expiry_date, passport_expiry_date, employer_id')
+      .eq('id', promoterId)
+      .single();
+
+    // Get current contracts
+    const { data: contracts } = await supabase
+      .from('contracts')
+      .select('id, contract_type, status, employer_id, start_date, basic_salary, currency')
+      .eq('promoter_id', promoterId)
+      .in('status', ['active', 'pending', 'pending_approval'])
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    // Get employer info for contracts
+    const { data: employers } = await supabase
+      .from('parties')
+      .select('id, name_en, name_ar')
+      .in('id', contracts?.map((c: any) => c.employer_id).filter(Boolean) || []);
+
+    // Calculate document status
+    const idCardExpiry = promoter?.id_card_expiry_date ? new Date(promoter.id_card_expiry_date) : null;
+    const passportExpiry = promoter?.passport_expiry_date ? new Date(promoter.passport_expiry_date) : null;
+
+    const getDaysRemaining = (date: Date | null) => {
+      if (!date) return null;
+      return Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    };
+
+    const idCardDays = getDaysRemaining(idCardExpiry);
+    const passportDays = getDaysRemaining(passportExpiry);
+
+    // Build expiring documents list
+    const expiringDocuments = [];
+    if (idCardDays !== null && idCardDays < 90) {
+      expiringDocuments.push({
+        type: 'ID Card',
+        expiryDate: idCardExpiry!.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+        daysRemaining: idCardDays,
+      });
+    }
+    if (passportDays !== null && passportDays < 90) {
+      expiringDocuments.push({
+        type: 'Passport',
+        expiryDate: passportExpiry!.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+        daysRemaining: passportDays,
+      });
+    }
+
+    // Build pending contracts list
+    const pendingContracts = contracts?.map((contract: any) => {
+      const employer = employers?.find((e: any) => e.id === contract.employer_id);
+      return {
+        id: contract.id,
+        type: contract.contract_type || 'Employment Contract',
+        status: contract.status,
+        employer: employer?.name_en || employer?.name_ar || 'Employer',
+      };
+    }) || [];
+
+    // Build missing documents list
+    const missingDocuments = [];
+    if (!idCardExpiry) missingDocuments.push('ID Card (not uploaded or no expiry date)');
+    if (!passportExpiry) missingDocuments.push('Passport (not uploaded or no expiry date)');
+
+    // Build action items
+    const actionItems = [];
+    if (expiringDocuments.length > 0) {
+      actionItems.push(`Upload renewed documents (${expiringDocuments.length} expiring soon)`);
+    }
+    if (pendingContracts.length > 0) {
+      actionItems.push(`Review and sign pending contracts (${pendingContracts.length} waiting)`);
+    }
+    if (missingDocuments.length > 0) {
+      actionItems.push(`Upload missing documents`);
+    }
+    if (actionItems.length === 0) {
+      actionItems.push('Keep your profile and documents up to date');
+    }
+
+    // Get current contract details
+    const currentContract = contracts?.[0] ? {
+      type: contracts[0].contract_type || 'Employment Contract',
+      employer: employers?.find((e: any) => e.id === contracts[0].employer_id)?.name_en || 'Employer',
+      startDate: contracts[0].start_date ? new Date(contracts[0].start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : undefined,
+      salary: contracts[0].basic_salary ? `${contracts[0].basic_salary} ${contracts[0].currency || 'OMR'}` : undefined,
+    } : null;
+
+    return {
+      expiringDocuments: expiringDocuments.length > 0 ? expiringDocuments : undefined,
+      pendingContracts: pendingContracts.length > 0 ? pendingContracts : undefined,
+      missingDocuments: missingDocuments.length > 0 ? missingDocuments : undefined,
+      actionItems: actionItems.length > 0 ? actionItems : undefined,
+      currentContract,
+      status: promoter?.status || 'Active',
+      assignmentStatus: contracts && contracts.length > 0 ? 'Assigned' : 'Available',
+      idCardStatus: idCardDays === null ? 'Not Uploaded' : idCardDays < 0 ? 'Expired' : idCardDays < 30 ? 'Expiring Soon' : 'Valid',
+      passportStatus: passportDays === null ? 'Not Uploaded' : passportDays < 0 ? 'Expired' : passportDays < 30 ? 'Expiring Soon' : 'Valid',
+      idCardExpiry: idCardExpiry?.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      passportExpiry: passportExpiry?.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+    };
+  } catch (error) {
+    console.error('Error fetching promoter details:', error);
+    return {
+      status: 'Active',
+      assignmentStatus: 'Unknown',
+      idCardStatus: 'Unknown',
+      passportStatus: 'Unknown',
+    };
+  }
+}
+
 const notifySchema = z.object({
   message: z.string().min(1).max(1000).optional(),
   type: z.enum(['urgent', 'info', 'warning', 'standard', 'reminder', 'document_reminder']).default('info'),
@@ -95,39 +215,80 @@ export async function POST(
     // Generate appropriate message based on type if not provided
     const message = validatedData.message || generateDefaultMessage(validatedData.type, promoter.full_name);
 
-    // Send notification using the notification service
+    // Send detailed notification email
     if (validatedData.sendEmail && promoter.email) {
       try {
         const { sendEmail } = await import('@/lib/services/email.service');
-        const { documentExpiryEmail } = await import('@/lib/email-templates/document-expiry');
-
-        // For document reminders, send appropriate email
-        if (validatedData.type === 'document_reminder' || validatedData.type === 'reminder') {
-          const emailContent = documentExpiryEmail({
+        
+        // Fetch detailed information about the promoter
+        const promoterDetails = await fetchPromoterDetails(supabaseAdmin, params.id);
+        
+        let emailContent;
+        
+        // Send appropriate detailed email based on type
+        if (validatedData.type === 'urgent') {
+          const { urgentNotificationEmail } = await import('@/lib/email-templates/urgent-notification');
+          emailContent = urgentNotificationEmail({
             promoterName: promoter.full_name,
-            documentType: 'ID Card', // Default, should ideally be passed in
-            expiryDate: 'Soon', // Should be calculated
-            daysRemaining: 30,
-            urgent: false, // Reminders are not urgent by default
+            reason: 'Immediate action required for documents and contracts',
+            details: {
+              expiringDocuments: promoterDetails.expiringDocuments,
+              pendingContracts: promoterDetails.pendingContracts,
+              missingDocuments: promoterDetails.missingDocuments,
+              actionItems: promoterDetails.actionItems,
+            },
+            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
           });
+        } else if (validatedData.type === 'document_reminder' || validatedData.type === 'reminder') {
+          const { documentExpiryEmail } = await import('@/lib/email-templates/document-expiry');
+          
+          // Find the most urgent expiring document
+          const mostUrgentDoc = promoterDetails.expiringDocuments?.[0];
+          
+          if (mostUrgentDoc) {
+            emailContent = documentExpiryEmail({
+              promoterName: promoter.full_name,
+              documentType: mostUrgentDoc.type as 'ID Card' | 'Passport',
+              expiryDate: mostUrgentDoc.expiryDate,
+              daysRemaining: mostUrgentDoc.daysRemaining,
+              urgent: mostUrgentDoc.daysRemaining < 30,
+            });
+          }
+        } else {
+          // Standard or info notification with full details
+          const { standardNotificationEmail } = await import('@/lib/email-templates/standard-notification');
+          emailContent = standardNotificationEmail({
+            promoterName: promoter.full_name,
+            title: validatedData.type === 'warning' ? 'Important Update' : 'Notification',
+            message: message,
+            details: {
+              contractInfo: promoterDetails.currentContract ? {
+                type: promoterDetails.currentContract.type,
+                employer: promoterDetails.currentContract.employer,
+                startDate: promoterDetails.currentContract.startDate,
+                salary: promoterDetails.currentContract.salary,
+              } : undefined,
+              documentStatus: {
+                idCardStatus: promoterDetails.idCardStatus,
+                passportStatus: promoterDetails.passportStatus,
+                idCardExpiry: promoterDetails.idCardExpiry,
+                passportExpiry: promoterDetails.passportExpiry,
+              },
+              accountInfo: {
+                status: promoterDetails.status,
+                assignmentStatus: promoterDetails.assignmentStatus,
+              },
+            },
+            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
+            actionText: 'View Your Profile',
+          });
+        }
 
+        // Send the email if content was generated
+        if (emailContent) {
           await sendEmail({
             to: promoter.email,
             ...emailContent,
-          });
-        } else {
-          // Send generic notification email
-          await sendEmail({
-            to: promoter.email,
-            subject: validatedData.type === 'urgent' ? '🚨 Urgent Notification' : '📋 Notification',
-            html: `
-              <div style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2>Hello ${promoter.full_name},</h2>
-                <p>${message}</p>
-                <hr>
-                <p style="color: #666; font-size: 12px;">SmartPro Contract Management System</p>
-              </div>
-            `,
           });
         }
       } catch (emailError) {
