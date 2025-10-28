@@ -30,8 +30,8 @@ export async function sendEmail(options: EmailOptions): Promise<{
       };
     }
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-    const fromName = process.env.RESEND_FROM_NAME || 'Contract Management System';
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io';
+    const fromName = process.env.RESEND_FROM_NAME || 'SmartPro Contract Management System';
 
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
