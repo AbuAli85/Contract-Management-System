@@ -215,6 +215,9 @@ export async function POST(
     // Generate appropriate message based on type if not provided
     const message = validatedData.message || generateDefaultMessage(validatedData.type, promoter.full_name);
 
+    // Track email send result
+    let emailResult: { success: boolean; messageId?: string; error?: string } | null = null;
+
     // Send detailed notification email
     if (validatedData.sendEmail && promoter.email) {
       try {
@@ -288,10 +291,13 @@ export async function POST(
 
         // Send the email if content was generated
         if (emailContent) {
-          await sendEmail({
+          emailResult = await sendEmail({
             to: promoter.email,
             ...emailContent,
           });
+          
+          // Log email result for debugging
+          console.log('📧 Email send result:', emailResult);
         }
       } catch (emailError) {
         console.error('Failed to send email notification:', emailError);
@@ -322,6 +328,7 @@ export async function POST(
         status: 'sent',
         created_at: notification.created_at,
       },
+      emailResult: emailResult || { success: false, error: 'Email not sent' },
       message: 'Notification sent successfully',
     });
   } catch (error) {
