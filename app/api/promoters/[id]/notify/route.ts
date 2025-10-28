@@ -243,18 +243,48 @@ export async function POST(
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
           });
         } else if (validatedData.type === 'document_reminder' || validatedData.type === 'reminder') {
-          const { documentExpiryEmail } = await import('@/lib/email-templates/document-expiry');
-          
           // Find the most urgent expiring document
           const mostUrgentDoc = promoterDetails.expiringDocuments?.[0];
           
           if (mostUrgentDoc) {
+            // If there are expiring documents, send specific document expiry email
+            const { documentExpiryEmail } = await import('@/lib/email-templates/document-expiry');
             emailContent = documentExpiryEmail({
               promoterName: promoter.full_name,
               documentType: mostUrgentDoc.type as 'ID Card' | 'Passport',
               expiryDate: mostUrgentDoc.expiryDate,
               daysRemaining: mostUrgentDoc.daysRemaining,
               urgent: mostUrgentDoc.daysRemaining < 30,
+            });
+          } else {
+            // If no expiring documents, send a standard reminder email
+            const { standardNotificationEmail } = await import('@/lib/email-templates/standard-notification');
+            emailContent = standardNotificationEmail({
+              promoterName: promoter.full_name,
+              title: 'Document Status Reminder',
+              message: message,
+              details: {
+                ...(promoterDetails.currentContract && {
+                  contractInfo: {
+                    type: promoterDetails.currentContract.type,
+                    employer: promoterDetails.currentContract.employer,
+                    ...(promoterDetails.currentContract.startDate && { startDate: promoterDetails.currentContract.startDate }),
+                    ...(promoterDetails.currentContract.salary && { salary: promoterDetails.currentContract.salary }),
+                  }
+                }),
+                documentStatus: {
+                  idCardStatus: promoterDetails.idCardStatus,
+                  passportStatus: promoterDetails.passportStatus,
+                  ...(promoterDetails.idCardExpiry && { idCardExpiry: promoterDetails.idCardExpiry }),
+                  ...(promoterDetails.passportExpiry && { passportExpiry: promoterDetails.passportExpiry }),
+                },
+                accountInfo: {
+                  status: promoterDetails.status,
+                  assignmentStatus: promoterDetails.assignmentStatus,
+                },
+              },
+              actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
+              actionText: 'View Your Profile',
             });
           }
         } else {
