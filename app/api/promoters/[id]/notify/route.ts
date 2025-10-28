@@ -27,8 +27,7 @@ const notifySchema = z.object({
   type: z.enum(['urgent', 'info', 'warning', 'standard', 'reminder', 'document_reminder']).default('info'),
   sendEmail: z.boolean().default(true),
   sendSms: z.boolean().default(false),
-  promoterName: z.string().optional(),
-  email: z.string().email().optional(),
+  // Don't validate email/promoterName from client - we fetch from database
 });
 
 export async function POST(
