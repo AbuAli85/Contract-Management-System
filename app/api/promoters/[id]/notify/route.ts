@@ -70,7 +70,7 @@ export async function POST(
     const supabaseAdmin = getSupabaseAdmin();
     const { data: promoterData, error: promoterError } = await supabaseAdmin
       .from('promoters')
-      .select('full_name, email, phone')
+      .select('name_en, name_ar, email, phone, mobile_number')
       .eq('id', params.id)
       .single();
 
@@ -86,12 +86,12 @@ export async function POST(
       );
     }
 
-    // Type-safe promoter object
-    const promoter: {
-      full_name: string;
-      email: string | null;
-      phone: string | null;
-    } = promoterData;
+    // Type-safe promoter object with name and contact info
+    const promoter = {
+      full_name: (promoterData as any).name_en || (promoterData as any).name_ar || 'Unknown',
+      email: (promoterData as any).email as string | null,
+      phone: (promoterData as any).phone || (promoterData as any).mobile_number,
+    };
 
     // Generate appropriate message based on type if not provided
     const message = validatedData.message || generateDefaultMessage(validatedData.type, promoter.full_name);
