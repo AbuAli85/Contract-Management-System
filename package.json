@@ -68,7 +68,8 @@
     "test:validation": "node tests/performance-validation.js",
     "test:validation:prod": "API_BASE_URL=https://portal.thesmartpro.io node tests/performance-validation.js",
     "test:get-token": "node tests/get-auth-token.js",
-    "test:data-consistency": "node tests/performance-validation.js"
+    "test:data-consistency": "node tests/performance-validation.js",
+    "test:email": "tsx scripts/test-email.ts"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
@@ -93,6 +94,7 @@
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@react-email/render": "^1.4.0",
     "@sentry/nextjs": "^7.0.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.38.4",
@@ -132,6 +134,7 @@
     "react-hook-form": "^7.65.0",
     "react-intersection-observer": "^9.16.0",
     "recharts": "^2.15.4",
+    "resend": "^6.3.0",
     "server-only": "^0.0.1",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.0.0",

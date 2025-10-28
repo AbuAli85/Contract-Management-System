@@ -242,10 +242,7 @@ export class DocumentMonitor {
   }
 
   /**
-   * Send individual alert
-   * TODO: Integrate with email service (SendGrid, AWS SES, etc.)
-   * TODO: Integrate with notification system
-   * TODO: Integrate with SMS service for critical alerts
+   * Send individual alert via email
    */
   private async sendAlert(alert: DocumentAlert): Promise<void> {
     const docName = alert.documentType === 'id_card' ? 'ID Card' : 'Passport';
@@ -257,34 +254,59 @@ export class DocumentMonitor {
       daysUntilExpiry: alert.daysUntilExpiry,
     });
 
-    // TODO: Implement actual notification sending
-    // Examples:
-    
-    // 1. Email notification
-    // await sendEmail({
-    //   to: [alert.promoterEmail, process.env.ADMIN_EMAIL],
-    //   subject: `${alert.severity === 'critical' ? 'URGENT: ' : ''}${docName} ${alert.status === 'expired' ? 'Expired' : 'Expiring Soon'}`,
-    //   template: 'document-expiry',
-    //   data: { alert }
-    // });
+    try {
+      // Check if email address is available
+      if (!alert.promoterEmail) {
+        console.warn(`⚠️ No email address for promoter: ${alert.promoterName}`);
+        return;
+      }
 
-    // 2. In-app notification
-    // await supabase.from('notifications').insert({
-    //   user_id: alert.promoterId,
-    //   type: 'DOCUMENT_EXPIRY',
-    //   title: `${docName} ${alert.status === 'expired' ? 'Expired' : 'Expiring Soon'}`,
-    //   message: `Your ${docName} ${alert.status === 'expired' ? 'expired' : `expires in ${alert.daysUntilExpiry} days`}`,
-    //   severity: alert.severity,
-    //   action_url: `/en/promoters/${alert.promoterId}/documents`
-    // });
+      // Import email service and template
+      const { sendEmail } = await import('@/lib/services/email.service');
+      const { documentExpiryEmail } = await import('@/lib/email-templates/document-expiry');
 
-    // 3. SMS for critical documents
-    // if (alert.severity === 'critical') {
-    //   await sendSMS({
-    //     to: alert.promoterPhone,
-    //     message: `URGENT: Your ${docName} has expired. Please renew immediately.`
-    //   });
-    // }
+      // Generate email content
+      const emailContent = documentExpiryEmail({
+        promoterName: alert.promoterName,
+        documentType: docName as 'ID Card' | 'Passport',
+        expiryDate: alert.expiryDate,
+        daysRemaining: alert.daysUntilExpiry,
+        urgent: alert.severity === 'critical',
+      });
+
+      // Send email notification
+      const result = await sendEmail({
+        to: alert.promoterEmail,
+        ...emailContent,
+      });
+
+      if (result.success) {
+        console.log(`✅ Email sent successfully to ${alert.promoterEmail}`);
+      } else {
+        console.error(`❌ Failed to send email:`, result.error);
+      }
+
+      // TODO: Add in-app notification
+      // const supabase = await createClient();
+      // await supabase.from('notifications').insert({
+      //   user_id: alert.promoterId,
+      //   type: 'DOCUMENT_EXPIRY',
+      //   title: `${docName} ${alert.status === 'expired' ? 'Expired' : 'Expiring Soon'}`,
+      //   message: `Your ${docName} ${alert.status === 'expired' ? 'expired' : `expires in ${alert.daysUntilExpiry} days`}`,
+      //   severity: alert.severity,
+      //   action_url: `/en/promoters/${alert.promoterId}/documents`
+      // });
+
+      // TODO: SMS for critical documents (add Twilio integration if needed)
+      // if (alert.severity === 'critical') {
+      //   await sendSMS({
+      //     to: alert.promoterPhone,
+      //     message: `URGENT: Your ${docName} has expired. Please renew immediately.`
+      //   });
+      // }
+    } catch (error) {
+      console.error('Error sending alert:', error);
+    }
   }
 
   /**

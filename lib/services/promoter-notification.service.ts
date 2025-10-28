@@ -96,36 +96,28 @@ export interface BulkNotificationResult {
 }
 
 // ============================================================================
-// EMAIL & SMS INTEGRATION (Placeholder)
+// EMAIL & SMS INTEGRATION
 // ============================================================================
-// These functions should be replaced with actual email/SMS service integration
-// Options: SendGrid, AWS SES, Twilio, etc.
+// Email: Resend.io (configured)
+// SMS: Twilio (placeholder - add if needed)
 // ============================================================================
 
+import { sendEmail as sendResendEmail } from '@/lib/services/email.service';
+
 /**
- * Send email notification (PLACEHOLDER - Integrate with your email service)
+ * Send email notification via Resend
  */
 async function sendEmail(
   to: string,
   subject: string,
   body: string
 ): Promise<{ success: boolean; error?: string }> {
-  // TODO: Replace with actual email service integration
-  console.log(`[EMAIL PLACEHOLDER] To: ${to}, Subject: ${subject}`);
-  console.log(`[EMAIL PLACEHOLDER] Body: ${body}`);
-  
-  // Simulate success
-  return { success: true };
-  
-  // Example with SendGrid:
-  // const sgMail = require('@sendgrid/mail');
-  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  // try {
-  //   await sgMail.send({ to, from: 'noreply@yourapp.com', subject, html: body });
-  //   return { success: true };
-  // } catch (error) {
-  //   return { success: false, error: error.message };
-  // }
+  return await sendResendEmail({
+    to,
+    subject,
+    html: body,
+    text: body.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+  });
 }
 
 /**

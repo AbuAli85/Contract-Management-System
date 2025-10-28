@@ -1,0 +1,115 @@
+import { Resend } from 'resend';
+
+// Initialize Resend with your API key
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export interface EmailOptions {
+  to: string | string[];
+  subject: string;
+  html: string;
+  text?: string;
+  replyTo?: string;
+  cc?: string | string[];
+  bcc?: string | string[];
+}
+
+/**
+ * Send email via Resend
+ */
+export async function sendEmail(options: EmailOptions): Promise<{
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error('❌ RESEND_API_KEY not configured');
+      return {
+        success: false,
+        error: 'Email service not configured',
+      };
+    }
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromName = process.env.RESEND_FROM_NAME || 'Contract Management System';
+
+    const { data, error } = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: Array.isArray(options.to) ? options.to : [options.to],
+      subject: options.subject,
+      html: options.html,
+      text: options.text || stripHtml(options.html),
+      ...(options.replyTo && { replyTo: options.replyTo }),
+      ...(options.cc && { cc: options.cc }),
+      ...(options.bcc && { bcc: options.bcc }),
+    });
+
+    if (error) {
+      console.error('❌ Email send error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to send email',
+      };
+    }
+
+    console.log('✅ Email sent successfully:', data?.id);
+    return {
+      success: true,
+      messageId: data?.id,
+    };
+  } catch (error) {
+    console.error('❌ Email send exception:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Send bulk emails (with rate limiting consideration)
+ */
+export async function sendBulkEmails(
+  emails: EmailOptions[]
+): Promise<{
+  success: boolean;
+  sent: number;
+  failed: number;
+  errors: string[];
+}> {
+  const results = {
+    success: true,
+    sent: 0,
+    failed: 0,
+    errors: [] as string[],
+  };
+
+  for (const email of emails) {
+    const result = await sendEmail(email);
+    if (result.success) {
+      results.sent++;
+    } else {
+      results.failed++;
+      results.errors.push(result.error || 'Unknown error');
+    }
+
+    // Small delay to avoid rate limits (Resend: 10 emails/second on free tier)
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  results.success = results.failed === 0;
+  return results;
+}
+
+/**
+ * Simple HTML stripper for plain text fallback
+ */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[^>]*>.*?<\/style>/gi, '')
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
