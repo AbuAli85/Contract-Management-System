@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { ratelimitStrict, getClientIdentifier } from '@/lib/rate-limit';
 import { z } from 'zod';
 
@@ -65,19 +66,32 @@ export async function POST(
     const body = await request.json();
     const validatedData = notifySchema.parse(body);
 
-    // Get promoter details
-    const { data: promoter, error: promoterError } = await supabase
+    // Get promoter details - use admin client to bypass RLS
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: promoterData, error: promoterError } = await supabaseAdmin
       .from('promoters')
       .select('full_name, email, phone')
       .eq('id', params.id)
       .single();
 
-    if (promoterError || !promoter) {
+    if (promoterError || !promoterData) {
+      console.error('Error fetching promoter:', promoterError);
       return NextResponse.json(
-        { error: 'Promoter not found' },
+        { 
+          error: 'Promoter not found',
+          details: promoterError?.message,
+          promoterId: params.id
+        },
         { status: 404 }
       );
     }
+
+    // Type-safe promoter object
+    const promoter: {
+      full_name: string;
+      email: string | null;
+      phone: string | null;
+    } = promoterData;
 
     // Generate appropriate message based on type if not provided
     const message = validatedData.message || generateDefaultMessage(validatedData.type, promoter.full_name);
@@ -95,7 +109,7 @@ export async function POST(
             documentType: 'ID Card', // Default, should ideally be passed in
             expiryDate: 'Soon', // Should be calculated
             daysRemaining: 30,
-            urgent: validatedData.type === 'urgent',
+            urgent: false, // Reminders are not urgent by default
           });
 
           await sendEmail({
