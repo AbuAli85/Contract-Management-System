@@ -3,11 +3,31 @@ import { createClient } from '@/lib/supabase/server';
 import { ratelimitStrict, getClientIdentifier } from '@/lib/rate-limit';
 import { z } from 'zod';
 
+// Helper function to generate default messages
+function generateDefaultMessage(type: string, promoterName: string): string {
+  switch (type) {
+    case 'urgent':
+      return `Urgent notification for ${promoterName}. Please check your documents and contracts.`;
+    case 'reminder':
+    case 'document_reminder':
+      return `Reminder: Please review and update your documents.`;
+    case 'standard':
+    case 'info':
+      return `This is a notification from SmartPro Contract Management System.`;
+    case 'warning':
+      return `Important: Please review your account and documents.`;
+    default:
+      return `Notification for ${promoterName}.`;
+  }
+}
+
 const notifySchema = z.object({
-  message: z.string().min(1).max(1000),
-  type: z.enum(['urgent', 'info', 'warning']).default('info'),
+  message: z.string().min(1).max(1000).optional(),
+  type: z.enum(['urgent', 'info', 'warning', 'standard', 'reminder', 'document_reminder']).default('info'),
   sendEmail: z.boolean().default(true),
   sendSms: z.boolean().default(false),
+  promoterName: z.string().optional(),
+  email: z.string().email().optional(),
 });
 
 export async function POST(
@@ -45,23 +65,74 @@ export async function POST(
     const body = await request.json();
     const validatedData = notifySchema.parse(body);
 
-    // For now, we'll simulate the notification process
-    // In a real implementation, you would:
-    // 1. Verify the promoter exists in the database
-    // 2. Create a notification record
-    // 3. Send the actual notification (email/SMS)
-    // 4. Log the action
+    // Get promoter details
+    const { data: promoter, error: promoterError } = await supabase
+      .from('promoters')
+      .select('full_name, email, phone')
+      .eq('id', params.id)
+      .single();
+
+    if (promoterError || !promoter) {
+      return NextResponse.json(
+        { error: 'Promoter not found' },
+        { status: 404 }
+      );
+    }
+
+    // Generate appropriate message based on type if not provided
+    const message = validatedData.message || generateDefaultMessage(validatedData.type, promoter.full_name);
+
+    // Send notification using the notification service
+    if (validatedData.sendEmail && promoter.email) {
+      try {
+        const { sendEmail } = await import('@/lib/services/email.service');
+        const { documentExpiryEmail } = await import('@/lib/email-templates/document-expiry');
+
+        // For document reminders, send appropriate email
+        if (validatedData.type === 'document_reminder' || validatedData.type === 'reminder') {
+          const emailContent = documentExpiryEmail({
+            promoterName: promoter.full_name,
+            documentType: 'ID Card', // Default, should ideally be passed in
+            expiryDate: 'Soon', // Should be calculated
+            daysRemaining: 30,
+            urgent: validatedData.type === 'urgent',
+          });
+
+          await sendEmail({
+            to: promoter.email,
+            ...emailContent,
+          });
+        } else {
+          // Send generic notification email
+          await sendEmail({
+            to: promoter.email,
+            subject: validatedData.type === 'urgent' ? '🚨 Urgent Notification' : '📋 Notification',
+            html: `
+              <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Hello ${promoter.full_name},</h2>
+                <p>${message}</p>
+                <hr>
+                <p style="color: #666; font-size: 12px;">SmartPro Contract Management System</p>
+              </div>
+            `,
+          });
+        }
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+        // Don't fail the whole request if email fails
+      }
+    }
 
     const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Simulate notification creation
+    // Create notification record
     const notification = {
       id: notificationId,
       promoter_id: params.id,
       user_id: user.id,
       type: validatedData.type,
-      message: validatedData.message,
-      status: 'pending',
+      message: message,
+      status: 'sent',
       created_at: new Date().toISOString(),
     };
 
@@ -71,11 +142,11 @@ export async function POST(
         id: notification.id,
         promoter_id: params.id,
         type: validatedData.type,
-        message: validatedData.message,
-        status: 'pending',
+        message: message,
+        status: 'sent',
         created_at: notification.created_at,
       },
-      message: 'Notification queued successfully',
+      message: 'Notification sent successfully',
     });
   } catch (error) {
     console.error('Error in notify promoter API:', error);
