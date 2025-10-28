@@ -85,11 +85,11 @@ const nextConfig = {
           },
           {
             key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
+            value: 'same-origin-allow-popups', // Allow popups for OAuth and WebSocket connections
           },
           {
             key: 'Cross-Origin-Resource-Policy',
-            value: 'same-origin',
+            value: 'cross-origin', // Allow cross-origin resources like WebSocket connections
           },
           {
             key: 'X-DNS-Prefetch-Control',
