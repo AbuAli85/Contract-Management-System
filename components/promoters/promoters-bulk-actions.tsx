@@ -12,6 +12,7 @@ import {
   Archive,
   Trash2,
   Loader2,
+  FileText,
 } from 'lucide-react';
 
 interface BulkAction {
@@ -33,6 +34,18 @@ interface PromotersBulkActionsProps {
 
 const BULK_ACTIONS: BulkAction[] = [
   {
+    id: 'request_documents',
+    label: 'Request Documents',
+    icon: FileText,
+    variant: 'default',
+  },
+  {
+    id: 'remind',
+    label: 'Send Reminders',
+    icon: Send,
+    variant: 'default',
+  },
+  {
     id: 'export',
     label: 'Export Selected',
     icon: Download,
@@ -47,12 +60,6 @@ const BULK_ACTIONS: BulkAction[] = [
   {
     id: 'notify',
     label: 'Send Notifications',
-    icon: Send,
-    variant: 'default',
-  },
-  {
-    id: 'remind',
-    label: 'Send Reminders',
     icon: Send,
     variant: 'default',
   },
