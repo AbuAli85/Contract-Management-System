@@ -24,36 +24,48 @@ interface PromotersStatsChartsProps {
 export function PromotersStatsCharts({ metrics, promoters }: PromotersStatsChartsProps) {
   // Calculate document expiry timeline (next 90 days)
   const getExpiryTimeline = () => {
-    const timeline: Record<string, { ids: number; passports: number }> = {};
-    const months = ['This Month', 'Next Month', 'Month 3'];
+    const now = new Date();
     
+    // Generate actual month names for next 3 months
+    const getMonthName = (monthOffset: number) => {
+      const date = new Date(now);
+      date.setMonth(date.getMonth() + monthOffset);
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    };
+    
+    const months = [
+      getMonthName(0), // Current month (e.g., "October 2025")
+      getMonthName(1), // Next month (e.g., "November 2025")
+      getMonthName(2)  // Month after (e.g., "December 2025")
+    ];
+    
+    const timeline: Record<string, { ids: number; passports: number }> = {};
     months.forEach(month => {
       timeline[month] = { ids: 0, passports: 0 };
     });
 
-    const now = new Date();
     promoters.forEach(p => {
       // ID card expiry (with null safety)
       if (p?.idDocument?.expiresOn && p?.idDocument?.status === 'expiring') {
         const daysUntilExpiry = p?.idDocument?.daysRemaining || 0;
-        if (daysUntilExpiry <= 30 && timeline['This Month']) {
-          timeline['This Month']!.ids++;
-        } else if (daysUntilExpiry <= 60 && timeline['Next Month']) {
-          timeline['Next Month']!.ids++;
-        } else if (daysUntilExpiry <= 90 && timeline['Month 3']) {
-          timeline['Month 3']!.ids++;
+        if (daysUntilExpiry <= 30 && timeline[months[0]]) {
+          timeline[months[0]]!.ids++;
+        } else if (daysUntilExpiry <= 60 && timeline[months[1]]) {
+          timeline[months[1]]!.ids++;
+        } else if (daysUntilExpiry <= 90 && timeline[months[2]]) {
+          timeline[months[2]]!.ids++;
         }
       }
 
       // Passport expiry (with null safety)
       if (p?.passportDocument?.expiresOn && p?.passportDocument?.status === 'expiring') {
         const daysUntilExpiry = p?.passportDocument?.daysRemaining || 0;
-        if (daysUntilExpiry <= 30 && timeline['This Month']) {
-          timeline['This Month']!.passports++;
-        } else if (daysUntilExpiry <= 60 && timeline['Next Month']) {
-          timeline['Next Month']!.passports++;
-        } else if (daysUntilExpiry <= 90 && timeline['Month 3']) {
-          timeline['Month 3']!.passports++;
+        if (daysUntilExpiry <= 30 && timeline[months[0]]) {
+          timeline[months[0]]!.passports++;
+        } else if (daysUntilExpiry <= 60 && timeline[months[1]]) {
+          timeline[months[1]]!.passports++;
+        } else if (daysUntilExpiry <= 90 && timeline[months[2]]) {
+          timeline[months[2]]!.passports++;
         }
       }
     });
@@ -69,13 +81,24 @@ export function PromotersStatsCharts({ metrics, promoters }: PromotersStatsChart
   const expiryTimeline = getExpiryTimeline();
   const totalExpiring = expiryTimeline.reduce((sum, item) => sum + item.total, 0);
 
-  // Calculate status distribution
+  // Calculate mutually exclusive status distribution
+  // IMPORTANT: These categories must not overlap to avoid percentage totals >100%
+  // Priority: Critical > Warning > Assigned > Available
+  const assigned = metrics.active - metrics.unassigned; // Active promoters with employer assignment
+  const available = metrics.unassigned; // Active but awaiting assignment
+  
   const statusDistribution = [
-    { status: 'Active', count: metrics.active, percentage: Math.round((metrics.active / metrics.total) * 100) || 0, color: 'bg-green-500' },
-    { status: 'Critical', count: metrics.critical, percentage: Math.round((metrics.critical / metrics.total) * 100) || 0, color: 'bg-red-500' },
-    { status: 'Warning', count: metrics.expiring, percentage: Math.round((metrics.expiring / metrics.total) * 100) || 0, color: 'bg-amber-500' },
-    { status: 'Unassigned', count: metrics.unassigned, percentage: Math.round((metrics.unassigned / metrics.total) * 100) || 0, color: 'bg-gray-500' },
+    { status: 'Assigned', count: assigned, percentage: Math.round((assigned / metrics.total) * 100) || 0, color: 'bg-green-500', description: 'Active with employer' },
+    { status: 'Available', count: available, percentage: Math.round((available / metrics.total) * 100) || 0, color: 'bg-blue-500', description: 'Ready for assignment' },
+    { status: 'Critical', count: metrics.critical, percentage: Math.round((metrics.critical / metrics.total) * 100) || 0, color: 'bg-red-500', description: 'Expired documents' },
+    { status: 'Warning', count: metrics.expiring, percentage: Math.round((metrics.expiring / metrics.total) * 100) || 0, color: 'bg-amber-500', description: 'Expiring soon' },
   ];
+
+  // Verify categories are mutually exclusive (percentages should total ~100%)
+  const totalPercentage = statusDistribution.reduce((sum, item) => sum + item.percentage, 0);
+  if (totalPercentage > 105 || totalPercentage < 95) {
+    console.warn(`Workforce distribution percentages may overlap: ${totalPercentage}%`);
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

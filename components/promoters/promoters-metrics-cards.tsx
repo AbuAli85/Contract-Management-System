@@ -2,6 +2,13 @@
 
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { HelpCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Users,
@@ -56,6 +63,7 @@ interface EnhancedStatCardProps {
   onClick?: (() => void) | undefined;
   ariaLabel?: string;
   isActive?: boolean;
+  tooltip?: string;
 }
 
 function EnhancedStatCard({
@@ -68,6 +76,7 @@ function EnhancedStatCard({
   onClick,
   ariaLabel,
   isActive = false,
+  tooltip,
 }: EnhancedStatCardProps) {
   const styles = STAT_CARD_STYLES[variant];
   const isClickable = !!onClick;
@@ -100,9 +109,23 @@ function EnhancedStatCard({
       )}
       <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-3'>
         <div className='space-y-1'>
-          <CardTitle className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
-            {title}
-          </CardTitle>
+          <div className='flex items-center gap-2'>
+            <CardTitle className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
+              {title}
+            </CardTitle>
+            {tooltip && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className='h-4 w-4 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors' />
+                  </TooltipTrigger>
+                  <TooltipContent className='max-w-xs'>
+                    <p className='text-sm'>{tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           <div className='text-3xl font-bold tracking-tight'>{value}</div>
         </div>
         <div
@@ -162,6 +185,7 @@ export function PromotersMetricsCards({
             ? { value: safeMetrics.recentlyAdded, label: 'new this week' }
             : undefined
         }
+        tooltip='Total number of registered promoters in the system. Includes active, inactive, and all employment statuses. This is your complete workforce database.'
         {...(onCardClick && { onClick: () => onCardClick('all') })}
         ariaLabel={`Total promoters: ${safeMetrics.total}. Click to view all promoters.`}
         isActive={activeFilter === 'all'}
@@ -172,6 +196,7 @@ export function PromotersMetricsCards({
         helper={`${safeMetrics.unassigned} awaiting assignment`}
         icon={UserCheck}
         variant='neutral'
+        tooltip={`Currently active promoters who are employed and available in the system. Of these ${safeMetrics.active} active promoters, ${safeMetrics.unassigned} are awaiting assignment to a company, while ${safeMetrics.active - safeMetrics.unassigned} are already assigned.`}
         {...(onCardClick && { onClick: () => onCardClick('active') })}
         ariaLabel={`Active workforce: ${safeMetrics.active}. Click to filter by assigned promoters.`}
         isActive={activeFilter === 'active'}
@@ -182,6 +207,7 @@ export function PromotersMetricsCards({
         helper={`${safeMetrics.expiring} expiring soon`}
         icon={ShieldAlert}
         variant={safeMetrics.critical > 0 ? 'danger' : 'warning'}
+        tooltip={`Promoters with document compliance issues. ${safeMetrics.critical} have expired documents (ID cards or passports) requiring immediate attention. ${safeMetrics.expiring} have documents expiring within 30 days. Take action now to maintain compliance.`}
         {...(onCardClick && { onClick: () => onCardClick('alerts') })}
         ariaLabel={`Document alerts: ${safeMetrics.critical} critical, ${safeMetrics.expiring} expiring soon. Click to filter by document issues.`}
         isActive={activeFilter === 'alerts'}
@@ -192,6 +218,7 @@ export function PromotersMetricsCards({
         helper={`${assignedStaff} assigned staff`}
         icon={CheckCircle}
         variant={safeMetrics.complianceRate >= 90 ? 'success' : 'warning'}
+        tooltip={`Percentage of promoters with all documents valid and up to date. This measures how many promoters have both valid ID cards and passports. Target: 90% or higher for optimal workforce readiness.`}
         {...(onCardClick && { onClick: () => onCardClick('compliance') })}
         ariaLabel={`Compliance rate: ${safeMetrics.complianceRate}%. Click to view compliant promoters.`}
         isActive={activeFilter === 'compliance'}

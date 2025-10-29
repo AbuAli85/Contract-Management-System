@@ -276,6 +276,7 @@ export function PromotersTable({
                             <Plus className='h-3 w-3' />
                           </Badge>
                           <span className='text-sm'>Assignment</span>
+                          <span className='ml-1 text-xs text-muted-foreground'>(filterable)</span>
                         </div>
                       </TableHead>
                       <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>

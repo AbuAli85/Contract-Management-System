@@ -28,7 +28,56 @@ const DOCUMENT_STATUS_BADGES: Record<DocumentStatus, string> = {
   valid: 'bg-emerald-50 text-emerald-600 border-emerald-100',
   expiring: 'bg-amber-50 text-amber-600 border-amber-100',
   expired: 'bg-red-50 text-red-600 border-red-100',
-  missing: 'bg-slate-100 text-slate-500 border-slate-200',
+  missing: 'bg-blue-50 text-blue-600 border-blue-100',
+};
+
+/**
+ * Get urgency-based color styling for document alerts
+ * Based on days remaining until expiry:
+ * - Red: Expired or expires within 7 days (CRITICAL)
+ * - Orange: Expires within 8-30 days (URGENT)
+ * - Yellow: Expires within 31-90 days (WARNING)
+ * - Blue: Missing documents (ACTION NEEDED)
+ * - Green: Valid (>90 days)
+ */
+const getUrgencyColors = (status: DocumentStatus, daysRemaining: number | null): string => {
+  if (status === 'missing') {
+    return 'bg-blue-50 text-blue-700 border-blue-200';
+  }
+  
+  if (status === 'expired' || (daysRemaining !== null && daysRemaining < 0)) {
+    return 'bg-red-50 text-red-700 border-red-200 animate-pulse';
+  }
+  
+  if (daysRemaining !== null) {
+    if (daysRemaining <= 7) {
+      return 'bg-red-50 text-red-700 border-red-200 ring-1 ring-red-300';
+    }
+    if (daysRemaining <= 30) {
+      return 'bg-orange-50 text-orange-700 border-orange-200';
+    }
+    if (daysRemaining <= 90) {
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    }
+  }
+  
+  return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+};
+
+/**
+ * Get urgency icon based on document status and days remaining
+ */
+const getUrgencyIcon = (status: DocumentStatus, daysRemaining: number | null) => {
+  if (status === 'missing') {
+    return <AlertTriangle className='h-3 w-3' />;
+  }
+  if (status === 'expired' || (daysRemaining !== null && daysRemaining < 0)) {
+    return <AlertTriangle className='h-3 w-3' />;
+  }
+  if (daysRemaining !== null && daysRemaining <= 7) {
+    return <AlertTriangle className='h-3 w-3' />;
+  }
+  return <Clock className='h-3 w-3' />;
 };
 
 export function PromotersAlertsPanel({
@@ -118,11 +167,12 @@ export function PromotersAlertsPanel({
                       <Badge
                         variant='outline'
                         className={cn(
-                          'rounded-full border px-2 py-0.5 text-xs font-medium',
-                          DOCUMENT_STATUS_BADGES[promoter.idDocument.status]
+                          'rounded-full border px-2 py-0.5 text-xs font-medium transition-all',
+                          getUrgencyColors(promoter.idDocument.status, promoter.idDocument.daysRemaining)
                         )}
                       >
-                        <Contact className='mr-1 h-3 w-3' />
+                        {getUrgencyIcon(promoter.idDocument.status, promoter.idDocument.daysRemaining)}
+                        <Contact className='ml-1 mr-1 h-3 w-3' />
                         ID: {promoter.idDocument.label}
                       </Badge>
                     )}
@@ -132,11 +182,12 @@ export function PromotersAlertsPanel({
                       <Badge
                         variant='outline'
                         className={cn(
-                          'rounded-full border px-2 py-0.5 text-xs font-medium',
-                          DOCUMENT_STATUS_BADGES[promoter.passportDocument.status]
+                          'rounded-full border px-2 py-0.5 text-xs font-medium transition-all',
+                          getUrgencyColors(promoter.passportDocument.status, promoter.passportDocument.daysRemaining)
                         )}
                       >
-                        <Globe className='mr-1 h-3 w-3' />
+                        {getUrgencyIcon(promoter.passportDocument.status, promoter.passportDocument.daysRemaining)}
+                        <Globe className='ml-1 mr-1 h-3 w-3' />
                         Passport: {promoter.passportDocument.label}
                       </Badge>
                     )}
