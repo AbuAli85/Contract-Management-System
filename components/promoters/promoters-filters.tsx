@@ -293,7 +293,7 @@ export function PromotersFilters({
   }, [statusFilter, documentFilter, assignmentFilter, searchTerm, filterPresets]);
 
   return (
-    <Card className="sticky top-16 z-40 shadow-lg">
+    <Card className="sticky top-16 z-50 shadow-lg bg-white dark:bg-slate-900">
       <CardHeader className='pb-5'>
         <div className="flex items-center justify-between">
           <div>

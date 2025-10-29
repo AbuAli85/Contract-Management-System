@@ -441,6 +441,11 @@ export function PromotersTable({
 
             {/* Grid View */}
             {viewMode === 'grid' && (
+              <>
+                {/* Document Status Legend */}
+                <div className='px-6 pt-4 pb-2'>
+                  <DocumentStatusLegend compact />
+                </div>
               <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
                 <PromotersGridView
                   promoters={promoters}
@@ -456,10 +461,16 @@ export function PromotersTable({
                   </div>
                 )}
               </ScrollArea>
+              </>
             )}
 
             {/* Cards View */}
             {viewMode === 'cards' && (
+              <>
+                {/* Document Status Legend */}
+                <div className='px-6 pt-4 pb-2'>
+                  <DocumentStatusLegend compact />
+                </div>
               <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
                 {enableEnhancedPartyManagement ? (
                   <EnhancedPromotersCardsViewWithPartyEdit
@@ -486,6 +497,7 @@ export function PromotersTable({
                   </div>
                 )}
               </ScrollArea>
+              </>
             )}
           </div>
         )}
