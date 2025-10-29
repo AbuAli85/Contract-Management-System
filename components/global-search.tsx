@@ -189,7 +189,7 @@ export default function GlobalSearch() {
   }, []);
 
   return (
-    <div className="relative flex-1 max-w-md">
+    <div className="relative flex-1 max-w-md" data-search-wrapper>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -201,6 +201,12 @@ export default function GlobalSearch() {
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           className="w-full pl-10 pr-10 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+          role="combobox"
+          aria-label="Global search"
+          aria-expanded={isOpen}
+          aria-autocomplete="list"
+          aria-controls="search-results"
+          data-search-input
         />
         {query && (
           <Button
@@ -220,7 +226,11 @@ export default function GlobalSearch() {
 
       {/* Search Results Dropdown */}
       {isOpen && (
-        <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-96 overflow-y-auto">
+        <Card 
+          ref={resultsRef}
+          className="absolute top-full left-0 right-0 mt-1 z-[60] max-h-96 overflow-y-auto shadow-2xl border-2"
+          data-search-results
+        >
           <CardContent className="p-0">
             {isLoading ? (
               <div className="flex items-center justify-center p-4">
