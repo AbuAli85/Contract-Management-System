@@ -1,7 +1,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { 
+  Book, 
+  PlayCircle, 
+  HelpCircle, 
+  Lightbulb,
+  ChevronRight
+} from 'lucide-react';
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -19,6 +27,11 @@ interface EmptyStateProps {
   };
   className?: string;
   iconClassName?: string;
+  // New enhanced features
+  quickTips?: string[]; // Quick tips to display
+  helpLink?: string; // Link to help documentation
+  videoTutorial?: string; // Link to video tutorial
+  showSuggestions?: boolean; // Show helpful suggestions
 }
 
 export function EmptyState({
@@ -29,6 +42,10 @@ export function EmptyState({
   secondaryAction,
   className,
   iconClassName,
+  quickTips,
+  helpLink,
+  videoTutorial,
+  showSuggestions = true,
 }: EmptyStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center py-16 px-4 text-center', className)}>
@@ -50,7 +67,7 @@ export function EmptyState({
 
       {/* Actions */}
       {(action || secondaryAction) && (
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           {action && (
             action.href ? (
               <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
@@ -77,6 +94,50 @@ export function EmptyState({
               </Button>
             )
           )}
+        </div>
+      )}
+
+      {/* Quick Tips */}
+      {quickTips && quickTips.length > 0 && showSuggestions && (
+        <div className="w-full max-w-md mt-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-start gap-2 mb-3">
+            <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Quick Start Tips</h4>
+          </div>
+          <ul className="space-y-2 text-left">
+            {quickTips.map((tip, index) => (
+              <li key={index} className="flex items-start gap-2 text-sm text-blue-800 dark:text-blue-200">
+                <ChevronRight className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Help Resources */}
+      {showSuggestions && (helpLink || videoTutorial) && (
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+          {helpLink && (
+            <Button variant="ghost" size="sm" asChild className="text-xs">
+              <a href={helpLink} target="_blank" rel="noopener noreferrer">
+                <Book className="h-3.5 w-3.5 mr-1.5" />
+                Read Documentation
+              </a>
+            </Button>
+          )}
+          {videoTutorial && (
+            <Button variant="ghost" size="sm" asChild className="text-xs">
+              <a href={videoTutorial} target="_blank" rel="noopener noreferrer">
+                <PlayCircle className="h-3.5 w-3.5 mr-1.5" />
+                Watch Tutorial
+              </a>
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" className="text-xs">
+            <HelpCircle className="h-3.5 w-3.5 mr-1.5" />
+            Get Help
+          </Button>
         </div>
       )}
     </div>

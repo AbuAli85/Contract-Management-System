@@ -17,12 +17,19 @@ import {
   CheckCircle,
   TrendingUp,
 } from 'lucide-react';
+import { TrendIndicator, type TrendData } from '@/components/ui/trend-indicator';
 import type { DashboardMetrics } from './types';
 
 interface PromotersMetricsCardsProps {
   metrics: DashboardMetrics;
   onCardClick?: (filterType: 'all' | 'active' | 'alerts' | 'compliance') => void;
   activeFilter?: 'all' | 'active' | 'alerts' | 'compliance' | null;
+  trends?: {
+    totalPromoters?: TrendData | null;
+    activeWorkforce?: TrendData | null;
+    criticalDocuments?: TrendData | null;
+    complianceRate?: TrendData | null;
+  };
 }
 
 const STAT_CARD_STYLES = {
@@ -64,6 +71,9 @@ interface EnhancedStatCardProps {
   ariaLabel?: string;
   isActive?: boolean;
   tooltip?: string;
+  trendData?: TrendData | null | undefined; // New: Historical trend data
+  trendLabel?: string; // e.g., "from last week"
+  invertTrendColors?: boolean; // For metrics where decrease is good
 }
 
 function EnhancedStatCard({
@@ -77,6 +87,9 @@ function EnhancedStatCard({
   ariaLabel,
   isActive = false,
   tooltip,
+  trendData,
+  trendLabel = 'from last week',
+  invertTrendColors = false,
 }: EnhancedStatCardProps) {
   const styles = STAT_CARD_STYLES[variant];
   const isClickable = !!onClick;
@@ -139,7 +152,21 @@ function EnhancedStatCard({
       </CardHeader>
       <CardContent className='space-y-2'>
         {helper && <p className='text-sm text-muted-foreground'>{helper}</p>}
-        {trend && (
+        
+        {/* Historical Trend Indicator (new feature) */}
+        {trendData && (
+          <TrendIndicator
+            trend={trendData}
+            comparisonPeriod={trendLabel}
+            variant="detailed"
+            showPercent={true}
+            invertColors={invertTrendColors}
+            className="w-full justify-center"
+          />
+        )}
+        
+        {/* Legacy trend display (keep for backwards compatibility) */}
+        {trend && !trendData && (
           <div className='flex items-center gap-2 rounded-lg bg-green-50/50 p-2 text-xs text-green-700'>
             <TrendingUp className='h-4 w-4' />
             <span className='font-semibold'>
@@ -156,6 +183,7 @@ export function PromotersMetricsCards({
   metrics,
   onCardClick,
   activeFilter,
+  trends,
 }: PromotersMetricsCardsProps) {
   // ✅ Safety: Ensure all metric values are numbers, not undefined or NaN
   const safeMetrics = {
@@ -185,6 +213,8 @@ export function PromotersMetricsCards({
             ? { value: safeMetrics.recentlyAdded, label: 'new this week' }
             : undefined
         }
+        trendData={trends?.totalPromoters}
+        trendLabel='from last week'
         tooltip='Total number of registered promoters in the system. Includes active, inactive, and all employment statuses. This is your complete workforce database.'
         {...(onCardClick && { onClick: () => onCardClick('all') })}
         ariaLabel={`Total promoters: ${safeMetrics.total}. Click to view all promoters.`}
@@ -196,6 +226,8 @@ export function PromotersMetricsCards({
         helper={`${safeMetrics.unassigned} awaiting assignment`}
         icon={UserCheck}
         variant='neutral'
+        trendData={trends?.activeWorkforce}
+        trendLabel='from last week'
         tooltip={`Currently active promoters who are employed and available in the system. Of these ${safeMetrics.active} active promoters, ${safeMetrics.unassigned} are awaiting assignment to a company, while ${safeMetrics.active - safeMetrics.unassigned} are already assigned.`}
         {...(onCardClick && { onClick: () => onCardClick('active') })}
         ariaLabel={`Active workforce: ${safeMetrics.active}. Click to filter by assigned promoters.`}
@@ -207,6 +239,9 @@ export function PromotersMetricsCards({
         helper={`${safeMetrics.expiring} expiring soon`}
         icon={ShieldAlert}
         variant={safeMetrics.critical > 0 ? 'danger' : 'warning'}
+        trendData={trends?.criticalDocuments}
+        trendLabel='from last week'
+        invertTrendColors={true} // Down is good for alerts!
         tooltip={`Promoters with document compliance issues. ${safeMetrics.critical} have expired documents (ID cards or passports) requiring immediate attention. ${safeMetrics.expiring} have documents expiring within 30 days. Take action now to maintain compliance.`}
         {...(onCardClick && { onClick: () => onCardClick('alerts') })}
         ariaLabel={`Document alerts: ${safeMetrics.critical} critical, ${safeMetrics.expiring} expiring soon. Click to filter by document issues.`}
@@ -218,6 +253,8 @@ export function PromotersMetricsCards({
         helper={`${assignedStaff} assigned staff`}
         icon={CheckCircle}
         variant={safeMetrics.complianceRate >= 90 ? 'success' : 'warning'}
+        trendData={trends?.complianceRate}
+        trendLabel='from last week'
         tooltip={`Percentage of promoters with all documents valid and up to date. This measures how many promoters have both valid ID cards and passports. Target: 90% or higher for optimal workforce readiness.`}
         {...(onCardClick && { onClick: () => onCardClick('compliance') })}
         ariaLabel={`Compliance rate: ${safeMetrics.complianceRate}%. Click to view compliant promoters.`}

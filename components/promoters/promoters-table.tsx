@@ -222,10 +222,18 @@ export function PromotersTable({
                 onClick: onAddPromoter,
               }}
               secondaryAction={{
-                label: 'Learn More',
-                href: '/help',
+                label: 'Import CSV',
+                href: '/en/manage-promoters/import',
               }}
+              quickTips={[
+                'Add individual promoters with the form above',
+                'Import multiple promoters from a CSV file',
+                'Track document expiry dates and compliance',
+                'Assign promoters to companies and contracts',
+                'Monitor workforce availability and status'
+              ]}
               iconClassName="text-blue-500"
+              showSuggestions={true}
             />
           )
         ) : (
