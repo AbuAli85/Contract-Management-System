@@ -22,6 +22,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDebouncedAutoSave } from '@/hooks/use-auto-save';
+import { AutoSaveIndicator, DraftRecoveryBanner } from '@/components/ui/auto-save-indicator';
 
 import {
   ArrowLeft,
@@ -66,6 +68,7 @@ export default function PromoterForm(props: PromoterFormProps) {
   const isEditMode = Boolean(promoterToEdit);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
+  const [showDraftRecovery, setShowDraftRecovery] = useState(false);
 
   const [formData, setFormData] = useState({
     // Personal Information (only fields that exist in database)
@@ -144,6 +147,21 @@ export default function PromoterForm(props: PromoterFormProps) {
     iban: promoterToEdit?.iban || '',
     swift_code: promoterToEdit?.swift_code || '',
     tax_id: promoterToEdit?.tax_id || '',
+  });
+
+  // Auto-save functionality (only for new forms, not edit mode)
+  const autoSave = useDebouncedAutoSave({
+    key: `promoter-form-draft-${isEditMode ? promoterToEdit?.id : 'new'}`,
+    debounceMs: 3000, // Save 3 seconds after user stops typing
+    enabled: !isEditMode, // Only auto-save for new promoters
+    excludeFields: ['password', 'confirm_password'], // Don't save sensitive fields
+    onSave: (data) => {
+      console.log('✅ Draft auto-saved');
+    },
+    onRestore: (data) => {
+      console.log('📥 Draft available for restore');
+      setShowDraftRecovery(true);
+    },
   });
 
   // Document upload state
@@ -290,7 +308,35 @@ export default function PromoterForm(props: PromoterFormProps) {
   ];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+    
+    // Trigger auto-save after field change
+    if (!isEditMode) {
+      autoSave.saveDraft(newData);
+    }
+  };
+
+  // Handle draft recovery
+  const handleRestoreDraft = () => {
+    const draft = autoSave.loadDraft();
+    if (draft) {
+      setFormData(draft);
+      setShowDraftRecovery(false);
+      toast({
+        title: 'Draft restored',
+        description: 'Your previous work has been restored.',
+      });
+    }
+  };
+
+  const handleDiscardDraft = () => {
+    autoSave.clearDraft();
+    setShowDraftRecovery(false);
+    toast({
+      title: 'Draft discarded',
+      description: 'Starting with a fresh form.',
+    });
   };
 
   // Handle document upload
@@ -527,6 +573,11 @@ export default function PromoterForm(props: PromoterFormProps) {
           : 'New promoter has been added successfully.',
       });
 
+      // Clear draft after successful submission
+      if (!isEditMode) {
+        autoSave.clearDraft();
+      }
+
       onFormSubmit();
     } catch (error) {
       console.error('Error saving promoter:', error);
@@ -544,20 +595,41 @@ export default function PromoterForm(props: PromoterFormProps) {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
-          <h2 className='text-2xl font-bold'>
-            {isEditMode ? 'Edit Promoter' : 'Add New Promoter'}
-          </h2>
-          <p className='text-muted-foreground'>
-            {isEditMode
-              ? 'Update promoter information'
-              : 'Fill in the promoter details'}
-          </p>
+      <div className='space-y-4'>
+        <div className='flex items-center justify-between'>
+          <div>
+            <h2 className='text-2xl font-bold'>
+              {isEditMode ? 'Edit Promoter' : 'Add New Promoter'}
+            </h2>
+            <p className='text-muted-foreground'>
+              {isEditMode
+                ? 'Update promoter information'
+                : 'Fill in the promoter details'}
+            </p>
+          </div>
+          <div className='flex items-center gap-3'>
+            {/* Auto-Save Indicator - Only show for new forms */}
+            {!isEditMode && (
+              <AutoSaveIndicator
+                isSaving={autoSave.isSaving}
+                lastSaved={autoSave.lastSaved}
+                variant="detailed"
+              />
+            )}
+            <Badge variant={isEditMode ? 'secondary' : 'default'}>
+              {isEditMode ? 'Edit Mode' : 'New Promoter'}
+            </Badge>
+          </div>
         </div>
-        <Badge variant={isEditMode ? 'secondary' : 'default'}>
-          {isEditMode ? 'Edit Mode' : 'New Promoter'}
-        </Badge>
+
+        {/* Draft Recovery Banner */}
+        {showDraftRecovery && autoSave.hasDraft && !isEditMode && (
+          <DraftRecoveryBanner
+            onRestore={handleRestoreDraft}
+            onDiscard={handleDiscardDraft}
+            draftAge={autoSave.getTimeSinceLastSave()}
+          />
+        )}
       </div>
 
       <form onSubmit={handleSubmit}>
