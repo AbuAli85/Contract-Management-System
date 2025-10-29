@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { SafeImage } from '@/components/ui/safe-image';
+import { InlineEditableCell, validators } from './inline-editable-cell';
 import type { LucideIcon } from 'lucide-react';
 import {
   Users,
@@ -64,6 +65,9 @@ interface PromotersTableRowProps {
   onSelect: () => void;
   onView: () => void;
   onEdit: () => void;
+  isColumnVisible?: (columnId: string) => boolean;
+  onInlineUpdate?: ((promoterId: string, field: string, value: string) => Promise<void>) | undefined;
+  enableInlineEdit?: boolean;
 }
 
 const DOCUMENT_STATUS_BADGES: Record<DocumentStatus, string> = {
@@ -469,7 +473,17 @@ export function PromotersTableRow({
   onSelect,
   onView,
   onEdit,
+  isColumnVisible = () => true, // Default to showing all columns
+  onInlineUpdate,
+  enableInlineEdit = false,
 }: PromotersTableRowProps) {
+  
+  const handleFieldUpdate = async (field: string, value: string) => {
+    if (!onInlineUpdate) {
+      throw new Error('Inline update handler not provided');
+    }
+    await onInlineUpdate(promoter.id, field, value);
+  };
   return (
     <TableRow
       className={cn(
@@ -481,14 +495,17 @@ export function PromotersTableRow({
         isSelected && 'bg-gradient-to-r from-indigo-50/40 to-blue-50/20 border-l-4 border-l-indigo-500 dark:from-indigo-900/20 dark:to-blue-900/10'
       )}
     >
-      <TableCell className='w-[50px] py-4'>
-        <Checkbox 
-          checked={isSelected} 
-          onCheckedChange={onSelect}
-          className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
-        />
-      </TableCell>
-      <TableCell className='py-4'>
+      {isColumnVisible('checkbox') && (
+        <TableCell className='w-[50px] py-4'>
+          <Checkbox 
+            checked={isSelected} 
+            onCheckedChange={onSelect}
+            className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
+          />
+        </TableCell>
+      )}
+      {isColumnVisible('name') && (
+        <TableCell className='py-4'>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -543,17 +560,21 @@ export function PromotersTableRow({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      </TableCell>
-      <TableCell className='py-4'>
-        <div className='space-y-2'>
-          <DocumentStatusPill label='ID' health={promoter.idDocument} />
-          <DocumentStatusPill
-            label='Passport'
-            health={promoter.passportDocument}
-          />
-        </div>
-      </TableCell>
-      <TableCell className='py-4'>
+        </TableCell>
+      )}
+      {isColumnVisible('documents') && (
+        <TableCell className='py-4'>
+          <div className='space-y-2'>
+            <DocumentStatusPill label='ID' health={promoter.idDocument} />
+            <DocumentStatusPill
+              label='Passport'
+              health={promoter.passportDocument}
+            />
+          </div>
+        </TableCell>
+      )}
+      {isColumnVisible('assignment') && (
+        <TableCell className='py-4'>
         <div className='space-y-2'>
           <div className='text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight'>
             {promoter.assignmentStatus === 'assigned' 
@@ -574,31 +595,68 @@ export function PromotersTableRow({
               : '○ Available'}
           </Badge>
         </div>
-      </TableCell>
-      <TableCell className='py-4'>
-        <div className='space-y-2 text-sm'>
-          <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
-            <Mail className='h-4 w-4 text-slate-400' />
-            <span className='font-medium truncate min-w-0 flex-1'>
-              {promoter.contactEmail || '—'}
-            </span>
+        </TableCell>
+      )}
+      {isColumnVisible('contact') && (
+        <TableCell className='py-4'>
+          {enableInlineEdit && onInlineUpdate ? (
+            <div className='space-y-2'>
+              <div className='flex items-center gap-2'>
+                <Mail className='h-4 w-4 text-slate-400 flex-shrink-0' />
+                <InlineEditableCell
+                  value={promoter.contactEmail}
+                  fieldName='email'
+                  fieldLabel='Email'
+                  onSave={(value) => handleFieldUpdate('email', value)}
+                  placeholder='email@example.com'
+                  type='email'
+                  validator={validators.email}
+                  displayClassName='text-slate-700 dark:text-slate-300 font-medium'
+                />
+              </div>
+              <div className='flex items-center gap-2'>
+                <Phone className='h-4 w-4 text-slate-400 flex-shrink-0' />
+                <InlineEditableCell
+                  value={promoter.contactPhone}
+                  fieldName='phone'
+                  fieldLabel='Phone'
+                  onSave={(value) => handleFieldUpdate('mobile_number', value)}
+                  placeholder='+1 234 567 8900'
+                  type='tel'
+                  validator={validators.phone}
+                  displayClassName='text-slate-700 dark:text-slate-300 font-medium'
+                />
+              </div>
+            </div>
+          ) : (
+            <div className='space-y-2 text-sm'>
+              <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
+                <Mail className='h-4 w-4 text-slate-400' />
+                <span className='font-medium truncate min-w-0 flex-1'>
+                  {promoter.contactEmail || '—'}
+                </span>
+              </div>
+              <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
+                <Phone className='h-4 w-4 text-slate-400' />
+                <span className='font-medium'>
+                  {promoter.contactPhone || '—'}
+                </span>
+              </div>
+            </div>
+          )}
+        </TableCell>
+      )}
+      {isColumnVisible('created') && (
+        <TableCell className='py-4'>
+          <div className='flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400'>
+            <Calendar className='h-4 w-4 text-slate-400' />
+            <span className='font-medium'>{promoter.createdLabel}</span>
           </div>
-          <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
-            <Phone className='h-4 w-4 text-slate-400' />
-            <span className='font-medium'>
-              {promoter.contactPhone || '—'}
-            </span>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell className='py-4'>
-        <div className='flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400'>
-          <Calendar className='h-4 w-4 text-slate-400' />
-          <span className='font-medium'>{promoter.createdLabel}</span>
-        </div>
-      </TableCell>
-      <TableCell className='py-4'>
-        <Badge
+        </TableCell>
+      )}
+      {isColumnVisible('status') && (
+        <TableCell className='py-4'>
+          <Badge
           variant='outline'
           className={cn(
             'rounded-full px-4 py-2 text-sm font-bold transition-all shadow-md border-2',
@@ -619,14 +677,17 @@ export function PromotersTableRow({
             {OVERALL_STATUS_LABELS[promoter.overallStatus]}
           </div>
         </Badge>
-      </TableCell>
-      <TableCell className='text-right py-4'>
-        <EnhancedActionsMenu
-          promoter={promoter}
-          onView={onView}
-          onEdit={onEdit}
-        />
-      </TableCell>
+        </TableCell>
+      )}
+      {isColumnVisible('actions') && (
+        <TableCell className='text-right py-4'>
+          <EnhancedActionsMenu
+            promoter={promoter}
+            onView={onView}
+            onEdit={onEdit}
+          />
+        </TableCell>
+      )}
     </TableRow>
   );
 }

@@ -35,6 +35,7 @@ import { PromotersCardsView } from './promoters-cards-view';
 import { EnhancedPromotersCardsViewWithPartyEdit } from './enhanced-promoter-card-with-party-edit';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { ColumnCustomization, useColumnCustomization, type ColumnConfig } from './column-customization';
 import type {
   DocumentStatus,
   OverallStatus,
@@ -44,6 +45,18 @@ import type {
   DashboardPromoter,
   PaginationInfo,
 } from './types';
+
+// Default column configuration
+const DEFAULT_COLUMNS: ColumnConfig[] = [
+  { id: 'checkbox', label: 'Select', visible: true, order: 0, required: true },
+  { id: 'name', label: 'Team Member', visible: true, order: 1, required: true },
+  { id: 'documents', label: 'Documentation', visible: true, order: 2, required: false },
+  { id: 'assignment', label: 'Assignment', visible: true, order: 3, required: false },
+  { id: 'contact', label: 'Contact Info', visible: true, order: 4, required: false },
+  { id: 'created', label: 'Joined', visible: true, order: 5, required: false },
+  { id: 'status', label: 'Status', visible: true, order: 6, required: false },
+  { id: 'actions', label: 'Actions', visible: true, order: 7, required: true },
+];
 
 interface PromotersTableProps {
   promoters: DashboardPromoter[];
@@ -65,6 +78,8 @@ interface PromotersTableProps {
   onPageChange: (page: number) => void;
   onPartyAssignmentUpdate?: (promoterId: string, partyId: string | null) => void;
   enableEnhancedPartyManagement?: boolean;
+  onInlineUpdate?: (promoterId: string, field: string, value: string) => Promise<void>;
+  enableInlineEdit?: boolean;
 }
 
 export function PromotersTable({
@@ -87,8 +102,13 @@ export function PromotersTable({
   onPageChange,
   onPartyAssignmentUpdate,
   enableEnhancedPartyManagement = false,
+  onInlineUpdate,
+  enableInlineEdit = false,
 }: PromotersTableProps) {
   const parentRef = useRef<HTMLDivElement>(null);
+  
+  // Column customization
+  const { columns, visibleColumns, setColumns, resetColumns, isColumnVisible } = useColumnCustomization(DEFAULT_COLUMNS);
 
   return (
     <Card className='shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
@@ -174,6 +194,15 @@ export function PromotersTable({
               </TabsTrigger>
             </TabsList>
           </Tabs>
+          
+          {/* Column Customization - Only show in table view */}
+          {viewMode === 'table' && (
+            <ColumnCustomization
+              columns={columns}
+              onColumnChange={setColumns}
+              onReset={resetColumns}
+            />
+          )}
         </div>
       </CardHeader>
       <CardContent className='p-0'>
@@ -208,27 +237,30 @@ export function PromotersTable({
                   <Table>
                     <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
                     <TableRow className='hover:bg-transparent border-0'>
-                      <TableHead className='w-[50px] text-center py-4'>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Checkbox
-                                checked={
-                                  selectedPromoters.size === promoters.length
-                                }
-                                onCheckedChange={onSelectAll}
-                                className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className='text-xs font-medium'>
-                                Select all visible promoters
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableHead>
-                      <TableHead
+                      {isColumnVisible('checkbox') && (
+                        <TableHead className='w-[50px] text-center py-4'>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Checkbox
+                                  checked={
+                                    selectedPromoters.size === promoters.length
+                                  }
+                                  onCheckedChange={onSelectAll}
+                                  className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className='text-xs font-medium'>
+                                  Select all visible promoters
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableHead>
+                      )}
+                      {isColumnVisible('name') && (
+                        <TableHead
                         className='min-w-[200px] w-[220px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                         onClick={() => onSort('name')}
                       >
@@ -247,11 +279,13 @@ export function PromotersTable({
                             </div>
                           )}
                         </div>
-                      </TableHead>
-                      <TableHead
-                        className='min-w-[180px] w-[200px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
-                        onClick={() => onSort('documents')}
-                      >
+                        </TableHead>
+                      )}
+                      {isColumnVisible('documents') && (
+                        <TableHead
+                          className='min-w-[180px] w-[200px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                          onClick={() => onSort('documents')}
+                        >
                         <div className='flex items-center gap-2 group/header px-2'>
                           <Badge className='bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 p-0.5'>
                             <Plus className='h-3 w-3' />
@@ -269,8 +303,10 @@ export function PromotersTable({
                             </div>
                           )}
                         </div>
-                      </TableHead>
-                      <TableHead className='min-w-[140px] w-[160px] font-bold text-slate-700 dark:text-slate-200 py-4'>
+                        </TableHead>
+                      )}
+                      {isColumnVisible('assignment') && (
+                        <TableHead className='min-w-[140px] w-[160px] font-bold text-slate-700 dark:text-slate-200 py-4'>
                         <div className='flex items-center gap-2 px-2'>
                           <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5'>
                             <Plus className='h-3 w-3' />
@@ -278,19 +314,23 @@ export function PromotersTable({
                           <span className='text-sm'>Assignment</span>
                           <span className='ml-1 text-xs text-muted-foreground'>(filterable)</span>
                         </div>
-                      </TableHead>
-                      <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>
+                        </TableHead>
+                      )}
+                      {isColumnVisible('contact') && (
+                        <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>
                         <div className='flex items-center gap-2 px-2'>
                           <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5'>
                             <Plus className='h-3 w-3' />
                           </Badge>
                           <span className='text-sm'>Contact Info</span>
                         </div>
-                      </TableHead>
-                      <TableHead
-                        className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
-                        onClick={() => onSort('created')}
-                      >
+                        </TableHead>
+                      )}
+                      {isColumnVisible('created') && (
+                        <TableHead
+                          className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                          onClick={() => onSort('created')}
+                        >
                         <div className='flex items-center gap-2 group/header px-2'>
                           <Badge className='bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 p-0.5'>
                             <Plus className='h-3 w-3' />
@@ -308,11 +348,13 @@ export function PromotersTable({
                             </div>
                           )}
                         </div>
-                      </TableHead>
-                      <TableHead
-                        className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
-                        onClick={() => onSort('status')}
-                      >
+                        </TableHead>
+                      )}
+                      {isColumnVisible('status') && (
+                        <TableHead
+                          className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                          onClick={() => onSort('status')}
+                        >
                         <div className='flex items-center gap-2 group/header px-2'>
                           <Badge className='bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 p-0.5'>
                             <Plus className='h-3 w-3' />
@@ -330,13 +372,16 @@ export function PromotersTable({
                             </div>
                           )}
                         </div>
-                      </TableHead>
-                      <TableHead className='min-w-[100px] w-[120px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
-                        <div className='flex items-center justify-end gap-2 px-2'>
-                          <span className='text-sm'>Actions</span>
-                          <MoreHorizontal className='h-4 w-4 text-slate-400' />
-                        </div>
-                      </TableHead>
+                        </TableHead>
+                      )}
+                      {isColumnVisible('actions') && (
+                        <TableHead className='min-w-[100px] w-[120px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
+                          <div className='flex items-center justify-end gap-2 px-2'>
+                            <span className='text-sm'>Actions</span>
+                            <MoreHorizontal className='h-4 w-4 text-slate-400' />
+                          </div>
+                        </TableHead>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -348,11 +393,14 @@ export function PromotersTable({
                         onSelect={() => onSelectPromoter(promoter.id)}
                         onView={() => onViewPromoter(promoter)}
                         onEdit={() => onEditPromoter(promoter)}
+                        isColumnVisible={isColumnVisible}
+                        onInlineUpdate={onInlineUpdate}
+                        enableInlineEdit={enableInlineEdit}
                       />
                     ))}
                     {isFetching && promoters.length > 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className='text-center py-8'>
+                        <TableCell colSpan={visibleColumns.length} className='text-center py-8'>
                           <div className='flex items-center justify-center gap-2 text-muted-foreground'>
                             <RefreshCw className='h-4 w-4 animate-spin' />
                             <span>Updating data...</span>

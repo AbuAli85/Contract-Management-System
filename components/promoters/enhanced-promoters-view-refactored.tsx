@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { toTitleCase } from '@/lib/utils/text-formatting';
 import type { Promoter } from '@/lib/types';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
+import { updatePromoter as updatePromoterAction } from '@/app/actions/promoters-improved';
 import type {
   DocumentStatus,
   OverallStatus,
@@ -1265,6 +1266,36 @@ export function EnhancedPromotersViewRefactored({
     [router, derivedLocale]
   );
 
+  // Inline update handler for quick edits
+  const handleInlineUpdate = useCallback(
+    async (promoterId: string, field: string, value: string) => {
+      try {
+        const result = await updatePromoterAction(promoterId, {
+          [field]: value,
+        });
+
+        if (result.success) {
+          toast({
+            title: 'Updated successfully',
+            description: `${field} has been updated.`,
+          });
+          // Trigger a refetch to update the UI
+          refetch();
+        } else {
+          throw new Error(result.message || 'Failed to update');
+        }
+      } catch (error) {
+        toast({
+          title: 'Update failed',
+          description: error instanceof Error ? error.message : 'Could not save changes',
+          variant: 'destructive',
+        });
+        throw error; // Re-throw so the cell stays in edit mode
+      }
+    },
+    [toast, refetch]
+  );
+
   const handlePartyAssignmentUpdate = useCallback(
     async (promoterId: string, partyId: string | null) => {
       // Update the local promoter data optimistically
@@ -1817,6 +1848,8 @@ export function EnhancedPromotersViewRefactored({
           onPageChange={handlePageChange}
           onPartyAssignmentUpdate={handlePartyAssignmentUpdate}
           enableEnhancedPartyManagement={true}
+          onInlineUpdate={handleInlineUpdate}
+          enableInlineEdit={true}
         />
 
             {/* Enhanced Alerts Panel - Only show in non-analytics view */}
