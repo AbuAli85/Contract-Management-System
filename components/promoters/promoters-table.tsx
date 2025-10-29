@@ -32,6 +32,7 @@ import { Users, Plus, RefreshCw, SortAsc, SortDesc, MoreHorizontal, ArrowRight }
 import { PromotersTableRow } from './promoters-table-row';
 import { PromotersGridView } from './promoters-grid-view';
 import { PromotersCardsView } from './promoters-cards-view';
+import { DocumentStatusLegend } from './document-status-legend';
 import { EnhancedPromotersCardsViewWithPartyEdit } from './enhanced-promoter-card-with-party-edit';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import { PaginationControls } from '@/components/ui/pagination-controls';
@@ -240,8 +241,13 @@ export function PromotersTable({
           <div className='relative'>
             {/* Table View */}
             {viewMode === 'table' && (
-              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef} data-view-mode="table">
-                <div className='min-w-[1100px] lg:min-w-[1200px] xl:min-w-[1300px]'>
+              <>
+                {/* Document Status Legend */}
+                <div className='px-6 pt-4 pb-2'>
+                  <DocumentStatusLegend compact />
+                </div>
+                <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef} data-view-mode="table">
+                  <div className='min-w-[1100px] lg:min-w-[1200px] xl:min-w-[1300px]'>
                   <Table>
                     <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
                     <TableRow className='hover:bg-transparent border-0'>
@@ -430,6 +436,7 @@ export function PromotersTable({
                   </div>
                 )}
               </ScrollArea>
+              </>
             )}
 
             {/* Grid View */}

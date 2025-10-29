@@ -51,6 +51,12 @@ const BULK_ACTIONS: BulkAction[] = [
     variant: 'default',
   },
   {
+    id: 'remind',
+    label: 'Send Reminders',
+    icon: Send,
+    variant: 'default',
+  },
+  {
     id: 'archive',
     label: 'Archive Selected',
     icon: Archive,

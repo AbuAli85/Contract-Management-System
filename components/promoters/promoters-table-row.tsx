@@ -486,8 +486,9 @@ export function PromotersTableRow({
   };
   return (
     <TableRow
+      onClick={onView}
       className={cn(
-        'group transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-indigo-50/30 dark:hover:from-slate-800/50 dark:hover:to-indigo-900/20 border-b border-slate-100 dark:border-slate-800',
+        'group transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-indigo-50/30 dark:hover:from-slate-800/50 dark:hover:to-indigo-900/20 border-b border-slate-100 dark:border-slate-800 cursor-pointer',
         promoter.overallStatus === 'critical' &&
           'border-l-4 border-l-red-500 bg-gradient-to-r from-red-50/30 to-transparent hover:from-red-50/50 hover:to-red-100/20 dark:from-red-900/20 dark:hover:from-red-900/30',
         promoter.overallStatus === 'warning' &&
@@ -496,11 +497,10 @@ export function PromotersTableRow({
       )}
     >
       {isColumnVisible('checkbox') && (
-        <TableCell className='w-[50px] py-4'>
+        <TableCell className='w-[50px] py-4' onClick={(e) => e.stopPropagation()}>
           <Checkbox 
             checked={isSelected} 
-            onCheckedChange={onSelect}
-            className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
+            onCheckedChange={onSelect}            className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
           />
         </TableCell>
       )}
@@ -680,7 +680,7 @@ export function PromotersTableRow({
         </TableCell>
       )}
       {isColumnVisible('actions') && (
-        <TableCell className='text-right py-4'>
+        <TableCell className='text-right py-4' onClick={(e) => e.stopPropagation()}>
           <EnhancedActionsMenu
             promoter={promoter}
             onView={onView}

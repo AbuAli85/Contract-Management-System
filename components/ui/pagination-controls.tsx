@@ -158,7 +158,7 @@ export function PaginationControls({
         {/* Another visual separator */}
         <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
         
-        {/* Page indicator */}
+        {/* Page indicator with jump input */}
         <div className="flex items-center gap-3">
           <div className="text-xs text-slate-500 dark:text-slate-400 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600 shadow-sm">
             Page{' '}
@@ -170,6 +170,27 @@ export function PaginationControls({
               {totalPages}
             </span>
           </div>
+          {totalPages > 5 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Go to:</span>
+              <input
+                type="number"
+                min="1"
+                max={totalPages}
+                placeholder="#"
+                className="w-16 h-8 px-2 text-xs text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const page = parseInt((e.target as HTMLInputElement).value);
+                    if (page >= 1 && page <= totalPages) {
+                      handlePageChange(page);
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
