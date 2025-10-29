@@ -240,7 +240,7 @@ export function PromotersTable({
           <div className='relative'>
             {/* Table View */}
             {viewMode === 'table' && (
-              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef}>
+              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef} data-view-mode="table">
                 <div className='min-w-[1100px] lg:min-w-[1200px] xl:min-w-[1300px]'>
                   <Table>
                     <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>

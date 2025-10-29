@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-// import { useDropzone } from 'react-dropzone'; // Install with: npm install react-dropzone
+import { useDropzone } from 'react-dropzone';
 import {
   Dialog,
   DialogContent,
@@ -71,6 +71,38 @@ export function PromoterDocumentUploadDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const documentLabel = DOCUMENT_LABELS[documentType] || 'Document';
+
+  // Dropzone configuration
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+    if (rejectedFiles.length > 0) {
+      const rejection = rejectedFiles[0];
+      if (rejection.errors?.[0]?.code === 'file-too-large') {
+        setError('File size must be less than 10MB');
+      } else if (rejection.errors?.[0]?.code === 'file-invalid-type') {
+        setError('Please select a PDF, JPG, or PNG file');
+      } else {
+        setError('Invalid file. Please try again.');
+      }
+      return;
+    }
+
+    if (acceptedFiles.length > 0 && acceptedFiles[0]) {
+      setFile(acceptedFiles[0]);
+      setError(null);
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+    },
+    maxSize: MAX_FILE_SIZE,
+    maxFiles: 1,
+    multiple: false,
+  });
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -236,19 +268,19 @@ export function PromoterDocumentUploadDialog({
             <Label className="mb-2 block">Document File *</Label>
             {!file ? (
               <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors border-gray-300 hover:border-primary"
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                  isDragActive 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-gray-300 hover:border-primary'
+                }`}
               >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                <p className="text-sm text-gray-600">
-                  Click to select a file
+                <input {...getInputProps()} />
+                <Upload className={`mx-auto h-12 w-12 mb-3 ${
+                  isDragActive ? 'text-primary' : 'text-gray-400'
+                }`} />
+                <p className="text-sm text-gray-600 font-medium">
+                  {isDragActive ? 'Drop file here' : 'Drag & drop or click to select'}
                 </p>
                 <p className="text-xs text-gray-400 mt-2">
                   PDF, JPG, or PNG (max 10MB)

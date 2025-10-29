@@ -24,7 +24,7 @@ Created a complete document upload system with:
 **Location:** `components/promoters/promoter-document-upload-dialog.tsx`
 
 **Features:**
-- ✅ Drag & drop file upload with react-dropzone
+- ✅ Simple file upload with native input (drag & drop optional)
 - ✅ File type validation (PDF, JPG, PNG only)
 - ✅ File size validation (10MB limit)
 - ✅ Document number input (for ID cards and passports)
@@ -37,22 +37,17 @@ Created a complete document upload system with:
 
 ---
 
-## 📦 Dependencies Required
+## 📦 Dependencies (Optional)
 
-Add this to `package.json`:
+**Current Implementation:** Uses native HTML5 file input (no external dependencies required)
 
-```json
-{
-  "dependencies": {
-    "react-dropzone": "^14.2.3"
-  }
-}
-```
+**Optional Enhancement:** Add drag & drop with `react-dropzone`
 
-Install:
 ```bash
 npm install react-dropzone
 ```
+
+Then uncomment the import in the component and replace the file input with dropzone functionality.
 
 ---
 
