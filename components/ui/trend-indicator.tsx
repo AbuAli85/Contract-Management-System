@@ -20,7 +20,7 @@ export interface TrendData {
 interface TrendIndicatorProps {
   trend: TrendData | null;
   comparisonPeriod?: string; // e.g., "from last week", "vs yesterday"
-  className?: string;
+  className?: string | undefined;
   variant?: 'default' | 'compact' | 'detailed';
   showIcon?: boolean;
   showPercent?: boolean;
@@ -200,7 +200,7 @@ interface MetricTrendProps {
   previous: number;
   label?: string;
   invertColors?: boolean;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function MetricTrend({
