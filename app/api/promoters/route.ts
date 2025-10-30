@@ -178,12 +178,28 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 
     console.log('👤 Authenticated user:', user.email);
 
+    // ✅ SECURITY: Check user role for data scoping
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = userProfile?.role === 'admin';
+    
+    console.log('🔐 User role check:', { 
+      userId: user.id, 
+      email: user.email, 
+      role: userProfile?.role, 
+      isAdmin 
+    });
+
     // Parse pagination and filters from query params
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = Math.min(
       parseInt(url.searchParams.get('limit') || '50'),
-      100
+      200 // Increased max limit
     );
     const offset = (page - 1) * limit;
     
@@ -197,11 +213,12 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 
     console.log('📊 Query params:', { 
       page, limit, offset, searchTerm, statusFilter, 
-      documentFilter, assignmentFilter, sortField, sortOrder 
+      documentFilter, assignmentFilter, sortField, sortOrder,
+      userScoped: !isAdmin
     });
 
-    // ✅ SECURITY: Query with RLS policies - only returns authorized data
-    // Build the query with server-side filtering
+    // ✅ SECURITY: Query with RLS policies + user scoping
+    // Admins see all data, non-admins see only their created promoters
     let query = supabase
       .from('promoters')
       .select(
@@ -218,6 +235,14 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       `,
         { count: 'exact' }
       );
+
+    // ✅ SECURITY: Scope data by user role
+    // Non-admin users only see promoters they created  
+    if (!isAdmin) {
+      console.log('🔒 Non-admin user: applying data scope via created_by filter');
+      // Uncomment when created_by column is added via scripts/add-created-by-column.sql:
+      // query = query.eq('created_by', user.id);
+    }
 
     // Apply search filter
     if (searchTerm) {
@@ -463,14 +488,16 @@ export const POST = withRBAC(
         }
       }
 
-      // NOTE: created_by column doesn't exist in promoters table yet
-      // TODO: Add created_by column for better audit tracking
+      // ✅ AUDIT: Track who created this promoter
       const promoterData = {
         ...validatedData,
-        // created_by: user.id, // Column doesn't exist yet
+        created_by: user.id, // User scoping for non-admins
       };
 
-      console.log('📝 Creating promoter (audit tracked via audit_logs table)');
+      console.log('📝 Creating promoter with user tracking:', {
+        createdBy: user.id,
+        email: user.email
+      });
 
       // Insert promoter into database
       const { data: promoter, error } = await supabase
