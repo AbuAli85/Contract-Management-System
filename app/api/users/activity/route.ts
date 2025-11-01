@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get current user
     const {
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get current user
     const {
@@ -110,17 +110,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       user_id,
-      user_name,
-      user_email,
       action,
       resource_type,
       resource_id,
-      resource_name,
       details,
     } = body;
 
     // Validate required fields
-    if (!user_id || !action || !resource_type) {
+    if (!user_id || !action) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -134,21 +131,17 @@ export async function POST(request: NextRequest) {
       'unknown';
     const user_agent = request.headers.get('user-agent') || 'unknown';
 
-    // Insert activity log
+    // Insert activity log with only valid columns
     const { data: activity, error: insertError } = await supabase
       .from('user_activity_log')
       .insert({
         user_id,
-        user_name: user_name || user.user_metadata?.full_name || user.email,
-        user_email: user_email || user.email,
         action,
-        resource_type,
-        resource_id,
-        resource_name,
+        resource_type: resource_type || null,
+        resource_id: resource_id || null,
         details: details || {},
         ip_address,
         user_agent,
-        created_at: new Date().toISOString(),
       })
       .select()
       .single();
