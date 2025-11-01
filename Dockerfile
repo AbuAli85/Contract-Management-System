@@ -16,6 +16,7 @@ RUN npm ci --ignore-scripts
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+USER root
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -23,6 +24,9 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create .next directory with proper permissions before build
+RUN mkdir -p .next && chmod -R 777 .next
 
 RUN npm run build
 
