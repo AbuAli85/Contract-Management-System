@@ -138,7 +138,7 @@ async function handleContractsRequest(
   if (isAdmin === null) {
     // Cache miss - fetch from database
     const { data: userProfile } = await supabase
-      .from('users')
+      .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();

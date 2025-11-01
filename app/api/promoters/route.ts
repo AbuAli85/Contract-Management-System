@@ -180,7 +180,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 
     // ✅ SECURITY: Check user role for data scoping
     const { data: userProfile } = await supabase
-      .from('users')
+      .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
@@ -453,7 +453,7 @@ export const POST = withRBAC(
       // Check if user is admin (for scoping data)
       let isAdmin = false;
       const { data: userProfile } = await supabase
-        .from('users')
+        .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
