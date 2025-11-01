@@ -30,11 +30,15 @@ export async function GET(request: NextRequest) {
     // Get user role
     let userRole = 'user';
     if (user) {
-      const { data: userData } = await supabase
-        .from('users')
+      const { data: userData, error: roleError } = await supabase
+        .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
+
+      if (roleError) {
+        console.warn('🔍 Dashboard stats: Role fetch error:', roleError);
+      }
 
       if (userData?.role) {
         userRole = userData.role;
@@ -132,14 +136,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(stats);
   } catch (error) {
     console.error('🔍 Dashboard stats: Unexpected error:', error);
+    
+    // Handle different error types
+    let errorMessage = 'Unknown error';
+    let errorType = 'Unknown';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorType = error.constructor.name;
+    } else if (error && typeof error === 'object') {
+      // Handle Supabase error objects
+      errorMessage = (error as any).message || JSON.stringify(error);
+      errorType = 'SupabaseError';
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+      errorType = 'StringError';
+    }
+    
     return NextResponse.json(
       {
         error: 'Failed to fetch dashboard statistics',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: errorMessage,
         debug: {
           timestamp: new Date().toISOString(),
-          errorType:
-            error instanceof Error ? error.constructor.name : 'Unknown',
+          errorType,
+          fullError: process.env.NODE_ENV === 'development' ? error : undefined,
         },
       },
       { status: 500 }
