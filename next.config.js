@@ -166,6 +166,30 @@ const nextConfig = {
       tls: false,
     };
 
+    // Ensure path aliases work correctly in Docker builds
+    const path = require('path');
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+      '@/components': path.resolve(__dirname, 'components'),
+      '@/lib': path.resolve(__dirname, 'lib'),
+      '@/hooks': path.resolve(__dirname, 'hooks'),
+      '@/types': path.resolve(__dirname, 'types'),
+      '@/utils': path.resolve(__dirname, 'utils'),
+      '@/constants': path.resolve(__dirname, 'constants'),
+      '@/styles': path.resolve(__dirname, 'styles'),
+    };
+    
+    // Ensure extensions are resolved
+    config.resolve.extensions = [
+      '.js',
+      '.jsx',
+      '.ts',
+      '.tsx',
+      '.json',
+      ...(config.resolve.extensions || []),
+    ];
+
     return config;
   },
 
@@ -224,8 +248,8 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
-  // Output configuration - removed standalone for Vercel compatibility
-  // output: 'standalone', // Commented out - causes issues with Vercel
+  // Output configuration - standalone for Docker builds
+  output: 'standalone',
 };
 
 module.exports = withNextIntl(nextConfig);
