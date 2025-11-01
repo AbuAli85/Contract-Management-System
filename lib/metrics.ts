@@ -540,12 +540,19 @@ export async function getPartyMetrics(
     // Get party types
     const { data: parties, error: partiesError } = await supabase
       .from('parties')
-      .select('party_type');
+      .select('type');
 
     if (partiesError) throw partiesError;
 
-    const companies = parties?.filter(p => p.party_type === 'company').length || 0;
-    const individuals = parties?.filter(p => p.party_type === 'individual').length || 0;
+    // Note: Using actual values from database (Employer, Client)
+    const companies = parties?.filter(p => 
+      p.type === 'Employer' || p.type === 'employer' || 
+      p.type === 'company' || p.type === 'Company'
+    ).length || 0;
+    const individuals = parties?.filter(p => 
+      p.type === 'Client' || p.type === 'client' || 
+      p.type === 'individual' || p.type === 'Individual'
+    ).length || 0;
 
     const metrics: PartyMetrics = {
       total: totalCount || 0,
