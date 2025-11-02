@@ -148,9 +148,12 @@ export function PromotersStatsCharts({ metrics, promoters, hasFiltersApplied = f
                   {/* ID Cards Bar */}
                   <div className="flex-1 space-y-1">
                     <div className="h-8 bg-orange-100 rounded-md flex items-center justify-center relative overflow-hidden">
+                      {/* eslint-disable-next-line react/no-inline-styles */}
                       <div 
                         className="absolute left-0 top-0 h-full bg-orange-500 transition-all duration-300"
-                        style={{ width: `${Math.min(100, (item.ids / Math.max(...expiryTimeline.map(t => t?.total || 0), 1)) * 100)}%` }}
+                        style={{ 
+                          width: `${Math.min(100, (item.ids / Math.max(...expiryTimeline.map(t => t?.total || 0), 1)) * 100)}%` 
+                        } as React.CSSProperties}
                       />
                       <span className="relative z-10 text-xs font-medium text-orange-900">
                         {item.ids} IDs
@@ -160,9 +163,12 @@ export function PromotersStatsCharts({ metrics, promoters, hasFiltersApplied = f
                   {/* Passports Bar */}
                   <div className="flex-1 space-y-1">
                     <div className="h-8 bg-blue-100 rounded-md flex items-center justify-center relative overflow-hidden">
+                      {/* eslint-disable-next-line react/no-inline-styles */}
                       <div 
                         className="absolute left-0 top-0 h-full bg-blue-500 transition-all duration-300"
-                        style={{ width: `${Math.min(100, (item.passports / Math.max(...expiryTimeline.map(t => t?.total || 0), 1)) * 100)}%` }}
+                        style={{ 
+                          width: `${Math.min(100, (item.passports / Math.max(...expiryTimeline.map(t => t?.total || 0), 1)) * 100)}%` 
+                        } as React.CSSProperties}
                       />
                       <span className="relative z-10 text-xs font-medium text-blue-900">
                         {item.passports} Passports
@@ -214,9 +220,10 @@ export function PromotersStatsCharts({ metrics, promoters, hasFiltersApplied = f
                   </div>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  {/* eslint-disable-next-line react/no-inline-styles */}
                   <div 
                     className={`h-full ${item.color} transition-all duration-300`}
-                    style={{ width: `${item.percentage}%` }}
+                    style={{ width: `${item.percentage}%` } as React.CSSProperties}
                   />
                 </div>
               </div>
@@ -255,9 +262,10 @@ export function PromotersStatsCharts({ metrics, promoters, hasFiltersApplied = f
                 </span>
               </div>
               <div className="h-3 bg-muted rounded-full overflow-hidden">
+                {/* eslint-disable-next-line react/no-inline-styles */}
                 <div 
                   className="h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-500"
-                  style={{ width: `${metrics.complianceRate}%` }}
+                  style={{ width: `${metrics.complianceRate}%` } as React.CSSProperties}
                 />
               </div>
             </div>

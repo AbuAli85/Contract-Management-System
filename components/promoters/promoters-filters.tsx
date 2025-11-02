@@ -137,12 +137,15 @@ const DEFAULT_PRESETS: FilterPreset[] = [
 // Memoized search input to prevent re-renders
 const SearchInput = React.memo(({ 
   searchTerm, 
-  onSearchChange 
+  onSearchChange,
+  isSearching = false
 }: { 
   searchTerm: string; 
-  onSearchChange: (value: string) => void; 
+  onSearchChange: (value: string) => void;
+  isSearching?: boolean;
 }) => {
   const [localValue, setLocalValue] = useState(searchTerm);
+  const [isFocused, setIsFocused] = useState(false);
   
   // Update local value when searchTerm prop changes (external updates only)
   useEffect(() => {
@@ -162,36 +165,57 @@ const SearchInput = React.memo(({
 
   return (
     <div className='space-y-3'>
-      <Label htmlFor='promoter-search' className="text-sm font-medium">Search promoters</Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor='promoter-search' className="text-sm font-medium">Search promoters</Label>
+        {isSearching && localValue && (
+          <div className="flex items-center gap-2 text-xs text-blue-600">
+            <div className="animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full" />
+            <span>Searching...</span>
+          </div>
+        )}
+      </div>
       <div className='relative'>
-        <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+        <Search className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${
+          isFocused || localValue ? 'text-indigo-600' : 'text-muted-foreground'
+        }`} />
         <Input
           id='promoter-search'
           placeholder='Search by name, contact, ID...'
-          className='pl-10 pr-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+          className={`pl-10 pr-10 transition-all ${
+            isFocused 
+              ? 'bg-white dark:bg-slate-900 border-indigo-500 ring-2 ring-indigo-500/20 shadow-sm' 
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+          }`}
           value={localValue}
           onChange={handleChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           aria-label='Search promoters by name, contact, or ID'
           aria-describedby='search-help'
           autoComplete="off"
           spellCheck="false"
-          style={{ transition: 'none' }} // Remove all CSS transitions that could cause flickering
         />
-        <button
-          onClick={handleClear}
-          className={`absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${
-            localValue ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-          style={{ transition: 'opacity 0.15s ease' }} // Only transition opacity
-          aria-label='Clear search'
-          tabIndex={localValue ? 0 : -1}
-        >
-          <X className='h-4 w-4' />
-        </button>
+        {localValue && (
+          <button
+            onClick={handleClear}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label='Clear search'
+          >
+            <X className='h-4 w-4' />
+          </button>
+        )}
       </div>
-      <p id='search-help' className='text-xs text-muted-foreground'>
-        Press <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Ctrl+K</kbd> for focus • <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Esc</kbd> to clear
-      </p>
+      <div className="flex items-center justify-between">
+        <p id='search-help' className='text-xs text-muted-foreground'>
+          Press <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Ctrl+K</kbd> for focus • <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>Esc</kbd> to clear
+        </p>
+        {localValue && !isSearching && (
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-green-600 font-medium">✓</span>
+            <span className="text-muted-foreground">Search applied</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
@@ -211,7 +235,7 @@ export function PromotersFilters({
   onResetFilters,
   onExport,
   onRefresh,
-  isFetching,
+  isFetching = false,
 }: PromotersFiltersProps) {
   const [advancedSearchCriteria, setAdvancedSearchCriteria] = useState<SearchCriteria[]>([]);
   const [filterPresets, setFilterPresets] = useState<FilterPreset[]>(DEFAULT_PRESETS);
@@ -399,7 +423,11 @@ export function PromotersFilters({
         </div>
 
         <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,2fr)]'>
-          <SearchInput searchTerm={searchTerm} onSearchChange={onSearchChange} />
+          <SearchInput 
+            searchTerm={searchTerm} 
+            onSearchChange={onSearchChange}
+            isSearching={isFetching && searchTerm.length > 0}
+          />
           
           {/* Recent searches - Only show when advanced options are enabled */}
           {recentSearches.length > 0 && showAdvancedOptions && (
