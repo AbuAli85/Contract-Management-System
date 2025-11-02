@@ -1,7 +1,14 @@
 import { Resend } from 'resend';
 
-// Initialize Resend with your API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export interface EmailOptions {
   to: string | string[];
@@ -33,7 +40,7 @@ export async function sendEmail(options: EmailOptions): Promise<{
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io';
     const fromName = process.env.RESEND_FROM_NAME || 'SmartPro Contract Management System';
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: Array.isArray(options.to) ? options.to : [options.to],
       subject: options.subject,
@@ -118,7 +125,7 @@ export async function getEmailStatus(messageId: string): Promise<{
       };
     }
 
-    const { data, error } = await resend.emails.get(messageId);
+    const { data, error } = await getResendClient().emails.get(messageId);
 
     if (error) {
       console.error('❌ Failed to get email status:', error);
