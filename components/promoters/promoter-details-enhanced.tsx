@@ -301,13 +301,14 @@ export function PromoterDetailsEnhanced({
           .order('updated_at', { ascending: false })
           .limit(10),
         
-        // Get document activities (if document tracking exists)
-        supabase
-          .from('promoter_documents')
-          .select('id, document_type, created_at, updated_at')
-          .eq('promoter_id', promoterId)
-          .order('updated_at', { ascending: false })
-          .limit(10),
+        // Get document activities via API route to avoid RLS issues
+        fetch(`/api/promoters/${promoterId}/documents`)
+          .then(res => res.ok ? res.json() : { documents: [] })
+          .then(result => ({ data: result.documents || [], error: null }))
+          .catch(error => {
+            console.warn('Documents API not available:', error);
+            return { data: [], error: null };
+          }),
         
         // Get communications (if communications table exists)
         supabase
