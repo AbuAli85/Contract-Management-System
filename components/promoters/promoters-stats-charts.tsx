@@ -15,13 +15,14 @@ import type { DashboardMetrics, DashboardPromoter } from './types';
 interface PromotersStatsChartsProps {
   metrics: DashboardMetrics;
   promoters: DashboardPromoter[];
+  hasFiltersApplied?: boolean;
 }
 
 /**
  * Visual data insights with charts and statistics
  * Provides quick overview of workforce health
  */
-export function PromotersStatsCharts({ metrics, promoters }: PromotersStatsChartsProps) {
+export function PromotersStatsCharts({ metrics, promoters, hasFiltersApplied = false }: PromotersStatsChartsProps) {
   // Calculate document expiry timeline (next 90 days)
   const getExpiryTimeline = () => {
     const now = new Date();
@@ -48,24 +49,32 @@ export function PromotersStatsCharts({ metrics, promoters }: PromotersStatsChart
       // ID card expiry (with null safety)
       if (p?.idDocument?.expiresOn && p?.idDocument?.status === 'expiring') {
         const daysUntilExpiry = p?.idDocument?.daysRemaining || 0;
-        if (daysUntilExpiry <= 30 && timeline[months[0]]) {
-          timeline[months[0]]!.ids++;
-        } else if (daysUntilExpiry <= 60 && timeline[months[1]]) {
-          timeline[months[1]]!.ids++;
-        } else if (daysUntilExpiry <= 90 && timeline[months[2]]) {
-          timeline[months[2]]!.ids++;
+        const month0 = months[0];
+        const month1 = months[1];
+        const month2 = months[2];
+        
+        if (daysUntilExpiry <= 30 && month0 && timeline[month0]) {
+          timeline[month0].ids++;
+        } else if (daysUntilExpiry <= 60 && month1 && timeline[month1]) {
+          timeline[month1].ids++;
+        } else if (daysUntilExpiry <= 90 && month2 && timeline[month2]) {
+          timeline[month2].ids++;
         }
       }
 
       // Passport expiry (with null safety)
       if (p?.passportDocument?.expiresOn && p?.passportDocument?.status === 'expiring') {
         const daysUntilExpiry = p?.passportDocument?.daysRemaining || 0;
-        if (daysUntilExpiry <= 30 && timeline[months[0]]) {
-          timeline[months[0]]!.passports++;
-        } else if (daysUntilExpiry <= 60 && timeline[months[1]]) {
-          timeline[months[1]]!.passports++;
-        } else if (daysUntilExpiry <= 90 && timeline[months[2]]) {
-          timeline[months[2]]!.passports++;
+        const month0 = months[0];
+        const month1 = months[1];
+        const month2 = months[2];
+        
+        if (daysUntilExpiry <= 30 && month0 && timeline[month0]) {
+          timeline[month0].passports++;
+        } else if (daysUntilExpiry <= 60 && month1 && timeline[month1]) {
+          timeline[month1].passports++;
+        } else if (daysUntilExpiry <= 90 && month2 && timeline[month2]) {
+          timeline[month2].passports++;
         }
       }
     });
@@ -110,12 +119,21 @@ export function PromotersStatsCharts({ metrics, promoters }: PromotersStatsChart
               <Calendar className="h-5 w-5 text-amber-600" />
               Document Renewal Timeline
             </CardTitle>
-            <Badge variant="outline" className="text-xs">
-              Next 90 days
-            </Badge>
+            <div className="flex items-center gap-2">
+              {hasFiltersApplied && (
+                <Badge variant="secondary" className="text-xs">
+                  Filtered View
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs">
+                Next 90 days
+              </Badge>
+            </div>
           </div>
           <CardDescription>
-            Upcoming document renewals that require attention
+            {hasFiltersApplied 
+              ? 'Showing renewals for filtered promoters only' 
+              : 'Upcoming document renewals that require attention'}
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -540,7 +540,7 @@ export function EnhancedPromotersViewRefactored({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 400); // Slightly increased to reduce instability
+    }, 600); // Optimized to 600ms for better stability and prevent timeout issues
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
@@ -1590,6 +1590,7 @@ export function EnhancedPromotersViewRefactored({
           <PromotersStatsCharts 
             metrics={metrics} 
             promoters={dashboardPromoters}
+            hasFiltersApplied={hasFiltersApplied}
           />
         </section>
       )}
@@ -1793,6 +1794,7 @@ export function EnhancedPromotersViewRefactored({
                 <PromotersStatsCharts 
                   metrics={metrics}
                   promoters={allDashboardPromoters}
+                  hasFiltersApplied={hasFiltersApplied}
                 />
 
                 {/* Workforce Summary */}

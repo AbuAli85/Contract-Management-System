@@ -39,6 +39,7 @@ import {
   Upload,
   Eye,
   Download,
+  AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -424,19 +425,36 @@ export default function PromoterFormProfessional(
       errors.email = 'Please enter a valid email address';
     }
 
-    // Phone validation - using comprehensive validator
+    // Phone validation - NOW REQUIRED for better communication
+    if (!formData.mobile_number || !formData.mobile_number.trim()) {
+      errors.mobile_number = 'Mobile number is required for document alerts and notifications';
+    } else {
+      const mobileValidation = validateMobileNumber(formData.mobile_number, true);
+      if (!mobileValidation.isValid) {
+        errors.mobile_number = mobileValidation.error || 'Please enter a valid mobile number';
+      }
+    }
+
+    // Landline phone validation - using comprehensive validator (optional)
     const phoneValidation = validatePhoneNumber(formData.phone, {
-      required: false, // Phone is optional
+      required: false, // Landline is optional
       minDigits: 10,
     });
     if (!phoneValidation.isValid && formData.phone) {
       errors.phone = phoneValidation.error || 'Please enter a valid phone number';
     }
 
-    // Mobile validation - using comprehensive validator
-    const mobileValidation = validateMobileNumber(formData.mobile_number, false);
-    if (!mobileValidation.isValid && formData.mobile_number) {
-      errors.mobile_number = mobileValidation.error || 'Please enter a valid mobile number';
+    // Passport validation - STRONGLY ENCOURAGED
+    if (!formData.passport_number || !formData.passport_number.trim()) {
+      // Add warning instead of error to allow submission but encourage passport
+      if (!errors.passport_number) {
+        console.warn('⚠️ Promoter submitted without passport number - compliance risk!');
+      }
+    }
+
+    // Passport expiry validation - ENCOURAGE with warning
+    if (formData.passport_number && !formData.passport_expiry_date) {
+      errors.passport_expiry_date = 'Passport expiry date is required when passport number is provided';
     }
 
     // Date validation
@@ -1111,15 +1129,26 @@ export default function PromoterFormProfessional(
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='passport_number'>Passport Number</Label>
+                    <Label htmlFor='passport_number' className="flex items-center gap-2">
+                      Passport Number
+                      <Badge variant="outline" className="text-xs font-normal">
+                        Highly Recommended
+                      </Badge>
+                    </Label>
                     <Input
                       id='passport_number'
                       value={formData.passport_number}
                       onChange={e =>
                         handleInputChange('passport_number', e.target.value)
                       }
-                      placeholder='Enter passport number'
+                      placeholder='Enter passport number (recommended for compliance)'
                     />
+                    {!formData.passport_number && (
+                      <p className='text-xs text-amber-600 flex items-center gap-1'>
+                        <AlertTriangle className="h-3 w-3" />
+                        Passport required for international assignments and compliance tracking
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1395,7 +1424,12 @@ export default function PromoterFormProfessional(
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='mobile_number'>Mobile Number</Label>
+                    <Label htmlFor='mobile_number' className="flex items-center gap-2">
+                      Mobile Number
+                      <Badge variant="destructive" className="text-xs font-normal">
+                        Required
+                      </Badge>
+                    </Label>
                     <Input
                       id='mobile_number'
                       type='tel'
