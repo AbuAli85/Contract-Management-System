@@ -109,11 +109,11 @@ export function PaginationControls({
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-t border-slate-200 dark:border-slate-700 pt-4 mt-4 bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-800/30 px-2 py-3 rounded-lg">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-t border-slate-200 dark:border-slate-700 pt-4 mt-4 bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-800/30 px-3 py-3.5 rounded-lg">
       {/* Left section: Info and controls */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
-        {/* Results info */}
-        <div className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+        {/* Results info - Fixed height container for alignment */}
+        <div className="flex items-center h-9 text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
           Showing{' '}
           <span className="font-bold text-indigo-600 dark:text-indigo-400">
             {startIndex.toLocaleString()}
@@ -129,12 +129,12 @@ export function PaginationControls({
           {' '}members
         </div>
         
-        {/* Visual separator */}
-        <div className="hidden sm:block w-px h-5 bg-slate-300 dark:bg-slate-600"></div>
+        {/* Visual separator - Aligned with h-9 elements */}
+        <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600 self-center"></div>
         
         {/* Page size selector */}
         {showPageSizeSelector && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 h-9">
             <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
               Per page:
             </label>
@@ -157,22 +157,25 @@ export function PaginationControls({
         )}
         
         {/* Another visual separator */}
-        <div className="hidden sm:block w-px h-5 bg-slate-300 dark:bg-slate-600"></div>
+        <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600 self-center"></div>
         
-        {/* Page indicator with jump input */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="text-sm text-slate-600 dark:text-slate-400 bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-800 dark:via-slate-750 dark:to-slate-700 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm whitespace-nowrap">
+        {/* Page indicator with jump input - All elements aligned to h-9 */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Page indicator badge - exact h-9 to match inputs */}
+          <div className="flex items-center h-9 text-sm text-slate-600 dark:text-slate-400 bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-800 dark:via-slate-750 dark:to-slate-700 px-3.5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm whitespace-nowrap">
             Page{' '}
-            <span className="font-bold text-slate-800 dark:text-slate-200">
+            <span className="font-bold text-slate-800 dark:text-slate-200 mx-1">
               {currentPage}
             </span>
             {' '}of{' '}
-            <span className="font-bold text-slate-800 dark:text-slate-200">
+            <span className="font-bold text-slate-800 dark:text-slate-200 ml-1">
               {totalPages}
             </span>
           </div>
+          
+          {/* Jump to page input */}
           {totalPages > 5 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 h-9">
               <label htmlFor="page-jump" className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                 Go to:
               </label>
@@ -202,7 +205,7 @@ export function PaginationControls({
       {/* Right section: Page navigation */}
       <div className="flex justify-center sm:justify-start lg:justify-end mt-2 lg:mt-0">
         <Pagination className="mx-0">
-          <PaginationContent className="gap-1">
+          <PaginationContent className="gap-1.5">
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => handlePageChange(currentPage - 1)}
