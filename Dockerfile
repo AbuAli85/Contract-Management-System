@@ -1,5 +1,5 @@
 # Multi-stage build for production
-FROM node:18-alpine AS base
+FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -24,6 +24,11 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Verify critical dependencies are installed
+RUN ls -la node_modules/autoprefixer 2>/dev/null || echo "WARNING: autoprefixer not found!"
+RUN ls -la node_modules/postcss 2>/dev/null || echo "WARNING: postcss not found!"
+RUN ls -la node_modules/tailwindcss 2>/dev/null || echo "WARNING: tailwindcss not found!"
 
 # Create .next directory with proper permissions before build
 RUN mkdir -p .next && chmod -R 777 .next
