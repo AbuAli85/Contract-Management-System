@@ -23,6 +23,16 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
+    // Get current user for ownership tracking
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: 'You must be logged in to create contracts' },
+        { status: 401 }
+      );
+    }
+
     // Generate unique contract number
     const now = new Date();
     const day = now.getDate().toString().padStart(2, '0');
@@ -86,6 +96,7 @@ export async function POST(request: NextRequest) {
       value: body.basic_salary || 0,
       currency: 'USD',
       status: 'pending', // Changed from 'draft' to 'pending' for proper workflow
+      user_id: currentUser.id, // Track who created the contract
       created_at: new Date().toISOString(),
     };
 

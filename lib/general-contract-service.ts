@@ -204,6 +204,13 @@ export class GeneralContractService {
   async createContract(data: GeneralContractData): Promise<any> {
     const supabase = await this.getSupabaseClient();
 
+    // Get current user for ownership tracking
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    if (!currentUser) {
+      throw new Error('You must be logged in to create contracts');
+    }
+
     // Generate contract number
     const contractNumber = this.generateContractNumber();
 
@@ -236,6 +243,7 @@ export class GeneralContractService {
       end_date: this.formatDate(data.contract_end_date),
       terms: data.special_terms || '',
       description: this.buildDescription(data),
+      user_id: currentUser.id, // Track who created the contract
       // New bilingual fields for Make.com
       products_en: data.products_en || '',
       products_ar: data.products_ar || '',

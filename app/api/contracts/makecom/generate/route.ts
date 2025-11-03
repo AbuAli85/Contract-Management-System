@@ -462,6 +462,20 @@ export const POST = withAnyRBAC(
 
       // First, create the contract in the database
       const supabase = createSupabaseClient();
+      
+      // Get current user for ownership tracking
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!currentUser) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'You must be logged in to create contracts',
+          },
+          { status: 401 }
+        );
+      }
+      
       const { data: contract, error: contractError } = await supabase
         .from('contracts')
         .insert({
@@ -482,6 +496,7 @@ export const POST = withAnyRBAC(
           value: contractData.basic_salary,
           currency: contractData.currency || 'OMR',
           is_current: true,
+          user_id: currentUser.id, // Track who created the contract
         })
         .select(
           'id, contract_number, contract_type, status, promoter_id, start_date, end_date, title, value, currency, created_at, updated_at'
