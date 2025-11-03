@@ -417,6 +417,14 @@ export default function SharafDGDeploymentForm({
         throw new Error('Supabase client not available');
       }
 
+      // Get current user for ownership tracking
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!currentUser) {
+        console.error('❌ No authenticated user');
+        throw new Error('You must be logged in to create contracts');
+      }
+
       // Create contract in database (only using columns that exist in contracts table)
       const contractData = {
         contract_number: formData.contract_number,
@@ -431,6 +439,7 @@ export default function SharafDGDeploymentForm({
         end_date: formData.contract_end_date,
         value: formData.basic_salary || 0,
         currency: 'OMR',
+        user_id: currentUser.id, // Track who created the contract
         // Store all additional data as JSON in the 'terms' field (TEXT column that exists)
         terms: JSON.stringify({
           // Contract subtype
@@ -647,8 +656,12 @@ export default function SharafDGDeploymentForm({
   const pollPDFStatus = () => {
     // Since pdf_status, pdf_url columns don't exist in production,
     // we'll use a simple timer and manual check approach
+    let pollCount = 0;
+    const maxPolls = 40; // 40 polls × 3 seconds = 120 seconds total
+    
     const interval = setInterval(async () => {
       try {
+        pollCount++;
         const supabase = createClient();
         
         if (!supabase || !createdContractId) return;
@@ -691,21 +704,26 @@ export default function SharafDGDeploymentForm({
         } catch (parseError) {
           console.log('Terms parse error (might be normal):', parseError);
         }
+
+        // Check if we've exceeded max polling time
+        if (pollCount >= maxPolls) {
+          clearInterval(interval);
+          setPdfStatus('error');
+          toast({
+            title: 'PDF Generation Timeout',
+            description: 'The PDF generation is taking longer than expected. Please check Make.com or try generating again.',
+            variant: 'destructive',
+          });
+        }
       } catch (error) {
         console.error('Poll error:', error);
       }
     }, 3000);
 
-    // Stop polling after 2 minutes
+    // Cleanup: Stop polling after 2 minutes (safety backup)
     setTimeout(() => {
       clearInterval(interval);
-      // After 2 minutes, show ready state (Make.com should be done)
-      setPdfStatus('ready');
-      toast({
-        title: 'PDF Processing Complete',
-        description: 'Check your Make.com scenario for the generated PDF.',
-      });
-    }, 120000);
+    }, 125000); // 125 seconds (slightly longer than max polls)
   };
 
   const clearForm = () => {

@@ -37,6 +37,10 @@ export const promoterFormSchema = z
 
     // Identity Documents
     id_card_number: z.string().min(5, 'ID card number is required').max(50),
+    id_card_url: z
+      .string()
+      .url('Invalid URL')
+      .min(1, 'ID card image is required for contract generation'),
     id_card_expiry_date: z
       .date({
         required_error: 'ID card expiry date is required',
@@ -47,6 +51,10 @@ export const promoterFormSchema = z
       }),
 
     passport_number: z.string().max(50).optional().nullable(),
+    passport_url: z
+      .string()
+      .url('Invalid URL')
+      .min(1, 'Passport image is required for contract generation'),
     passport_expiry_date: z.date().optional().nullable(),
 
     visa_number: z.string().max(50).optional().nullable(),
@@ -260,11 +268,13 @@ export const FORM_SECTIONS = {
   },
   documents: {
     title: 'Identity Documents',
-    description: 'ID card, passport, visa, and work permit',
+    description: 'ID card, passport, visa, and work permit (images required)',
     fields: [
       'id_card_number',
+      'id_card_url',
       'id_card_expiry_date',
       'passport_number',
+      'passport_url',
       'passport_expiry_date',
       'visa_number',
       'visa_expiry_date',

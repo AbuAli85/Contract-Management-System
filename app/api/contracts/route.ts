@@ -168,9 +168,9 @@ async function handleContractsRequest(
         .or(`employer_id.eq.${partyId},client_id.eq.${partyId}`)
         .eq('status', status);
 
-      // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in
+      // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in OR created
       if (!isAdmin) {
-        query = query.or(`employer_id.eq.${user.id},client_id.eq.${user.id}`);
+        query = query.or(`employer_id.eq.${user.id},client_id.eq.${user.id},user_id.eq.${user.id}`);
       }
 
       const { data: contracts, error: contractsError } = await query.limit(10);
@@ -222,9 +222,9 @@ async function handleContractsRequest(
       query = query.eq('status', status);
     }
 
-    // Non-admin users only see contracts they're involved in
+    // Non-admin users only see contracts they're involved in OR created
     if (!isAdmin) {
-      query = query.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id}`);
+      query = query.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`);
     }
 
     const queryStartTime = Date.now();

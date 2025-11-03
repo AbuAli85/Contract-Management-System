@@ -444,12 +444,22 @@ export default function PromoterFormProfessional(
       errors.phone = phoneValidation.error || 'Please enter a valid phone number';
     }
 
+    // ID Card Image validation - REQUIRED for contract generation
+    if (!formData.id_card_url || !formData.id_card_url.trim()) {
+      errors.id_card_url = 'ID card image is required for contract generation';
+    }
+
     // Passport validation - STRONGLY ENCOURAGED
     if (!formData.passport_number || !formData.passport_number.trim()) {
       // Add warning instead of error to allow submission but encourage passport
       if (!errors.passport_number) {
         console.warn('⚠️ Promoter submitted without passport number - compliance risk!');
       }
+    }
+
+    // Passport Image validation - REQUIRED for contract generation
+    if (!formData.passport_url || !formData.passport_url.trim()) {
+      errors.passport_url = 'Passport image is required for contract generation';
     }
 
     // Passport expiry validation - ENCOURAGE with warning
