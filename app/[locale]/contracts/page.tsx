@@ -187,9 +187,19 @@ const safeDifferenceInDays = (dateString: string | null | undefined, compareDate
   }
 };
 
-type ContractStatus = 'Active' | 'Expired' | 'Upcoming' | 'Unknown';
+type ContractStatus = 'draft' | 'pending' | 'processing' | 'approved' | 'Active' | 'Expired' | 'Upcoming' | 'Unknown';
 
 function getContractStatus(contract: ContractWithRelations): ContractStatus {
+  // ✅ PRIORITY 1: Use the actual database status if it exists and is a workflow status
+  if (contract.status) {
+    const dbStatus = contract.status.toLowerCase();
+    // If status is a workflow status (draft, pending, processing, approved), use it directly
+    if (['draft', 'pending', 'processing', 'approved'].includes(dbStatus)) {
+      return dbStatus as ContractStatus;
+    }
+  }
+  
+  // ✅ PRIORITY 2: Calculate status based on dates (for contracts without explicit workflow status)
   if (!contract.contract_start_date || !contract.contract_end_date)
     return 'Unknown';
   const now = new Date();
