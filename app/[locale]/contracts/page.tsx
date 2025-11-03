@@ -1208,9 +1208,13 @@ function ContractsContent() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>All Statuses</SelectItem>
+                    <SelectItem value='draft'>Draft</SelectItem>
+                    <SelectItem value='pending'>Pending</SelectItem>
+                    <SelectItem value='processing'>Processing</SelectItem>
                     <SelectItem value='Active'>Active</SelectItem>
                     <SelectItem value='Expired'>Expired</SelectItem>
                     <SelectItem value='Upcoming'>Upcoming</SelectItem>
+                    <SelectItem value='approved'>Approved</SelectItem>
                     <SelectItem value='Unknown'>Unknown</SelectItem>
                   </SelectContent>
                 </Select>
