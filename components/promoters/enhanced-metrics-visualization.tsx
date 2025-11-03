@@ -238,11 +238,11 @@ export function EnhancedMetricsVisualization({
                 </span>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
+                {/* eslint-disable-next-line react/forbid-dom-props */}
                 <div
                   className="h-full bg-blue-600 transition-all"
-                  style={{
-                    width: `${Math.min(activityInsights.percentageOfTotal, 100)}%`,
-                  }}
+                  style={{ width: `${Math.min(activityInsights.percentageOfTotal, 100)}%` }}
+                  aria-hidden="true"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -355,9 +355,11 @@ function HealthBar({ label, value, total, color }: HealthBarProps) {
         </span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
+        {/* eslint-disable-next-line react/forbid-dom-props */}
         <div
           className={`h-full ${colorClasses[color]} transition-all duration-300`}
           style={{ width: `${percentage}%` }}
+          aria-hidden="true"
         />
       </div>
     </div>

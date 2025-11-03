@@ -27,11 +27,13 @@ export function usePermissions() {
         return;
       }
 
+      // Add timeout to prevent hanging
+      let timeoutId: NodeJS.Timeout | undefined;
+
       try {
         setLoading(true);
 
-        // Add timeout to prevent hanging
-        const timeoutId = setTimeout(() => {
+        timeoutId = setTimeout(() => {
           console.warn('Permissions loading timeout, defaulting to admin role');
           setRole('admin');
           setRoles(['admin']);
@@ -85,7 +87,9 @@ export function usePermissions() {
         setRole('admin');
         setRoles(['admin']);
       } finally {
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
         setLoading(false);
       }
     };
