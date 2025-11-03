@@ -212,8 +212,8 @@ async function handleContractsRequest(
   
   try {
     // ✅ ENHANCED QUERY: Get all contracts with comprehensive data
-    // Use simple select first, then fetch related data separately
-    let query = supabase.from('contracts').select('*');
+    // Use simple select with count option directly
+    let query = supabase.from('contracts').select('*', { count: 'exact' });
 
     // ✅ FIX: Apply status filter if provided
     if (status && status !== 'all') {
@@ -229,11 +229,10 @@ async function handleContractsRequest(
 
     const queryStartTime = Date.now();
     
-    // ✅ OPTIMIZED: Use database-level pagination with count
+    // ✅ OPTIMIZED: Use database-level pagination
     const { data: contractsData, error: contractsError, count } = await query
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-      .select('*', { count: 'exact' });
+      .range(offset, offset + limit - 1);
     
     totalCount = count;
     
