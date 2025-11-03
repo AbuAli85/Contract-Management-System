@@ -265,7 +265,7 @@ async function handleContractsRequest(
 
         // Apply RBAC to fallback query too
         if (!isAdmin) {
-          fallbackQuery = fallbackQuery.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id}`);
+          fallbackQuery = fallbackQuery.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`);
         }
 
         const { data: fallbackData, error: fallbackError, count: fallbackCount } = await fallbackQuery;
