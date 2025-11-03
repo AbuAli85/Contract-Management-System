@@ -22,7 +22,7 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
   try {
     const { searchParams } = new URL(request.url);
     const partyId = searchParams.get('party_id');
-    const status = searchParams.get('status') || 'active';
+    const status = searchParams.get('status') || 'all'; // ✅ FIX: Default to 'all' instead of 'active' to show all contracts
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     
