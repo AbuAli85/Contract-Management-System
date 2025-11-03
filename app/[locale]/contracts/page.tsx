@@ -1,6 +1,15 @@
 'use client';
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+
+// ✅ CONSTANTS: Extract magic numbers for maintainability
+const CONSTANTS = {
+  EXPIRING_SOON_DAYS: 30,
+  DEFAULT_PAGE_SIZE: 20,
+  ID_DISPLAY_LENGTH: 8,
+  SEARCH_DEBOUNCE_MS: 300,
+  VIEW_PREFERENCE_KEY: 'contracts-view-preference',
+} as const;
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { ContractWithRelations } from '@/hooks/use-contracts';
@@ -129,10 +138,29 @@ interface ContractStats {
   expired: number;
   upcoming: number;
   unknown: number;
+  pending: number; // ✅ NEW: Count of contracts with status='pending'
+  draft: number; // ✅ NEW: Count of contracts with status='draft'
+  processing: number; // ✅ NEW: Count of contracts with status='processing'
   expiring_soon: number;
   total_value: number;
   avg_duration: number;
 }
+
+// ✅ UTILITY: Extract party/promoter name to avoid duplication
+const getLocalizedName = (
+  entity: any,
+  locale: string,
+  fallback: string = 'N/A'
+): string => {
+  if (!entity || typeof entity !== 'object') return fallback;
+  
+  if (!('name_en' in entity)) return fallback;
+  
+  if (locale === 'ar') {
+    return entity.name_ar || entity.name_en || fallback;
+  }
+  return entity.name_en || entity.name_ar || fallback;
+};
 
 // Safe date parsing functions to prevent "Invalid time value" errors
 const safeParseISO = (dateString: string | null | undefined): Date | null => {
@@ -308,7 +336,14 @@ function ContractsContent() {
 
   // Enhanced state management - moved before conditional returns
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
-  const [currentView, setCurrentView] = useState<'table' | 'grid'>('table');
+  // ✅ PERSISTENCE: Load view preference from localStorage
+  const [currentView, setCurrentView] = useState<'table' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(CONSTANTS.VIEW_PREFERENCE_KEY);
+      return (saved as 'table' | 'grid') || 'table';
+    }
+    return 'table';
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | ContractStatus>(
     'all'
@@ -328,10 +363,36 @@ function ContractsContent() {
     useState<ContractWithRelations | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   // All hooks must be called before any conditional returns
   const isMountedRef = useRef(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ✅ PERFORMANCE: Debounce search input
+  useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, CONSTANTS.SEARCH_DEBOUNCE_MS);
+    
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchTerm]);
+
+  // ✅ PERSISTENCE: Save view preference
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(CONSTANTS.VIEW_PREFERENCE_KEY, currentView);
+    }
+  }, [currentView]);
 
   // Calculate statistics BEFORE permission check
   const contractStats = useMemo((): ContractStats => {
@@ -342,6 +403,9 @@ function ContractsContent() {
         expired: 0,
         upcoming: 0,
         unknown: 0,
+        pending: 0,
+        draft: 0,
+        processing: 0,
         expiring_soon: 0,
         total_value: 0,
         avg_duration: 0,
@@ -351,6 +415,11 @@ function ContractsContent() {
       const enhanced = contracts.map(enhanceContract);
       const now = new Date();
 
+      // ✅ Count actual workflow statuses from database
+      const pendingCount = enhanced.filter(c => getContractStatus(c) === 'pending').length;
+      const draftCount = enhanced.filter(c => getContractStatus(c) === 'draft').length;
+      const processingCount = enhanced.filter(c => getContractStatus(c) === 'processing').length;
+
       return {
         // Use totalCount (actual DB total) not enhanced.length (paginated results)
         total: totalCount,
@@ -358,11 +427,14 @@ function ContractsContent() {
         expired: enhanced.filter(c => c.status_type === 'expired').length,
         upcoming: enhanced.filter(c => c.status_type === 'upcoming').length,
         unknown: enhanced.filter(c => c.status_type === 'unknown').length,
+        pending: pendingCount, // ✅ FIX: Actual pending contracts
+        draft: draftCount, // ✅ NEW: Draft contracts
+        processing: processingCount, // ✅ NEW: Processing contracts
         expiring_soon: enhanced.filter(
           c =>
             c.days_until_expiry !== undefined &&
             c.days_until_expiry > 0 &&
-            c.days_until_expiry <= 30
+            c.days_until_expiry <= CONSTANTS.EXPIRING_SOON_DAYS
         ).length,
         total_value: enhanced.reduce(
           (sum, c) => sum + (c.contract_value || 0),
@@ -382,6 +454,9 @@ function ContractsContent() {
         expired: 0,
         upcoming: 0,
         unknown: 0,
+        pending: 0,
+        draft: 0,
+        processing: 0,
         expiring_soon: 0,
         total_value: 0,
         avg_duration: 0,
@@ -401,42 +476,26 @@ function ContractsContent() {
         const matchesStatus =
           statusFilter === 'all' || contractStatus === statusFilter;
 
-        const firstParty =
-          (contract.first_party &&
-          typeof contract.first_party === 'object' &&
-          'name_en' in contract.first_party
-            ? locale === 'ar'
-              ? contract.first_party.name_ar || contract.first_party.name_en
-              : contract.first_party.name_en || contract.first_party.name_ar
-            : '') || '';
-        const secondParty =
-          (contract.second_party &&
-          typeof contract.second_party === 'object' &&
-          'name_en' in contract.second_party
-            ? locale === 'ar'
-              ? contract.second_party.name_ar || contract.second_party.name_en
-              : contract.second_party.name_en || contract.second_party.name_ar
-            : '') || '';
-        const promoterName: string = contract.promoters
-          ? locale === 'ar'
-            ? contract.promoters.name_ar || contract.promoters.name_en || ''
-            : contract.promoters.name_en || contract.promoters.name_ar || ''
-          : '';
+        // ✅ REFACTOR: Use utility function for name extraction
+        const firstParty = getLocalizedName(contract.first_party, locale);
+        const secondParty = getLocalizedName(contract.second_party, locale);
+        const promoterName = getLocalizedName(contract.promoters, locale);
 
+        // ✅ PERFORMANCE: Use debounced search term
         const matchesSearch =
-          !searchTerm ||
-          contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          firstParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          secondParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (promoterName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          !debouncedSearchTerm ||
+          contract.id.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          firstParty.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          secondParty.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          (promoterName || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
           (contract.job_title &&
             contract.job_title
               .toLowerCase()
-              .includes(searchTerm.toLowerCase())) ||
+              .includes(debouncedSearchTerm.toLowerCase())) ||
           (contract.contract_number &&
             contract.contract_number
               .toLowerCase()
-              .includes(searchTerm.toLowerCase()));
+              .includes(debouncedSearchTerm.toLowerCase()));
 
         return matchesStatus && matchesSearch;
       });
@@ -474,7 +533,7 @@ function ContractsContent() {
     }
   }, [
     contracts,
-    searchTerm,
+    debouncedSearchTerm, // ✅ Use debounced version
     statusFilter,
     sortColumn,
     sortDirection,
@@ -519,7 +578,7 @@ function ContractsContent() {
       params.set('page', '1');
       router.push(`${window.location.pathname}?${params.toString()}`);
     }
-  }, [searchTerm, statusFilter, searchParams, router]);
+  }, [debouncedSearchTerm, statusFilter, searchParams, router]); // ✅ Use debounced version
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -890,11 +949,11 @@ function ContractsContent() {
           <div className='flex items-center justify-between'>
             <div>
               <p className='text-sm text-purple-100 font-medium'>Pending</p>
-              <p className='text-2xl font-bold'>{contractStats.upcoming}</p>
-              <p className='text-xs text-blue-200 mt-1'>Awaiting approval</p>
+              <p className='text-2xl font-bold'>{contractStats.pending}</p>
+              <p className='text-xs text-purple-200 mt-1'>Awaiting approval</p>
             </div>
-            <div className='p-2 bg-blue-400/20 rounded-lg'>
-              <Clock className='h-6 w-6 text-blue-200' />
+            <div className='p-2 bg-purple-400/20 rounded-lg'>
+              <Clock className='h-6 w-6 text-purple-200' />
             </div>
           </div>
         </CardContent>
