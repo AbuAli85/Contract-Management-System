@@ -192,14 +192,18 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
 };
 
 const safeFormatDate = (dateString: string | null | undefined, formatStr: string = 'dd-MM-yyyy'): string => {
+  // Return immediately for null/undefined/empty values
+  if (!dateString || dateString === 'Invalid date') return 'N/A';
+  
   const date = safeParseISO(dateString);
-  if (!date) return 'Invalid date';
+  if (!date) return 'N/A';
   
   try {
-    return format(date, formatStr);
+    const formatted = format(date, formatStr);
+    return formatted;
   } catch (error) {
-    console.warn('Failed to format date:', date, error);
-    return 'Invalid date';
+    console.warn('Failed to format date:', dateString, error);
+    return 'N/A';
   }
 };
 
