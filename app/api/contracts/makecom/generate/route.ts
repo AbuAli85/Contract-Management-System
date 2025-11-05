@@ -561,7 +561,8 @@ export const POST = withAnyRBAC(
           };
 
           // Trigger Make.com webhook with retry logic
-          const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL;
+          // Support both MAKECOM_WEBHOOK_URL and MAKECOM_WEBHOOK_URL_EXTRA
+          const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL_EXTRA || process.env.MAKECOM_WEBHOOK_URL;
 
           if (makecomWebhookUrl) {
             console.log('📤 Triggering Make.com webhook:', makecomWebhookUrl);
