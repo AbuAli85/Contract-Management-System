@@ -54,8 +54,23 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // 2. Parse payload
-    const payload: PDFReadyPayload = await request.json();
+    // 2. Parse payload with error handling
+    let payload: PDFReadyPayload;
+    try {
+      payload = await request.json();
+    } catch (parseError) {
+      console.error('Failed to parse webhook JSON:', parseError);
+      const rawBody = await request.text().catch(() => 'Unable to read body');
+      console.error('Raw body received:', rawBody);
+      return NextResponse.json(
+        { 
+          error: 'Invalid JSON payload',
+          details: parseError instanceof Error ? parseError.message : 'JSON parse error',
+          hint: 'Check Make.com webhook body for syntax errors (missing quotes, commas, etc.)'
+        },
+        { status: 400 }
+      );
+    }
 
     console.log('PDF Ready webhook received:', {
       contractId: payload.contract_id,
