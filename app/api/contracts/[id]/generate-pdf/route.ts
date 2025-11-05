@@ -1,44 +1,70 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-// Make.com webhook URL from environment
-const MAKE_WEBHOOK_URL = process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL;
+// Create Supabase service client
+function createServiceClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
+}
+
+// Make.com webhook URL from environment - support multiple env var names
+const MAKE_WEBHOOK_URL = 
+  process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL || 
+  process.env.MAKECOM_WEBHOOK_URL_EXTRA ||
+  process.env.MAKECOM_WEBHOOK_URL;
+
+// Interface is just for reference - actual contract data structure varies
 interface ContractData {
   id: string;
   contract_number: string;
   contract_type: string;
-  promoter_id: string;
-  first_party_id: string;
-  second_party_id: string;
-  job_title: string | null;
-  department: string | null;
-  work_location: string | null;
+  promoter_id: string | null;
+  first_party_id: string | null;
+  second_party_id: string | null;
+  title: string; // Main title field in database
+  description: string | null; // Description field
+  terms: string | null; // Terms field
   basic_salary: number | null;
+  value: number | null;
+  total_value: number | null;
   start_date: string;
   end_date: string;
-  special_terms: string | null;
+  notice_period: number | null;
+  metadata: any; // JSONB field containing additional data
   
-  // Promoter data (from join)
-  promoter_name_en: string;
-  promoter_name_ar: string;
-  promoter_mobile_number: string;
-  promoter_email: string;
-  promoter_id_card_number: string;
-  promoter_id_card_url: string | null;
-  promoter_passport_url: string | null;
-  passport_number: string | null;
+  // Joined promoter data
+  promoters?: {
+    name_en: string;
+    name_ar: string;
+    mobile_number: string | null;
+    email: string | null;
+    id_card_number: string | null;
+    id_card_url: string | null;
+    passport_url: string | null;
+    passport_number: string | null;
+  };
   
-  // Party data (from join)
-  first_party_name_en: string;
-  first_party_name_ar: string;
-  first_party_crn: string | null;
-  first_party_logo: string | null;
+  // Joined party data
+  first_party?: {
+    name_en: string;
+    name_ar: string;
+    crn: string | null;
+    logo_url: string | null;
+  };
   
-  second_party_name_en: string;
-  second_party_name_ar: string;
-  second_party_crn: string | null;
-  second_party_logo: string | null;
+  second_party?: {
+    name_en: string;
+    name_ar: string;
+    crn: string | null;
+    logo_url: string | null;
+  };
 }
 
 export async function POST(
@@ -46,11 +72,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
     const contractId = params.id;
 
-    // 1. Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // 1. Check authentication using server client (has cookies)
+    const supabaseServer = await createServerClient();
+    const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -58,7 +84,8 @@ export async function POST(
       );
     }
 
-    // 2. Fetch complete contract data with relations
+    // 2. Fetch complete contract data with relations using service client
+    const supabase = createServiceClient();
     const { data: contract, error: fetchError } = await supabase
       .from('contracts')
       .select(`
@@ -97,37 +124,41 @@ export async function POST(
       );
     }
 
-    // 3. Validate required fields
+    // 3. Validate required fields (relaxed validation)
     const missingFields: string[] = [];
     
     if (!contract.contract_number) missingFields.push('contract_number');
-    if (!contract.promoters) missingFields.push('promoter');
-    if (!contract.first_party) missingFields.push('first_party (employer)');
-    if (!contract.second_party) missingFields.push('second_party (client)');
     if (!contract.start_date) missingFields.push('start_date');
     if (!contract.end_date) missingFields.push('end_date');
 
-    // Validate promoter data
+    // Only validate promoter data if promoter exists
     if (contract.promoters) {
-      if (!contract.promoters.name_en) missingFields.push('promoter name (English)');
-      if (!contract.promoters.name_ar) missingFields.push('promoter name (Arabic)');
-      if (!contract.promoters.id_card_number) missingFields.push('promoter ID card number');
-      if (!contract.promoters.id_card_url) missingFields.push('promoter ID card image');
-      if (!contract.promoters.passport_url) missingFields.push('promoter passport image');
+      if (!contract.promoters.name_en && !contract.promoters.name_ar) {
+        missingFields.push('promoter name (at least one language)');
+      }
+    } else {
+      console.warn('⚠️ No promoter data found for contract');
     }
 
-    // Validate party data
+    // Only validate party data if parties exist
     if (contract.first_party) {
-      if (!contract.first_party.name_en) missingFields.push('first party name (English)');
-      if (!contract.first_party.name_ar) missingFields.push('first party name (Arabic)');
+      if (!contract.first_party.name_en && !contract.first_party.name_ar) {
+        missingFields.push('first party name (at least one language)');
+      }
+    } else {
+      console.warn('⚠️ No first party data found for contract');
     }
 
     if (contract.second_party) {
-      if (!contract.second_party.name_en) missingFields.push('second party name (English)');
-      if (!contract.second_party.name_ar) missingFields.push('second party name (Arabic)');
+      if (!contract.second_party.name_en && !contract.second_party.name_ar) {
+        missingFields.push('second party name (at least one language)');
+      }
+    } else {
+      console.warn('⚠️ No second party data found for contract');
     }
 
     if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
       return NextResponse.json(
         {
           error: 'Missing required fields',
@@ -138,27 +169,36 @@ export async function POST(
       );
     }
 
-    // 4. Verify image URLs are accessible
+    // 4. Verify image URLs are accessible (skip if not provided)
     const imageUrls = [
-      contract.promoters.id_card_url,
-      contract.promoters.passport_url,
-    ].filter(Boolean);
+      contract.promoters?.id_card_url,
+      contract.promoters?.passport_url,
+    ].filter(url => url && !url.includes('NO_PASSPORT') && !url.includes('NO_ID_CARD'));
+
+    console.log(`🔍 Checking ${imageUrls.length} image URLs for accessibility...`);
 
     for (const url of imageUrls) {
       try {
-        const response = await fetch(url as string, { method: 'HEAD' });
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(url as string, { 
+          method: 'HEAD', 
+          signal: controller.signal 
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
-          return NextResponse.json(
-            { error: `Image not accessible: ${url}` },
-            { status: 400 }
-          );
+          console.warn(`⚠️ Image not accessible (${response.status}): ${url}`);
+          // Don't fail - just log warning
+        } else {
+          console.log(`✅ Image accessible: ${url}`);
         }
       } catch (error) {
-        console.error(`Image URL check failed for ${url}:`, error);
-        return NextResponse.json(
-          { error: `Cannot access image: ${url}` },
-          { status: 400 }
-        );
+        console.warn(`⚠️ Image URL check failed for ${url}:`, error);
+        // Don't fail - just log warning
       }
     }
 
@@ -184,66 +224,99 @@ export async function POST(
       supplierBrandData = supplier;
     }
 
-    // 6. Prepare payload for Make.com webhook
-    const webhookPayload = {
+    // 6. Prepare payload for Make.com webhook (with safe access to nested data)
+    const webhookPayload: any = {
       contract_id: contract.id,
       contract_number: contract.contract_number,
-      contract_type: contract.contract_type,
+      contract_type: contract.contract_type || 'employment_contract',
       
-      // Promoter information
-      promoter_id: contract.promoter_id,
-      promoter_name_en: contract.promoters.name_en,
-      promoter_name_ar: contract.promoters.name_ar,
-      promoter_mobile_number: contract.promoters.mobile_number,
-      promoter_email: contract.promoters.email,
-      promoter_id_card_number: contract.promoters.id_card_number,
-      promoter_id_card_url: contract.promoters.id_card_url,
-      promoter_passport_url: contract.promoters.passport_url,
-      passport_number: contract.promoters.passport_number,
-      
-      // Party information
-      first_party_id: contract.first_party_id,
-      first_party_name_en: contract.first_party.name_en,
-      first_party_name_ar: contract.first_party.name_ar,
-      first_party_crn: contract.first_party.crn,
-      first_party_logo: contract.first_party.logo_url,
-      
-      second_party_id: contract.second_party_id,
-      second_party_name_en: contract.second_party.name_en,
-      second_party_name_ar: contract.second_party.name_ar,
-      second_party_crn: contract.second_party.crn,
-      second_party_logo: contract.second_party.logo_url,
-      
-      // Supplier/Brand information (from parties, shows only names)
-      supplier_brand_name_en: supplierBrandData?.name_en || contract.metadata?.supplier_brand_name_en,
-      supplier_brand_name_ar: supplierBrandData?.name_ar || contract.metadata?.supplier_brand_name_ar,
-      
-      // Contract details
-      job_title: contract.job_title,
-      department: contract.department,
-      work_location: contract.work_location,
-      basic_salary: contract.basic_salary,
+      // Contract details - use correct column names from database
+      job_title: contract.title || 'Employment Contract', // 'title' column, not 'job_title'
+      department: contract.metadata?.department,
+      work_location: contract.metadata?.work_location,
+      basic_salary: contract.basic_salary || contract.value || contract.total_value,
       contract_start_date: contract.start_date,
       contract_end_date: contract.end_date,
-      special_terms: contract.special_terms,
+      special_terms: contract.description || contract.terms,
       
       // Employment terms (from metadata)
       probation_period: contract.metadata?.probation_period,
-      notice_period: contract.metadata?.notice_period,
+      notice_period: contract.notice_period || contract.metadata?.notice_period,
       working_hours: contract.metadata?.working_hours,
       housing_allowance: contract.metadata?.housing_allowance,
       transport_allowance: contract.metadata?.transport_allowance,
     };
 
+    // Add promoter information if available
+    if (contract.promoters) {
+      webhookPayload.promoter_id = contract.promoter_id;
+      webhookPayload.promoter_name_en = contract.promoters.name_en;
+      webhookPayload.promoter_name_ar = contract.promoters.name_ar;
+      webhookPayload.promoter_mobile_number = contract.promoters.mobile_number;
+      webhookPayload.promoter_email = contract.promoters.email;
+      webhookPayload.promoter_id_card_number = contract.promoters.id_card_number;
+      webhookPayload.id_card_number = contract.promoters.id_card_number;
+      webhookPayload.passport_number = contract.promoters.passport_number;
+      
+      // Only add image URLs if they're valid (not placeholders)
+      if (contract.promoters.id_card_url && !contract.promoters.id_card_url.includes('NO_ID_CARD')) {
+        webhookPayload.promoter_id_card_url = contract.promoters.id_card_url;
+        webhookPayload.id_card_url = contract.promoters.id_card_url;
+      }
+      if (contract.promoters.passport_url && !contract.promoters.passport_url.includes('NO_PASSPORT')) {
+        webhookPayload.promoter_passport_url = contract.promoters.passport_url;
+        webhookPayload.passport_url = contract.promoters.passport_url;
+      }
+    }
+    
+    // Add first party information if available
+    if (contract.first_party) {
+      webhookPayload.first_party_id = contract.first_party_id;
+      webhookPayload.first_party_name_en = contract.first_party.name_en;
+      webhookPayload.first_party_name_ar = contract.first_party.name_ar;
+      webhookPayload.first_party_crn = contract.first_party.crn;
+      if (contract.first_party.logo_url) {
+        webhookPayload.first_party_logo = contract.first_party.logo_url;
+        webhookPayload.first_party_logo_url = contract.first_party.logo_url;
+      }
+    }
+    
+    // Add second party information if available
+    if (contract.second_party) {
+      webhookPayload.second_party_id = contract.second_party_id;
+      webhookPayload.second_party_name_en = contract.second_party.name_en;
+      webhookPayload.second_party_name_ar = contract.second_party.name_ar;
+      webhookPayload.second_party_crn = contract.second_party.crn;
+      if (contract.second_party.logo_url) {
+        webhookPayload.second_party_logo = contract.second_party.logo_url;
+        webhookPayload.second_party_logo_url = contract.second_party.logo_url;
+      }
+    }
+
+    // Add supplier/brand information if available
+    if (supplierBrandData) {
+      webhookPayload.supplier_brand_name_en = supplierBrandData.name_en;
+      webhookPayload.supplier_brand_name_ar = supplierBrandData.name_ar;
+    } else if (contract.metadata?.supplier_brand_name_en) {
+      webhookPayload.supplier_brand_name_en = contract.metadata.supplier_brand_name_en;
+      webhookPayload.supplier_brand_name_ar = contract.metadata.supplier_brand_name_ar;
+    }
+
+    console.log('📤 Prepared webhook payload with keys:', Object.keys(webhookPayload));
+
     // 7. Call Make.com webhook
     if (!MAKE_WEBHOOK_URL) {
-      throw new Error('MAKE_CONTRACT_PDF_WEBHOOK_URL environment variable is not set');
+      console.error('❌ Make.com webhook URL not configured');
+      throw new Error('Make.com webhook URL not configured. Please set MAKECOM_WEBHOOK_URL_EXTRA environment variable.');
     }
+
+    console.log('📤 Calling Make.com webhook:', MAKE_WEBHOOK_URL);
 
     const webhookResponse = await fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Webhook-Secret': process.env.MAKE_WEBHOOK_SECRET || '',
       },
       body: JSON.stringify(webhookPayload),
     });
@@ -275,25 +348,32 @@ export async function POST(
 
   } catch (error) {
     console.error('PDF generation error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+
+    // Get contract ID from params or from earlier
+    const errorContractId = params?.id;
 
     // Try to update contract status
-    try {
-      const supabase = await createClient();
-      await supabase
-        .from('contracts')
-        .update({
-          pdf_status: 'error',
-          pdf_error_message: error instanceof Error ? error.message : 'Unknown error',
-        })
-        .eq('id', params.id);
-    } catch (updateError) {
-      console.error('Failed to update error status:', updateError);
+    if (errorContractId) {
+      try {
+        const supabase = createServiceClient();
+        await supabase
+          .from('contracts')
+          .update({
+            pdf_status: 'error',
+            pdf_error_message: error instanceof Error ? error.message : 'Unknown error',
+          })
+          .eq('id', errorContractId);
+      } catch (updateError) {
+        console.error('Failed to update error status:', updateError);
+      }
     }
 
     return NextResponse.json(
       {
         error: 'PDF generation failed',
         message: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
