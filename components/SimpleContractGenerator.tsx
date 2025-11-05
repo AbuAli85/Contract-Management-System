@@ -330,6 +330,7 @@ export default function SimpleContractGenerator({ pageTitle = "Quick Contract Ge
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({
             contractType: formData.contract_type,
             contractData: formData,

@@ -1,7 +1,8 @@
 // app/api/contracts/makecom/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 import {
   generateContractWithMakecom,
   getEnhancedContractTypeConfig,
@@ -12,8 +13,8 @@ import {
   generateMakecomBlueprint,
 } from '@/lib/makecom-template-config';
 
-// Create Supabase client function to avoid build-time issues
-function createSupabaseClient() {
+// Create Supabase client with service role for elevated privileges
+function createSupabaseServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -21,7 +22,7 @@ function createSupabaseClient() {
     throw new Error('Missing Supabase environment variables');
   }
 
-  return createClient(supabaseUrl, supabaseKey);
+  return createSupabaseClient(supabaseUrl, supabaseKey);
 }
 
 // GET: List all Make.com enabled contract types
@@ -176,9 +177,10 @@ export const POST = withAnyRBAC(
 
       // Fetch promoter data including image URLs if promoter_id is provided
       let enrichedContractData = { ...contractData };
+      const supabaseService = createSupabaseServiceClient();
+      
       if (contractData.promoter_id) {
-        const supabase = createSupabaseClient();
-        const { data: promoter, error: promoterError } = await supabase
+        const { data: promoter, error: promoterError } = await supabaseService
           .from('promoters')
           .select(
             'id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number, employer_id'
@@ -214,8 +216,7 @@ export const POST = withAnyRBAC(
 
       // Fetch first party (employer) data if first_party_id is provided
       if (contractData.first_party_id) {
-        const supabase = createSupabaseClient();
-        const { data: firstParty, error: firstPartyError } = await supabase
+        const { data: firstParty, error: firstPartyError } = await supabaseService
           .from('parties')
           .select('id, name_en, name_ar, crn, logo_url')
           .eq('id', contractData.first_party_id)
@@ -238,8 +239,7 @@ export const POST = withAnyRBAC(
 
       // Fetch second party data if second_party_id is provided
       if (contractData.second_party_id) {
-        const supabase = createSupabaseClient();
-        const { data: secondParty, error: secondPartyError } = await supabase
+        const { data: secondParty, error: secondPartyError } = await supabaseService
           .from('parties')
           .select('id, name_en, name_ar, crn, logo_url')
           .eq('id', contractData.second_party_id)
@@ -460,23 +460,26 @@ export const POST = withAnyRBAC(
         );
       }
 
-      // First, create the contract in the database
-      const supabase = createSupabaseClient();
+      // First, get the authenticated user using the server client (has access to cookies)
+      const supabaseServer = await createServerClient();
+      const { data: { user: currentUser }, error: authError } = await supabaseServer.auth.getUser();
       
-      // Get current user for ownership tracking
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      if (!currentUser) {
+      if (authError || !currentUser) {
+        console.error('❌ Authentication error:', authError);
         return NextResponse.json(
           {
             success: false,
             error: 'You must be logged in to create contracts',
+            details: authError?.message || 'User not authenticated',
           },
           { status: 401 }
         );
       }
       
-      const { data: contract, error: contractError } = await supabase
+      // Use service client for database operations (elevated privileges)
+      const supabaseService = createSupabaseServiceClient();
+      
+      const { data: contract, error: contractError } = await supabaseService
         .from('contracts')
         .insert({
           contract_number:
@@ -682,7 +685,7 @@ export const POST = withAnyRBAC(
                   console.log('📊 Make.com response data:', parsedResponse);
 
                   // Update contract status to processing
-                  const { error: updateError } = await supabase
+                  const { error: updateError } = await supabaseService
                     .from('contracts')
                     .update({ 
                       status: 'processing',

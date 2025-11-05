@@ -243,6 +243,7 @@ export default function SimpleContractGeneratorWithValidation() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({
             contractType: data.contract_type,
             contractData: data,

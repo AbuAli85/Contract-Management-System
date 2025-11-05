@@ -213,6 +213,7 @@ export default function DocumentWorkflowWizard() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({
           contractType: selectedContractType,
           contractData: {
