@@ -264,25 +264,23 @@ export const POST = withAnyRBAC(
       }
 
       // Add default placeholder URLs for ALL possible template images to prevent empty URL errors
-      // This ensures all image slots (body, header, footer, with various naming conventions) have valid URLs
+      // Using publicly accessible imgur placeholders instead of via.placeholder.com for better reliability
       const placeholderImage =
-        'https://via.placeholder.com/200x200/cccccc/666666.png?text=No+Image';
+        'https://i.imgur.com/7DrMrhN.png'; // 200x200 light gray placeholder
       const placeholderLogo =
-        'https://via.placeholder.com/300x100/0066cc/ffffff.png?text=Logo';
+        'https://i.imgur.com/YlUKsz7.png'; // 300x100 blue placeholder
       const placeholderSignature =
-        'https://via.placeholder.com/200x100/333333/ffffff.png?text=Signature';
+        'https://i.imgur.com/zQeWKYc.png'; // 200x100 dark gray placeholder
 
       // Function to ensure valid URL with strict validation
       const ensureValidUrl = (
         url: string | null | undefined,
         type: 'image' | 'logo' | 'signature' = 'image'
-      ): string => {
-        // Return appropriate placeholder if URL is null/undefined/empty
+      ): string | undefined => {
+        // If URL is null/undefined/empty, return undefined to skip this image in the template
         if (!url || url.toString().trim() === '') {
-          console.warn(`⚠️ Empty URL detected, using placeholder for ${type}`);
-          if (type === 'logo') return placeholderLogo;
-          if (type === 'signature') return placeholderSignature;
-          return placeholderImage;
+          console.warn(`⚠️ Empty URL detected, skipping ${type} replacement`);
+          return undefined;
         }
         
         // Basic URL validation
@@ -291,13 +289,20 @@ export const POST = withAnyRBAC(
           const parsedUrl = new URL(urlString);
           // Ensure it's http or https
           if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-            console.warn(`⚠️ Invalid protocol: ${parsedUrl.protocol}, using placeholder`);
-            return type === 'logo' ? placeholderLogo : type === 'signature' ? placeholderSignature : placeholderImage;
+            console.warn(`⚠️ Invalid protocol: ${parsedUrl.protocol}, skipping ${type}`);
+            return undefined;
           }
+          
+          // Check if it's a Supabase storage URL with "NO_PASSPORT" or similar placeholders
+          if (urlString.includes('NO_PASSPORT') || urlString.includes('NO_ID_CARD')) {
+            console.warn(`⚠️ Placeholder document detected in URL, skipping ${type}`);
+            return undefined;
+          }
+          
           return urlString;
         } catch {
-          console.warn(`⚠️ Invalid URL format: ${urlString}, using placeholder`);
-          return type === 'logo' ? placeholderLogo : type === 'signature' ? placeholderSignature : placeholderImage;
+          console.warn(`⚠️ Invalid URL format: ${urlString}, skipping ${type}`);
+          return undefined;
         }
       };
 
@@ -426,9 +431,23 @@ export const POST = withAnyRBAC(
         }
       });
 
+      // Remove undefined image URLs before sending to Make.com
+      // This prevents the "problem retrieving image" error for invalid/missing images
+      const undefinedKeys = Object.entries(enrichedContractData)
+        .filter(([_, value]) => value === undefined)
+        .map(([key]) => key);
+      
+      if (undefinedKeys.length > 0) {
+        console.log('🔍 Skipping undefined image URLs:', undefinedKeys);
+      }
+      
+      const cleanedContractData = Object.fromEntries(
+        Object.entries(enrichedContractData).filter(([_, value]) => value !== undefined)
+      ) as typeof enrichedContractData;
+
       // Generate contract with Make.com integration
       const { webhookPayload, templateConfig, validation } =
-        generateContractWithMakecom(contractType, enrichedContractData);
+        generateContractWithMakecom(contractType, cleanedContractData);
 
       console.log('🔧 Generated webhook payload:', {
         hasWebhookPayload: !!webhookPayload,
