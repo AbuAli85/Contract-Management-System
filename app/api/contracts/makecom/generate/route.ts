@@ -476,9 +476,7 @@ export const POST = withAnyRBAC(
         );
       }
       
-      // Use service client for database operations (elevated privileges)
-      const supabaseService = createSupabaseServiceClient();
-      
+      // supabaseService already defined above - reuse it for database operations
       const { data: contract, error: contractError } = await supabaseService
         .from('contracts')
         .insert({
