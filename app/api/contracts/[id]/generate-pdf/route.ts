@@ -202,12 +202,12 @@ export async function POST(
       }
     }
 
-    // 5. Update contract status to 'generating'
+    // 5. Update contract status to 'generating' (using notes since pdf_status doesn't exist)
     await supabase
       .from('contracts')
       .update({
-        pdf_status: 'generating',
-        pdf_error_message: null,
+        notes: `PDF generation started at ${new Date().toISOString()}`,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', contractId);
 
@@ -325,12 +325,12 @@ export async function POST(
       const errorText = await webhookResponse.text();
       console.error('Make.com webhook error:', errorText);
       
-      // Update contract with error status
+      // Update contract with error status (using notes since pdf_status doesn't exist)
       await supabase
         .from('contracts')
         .update({
-          pdf_status: 'error',
-          pdf_error_message: 'Failed to trigger PDF generation workflow',
+          notes: `PDF generation failed at ${new Date().toISOString()}: Failed to trigger PDF generation workflow`,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', contractId);
 
@@ -353,15 +353,15 @@ export async function POST(
     // Get contract ID from params or from earlier
     const errorContractId = params?.id;
 
-    // Try to update contract status
+    // Try to update contract status (using notes since pdf_status doesn't exist)
     if (errorContractId) {
       try {
         const supabase = createServiceClient();
         await supabase
           .from('contracts')
           .update({
-            pdf_status: 'error',
-            pdf_error_message: error instanceof Error ? error.message : 'Unknown error',
+            notes: `PDF generation error at ${new Date().toISOString()}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            updated_at: new Date().toISOString(),
           })
           .eq('id', errorContractId);
       } catch (updateError) {

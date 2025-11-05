@@ -97,21 +97,25 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // 6. Update contract in database
+    // 6. Update contract in database (only update columns that exist)
     const updateData: any = {
-      pdf_generated_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
     if (payload.status === 'generated') {
       updateData.pdf_url = payload.pdf_url;
-      updateData.google_drive_url = payload.google_drive_url;
-      updateData.pdf_status = 'generated';
-      updateData.pdf_error_message = null;
+      updateData.google_doc_url = payload.google_drive_url; // Map to existing column
+      // Note: pdf_generated_at, pdf_status, pdf_error_message don't exist in schema
+      // Store status info in notes if needed for audit trail
+      const statusNote = `PDF generated at ${new Date().toISOString()}. Images processed: ${JSON.stringify(payload.images_processed || {})}`;
+      updateData.notes = statusNote;
     } else if (payload.status === 'error') {
-      updateData.pdf_status = 'error';
-      updateData.pdf_error_message = payload.error_message || 'PDF generation failed';
+      // Store error in notes since pdf_error_message column doesn't exist
+      const errorNote = `PDF generation failed at ${new Date().toISOString()}: ${payload.error_message || 'Unknown error'}`;
+      updateData.notes = errorNote;
     }
+
+    console.log('Updating contract with data:', updateData);
 
     const { error: updateError } = await supabase
       .from('contracts')
@@ -121,10 +125,16 @@ export async function PATCH(request: Request) {
     if (updateError) {
       console.error('Failed to update contract:', updateError);
       return NextResponse.json(
-        { error: 'Failed to update contract' },
+        { 
+          error: 'Failed to update contract',
+          details: updateError.message,
+          hint: updateError.hint 
+        },
         { status: 500 }
       );
     }
+
+    console.log('✅ Contract updated successfully:', payload.contract_id);
 
     // 7. Log the webhook event for audit trail
     try {
