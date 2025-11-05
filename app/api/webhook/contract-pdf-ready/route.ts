@@ -1,7 +1,23 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-const PDF_WEBHOOK_SECRET = process.env.PDF_WEBHOOK_SECRET;
+// Support multiple webhook secret environment variable names
+const PDF_WEBHOOK_SECRET = 
+  process.env.PDF_WEBHOOK_SECRET || 
+  process.env.MAKE_WEBHOOK_SECRET ||
+  process.env.MAKECOM_WEBHOOK_SECRET;
+
+// Create Supabase service client for webhook (doesn't need cookies)
+function createServiceClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 interface PDFReadyPayload {
   contract_id: string;
@@ -64,12 +80,12 @@ export async function PATCH(request: Request) {
     }
 
     // 4. Create Supabase client (service role for webhook)
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     // 5. Verify contract exists
     const { data: contract, error: fetchError } = await supabase
       .from('contracts')
-      .select('id, contract_number, created_by')
+      .select('id, contract_number, user_id')
       .eq('id', payload.contract_id)
       .single();
 
@@ -126,10 +142,10 @@ export async function PATCH(request: Request) {
     }
 
     // 8. Send notification to user (optional - if you have notification system)
-    if (payload.status === 'generated' && contract.created_by) {
+    if (payload.status === 'generated' && contract.user_id) {
       try {
         await sendNotification({
-          userId: contract.created_by,
+          userId: contract.user_id,
           type: 'contract_pdf_ready',
           title: 'Contract PDF Ready',
           message: `PDF for contract ${payload.contract_number} is ready to download`,
@@ -184,16 +200,20 @@ async function sendNotification(params: {
   console.log('Notification:', params);
   
   // Example: Store in database
-  const supabase = await createClient();
-  await supabase.from('notifications').insert({
-    user_id: params.userId,
-    type: params.type,
-    title: params.title,
-    message: params.message,
-    data: params.data,
-    read: false,
-    created_at: new Date().toISOString(),
-  });
+  try {
+    const supabase = createServiceClient();
+    await supabase.from('notifications').insert({
+      user_id: params.userId,
+      type: params.type,
+      title: params.title,
+      message: params.message,
+      data: params.data,
+      read: false,
+      created_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.warn('Failed to create notification:', error);
+  }
 }
 
 // Also support POST for compatibility
