@@ -635,15 +635,28 @@ function ContractsContent() {
     }
 
     setIsDownloading(contract.id);
+    console.log('📥 Downloading PDF:', contract.pdf_url);
+    
     try {
-      const response = await fetch(contract.pdf_url);
-      if (!response.ok) throw new Error('Failed to download PDF');
+      // Add CORS mode and credentials for Supabase storage
+      const response = await fetch(contract.pdf_url, {
+        mode: 'cors',
+        credentials: 'omit', // Supabase storage is public
+      });
+      
+      if (!response.ok) {
+        console.error('❌ PDF fetch failed:', response.status, response.statusText);
+        throw new Error(`Failed to download PDF: ${response.statusText}`);
+      }
 
       const blob = await response.blob();
+      console.log('✅ PDF blob received:', blob.size, 'bytes');
+      
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${contract.contract_number || contract.id}-contract.pdf`;
+      const filename = contract.contract_number || contract.id.substring(0, 8);
+      a.download = `${filename}-contract.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -651,14 +664,14 @@ function ContractsContent() {
 
       toast({
         title: '✅ Download Successful',
-        description: 'Contract PDF downloaded successfully',
+        description: `${filename}-contract.pdf downloaded successfully`,
         variant: 'default',
       });
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('❌ Download error:', error);
       toast({
         title: '❌ Download Failed',
-        description: 'Failed to download contract PDF',
+        description: error instanceof Error ? error.message : 'Failed to download contract PDF. The file may not be accessible.',
         variant: 'destructive',
       });
     } finally {
@@ -1531,33 +1544,60 @@ function ContractsContent() {
                             </TableCell>
                             <TableCell className='py-4'>
                               {contract.pdf_url ? (
+                                <div className='flex items-center gap-2'>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() => window.open(contract.pdf_url!, '_blank')}
+                                          className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-400 transition-colors duration-200'
+                                          title='View contract PDF'
+                                        >
+                                          <Eye className='h-4 w-4' />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>View PDF</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() =>
+                                            handleDownloadContract(contract)
+                                          }
+                                          disabled={isDownloading === contract.id}
+                                          className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                                          title='Download contract PDF'
+                                        >
+                                          {isDownloading === contract.id ? (
+                                            <Loader2 className='h-4 w-4 animate-spin' />
+                                          ) : (
+                                            <Download className='h-4 w-4' />
+                                          )}
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Download PDF</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                              ) : (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() =>
-                                          handleDownloadContract(contract)
-                                        }
-                                        disabled={isDownloading === contract.id}
-                                        className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
-                                        title='Download contract PDF'
-                                      >
-                                        {isDownloading === contract.id ? (
-                                          <Loader2 className='h-4 w-4 animate-spin' />
-                                        ) : (
-                                          <Download className='h-4 w-4' />
-                                        )}
-                                      </button>
+                                      <div className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'>
+                                        <FileText className='h-4 w-4' />
+                                      </div>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>Download PDF</p>
+                                      <p>No PDF available</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
-                              ) : (
-                                <div className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400'>
-                                  <FileText className='h-4 w-4' />
-                                </div>
                               )}
                             </TableCell>
                             <TableCell className='text-right py-4'>
@@ -1571,17 +1611,18 @@ function ContractsContent() {
                                     <MoreHorizontal className='h-4 w-4' />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align='end'>
+                                <DropdownMenuContent align='end' className='w-48'>
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <Link
-                                    href={`/${locale}/contracts/${contract.id}`}
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      console.log('📄 Navigating to contract:', contract.id);
+                                      router.push(`/${locale}/contracts/${contract.id}`);
+                                    }}
+                                    className='cursor-pointer'
                                   >
-                                    <DropdownMenuItem>
-                                      <Eye className='mr-2 h-4 w-4' /> View
-                                      Details
-                                    </DropdownMenuItem>
-                                  </Link>
+                                    <Eye className='mr-2 h-4 w-4' /> View Details
+                                  </DropdownMenuItem>
                                   {contract.pdf_url && (
                                     <DropdownMenuItem
                                       onClick={() =>
@@ -1603,20 +1644,34 @@ function ContractsContent() {
                                     </DropdownMenuItem>
                                   )}
                                   {canEditContract && (
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        router.push(`/${locale}/contracts/${contract.id}/edit`);
+                                      }}
+                                      className='cursor-pointer'
+                                    >
                                       <Edit className='mr-2 h-4 w-4' /> Edit
                                     </DropdownMenuItem>
                                   )}
                                   {canCreateContract && (
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        toast({
+                                          title: 'Duplicate Contract',
+                                          description: 'Feature coming soon!',
+                                        });
+                                      }}
+                                    >
                                       <Copy className='mr-2 h-4 w-4' />{' '}
                                       Duplicate
                                     </DropdownMenuItem>
                                   )}
-                                  {canEditContract && (
-                                    <DropdownMenuItem>
-                                      <Archive className='mr-2 h-4 w-4' />{' '}
-                                      Archive
+                                  {contract.pdf_url && (
+                                    <DropdownMenuItem
+                                      onClick={() => window.open(contract.pdf_url!, '_blank')}
+                                    >
+                                      <Eye className='mr-2 h-4 w-4' />{' '}
+                                      View PDF
                                     </DropdownMenuItem>
                                   )}
                                   {canDeleteContract && (
@@ -1703,17 +1758,18 @@ function ContractsContent() {
                                   <MoreHorizontal className='h-4 w-4' />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align='end'>
+                              <DropdownMenuContent align='end' className='w-48'>
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <Link
-                                  href={`/${locale}/contracts/${contract.id}`}
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    console.log('📄 Navigating to contract:', contract.id);
+                                    router.push(`/${locale}/contracts/${contract.id}`);
+                                  }}
+                                  className='cursor-pointer'
                                 >
-                                  <DropdownMenuItem>
-                                    <Eye className='mr-2 h-4 w-4' /> View
-                                    Details
-                                  </DropdownMenuItem>
-                                </Link>
+                                  <Eye className='mr-2 h-4 w-4' /> View Details
+                                </DropdownMenuItem>
                                 {contract.pdf_url && (
                                   <DropdownMenuItem
                                     onClick={() =>
@@ -1735,17 +1791,33 @@ function ContractsContent() {
                                   </DropdownMenuItem>
                                 )}
                                 {canEditContract && (
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      router.push(`/${locale}/contracts/${contract.id}/edit`);
+                                    }}
+                                    className='cursor-pointer'
+                                  >
                                     <Edit className='mr-2 h-4 w-4' /> Edit
                                   </DropdownMenuItem>
                                 )}
-                                {canDeleteContract && (
+                                {contract.pdf_url && (
                                   <DropdownMenuItem
-                                    onClick={() => handleDeleteClick(contract)}
-                                    className='text-red-600'
+                                    onClick={() => window.open(contract.pdf_url!, '_blank')}
                                   >
-                                    <Trash2 className='mr-2 h-4 w-4' /> Delete
+                                    <Eye className='mr-2 h-4 w-4' />{' '}
+                                    View PDF
                                   </DropdownMenuItem>
+                                )}
+                                {canDeleteContract && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteClick(contract)}
+                                      className='text-red-600 focus:bg-red-50 focus:text-red-600'
+                                    >
+                                      <Trash2 className='mr-2 h-4 w-4' /> Delete
+                                    </DropdownMenuItem>
+                                  </>
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>
