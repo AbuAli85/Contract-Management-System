@@ -107,6 +107,7 @@ export default function ContractDetailPage() {
   });
   const [downloading, setDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Validate contract ID format
   const isValidContractId =
@@ -115,12 +116,105 @@ export default function ContractDetailPage() {
       contractId
     );
 
-  // Fetch PDF status when contract loads
-  useEffect(() => {
-    if (contract && contract.approval_status === 'active') {
-      fetchPDFStatus();
+  // Poll for PDF status (similar to Sharaf DG)
+  const startPDFPolling = () => {
+    // Clear any existing polling
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
     }
-  }, [contract]);
+
+    let pollCount = 0;
+    const maxPolls = 40; // 40 polls × 3 seconds = 120 seconds total
+    
+    setPdfStatus(prev => ({ ...prev, is_processing: true }));
+    
+    const interval = setInterval(async () => {
+      try {
+        pollCount++;
+        
+        // Fetch updated contract data
+        const response = await fetch(`/api/contracts/${contractId}`);
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        const updatedContract = data?.contract || data;
+        
+        console.log(`📊 PDF Poll ${pollCount}/${maxPolls}:`, {
+          status: updatedContract?.status,
+          has_pdf_url: !!updatedContract?.pdf_url,
+        });
+
+        // Check if PDF is ready
+        if (updatedContract?.pdf_url) {
+          clearInterval(interval);
+          setPollingInterval(null);
+          setPdfStatus(prev => ({
+            ...prev,
+            has_pdf: true,
+            pdf_url: updatedContract.pdf_url,
+            is_processing: false,
+          }));
+          setStatusMessage('PDF generated successfully!');
+          refetch(); // Refresh contract data
+          return;
+        }
+
+        // Stop polling after max attempts
+        if (pollCount >= maxPolls) {
+          clearInterval(interval);
+          setPollingInterval(null);
+          setPdfStatus(prev => ({ ...prev, is_processing: false }));
+          setStatusMessage('PDF generation is taking longer than expected. Please check back later or click "Generate PDF" to retry.');
+        }
+      } catch (error) {
+        console.error('Poll error:', error);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    setPollingInterval(interval);
+    
+    // Auto-stop after 2 minutes
+    setTimeout(() => {
+      if (interval) {
+        clearInterval(interval);
+        setPollingInterval(null);
+        setPdfStatus(prev => ({ ...prev, is_processing: false }));
+      }
+    }, 120000);
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  // Fetch PDF status when contract loads
+  // Check for approved/active contracts (either status='approved' or approval_status='active')
+  useEffect(() => {
+    if (contract) {
+      const isApproved = 
+        contract.status === 'approved' || 
+        contract.approval_status === 'active' ||
+        contract.status === 'active';
+      
+      if (isApproved) {
+        fetchPDFStatus();
+        
+        // If PDF is not available but contract is approved, start polling
+        if (!contract.pdf_url && !pdfStatus.is_processing && !pollingInterval) {
+          // Check notes field to see if PDF generation was started
+          const notes = contract.notes || '';
+          if (notes.includes('PDF generation started') || notes.includes('generation started')) {
+            startPDFPolling();
+          }
+        }
+      }
+    }
+  }, [contract?.id, contract?.pdf_url, contract?.status, contract?.approval_status]);
 
   const fetchPDFStatus = async () => {
     if (!contractId) return;
@@ -161,17 +255,13 @@ export default function ContractDetailPage() {
       const data = await response.json();
 
       if (data.success) {
-        setStatusMessage('PDF generated successfully!');
-        // Refresh the contract data to get the new PDF URL
+        setStatusMessage('PDF generation started. Please wait...');
+        // Start polling for PDF status
+        startPDFPolling();
+        // Refresh the contract data
         refetch();
-        // Update PDF status
-        setPdfStatus(prev => ({
-          ...prev,
-          has_pdf: true,
-          pdf_url: data.pdf_url,
-        }));
       } else {
-        setStatusMessage(`Error: ${data.error}`);
+        setStatusMessage(`Error: ${data.error || 'Failed to generate PDF'}`);
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -299,7 +389,11 @@ export default function ContractDetailPage() {
     );
   }
 
-  const isApproved = contract.approval_status === 'active';
+  // Check if contract is approved/active (for PDF generation)
+  const isApproved = 
+    contract?.status === 'approved' || 
+    contract?.approval_status === 'active' ||
+    contract?.status === 'active';
   const hasPDF = !!contract.pdf_url;
 
   // Show loading state while checking authentication
