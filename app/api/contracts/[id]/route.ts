@@ -330,14 +330,10 @@ export const DELETE = withRBAC(
         );
       }
 
-      // Soft delete by updating status to 'deleted' instead of hard delete
-      // This preserves data integrity and audit trails
+      // Perform hard delete (RLS policies may prevent status='deleted')
       const { error: deleteError } = await supabase
         .from('contracts')
-        .update({
-          status: 'deleted',
-          updated_at: new Date().toISOString(),
-        })
+        .delete()
         .eq('id', id);
 
       if (deleteError) {
