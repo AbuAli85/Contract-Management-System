@@ -49,8 +49,15 @@ export const GET = withRBAC('system:admin:all', async (request: NextRequest) => 
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // Fetch all API keys
-    const { data: apiKeys, error } = await supabase
+    // Use service role client to bypass RLS for admin operations
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Fetch all API keys using service role (bypasses RLS)
+    const { data: apiKeys, error } = await serviceClient
       .from('api_keys')
       .select('*')
       .order('created_at', { ascending: false });
@@ -153,8 +160,15 @@ export const POST = withRBAC('system:admin:all', async (request: NextRequest) =>
     // Generate API key
     const { key, prefix, hash } = generateApiKey();
 
-    // Insert into database
-    const { data: apiKeyRecord, error: insertError } = await supabase
+    // Use service role client to bypass RLS for admin operations
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Insert into database using service role (bypasses RLS)
+    const { data: apiKeyRecord, error: insertError } = await serviceClient
       .from('api_keys')
       .insert({
         name: name.trim(),

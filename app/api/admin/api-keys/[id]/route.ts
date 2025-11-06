@@ -49,8 +49,15 @@ export const PUT = withRBAC('system:admin:all', async (
     if (body.isActive !== undefined) updates.is_active = body.isActive;
     if (body.expiresAt !== undefined) updates.expires_at = body.expiresAt || null;
 
-    // Update API key
-    const { data: updatedKey, error } = await supabase
+    // Use service role client to bypass RLS for admin operations
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Update API key using service role (bypasses RLS)
+    const { data: updatedKey, error } = await serviceClient
       .from('api_keys')
       .update(updates)
       .eq('id', id)
@@ -132,8 +139,15 @@ export const DELETE = withRBAC('system:admin:all', async (
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // Soft delete by deactivating
-    const { error } = await supabase
+    // Use service role client to bypass RLS for admin operations
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Soft delete by deactivating using service role (bypasses RLS)
+    const { error } = await serviceClient
       .from('api_keys')
       .update({ is_active: false })
       .eq('id', id);
