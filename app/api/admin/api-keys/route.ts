@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { hashApiKey } from '@/lib/api-key-auth';
 import { withRBAC } from '@/lib/rbac/guard';
 import crypto from 'crypto';
@@ -49,15 +50,11 @@ export const GET = withRBAC('system:admin:all', async (request: NextRequest) => 
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // Use service role client to bypass RLS for admin operations
-    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
-    const serviceClient = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Use admin client to bypass RLS for admin operations
+    const adminClient = getSupabaseAdmin();
 
-    // Fetch all API keys using service role (bypasses RLS)
-    const { data: apiKeys, error } = await serviceClient
+    // Fetch all API keys using admin client (bypasses RLS)
+    const { data: apiKeys, error } = await adminClient
       .from('api_keys')
       .select('*')
       .order('created_at', { ascending: false });
@@ -160,30 +157,23 @@ export const POST = withRBAC('system:admin:all', async (request: NextRequest) =>
     // Generate API key
     const { key, prefix, hash } = generateApiKey();
 
-    // Use service role client to bypass RLS for admin operations
-    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
-    
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!supabaseUrl || !serviceRoleKey) {
-      console.error('Missing Supabase environment variables:', {
-        hasUrl: !!supabaseUrl,
-        hasServiceKey: !!serviceRoleKey,
-      });
+    // Use admin client to bypass RLS for admin operations
+    let adminClient;
+    try {
+      adminClient = getSupabaseAdmin();
+    } catch (error) {
+      console.error('Failed to get admin client:', error);
       return NextResponse.json(
         { 
           error: 'Server configuration error', 
-          details: 'Missing Supabase service role key. Please check your environment variables.' 
+          details: error instanceof Error ? error.message : 'Missing Supabase service role key',
         },
         { status: 500 }
       );
     }
-    
-    const serviceClient = createServiceClient(supabaseUrl, serviceRoleKey);
 
-    // Insert into database using service role (bypasses RLS)
-    const { data: apiKeyRecord, error: insertError } = await serviceClient
+    // Insert into database using admin client (bypasses RLS)
+    const { data: apiKeyRecord, error: insertError } = await adminClient
       .from('api_keys')
       .insert({
         name: name.trim(),

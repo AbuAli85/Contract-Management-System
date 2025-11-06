@@ -92,6 +92,13 @@ CREATE POLICY "Admins can delete API keys"
 -- Grant permissions to authenticated users
 GRANT SELECT, INSERT, UPDATE, DELETE ON api_keys TO authenticated;
 
+-- Grant permissions to service_role (for service role client)
+-- This allows the service role key to bypass RLS
+GRANT SELECT, INSERT, UPDATE, DELETE ON api_keys TO service_role;
+
+-- Also grant to anon role (sometimes needed for service role operations)
+GRANT SELECT, INSERT, UPDATE, DELETE ON api_keys TO anon;
+
 -- Verify table was created
 SELECT 
   'Table created successfully' as status,
