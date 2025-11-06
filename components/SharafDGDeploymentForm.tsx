@@ -703,9 +703,40 @@ export default function SharafDGDeploymentForm({
       console.log('Images:', {
         id_card_url: safeWebhookData.promoter_id_card_url || '(empty)',
         passport_url: safeWebhookData.promoter_passport_url || '(empty)',
+        id_card_length: safeWebhookData.promoter_id_card_url?.length || 0,
+        passport_length: safeWebhookData.promoter_passport_url?.length || 0,
         has_id_card: safeWebhookData.has_id_card_image,
         has_passport: safeWebhookData.has_passport_image,
       });
+      
+      // Test image URL accessibility before sending to Make.com
+      if (safeWebhookData.promoter_passport_url) {
+        console.log('🔍 Testing passport URL accessibility...');
+        try {
+          const testResponse = await fetch(safeWebhookData.promoter_passport_url, { method: 'HEAD' });
+          console.log('Passport URL status:', testResponse.status, testResponse.statusText);
+          if (!testResponse.ok) {
+            console.error('❌ Passport URL not accessible:', safeWebhookData.promoter_passport_url);
+            console.warn('⚠️ Make.com may fail to embed this image');
+          }
+        } catch (urlError) {
+          console.error('❌ Passport URL test failed:', urlError);
+        }
+      }
+      
+      if (safeWebhookData.promoter_id_card_url) {
+        console.log('🔍 Testing ID card URL accessibility...');
+        try {
+          const testResponse = await fetch(safeWebhookData.promoter_id_card_url, { method: 'HEAD' });
+          console.log('ID card URL status:', testResponse.status, testResponse.statusText);
+          if (!testResponse.ok) {
+            console.error('❌ ID card URL not accessible:', safeWebhookData.promoter_id_card_url);
+            console.warn('⚠️ Make.com may fail to embed this image');
+          }
+        } catch (urlError) {
+          console.error('❌ ID card URL test failed:', urlError);
+        }
+      }
       console.log('Parties:', {
         first_party: safeWebhookData.first_party_name_en,
         second_party: safeWebhookData.second_party_name_en,
@@ -723,6 +754,9 @@ export default function SharafDGDeploymentForm({
       if (!safeWebhookData.passport_number) {
         console.warn('⚠️ WARNING: Passport number is missing from webhook data!');
       }
+      
+      // Log the complete payload being sent (for Make.com debugging)
+      console.log('📦 COMPLETE WEBHOOK PAYLOAD:', JSON.stringify(safeWebhookData, null, 2));
 
       // Send to Make.com webhook (using safeWebhookData with placeholders removed)
       const webhookResponse = await fetch('https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn', {
