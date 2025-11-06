@@ -392,10 +392,18 @@ export default function SharafDGDeploymentForm({
     if (!formData.job_title) errors.push('Job Title');
     if (!formData.work_location) errors.push('Work Location');
 
-    // Validate promoter has required documents
+    // Validate promoter has required documents (check for placeholders)
     if (selectedPromoter) {
-      if (!selectedPromoter.id_card_url) errors.push('Promoter ID Card Image');
-      if (!selectedPromoter.passport_url) errors.push('Promoter Passport Image');
+      const hasValidIdCard = selectedPromoter.id_card_url && 
+        !selectedPromoter.id_card_url.includes('NO_ID_CARD') &&
+        !selectedPromoter.id_card_url.includes('placeholder');
+      
+      const hasValidPassport = selectedPromoter.passport_url && 
+        !selectedPromoter.passport_url.includes('NO_PASSPORT') &&
+        !selectedPromoter.passport_url.includes('placeholder');
+      
+      if (!hasValidIdCard) errors.push('Promoter ID Card Image (valid, not placeholder)');
+      if (!hasValidPassport) errors.push('Promoter Passport Image (valid, not placeholder)');
       if (!selectedPromoter.id_card_number) errors.push('Promoter ID Card Number');
       if (!selectedPromoter.passport_number) errors.push('Promoter Passport Number');
     }
@@ -543,11 +551,23 @@ export default function SharafDGDeploymentForm({
   const handleGeneratePDF = async () => {
     if (!createdContractId) return;
 
-    // Validate required images before proceeding
-    if (!selectedPromoter?.id_card_url || !selectedPromoter?.passport_url) {
+    // Validate required images before proceeding (check for placeholders too)
+    const hasValidIdCard = selectedPromoter?.id_card_url && 
+      !selectedPromoter.id_card_url.includes('NO_ID_CARD') &&
+      !selectedPromoter.id_card_url.includes('placeholder');
+    
+    const hasValidPassport = selectedPromoter?.passport_url && 
+      !selectedPromoter.passport_url.includes('NO_PASSPORT') &&
+      !selectedPromoter.passport_url.includes('placeholder');
+
+    if (!hasValidIdCard || !hasValidPassport) {
+      const missingDocs = [];
+      if (!hasValidIdCard) missingDocs.push('ID Card');
+      if (!hasValidPassport) missingDocs.push('Passport');
+      
       toast({
         title: 'Missing Required Images',
-        description: 'Promoter must have both ID card and passport images uploaded.',
+        description: `Promoter must have valid ${missingDocs.join(' and ')} images uploaded (not placeholders).`,
         variant: 'destructive',
       });
       setPdfStatus('error');
@@ -575,8 +595,9 @@ export default function SharafDGDeploymentForm({
         promoter_passport_number: selectedPromoter?.passport_number || '',
         promoter_email: selectedPromoter?.email || '',
         promoter_mobile_number: selectedPromoter?.mobile_number || '',
-        promoter_id_card_url: selectedPromoter?.id_card_url || '',
-        promoter_passport_url: selectedPromoter?.passport_url || '',
+        // Only send valid image URLs (no placeholders)
+        promoter_id_card_url: hasValidIdCard ? selectedPromoter?.id_card_url || '' : '',
+        promoter_passport_url: hasValidPassport ? selectedPromoter?.passport_url || '' : '',
         
         // First Party (Client) - FLAT fields
         first_party_id: formData.first_party_id,
@@ -592,10 +613,10 @@ export default function SharafDGDeploymentForm({
         second_party_crn: selectedEmployer?.crn || '',
         second_party_logo_url: selectedEmployer?.logo_url || '',
         
-        // Supplier/Brand - FLAT fields
-        supplier_id: formData.supplier_brand_id,
-        supplier_name_en: selectedSupplier?.name_en || '',
-        supplier_name_ar: selectedSupplier?.name_ar || '',
+        // Supplier/Brand - FLAT fields (matching backend naming convention)
+        supplier_brand_id: formData.supplier_brand_id,
+        supplier_brand_name_en: selectedSupplier?.name_en || '',
+        supplier_brand_name_ar: selectedSupplier?.name_ar || '',
         
         // Contract dates
         contract_start_date: formData.contract_start_date || '',
@@ -894,55 +915,114 @@ export default function SharafDGDeploymentForm({
 
             {/* Promoter preview */}
             {selectedPromoter && (
-              <Alert className={selectedPromoter.id_card_url && selectedPromoter.passport_url ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}>
-                <User className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-2 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div><strong>Name (EN):</strong> {selectedPromoter.name_en}</div>
-                      <div className="text-right"><strong>الاسم:</strong> {selectedPromoter.name_ar}</div>
-                    </div>
-                    <div><strong>ID Card:</strong> {selectedPromoter.id_card_number}</div>
-                    <div><strong>Passport:</strong> {selectedPromoter.passport_number || 'Not provided'}</div>
-                    <div><strong>Email:</strong> {selectedPromoter.email || 'Not provided'}</div>
-                    <div><strong>Mobile:</strong> {selectedPromoter.mobile_number || 'Not provided'}</div>
-                    
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-                      {selectedPromoter.id_card_url ? (
-                        <Badge variant="default" className="gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          ID Card Image ✓
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" className="gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          ID Card Missing!
-                        </Badge>
-                      )}
-                      {selectedPromoter.passport_url ? (
-                        <Badge variant="default" className="gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Passport Image ✓
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" className="gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          Passport Missing!
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {(!selectedPromoter.id_card_url || !selectedPromoter.passport_url) && (
-                      <Alert variant="destructive" className="mt-2">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                          This promoter is missing required images. Please upload ID card and passport before proceeding.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
-                </AlertDescription>
-              </Alert>
+              (() => {
+                const hasValidIdCard = selectedPromoter.id_card_url && 
+                  !selectedPromoter.id_card_url.includes('NO_ID_CARD') &&
+                  !selectedPromoter.id_card_url.includes('placeholder');
+                
+                const hasValidPassport = selectedPromoter.passport_url && 
+                  !selectedPromoter.passport_url.includes('NO_PASSPORT') &&
+                  !selectedPromoter.passport_url.includes('placeholder');
+                
+                const hasPassportNumber = !!selectedPromoter.passport_number;
+                const allValid = hasValidIdCard && hasValidPassport && hasPassportNumber;
+                
+                return (
+                  <Alert className={allValid ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}>
+                    <User className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-2 text-sm">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div><strong>Name (EN):</strong> {selectedPromoter.name_en}</div>
+                          <div className="text-right"><strong>الاسم:</strong> {selectedPromoter.name_ar}</div>
+                        </div>
+                        
+                        {/* ID Card Number */}
+                        <div className="flex items-center justify-between">
+                          <div><strong>ID Card:</strong> {selectedPromoter.id_card_number}</div>
+                          {selectedPromoter.id_card_number && (
+                            <Badge variant="outline" className="gap-1">
+                              <CheckCircle className="h-3 w-3 text-green-600" />
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {/* Passport Number - Required and Highlighted */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <strong>Passport Number:</strong>
+                            {selectedPromoter.passport_number ? (
+                              <span className="text-green-700 font-semibold">{selectedPromoter.passport_number}</span>
+                            ) : (
+                              <span className="text-red-600 font-semibold">Not provided ⚠️</span>
+                            )}
+                          </div>
+                          {selectedPromoter.passport_number ? (
+                            <Badge variant="default" className="gap-1 bg-green-600">
+                              <CheckCircle className="h-3 w-3" />
+                              Valid
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Required!
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div><strong>Email:</strong> {selectedPromoter.email || 'Not provided'}</div>
+                        <div><strong>Mobile:</strong> {selectedPromoter.mobile_number || 'Not provided'}</div>
+                        
+                        {/* Document Images Status */}
+                        <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t">
+                          {hasValidIdCard ? (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              ID Card Image ✓
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              {selectedPromoter.id_card_url ? 'ID Card is Placeholder!' : 'ID Card Missing!'}
+                            </Badge>
+                          )}
+                          {hasValidPassport ? (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Passport Image ✓
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              {selectedPromoter.passport_url ? 'Passport is Placeholder!' : 'Passport Missing!'}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {(!allValid || !selectedPromoter.passport_number) && (
+                          <Alert variant="destructive" className="mt-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertDescription>
+                              <div className="space-y-1">
+                                {!allValid && (
+                                  <div>
+                                    This promoter has {!hasValidIdCard && !hasValidPassport ? 'missing or placeholder images' : !hasValidIdCard ? 'missing or placeholder ID card' : 'missing or placeholder passport'}. Please upload valid images before proceeding.
+                                  </div>
+                                )}
+                                {!selectedPromoter.passport_number && (
+                                  <div className="font-semibold">
+                                    ⚠️ Passport Number is required for Sharaf DG deployment letters.
+                                  </div>
+                                )}
+                              </div>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                );
+              })()
             )}
           </CardContent>
         </Card>
