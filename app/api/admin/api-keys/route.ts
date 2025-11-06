@@ -24,7 +24,7 @@ function generateApiKey(): { key: string; prefix: string; hash: string } {
  * GET /api/admin/api-keys
  * List all API keys (admin only)
  */
-export const GET = withRBAC('system.admin', async (request: NextRequest) => {
+export const GET = withRBAC('system:admin:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient();
     
@@ -99,7 +99,7 @@ export const GET = withRBAC('system.admin', async (request: NextRequest) => {
  * POST /api/admin/api-keys
  * Create a new API key
  */
-export const POST = withRBAC('system.admin', async (request: NextRequest) => {
+export const POST = withRBAC('system:admin:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient();
     

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  * PUT /api/admin/api-keys/[id]
  * Update an API key
  */
-export const PUT = withRBAC('system.admin', async (
+export const PUT = withRBAC('system:admin:all', async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
@@ -103,7 +103,7 @@ export const PUT = withRBAC('system.admin', async (
  * DELETE /api/admin/api-keys/[id]
  * Delete (deactivate) an API key
  */
-export const DELETE = withRBAC('system.admin', async (
+export const DELETE = withRBAC('system:admin:all', async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
