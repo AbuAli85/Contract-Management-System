@@ -284,8 +284,12 @@ export async function POST(
       webhookPayload.promoter_mobile_number = contract.promoters.mobile_number;
       webhookPayload.promoter_email = contract.promoters.email;
       webhookPayload.promoter_id_card_number = contract.promoters.id_card_number;
+      webhookPayload.promoter_passport_number = contract.promoters.passport_number;
+      // Aliases for Make.com template compatibility
       webhookPayload.id_card_number = contract.promoters.id_card_number;
       webhookPayload.passport_number = contract.promoters.passport_number;
+      webhookPayload.employee_name_en = contract.promoters.name_en;
+      webhookPayload.employee_name_ar = contract.promoters.name_ar;
       
       // Only add image URLs if they're valid (not placeholders)
       // Check for both specific placeholders (NO_ID_CARD, NO_PASSPORT) and generic "placeholder"

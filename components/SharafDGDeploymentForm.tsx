@@ -595,9 +595,16 @@ export default function SharafDGDeploymentForm({
         promoter_passport_number: selectedPromoter?.passport_number || '',
         promoter_email: selectedPromoter?.email || '',
         promoter_mobile_number: selectedPromoter?.mobile_number || '',
+        // Aliases for Make.com template compatibility
+        id_card_number: selectedPromoter?.id_card_number || '',
+        passport_number: selectedPromoter?.passport_number || '',
+        employee_name_en: selectedPromoter?.name_en || '',
+        employee_name_ar: selectedPromoter?.name_ar || '',
         // Only send valid image URLs (no placeholders)
         promoter_id_card_url: hasValidIdCard ? selectedPromoter?.id_card_url || '' : '',
         promoter_passport_url: hasValidPassport ? selectedPromoter?.passport_url || '' : '',
+        id_card_url: hasValidIdCard ? selectedPromoter?.id_card_url || '' : '',
+        passport_url: hasValidPassport ? selectedPromoter?.passport_url || '' : '',
         
         // First Party (Client) - FLAT fields
         first_party_id: formData.first_party_id,
@@ -727,13 +734,20 @@ export default function SharafDGDeploymentForm({
       console.log('📤 Sending to Make.com webhook:', {
         contract_id: safeWebhookData.contract_id,
         contract_number: safeWebhookData.contract_number,
+        promoter_name: safeWebhookData.promoter_name_en,
+        id_card_number: safeWebhookData.id_card_number,
+        passport_number: safeWebhookData.passport_number,
+        promoter_passport_number: safeWebhookData.promoter_passport_number,
         promoter_id_card_url: safeWebhookData.promoter_id_card_url || '(removed - placeholder)',
         promoter_passport_url: safeWebhookData.promoter_passport_url || '(removed - placeholder)',
-        has_id_card: !!safeWebhookData.promoter_id_card_url,
-        has_passport: !!safeWebhookData.promoter_passport_url,
+        has_id_card_image: safeWebhookData.has_id_card_image,
+        has_passport_image: safeWebhookData.has_passport_image,
         first_party: safeWebhookData.first_party_name_en,
         second_party: safeWebhookData.second_party_name_en,
+        supplier: safeWebhookData.supplier_brand_name_en,
       });
+      
+      console.log('📋 Complete webhook payload keys:', Object.keys(safeWebhookData).sort());
 
       // Send to Make.com webhook (using safeWebhookData with placeholders removed)
       const webhookResponse = await fetch('https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn', {
@@ -786,10 +800,10 @@ export default function SharafDGDeploymentForm({
         
         if (!supabase || !createdContractId) return;
         
-        // Query only existing columns
+        // Query PDF-related columns directly (Make.com updates these!)
         const { data: contract, error } = await supabase
           .from('contracts')
-          .select('id, contract_number, status, terms')
+          .select('id, contract_number, status, pdf_url, google_doc_url, terms, notes')
           .eq('id', createdContractId)
           .single();
 
@@ -798,7 +812,31 @@ export default function SharafDGDeploymentForm({
           return;
         }
 
-        // Check if terms field has PDF info (Make.com might update this)
+        console.log(`📊 Poll ${pollCount}/${maxPolls}:`, {
+          status: contract?.status,
+          has_pdf_url: !!contract?.pdf_url,
+          has_google_doc: !!contract?.google_doc_url,
+          has_terms: !!contract?.terms,
+          has_notes: !!contract?.notes,
+        });
+
+        // PRIORITY 1: Check pdf_url column directly (Make.com updates this!)
+        if (contract?.pdf_url) {
+          clearInterval(interval);
+          setPdfStatus('ready');
+          setPdfUrl(contract.pdf_url);
+          setGoogleDriveUrl(contract.google_doc_url || null);
+          
+          console.log('✅ PDF Ready! URL:', contract.pdf_url);
+          
+          toast({
+            title: 'PDF Ready!',
+            description: 'Your deployment letter has been generated successfully.',
+          });
+          return;
+        }
+
+        // PRIORITY 2: Check if terms field has PDF info (fallback)
         try {
           const terms = contract?.terms ? JSON.parse(contract.terms) : {};
           
@@ -812,6 +850,7 @@ export default function SharafDGDeploymentForm({
               title: 'PDF Ready!',
               description: 'Your deployment letter has been generated successfully.',
             });
+            return;
           } else if (terms.pdf_error) {
             clearInterval(interval);
             setPdfStatus('error');
@@ -820,9 +859,44 @@ export default function SharafDGDeploymentForm({
               description: terms.pdf_error || 'An error occurred',
               variant: 'destructive',
             });
+            return;
           }
         } catch (parseError) {
           console.log('Terms parse error (might be normal):', parseError);
+        }
+
+        // Also check notes field for PDF URL (Make.com might update this instead)
+        if (contract?.notes) {
+          try {
+            // Check if notes contains a URL pattern
+            const urlMatch = contract.notes.match(/https?:\/\/[^\s"]+\.pdf/i);
+            if (urlMatch) {
+              const pdfUrl = urlMatch[0];
+              clearInterval(interval);
+              setPdfStatus('ready');
+              setPdfUrl(pdfUrl);
+              
+              // Try to extract Google Drive URL too
+              const driveMatch = contract.notes.match(/https?:\/\/drive\.google\.com[^\s"]+/i);
+              if (driveMatch) {
+                setGoogleDriveUrl(driveMatch[0]);
+              }
+              
+              toast({
+                title: 'PDF Ready!',
+                description: 'Your deployment letter has been generated successfully.',
+              });
+              return;
+            }
+            
+            // Check for error in notes
+            if (contract.notes.toLowerCase().includes('error') || 
+                contract.notes.toLowerCase().includes('failed')) {
+              console.warn('⚠️ Possible error in notes:', contract.notes);
+            }
+          } catch (noteParseError) {
+            console.log('Notes parse error:', noteParseError);
+          }
         }
 
         // Check if we've exceeded max polling time
