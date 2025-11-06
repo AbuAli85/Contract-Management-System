@@ -50,8 +50,8 @@ export function OverviewTab({ contract }: OverviewTabProps) {
         <KeyMetricCard
           title='Duration'
           value={calculateDuration(
-            contract?.contract_start_date,
-            contract?.contract_end_date
+            contract?.start_date,
+            contract?.end_date
           ).value}
           icon={CalendarIcon}
           colorClass='bg-gradient-to-br from-green-50 to-green-100 border-green-200'
@@ -60,7 +60,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
         <KeyMetricCard
           title='Value'
           value={formatCurrency(
-            contract?.salary ?? undefined,
+            contract?.value ?? contract?.contract_value ?? contract?.basic_salary ?? undefined,
             { currency: contract?.currency || 'USD' }
           ).value}
           icon={TagIcon}
@@ -92,9 +92,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     Job Title
                   </label>
                   <p className='mt-1 font-semibold text-gray-900'>
-                    {contract?.job_title
-                      ? getOptionLabel(JOB_TITLES, contract.job_title)
-                      : 'Senior Software Engineer'}
+                    {contract?.title || 'N/A'}
                   </p>
                 </div>
                 <div>
@@ -102,9 +100,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     Department
                   </label>
                   <p className='mt-1 font-semibold text-gray-900'>
-                    {contract?.department
-                      ? getOptionLabel(DEPARTMENTS, contract.department)
-                      : 'Technology'}
+                    {contract?.description || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -138,9 +134,9 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     Start Date
                   </label>
                   <p className='mt-1 font-semibold text-gray-900'>
-                    {formatDate(contract?.contract_start_date).value !== 'N/A'
-                      ? formatDate(contract?.contract_start_date).value
-                      : '01-01-2025'}
+                    {formatDate(contract?.start_date).value !== 'N/A'
+                      ? formatDate(contract?.start_date).value
+                      : 'N/A'}
                   </p>
                 </div>
                 <div>
@@ -148,9 +144,9 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                     End Date
                   </label>
                   <p className='mt-1 font-semibold text-gray-900'>
-                    {formatDate(contract?.contract_end_date).value !== 'N/A'
-                      ? formatDate(contract?.contract_end_date).value
-                      : '01-01-2027'}
+                    {formatDate(contract?.end_date).value !== 'N/A'
+                      ? formatDate(contract?.end_date).value
+                      : 'N/A'}
                   </p>
                 </div>
               </div>
