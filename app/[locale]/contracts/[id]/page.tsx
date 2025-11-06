@@ -514,8 +514,8 @@ export default function ContractDetailPage() {
                     </label>
                     <p className='mt-1 text-gray-900'>
                       {calculateDuration(
-                        contract?.contract_start_date,
-                        contract?.contract_end_date
+                        contract?.start_date,
+                        contract?.end_date
                       )}
                     </p>
                   </div>
@@ -1039,7 +1039,7 @@ export default function ContractDetailPage() {
                     </div>
 
                     {/* Contract Start Date */}
-                    {contract?.contract_start_date && (
+                    {contract?.start_date && (
                       <div className='flex items-start gap-6'>
                         <div className='relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-green-500'>
                           <CalendarIcon className='h-5 w-5 text-white' />
@@ -1053,7 +1053,7 @@ export default function ContractDetailPage() {
                               Employment period begins
                             </p>
                             <p className='mt-2 text-xs font-medium text-green-600'>
-                              {formatDate(contract.contract_start_date)}
+                              {formatDate(contract.start_date)}
                             </p>
                           </div>
                         </div>
@@ -1084,7 +1084,7 @@ export default function ContractDetailPage() {
                       )}
 
                     {/* Contract End Date */}
-                    {contract?.contract_end_date && (
+                    {contract?.end_date && (
                       <div className='flex items-start gap-6'>
                         <div className='relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-red-500'>
                           <ClockIcon className='h-5 w-5 text-white' />
@@ -1098,14 +1098,14 @@ export default function ContractDetailPage() {
                               Employment period ends
                             </p>
                             <p className='mt-2 text-xs font-medium text-red-600'>
-                              {formatDate(contract.contract_end_date)}
+                              {formatDate(contract.end_date)}
                             </p>
-                            {new Date(contract.contract_end_date) >
+                            {new Date(contract.end_date) >
                               new Date() && (
                               <p className='mt-1 text-xs text-red-500'>
                                 {Math.ceil(
                                   (new Date(
-                                    contract.contract_end_date
+                                    contract.end_date
                                   ).getTime() -
                                     new Date().getTime()) /
                                     (1000 * 60 * 60 * 24)
@@ -1129,8 +1129,8 @@ export default function ContractDetailPage() {
                       </h5>
                       <p className='mt-1 text-sm text-gray-600'>
                         {calculateDuration(
-                          contract?.contract_start_date,
-                          contract?.contract_end_date
+                          contract?.start_date,
+                          contract?.end_date
                         )}
                       </p>
                     </div>
