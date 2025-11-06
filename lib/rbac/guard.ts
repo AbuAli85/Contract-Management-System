@@ -44,10 +44,29 @@ export async function checkPermission(
       error: authError,
     } = await supabase.auth.getUser();
 
+    // Enhanced error logging for debugging
+    if (authError) {
+      console.error('🔐 RBAC: Auth error:', {
+        message: authError.message,
+        status: authError.status,
+        requiredPermission,
+      });
+    }
+
+    if (!user) {
+      // Try to get session for more debugging info
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.warn('🔐 RBAC: No user found', {
+        hasSession: !!session,
+        sessionError: sessionError?.message,
+        requiredPermission,
+      });
+    }
+
     if (authError || !user) {
       return {
         allowed: false,
-        reason: 'User not authenticated',
+        reason: authError ? `Auth error: ${authError.message}` : 'User not authenticated',
         required_permission: requiredPermission,
         user_permissions: [],
         user_roles: [],
