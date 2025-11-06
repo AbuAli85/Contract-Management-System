@@ -162,10 +162,25 @@ export const POST = withRBAC('system:admin:all', async (request: NextRequest) =>
 
     // Use service role client to bypass RLS for admin operations
     const { createClient: createServiceClient } = await import('@supabase/supabase-js');
-    const serviceClient = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('Missing Supabase environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!serviceRoleKey,
+      });
+      return NextResponse.json(
+        { 
+          error: 'Server configuration error', 
+          details: 'Missing Supabase service role key. Please check your environment variables.' 
+        },
+        { status: 500 }
+      );
+    }
+    
+    const serviceClient = createServiceClient(supabaseUrl, serviceRoleKey);
 
     // Insert into database using service role (bypasses RLS)
     const { data: apiKeyRecord, error: insertError } = await serviceClient
@@ -185,9 +200,19 @@ export const POST = withRBAC('system:admin:all', async (request: NextRequest) =>
       .single();
 
     if (insertError) {
-      console.error('Error creating API key:', insertError);
+      console.error('Error creating API key:', {
+        message: insertError.message,
+        code: insertError.code,
+        details: insertError.details,
+        hint: insertError.hint,
+      });
       return NextResponse.json(
-        { error: 'Failed to create API key', details: insertError.message },
+        { 
+          error: 'Failed to create API key', 
+          details: insertError.message,
+          code: insertError.code,
+          hint: insertError.hint,
+        },
         { status: 500 }
       );
     }
