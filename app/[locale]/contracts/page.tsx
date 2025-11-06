@@ -854,20 +854,28 @@ function ContractsContent() {
   };
 
   const getStatusBadge = (status: ContractStatus) => {
-    // Map old statuses to new workflow statuses
+    // Normalize status to lowercase for consistency
+    const normalizedStatus = status.toLowerCase();
+    
+    // Map calculated statuses to proper workflow statuses
     const statusMap: Record<string, string> = {
-      'Active': 'active',
-      'Expired': 'expired', 
-      'Upcoming': 'pending',
-      'Unknown': 'draft',
+      'active': 'active',
+      'expired': 'expired', 
+      'upcoming': 'pending', // Upcoming contracts are pending approval
+      'unknown': 'draft', // Unknown defaults to draft
+      'draft': 'draft',
+      'pending': 'pending',
+      'processing': 'processing',
+      'approved': 'approved',
     };
     
-    const mappedStatus = statusMap[status] || status.toLowerCase();
+    const mappedStatus = statusMap[normalizedStatus] || normalizedStatus;
     
     return (
       <ContractStatusBadge 
         status={mappedStatus as any} 
         size="sm"
+        showIcon={true}
       />
     );
   };
@@ -912,20 +920,36 @@ function ContractsContent() {
         </Tooltip>
       </TooltipProvider>
 
-      <Card className='bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
-        <CardContent className='p-4'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-green-100 font-medium'>Active</p>
-              <p className='text-2xl font-bold'>{contractStats.active}</p>
-              <p className='text-xs text-green-200 mt-1'>Currently active</p>
-            </div>
-            <div className='p-2 bg-green-400/20 rounded-lg'>
-              <CheckCircle className='h-6 w-6 text-green-200' />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Card className='bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-help'>
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <div className='flex items-center gap-1'>
+                      <p className='text-sm text-green-100 font-medium'>Active</p>
+                      <Info className='h-3 w-3 text-green-200' />
+                    </div>
+                    <p className='text-2xl font-bold'>{contractStats.active}</p>
+                    <p className='text-xs text-green-200 mt-1'>Currently active</p>
+                  </div>
+                  <div className='p-2 bg-green-400/20 rounded-lg'>
+                    <CheckCircle className='h-6 w-6 text-green-200' />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className='max-w-xs'>
+              Contracts that are currently in effect and running.
+              <br />• Status: active
+              <br />• Between start and end dates
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <Card className='bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
@@ -961,20 +985,36 @@ function ContractsContent() {
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
-        <CardContent className='p-4'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-purple-100 font-medium'>Pending</p>
-              <p className='text-2xl font-bold'>{contractStats.pending}</p>
-              <p className='text-xs text-purple-200 mt-1'>Awaiting approval</p>
-            </div>
-            <div className='p-2 bg-purple-400/20 rounded-lg'>
-              <Clock className='h-6 w-6 text-purple-200' />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Card className='bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-help'>
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <div className='flex items-center gap-1'>
+                      <p className='text-sm text-purple-100 font-medium'>Pending</p>
+                      <Info className='h-3 w-3 text-purple-200' />
+                    </div>
+                    <p className='text-2xl font-bold'>{contractStats.pending}</p>
+                    <p className='text-xs text-purple-200 mt-1'>Awaiting approval</p>
+                  </div>
+                  <div className='p-2 bg-purple-400/20 rounded-lg'>
+                    <Clock className='h-6 w-6 text-purple-200' />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className='max-w-xs'>
+              Contracts awaiting admin review and approval.
+              <br />• Status: pending
+              <br />• Action needed: Admin approval
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <Card className='bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
@@ -1293,15 +1333,51 @@ function ContractsContent() {
                     <SelectValue placeholder='Filter by status' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='all'>All Statuses</SelectItem>
-                    <SelectItem value='draft'>Draft</SelectItem>
-                    <SelectItem value='pending'>Pending</SelectItem>
-                    <SelectItem value='processing'>Processing</SelectItem>
-                    <SelectItem value='Active'>Active</SelectItem>
-                    <SelectItem value='Expired'>Expired</SelectItem>
-                    <SelectItem value='Upcoming'>Upcoming</SelectItem>
-                    <SelectItem value='approved'>Approved</SelectItem>
-                    <SelectItem value='Unknown'>Unknown</SelectItem>
+                    <SelectItem value='all'>
+                      <span className='font-medium'>All Statuses</span>
+                    </SelectItem>
+                    <SelectItem value='draft'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 rounded-full bg-gray-500'></div>
+                        Draft
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='pending'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 rounded-full bg-orange-500'></div>
+                        Pending
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='approved'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 rounded-full bg-blue-500'></div>
+                        Approved
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='Active'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 rounded-full bg-green-500'></div>
+                        Active
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='Expired'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 rounded-full bg-red-500'></div>
+                        Expired
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='Upcoming'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 rounded-full bg-purple-500'></div>
+                        Upcoming
+                      </div>
+                    </SelectItem>
+                    <SelectItem value='processing'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 rounded-full bg-yellow-500'></div>
+                        Processing
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
