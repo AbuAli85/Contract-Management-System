@@ -600,11 +600,11 @@ export default function SharafDGDeploymentForm({
         passport_number: selectedPromoter?.passport_number || '',
         employee_name_en: selectedPromoter?.name_en || '',
         employee_name_ar: selectedPromoter?.name_ar || '',
-        // Only send valid image URLs (no placeholders)
-        promoter_id_card_url: hasValidIdCard ? selectedPromoter?.id_card_url || '' : '',
-        promoter_passport_url: hasValidPassport ? selectedPromoter?.passport_url || '' : '',
-        id_card_url: hasValidIdCard ? selectedPromoter?.id_card_url || '' : '',
-        passport_url: hasValidPassport ? selectedPromoter?.passport_url || '' : '',
+        // Image URLs - send them, Make.com will handle validation
+        promoter_id_card_url: selectedPromoter?.id_card_url || '',
+        promoter_passport_url: selectedPromoter?.passport_url || '',
+        id_card_url: selectedPromoter?.id_card_url || '',
+        passport_url: selectedPromoter?.passport_url || '',
         
         // First Party (Client) - FLAT fields
         first_party_id: formData.first_party_id,
@@ -656,98 +656,73 @@ export default function SharafDGDeploymentForm({
         created_at: new Date().toISOString(),
       };
 
-      // CRITICAL SAFETY CHECK: Validate and clean URLs before sending to Make.com
-      // Make.com may query Supabase directly, so we must ensure NO placeholder URLs are sent
+      // SAFETY: Filter out placeholder URLs before sending to Make.com
+      // But still send the webhook with all other data
       const safeWebhookData: any = { ...webhookData };
       
-      // Check and clean ID card URL
-      let hasValidIdCardUrl = false;
-      if (safeWebhookData.promoter_id_card_url) {
-        const idCardUrl = safeWebhookData.promoter_id_card_url.toString();
-        if (idCardUrl.includes('NO_ID_CARD') || 
-            idCardUrl.toLowerCase().includes('placeholder')) {
-          console.error('🛑 BLOCKED: ID card URL contains placeholder:', idCardUrl);
-          // DO NOT send placeholder URL - remove it completely
-          delete safeWebhookData.promoter_id_card_url;
-          delete safeWebhookData.id_card_url;  // Also remove alias if exists
-          hasValidIdCardUrl = false;
-        } else {
-          hasValidIdCardUrl = true;
-        }
+      // Check and clean ID card URL (but don't block webhook)
+      if (safeWebhookData.promoter_id_card_url && 
+          (safeWebhookData.promoter_id_card_url.includes('NO_ID_CARD') || 
+           safeWebhookData.promoter_id_card_url.toLowerCase().includes('placeholder'))) {
+        console.warn('🛑 Removing ID card placeholder URL:', safeWebhookData.promoter_id_card_url);
+        safeWebhookData.promoter_id_card_url = '';
+        safeWebhookData.id_card_url = '';
+        safeWebhookData.has_id_card_image = false;
+      } else {
+        safeWebhookData.has_id_card_image = !!safeWebhookData.promoter_id_card_url;
       }
-      safeWebhookData.has_id_card_image = hasValidIdCardUrl;
       
-      // Check and clean passport URL
-      let hasValidPassportUrl = false;
-      if (safeWebhookData.promoter_passport_url) {
-        const passportUrl = safeWebhookData.promoter_passport_url.toString();
-        if (passportUrl.includes('NO_PASSPORT') || 
-            passportUrl.toLowerCase().includes('placeholder')) {
-          console.error('🛑 BLOCKED: Passport URL contains placeholder:', passportUrl);
-          // DO NOT send placeholder URL - remove it completely
-          delete safeWebhookData.promoter_passport_url;
-          delete safeWebhookData.passport_url;  // Also remove alias if exists
-          hasValidPassportUrl = false;
-        } else {
-          hasValidPassportUrl = true;
-        }
+      // Check and clean passport URL (but don't block webhook)
+      if (safeWebhookData.promoter_passport_url && 
+          (safeWebhookData.promoter_passport_url.includes('NO_PASSPORT') || 
+           safeWebhookData.promoter_passport_url.toLowerCase().includes('placeholder'))) {
+        console.warn('🛑 Removing passport placeholder URL:', safeWebhookData.promoter_passport_url);
+        safeWebhookData.promoter_passport_url = '';
+        safeWebhookData.passport_url = '';
+        safeWebhookData.has_passport_image = false;
+      } else {
+        safeWebhookData.has_passport_image = !!safeWebhookData.promoter_passport_url;
       }
-      safeWebhookData.has_passport_image = hasValidPassportUrl;
       
-      // Add explicit flags for Make.com to check before replacing images
-      safeWebhookData.image_instructions = {
-        skip_id_card_replacement: !hasValidIdCardUrl,
-        skip_passport_replacement: !hasValidPassportUrl,
-        message: 'IMPORTANT: Only replace images if has_id_card_image=true or has_passport_image=true. If false, skip the Replace Image step.',
-        warning: hasValidIdCardUrl && !hasValidPassportUrl 
-          ? 'Passport image is missing - Make.com should skip passport replacement' 
-          : !hasValidIdCardUrl && hasValidPassportUrl
-          ? 'ID card image is missing - Make.com should skip ID card replacement'
-          : !hasValidIdCardUrl && !hasValidPassportUrl
-          ? 'Both images are missing - Make.com should skip all image replacements'
-          : 'All images are valid'
-      };
-      
-      // Final validation: If Make.com queries Supabase, it will get placeholder URLs
-      // So we MUST prevent webhook if placeholders exist in our data
-      if (!hasValidIdCardUrl || !hasValidPassportUrl) {
-        const missingImages = [];
-        if (!hasValidIdCardUrl) missingImages.push('ID Card');
-        if (!hasValidPassportUrl) missingImages.push('Passport');
-        
-        console.error('❌ ABORTING: Cannot send to Make.com - placeholder images detected:', {
-          id_card: safeWebhookData.promoter_id_card_url || 'REMOVED',
-          passport: safeWebhookData.promoter_passport_url || 'REMOVED',
-          missing: missingImages
-        });
-        
-        setPdfStatus('error');
-        setGenerating(false);
-        toast({
-          title: 'Cannot Generate PDF',
-          description: `Missing valid ${missingImages.join(' and ')} images. The promoter has placeholder images in the database. Please upload real images for ${selectedPromoter?.name_en} before generating the PDF.`,
-          variant: 'destructive',
-        });
-        return;  // STOP - Don't send webhook at all
-      }
+      // Add flags for Make.com to conditionally replace images
+      safeWebhookData.skip_id_card_replacement = !safeWebhookData.has_id_card_image;
+      safeWebhookData.skip_passport_replacement = !safeWebhookData.has_passport_image;
 
-      console.log('📤 Sending to Make.com webhook:', {
-        contract_id: safeWebhookData.contract_id,
-        contract_number: safeWebhookData.contract_number,
-        promoter_name: safeWebhookData.promoter_name_en,
-        id_card_number: safeWebhookData.id_card_number,
-        passport_number: safeWebhookData.passport_number,
-        promoter_passport_number: safeWebhookData.promoter_passport_number,
-        promoter_id_card_url: safeWebhookData.promoter_id_card_url || '(removed - placeholder)',
-        promoter_passport_url: safeWebhookData.promoter_passport_url || '(removed - placeholder)',
-        has_id_card_image: safeWebhookData.has_id_card_image,
-        has_passport_image: safeWebhookData.has_passport_image,
+      console.log('📤 Sending to Make.com webhook:');
+      console.log('Contract:', {
+        id: safeWebhookData.contract_id,
+        number: safeWebhookData.contract_number,
+        type: safeWebhookData.contract_type,
+      });
+      console.log('Promoter:', {
+        name_en: safeWebhookData.promoter_name_en,
+        name_ar: safeWebhookData.promoter_name_ar,
+        id_card: safeWebhookData.id_card_number,
+        passport: safeWebhookData.passport_number,
+      });
+      console.log('Images:', {
+        id_card_url: safeWebhookData.promoter_id_card_url || '(empty)',
+        passport_url: safeWebhookData.promoter_passport_url || '(empty)',
+        has_id_card: safeWebhookData.has_id_card_image,
+        has_passport: safeWebhookData.has_passport_image,
+      });
+      console.log('Parties:', {
         first_party: safeWebhookData.first_party_name_en,
         second_party: safeWebhookData.second_party_name_en,
         supplier: safeWebhookData.supplier_brand_name_en,
       });
-      
-      console.log('📋 Complete webhook payload keys:', Object.keys(safeWebhookData).sort());
+      console.log('📋 Total fields being sent:', Object.keys(safeWebhookData).length);
+      console.log('📋 All payload keys:', Object.keys(safeWebhookData).sort());
+
+      // Final sanity check: Ensure critical fields are present
+      if (!safeWebhookData.contract_number || !safeWebhookData.contract_id) {
+        console.error('❌ CRITICAL: Missing contract_number or contract_id!', safeWebhookData);
+        throw new Error('Cannot send webhook - missing critical contract data');
+      }
+
+      if (!safeWebhookData.passport_number) {
+        console.warn('⚠️ WARNING: Passport number is missing from webhook data!');
+      }
 
       // Send to Make.com webhook (using safeWebhookData with placeholders removed)
       const webhookResponse = await fetch('https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn', {
