@@ -136,6 +136,30 @@ export async function POST(
       if (!contract.promoters.name_en && !contract.promoters.name_ar) {
         missingFields.push('promoter name (at least one language)');
       }
+      
+      // Validate that promoter images are NOT placeholders
+      if (contract.promoters.id_card_url) {
+        if (contract.promoters.id_card_url.includes('NO_ID_CARD') || 
+            contract.promoters.id_card_url.toLowerCase().includes('placeholder')) {
+          missingFields.push('valid ID card image (current image is a placeholder)');
+        }
+      } else {
+        missingFields.push('ID card image');
+      }
+      
+      if (contract.promoters.passport_url) {
+        if (contract.promoters.passport_url.includes('NO_PASSPORT') || 
+            contract.promoters.passport_url.toLowerCase().includes('placeholder')) {
+          missingFields.push('valid passport image (current image is a placeholder)');
+        }
+      } else {
+        missingFields.push('passport image');
+      }
+      
+      // Validate passport number exists
+      if (!contract.promoters.passport_number) {
+        missingFields.push('passport number');
+      }
     } else {
       console.warn('⚠️ No promoter data found for contract');
     }
@@ -169,11 +193,16 @@ export async function POST(
       );
     }
 
-    // 4. Verify image URLs are accessible (skip if not provided)
+    // 4. Verify image URLs are accessible (skip if not provided or placeholders)
     const imageUrls = [
       contract.promoters?.id_card_url,
       contract.promoters?.passport_url,
-    ].filter(url => url && !url.includes('NO_PASSPORT') && !url.includes('NO_ID_CARD'));
+    ].filter(url => 
+      url && 
+      !url.includes('NO_PASSPORT') && 
+      !url.includes('NO_ID_CARD') &&
+      !url.toLowerCase().includes('placeholder')
+    );
 
     console.log(`🔍 Checking ${imageUrls.length} image URLs for accessibility...`);
 
@@ -259,13 +288,27 @@ export async function POST(
       webhookPayload.passport_number = contract.promoters.passport_number;
       
       // Only add image URLs if they're valid (not placeholders)
-      if (contract.promoters.id_card_url && !contract.promoters.id_card_url.includes('NO_ID_CARD')) {
+      // Check for both specific placeholders (NO_ID_CARD, NO_PASSPORT) and generic "placeholder"
+      const isValidIdCardUrl = contract.promoters.id_card_url && 
+        !contract.promoters.id_card_url.includes('NO_ID_CARD') &&
+        !contract.promoters.id_card_url.toLowerCase().includes('placeholder');
+      
+      const isValidPassportUrl = contract.promoters.passport_url && 
+        !contract.promoters.passport_url.includes('NO_PASSPORT') &&
+        !contract.promoters.passport_url.toLowerCase().includes('placeholder');
+      
+      if (isValidIdCardUrl) {
         webhookPayload.promoter_id_card_url = contract.promoters.id_card_url;
         webhookPayload.id_card_url = contract.promoters.id_card_url;
+      } else {
+        console.warn('⚠️ Skipping ID card URL - placeholder or invalid:', contract.promoters.id_card_url);
       }
-      if (contract.promoters.passport_url && !contract.promoters.passport_url.includes('NO_PASSPORT')) {
+      
+      if (isValidPassportUrl) {
         webhookPayload.promoter_passport_url = contract.promoters.passport_url;
         webhookPayload.passport_url = contract.promoters.passport_url;
+      } else {
+        console.warn('⚠️ Skipping passport URL - placeholder or invalid:', contract.promoters.passport_url);
       }
     }
     
@@ -303,6 +346,10 @@ export async function POST(
     }
 
     console.log('📤 Prepared webhook payload with keys:', Object.keys(webhookPayload));
+    console.log('📤 Image URLs being sent to Make.com:', {
+      id_card: webhookPayload.promoter_id_card_url || '(not included - placeholder or missing)',
+      passport: webhookPayload.promoter_passport_url || '(not included - placeholder or missing)',
+    });
 
     // 7. Call Make.com webhook
     if (!MAKE_WEBHOOK_URL) {
