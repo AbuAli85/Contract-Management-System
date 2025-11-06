@@ -82,7 +82,8 @@ export type PermissionAction =
   | 'message'
   | 'approve'
   | 'transition'
-  | 'import';
+  | 'import'
+  | 'admin';
 
 // Valid permission scopes
 export const VALID_SCOPES: PermissionScope[] = [
@@ -163,6 +164,7 @@ export const VALID_ACTIONS: PermissionAction[] = [
   'approve',
   'transition',
   'import',
+  'admin',
 ];
 
 // Permission parsing function
