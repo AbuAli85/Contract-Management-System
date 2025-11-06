@@ -649,24 +649,40 @@ export default function SharafDGDeploymentForm({
         created_at: new Date().toISOString(),
       };
 
+      // CRITICAL SAFETY CHECK: Remove placeholder URLs before sending to Make.com
+      // This is a final safety net in case validation is bypassed
+      const safeWebhookData: any = { ...webhookData };
+      
+      if (safeWebhookData.promoter_id_card_url?.includes('NO_ID_CARD') || 
+          safeWebhookData.promoter_id_card_url?.toLowerCase().includes('placeholder')) {
+        console.warn('🛑 Removing ID card placeholder URL before sending to Make.com');
+        safeWebhookData.promoter_id_card_url = '';  // Set to empty string instead of undefined
+      }
+      
+      if (safeWebhookData.promoter_passport_url?.includes('NO_PASSPORT') || 
+          safeWebhookData.promoter_passport_url?.toLowerCase().includes('placeholder')) {
+        console.warn('🛑 Removing passport placeholder URL before sending to Make.com');
+        safeWebhookData.promoter_passport_url = '';  // Set to empty string instead of undefined
+      }
+
       console.log('📤 Sending to Make.com webhook:', {
-        contract_id: webhookData.contract_id,
-        contract_number: webhookData.contract_number,
-        promoter_id_card_url: webhookData.promoter_id_card_url,
-        promoter_passport_url: webhookData.promoter_passport_url,
-        has_id_card: !!webhookData.promoter_id_card_url,
-        has_passport: !!webhookData.promoter_passport_url,
-        first_party: webhookData.first_party_name_en,
-        second_party: webhookData.second_party_name_en,
+        contract_id: safeWebhookData.contract_id,
+        contract_number: safeWebhookData.contract_number,
+        promoter_id_card_url: safeWebhookData.promoter_id_card_url || '(removed - placeholder)',
+        promoter_passport_url: safeWebhookData.promoter_passport_url || '(removed - placeholder)',
+        has_id_card: !!safeWebhookData.promoter_id_card_url,
+        has_passport: !!safeWebhookData.promoter_passport_url,
+        first_party: safeWebhookData.first_party_name_en,
+        second_party: safeWebhookData.second_party_name_en,
       });
 
-      // Send to Make.com webhook
+      // Send to Make.com webhook (using safeWebhookData with placeholders removed)
       const webhookResponse = await fetch('https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(webhookData),
+        body: JSON.stringify(safeWebhookData),
       });
 
       if (!webhookResponse.ok) {
