@@ -18,9 +18,15 @@ export type ContractWithRelations = {
   id: string;
   contract_number: string | null;
   status: string;  // Make status required to match ContractDetail
-  contract_start_date: string | null;
-  contract_end_date: string | null;
-  job_title: string | null;
+  // Date fields - database uses start_date and end_date
+  start_date?: string | null;
+  end_date?: string | null;
+  // Legacy field names for backward compatibility
+  contract_start_date?: string | null;
+  contract_end_date?: string | null;
+  // Title fields - database uses 'title' but some code uses 'job_title'
+  title?: string | null;
+  job_title?: string | null;
   work_location: string | null;
   contract_value: number | null;
   email: string | null;
@@ -33,8 +39,11 @@ export type ContractWithRelations = {
   // Additional fields for compatibility
   approval_status?: string | null;
   salary?: number | null;
+  value?: number | null;
+  basic_salary?: number | null;
   currency?: string | null;
   id_card_number?: string | null;  // Added for contract detail page
+  description?: string | null;
   // Relational data
   first_party: {
     id: string;

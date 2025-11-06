@@ -13,6 +13,15 @@ export type ContractWithRelations =
     work_location?: string | null;
     contract_value?: number | null;
     email?: string | null;
+    // Date fields (database uses start_date and end_date)
+    start_date?: string | null;
+    end_date?: string | null;
+    // Legacy field names for backward compatibility
+    contract_start_date?: string | null;
+    contract_end_date?: string | null;
+    // Title fields (database uses 'title' but some code uses 'job_title')
+    title?: string | null;
+    job_title?: string | null;
     // Relational data
     first_party?: {
       id: string;
@@ -65,6 +74,11 @@ const fetchContract = async (
 ): Promise<ContractWithRelations | null> => {
   try {
     const supabase = createClient();
+    
+    if (!supabase) {
+      throw new Error('Failed to initialize Supabase client');
+    }
+    
     const { data, error } = await supabase
       .from('contracts')
       .select(

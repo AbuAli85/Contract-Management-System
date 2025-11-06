@@ -232,11 +232,11 @@ function getContractStatus(contract: ContractWithRelations): ContractStatus {
   }
   
   // ✅ PRIORITY 2: Calculate status based on dates (for contracts without explicit workflow status)
-  if (!contract.contract_start_date || !contract.contract_end_date)
+  if (!contract.start_date || !contract.end_date)
     return 'Unknown';
   const now = new Date();
-  const startDate = safeParseISO(contract.contract_start_date);
-  const endDate = safeParseISO(contract.contract_end_date);
+  const startDate = safeParseISO(contract.start_date);
+  const endDate = safeParseISO(contract.end_date);
   
   if (!startDate || !endDate) return 'Unknown';
   
@@ -254,13 +254,13 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
   let contract_duration_days: number | undefined;
   let age_days: number | undefined;
 
-  if (contract.contract_end_date) {
-    days_until_expiry = safeDifferenceInDays(contract.contract_end_date, now) ?? undefined;
+  if (contract.end_date) {
+    days_until_expiry = safeDifferenceInDays(contract.end_date, now) ?? undefined;
   }
 
-  if (contract.contract_start_date && contract.contract_end_date) {
-    const startDate = safeParseISO(contract.contract_start_date);
-    const endDate = safeParseISO(contract.contract_end_date);
+  if (contract.start_date && contract.end_date) {
+    const startDate = safeParseISO(contract.start_date);
+    const endDate = safeParseISO(contract.end_date);
     if (startDate && endDate) {
       contract_duration_days = differenceInDays(endDate, startDate);
     }
@@ -739,8 +739,8 @@ function ContractsContent() {
             ? contract.promoters.name_en || 'N/A'
             : 'N/A',
         'Job Title': contract.job_title || 'N/A',
-        'Start Date': safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy'),
-        'End Date': safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy'),
+        'Start Date': safeFormatDate(contract.start_date, 'dd-MM-yyyy'),
+        'End Date': safeFormatDate(contract.end_date, 'dd-MM-yyyy'),
         Status: getContractStatus(contract),
         'Contract Value': contract.contract_value || 0,
         'Work Location': contract.work_location || 'N/A',
@@ -1382,19 +1382,19 @@ function ContractsContent() {
                         <TableHead scope='col'>Promoter</TableHead>
                         <TableHead
                           className='cursor-pointer'
-                          onClick={() => handleSort('contract_start_date')}
+                          onClick={() => handleSort('start_date')}
                           scope='col'
-                          aria-sort={sortColumn === 'contract_start_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                          aria-sort={sortColumn === 'start_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                         >
-                          Start Date {renderSortIcon('contract_start_date')}
+                          Start Date {renderSortIcon('start_date')}
                         </TableHead>
                         <TableHead
                           className='cursor-pointer'
-                          onClick={() => handleSort('contract_end_date')}
+                          onClick={() => handleSort('end_date')}
                           scope='col'
-                          aria-sort={sortColumn === 'contract_end_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                          aria-sort={sortColumn === 'end_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                         >
-                          End Date {renderSortIcon('contract_end_date')}
+                          End Date {renderSortIcon('end_date')}
                         </TableHead>
                         <TableHead
                           className='cursor-pointer'
@@ -1510,12 +1510,12 @@ function ContractsContent() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy')}
+                              {safeFormatDate(contract.start_date, 'dd-MM-yyyy')}
                             </TableCell>
                             <TableCell>
                               <div className='flex flex-col'>
                                 <span>
-                                  {safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy')}
+                                  {safeFormatDate(contract.end_date, 'dd-MM-yyyy')}
                                 </span>
                                 {enhanced.days_until_expiry !== undefined &&
                                   enhanced.days_until_expiry <= 30 &&
@@ -1795,12 +1795,12 @@ function ContractsContent() {
 
                             <div className='flex items-center justify-between border-t pt-2'>
                               <div className='text-xs text-muted-foreground'>
-                                {contract.contract_start_date &&
-                                  contract.contract_end_date && (
+                                {contract.start_date &&
+                                  contract.end_date && (
                                     <>
-                                      {safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy')}{' '}
+                                      {safeFormatDate(contract.start_date, 'dd-MM-yyyy')}{' '}
                                       -{' '}
-                                      {safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy')}
+                                      {safeFormatDate(contract.end_date, 'dd-MM-yyyy')}
                                       {enhanced.days_until_expiry !==
                                         undefined &&
                                         enhanced.days_until_expiry <= 30 &&
@@ -1971,9 +1971,9 @@ Please find attached the employment contract for your review and signature.
 
 Contract Details:
 - Contract Number: ${contract.contract_number || 'N/A'}
-- Job Title: ${contract.job_title || 'N/A'}
-- Start Date: ${safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy')}
-- End Date: ${safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy')}
+- Job Title: ${contract.title || contract.job_title || 'N/A'}
+- Start Date: ${safeFormatDate(contract.start_date, 'dd-MM-yyyy')}
+- End Date: ${safeFormatDate(contract.end_date, 'dd-MM-yyyy')}
 
 Please review the attached contract and let us know if you have any questions.
 
