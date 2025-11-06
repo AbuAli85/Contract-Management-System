@@ -463,15 +463,19 @@ export default function SharafDGDeploymentForm({
         title: formData.contract_name || `Sharaf DG Deployment - ${selectedPromoter?.name_en}`,
         description: formData.special_terms || `${formData.job_title} at ${formData.work_location}`,
         contract_type: formData.contract_type,
-        status: 'draft',
+        status: 'pending',  // ✅ FIXED: Use 'pending' instead of 'draft' to show on pending page
+        approval_status: 'pending',  // Set approval status
         promoter_id: formData.promoter_id,
         employer_id: formData.second_party_id, // Employer is second party
         client_id: formData.first_party_id, // Client is first party
+        first_party_id: formData.first_party_id, // Also set first_party_id
+        second_party_id: formData.second_party_id, // Also set second_party_id
         start_date: formData.contract_start_date,
         end_date: formData.contract_end_date,
         value: formData.basic_salary || 0,
         currency: 'OMR',
         user_id: currentUser.id, // Track who created the contract
+        submitted_for_review_at: new Date().toISOString(), // Track when submitted for review
         // Store all additional data as JSON in the 'terms' field (TEXT column that exists)
         terms: JSON.stringify({
           // Contract subtype
