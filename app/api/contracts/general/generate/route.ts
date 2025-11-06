@@ -80,8 +80,23 @@ export async function POST(request: NextRequest) {
       location_id: body.location_id,
     };
 
-    // Create contract in database
-    const contract = await generalContractService.createContract(contractData);
+    // Get current user from request (has access to cookies/session)
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !currentUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'You must be logged in to create contracts',
+        },
+        { status: 401 }
+      );
+    }
+
+    // Create contract in database with user ID
+    const contract = await generalContractService.createContract(contractData, currentUser.id);
     console.log('✅ Contract created:', contract.id);
 
     // Trigger Make.com webhook for general contracts with retry
