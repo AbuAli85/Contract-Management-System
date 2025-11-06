@@ -121,11 +121,13 @@ export default function ContractDetailPage() {
     // Clear any existing polling
     if (pollingInterval) {
       clearInterval(pollingInterval);
+      setPollingInterval(null);
     }
 
     let pollCount = 0;
     const maxPolls = 40; // 40 polls × 3 seconds = 120 seconds total
     
+    console.log('🔄 Starting PDF polling...');
     setPdfStatus(prev => ({ ...prev, is_processing: true }));
     
     const interval = setInterval(async () => {
@@ -134,7 +136,10 @@ export default function ContractDetailPage() {
         
         // Fetch updated contract data
         const response = await fetch(`/api/contracts/${contractId}`);
-        if (!response.ok) return;
+        if (!response.ok) {
+          console.error('❌ Poll fetch failed:', response.status);
+          return;
+        }
         
         const data = await response.json();
         const updatedContract = data?.contract || data;
@@ -142,10 +147,12 @@ export default function ContractDetailPage() {
         console.log(`📊 PDF Poll ${pollCount}/${maxPolls}:`, {
           status: updatedContract?.status,
           has_pdf_url: !!updatedContract?.pdf_url,
+          pdf_url: updatedContract?.pdf_url,
         });
 
         // Check if PDF is ready
         if (updatedContract?.pdf_url) {
+          console.log('✅ PDF Ready! Stopping polling.');
           clearInterval(interval);
           setPollingInterval(null);
           setPdfStatus(prev => ({
@@ -161,33 +168,45 @@ export default function ContractDetailPage() {
 
         // Stop polling after max attempts
         if (pollCount >= maxPolls) {
+          console.log('⏱️ Polling timeout reached. Stopping.');
           clearInterval(interval);
           setPollingInterval(null);
           setPdfStatus(prev => ({ ...prev, is_processing: false }));
-          setStatusMessage('PDF generation is taking longer than expected. Please check back later or click "Generate PDF" to retry.');
+          setStatusMessage('PDF generation is taking longer than expected. Please check your Make.com scenario or click "Generate PDF" to retry.');
         }
       } catch (error) {
-        console.error('Poll error:', error);
+        console.error('❌ Poll error:', error);
       }
     }, 3000); // Poll every 3 seconds
 
     setPollingInterval(interval);
-    
-    // Auto-stop after 2 minutes
-    setTimeout(() => {
-      if (interval) {
-        clearInterval(interval);
-        setPollingInterval(null);
-        setPdfStatus(prev => ({ ...prev, is_processing: false }));
-      }
-    }, 120000);
   };
 
-  // Cleanup polling on unmount
+  // Cleanup polling on unmount and when interval changes
   useEffect(() => {
+    // Set up timeout to stop polling after 2 minutes
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    if (pollingInterval) {
+      console.log('⏰ Setting 2-minute timeout for polling');
+      timeoutId = setTimeout(() => {
+        console.log('⏱️ 2-minute timeout reached. Force stopping polling.');
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
+          setPdfStatus(prev => ({ ...prev, is_processing: false }));
+          setStatusMessage('PDF generation timed out. Please check your Make.com scenario or try generating again.');
+        }
+      }, 120000); // 2 minutes
+    }
+    
     return () => {
       if (pollingInterval) {
+        console.log('🧹 Cleaning up polling interval');
         clearInterval(pollingInterval);
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
     };
   }, [pollingInterval]);
