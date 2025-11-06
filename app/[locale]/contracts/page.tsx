@@ -222,65 +222,96 @@ const safeDifferenceInDays = (dateString: string | null | undefined, compareDate
 type ContractStatus = 'draft' | 'pending' | 'processing' | 'approved' | 'Active' | 'Expired' | 'Upcoming' | 'Unknown';
 
 function getContractStatus(contract: ContractWithRelations): ContractStatus {
-  // ✅ PRIORITY 1: Use the actual database status if it exists and is a workflow status
-  if (contract.status) {
-    const dbStatus = contract.status.toLowerCase();
-    // If status is a workflow status (draft, pending, processing, approved), use it directly
-    if (['draft', 'pending', 'processing', 'approved'].includes(dbStatus)) {
-      return dbStatus as ContractStatus;
+  try {
+    // ✅ PRIORITY 1: Use the actual database status if it exists and is a workflow status
+    if (contract.status) {
+      const dbStatus = contract.status.toLowerCase();
+      // If status is a workflow status (draft, pending, processing, approved), use it directly
+      if (['draft', 'pending', 'processing', 'approved'].includes(dbStatus)) {
+        return dbStatus as ContractStatus;
+      }
     }
-  }
-  
-  // ✅ PRIORITY 2: Calculate status based on dates (for contracts without explicit workflow status)
-  if (!contract.start_date || !contract.end_date)
+    
+    // ✅ PRIORITY 2: Calculate status based on dates (for contracts without explicit workflow status)
+    if (!contract.start_date || !contract.end_date)
+      return 'Unknown';
+    const now = new Date();
+    const startDate = safeParseISO(contract.start_date);
+    const endDate = safeParseISO(contract.end_date);
+    
+    if (!startDate || !endDate) return 'Unknown';
+    
+    if (now >= startDate && now <= endDate) return 'Active';
+    if (now > endDate) return 'Expired';
+    if (now < startDate) return 'Upcoming';
     return 'Unknown';
-  const now = new Date();
-  const startDate = safeParseISO(contract.start_date);
-  const endDate = safeParseISO(contract.end_date);
-  
-  if (!startDate || !endDate) return 'Unknown';
-  
-  if (now >= startDate && now <= endDate) return 'Active';
-  if (now > endDate) return 'Expired';
-  if (now < startDate) return 'Upcoming';
-  return 'Unknown';
+  } catch (error) {
+    console.error('Error calculating contract status:', contract.id, error);
+    return 'Unknown';
+  }
 }
 
 function enhanceContract(contract: ContractWithRelations): EnhancedContract {
-  const status = getContractStatus(contract);
-  const now = new Date();
+  try {
+    const status = getContractStatus(contract);
+    const now = new Date();
 
-  let days_until_expiry: number | undefined;
-  let contract_duration_days: number | undefined;
-  let age_days: number | undefined;
+    let days_until_expiry: number | undefined;
+    let contract_duration_days: number | undefined;
+    let age_days: number | undefined;
 
-  if (contract.end_date) {
-    days_until_expiry = safeDifferenceInDays(contract.end_date, now) ?? undefined;
-  }
-
-  if (contract.start_date && contract.end_date) {
-    const startDate = safeParseISO(contract.start_date);
-    const endDate = safeParseISO(contract.end_date);
-    if (startDate && endDate) {
-      contract_duration_days = differenceInDays(endDate, startDate);
+    // Safe date calculations with proper null checks
+    if (contract.end_date) {
+      try {
+        days_until_expiry = safeDifferenceInDays(contract.end_date, now) ?? undefined;
+      } catch (error) {
+        console.warn('Error calculating days until expiry:', error);
+        days_until_expiry = undefined;
+      }
     }
-  }
 
-  if (contract.created_at) {
-    age_days = safeDifferenceInDays(contract.created_at, now) ?? undefined;
-  }
+    if (contract.start_date && contract.end_date) {
+      const startDate = safeParseISO(contract.start_date);
+      const endDate = safeParseISO(contract.end_date);
+      if (startDate && endDate) {
+        try {
+          contract_duration_days = differenceInDays(endDate, startDate);
+        } catch (error) {
+          console.warn('Error calculating contract duration:', error);
+          contract_duration_days = undefined;
+        }
+      }
+    }
 
-  return {
-    ...contract,
-    status_type: status.toLowerCase() as
-      | 'active'
-      | 'expired'
-      | 'upcoming'
-      | 'unknown',
-    days_until_expiry,
-    contract_duration_days,
-    age_days,
-  } as EnhancedContract;
+    if (contract.created_at) {
+      try {
+        age_days = safeDifferenceInDays(contract.created_at, now) ?? undefined;
+      } catch (error) {
+        console.warn('Error calculating age:', error);
+        age_days = undefined;
+      }
+    }
+
+    return {
+      ...contract,
+      status_type: status.toLowerCase() as
+        | 'active'
+        | 'expired'
+        | 'upcoming'
+        | 'unknown',
+      days_until_expiry,
+      contract_duration_days,
+      age_days,
+    } as EnhancedContract;
+  } catch (error) {
+    // If enhancement completely fails, return contract with minimal enhancement
+    console.error('Critical error enhancing contract:', contract.id, error);
+    // Return contract with only status_type set
+    // TypeScript requires explicit cast because optional properties may be undefined
+    return Object.assign({}, contract, {
+      status_type: 'unknown' as const,
+    }) as EnhancedContract;
+  }
 }
 
 export default function ContractsDashboardPage() {
@@ -1499,8 +1530,9 @@ function ContractsContent() {
                     </TableHeader>
                     <TableBody>
                       {filteredAndSortedContracts.map(contract => {
-                        const contractStatus = getContractStatus(contract);
-                        const enhanced = enhanceContract(contract);
+                        try {
+                          const contractStatus = getContractStatus(contract);
+                          const enhanced = enhanceContract(contract);
                         const promoterName: string = contract.promoters
                           ? locale === 'ar'
                             ? contract.promoters.name_ar ||
@@ -1769,6 +1801,17 @@ function ContractsContent() {
                             </TableCell>
                           </TableRow>
                         );
+                        } catch (renderError) {
+                          console.error('Error rendering contract row:', contract.id, renderError);
+                          // Return a fallback row for contracts that fail to render
+                          return (
+                            <TableRow key={contract.id} className='bg-red-50'>
+                              <TableCell colSpan={10} className='text-center text-red-600'>
+                                Error displaying contract {contract.contract_number || contract.id.substring(0, 8)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
                       })}
                     </TableBody>
                   </Table>
@@ -1789,8 +1832,9 @@ function ContractsContent() {
                 {/* Grid View */}
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
                   {filteredAndSortedContracts.map(contract => {
-                    const contractStatus = getContractStatus(contract);
-                    const enhanced = enhanceContract(contract);
+                    try {
+                      const contractStatus = getContractStatus(contract);
+                      const enhanced = enhanceContract(contract);
                     const promoterName: string = contract.promoters
                       ? locale === 'ar'
                         ? contract.promoters.name_ar ||
@@ -2015,6 +2059,18 @@ function ContractsContent() {
                         </CardContent>
                       </Card>
                     );
+                    } catch (renderError) {
+                      console.error('Error rendering contract card:', contract.id, renderError);
+                      // Return a fallback card for contracts that fail to render
+                      return (
+                        <Card key={contract.id} className='border-red-200 bg-red-50'>
+                          <CardContent className='p-4 text-center text-red-600'>
+                            <p className='font-semibold'>Error displaying contract</p>
+                            <p className='text-sm'>{contract.contract_number || contract.id.substring(0, 8)}</p>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
                   })}
                 </div>
 
