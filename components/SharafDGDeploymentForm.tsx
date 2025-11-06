@@ -211,6 +211,29 @@ export default function SharafDGDeploymentForm({
     }
   }, []);
 
+  // Auto-select Sharaf DG as First Party when clients are loaded
+  useEffect(() => {
+    if (clients.length > 0) {
+      // Find Sharaf DG in the clients list (case-insensitive search)
+      const sharafDG = clients.find(c => 
+        c.name_en.toLowerCase().includes('sharaf') && 
+        c.name_en.toLowerCase().includes('dg')
+      );
+      
+      if (sharafDG) {
+        // Always set Sharaf DG as first party (even if draft has different value)
+        if (formData.first_party_id !== sharafDG.id) {
+          setFormData(prev => ({ ...prev, first_party_id: sharafDG.id }));
+          console.log('✅ Auto-selected Sharaf DG as First Party:', sharafDG.name_en);
+        }
+        // Always update the selected client display
+        setSelectedClient(sharafDG);
+      } else {
+        console.warn('⚠️ Sharaf DG not found in clients list');
+      }
+    }
+  }, [clients, formData.first_party_id]);
+
   // Auto-save draft
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -228,6 +251,7 @@ export default function SharafDGDeploymentForm({
       const savedDraft = localStorage.getItem('sharaf-dg-form-draft');
       if (savedDraft) {
         const parsedDraft = JSON.parse(savedDraft);
+        // Note: first_party_id will be auto-set to Sharaf DG on clients load
         setFormData(parsedDraft);
         setLastSaved(new Date());
         toast({
@@ -931,38 +955,40 @@ export default function SharafDGDeploymentForm({
               Party Information
             </CardTitle>
             <CardDescription>
-              Select client, employer, and supplier/brand
+              First Party (Sharaf DG) is fixed for this form. Select employer and supplier/brand.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* First Party (Client - Sharaf DG) */}
+            {/* First Party (Client - Sharaf DG) - FIXED/AUTO-SELECTED */}
             <div className="space-y-2">
-              <Label htmlFor="client">First Party (Client) *</Label>
-              <Select
-                value={formData.first_party_id}
-                onValueChange={handleClientChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select client (Sharaf DG)..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map(client => (
-                    <SelectItem key={client.id} value={client.id}>
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col">
-                          <span>{client.name_en}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {client.name_ar} • CRN: {client.crn || 'N/A'}
-                          </span>
-                        </div>
-                        {client.name_en.toLowerCase().includes('sharaf') && (
-                          <Badge variant="default" className="ml-auto">Sharaf DG</Badge>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="client" className="flex items-center gap-2">
+                First Party (Client) *
+                <Badge variant="secondary" className="ml-2 text-xs">Fixed</Badge>
+              </Label>
+              {selectedClient ? (
+                <div className="border rounded-md p-3 bg-muted/50 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Building className="h-5 w-5 text-blue-600" />
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-base">{selectedClient.name_en}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {selectedClient.name_ar} • CRN: {selectedClient.crn || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant="default">Sharaf DG</Badge>
+                </div>
+              ) : (
+                <Alert className="border-amber-200 bg-amber-50">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-900">
+                    Sharaf DG client not found in database. Please add "Sharaf DG" as a Client type party.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <p className="text-xs text-muted-foreground">
+                This form is specifically for Sharaf DG deployment letters. The client is automatically set to Sharaf DG.
+              </p>
             </div>
 
             {/* Second Party (Employer) */}
