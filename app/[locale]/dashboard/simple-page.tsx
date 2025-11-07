@@ -1,10 +1,22 @@
 'use client';
 
-import { useParams, use } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-service';
 
 export default function SimpleDashboardPage() {
   const params = useParams();
+  
+  if (!params || !params.locale) {
+    return (
+      <div className='flex min-h-screen items-center justify-center'>
+        <div className='text-center'>
+          <p className='text-muted-foreground'>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  const locale = params.locale as string;
   const { user, loading, mounted } = useAuth();
 
   if (loading || !mounted) {
@@ -26,7 +38,7 @@ export default function SimpleDashboardPage() {
             Please log in to access the dashboard.
           </p>
           <a
-            href={`/${params.locale}/auth/login`}
+            href={`/${locale}/auth/login`}
             className='text-blue-600 hover:underline'
           >
             Go to Login
@@ -52,13 +64,13 @@ export default function SimpleDashboardPage() {
       </div>
       <div className='mt-4'>
         <a
-          href={`/${params.locale}/dashboard`}
+          href={`/${locale}/dashboard`}
           className='mr-4 text-blue-600 hover:underline'
         >
           Full Dashboard
         </a>
         <a
-          href={`/${params.locale}/auth/login`}
+          href={`/${locale}/auth/login`}
           className='text-blue-600 hover:underline'
         >
           Logout

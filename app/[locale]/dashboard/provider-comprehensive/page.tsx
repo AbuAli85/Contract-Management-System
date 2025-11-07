@@ -2,13 +2,15 @@
 
 import { RealTimeProviderDashboard } from '@/components/dashboards/real-time-provider-dashboard';
 import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
+import { useAuth } from '@/app/providers';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
 export default function ProviderComprehensivePage() {
-  const { user, loading, hasPermission } = useEnhancedRBAC();
+  const { user, loading } = useAuth();
+  const { hasPermission, isLoading } = useEnhancedRBAC();
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='flex items-center space-x-3'>
@@ -38,7 +40,8 @@ export default function ProviderComprehensivePage() {
   }
 
   // Check if user has provider role
-  if (user.role !== 'provider' && !hasPermission('dashboard.view_all')) {
+  const userRole = user.user_metadata?.role || '';
+  if (userRole !== 'provider' && !hasPermission('dashboard.view')) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <Card className='w-96'>
@@ -51,7 +54,7 @@ export default function ProviderComprehensivePage() {
               You need to have a provider account to access this dashboard.
             </p>
             <p className='text-sm text-gray-500 mt-2'>
-              Current role: {user.role}
+              Current role: {user.user_metadata?.role || 'Unknown'}
             </p>
           </CardContent>
         </Card>

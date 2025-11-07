@@ -349,7 +349,7 @@ function RecentTeamActivities() {
     fetchActivities();
   }, []);
 
-  const getStatusIcon = status => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
         return <CheckCircle className='w-4 h-4 text-green-600' />;
@@ -488,7 +488,7 @@ export default function ManagerDashboard({
 
             <div className='flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center'>
               <div className='text-sm text-slate-600'>
-                Welcome back, {profile?.name || user?.email || 'Manager'}
+                Welcome back, {profile?.getDisplayName?.() || profile?.full_name || profile?.display_name || user?.email || 'Manager'}
               </div>
 
               <div className='flex gap-2'>
