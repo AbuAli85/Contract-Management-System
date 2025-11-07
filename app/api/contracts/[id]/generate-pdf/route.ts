@@ -150,6 +150,24 @@ export async function POST(
     } else {
       promoterData = contract.promoters || null;
     }
+    
+    // If promoter data is missing but promoter_id exists, try to fetch it separately
+    if (!promoterData && contract.promoter_id) {
+      console.warn('⚠️ Promoter data not returned in query, fetching separately...');
+      const { data: promoter, error: promoterError } = await supabase
+        .from('promoters')
+        .select('name_en, name_ar, mobile_number, email, id_card_number, id_card_url, passport_url, passport_number')
+        .eq('id', contract.promoter_id)
+        .single();
+      
+      if (promoterError) {
+        console.error('Failed to fetch promoter separately:', promoterError);
+      } else if (promoter) {
+        promoterData = promoter;
+        console.log('✅ Successfully fetched promoter data separately');
+      }
+    }
+    
     contract.promoters = promoterData;
 
     // Log contract data for debugging (without sensitive info)
@@ -186,8 +204,13 @@ export async function POST(
     if (!contract.start_date) missingFields.push('start_date');
     if (!contract.end_date) missingFields.push('end_date');
 
-    // Only validate promoter data if promoter exists
-    if (contract.promoters) {
+    // Validate promoter data
+    if (contract.promoter_id && !contract.promoters) {
+      // Promoter ID exists but promoter data couldn't be fetched
+      console.error('❌ Promoter ID exists but promoter data is missing:', contract.promoter_id);
+      missingFields.push('promoter data (promoter not found in database)');
+    } else if (contract.promoters) {
+      // Promoter data exists, validate it
       if (!contract.promoters.name_en && !contract.promoters.name_ar) {
         missingFields.push('promoter name (at least one language)');
       }
