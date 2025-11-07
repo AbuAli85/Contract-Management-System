@@ -89,14 +89,48 @@ jobs:
 
           # Link to Supabase project
           echo "🔗 Linking to Supabase project..."
+          
+          # Try linking with password if available, otherwise without
           if [ -n "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
-            supabase link --project-ref $SUPABASE_PROJECT_REF --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+            echo "🔐 Using database password from secrets..."
+            if supabase link --project-ref $SUPABASE_PROJECT_REF --password "${{ secrets.SUPABASE_DB_PASSWORD }}" 2>&1; then
+              echo "✅ Successfully linked with password"
+            else
+              echo "⚠️  Link with password failed, trying without password..."
+              supabase link --project-ref $SUPABASE_PROJECT_REF || {
+                echo ""
+                echo "❌ Failed to link to Supabase project"
+                echo ""
+                echo "💡 Troubleshooting steps:"
+                echo "   1. Verify SUPABASE_PROJECT_REF is correct"
+                echo "   2. Verify SUPABASE_ACCESS_TOKEN has correct permissions"
+                echo "   3. Check if database password is required (set SUPABASE_DB_PASSWORD secret)"
+                echo "   4. Check network connectivity to Supabase"
+                echo "   5. Try running with --debug flag locally: supabase link --project-ref $SUPABASE_PROJECT_REF --debug"
+                exit 1
+              }
+            fi
           else
             echo "ℹ️  No database password provided, attempting link without password..."
-            supabase link --project-ref $SUPABASE_PROJECT_REF || {
-              echo "⚠️  Link failed. If password is required, set SUPABASE_DB_PASSWORD secret"
+            if supabase link --project-ref $SUPABASE_PROJECT_REF 2>&1; then
+              echo "✅ Successfully linked without password"
+            else
+              echo ""
+              echo "❌ Failed to link to Supabase project"
+              echo ""
+              echo "💡 Common causes:"
+              echo "   - Database password is required (set SUPABASE_DB_PASSWORD secret)"
+              echo "   - Network connectivity issues"
+              echo "   - Invalid project reference or access token"
+              echo ""
+              echo "📋 To get your database password:"
+              echo "   1. Go to Supabase Dashboard → Settings → Database"
+              echo "   2. Find 'Database Password' section"
+              echo "   3. Copy the password (or reset if needed)"
+              echo "   4. Add it as SUPABASE_DB_PASSWORD secret in GitHub"
+              echo ""
               exit 1
-            }
+            fi
           fi
 
           # Check migration status
