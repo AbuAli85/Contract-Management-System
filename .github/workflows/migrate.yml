@@ -122,8 +122,15 @@ jobs:
               break
             fi
             
+            # Always show error output for debugging
+            if [ -n "$LINK_OUTPUT" ]; then
+              echo "📋 Error output from attempt $attempt:"
+              echo "$LINK_OUTPUT"
+              echo ""
+            fi
+            
             # Check if it's a timeout error and we should retry
-            if echo "$LINK_OUTPUT" | grep -q "timeout\|deadline exceeded\|connection.*refused"; then
+            if echo "$LINK_OUTPUT" | grep -qi "timeout\|deadline exceeded\|connection.*refused"; then
               if [ $attempt -lt $max_attempts ]; then
                 echo "⏱️  Connection timeout detected. Waiting ${delay}s before retry..."
                 sleep $delay
@@ -136,18 +143,19 @@ jobs:
           done
           
           if [ "$LINK_FAILED" = true ]; then
+            echo ""
+            echo "❌ Failed to link after $max_attempts attempts"
+            echo ""
+            echo "📋 Final error output:"
+            echo "$LINK_OUTPUT"
+            echo ""
+            
             # Check error type and provide specific guidance
-            if echo "$LINK_OUTPUT" | grep -q "password\|SASL\|auth"; then
-              echo ""
+            if echo "$LINK_OUTPUT" | grep -qi "password\|SASL\|auth\|authentication\|unauthorized"; then
               echo "⚠️  Authentication error detected"
               echo ""
               
               if [ -z "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
-                echo "❌ Link failed - password might be required"
-                echo ""
-                echo "📋 Error details:"
-                echo "$LINK_OUTPUT"
-                echo ""
                 echo "💡 Solution: Add SUPABASE_DB_PASSWORD secret"
                 echo "   1. Go to Supabase Dashboard → Settings → Database"
                 echo "   2. Find 'Database Password' section"
@@ -155,26 +163,22 @@ jobs:
                 echo "   4. Add it as SUPABASE_DB_PASSWORD secret in GitHub"
                 exit 1
               else
-                echo "❌ Link failed even with password after $max_attempts attempts"
-                echo ""
                 echo "💡 Possible issues:"
                 echo "   - Database password might be incorrect"
                 echo "   - Password might need to be reset in Supabase Dashboard"
                 echo "   - Connection pooler might be blocking connections"
+                echo "   - Access token might be invalid or expired"
                 echo ""
                 echo "📋 To fix:"
                 echo "   1. Go to Supabase Dashboard → Settings → Database"
                 echo "   2. Check 'Database Password' - verify or reset it"
                 echo "   3. Update SUPABASE_DB_PASSWORD secret with the correct password"
-                echo "   4. Check if connection pooler is enabled (try direct connection)"
+                echo "   4. Verify SUPABASE_ACCESS_TOKEN is valid (Settings → API → Access Tokens)"
+                echo "   5. Check if connection pooler is enabled (try direct connection)"
                 exit 1
               fi
-            elif echo "$LINK_OUTPUT" | grep -q "timeout\|deadline exceeded"; then
-              echo ""
-              echo "❌ Connection timeout after $max_attempts attempts"
-              echo ""
-              echo "📋 Error details:"
-              echo "$LINK_OUTPUT"
+            elif echo "$LINK_OUTPUT" | grep -qi "timeout\|deadline exceeded"; then
+              echo "⏱️  Connection timeout error detected"
               echo ""
               echo "💡 Possible causes:"
               echo "   - Connection pooler is timing out (common in CI/CD environments)"
@@ -191,18 +195,13 @@ jobs:
               exit 1
             else
               # Other connection errors
-              echo ""
-              echo "❌ Failed to link to Supabase project"
-              echo ""
-              echo "📋 Error details:"
-              echo "$LINK_OUTPUT"
-              echo ""
               echo "💡 Troubleshooting steps:"
               echo "   1. Verify SUPABASE_PROJECT_REF is correct (20-character string)"
               echo "   2. Verify SUPABASE_ACCESS_TOKEN is valid and not expired"
               echo "   3. Check network connectivity to Supabase"
               echo "   4. Try linking locally: supabase link --project-ref $SUPABASE_PROJECT_REF --debug"
               echo "   5. Check Supabase project status in dashboard"
+              echo "   6. Review the error output above for specific details"
               exit 1
             fi
           fi
