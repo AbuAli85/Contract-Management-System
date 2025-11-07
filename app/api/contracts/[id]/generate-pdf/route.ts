@@ -466,6 +466,16 @@ export async function POST(
 
     // 7. Determine which webhook URL to use based on contract type
     // Check if this is a Sharaf DG contract
+    let termsData: any = null;
+    if (contract.terms && typeof contract.terms === 'string') {
+      try {
+        termsData = JSON.parse(contract.terms);
+      } catch {
+        // If parsing fails, treat as plain string
+        termsData = contract.terms;
+      }
+    }
+
     const isSharafDG = 
       contract.contract_type?.toLowerCase().includes('sharaf') ||
       contract.contract_type?.toLowerCase().includes('deployment') ||
@@ -473,9 +483,18 @@ export async function POST(
       contract.title?.toLowerCase().includes('deployment') ||
       contract.description?.toLowerCase().includes('sharaf') ||
       (contract.terms && typeof contract.terms === 'string' && contract.terms.toLowerCase().includes('sharaf-dg')) ||
+      (termsData && typeof termsData === 'object' && termsData.contract_subtype === 'sharaf-dg-deployment') ||
       (contract.metadata && typeof contract.metadata === 'object' && 
        (contract.metadata.contract_subtype === 'sharaf-dg-deployment' || 
         JSON.stringify(contract.metadata).toLowerCase().includes('sharaf')));
+
+    console.log('🔍 Contract type detection:', {
+      contract_type: contract.contract_type,
+      title: contract.title,
+      description: contract.description,
+      terms_subtype: termsData?.contract_subtype,
+      isSharafDG,
+    });
 
     let webhookUrl: string | undefined = undefined;
     let usedEnvVar: string = '';
@@ -511,8 +530,15 @@ export async function POST(
     }
 
     console.log('📤 Using webhook URL from environment variable:', usedEnvVar);
-    console.log('📤 Calling Make.com webhook:', webhookUrl.substring(0, 50) + '...');
+    console.log('📤 Webhook URL (full):', webhookUrl);
+    console.log('📤 Webhook URL (masked):', webhookUrl.substring(0, 30) + '...' + webhookUrl.substring(webhookUrl.length - 10));
     console.log('📤 Webhook URL length:', webhookUrl.length);
+    console.log('📤 Available webhook URLs:', {
+      SHARAF_DG: MAKE_WEBHOOK_URL_SHARAF_DG ? '✅ Set' : '❌ Not set',
+      EXTRA: MAKE_WEBHOOK_URL_EXTRA ? '✅ Set' : '❌ Not set',
+      GENERAL: MAKE_WEBHOOK_URL_GENERAL ? '✅ Set' : '❌ Not set',
+      LEGACY: MAKE_WEBHOOK_URL_LEGACY ? '✅ Set' : '❌ Not set',
+    });
 
     const webhookResponse = await fetch(webhookUrl, {
       method: 'POST',
