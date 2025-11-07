@@ -281,8 +281,17 @@ function UserStatsOverview() {
 }
 
 // Recent contracts component
+interface UserContract {
+  id: number;
+  title: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  client: string;
+}
+
 function RecentContracts() {
-  const [contracts, setContracts] = useState([]);
+  const [contracts, setContracts] = useState<UserContract[]>([]);
 
   useEffect(() => {
     // Fetch recent contracts
