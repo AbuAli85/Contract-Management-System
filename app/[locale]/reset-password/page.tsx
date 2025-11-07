@@ -71,6 +71,10 @@ export default function ResetPasswordPage() {
 
     try {
       const supabase = createClient();
+      if (!supabase) {
+        setError('Failed to initialize database connection');
+        return;
+      }
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       });

@@ -62,6 +62,10 @@ function ServicesListContent() {
     try {
       setError(null);
       const supabase = createClient();
+      if (!supabase) {
+        setError('Failed to initialize database connection');
+        return;
+      }
 
       // Fetch services with provider information
       const { data, error } = await supabase
@@ -87,10 +91,12 @@ function ServicesListContent() {
 
       if (data) {
         // Transform the data to include provider name
-        const transformedServices = data.map((service: any) => ({
+        const transformedServices: Service[] = data.map((service: any) => ({
           id: service.id,
           service_name: service.service_name,
-          status: service.status,
+          status: (service.status === 'pending' || service.status === 'approved' || service.status === 'rejected' || service.status === 'active' || service.status === 'inactive')
+            ? service.status
+            : 'pending' as Service['status'],
           provider_id: service.provider_id,
           provider_name: service.profiles?.full_name || 'Unknown Provider',
           created_at: service.created_at,
@@ -137,7 +143,14 @@ function ServicesListContent() {
   const handleStatusUpdate = (serviceId: string, newStatus: string) => {
     setServices(prev =>
       prev.map(service =>
-        service.id === serviceId ? { ...service, status: newStatus } : service
+        service.id === serviceId 
+          ? { 
+              ...service, 
+              status: (newStatus === 'pending' || newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'active' || newStatus === 'inactive')
+                ? newStatus as Service['status']
+                : service.status
+            } 
+          : service
       )
     );
   };
@@ -147,6 +160,9 @@ function ServicesListContent() {
 
     // Set up real-time subscription
     const supabase = createClient();
+    if (!supabase) {
+      return;
+    }
     const subscription = supabase
       .channel('services_changes')
       .on(
@@ -203,7 +219,9 @@ function ServicesListContent() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(subscription);
+      if (supabase) {
+        supabase.removeChannel(subscription);
+      }
     };
   }, [toast]);
 

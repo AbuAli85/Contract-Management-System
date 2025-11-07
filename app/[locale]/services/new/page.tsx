@@ -37,6 +37,10 @@ function NewServicePageContent() {
     const fetchProviders = async () => {
       try {
         const supabase = createClient();
+        if (!supabase) {
+          console.error('Failed to initialize database connection');
+          return;
+        }
         const { data, error } = await supabase
           .from('profiles')
           .select('id, full_name')

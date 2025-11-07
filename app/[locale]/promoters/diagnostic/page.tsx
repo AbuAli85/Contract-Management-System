@@ -39,6 +39,9 @@ export default function DiagnosticPage() {
       setTests(prev => {
         const newTests = [...prev];
         const existingTest = newTests[index];
+        if (!existingTest) {
+          return newTests;
+        }
         newTests[index] = {
           name: existingTest.name,
           status: response.ok ? 'success' : 'error',
@@ -53,6 +56,9 @@ export default function DiagnosticPage() {
       setTests(prev => {
         const newTests = [...prev];
         const existingTest = newTests[index];
+        if (!existingTest) {
+          return newTests;
+        }
         newTests[index] = {
           name: existingTest.name,
           status: 'error',
