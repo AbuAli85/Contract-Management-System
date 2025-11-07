@@ -540,6 +540,14 @@ export async function POST(
       LEGACY: MAKE_WEBHOOK_URL_LEGACY ? '✅ Set' : '❌ Not set',
     });
 
+    // Validate webhook URL format before calling
+    if (!webhookUrl.startsWith('https://hook.eu2.make.com/') && 
+        !webhookUrl.startsWith('https://hook.make.com/') &&
+        !webhookUrl.startsWith('https://hook.us1.make.com/')) {
+      console.warn('⚠️ Webhook URL format may be incorrect:', webhookUrl.substring(0, 50));
+    }
+
+    console.log('📤 Sending payload to Make.com webhook...');
     const webhookResponse = await fetch(webhookUrl, {
       method: 'POST',
       headers: {

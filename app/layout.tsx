@@ -27,7 +27,10 @@ const fontLexend = Lexend({
   variable: '--font-lexend',
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: 'Contract Management System | Professional CMS',
     template: '%s | Contract Management System',
