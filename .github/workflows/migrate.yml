@@ -99,47 +99,64 @@ jobs:
             }
           fi
 
-          # Check migration status before pushing
+          # Check migration status
           echo "📊 Checking migration status..."
-          MIGRATION_STATUS=$(supabase migration list --linked 2>&1) || true
+          supabase migration list --linked || true
           
-          if echo "$MIGRATION_STATUS" | grep -q "Remote migration versions not found"; then
-            echo "⚠️  Migration mismatch detected: Remote database has migrations not in local repo"
-            echo ""
-            echo "📋 Migration status:"
-            echo "$MIGRATION_STATUS"
-            echo ""
-            echo "💡 This usually happens when migrations were applied directly to the database."
-            echo "   Options to fix:"
-            echo ""
-            echo "   Option 1 (Recommended): Use --include-all flag to push all local migrations"
-            echo "   Option 2: Pull remote migrations locally first: supabase db pull --linked"
-            echo "   Option 3: Repair migration history: supabase migration repair --status reverted <versions>"
-            echo ""
-            echo "🔄 Attempting deployment with --include-all flag..."
-            
-            # Try pushing with --include-all to include all local migrations
-            supabase db push --linked --include-all || {
-              echo ""
-              echo "❌ Migration deployment failed even with --include-all"
-              echo ""
-              echo "📋 To fix this manually:"
-              echo "   1. Run locally: supabase link --project-ref $SUPABASE_PROJECT_REF"
-              echo "   2. Check status: supabase migration list --linked"
-              echo "   3. Pull remote: supabase db pull --linked"
-              echo "   4. Commit the pulled migrations to git"
-              echo "   5. Push again"
-              exit 1
-            }
+          # Attempt normal deployment first
+          echo ""
+          echo "🔄 Attempting normal migration deployment..."
+          if supabase db push --linked 2>&1 | tee /tmp/push_output.txt; then
+            echo "✅ Migrations deployed successfully!"
           else
-            # Normal deployment when migrations are in sync
-            echo "✅ Migration status looks good, proceeding with deployment..."
-            supabase db push --linked || {
-              echo "❌ Migration deployment failed"
+            PUSH_OUTPUT=$(cat /tmp/push_output.txt)
+            
+            # Check if the error is about missing remote migrations
+            if echo "$PUSH_OUTPUT" | grep -q "Remote migration versions not found"; then
+              echo ""
+              echo "⚠️  Migration mismatch detected: Remote database has migrations not in local repo"
+              echo ""
+              echo "📋 This means:"
+              echo "   - Remote database has migrations (001, 003, 006, etc.) that don't exist locally"
+              echo "   - These were likely applied directly via Supabase Dashboard"
+              echo ""
+              echo "💡 Solutions:"
+              echo ""
+              echo "   Option 1 (Recommended): Sync migrations locally first"
+              echo "   1. Run locally: supabase link --project-ref $SUPABASE_PROJECT_REF"
+              echo "   2. Pull remote: supabase db pull --linked"
+              echo "   3. Commit: git add supabase/migrations/ && git commit -m 'chore: sync migrations'"
+              echo "   4. Push: git push"
+              echo ""
+              echo "   Option 2: Repair migration history (if migrations are no longer needed)"
+              echo "   supabase migration repair --status reverted <migration_versions>"
+              echo ""
+              echo "🔄 Attempting deployment with --include-all flag (may not work for this case)..."
+              
+              # Try pushing with --include-all (though it may not help for this specific error)
+              if supabase db push --linked --include-all 2>&1; then
+                echo "✅ Migrations deployed with --include-all!"
+              else
+                echo ""
+                echo "❌ Migration deployment failed"
+                echo ""
+                echo "📋 Migration status:"
+                supabase migration list --linked || true
+                echo ""
+                echo "⚠️  Action Required: You must sync migrations locally before deploying."
+                echo "   See instructions above under 'Option 1'."
+                exit 1
+              fi
+            else
+              # Different error - show it and fail
+              echo ""
+              echo "❌ Migration deployment failed with error:"
+              echo "$PUSH_OUTPUT"
+              echo ""
               echo "📋 Migration status:"
               supabase migration list --linked || true
               exit 1
-            }
+            fi
           fi
 
           # Deploy Edge Functions (if any exist)
