@@ -193,12 +193,14 @@ export default function ClientRegistrationPage() {
         </motion.div>
 
         {/* Registration Form */}
-        <CompanyProfileForm
-          userId={user.id}
-          role='client'
-          onSuccess={handleRegistrationSuccess}
-          onError={handleRegistrationError}
-        />
+        {user && (
+          <CompanyProfileForm
+            userId={user.id}
+            role='client'
+            onSuccess={handleRegistrationSuccess}
+            onError={handleRegistrationError}
+          />
+        )}
 
         {/* Help section */}
         <motion.div

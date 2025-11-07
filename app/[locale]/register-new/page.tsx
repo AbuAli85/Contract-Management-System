@@ -99,6 +99,10 @@ export default function RegisterNewUserPage() {
       );
 
       // Step 1: Sign up with Supabase Auth
+      if (!supabase) {
+        setError('Failed to initialize database connection');
+        return;
+      }
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -133,6 +137,10 @@ export default function RegisterNewUserPage() {
         ? formData.role
         : 'user';
 
+      if (!supabase) {
+        setError('Failed to initialize database connection');
+        return;
+      }
       const { error: publicUserError } = await supabase.from('users').insert({
         id: authData.user.id,
         email: formData.email,
@@ -289,8 +297,8 @@ export default function RegisterNewUserPage() {
               <Label htmlFor='role'>Account Type *</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: UserRole) =>
-                  updateFormData('role', value)
+                onValueChange={(value: string) =>
+                  updateFormData('role', value as UserRole)
                 }
               >
                 <SelectTrigger>

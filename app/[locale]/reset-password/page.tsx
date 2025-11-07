@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/lib/auth-service';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 export default function ResetPasswordPage() {
@@ -25,7 +25,6 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const { updatePassword } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -71,7 +70,15 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await updatePassword(password);
+      const supabase = createClient();
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (updateError) {
+        throw updateError;
+      }
+
       setSuccess(true);
     } catch (err: any) {
       setError(

@@ -55,6 +55,10 @@ export default function PromoterDetailsPage() {
   async function fetchPromoters() {
     try {
       const supabase = createClient();
+      if (!supabase) {
+        setError('Failed to initialize database connection');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('promoters')

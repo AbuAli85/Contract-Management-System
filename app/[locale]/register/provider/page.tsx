@@ -76,7 +76,10 @@ export default function ProviderRegistrationPage() {
 
     // Check if all required fields are filled
     const allFieldsFilled = requiredFields.every(
-      field => formData[field].trim() !== ''
+      (field): boolean => {
+        const value = formData[field as keyof typeof formData];
+        return typeof value === 'string' && value.trim() !== '';
+      }
     );
 
     // Check if description meets minimum length requirement

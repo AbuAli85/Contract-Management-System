@@ -38,11 +38,13 @@ export default function DiagnosticPage() {
 
       setTests(prev => {
         const newTests = [...prev];
+        const existingTest = newTests[index];
         newTests[index] = {
-          ...newTests[index],
+          name: existingTest.name,
           status: response.ok ? 'success' : 'error',
           data,
           duration,
+          ...(response.ok ? {} : { error: 'Request failed' }),
         };
         return newTests;
       });
@@ -50,8 +52,9 @@ export default function DiagnosticPage() {
       const duration = Date.now() - startTime;
       setTests(prev => {
         const newTests = [...prev];
+        const existingTest = newTests[index];
         newTests[index] = {
-          ...newTests[index],
+          name: existingTest.name,
           status: 'error',
           error: error.message,
           duration,
