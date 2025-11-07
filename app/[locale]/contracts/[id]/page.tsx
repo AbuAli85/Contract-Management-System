@@ -258,65 +258,52 @@ export default function ContractDetailPage() {
     }
   };
 
-  const handleDownloadExistingPDF = async (pdfUrl: string) => {
-    if (!pdfUrl) {
-      setStatusMessage('No PDF available for download');
-      return;
-    }
-
-    // Validate URL format
-    try {
-      new URL(pdfUrl);
-    } catch {
-      setStatusMessage('Invalid PDF URL');
-      return;
-    }
-
+  const handleDownloadExistingPDF = async (pdfUrl?: string) => {
     setDownloading(true);
     setStatusMessage('Downloading PDF...');
 
     try {
-      console.log('📥 Downloading PDF from:', pdfUrl);
-      
-      // Fetch the PDF with CORS support and error handling
-      let response: Response;
-      try {
-        response = await fetch(pdfUrl, {
-          mode: 'cors',
-          credentials: 'omit',
-          cache: 'no-cache',
-        });
-      } catch (fetchError) {
-        console.error('❌ Fetch error:', fetchError);
-        // If CORS fails, try opening in new window as fallback
-        window.open(pdfUrl, '_blank');
-        setStatusMessage('Opening PDF in new window (CORS issue)');
-        return;
-      }
+      // Use the internal API endpoint that generates/serves the PDF
+      // This is more reliable than trying to download from storage directly
+      const apiUrl = `/api/contracts/${contractId}/pdf/view`;
+      console.log('📥 Downloading PDF via API:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+        },
+      });
 
       if (!response.ok) {
-        console.error('❌ PDF fetch failed:', response.status, response.statusText);
-        // If fetch fails, try opening in new window as fallback
-        window.open(pdfUrl, '_blank');
-        setStatusMessage('Opening PDF in new window');
-        return;
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}`;
+        console.error('❌ PDF API failed:', response.status, errorMessage);
+        
+        // If API fails and we have a direct URL, try that as fallback
+        if (pdfUrl) {
+          console.log('🔄 Trying direct URL as fallback:', pdfUrl);
+          window.open(pdfUrl, '_blank');
+          setStatusMessage('Opening PDF in new window');
+          return;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Check content type
       const contentType = response.headers.get('content-type');
       console.log('📄 Content-Type:', contentType);
 
+      if (!contentType || !contentType.includes('application/pdf')) {
+        console.warn('⚠️ Unexpected content type:', contentType);
+      }
+
       const blob = await response.blob();
       console.log('✅ PDF blob received:', blob.size, 'bytes', 'type:', blob.type);
 
       if (blob.size === 0) {
         throw new Error('Downloaded file is empty');
-      }
-
-      // Validate blob type
-      if (blob.type && !blob.type.includes('pdf') && !blob.type.includes('octet-stream')) {
-        console.warn('⚠️ Unexpected blob type:', blob.type);
-        // Still try to download, might be a PDF with wrong content-type
       }
 
       // Create download link
@@ -341,9 +328,13 @@ export default function ContractDetailPage() {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setStatusMessage(`Download failed: ${errorMessage}`);
       
-      // Fallback: try opening in new window
+      // Fallback: try opening direct URL or API endpoint in new window
       try {
-        window.open(pdfUrl, '_blank');
+        if (pdfUrl) {
+          window.open(pdfUrl, '_blank');
+        } else {
+          window.open(`/api/contracts/${contractId}/pdf/view`, '_blank');
+        }
         setStatusMessage('Opened PDF in new window (download failed)');
       } catch (openError) {
         console.error('❌ Failed to open PDF:', openError);
@@ -1040,14 +1031,12 @@ export default function ContractDetailPage() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (contract?.pdf_url) {
-                              handleDownloadExistingPDF(contract.pdf_url).catch((error) => {
-                                console.error('Download handler error:', error);
-                                setStatusMessage(`Error: ${error instanceof Error ? error.message : 'Failed to download'}`);
-                              });
-                            }
+                            handleDownloadExistingPDF(contract.pdf_url).catch((error) => {
+                              console.error('Download handler error:', error);
+                              setStatusMessage(`Error: ${error instanceof Error ? error.message : 'Failed to download'}`);
+                            });
                           }}
-                          disabled={downloading || !contract?.pdf_url}
+                          disabled={downloading}
                         >
                           <DownloadIcon className='mr-2 h-4 w-4' />
                           {downloading ? 'Downloading...' : 'Download'}
