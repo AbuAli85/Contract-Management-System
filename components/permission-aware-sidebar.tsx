@@ -458,6 +458,7 @@ export function PermissionAwareSidebar({
     return (
       <Link
         href={item.href}
+        prefetch={false}
         className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent hover:text-primary',
           pathname === item.href
@@ -491,6 +492,7 @@ export function PermissionAwareSidebar({
           <TooltipTrigger asChild>
             <Link
               href={item.href}
+              prefetch={false}
               className={cn(
                 'flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-accent hover:text-foreground md:h-8 md:w-8',
                 pathname === item.href
