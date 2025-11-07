@@ -1,5 +1,5 @@
 // app/[locale]/dashboard/makecom-templates/page.tsx
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import MakecomContractTemplates from '@/components/makecom-contract-templates';
 
 export const metadata: Metadata = {

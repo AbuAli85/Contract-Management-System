@@ -40,8 +40,9 @@ export default function ClientComprehensivePage() {
   }
 
   // Check if user has client role or admin permissions
+  const userRole = user.user_metadata?.role || '';
   if (
-    !['client', 'admin', 'super_admin'].includes(user.role || '') &&
+    !['client', 'admin', 'super_admin'].includes(userRole) &&
     !hasPermission('dashboard.view')
   ) {
     return (
@@ -56,7 +57,7 @@ export default function ClientComprehensivePage() {
               You need to have a client account to access this dashboard.
             </p>
             <p className='text-sm text-gray-500 mt-2'>
-              Current role: {user.role || 'Unknown'}
+              Current role: {user.user_metadata?.role || 'Unknown'}
             </p>
           </CardContent>
         </Card>

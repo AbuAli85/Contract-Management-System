@@ -298,8 +298,17 @@ function ManagerStatsOverview() {
 }
 
 // Recent team activities
+interface Activity {
+  id: number;
+  type: string;
+  message: string;
+  user: string;
+  timestamp: string;
+  status: string;
+}
+
 function RecentTeamActivities() {
-  const [activities, setActivities] = useState([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   useEffect(() => {
     // Fetch recent team activities

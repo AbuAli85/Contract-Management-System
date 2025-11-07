@@ -68,7 +68,7 @@ export default function AuditLogsPage() {
   const [sortKey, setSortKey] = useState<keyof AuditLogItem>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0] ?? 10);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch logs
@@ -191,12 +191,12 @@ export default function AuditLogsPage() {
     return filtered;
   }, [logs, searchTerm, sortKey, sortDirection]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / (pageSize || PAGE_SIZE_OPTIONS[0])));
+  const currentPageSize = pageSize ?? PAGE_SIZE_OPTIONS[0];
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / currentPageSize));
   const paginatedLogs = useMemo(() => {
-    const size = pageSize || PAGE_SIZE_OPTIONS[0];
-    const start = (page - 1) * size;
-    return filteredLogs.slice(start, start + size);
-  }, [filteredLogs, page, pageSize]);
+    const start = (page - 1) * currentPageSize;
+    return filteredLogs.slice(start, start + currentPageSize);
+  }, [filteredLogs, page, currentPageSize]);
 
   // Sorting
   const handleSort = (key: keyof AuditLogItem) => {
