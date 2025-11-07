@@ -111,11 +111,22 @@ jobs:
             elif [ $attempt -eq 2 ] && [ -n "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
               # Second attempt: try with password if available
               echo "🔐 Retrying with database password..."
-              LINK_OUTPUT=$(supabase link --project-ref $SUPABASE_PROJECT_REF --password "${{ secrets.SUPABASE_DB_PASSWORD }}" 2>&1) && LINK_FAILED=false || LINK_FAILED=true
+              # Try with password, ensuring no extra whitespace
+              PASSWORD=$(echo "${{ secrets.SUPABASE_DB_PASSWORD }}" | tr -d '\n\r\t ')
+              LINK_OUTPUT=$(supabase link --project-ref $SUPABASE_PROJECT_REF --password "$PASSWORD" 2>&1) && LINK_FAILED=false || LINK_FAILED=true
             elif [ -n "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
-              # Third attempt: try with password and debug flag
+              # Third attempt: try with password and debug flag, also try direct connection
               echo "🔍 Retrying with password and debug mode..."
-              LINK_OUTPUT=$(supabase link --project-ref $SUPABASE_PROJECT_REF --password "${{ secrets.SUPABASE_DB_PASSWORD }}" --debug 2>&1) && LINK_FAILED=false || LINK_FAILED=true
+              PASSWORD=$(echo "${{ secrets.SUPABASE_DB_PASSWORD }}" | tr -d '\n\r\t ')
+              
+              # First try with pooler (default)
+              LINK_OUTPUT=$(supabase link --project-ref $SUPABASE_PROJECT_REF --password "$PASSWORD" --debug 2>&1) && LINK_FAILED=false || LINK_FAILED=true
+              
+              # If still failing and error mentions pooler, suggest direct connection
+              if [ "$LINK_FAILED" = true ] && echo "$LINK_OUTPUT" | grep -qi "pooler\|timeout"; then
+                echo "⚠️  Pooler connection failed. Note: Direct connection may work better in CI/CD."
+                echo "💡 Consider using direct database connection string if pooler continues to fail."
+              fi
             else
               # No password available, can't retry
               break
@@ -164,28 +175,38 @@ jobs:
                 echo ""
                 echo "🔴 INCORRECT DATABASE PASSWORD DETECTED"
                 echo ""
-                echo "The database password in SUPABASE_DB_PASSWORD secret is incorrect."
+                echo "The database password in SUPABASE_DB_PASSWORD secret is incorrect or has formatting issues."
                 echo ""
-                echo "📋 Steps to fix:"
+                echo "📋 Troubleshooting Steps:"
                 echo ""
-                echo "1. Go to Supabase Dashboard: https://supabase.com/dashboard/project/${SUPABASE_PROJECT_REF}/settings/database"
+                echo "1. Verify Password in Supabase Dashboard:"
+                echo "   https://supabase.com/dashboard/project/${SUPABASE_PROJECT_REF}/settings/database"
                 echo ""
-                echo "2. In the 'Database Password' section:"
-                echo "   - If you know the password: Copy it exactly (watch for special characters)"
-                echo "   - If you don't know it: Click 'Reset Database Password' to create a new one"
+                echo "2. Reset Password (Recommended if unsure):"
+                echo "   - Click 'Reset Database Password' in Supabase Dashboard"
+                echo "   - Copy the NEW password immediately (it won't be shown again)"
                 echo ""
                 echo "3. Update GitHub Secret:"
                 echo "   - Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
                 echo "   - Find 'SUPABASE_DB_PASSWORD'"
                 echo "   - Click 'Update'"
-                echo "   - Paste the password (ensure no extra spaces or newlines)"
-                echo "   - Save"
+                echo "   - Delete the old value completely"
+                echo "   - Paste the NEW password (copy directly, don't type)"
+                echo "   - Ensure no spaces before/after"
+                echo "   - Click 'Update secret'"
                 echo ""
-                echo "4. Important notes:"
-                echo "   - Password is case-sensitive"
-                echo "   - Special characters may need URL encoding"
-                echo "   - Ensure no leading/trailing whitespace"
-                echo "   - If password contains quotes, ensure they're properly escaped"
+                echo "4. Common Issues:"
+                echo "   ❌ Password copied with extra spaces or newlines"
+                echo "   ❌ Password contains special characters that need escaping"
+                echo "   ❌ Using old password after reset"
+                echo "   ❌ Password is case-sensitive - check capitalization"
+                echo ""
+                echo "5. Test Password Locally (Optional):"
+                echo "   supabase link --project-ref ${SUPABASE_PROJECT_REF} --password 'YOUR_PASSWORD'"
+                echo ""
+                echo "6. If password contains special characters:"
+                echo "   - Try URL-encoding special characters"
+                echo "   - Or reset to a simpler password without special chars"
                 echo ""
                 exit 1
               fi
