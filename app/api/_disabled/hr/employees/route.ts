@@ -33,7 +33,7 @@ const EmployeeSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
     const page = parseInt(searchParams.get('page') || '1');
@@ -76,8 +76,24 @@ export async function GET(request: NextRequest) {
       query = query.eq('employment_status', status);
     }
 
-    // Get total count for pagination
-    const { count } = await query.select('*', { count: 'exact', head: true });
+    // Get total count for pagination (apply same filters)
+    let countQuery = supabase
+      .from('hr.employees')
+      .select('*', { count: 'exact', head: true });
+
+    if (search) {
+      countQuery = countQuery.or(
+        `full_name.ilike.%${search}%,employee_code.ilike.%${search}%,email.ilike.%${search}%`
+      );
+    }
+    if (department_id) {
+      countQuery = countQuery.eq('department_id', department_id);
+    }
+    if (status) {
+      countQuery = countQuery.eq('employment_status', status);
+    }
+
+    const { count } = await countQuery;
 
     // Get paginated results
     const { data, error } = await query.range(offset, offset + limit - 1);
@@ -110,7 +126,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.json();
 
     const parsed = EmployeeSchema.safeParse(body);
