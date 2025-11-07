@@ -143,6 +143,15 @@ export async function POST(
       );
     }
 
+    // Handle promoters - can be array or object depending on query
+    let promoterData = null;
+    if (Array.isArray(contract.promoters)) {
+      promoterData = contract.promoters[0] || null;
+    } else {
+      promoterData = contract.promoters || null;
+    }
+    contract.promoters = promoterData;
+
     // Log contract data for debugging (without sensitive info)
     console.log('📋 Contract data fetched:', {
       id: contract.id,
@@ -153,6 +162,7 @@ export async function POST(
       employer_id: contract.employer_id,
       client_id: contract.client_id,
       has_promoter: !!contract.promoters,
+      promoter_passport_number: contract.promoters?.passport_number,
       has_first_party: !!contract.first_party,
       has_second_party: !!contract.second_party,
       has_employer: !!contract.employer,
@@ -203,9 +213,19 @@ export async function POST(
         // Don't block PDF generation for placeholder passport images
       }
       
-      // Validate passport number exists
+      // Passport number is optional - warn but don't block
+      // Only require it if passport image is provided and valid
       if (!contract.promoters.passport_number) {
-        missingFields.push('passport number');
+        const hasValidPassportImage = contract.promoters.passport_url && 
+          !contract.promoters.passport_url.includes('NO_PASSPORT') &&
+          !contract.promoters.passport_url.toLowerCase().includes('placeholder');
+        
+        if (hasValidPassportImage) {
+          console.warn('⚠️ Passport number missing but passport image is provided');
+          // Only warn, don't block - the PDF can still be generated
+        } else {
+          console.warn('⚠️ No passport number provided - PDF will be generated without passport number');
+        }
       }
     } else {
       console.warn('⚠️ No promoter data found for contract');
