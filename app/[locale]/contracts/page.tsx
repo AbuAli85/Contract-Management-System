@@ -1657,7 +1657,7 @@ function ContractsContent() {
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <button
-                                          onClick={() => window.open(contract.pdf_url!, '_blank')}
+                                          onClick={() => window.open(`/api/contracts/${contract.id}/pdf/view`, '_blank')}
                                           className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-400 transition-colors duration-200'
                                           title='View contract PDF'
                                         >

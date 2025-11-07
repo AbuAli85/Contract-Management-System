@@ -280,14 +280,8 @@ export default function ContractDetailPage() {
         const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}`;
         console.error('❌ PDF API failed:', response.status, errorMessage);
         
-        // If API fails and we have a direct URL, try that as fallback
-        if (pdfUrl) {
-          console.log('🔄 Trying direct URL as fallback:', pdfUrl);
-          window.open(pdfUrl, '_blank');
-          setStatusMessage('Opening PDF in new window');
-          return;
-        }
-        
+        // Don't fallback to direct URL as it may be incorrect
+        // Instead, show error and suggest regenerating the PDF
         throw new Error(errorMessage);
       }
 
@@ -328,13 +322,9 @@ export default function ContractDetailPage() {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setStatusMessage(`Download failed: ${errorMessage}`);
       
-      // Fallback: try opening direct URL or API endpoint in new window
+      // Fallback: try opening API endpoint in new window
       try {
-        if (pdfUrl) {
-          window.open(pdfUrl, '_blank');
-        } else {
-          window.open(`/api/contracts/${contractId}/pdf/view`, '_blank');
-        }
+        window.open(`/api/contracts/${contractId}/pdf/view`, '_blank');
         setStatusMessage('Opened PDF in new window (download failed)');
       } catch (openError) {
         console.error('❌ Failed to open PDF:', openError);
@@ -653,10 +643,10 @@ export default function ContractDetailPage() {
                         </div>
                       </div>
                       <div className='flex items-center gap-2'>
-                        {hasPDF && contract.pdf_url ? (
+                        {hasPDF ? (
                           <Button size='sm' variant='outline' asChild>
                             <a
-                              href={contract.pdf_url}
+                              href={`/api/contracts/${contractId}/pdf/view`}
                               target='_blank'
                               rel='noopener noreferrer'
                             >
@@ -1031,7 +1021,7 @@ export default function ContractDetailPage() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleDownloadExistingPDF(contract.pdf_url).catch((error) => {
+                            handleDownloadExistingPDF(contract.pdf_url || undefined).catch((error) => {
                               console.error('Download handler error:', error);
                               setStatusMessage(`Error: ${error instanceof Error ? error.message : 'Failed to download'}`);
                             });
@@ -1044,7 +1034,7 @@ export default function ContractDetailPage() {
                         <Button 
                           size='sm' 
                           variant='ghost'
-                          onClick={() => contract.pdf_url && window.open(contract.pdf_url, '_blank')}
+                          onClick={() => window.open(`/api/contracts/${contractId}/pdf/view`, '_blank')}
                         >
                           <ExternalLinkIcon className='mr-2 h-4 w-4' />
                           Open
@@ -1331,7 +1321,7 @@ export default function ContractDetailPage() {
                     <p className='text-sm text-blue-700'>
                       {hasPDF ? 'Generated' : 'Not generated'}
                     </p>
-                    {hasPDF && contract.pdf_url && (
+                    {hasPDF && (
                       <Button
                         size='sm'
                         variant='outline'
@@ -1339,7 +1329,7 @@ export default function ContractDetailPage() {
                         asChild
                       >
                         <a
-                          href={contract.pdf_url}
+                          href={`/api/contracts/${contractId}/pdf/view`}
                           target='_blank'
                           rel='noopener noreferrer'
                         >
