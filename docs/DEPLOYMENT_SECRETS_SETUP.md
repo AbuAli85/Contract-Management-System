@@ -51,18 +51,22 @@ If you have a separate staging environment, add this secret with your staging pr
 
 ### 4. SUPABASE_DB_PASSWORD (Required for some projects)
 
-Your database password. **Required if you get connection timeout errors during linking.**
+Your database password. **Required if you get authentication errors during linking.**
 
 **How to get it:**
 1. Go to your Supabase project dashboard
 2. Click **Settings** → **Database**
 3. Find **Database Password** section
 4. If you don't remember it, you can reset it (be careful!)
+5. Copy the password exactly as shown
 
-**Note:** 
+**Important Notes:** 
 - Some Supabase projects require the database password for CLI operations
-- If you see "failed to connect" or "timeout" errors, add this secret
+- If you see "failed SASL auth" or "timeout" errors, add this secret
 - The password is different from your Supabase account password
+- Make sure there are no extra spaces when copying the password
+- If password contains special characters, ensure they're properly escaped in the secret
+- If linking still fails, try resetting the database password in Supabase Dashboard
 
 ---
 
