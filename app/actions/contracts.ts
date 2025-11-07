@@ -39,6 +39,8 @@ export async function createContract(newContract: ContractInsert) {
   const endDate = asAny.contract_end_date || asAny.end_date;
 
   // Create base payload with proper date mapping
+  // Note: email, job_title, work_location, department are not part of ContractInsert type
+  // They may exist in the database but are not in the TypeScript types
   const basePayload: ContractInsert = {
     ...newContract,
     contract_number: (asAny.contract_number as string) || generatedNumber,
@@ -48,10 +50,6 @@ export async function createContract(newContract: ContractInsert) {
     end_date: endDate
       ? (new Date(endDate as unknown as string).toISOString().split('T')[0] as string)
       : newContract.end_date,
-    email: asAny.email ?? null,
-    job_title: asAny.job_title ?? null,
-    work_location: asAny.work_location ?? null,
-    department: asAny.department ?? null,
     currency: asAny.currency ?? 'OMR',
     contract_value: asAny.contract_value ?? asAny.basic_salary ?? null,
     first_party_id: asAny.first_party_id ?? newContract.first_party_id ?? null,
@@ -63,15 +61,21 @@ export async function createContract(newContract: ContractInsert) {
     updated_at: new Date().toISOString(),
   };
 
-  // Add legacy field names for backward compatibility (cast to any to bypass type check)
+  // Add legacy field names and extra fields for backward compatibility (cast to any to bypass type check)
   const safePayload = {
     ...basePayload,
+    // Legacy date field names
     contract_start_date: startDate
       ? (new Date(startDate as unknown as string).toISOString() as any)
       : (null as any),
     contract_end_date: endDate
       ? (new Date(endDate as unknown as string).toISOString() as any)
       : (null as any),
+    // Extra fields that may exist in database but not in TypeScript types
+    email: asAny.email ?? null,
+    job_title: asAny.job_title ?? null,
+    work_location: asAny.work_location ?? null,
+    department: asAny.department ?? null,
   } as any;
 
   const { data, error } = await supabase

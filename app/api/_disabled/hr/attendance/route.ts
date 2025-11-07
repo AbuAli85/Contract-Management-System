@@ -67,8 +67,22 @@ export async function GET(request: NextRequest) {
       query = query.lte('check_in', parsed.data.end_date);
     }
 
-    // Get total count for pagination
-    const { count } = await query.select('*', { count: 'exact', head: true });
+    // Get total count for pagination (apply same filters)
+    let countQuery = supabase
+      .from('hr.attendance_logs')
+      .select('*', { count: 'exact', head: true });
+
+    if (parsed.data.employee_id) {
+      countQuery = countQuery.eq('employee_id', parsed.data.employee_id);
+    }
+    if (parsed.data.start_date) {
+      countQuery = countQuery.gte('check_in', parsed.data.start_date);
+    }
+    if (parsed.data.end_date) {
+      countQuery = countQuery.lte('check_in', parsed.data.end_date);
+    }
+
+    const { count } = await countQuery;
 
     // Get paginated results
     const { data, error } = await query.range(offset, offset + limit - 1);
@@ -169,7 +183,7 @@ export async function POST(request: NextRequest) {
       // Find the latest open attendance record
       const { data: openLogs, error: findError } = await supabase
         .from('hr.attendance_logs')
-        .select('id, check_in')
+        .select('id, check_in, notes')
         .eq('employee_id', employee_id)
         .is('check_out', null)
         .order('check_in', { ascending: false })
@@ -183,15 +197,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (!openLogs || openLogs.length === 0) {
+      if (!openLogs || openLogs.length === 0 || !openLogs[0]) {
         return NextResponse.json(
           { error: 'No open shift found. Please check in first.' },
           { status: 400 }
         );
       }
 
+      const openLog = openLogs[0];
       const checkOutTime = new Date();
-      const checkInTime = new Date(openLogs[0].check_in);
+      const checkInTime = new Date(openLog.check_in);
       const workHours =
         (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
       const overtimeHours = Math.max(0, workHours - 8); // Assuming 8 hours standard work day
@@ -203,10 +218,10 @@ export async function POST(request: NextRequest) {
           check_out: checkOutTime.toISOString(),
           overtime_hours: overtimeHours,
           notes: notes
-            ? `${openLogs[0].notes || ''}\n${notes}`.trim()
-            : openLogs[0].notes,
+            ? `${openLog.notes || ''}\n${notes}`.trim()
+            : openLog.notes || null,
         })
-        .eq('id', openLogs[0].id)
+        .eq('id', openLog.id)
         .select(
           `
           id, employee_id, check_in, check_out, location, method, 

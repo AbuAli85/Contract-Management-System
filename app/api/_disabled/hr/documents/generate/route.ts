@@ -10,7 +10,7 @@ const DocumentGenerationSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.json();
 
     const parsed = DocumentGenerationSchema.safeParse(body);
