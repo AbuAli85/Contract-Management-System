@@ -83,46 +83,79 @@ export const GET = withRBAC(
         );
       }
 
-      // Find the correct PDF file in storage
+      // Find the correct PDF file in storage - MUST fetch from storage, never generate
       let pdfFileName: string | null = null;
       let pdfUrl: string | null = contract.pdf_url || null;
 
-      if (contract.pdf_url && contract.contract_number) {
-        try {
-          // Extract filename from URL
+      if (!contract.contract_number) {
+        console.error('❌ Contract number missing, cannot search for PDF');
+        return NextResponse.json(
+          { error: 'Contract number is required to find PDF file' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        // Extract filename from URL (decode URL encoding)
+        let storedFilename: string | null = null;
+        if (contract.pdf_url) {
           const urlParts = contract.pdf_url.split('/contracts/');
-          const storedFilename = urlParts.length > 1 ? urlParts[1] : null;
+          if (urlParts.length > 1) {
+            storedFilename = decodeURIComponent(urlParts[1]); // Decode %20 to space
+          }
+        }
+        
+        console.log('🔍 Searching for PDF file...');
+        console.log('📋 Contract number:', contract.contract_number);
+        console.log('📋 Stored filename from URL:', storedFilename);
+        
+        // List ALL files in storage (increase limit to find all files)
+        const { data: fileList, error: listError } = await supabase.storage
+          .from('contracts')
+          .list('', {
+            limit: 1000, // Increased limit to find all files
+          });
+        
+        if (listError) {
+          console.error('❌ Error listing storage files:', listError);
+          return NextResponse.json(
+            { error: 'Failed to access storage', details: listError.message },
+            { status: 500 }
+          );
+        }
+        
+        console.log(`📁 Found ${fileList?.length || 0} files in storage`);
+        
+        // First, try exact match with stored filename (decoded)
+        if (storedFilename && fileList) {
+          const exactMatch = fileList.find(file => file.name === storedFilename);
+          if (exactMatch) {
+            pdfFileName = exactMatch.name;
+            console.log('✅ Found exact match:', pdfFileName);
+          }
+        }
+        
+        // If no exact match, search for files matching contract number
+        if (!pdfFileName && fileList) {
+          const matchingFiles = fileList.filter(
+            (file) =>
+              file.name.startsWith(contract.contract_number!) &&
+              file.name.endsWith('.pdf')
+          );
           
-          // List files in storage
-          const { data: fileList } = await supabase.storage
-            .from('contracts')
-            .list('', {
-              limit: 100,
+          console.log(`🔍 Found ${matchingFiles.length} files matching contract number:`, matchingFiles.map(f => f.name));
+          
+          if (matchingFiles.length > 0) {
+            // Get the most recent matching file
+            const sortedFiles = matchingFiles.sort((a, b) => {
+              const aTime = new Date(a.created_at || 0).getTime();
+              const bTime = new Date(b.created_at || 0).getTime();
+              return bTime - aTime;
             });
-          
-          // Check if stored file exists
-          const fileExists = storedFilename && fileList?.some(file => file.name === storedFilename);
-          
-          if (fileExists && storedFilename) {
-            // Use the stored filename
-            pdfFileName = storedFilename;
-            console.log('✅ Found PDF file in storage:', pdfFileName);
-          } else if (fileList) {
-            // Search for files matching contract number
-            const matchingFiles = fileList.filter(
-              (file) =>
-                file.name.startsWith(contract.contract_number) &&
-                file.name.endsWith('.pdf')
-            );
             
-            if (matchingFiles.length > 0) {
-              // Get the most recent matching file
-              const matchingFile = matchingFiles.sort((a, b) => {
-                const aTime = new Date(a.created_at || 0).getTime();
-                const bTime = new Date(b.created_at || 0).getTime();
-                return bTime - aTime;
-              })[0];
-              
+            const matchingFile = sortedFiles[0];
+            
+            if (matchingFile) {
               pdfFileName = matchingFile.name;
               
               // Update contract with correct URL in background
@@ -132,97 +165,114 @@ export const GET = withRBAC(
               
               pdfUrl = publicUrl;
               
-              supabase
-                .from('contracts')
-                .update({ pdf_url: publicUrl })
-                .eq('id', contractId)
-                .then(() => {
+              // Update contract with correct URL (fire and forget)
+              void (async () => {
+                try {
+                  await supabase
+                    .from('contracts')
+                    .update({ pdf_url: publicUrl })
+                    .eq('id', contractId);
                   console.log('✅ Auto-fixed PDF URL:', matchingFile.name);
-                })
-                .catch((err) => {
+                } catch (err: unknown) {
                   console.warn('⚠️ Failed to auto-fix PDF URL:', err);
-                });
+                }
+              })();
               
-              console.log('🔧 Found correct PDF file:', pdfFileName);
+              console.log('🔧 Found matching PDF file:', pdfFileName);
             }
           }
-        } catch (fixError) {
-          console.warn('⚠️ Could not find PDF file in storage:', fixError);
         }
-      }
-
-      // Try to fetch PDF from storage first
-      if (pdfFileName) {
-        try {
-          console.log('📥 Fetching PDF from storage:', pdfFileName);
-          console.log('📥 Filename length:', pdfFileName.length);
-          console.log('📥 Filename includes space:', pdfFileName.includes(' '));
-          
-          const { data: pdfData, error: downloadError } = await supabase.storage
-            .from('contracts')
-            .download(pdfFileName);
-          
-          if (!downloadError && pdfData) {
-            const arrayBuffer = await pdfData.arrayBuffer();
-            const pdfBuffer = new Uint8Array(arrayBuffer);
-            
-            console.log('✅ PDF fetched from storage:', pdfBuffer.length, 'bytes');
-            
-            // URL encode filename for Content-Disposition header if it contains spaces
-            const encodedFileName = pdfFileName.includes(' ') 
-              ? pdfFileName.replace(/ /g, '%20')
-              : pdfFileName;
-            
-            // Return the PDF from storage
-            return new NextResponse(pdfBuffer, {
-              status: 200,
-              headers: {
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `inline; filename="${pdfFileName}"; filename*=UTF-8''${encodedFileName}`,
-                'Cache-Control': 'public, max-age=3600',
-              },
-            });
-          } else {
-            console.error('⚠️ Failed to download PDF from storage:', downloadError);
-            console.error('⚠️ Error details:', JSON.stringify(downloadError, null, 2));
-            // Fall through to generate PDF on-demand
-          }
-        } catch (fetchError) {
-          console.error('⚠️ Error fetching PDF from storage:', fetchError);
-          console.error('⚠️ Fetch error details:', fetchError instanceof Error ? fetchError.message : String(fetchError));
-          // Fall through to generate PDF on-demand
-        }
-      } else {
-        console.warn('⚠️ No PDF filename found, cannot fetch from storage');
-      }
-
-      // Fallback: Generate PDF on-demand if not found in storage
-      if (!hasPDF) {
-        console.log('❌ No PDF available for contract');
+      } catch (fixError) {
+        console.error('❌ Error searching for PDF file:', fixError);
         return NextResponse.json(
-          { error: 'PDF not available for this contract' },
+          { error: 'Failed to search for PDF file', details: fixError instanceof Error ? fixError.message : 'Unknown error' },
+          { status: 500 }
+        );
+      }
+
+      // MUST fetch PDF from storage - never generate if pdf_url exists
+      if (!pdfFileName) {
+        console.error('❌ PDF file not found in storage');
+        console.error('📋 Contract number:', contract.contract_number);
+        console.error('📋 Stored PDF URL:', contract.pdf_url);
+        return NextResponse.json(
+          { 
+            error: 'PDF file not found in storage',
+            contractNumber: contract.contract_number,
+            storedUrl: contract.pdf_url,
+            message: 'The PDF file does not exist in Supabase storage. Please regenerate the PDF or check the file name.',
+          },
           { status: 404 }
         );
       }
 
-      console.log('📄 Generating PDF on-demand (file not found in storage)');
-
+      // Fetch the actual PDF file from storage
       try {
-        const pdfBuffer = await generateContractPDF(contract);
+        console.log('📥 Fetching PDF from storage:', pdfFileName);
+        console.log('📥 Filename length:', pdfFileName.length);
+        console.log('📥 Filename includes space:', pdfFileName.includes(' '));
         
-        // Return the generated PDF content
-        return new NextResponse(new Uint8Array(pdfBuffer), {
+        const { data: pdfData, error: downloadError } = await supabase.storage
+          .from('contracts')
+          .download(pdfFileName);
+        
+        if (downloadError) {
+          console.error('❌ Failed to download PDF from storage:', downloadError);
+          console.error('❌ Error details:', JSON.stringify(downloadError, null, 2));
+          return NextResponse.json(
+            { 
+              error: 'Failed to download PDF from storage',
+              details: downloadError.message,
+              fileName: pdfFileName,
+            },
+            { status: 500 }
+          );
+        }
+
+        if (!pdfData) {
+          console.error('❌ PDF data is null');
+          return NextResponse.json(
+            { error: 'PDF file is empty or corrupted' },
+            { status: 500 }
+          );
+        }
+
+        const arrayBuffer = await pdfData.arrayBuffer();
+        const pdfBuffer = new Uint8Array(arrayBuffer);
+        
+        if (pdfBuffer.length === 0) {
+          console.error('❌ PDF buffer is empty');
+          return NextResponse.json(
+            { error: 'PDF file is empty' },
+            { status: 500 }
+          );
+        }
+        
+        console.log('✅ PDF fetched from storage:', pdfBuffer.length, 'bytes');
+        
+        // URL encode filename for Content-Disposition header if it contains spaces
+        const encodedFileName = pdfFileName.includes(' ') 
+          ? encodeURIComponent(pdfFileName)
+          : pdfFileName;
+        
+        // Return the actual PDF from storage (not generated)
+        return new NextResponse(pdfBuffer, {
           status: 200,
           headers: {
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `inline; filename="${contract.contract_number || contractId}-contract.pdf"`,
+            'Content-Disposition': `inline; filename="${pdfFileName}"; filename*=UTF-8''${encodedFileName}`,
             'Cache-Control': 'public, max-age=3600',
           },
         });
-      } catch (pdfError) {
-        console.error('❌ PDF generation failed:', pdfError);
+      } catch (fetchError) {
+        console.error('❌ Error fetching PDF from storage:', fetchError);
+        console.error('❌ Fetch error details:', fetchError instanceof Error ? fetchError.message : String(fetchError));
         return NextResponse.json(
-          { error: 'Failed to generate PDF', details: pdfError instanceof Error ? pdfError.message : 'Unknown error' },
+          { 
+            error: 'Failed to fetch PDF from storage',
+            details: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+            fileName: pdfFileName,
+          },
           { status: 500 }
         );
       }
