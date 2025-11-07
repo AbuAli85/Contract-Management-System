@@ -87,6 +87,11 @@ jobs:
           echo "Deploying to ${{ github.event.inputs.environment || 'production' }}"
           echo "Project Ref: ${SUPABASE_PROJECT_REF:0:8}..." # Show first 8 chars
 
+          # Ensure Supabase directories exist
+          echo "📁 Creating Supabase directory structure..."
+          mkdir -p supabase/.temp
+          mkdir -p supabase/migrations
+          
           # Link to Supabase project with retry logic
           echo "🔗 Linking to Supabase project..."
           
@@ -151,11 +156,42 @@ jobs:
             echo ""
             
             # Check error type and provide specific guidance
-            if echo "$LINK_OUTPUT" | grep -qi "password\|SASL\|auth\|authentication\|unauthorized"; then
+            if echo "$LINK_OUTPUT" | grep -qi "Wrong password\|password\|SASL\|auth\|authentication\|unauthorized"; then
               echo "⚠️  Authentication error detected"
-              echo ""
+              
+              # Check specifically for "Wrong password" error
+              if echo "$LINK_OUTPUT" | grep -qi "Wrong password"; then
+                echo ""
+                echo "🔴 INCORRECT DATABASE PASSWORD DETECTED"
+                echo ""
+                echo "The database password in SUPABASE_DB_PASSWORD secret is incorrect."
+                echo ""
+                echo "📋 Steps to fix:"
+                echo ""
+                echo "1. Go to Supabase Dashboard: https://supabase.com/dashboard/project/${SUPABASE_PROJECT_REF}/settings/database"
+                echo ""
+                echo "2. In the 'Database Password' section:"
+                echo "   - If you know the password: Copy it exactly (watch for special characters)"
+                echo "   - If you don't know it: Click 'Reset Database Password' to create a new one"
+                echo ""
+                echo "3. Update GitHub Secret:"
+                echo "   - Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+                echo "   - Find 'SUPABASE_DB_PASSWORD'"
+                echo "   - Click 'Update'"
+                echo "   - Paste the password (ensure no extra spaces or newlines)"
+                echo "   - Save"
+                echo ""
+                echo "4. Important notes:"
+                echo "   - Password is case-sensitive"
+                echo "   - Special characters may need URL encoding"
+                echo "   - Ensure no leading/trailing whitespace"
+                echo "   - If password contains quotes, ensure they're properly escaped"
+                echo ""
+                exit 1
+              fi
               
               if [ -z "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
+                echo ""
                 echo "💡 Solution: Add SUPABASE_DB_PASSWORD secret"
                 echo "   1. Go to Supabase Dashboard → Settings → Database"
                 echo "   2. Find 'Database Password' section"
@@ -163,6 +199,7 @@ jobs:
                 echo "   4. Add it as SUPABASE_DB_PASSWORD secret in GitHub"
                 exit 1
               else
+                echo ""
                 echo "💡 Possible issues:"
                 echo "   - Database password might be incorrect"
                 echo "   - Password might need to be reset in Supabase Dashboard"
