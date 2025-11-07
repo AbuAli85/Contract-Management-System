@@ -38,7 +38,7 @@ interface RegistrationStatus {
 
 export default function CheckRegistrationPage() {
   const params = useParams();
-  const locale = params.locale as string;
+  const locale = (params?.locale as string) || 'en';
   const { user } = useAuth();
   const [registrationStatus, setRegistrationStatus] =
     useState<RegistrationStatus | null>(null);

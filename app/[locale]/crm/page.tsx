@@ -10,7 +10,7 @@ import PromoterDashboard from '@/components/dashboard/PromoterDashboard';
 export default function CRMPage() {
   const { loading } = useAuth();
   const { userRole, hasPermission, isLoading } = useEnhancedRBAC();
-  const isAdmin = userRole === 'admin' || hasPermission('dashboard.view_all');
+  const isAdmin = userRole === 'admin' || hasPermission('dashboard.view');
   const [promoters, setPromoters] = useState<{ id: string }[]>([]);
   const [promotersLoading, setPromotersLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +23,9 @@ export default function CRMPage() {
         console.log('Fetching promoters...');
 
         const supabase = createClient();
+        if (!supabase) {
+          throw new Error('Supabase client not available');
+        }
         const { data, error } = await supabase
           .from('promoters')
           .select('id')

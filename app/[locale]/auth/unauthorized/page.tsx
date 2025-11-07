@@ -15,8 +15,8 @@ import { AlertCircle, Home, ArrowLeft } from 'lucide-react';
 
 export default function UnauthorizedPage() {
   const searchParams = useSearchParams();
-  const requiredRole = searchParams.get('required');
-  const currentRole = searchParams.get('current');
+  const requiredRole = searchParams?.get('required') || null;
+  const currentRole = searchParams?.get('current') || null;
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
