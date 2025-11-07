@@ -271,6 +271,14 @@ export default function ContractDetailPage() {
         }
       );
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.details || errorData.message || errorData.error || 'Failed to generate PDF';
+        console.error('PDF generation error:', errorData);
+        setStatusMessage(`Error: ${errorMessage}`);
+        return;
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -284,7 +292,8 @@ export default function ContractDetailPage() {
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
-      setStatusMessage('Failed to generate PDF');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate PDF';
+      setStatusMessage(`Error: ${errorMessage}`);
     } finally {
       setDownloading(false);
     }

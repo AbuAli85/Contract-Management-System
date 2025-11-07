@@ -86,7 +86,9 @@ export async function POST(
 
     // 2. Fetch complete contract data with relations using service client
     const supabase = createServiceClient();
-    const { data: contract, error: fetchError } = await supabase
+    
+    // Try to fetch with first_party_id/second_party_id, fallback to employer_id/client_id
+    let { data: contract, error: fetchError } = await supabase
       .from('contracts')
       .select(`
         *,
@@ -111,6 +113,18 @@ export async function POST(
           name_ar,
           crn,
           logo_url
+        ),
+        employer:employer_id (
+          name_en,
+          name_ar,
+          crn,
+          logo_url
+        ),
+        client:client_id (
+          name_en,
+          name_ar,
+          crn,
+          logo_url
         )
       `)
       .eq('id', contractId)
@@ -118,10 +132,41 @@ export async function POST(
 
     if (fetchError || !contract) {
       console.error('Contract fetch error:', fetchError);
+      console.error('Contract ID:', contractId);
       return NextResponse.json(
-        { error: 'Contract not found' },
+        { 
+          error: 'Contract not found',
+          details: fetchError?.message || 'No contract found with the provided ID',
+          contractId 
+        },
         { status: 404 }
       );
+    }
+
+    // Log contract data for debugging (without sensitive info)
+    console.log('📋 Contract data fetched:', {
+      id: contract.id,
+      contract_number: contract.contract_number,
+      promoter_id: contract.promoter_id,
+      first_party_id: contract.first_party_id,
+      second_party_id: contract.second_party_id,
+      employer_id: contract.employer_id,
+      client_id: contract.client_id,
+      has_promoter: !!contract.promoters,
+      has_first_party: !!contract.first_party,
+      has_second_party: !!contract.second_party,
+      has_employer: !!contract.employer,
+      has_client: !!contract.client,
+    });
+
+    // Use employer/client as fallback if first_party/second_party don't exist
+    if (!contract.first_party && contract.employer) {
+      contract.first_party = contract.employer;
+      contract.first_party_id = contract.employer_id;
+    }
+    if (!contract.second_party && contract.client) {
+      contract.second_party = contract.client;
+      contract.second_party_id = contract.client_id;
     }
 
     // 3. Validate required fields (relaxed validation)
@@ -182,12 +227,29 @@ export async function POST(
     }
 
     if (missingFields.length > 0) {
-      console.error('Missing required fields:', missingFields);
+      console.error('❌ Missing required fields:', missingFields);
+      console.error('📋 Contract state:', {
+        contract_number: contract.contract_number,
+        start_date: contract.start_date,
+        end_date: contract.end_date,
+        has_promoter: !!contract.promoters,
+        promoter_name_en: contract.promoters?.name_en,
+        promoter_name_ar: contract.promoters?.name_ar,
+        promoter_id_card_url: contract.promoters?.id_card_url,
+        promoter_passport_url: contract.promoters?.passport_url,
+        promoter_passport_number: contract.promoters?.passport_number,
+        has_first_party: !!contract.first_party,
+        has_second_party: !!contract.second_party,
+      });
+      
       return NextResponse.json(
         {
-          error: 'Missing required fields',
-          details: `The following fields are required for PDF generation: ${missingFields.join(', ')}`,
+          error: 'Missing required fields for PDF generation',
+          message: `The following fields are required: ${missingFields.join(', ')}`,
+          details: `Please ensure all required contract information is complete before generating the PDF. Missing: ${missingFields.join('; ')}`,
           missingFields,
+          contractId: contract.id,
+          contractNumber: contract.contract_number,
         },
         { status: 400 }
       );

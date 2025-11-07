@@ -63,7 +63,9 @@ export function GenerateContractPDFButton({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to generate PDF');
+        const errorMessage = error.details || error.message || error.error || 'Failed to generate PDF';
+        console.error('PDF generation error response:', error);
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
