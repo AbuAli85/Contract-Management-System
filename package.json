@@ -25,6 +25,8 @@
     "rbac:test-simple": "node scripts/test-rbac-simple.js",
     "rbac:assign-test": "node scripts/assign-test-role.js",
     "rbac:docs": "echo 'RBAC docs updated'",
+    "rbac:drift": "tsx scripts/rbac-drift.ts",
+    "rbac:lint": "tsx scripts/rbac-lint.ts",
     "metrics:record": "tsx scripts/record-daily-metrics.ts",
     "metrics:migrate": "supabase db query < supabase/migrations/20251029_create_metrics_history_table.sql",
     "dev": "next dev",

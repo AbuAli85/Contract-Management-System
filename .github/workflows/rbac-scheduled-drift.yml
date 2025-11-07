@@ -47,7 +47,11 @@ jobs:
       - name: Generate Weekly Report
         id: weekly-report
         run: |
-          echo "timestamp=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          TIMESTAMP=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          # Use a filesystem-safe format: YYYY-MM-DD-HH-MM-SS (no colons, no T)
+          TIMESTAMP_SAFE=$(date -u +'%Y-%m-%d-%H-%M-%S')
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "timestamp_safe=$TIMESTAMP_SAFE" >> $GITHUB_OUTPUT
           echo "week_start=$(date -u -d 'last monday' +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
           # Create comprehensive weekly report
@@ -96,7 +100,7 @@ jobs:
       - name: Upload Weekly Reports
         uses: actions/upload-artifact@v4
         with:
-          name: rbac-weekly-reports-${{ steps.weekly-report.outputs.timestamp }}
+          name: rbac-weekly-reports-${{ steps.weekly-report.outputs.timestamp_safe }}
           path: |
             docs/rbac_drift_report.md
             docs/rbac_guard_lint.md
