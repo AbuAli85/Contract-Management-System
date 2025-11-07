@@ -666,22 +666,32 @@ function ContractsContent() {
     }
 
     setIsDownloading(contract.id);
-    console.log('📥 Downloading PDF:', contract.pdf_url);
     
     try {
-      // Add CORS mode and credentials for Supabase storage
-      const response = await fetch(contract.pdf_url, {
-        mode: 'cors',
-        credentials: 'omit', // Supabase storage is public
+      // Use the internal API endpoint that fetches from storage
+      const apiUrl = `/api/contracts/${contract.id}/pdf/view`;
+      console.log('📥 Downloading PDF via API:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+        },
       });
       
       if (!response.ok) {
-        console.error('❌ PDF fetch failed:', response.status, response.statusText);
-        throw new Error(`Failed to download PDF: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}`;
+        console.error('❌ PDF API failed:', response.status, errorMessage);
+        throw new Error(errorMessage);
       }
 
       const blob = await response.blob();
       console.log('✅ PDF blob received:', blob.size, 'bytes');
+      
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty');
+      }
       
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

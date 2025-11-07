@@ -157,14 +157,21 @@ export function GenerateContractPDFButton({
     }
 
     try {
-      // Fetch the PDF with CORS support
-      const response = await fetch(pdfUrl, {
-        mode: 'cors',
-        credentials: 'omit',
+      // Use the internal API endpoint that fetches from storage
+      const apiUrl = `/api/contracts/${contract.id}/pdf/view`;
+      console.log('📥 Downloading PDF via API:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to download PDF: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       const blob = await response.blob();

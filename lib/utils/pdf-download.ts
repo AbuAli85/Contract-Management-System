@@ -54,9 +54,10 @@ export async function downloadContractPDF(
         useInternalApi = false;
       }
     } else if (downloadUrl.includes('supabase.co')) {
-      // Use Supabase URL directly
-      finalUrl = downloadUrl;
-      useInternalApi = false;
+      // Always use internal API for Supabase URLs to ensure correct file is fetched
+      // The API endpoint will find the correct file even if URL is wrong
+      finalUrl = internalPdfUrl;
+      useInternalApi = true;
     }
 
     // Fetch the PDF
@@ -148,13 +149,22 @@ export async function downloadContractPDF(
  * Open PDF in new tab for preview
  */
 export function previewContractPDF(contract: ContractPDFData): void {
-  const viewUrl = contract.pdf_url || contract.google_drive_url;
-
-  if (!viewUrl) {
+  if (!contract.pdf_url && !contract.google_drive_url) {
     toast.error('No PDF Available', {
       description: 'This contract does not have a PDF file yet.',
     });
     return;
+  }
+
+  // Use internal API endpoint for Supabase URLs to ensure correct file
+  // For Google Drive URLs, use the direct URL
+  let viewUrl: string;
+  if (contract.pdf_url && contract.pdf_url.includes('supabase.co')) {
+    viewUrl = `/api/contracts/${contract.contract_id}/pdf/view`;
+  } else if (contract.google_drive_url) {
+    viewUrl = contract.google_drive_url;
+  } else {
+    viewUrl = contract.pdf_url!;
   }
 
   // Open in new tab
