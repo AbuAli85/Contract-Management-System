@@ -183,6 +183,7 @@ export async function POST(
       }
       
       // Validate that promoter images are NOT placeholders
+      // ID card is required for PDF generation
       if (contract.promoters.id_card_url) {
         if (contract.promoters.id_card_url.includes('NO_ID_CARD') || 
             contract.promoters.id_card_url.toLowerCase().includes('placeholder')) {
@@ -192,13 +193,14 @@ export async function POST(
         missingFields.push('ID card image');
       }
       
-      if (contract.promoters.passport_url) {
-        if (contract.promoters.passport_url.includes('NO_PASSPORT') || 
-            contract.promoters.passport_url.toLowerCase().includes('placeholder')) {
-          missingFields.push('valid passport image (current image is a placeholder)');
-        }
-      } else {
-        missingFields.push('passport image');
+      // Passport image is optional - warn but don't block if placeholder
+      // The webhook will handle missing/placeholder passport images gracefully
+      if (!contract.promoters.passport_url) {
+        console.warn('⚠️ No passport image provided - PDF will be generated without passport image');
+      } else if (contract.promoters.passport_url.includes('NO_PASSPORT') || 
+                 contract.promoters.passport_url.toLowerCase().includes('placeholder')) {
+        console.warn('⚠️ Passport image is a placeholder - PDF will be generated without passport image');
+        // Don't block PDF generation for placeholder passport images
       }
       
       // Validate passport number exists
