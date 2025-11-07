@@ -30,6 +30,10 @@ interface PDFReadyPayload {
     passport: boolean;
   };
   error_message?: string;
+  // Additional fields that might be sent from Make.com
+  promoter_name_en?: string;
+  file_name?: string;
+  file_path?: string;
 }
 
 export async function PATCH(request: Request) {
@@ -118,7 +122,71 @@ export async function PATCH(request: Request) {
     };
 
     if (payload.status === 'generated') {
-      updateData.pdf_url = payload.pdf_url;
+      // Fix PDF URL if it's incorrect (Make.com sometimes sends wrong filename)
+      // Make.com uploads as: {contract_number}-{promoter_name_en}.pdf
+      // But sometimes sends URL as: {contract_number}.pdf
+      let pdfUrl = payload.pdf_url;
+      
+      // If we have file_name or file_path from Make.com upload response, use that
+      if (payload.file_name || payload.file_path) {
+        const bucketName = 'contracts';
+        const fileName = payload.file_name || payload.file_path;
+        if (fileName) {
+          const { data: { publicUrl } } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+          pdfUrl = publicUrl;
+          console.log('✅ Using file_name from Make.com upload response:', fileName);
+        }
+      } else if (pdfUrl && pdfUrl.includes('/contracts/')) {
+        // Extract filename from URL and verify it exists
+        const urlParts = pdfUrl.split('/contracts/');
+        if (urlParts.length > 1) {
+          const storedFilename = urlParts[1];
+          
+          // Try to verify file exists, if not search for correct filename
+          try {
+            const { data: fileList } = await supabase.storage
+              .from('contracts')
+              .list('', {
+                search: payload.contract_number,
+                limit: 10,
+              });
+            
+            // If file not found at expected path, search for files starting with contract number
+            const fileExists = fileList?.some(file => file.name === storedFilename);
+            if (!fileExists && fileList && fileList.length > 0) {
+              // Find the most recent file that starts with contract number
+              const matchingFile = fileList
+                .filter(file => 
+                  file.name.startsWith(payload.contract_number) && 
+                  file.name.endsWith('.pdf')
+                )
+                .sort((a, b) => {
+                  // Sort by created_at descending (most recent first)
+                  const aTime = new Date(a.created_at || 0).getTime();
+                  const bTime = new Date(b.created_at || 0).getTime();
+                  return bTime - aTime;
+                })[0];
+              
+              if (matchingFile) {
+                const { data: { publicUrl } } = supabase.storage
+                  .from('contracts')
+                  .getPublicUrl(matchingFile.name);
+                pdfUrl = publicUrl;
+                console.log('✅ Found PDF with correct filename:', matchingFile.name);
+                console.log('📝 Original URL:', payload.pdf_url);
+                console.log('📝 Corrected URL:', pdfUrl);
+              }
+            }
+          } catch (storageError) {
+            console.warn('⚠️ Could not verify PDF file in storage:', storageError);
+            // Continue with original URL if verification fails
+          }
+        }
+      }
+      
+      updateData.pdf_url = pdfUrl;
       updateData.google_doc_url = payload.google_drive_url; // Map to existing column
       // Note: pdf_generated_at, pdf_status, pdf_error_message don't exist in schema
       // Store status info in notes if needed for audit trail
