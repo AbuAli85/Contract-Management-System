@@ -55,10 +55,29 @@ jobs:
         run: |
           ENV="${{ github.event.inputs.environment || 'production' }}"
           if [ "$ENV" = "production" ]; then
-            echo "ref=${{ secrets.SUPABASE_PROJECT_REF }}" >> $GITHUB_OUTPUT
+            REF="${{ secrets.SUPABASE_PROJECT_REF }}"
           else
-            echo "ref=${{ secrets.SUPABASE_STAGING_PROJECT_REF || secrets.SUPABASE_PROJECT_REF }}" >> $GITHUB_OUTPUT
+            REF="${{ secrets.SUPABASE_STAGING_PROJECT_REF || secrets.SUPABASE_PROJECT_REF }}"
           fi
+          
+          if [ -z "$REF" ]; then
+            echo "❌ Error: SUPABASE_PROJECT_REF secret is not set"
+            echo "Please set SUPABASE_PROJECT_REF in your GitHub repository secrets"
+            echo "You can find your Project Ref in Supabase Dashboard → Settings → General → Reference ID"
+            exit 1
+          fi
+          
+          echo "ref=$REF" >> $GITHUB_OUTPUT
+          echo "✅ Using project ref: ${REF:0:8}..." # Show first 8 chars for verification
+
+      - name: Validate secrets
+        run: |
+          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            echo "❌ Error: SUPABASE_ACCESS_TOKEN secret is not set"
+            echo "Please set SUPABASE_ACCESS_TOKEN in your GitHub repository secrets"
+            exit 1
+          fi
+          echo "✅ Required secrets are configured"
 
       - name: Deploy to Supabase
         env:
@@ -66,10 +85,19 @@ jobs:
           SUPABASE_PROJECT_REF: ${{ steps.set-project-ref.outputs.ref }}
         run: |
           echo "Deploying to ${{ github.event.inputs.environment || 'production' }}"
+          echo "Project Ref: ${SUPABASE_PROJECT_REF:0:8}..." # Show first 8 chars
 
           # Link to Supabase project
           echo "🔗 Linking to Supabase project..."
-          supabase link --project-ref $SUPABASE_PROJECT_REF --password ${{ secrets.SUPABASE_DB_PASSWORD || '' }}
+          if [ -n "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
+            supabase link --project-ref $SUPABASE_PROJECT_REF --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+          else
+            echo "ℹ️  No database password provided, attempting link without password..."
+            supabase link --project-ref $SUPABASE_PROJECT_REF || {
+              echo "⚠️  Link failed. If password is required, set SUPABASE_DB_PASSWORD secret"
+              exit 1
+            }
+          fi
 
           # Deploy database migrations
           echo "🔄 Deploying database migrations..."
