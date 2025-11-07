@@ -1039,8 +1039,8 @@ export default function ContractDetailPage() {
                           <ExternalLinkIcon className='mr-2 h-4 w-4' />
                           Open
                         </Button>
-                        <Button
-                          size='sm'
+                        <Button 
+                          size='sm' 
                           variant='ghost'
                           onClick={() => {
                             if (typeof window !== 'undefined') {
@@ -1049,6 +1049,30 @@ export default function ContractDetailPage() {
                           }}
                         >
                           <CopyIcon className='h-4 w-4' />
+                        </Button>
+                        <Button 
+                          size='sm' 
+                          variant='ghost'
+                          title='Fix incorrect PDF URL in database'
+                          onClick={async () => {
+                            try {
+                              setStatusMessage('Fixing PDF URL...');
+                              const response = await fetch(`/api/contracts/${contractId}/fix-pdf-url`, {
+                                method: 'POST',
+                              });
+                              const data = await response.json();
+                              if (data.success) {
+                                setStatusMessage(`✅ PDF URL fixed: ${data.fileName}`);
+                                refetch();
+                              } else {
+                                setStatusMessage(`❌ Error: ${data.error || 'Failed to fix PDF URL'}`);
+                              }
+                            } catch (error) {
+                              setStatusMessage(`❌ Error: ${error instanceof Error ? error.message : 'Failed to fix PDF URL'}`);
+                            }
+                          }}
+                        >
+                          <RefreshCwIcon className='h-4 w-4' />
                         </Button>
                       </div>
                     </div>
