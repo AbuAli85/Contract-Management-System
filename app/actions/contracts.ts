@@ -34,19 +34,20 @@ export async function createContract(newContract: ContractInsert) {
 
   const asAny: any = newContract as any;
 
-  const safePayload: ContractInsert = {
+  // Map contract_start_date/contract_end_date to start_date/end_date if needed
+  const startDate = asAny.contract_start_date || asAny.start_date;
+  const endDate = asAny.contract_end_date || asAny.end_date;
+
+  // Create base payload with proper date mapping
+  const basePayload: ContractInsert = {
     ...newContract,
     contract_number: (asAny.contract_number as string) || generatedNumber,
-    contract_start_date: newContract.contract_start_date
-      ? (new Date(
-          newContract.contract_start_date as unknown as string
-        ).toISOString() as any)
-      : (null as any),
-    contract_end_date: newContract.contract_end_date
-      ? (new Date(
-          newContract.contract_end_date as unknown as string
-        ).toISOString() as any)
-      : (null as any),
+    start_date: startDate
+      ? (new Date(startDate as unknown as string).toISOString().split('T')[0] as string)
+      : newContract.start_date,
+    end_date: endDate
+      ? (new Date(endDate as unknown as string).toISOString().split('T')[0] as string)
+      : newContract.end_date,
     email: asAny.email ?? null,
     job_title: asAny.job_title ?? null,
     work_location: asAny.work_location ?? null,
@@ -61,6 +62,17 @@ export async function createContract(newContract: ContractInsert) {
     created_at: (asAny.created_at as string) ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
+
+  // Add legacy field names for backward compatibility (cast to any to bypass type check)
+  const safePayload = {
+    ...basePayload,
+    contract_start_date: startDate
+      ? (new Date(startDate as unknown as string).toISOString() as any)
+      : (null as any),
+    contract_end_date: endDate
+      ? (new Date(endDate as unknown as string).toISOString() as any)
+      : (null as any),
+  } as any;
 
   const { data, error } = await supabase
     .from('contracts')

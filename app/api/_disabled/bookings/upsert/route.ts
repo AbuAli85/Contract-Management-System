@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   upsertBooking,
   createBookingPayload,
-  type BookingPayload,
 } from '@/lib/booking-service';
+import type { BookingWithDetails } from '@/types/booking';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -30,17 +30,29 @@ export async function POST(request: NextRequest) {
 
     // Create booking payload with defaults
     const bookingPayload = createBookingPayload(
-      body as Partial<BookingPayload> &
-        Pick<BookingPayload, 'service_id' | 'provider_company_id' | 'client_id'>
+      body as Partial<BookingWithDetails> &
+        Pick<BookingWithDetails, 'service_id' | 'provider_company_id' | 'client_id'>
     );
 
     // Perform upsert
     const result = await upsertBooking(bookingPayload);
 
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          error: 'Failed to upsert booking',
+          details: result.error,
+        },
+        { status: 500 }
+      );
+    }
+
+    const bookingNumber = result.data?.booking_number || bookingPayload.booking_number;
+
     return NextResponse.json({
       success: true,
-      data: result,
-      message: `Booking ${result.booking_number} ${body.booking_number ? 'updated' : 'created'} successfully`,
+      data: result.data,
+      message: `Booking ${bookingNumber} ${body.booking_number ? 'updated' : 'created'} successfully`,
     });
   } catch (error) {
     console.error('❌ API Booking upsert error:', error);

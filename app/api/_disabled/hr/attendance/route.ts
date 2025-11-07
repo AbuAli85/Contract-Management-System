@@ -20,7 +20,7 @@ const AttendanceQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
     const queryParams = {
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.json();
 
     const parsed = CheckInSchema.safeParse(body);
