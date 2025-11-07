@@ -68,7 +68,7 @@ export default function AuditLogsPage() {
   const [sortKey, setSortKey] = useState<keyof AuditLogItem>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch logs
@@ -77,6 +77,9 @@ export default function AuditLogsPage() {
     setError(null);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
       const { data, error } = await supabase
         .from('audit_logs')
         .select(
@@ -112,6 +115,9 @@ export default function AuditLogsPage() {
   // Real-time subscription (once)
   useEffect(() => {
     const supabase = createClient();
+    if (!supabase) {
+      return;
+    }
     const channel = supabase
       .channel('public:audit_logs:feed')
       .on(
@@ -185,10 +191,11 @@ export default function AuditLogsPage() {
     return filtered;
   }, [logs, searchTerm, sortKey, sortDirection]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / (pageSize || PAGE_SIZE_OPTIONS[0])));
   const paginatedLogs = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredLogs.slice(start, start + pageSize);
+    const size = pageSize || PAGE_SIZE_OPTIONS[0];
+    const start = (page - 1) * size;
+    return filteredLogs.slice(start, start + size);
   }, [filteredLogs, page, pageSize]);
 
   // Sorting

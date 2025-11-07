@@ -5,6 +5,9 @@ export interface Party {
   crn: string;
   type?: 'Employer' | 'Client' | 'Generic' | null;
   role?: string | null;
+  designation_id?: string | null;
+  signatory_name_en?: string | null;
+  signatory_name_ar?: string | null;
   cr_expiry?: string | null; // Changed from cr_expiry_date to match database
   cr_expiry_date?: string | null; // Keep for backward compatibility
   cr_status?: string | null;
@@ -27,6 +30,19 @@ export interface Party {
   address?: string | null;
   total_contracts?: number;
   active_contracts?: number;
+}
+
+export interface Designation {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  description_en?: string | null;
+  description_ar?: string | null;
+  category?: string | null;
+  is_active?: boolean;
+  display_order?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Promoter {

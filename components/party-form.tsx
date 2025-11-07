@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { partyFormSchema, type PartyFormData } from '@/lib/party-schema';
-import type { Party } from '@/lib/types';
+import type { Party, Designation } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
@@ -42,6 +42,8 @@ export default function PartyForm({
   onFormSubmit,
 }: PartyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [designations, setDesignations] = useState<Designation[]>([]);
+  const [isLoadingDesignations, setIsLoadingDesignations] = useState(true);
 
   const form = useForm<PartyFormData>({
     resolver: zodResolver(partyFormSchema),
@@ -51,6 +53,9 @@ export default function PartyForm({
       crn: '',
       type: 'Employer',
       role: '',
+      designation_id: '',
+      signatory_name_en: '',
+      signatory_name_ar: '',
       status: 'Active',
       cr_expiry_date: undefined,
       tax_number: '',
@@ -65,6 +70,34 @@ export default function PartyForm({
     },
   });
 
+  // Fetch designations on component mount
+  useEffect(() => {
+    async function fetchDesignations() {
+      try {
+        const supabase = createClient();
+        if (!supabase) {
+          throw new Error('Failed to initialize Supabase client');
+        }
+
+        const { data, error } = await supabase
+          .from('designations')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setDesignations(data || []);
+      } catch (error: any) {
+        console.error('Error fetching designations:', error);
+        toast.error('Failed to load designations');
+      } finally {
+        setIsLoadingDesignations(false);
+      }
+    }
+
+    fetchDesignations();
+  }, []);
+
   useEffect(() => {
     if (partyToEdit) {
       const party = partyToEdit as any; // Use any to access cr_expiry
@@ -74,6 +107,9 @@ export default function PartyForm({
         crn: party.crn || '',
         type: (party.type as 'Employer' | 'Client') || 'Employer',
         role: party.role || '',
+        designation_id: party.designation_id || '',
+        signatory_name_en: party.signatory_name_en || '',
+        signatory_name_ar: party.signatory_name_ar || '',
         cr_expiry_date: party.cr_expiry || party.cr_expiry_date
           ? parseISO(party.cr_expiry || party.cr_expiry_date)
           : undefined,
@@ -99,6 +135,9 @@ export default function PartyForm({
         crn: '',
         type: 'Employer',
         role: '',
+        designation_id: '',
+        signatory_name_en: '',
+        signatory_name_ar: '',
         status: 'Active',
         cr_expiry_date: undefined,
         tax_number: '',
@@ -123,6 +162,9 @@ export default function PartyForm({
         crn: values.crn || '',
         type: values.type as 'Employer' | 'Client',
         role: values.role || null,
+        designation_id: values.designation_id && values.designation_id.trim() !== '' ? values.designation_id : null,
+        signatory_name_en: values.signatory_name_en || null,
+        signatory_name_ar: values.signatory_name_ar || null,
         cr_expiry: values.cr_expiry_date
           ? format(values.cr_expiry_date, 'dd-MM-yyyy')
           : null,
@@ -291,6 +333,75 @@ export default function PartyForm({
                           <SelectItem value='Suspended'>Suspended</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                <FormField
+                  control={form.control}
+                  name='designation_id'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Designation</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ''}
+                        disabled={isSubmitting || isLoadingDesignations}
+                      >
+                        <FormControl>
+                          <SelectTrigger className={form.formState.errors.designation_id ? 'border-red-500' : field.value && !form.formState.errors.designation_id ? 'border-green-500' : ''}>
+                            <SelectValue placeholder={isLoadingDesignations ? 'Loading...' : 'Select designation'} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value=''>None</SelectItem>
+                          {designations.map((designation) => (
+                            <SelectItem key={designation.id} value={designation.id}>
+                              {designation.name_en} {designation.name_ar && `(${designation.name_ar})`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='signatory_name_en'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Signatory Name (English)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Signatory name in English'
+                          {...field}
+                          disabled={isSubmitting}
+                          className={form.formState.errors.signatory_name_en ? 'border-red-500' : field.value && !form.formState.errors.signatory_name_en ? 'border-green-500' : ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='signatory_name_ar'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>اسم الموقع (عربي)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='اسم الموقع بالعربية'
+                          {...field}
+                          dir='rtl'
+                          disabled={isSubmitting}
+                          className={`text-right ${form.formState.errors.signatory_name_ar ? 'border-red-500' : field.value && !form.formState.errors.signatory_name_ar ? 'border-green-500' : ''}`}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -2,13 +2,15 @@
 
 import { RealTimeClientDashboard } from '@/components/dashboards/real-time-client-dashboard';
 import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
+import { useAuth } from '@/app/providers';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
 export default function ClientComprehensivePage() {
-  const { user, loading, hasPermission } = useEnhancedRBAC();
+  const { user, loading } = useAuth();
+  const { hasPermission, isLoading } = useEnhancedRBAC();
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='flex items-center space-x-3'>
@@ -39,8 +41,8 @@ export default function ClientComprehensivePage() {
 
   // Check if user has client role or admin permissions
   if (
-    !['client', 'admin', 'super_admin'].includes(user.role) &&
-    !hasPermission('dashboard.view_all')
+    !['client', 'admin', 'super_admin'].includes(user.role || '') &&
+    !hasPermission('dashboard.view')
   ) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
@@ -54,7 +56,7 @@ export default function ClientComprehensivePage() {
               You need to have a client account to access this dashboard.
             </p>
             <p className='text-sm text-gray-500 mt-2'>
-              Current role: {user.role}
+              Current role: {user.role || 'Unknown'}
             </p>
           </CardContent>
         </Card>

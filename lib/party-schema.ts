@@ -33,6 +33,26 @@ export const partyFormSchema = z.object({
     .optional()
     .or(z.literal('')),
   
+  designation_id: z
+    .string()
+    .uuid({ message: 'Please select a valid designation' })
+    .optional()
+    .or(z.literal('')),
+  
+  signatory_name_en: z
+    .string()
+    .min(2, { message: 'Signatory name (English) must be at least 2 characters' })
+    .max(255, { message: 'Signatory name (English) must be less than 255 characters' })
+    .optional()
+    .or(z.literal('')),
+  
+  signatory_name_ar: z
+    .string()
+    .min(2, { message: 'Signatory name (Arabic) must be at least 2 characters' })
+    .max(255, { message: 'Signatory name (Arabic) must be less than 255 characters' })
+    .optional()
+    .or(z.literal('')),
+  
   status: z.enum(['Active', 'Inactive', 'Suspended'], {
     required_error: 'Please select a status',
   }),
