@@ -458,18 +458,47 @@ export async function POST(
 
     if (!webhookResponse.ok) {
       const errorText = await webhookResponse.text();
-      console.error('Make.com webhook error:', errorText);
+      let errorMessage = `Webhook failed with status ${webhookResponse.status}`;
+      
+      // Parse error response if it's JSON
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.message || errorJson.error || errorMessage;
+        console.error('Make.com webhook error (parsed):', errorJson);
+      } catch {
+        console.error('Make.com webhook error (raw):', errorText);
+        errorMessage = errorText || errorMessage;
+      }
+      
+      // Provide specific guidance for 404 errors
+      if (webhookResponse.status === 404) {
+        errorMessage = `Make.com webhook not found (404). Please verify the webhook URL is correct: ${MAKE_WEBHOOK_URL?.substring(0, 50)}...`;
+        console.error('❌ Webhook URL might be incorrect or the webhook endpoint does not exist');
+      }
+      
+      console.error('Webhook response status:', webhookResponse.status);
+      console.error('Webhook response headers:', Object.fromEntries(webhookResponse.headers.entries()));
       
       // Update contract with error status (using notes since pdf_status doesn't exist)
       await supabase
         .from('contracts')
         .update({
-          notes: `PDF generation failed at ${new Date().toISOString()}: Failed to trigger PDF generation workflow`,
+          notes: `PDF generation failed at ${new Date().toISOString()}: ${errorMessage}`,
           updated_at: new Date().toISOString(),
         })
         .eq('id', contractId);
 
-      throw new Error(`Webhook failed: ${webhookResponse.statusText}`);
+      return NextResponse.json(
+        {
+          error: 'PDF generation failed',
+          message: errorMessage,
+          statusCode: webhookResponse.status,
+          details: webhookResponse.status === 404 
+            ? 'The Make.com webhook URL appears to be incorrect or the webhook endpoint does not exist. Please check your environment variables (MAKE_CONTRACT_PDF_WEBHOOK_URL, MAKECOM_WEBHOOK_URL_EXTRA, or MAKECOM_WEBHOOK_URL).'
+            : 'Failed to trigger PDF generation workflow in Make.com',
+        },
+        { status: 500 }
+      );
     }
 
     // 8. Return success response
