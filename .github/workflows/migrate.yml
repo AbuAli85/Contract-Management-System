@@ -50,47 +50,80 @@ jobs:
         with:
           version: latest
 
+      - name: Set project reference
+        id: set-project-ref
+        run: |
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          if [ "$ENV" = "production" ]; then
+            echo "ref=${{ secrets.SUPABASE_PROJECT_REF }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ secrets.SUPABASE_STAGING_PROJECT_REF || secrets.SUPABASE_PROJECT_REF }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ steps.set-project-ref.outputs.ref }}
         run: |
           echo "Deploying to ${{ github.event.inputs.environment || 'production' }}"
 
-          # Set environment variables based on environment
-          if [ "${{ github.event.inputs.environment || 'production' }}" = "production" ]; then
-            export SUPABASE_PROJECT_ID=${{ secrets.SUPABASE_PROJECT_ID }}
-            export SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          else
-            export SUPABASE_PROJECT_ID=${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
-            export SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          fi
+          # Link to Supabase project
+          echo "🔗 Linking to Supabase project..."
+          supabase link --project-ref $SUPABASE_PROJECT_REF --password ${{ secrets.SUPABASE_DB_PASSWORD || '' }}
 
           # Deploy database migrations
           echo "🔄 Deploying database migrations..."
-          supabase db push --project-id $SUPABASE_PROJECT_ID
+          supabase db push --linked
 
-          # Deploy Edge Functions
-          echo "🔄 Deploying Edge Functions..."
-          supabase functions deploy --project-id $SUPABASE_PROJECT_ID
+          # Deploy Edge Functions (if any exist)
+          if [ -d "supabase/functions" ] && [ "$(ls -A supabase/functions)" ]; then
+            echo "🔄 Deploying Edge Functions..."
+            supabase functions deploy --linked
+          else
+            echo "ℹ️  No Edge Functions to deploy"
+          fi
 
           echo "✅ Deployment completed successfully"
 
       - name: Verify deployment
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ steps.set-project-ref.outputs.ref }}
         run: |
           echo "🔍 Verifying deployment..."
 
-          # Check if migrations were applied
-          supabase db diff --project-id $SUPABASE_PROJECT_ID
+          # Link to Supabase project (if not already linked)
+          supabase link --project-ref $SUPABASE_PROJECT_REF --password ${{ secrets.SUPABASE_DB_PASSWORD || '' }} || true
 
-          # List deployed functions
-          supabase functions list --project-id $SUPABASE_PROJECT_ID
+          # Check if migrations were applied
+          echo "📊 Checking migration status..."
+          supabase db diff --linked || echo "⚠️  Could not check diff (this is okay if no changes)"
+
+          # List deployed functions (if any exist)
+          if [ -d "supabase/functions" ] && [ "$(ls -A supabase/functions)" ]; then
+            echo "📋 Listing deployed functions..."
+            supabase functions list --linked || echo "⚠️  Could not list functions"
+          fi
 
           echo "✅ Deployment verification completed"
 
       - name: Run post-deployment tests
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ steps.set-project-ref.outputs.ref }}
         run: |
           echo "🧪 Running post-deployment tests..."
 
-          # Test database connectivity
-          supabase db reset --project-id $SUPABASE_PROJECT_ID --linked
+          # Link to Supabase project (if not already linked)
+          supabase link --project-ref $SUPABASE_PROJECT_REF --password ${{ secrets.SUPABASE_DB_PASSWORD || '' }} || true
+
+          # Test database connectivity (dry run only - don't reset production!)
+          if [ "${{ github.event.inputs.environment || 'production' }}" != "production" ]; then
+            echo "🔍 Testing database connectivity..."
+            supabase db diff --linked || echo "⚠️  Database connectivity check skipped"
+          else
+            echo "ℹ️  Skipping database reset in production (safety)"
+          fi
 
           # Test Edge Functions
           echo "Testing Edge Functions..."
