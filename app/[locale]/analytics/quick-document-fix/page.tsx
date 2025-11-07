@@ -95,12 +95,14 @@ export default function QuickDocumentFixPage() {
 
       for (let i = 0; i < promoters.length; i++) {
         const promoter = promoters[i];
-        setCurrentPromoter(promoter.name_en);
+        if (!promoter) continue;
+        
+        setCurrentPromoter(promoter.name_en || '');
         setProgress(Math.round(((i + 1) / totalPromoters) * 100));
 
         const result: FixResult = {
           promoterId: promoter.id,
-          promoterName: promoter.name_en,
+          promoterName: promoter.name_en || '',
           fixedIdCard: false,
           fixedPassport: false,
         };
@@ -110,7 +112,7 @@ export default function QuickDocumentFixPage() {
 
           // Fix ID Card URL if missing
           if (!promoter.id_card_url && promoter.id_card_number) {
-            const normalizedName = normalizeFilename(promoter.name_en);
+            const normalizedName = normalizeFilename(promoter.name_en || '');
             const possibleNames = [
               `${normalizedName}_${promoter.id_card_number}.png`,
               `${normalizedName}_${promoter.id_card_number}.jpeg`,

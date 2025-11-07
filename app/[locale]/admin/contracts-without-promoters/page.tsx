@@ -263,7 +263,9 @@ export default function ContractsWithoutPromotersPage() {
       const contract = contracts.find(c => c.id === contractId);
       if (contract && contract.suggestions.length > 0) {
         const topSuggestion = contract.suggestions[0];
-        newAssignments.set(contractId, topSuggestion.promoters.id);
+        if (topSuggestion && topSuggestion.promoters) {
+          newAssignments.set(contractId, topSuggestion.promoters.id);
+        }
       }
     });
     
@@ -297,7 +299,7 @@ export default function ContractsWithoutPromotersPage() {
   }
 
   return (
-    <ProtectedRoute requiredPermissions={['contract:edit:own']}>
+    <ProtectedRoute>
       <div className="space-y-6 p-4 md:p-6">
         {/* Header */}
         <div>
