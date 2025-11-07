@@ -92,6 +92,22 @@ jobs:
           mkdir -p supabase/.temp
           mkdir -p supabase/migrations
           
+          # Verify password format (without exposing it)
+          if [ -n "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
+            PASSWORD_LENGTH=${#SUPABASE_DB_PASSWORD}
+            echo "🔐 Password secret is set (length: ${PASSWORD_LENGTH} characters)"
+            
+            # Check for common issues
+            if echo "${{ secrets.SUPABASE_DB_PASSWORD }}" | grep -q ' '; then
+              echo "⚠️  Warning: Password contains spaces - this may cause issues"
+            fi
+            if echo "${{ secrets.SUPABASE_DB_PASSWORD }}" | grep -q $'\n'; then
+              echo "⚠️  Warning: Password contains newlines - this may cause issues"
+            fi
+          else
+            echo "⚠️  SUPABASE_DB_PASSWORD secret is not set"
+          fi
+          
           # Link to Supabase project with retry logic
           echo "🔗 Linking to Supabase project..."
           
@@ -207,6 +223,16 @@ jobs:
                 echo "6. If password contains special characters:"
                 echo "   - Try URL-encoding special characters"
                 echo "   - Or reset to a simpler password without special chars"
+                echo ""
+                echo "7. Check Network Restrictions:"
+                echo "   - Go to: https://supabase.com/dashboard/project/${SUPABASE_PROJECT_REF}/settings/network"
+                echo "   - Ensure GitHub Actions IPs are not blocked"
+                echo "   - Check if IPv4 add-on is needed (free tier may require it)"
+                echo ""
+                echo "8. Alternative: Use Direct Connection String"
+                echo "   - Get direct connection string from Supabase Dashboard"
+                echo "   - Format: postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres"
+                echo "   - Note: Direct connection bypasses pooler but may require IPv4 add-on"
                 echo ""
                 exit 1
               fi
