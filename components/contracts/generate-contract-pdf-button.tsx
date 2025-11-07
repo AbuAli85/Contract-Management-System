@@ -148,6 +148,52 @@ export function GenerateContractPDFButton({
     );
   }
 
+  const handleDownloadPDF = async (pdfUrl: string) => {
+    if (!pdfUrl) {
+      toast.error('No PDF Available', {
+        description: 'PDF URL is not available',
+      });
+      return;
+    }
+
+    try {
+      // Fetch the PDF with CORS support
+      const response = await fetch(pdfUrl, {
+        mode: 'cors',
+        credentials: 'omit',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download PDF: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty');
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${contract.contract_number || contract.id}-contract.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('PDF Downloaded', {
+        description: 'Contract PDF downloaded successfully',
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Download Failed', {
+        description: error instanceof Error ? error.message : 'Failed to download PDF',
+      });
+    }
+  };
+
   if (hasPDF) {
     return (
       <>
@@ -155,7 +201,8 @@ export function GenerateContractPDFButton({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(contract.pdf_url!, '_blank')}
+            onClick={() => handleDownloadPDF(contract.pdf_url!)}
+            disabled={isGenerating}
           >
             <Download className="mr-2 h-4 w-4" />
             Download PDF
