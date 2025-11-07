@@ -239,10 +239,11 @@ export default function RolesAndPermissionsPage() {
   // Group permissions by category
   const permissionsByCategory = filteredPermissions.reduce(
     (acc, permission) => {
-      if (!acc[permission.category]) {
-        acc[permission.category] = [];
+      const category = permission.category;
+      if (!acc[category]) {
+        acc[category] = [];
       }
-      acc[permission.category].push(permission);
+      acc[category]!.push(permission);
       return acc;
     },
     {} as Record<string, Permission[]>

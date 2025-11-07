@@ -28,6 +28,11 @@ export default function WorkingLoginPage() {
   // Test Supabase connection on component mount
   useEffect(() => {
     const testConnection = async () => {
+      if (!supabase) {
+        setConnectionStatus('error');
+        setError('Supabase client is not available');
+        return;
+      }
       try {
         console.log('🔗 Testing Supabase connection...');
         const { data, error } = await supabase
@@ -54,6 +59,8 @@ export default function WorkingLoginPage() {
 
     testConnection();
 
+    if (!supabase) return;
+
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -78,6 +85,11 @@ export default function WorkingLoginPage() {
   }, [supabase]);
 
   const handleLogin = async () => {
+    if (!supabase) {
+      setError('Supabase client is not available');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     setError('');
@@ -137,6 +149,11 @@ export default function WorkingLoginPage() {
   };
 
   const handleLogout = async () => {
+    if (!supabase) {
+      setError('Supabase client is not available');
+      return;
+    }
+
     setLoading(true);
     try {
       await supabase.auth.signOut();

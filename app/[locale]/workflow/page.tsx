@@ -2,11 +2,13 @@
 
 import { ComprehensiveWorkflowSystem } from '@/components/workflow/comprehensive-workflow-system';
 import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
+import { useAuth } from '@/app/providers';
 
 export default function WorkflowPage() {
-  const { user, loading } = useEnhancedRBAC();
+  const { user } = useAuth();
+  const { userRole, isLoading } = useEnhancedRBAC();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600'></div>
@@ -29,13 +31,13 @@ export default function WorkflowPage() {
     );
   }
 
-  // Determine user role based on user data
-  const userRole = user?.role === 'provider' ? 'provider' : 'client';
+  // Determine user role based on userRole from RBAC context
+  const role = userRole === 'provider' ? 'provider' : 'client';
 
   return (
     <div className='min-h-screen bg-gray-50'>
       <ComprehensiveWorkflowSystem
-        userRole={userRole}
+        userRole={role}
         userId={user?.id || ''}
       />
     </div>
