@@ -14,10 +14,12 @@ function createServiceClient() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-// Make.com webhook URL from environment - support multiple env var names
-const MAKE_WEBHOOK_URL = 
+// Make.com webhook URLs from environment - support multiple contract types
+const MAKE_WEBHOOK_URL_SHARAF_DG = process.env.MAKECOM_WEBHOOK_URL_SHARAF_DG;
+const MAKE_WEBHOOK_URL_EXTRA = process.env.MAKECOM_WEBHOOK_URL_EXTRA;
+const MAKE_WEBHOOK_URL_GENERAL = process.env.MAKECOM_WEBHOOK_URL_GENERAL;
+const MAKE_WEBHOOK_URL_LEGACY = 
   process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL || 
-  process.env.MAKECOM_WEBHOOK_URL_EXTRA ||
   process.env.MAKECOM_WEBHOOK_URL;
 
 // Interface is just for reference - actual contract data structure varies
@@ -462,15 +464,57 @@ export async function POST(
       passport: webhookPayload.promoter_passport_url || '(not included - placeholder or missing)',
     });
 
-    // 7. Call Make.com webhook
-    if (!MAKE_WEBHOOK_URL) {
-      console.error('❌ Make.com webhook URL not configured');
-      throw new Error('Make.com webhook URL not configured. Please set MAKECOM_WEBHOOK_URL_EXTRA environment variable.');
+    // 7. Determine which webhook URL to use based on contract type
+    // Check if this is a Sharaf DG contract
+    const isSharafDG = 
+      contract.contract_type?.toLowerCase().includes('sharaf') ||
+      contract.contract_type?.toLowerCase().includes('deployment') ||
+      contract.title?.toLowerCase().includes('sharaf') ||
+      contract.title?.toLowerCase().includes('deployment') ||
+      contract.description?.toLowerCase().includes('sharaf') ||
+      (contract.terms && typeof contract.terms === 'string' && contract.terms.toLowerCase().includes('sharaf-dg')) ||
+      (contract.metadata && typeof contract.metadata === 'object' && 
+       (contract.metadata.contract_subtype === 'sharaf-dg-deployment' || 
+        JSON.stringify(contract.metadata).toLowerCase().includes('sharaf')));
+
+    let webhookUrl: string | undefined = undefined;
+    let usedEnvVar: string = '';
+
+    if (isSharafDG && MAKE_WEBHOOK_URL_SHARAF_DG) {
+      webhookUrl = MAKE_WEBHOOK_URL_SHARAF_DG;
+      usedEnvVar = 'MAKECOM_WEBHOOK_URL_SHARAF_DG';
+      console.log('🎯 Detected Sharaf DG contract - using Sharaf DG webhook');
+    } else if (MAKE_WEBHOOK_URL_EXTRA) {
+      webhookUrl = MAKE_WEBHOOK_URL_EXTRA;
+      usedEnvVar = 'MAKECOM_WEBHOOK_URL_EXTRA';
+      console.log('📋 Using eXtra contracts webhook');
+    } else if (MAKE_WEBHOOK_URL_GENERAL) {
+      webhookUrl = MAKE_WEBHOOK_URL_GENERAL;
+      usedEnvVar = 'MAKECOM_WEBHOOK_URL_GENERAL';
+      console.log('📄 Using general contracts webhook');
+    } else if (MAKE_WEBHOOK_URL_LEGACY) {
+      webhookUrl = MAKE_WEBHOOK_URL_LEGACY;
+      usedEnvVar = process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL ? 'MAKE_CONTRACT_PDF_WEBHOOK_URL' : 'MAKECOM_WEBHOOK_URL';
+      console.log('🔄 Using legacy webhook URL');
     }
 
-    console.log('📤 Calling Make.com webhook:', MAKE_WEBHOOK_URL);
+    if (!webhookUrl) {
+      console.error('❌ Make.com webhook URL not configured');
+      const requiredVars = isSharafDG 
+        ? ['MAKECOM_WEBHOOK_URL_SHARAF_DG']
+        : ['MAKECOM_WEBHOOK_URL_EXTRA', 'MAKECOM_WEBHOOK_URL_GENERAL', 'MAKE_CONTRACT_PDF_WEBHOOK_URL', 'MAKECOM_WEBHOOK_URL'];
+      
+      throw new Error(
+        `Make.com webhook URL not configured. ` +
+        `For ${isSharafDG ? 'Sharaf DG' : 'this contract type'}, please set: ${requiredVars.join(' or ')}`
+      );
+    }
 
-    const webhookResponse = await fetch(MAKE_WEBHOOK_URL, {
+    console.log('📤 Using webhook URL from environment variable:', usedEnvVar);
+    console.log('📤 Calling Make.com webhook:', webhookUrl.substring(0, 50) + '...');
+    console.log('📤 Webhook URL length:', webhookUrl.length);
+
+    const webhookResponse = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -495,8 +539,16 @@ export async function POST(
       
       // Provide specific guidance for 404 errors
       if (webhookResponse.status === 404) {
-        errorMessage = `Make.com webhook not found (404). Please verify the webhook URL is correct: ${MAKE_WEBHOOK_URL?.substring(0, 50)}...`;
-        console.error('❌ Webhook URL might be incorrect or the webhook endpoint does not exist');
+        const maskedUrl = webhookUrl 
+          ? `${webhookUrl.substring(0, 30)}...${webhookUrl.substring(webhookUrl.length - 10)}`
+          : 'not configured';
+        errorMessage = `Make.com webhook not found (404). The webhook endpoint does not exist or the URL is incorrect.`;
+        console.error('❌ Webhook URL returned 404:', maskedUrl);
+        console.error('❌ Please verify:');
+        console.error('   1. The webhook URL is correct in Make.com');
+        console.error('   2. The Make.com scenario is active and running');
+        console.error('   3. The webhook trigger module is enabled');
+        console.error('   4. The environment variable', usedEnvVar, 'contains the correct URL');
       }
       
       console.error('Webhook response status:', webhookResponse.status);
