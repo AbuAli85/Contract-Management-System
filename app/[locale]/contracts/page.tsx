@@ -1776,7 +1776,7 @@ function ContractsContent() {
                                   )}
                                   {contract.pdf_url && (
                                     <DropdownMenuItem
-                                      onClick={() => window.open(contract.pdf_url!, '_blank')}
+                                      onClick={() => window.open(`/api/contracts/${contract.id}/pdf/view`, '_blank')}
                                     >
                                       <Eye className='mr-2 h-4 w-4' />{' '}
                                       View PDF
@@ -1922,7 +1922,7 @@ function ContractsContent() {
                                 )}
                                 {contract.pdf_url && (
                                   <DropdownMenuItem
-                                    onClick={() => window.open(contract.pdf_url!, '_blank')}
+                                    onClick={() => window.open(`/api/contracts/${contract.id}/pdf/view`, '_blank')}
                                   >
                                     <Eye className='mr-2 h-4 w-4' />{' '}
                                     View PDF

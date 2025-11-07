@@ -73,7 +73,7 @@ export const GET = withRBAC(
 
       // Check if contract is approved and has PDF
       const isApproved = contract.status === 'approved' || contract.approval_status === 'approved';
-      const hasPDF = !!contract.pdf_url;
+      let hasPDF = !!contract.pdf_url;
 
       if (!isApproved) {
         console.log('❌ Contract not approved:', contract.approval_status);
@@ -81,6 +81,64 @@ export const GET = withRBAC(
           { error: 'Contract is not approved yet' },
           { status: 403 }
         );
+      }
+
+      // If PDF URL exists but might be incorrect, try to fix it automatically
+      if (contract.pdf_url && contract.contract_number) {
+        try {
+          // Check if the stored URL points to a file that doesn't exist
+          const urlParts = contract.pdf_url.split('/contracts/');
+          if (urlParts.length > 1) {
+            const storedFilename = urlParts[1];
+            
+            // Try to verify file exists
+            const { data: fileList } = await supabase.storage
+              .from('contracts')
+              .list('', {
+                limit: 100,
+              });
+            
+            const fileExists = fileList?.some(file => file.name === storedFilename);
+            
+            // If file doesn't exist, search for correct file
+            if (!fileExists && fileList) {
+              const matchingFiles = fileList.filter(
+                (file) =>
+                  file.name.startsWith(contract.contract_number) &&
+                  file.name.endsWith('.pdf')
+              );
+              
+              if (matchingFiles.length > 0) {
+                const matchingFile = matchingFiles.sort((a, b) => {
+                  const aTime = new Date(a.created_at || 0).getTime();
+                  const bTime = new Date(b.created_at || 0).getTime();
+                  return bTime - aTime;
+                })[0];
+                
+                // Update contract with correct URL in background (don't wait)
+                const { data: { publicUrl } } = supabase.storage
+                  .from('contracts')
+                  .getPublicUrl(matchingFile.name);
+                
+                supabase
+                  .from('contracts')
+                  .update({ pdf_url: publicUrl })
+                  .eq('id', contractId)
+                  .then(() => {
+                    console.log('✅ Auto-fixed PDF URL:', matchingFile.name);
+                  })
+                  .catch((err) => {
+                    console.warn('⚠️ Failed to auto-fix PDF URL:', err);
+                  });
+                
+                console.log('🔧 Auto-correcting PDF URL from', storedFilename, 'to', matchingFile.name);
+              }
+            }
+          }
+        } catch (fixError) {
+          console.warn('⚠️ Could not auto-fix PDF URL:', fixError);
+          // Continue anyway - we'll generate PDF on-demand
+        }
       }
 
       if (!hasPDF) {
