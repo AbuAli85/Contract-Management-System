@@ -68,15 +68,25 @@ export const GET = withRBAC(
       }
 
       // ✅ SECURITY: Non-admin users can only see contracts they're involved in
+      // Note: RBAC guard already checks permissions, but we add additional checks here
       if (!isAdmin) {
         const isInvolved =
           contract.client_id === user.id ||
           contract.employer_id === user.id ||
           contract.first_party_id === user.id ||
-          contract.second_party_id === user.id;
+          contract.second_party_id === user.id ||
+          contract.created_by === user.id ||
+          contract.user_id === user.id;
 
         if (!isInvolved) {
           console.log('❌ User not authorized to view this contract');
+          console.log('📋 User ID:', user.id);
+          console.log('📋 Contract client_id:', contract.client_id);
+          console.log('📋 Contract employer_id:', contract.employer_id);
+          console.log('📋 Contract first_party_id:', contract.first_party_id);
+          console.log('📋 Contract second_party_id:', contract.second_party_id);
+          console.log('📋 Contract created_by:', contract.created_by);
+          console.log('📋 Contract user_id:', contract.user_id);
           return NextResponse.json(
             { error: 'Unauthorized to view this contract' },
             { status: 403 }
