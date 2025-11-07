@@ -71,7 +71,8 @@
     "test:validation:prod": "API_BASE_URL=https://portal.thesmartpro.io node tests/performance-validation.js",
     "test:get-token": "node tests/get-auth-token.js",
     "test:data-consistency": "node tests/performance-validation.js",
-    "test:email": "tsx scripts/test-email.ts"
+    "test:email": "tsx scripts/test-email.ts",
+    "supabase:validate-migrations": "node scripts/validate-migrations.js"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
