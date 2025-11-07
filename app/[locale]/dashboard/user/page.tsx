@@ -465,7 +465,7 @@ export default function UserDashboard({
 
             <div className='flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center'>
               <div className='text-sm text-slate-600'>
-                Welcome back, {profile?.name || user?.email || 'User'}
+                Welcome back, {profile?.full_name || profile?.display_name || user?.email || 'User'}
               </div>
 
               <div className='flex gap-2'>

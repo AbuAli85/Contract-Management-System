@@ -189,7 +189,7 @@ function formatDate(date: string): string {
 export default function NewUsersPage() {
   // Hooks
   const params = useParams();
-  const locale = params.locale as string;
+  const locale = (params?.locale as string) || 'en';
   const { count: pendingUsersCount } = usePendingUsersCount();
 
   // Basic state
@@ -236,7 +236,7 @@ export default function NewUsersPage() {
 
   // Pagination states
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1]);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[1] ?? 25);
 
   // Sorting states
   const [sortBy, setSortBy] = useState<keyof User>('created_at');
@@ -402,8 +402,9 @@ export default function NewUsersPage() {
         setFilteredUsers(result);
 
         // Update paginated users
-        const start = (page - 1) * pageSize;
-        const paginated = result.slice(start, start + pageSize);
+        const currentPageSize = pageSize ?? 25;
+        const start = (page - 1) * currentPageSize;
+        const paginated = result.slice(start, start + currentPageSize);
         setPaginatedUsers(Array.isArray(paginated) ? paginated : []);
       }
     } catch (error) {
@@ -726,7 +727,8 @@ export default function NewUsersPage() {
   }, [fetchUsers, debouncedSearch]);
 
   // Calculate total pages
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const currentPageSize = pageSize ?? 25;
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / currentPageSize));
 
   // Don't render anything until mounted to prevent hydration mismatches
   if (!mounted) {
@@ -983,6 +985,7 @@ export default function NewUsersPage() {
                       <th className='p-4 text-left font-medium'>
                         <input
                           type='checkbox'
+                          aria-label='Select all users'
                           checked={
                             selectedUsers.size === paginatedUsers.length &&
                             paginatedUsers.length > 0
@@ -1070,6 +1073,7 @@ export default function NewUsersPage() {
                         <td className='p-4'>
                           <input
                             type='checkbox'
+                            aria-label={`Select user ${user.full_name || user.email || user.id}`}
                             checked={selectedUsers.has(user.id)}
                             onChange={e => {
                               const newSelected = new Set(selectedUsers);
@@ -1285,14 +1289,14 @@ export default function NewUsersPage() {
               <div className='mt-6 flex items-center justify-between'>
                 <div className='flex items-center space-x-2'>
                   <span className='text-sm text-gray-700'>
-                    Showing {(page - 1) * pageSize + 1} to{' '}
-                    {Math.min(page * pageSize, filteredUsers.length)} of{' '}
+                    Showing {(page - 1) * (pageSize ?? 25) + 1} to{' '}
+                    {Math.min(page * (pageSize ?? 25), filteredUsers.length)} of{' '}
                     {filteredUsers.length} users
                   </span>
                 </div>
                 <div className='flex items-center space-x-2'>
                   <Select
-                    value={pageSize.toString()}
+                    value={(pageSize ?? 25).toString()}
                     onValueChange={value => {
                       setPageSize(Number(value));
                       setPage(1);
@@ -1348,7 +1352,7 @@ export default function NewUsersPage() {
       <ChangePasswordForm
         open={showChangePasswordModal}
         onOpenChange={setShowChangePasswordModal}
-        userId={selectedUser?.id}
+        userId={selectedUser?.id ?? undefined}
       />
 
       {/* Edit User Modal */}
@@ -1435,7 +1439,7 @@ export default function NewUsersPage() {
                   Department
                 </label>
                 <Select
-                  value={formData.department}
+                  value={formData.department || undefined}
                   onValueChange={value =>
                     setFormData({ ...formData, department: value })
                   }
