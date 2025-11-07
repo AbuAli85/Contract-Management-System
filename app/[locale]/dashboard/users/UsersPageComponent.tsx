@@ -74,8 +74,8 @@ export default function UsersPageComponent() {
 
   // Form states
   const [newEmail, setNewEmail] = useState('');
-  const [newRole, setNewRole] = useState(ROLES[0]);
-  const [newStatus, setNewStatus] = useState(STATUS[0]);
+  const [newRole, setNewRole] = useState<string>(ROLES[0] ?? 'user');
+  const [newStatus, setNewStatus] = useState<string>(STATUS[0] ?? 'active');
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -87,12 +87,12 @@ export default function UsersPageComponent() {
 
   // Filter and search states
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Pagination states
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1]);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[1] ?? 25);
 
   // Sorting states
   const [sortBy, setSortBy] = useState('created_at');
@@ -390,7 +390,7 @@ export default function UsersPageComponent() {
         </div>
         <Select
           value={roleFilter}
-          onValueChange={value => {
+          onValueChange={(value: string) => {
             setRoleFilter(value);
             setPage(1);
           }}
@@ -409,7 +409,7 @@ export default function UsersPageComponent() {
         </Select>
         <Select
           value={statusFilter}
-          onValueChange={value => {
+          onValueChange={(value: string) => {
             setStatusFilter(value);
             setPage(1);
           }}
@@ -618,7 +618,7 @@ export default function UsersPageComponent() {
             </div>
             <div>
               <label className='mb-2 block text-sm font-medium'>Role</label>
-              <Select value={newRole} onValueChange={setNewRole}>
+              <Select value={newRole} onValueChange={(value: string) => setNewRole(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -633,7 +633,7 @@ export default function UsersPageComponent() {
             </div>
             <div>
               <label className='mb-2 block text-sm font-medium'>Status</label>
-              <Select value={newStatus} onValueChange={setNewStatus}>
+              <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -697,7 +697,7 @@ export default function UsersPageComponent() {
             </div>
             <div>
               <label className='mb-2 block text-sm font-medium'>Role</label>
-              <Select value={newRole} onValueChange={setNewRole}>
+              <Select value={newRole} onValueChange={(value: string) => setNewRole(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -712,7 +712,7 @@ export default function UsersPageComponent() {
             </div>
             <div>
               <label className='mb-2 block text-sm font-medium'>Status</label>
-              <Select value={newStatus} onValueChange={setNewStatus}>
+              <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

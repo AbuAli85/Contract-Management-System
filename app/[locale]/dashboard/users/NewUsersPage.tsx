@@ -1352,7 +1352,7 @@ export default function NewUsersPage() {
       <ChangePasswordForm
         open={showChangePasswordModal}
         onOpenChange={setShowChangePasswordModal}
-        userId={selectedUser?.id ?? undefined}
+        {...(selectedUser?.id && { userId: selectedUser.id })}
       />
 
       {/* Edit User Modal */}
@@ -1439,7 +1439,7 @@ export default function NewUsersPage() {
                   Department
                 </label>
                 <Select
-                  value={formData.department || undefined}
+                  value={formData.department || ''}
                   onValueChange={value =>
                     setFormData({ ...formData, department: value })
                   }
@@ -1461,7 +1461,7 @@ export default function NewUsersPage() {
                   Position
                 </label>
                 <Select
-                  value={formData.position}
+                  value={formData.position || ''}
                   onValueChange={value =>
                     setFormData({ ...formData, position: value })
                   }
@@ -1566,7 +1566,35 @@ export default function NewUsersPage() {
 
       {/* Permissions Manager Modal */}
       <PermissionsManager
-        user={selectedUser}
+        user={selectedUser ? (() => {
+          const mappedRole = 
+            selectedUser.role === 'super_admin' || selectedUser.role === 'moderator' || selectedUser.role === 'guest'
+              ? 'admin'
+              : selectedUser.role === 'admin' || selectedUser.role === 'manager' || selectedUser.role === 'user'
+              ? selectedUser.role
+              : 'user';
+          
+          const userObj: {
+            id: string;
+            email: string;
+            full_name?: string;
+            role: 'admin' | 'manager' | 'user' | 'viewer';
+            status?: string;
+          } = {
+            id: selectedUser.id,
+            email: selectedUser.email,
+            role: mappedRole as 'admin' | 'manager' | 'user' | 'viewer',
+          };
+          
+          if (selectedUser.full_name) {
+            userObj.full_name = selectedUser.full_name;
+          }
+          if (selectedUser.status) {
+            userObj.status = selectedUser.status;
+          }
+          
+          return userObj;
+        })() : null}
         open={showPermissionsModal}
         onOpenChange={setShowPermissionsModal}
         onPermissionsUpdate={fetchUsers}
