@@ -112,29 +112,25 @@ export default function EditContractPage() {
     if (contract) {
       setFormData({
         status: contract.status || 'draft',
-        contract_start_date: contract.contract_start_date || '',
-        contract_end_date: contract.contract_end_date || '',
+        contract_start_date: contract.contract_start_date || contract.start_date || '',
+        contract_end_date: contract.contract_end_date || contract.end_date || '',
         salary: contract.basic_salary?.toString() || '',
         basic_salary: contract.basic_salary?.toString() || '',
-        allowances: contract.allowances?.toString() || '',
+        allowances: '', // Not available in ContractWithRelations
         currency: contract.currency || 'USD',
-        first_party_name_en:
-          contract.first_party_name_en || contract.first_party?.name_en || '',
-        first_party_name_ar:
-          contract.first_party_name_ar || contract.first_party?.name_ar || '',
-        second_party_name_en:
-          contract.second_party_name_en || contract.second_party?.name_en || '',
-        second_party_name_ar:
-          contract.second_party_name_ar || contract.second_party?.name_ar || '',
-        job_title: contract.job_title || '',
-        department: contract.department || '',
+        first_party_name_en: contract.first_party?.name_en || '',
+        first_party_name_ar: contract.first_party?.name_ar || '',
+        second_party_name_en: contract.second_party?.name_en || '',
+        second_party_name_ar: contract.second_party?.name_ar || '',
+        job_title: contract.job_title || contract.title || '',
+        department: '', // Not available in ContractWithRelations
         work_location: contract.work_location || '',
         email: contract.email || '',
         contract_type: contract.contract_type || '',
         contract_number: contract.contract_number || '',
         id_card_number: contract.id_card_number || '',
         pdf_url: contract.pdf_url || '',
-        special_terms: contract.special_terms || '',
+        special_terms: '', // Not available in ContractWithRelations
         google_doc_url: '',
         promoter_id: contract.promoter_id || '',
       });

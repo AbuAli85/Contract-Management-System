@@ -78,19 +78,19 @@ export default function AttendancePage() {
       const today = new Date();
       switch (dateFilter) {
         case 'today':
-          startDate = today.toISOString().split('T')[0];
-          endDate = today.toISOString().split('T')[0];
+          startDate = today.toISOString().split('T')[0] ?? '';
+          endDate = today.toISOString().split('T')[0] ?? '';
           break;
         case 'week':
           const weekStart = new Date(today);
           weekStart.setDate(today.getDate() - today.getDay());
-          startDate = weekStart.toISOString().split('T')[0];
-          endDate = today.toISOString().split('T')[0];
+          startDate = weekStart.toISOString().split('T')[0] ?? '';
+          endDate = today.toISOString().split('T')[0] ?? '';
           break;
         case 'month':
           const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-          startDate = monthStart.toISOString().split('T')[0];
-          endDate = today.toISOString().split('T')[0];
+          startDate = monthStart.toISOString().split('T')[0] ?? '';
+          endDate = today.toISOString().split('T')[0] ?? '';
           break;
       }
 

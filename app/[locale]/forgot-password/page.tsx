@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/lib/auth-service';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
@@ -22,7 +22,6 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const { resetPassword } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +30,15 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
-      await resetPassword(email);
+      const supabase = createClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/reset-password`,
+      });
+
+      if (resetError) {
+        throw resetError;
+      }
+
       setSuccess(true);
     } catch (err: any) {
       setError(
