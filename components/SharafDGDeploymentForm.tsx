@@ -66,6 +66,14 @@ interface Party {
   logo_url?: string | null;
   type: string;
   status?: string;
+  signatory_name_en?: string | null;
+  signatory_name_ar?: string | null;
+  designation_id?: string | null;
+}
+
+interface DesignationDetails {
+  name_en: string;
+  name_ar: string | null;
 }
 
 interface SharafDGFormData {
@@ -129,8 +137,20 @@ export default function SharafDGDeploymentForm({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [googleDriveUrl, setGoogleDriveUrl] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [designationMap, setDesignationMap] = useState<Record<string, DesignationDetails>>({});
 
   const { toast } = useToast();
+
+  const getPartyDesignation = (party: Party | null) => {
+    if (!party?.designation_id) {
+      return { en: '', ar: '' };
+    }
+    const designation = designationMap[party.designation_id];
+    return {
+      en: designation?.name_en || '',
+      ar: designation?.name_ar || '',
+    };
+  };
 
   const [formData, setFormData] = useState<SharafDGFormData>({
     promoter_id: '',
@@ -276,7 +296,7 @@ export default function SharafDGDeploymentForm({
       // Load all parties
       const { data: partiesData, error: partiesError } = await supabase
         .from('parties')
-        .select('id, name_en, name_ar, crn, type, logo_url, status')
+        .select('id, name_en, name_ar, crn, type, logo_url, status, signatory_name_en, signatory_name_ar, designation_id')
         .eq('status', 'Active')
         .order('name_en');
 
@@ -298,6 +318,31 @@ export default function SharafDGDeploymentForm({
       setClients(clientsList);
       setEmployers(employersList);
       setSuppliers(suppliersList);
+
+      // Load active designations for signatory details
+      const { data: designationsData, error: designationsError } = await supabase
+        .from('designations')
+        .select('id, name_en, name_ar')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (designationsError) {
+        console.error('Error loading designations:', designationsError);
+      } else if (designationsData) {
+        const designationLookup = (designationsData || []).reduce<Record<string, DesignationDetails>>(
+          (acc, designation) => {
+            if (designation?.id) {
+              acc[designation.id] = {
+                name_en: designation.name_en || '',
+                name_ar: designation.name_ar || null,
+              };
+            }
+            return acc;
+          },
+          {}
+        );
+        setDesignationMap(designationLookup);
+      }
 
       // Load promoters with images
       const { data: promotersData, error: promotersError } = await supabase
@@ -378,6 +423,10 @@ export default function SharafDGDeploymentForm({
     
     return matchesEmployer && matchesSearch;
   });
+
+  const selectedClientDesignation = getPartyDesignation(selectedClient);
+  const selectedEmployerDesignation = getPartyDesignation(selectedEmployer);
+  const selectedSupplierDesignation = getPartyDesignation(selectedSupplier);
 
   const validateForm = (): boolean => {
     const errors: string[] = [];
@@ -582,6 +631,10 @@ export default function SharafDGDeploymentForm({
     setPdfStatus('generating');
 
     try {
+      const firstPartyDesignation = getPartyDesignation(selectedClient);
+      const secondPartyDesignation = getPartyDesignation(selectedEmployer);
+      const supplierDesignation = getPartyDesignation(selectedSupplier);
+
       // Prepare data for Make.com webhook (FLAT structure to match Make.com mappings)
       const webhookData = {
         // Contract info
@@ -616,6 +669,10 @@ export default function SharafDGDeploymentForm({
         first_party_name_ar: selectedClient?.name_ar || '',
         first_party_crn: selectedClient?.crn || '',
         first_party_logo_url: selectedClient?.logo_url || '',
+        first_party_signatory_name_en: selectedClient?.signatory_name_en || '',
+        first_party_signatory_name_ar: selectedClient?.signatory_name_ar || '',
+        first_party_signatory_designation_en: firstPartyDesignation.en,
+        first_party_signatory_designation_ar: firstPartyDesignation.ar || '',
         
         // Second Party (Employer) - FLAT fields
         second_party_id: formData.second_party_id,
@@ -623,11 +680,19 @@ export default function SharafDGDeploymentForm({
         second_party_name_ar: selectedEmployer?.name_ar || '',
         second_party_crn: selectedEmployer?.crn || '',
         second_party_logo_url: selectedEmployer?.logo_url || '',
+        second_party_signatory_name_en: selectedEmployer?.signatory_name_en || '',
+        second_party_signatory_name_ar: selectedEmployer?.signatory_name_ar || '',
+        second_party_signatory_designation_en: secondPartyDesignation.en,
+        second_party_signatory_designation_ar: secondPartyDesignation.ar || '',
         
         // Supplier/Brand - FLAT fields (matching backend naming convention)
         supplier_brand_id: formData.supplier_brand_id,
         supplier_brand_name_en: selectedSupplier?.name_en || '',
         supplier_brand_name_ar: selectedSupplier?.name_ar || '',
+        supplier_signatory_name_en: selectedSupplier?.signatory_name_en || '',
+        supplier_signatory_name_ar: selectedSupplier?.signatory_name_ar || '',
+        supplier_signatory_designation_en: supplierDesignation.en,
+        supplier_signatory_designation_ar: supplierDesignation.ar || '',
         
         // Contract dates
         contract_start_date: formData.contract_start_date || '',
@@ -1298,6 +1363,16 @@ export default function SharafDGDeploymentForm({
                         <div className="text-xs text-muted-foreground">
                           CRN: {selectedClient.crn || 'Not provided'}
                         </div>
+                        <div className="text-xs text-muted-foreground">
+                          Signatory: {selectedClient.signatory_name_en || 'Not provided'}
+                          {selectedClientDesignation.en && ` (${selectedClientDesignation.en})`}
+                        </div>
+                        {selectedClient.signatory_name_ar && (
+                          <div className="text-right text-xs text-muted-foreground">
+                            {selectedClient.signatory_name_ar}
+                            {selectedClientDesignation.ar && ` (${selectedClientDesignation.ar})`}
+                          </div>
+                        )}
                       </div>
                     </AlertDescription>
                   </Alert>
@@ -1314,6 +1389,16 @@ export default function SharafDGDeploymentForm({
                         <div className="text-xs text-muted-foreground">
                           CRN: {selectedEmployer.crn || 'Not provided'}
                         </div>
+                        <div className="text-xs text-muted-foreground">
+                          Signatory: {selectedEmployer.signatory_name_en || 'Not provided'}
+                          {selectedEmployerDesignation.en && ` (${selectedEmployerDesignation.en})`}
+                        </div>
+                        {selectedEmployer.signatory_name_ar && (
+                          <div className="text-right text-xs text-muted-foreground">
+                            {selectedEmployer.signatory_name_ar}
+                            {selectedEmployerDesignation.ar && ` (${selectedEmployerDesignation.ar})`}
+                          </div>
+                        )}
                       </div>
                     </AlertDescription>
                   </Alert>
@@ -1327,6 +1412,16 @@ export default function SharafDGDeploymentForm({
                         <div className="font-semibold text-blue-900">Supplier/Brand</div>
                         <div>{selectedSupplier.name_en}</div>
                         <div className="text-right text-xs">{selectedSupplier.name_ar}</div>
+                        <div className="text-xs text-blue-900/70">
+                          Signatory: {selectedSupplier.signatory_name_en || 'Not provided'}
+                          {selectedSupplierDesignation.en && ` (${selectedSupplierDesignation.en})`}
+                        </div>
+                        {selectedSupplier.signatory_name_ar && (
+                          <div className="text-right text-xs text-blue-900/70">
+                            {selectedSupplier.signatory_name_ar}
+                            {selectedSupplierDesignation.ar && ` (${selectedSupplierDesignation.ar})`}
+                          </div>
+                        )}
                       </div>
                     </AlertDescription>
                   </Alert>
