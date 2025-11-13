@@ -268,6 +268,12 @@ export default function SharafDGDeploymentForm({
 
   const loadSavedDraft = () => {
     try {
+      const placeholderImages = {
+        idCard: 'https://i.imgur.com/7DrMrhN.png',
+        passport: 'https://i.imgur.com/7DrMrhN.png',
+        logo: 'https://i.imgur.com/YlUKsz7.png',
+      };
+
       const savedDraft = localStorage.getItem('sharaf-dg-form-draft');
       if (savedDraft) {
         const parsedDraft = JSON.parse(savedDraft);
@@ -725,6 +731,12 @@ export default function SharafDGDeploymentForm({
         created_at: new Date().toISOString(),
       };
 
+      const placeholderImages = {
+        idCard: 'https://i.imgur.com/7DrMrhN.png',
+        passport: 'https://i.imgur.com/7DrMrhN.png',
+        logo: 'https://i.imgur.com/YlUKsz7.png',
+      };
+
       // SAFETY: Filter out placeholder URLs before sending to Make.com
       // But still send the webhook with all other data
       const safeWebhookData: any = { ...webhookData };
@@ -734,8 +746,8 @@ export default function SharafDGDeploymentForm({
           (safeWebhookData.promoter_id_card_url.includes('NO_ID_CARD') || 
            safeWebhookData.promoter_id_card_url.toLowerCase().includes('placeholder'))) {
         console.warn('🛑 Removing ID card placeholder URL:', safeWebhookData.promoter_id_card_url);
-        safeWebhookData.promoter_id_card_url = '';
-        safeWebhookData.id_card_url = '';
+        delete safeWebhookData.promoter_id_card_url;
+        delete safeWebhookData.id_card_url;
         safeWebhookData.has_id_card_image = false;
       } else {
         safeWebhookData.has_id_card_image = !!safeWebhookData.promoter_id_card_url;
@@ -746,8 +758,8 @@ export default function SharafDGDeploymentForm({
           (safeWebhookData.promoter_passport_url.includes('NO_PASSPORT') || 
            safeWebhookData.promoter_passport_url.toLowerCase().includes('placeholder'))) {
         console.warn('🛑 Removing passport placeholder URL:', safeWebhookData.promoter_passport_url);
-        safeWebhookData.promoter_passport_url = '';
-        safeWebhookData.passport_url = '';
+        delete safeWebhookData.promoter_passport_url;
+        delete safeWebhookData.passport_url;
         safeWebhookData.has_passport_image = false;
       } else {
         safeWebhookData.has_passport_image = !!safeWebhookData.promoter_passport_url;
@@ -756,6 +768,54 @@ export default function SharafDGDeploymentForm({
       // Add flags for Make.com to conditionally replace images
       safeWebhookData.skip_id_card_replacement = !safeWebhookData.has_id_card_image;
       safeWebhookData.skip_passport_replacement = !safeWebhookData.has_passport_image;
+
+      // Remove empty string fields to prevent Make.com replaceImage errors
+      Object.entries(safeWebhookData).forEach(([key, value]) => {
+        if (value === null || value === undefined) {
+          delete safeWebhookData[key];
+          return;
+        }
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (trimmed.length === 0) {
+            delete safeWebhookData[key];
+          } else if (trimmed !== value) {
+            safeWebhookData[key] = trimmed;
+          }
+        }
+      });
+
+      // Ensure stored_* image aliases always contain non-empty values for Make.com mappings
+      if (!safeWebhookData.promoter_id_card_url) {
+        safeWebhookData.promoter_id_card_url = placeholderImages.idCard;
+        safeWebhookData.id_card_url = placeholderImages.idCard;
+      }
+      if (!safeWebhookData.promoter_passport_url) {
+        safeWebhookData.promoter_passport_url = placeholderImages.passport;
+        safeWebhookData.passport_url = placeholderImages.passport;
+      }
+      if (!safeWebhookData.first_party_logo_url) {
+        safeWebhookData.first_party_logo_url = placeholderImages.logo;
+      }
+      if (!safeWebhookData.second_party_logo_url) {
+        safeWebhookData.second_party_logo_url = placeholderImages.logo;
+      }
+
+      if (!safeWebhookData.first_party_logo) {
+        safeWebhookData.first_party_logo = safeWebhookData.first_party_logo_url || placeholderImages.logo;
+      }
+      if (!safeWebhookData.second_party_logo) {
+        safeWebhookData.second_party_logo = safeWebhookData.second_party_logo_url || placeholderImages.logo;
+      }
+
+      safeWebhookData.stored_promoter_id_card_image_url =
+        safeWebhookData.promoter_id_card_url || placeholderImages.idCard;
+      safeWebhookData.stored_promoter_passport_image_url =
+        safeWebhookData.promoter_passport_url || placeholderImages.passport;
+      safeWebhookData.stored_first_party_logo_url =
+        safeWebhookData.first_party_logo_url || placeholderImages.logo;
+      safeWebhookData.stored_second_party_logo_url =
+        safeWebhookData.second_party_logo_url || placeholderImages.logo;
 
       console.log('📤 Sending to Make.com webhook:');
       console.log('Contract:', {

@@ -445,9 +445,44 @@ export const POST = withAnyRBAC(
         Object.entries(enrichedContractData).filter(([_, value]) => value !== undefined)
       ) as typeof enrichedContractData;
 
+      const sanitizedContractData = { ...cleanedContractData };
+
+      const imageFallbacks: Record<string, string> = {
+        promoter_id_card_url: placeholderImage,
+        id_card_url: placeholderImage,
+        promoter_passport_url: placeholderImage,
+        passport_url: placeholderImage,
+        first_party_logo: placeholderLogo,
+        first_party_logo_url: placeholderLogo,
+        second_party_logo: placeholderLogo,
+        second_party_logo_url: placeholderLogo,
+        stored_promoter_id_card_image_url: placeholderImage,
+        stored_promoter_passport_image_url: placeholderImage,
+        stored_first_party_logo_url: placeholderLogo,
+        stored_second_party_logo_url: placeholderLogo,
+        image_1: placeholderImage,
+        image_2: placeholderImage,
+        image_3: placeholderImage,
+        image_4: placeholderImage,
+        image_5: placeholderImage,
+        image_6: placeholderImage,
+        image_7: placeholderImage,
+        image_8: placeholderImage,
+        image_9: placeholderImage,
+        image_10: placeholderImage,
+        image_11: placeholderImage,
+        image_12: placeholderImage,
+      };
+
+      for (const [key, fallback] of Object.entries(imageFallbacks)) {
+        if (!sanitizedContractData[key as keyof typeof sanitizedContractData]) {
+          sanitizedContractData[key as keyof typeof sanitizedContractData] = fallback as any;
+        }
+      }
+
       // Generate contract with Make.com integration
       const { webhookPayload, templateConfig, validation } =
-        generateContractWithMakecom(contractType, cleanedContractData);
+        generateContractWithMakecom(contractType, sanitizedContractData);
 
       console.log('🔧 Generated webhook payload:', {
         hasWebhookPayload: !!webhookPayload,
