@@ -601,7 +601,7 @@ export const POST = withAnyRBAC(
             contract_number: contract.contract_number,
             ref_number: contract.contract_number, // Alias for template compatibility
             // Callback URL for Make.com to update status/pdf_url
-            update_url: `${appUrl}/api/generate-contract`,
+            update_url: `${appUrl}/api/webhook/contract-pdf-ready`,
             // Provide Drive folder context to Make.com scenario if configured
             ...(makeTemplate?.makecomModuleConfig.googleDriveSettings
               ? {
