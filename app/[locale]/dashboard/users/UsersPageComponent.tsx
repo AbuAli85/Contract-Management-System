@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +32,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Shield,
 } from 'lucide-react';
 import { debounce } from 'lodash';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
@@ -346,7 +348,7 @@ export default function UsersPageComponent() {
             Manage users, roles, and permissions.
           </p>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex flex-wrap items-center gap-2'>
           <Button
             variant='outline'
             size='sm'
@@ -364,6 +366,12 @@ export default function UsersPageComponent() {
               Add User
             </Button>
           )}
+          <Button variant='secondary' size='sm' asChild>
+            <Link href='/en/admin/users' className='flex items-center gap-2'>
+              <Shield className='h-4 w-4' />
+              Advanced Permissions
+            </Link>
+          </Button>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -504,12 +505,12 @@ export default function UserManagementPage() {
               </p>
             </div>
             <div className='flex gap-2'>
-              <Button
-                variant='outline'
-                onClick={() => router.push('/en/dashboard')}
-              >
-                Back to Dashboard
-              </Button>
+            <Button variant='outline' asChild>
+              <Link href='/en/dashboard'>Dashboard</Link>
+            </Button>
+            <Button variant='secondary' asChild>
+              <Link href='/en/dashboard/users'>Create Users</Link>
+            </Button>
               <Button onClick={handleManualRefresh} disabled={loading}>
                 {loading || isRefreshing ? (
                   <>
