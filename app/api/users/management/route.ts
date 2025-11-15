@@ -98,9 +98,9 @@ export async function GET(request: NextRequest) {
       'full_name',
       'role',
       'status',
-      tableName === 'profiles' ? 'phone' : null,
       'created_at',
-      'updated_at',
+      tableName === 'profiles' ? 'phone' : null,
+      tableName === 'profiles' ? 'updated_at' : null,
     ]
       .filter(Boolean)
       .join(', ');
