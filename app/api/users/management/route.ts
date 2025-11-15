@@ -91,24 +91,12 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ Admin access granted. Fetching users from:', tableName);
 
-    // Get all users from the appropriate table
-    const selectFields = [
-      'id',
-      'email',
-      'full_name',
-      'role',
-      'status',
-      'created_at',
-      tableName === 'profiles' ? 'phone' : null,
-      tableName === 'profiles' ? 'updated_at' : null,
-    ]
-      .filter(Boolean)
-      .join(', ');
+    const orderColumn = tableName === 'profiles' ? 'created_at' : 'email';
 
-    const { data: users, error: usersListError } = await supabase
+    const { data: rawUsers, error: usersListError } = await supabase
       .from(tableName)
-      .select(selectFields)
-      .order('created_at', { ascending: false });
+      .select('*')
+      .order(orderColumn, { ascending: false });
 
     if (usersListError) {
       console.error('❌ Error fetching users:', usersListError);
@@ -123,12 +111,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Successfully fetched ${users?.length || 0} users`);
+    const sanitizedUsers =
+      rawUsers?.map(user => ({
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        status: user.status,
+        phone: 'phone' in user ? (user as any).phone : null,
+        created_at: 'created_at' in user ? (user as any).created_at : null,
+        updated_at: 'updated_at' in user ? (user as any).updated_at : null,
+      })) || [];
+
+    console.log(`✅ Successfully fetched ${sanitizedUsers.length} users`);
 
     return NextResponse.json({ 
-      users: users || [],
+      users: sanitizedUsers,
       tableName,
-      count: users?.length || 0
+      count: sanitizedUsers.length
     });
   } catch (error) {
     console.error('❌ User management error:', error);
@@ -224,6 +224,16 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Admin access granted. Using table:', tableName);
 
+    const addTimestampIfAvailable = (payload: Record<string, any>) => {
+      if (tableName === 'profiles') {
+        return {
+          ...payload,
+          updated_at: new Date().toISOString(),
+        };
+      }
+      return payload;
+    };
+
     const body = await request.json();
     const { action, userId, role, status } = body;
     
@@ -239,13 +249,14 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'approve':
         // Update user status to active
+        const approvePayload = addTimestampIfAvailable({
+          status: 'active',
+          role: role || 'user',
+        });
+
         const { error: approveError } = await supabase
           .from(tableName)
-          .update({
-            status: 'active',
-            role: role || 'user',
-            updated_at: new Date().toISOString(),
-          })
+          .update(approvePayload)
           .eq('id', userId);
 
         if (approveError) {
@@ -280,12 +291,13 @@ export async function POST(request: NextRequest) {
 
       case 'reject':
         // Update user status to inactive
+        const rejectPayload = addTimestampIfAvailable({
+          status: 'inactive',
+        });
+
         const { error: rejectError } = await supabase
           .from(tableName)
-          .update({
-            status: 'inactive',
-            updated_at: new Date().toISOString(),
-          })
+          .update(rejectPayload)
           .eq('id', userId);
 
         if (rejectError) {
@@ -307,12 +319,13 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        const rolePayload = addTimestampIfAvailable({
+          role,
+        });
+
         const { error: roleUpdateError } = await supabase
           .from(tableName)
-          .update({
-            role,
-            updated_at: new Date().toISOString(),
-          })
+          .update(rolePayload)
           .eq('id', userId);
 
         if (roleUpdateError) {
@@ -352,12 +365,13 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        const statusPayload = addTimestampIfAvailable({
+          status,
+        });
+
         const { error: statusUpdateError } = await supabase
           .from(tableName)
-          .update({
-            status,
-            updated_at: new Date().toISOString(),
-          })
+          .update(statusPayload)
           .eq('id', userId);
 
         if (statusUpdateError) {
