@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -176,7 +177,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       email,
-      password,
       full_name,
       role,
       status,
@@ -187,19 +187,9 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!email || !full_name || !password) {
+    if (!email || !full_name) {
       return NextResponse.json(
-        { error: 'Email, full name, and password are required' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        {
-          error:
-            'Password must be at least 8 characters and include uppercase, lowercase, and a number',
-        },
+        { error: 'Email and full name are required' },
         { status: 400 }
       );
     }
@@ -237,12 +227,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Create auth user using service role
+    const generatedPassword = randomBytes(16)
+      .toString('base64')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(0, 16);
+
     const {
       data: authResult,
       error: authError,
     } = await adminSupabase.auth.admin.createUser({
       email,
-      password,
+      password: generatedPassword,
       email_confirm: false,
       user_metadata: {
         full_name,
@@ -290,9 +285,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // TODO: send onboarding email with generated password + reset instructions
+
     return NextResponse.json({
       success: true,
-      message: 'User created successfully',
+      message: 'User created successfully. Temporary password emailed.',
       user: {
         auth: authResult.user,
         profile: newProfile,

@@ -35,7 +35,6 @@ import {
   XCircle,
   AlertCircle,
   Shield,
-  Lock,
 } from 'lucide-react';
 import { debounce } from 'lodash';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
@@ -46,21 +45,6 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-const passwordChecks = [
-  { label: '8+ characters', test: (value: string) => value.length >= 8 },
-  { label: 'Uppercase letter', test: (value: string) => /[A-Z]/.test(value) },
-  { label: 'Lowercase letter', test: (value: string) => /[a-z]/.test(value) },
-  { label: 'Number', test: (value: string) => /\d/.test(value) },
-];
-
-function getPasswordStrength(value: string): 'weak' | 'medium' | 'strong' | null {
-  if (!value) return null;
-  const passed = passwordChecks.filter(check => check.test(value)).length;
-  if (passed <= 1) return 'weak';
-  if (passed === passwordChecks.length) return 'strong';
-  return 'medium';
 }
 
 function getInitials(email: string) {
@@ -95,8 +79,6 @@ export default function UsersPageComponent() {
   // Form states
   const [newEmail, setNewEmail] = useState('');
   const [newFullName, setNewFullName] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [newRole, setNewRole] = useState<string>(ROLES[0] ?? 'user');
   const [newStatus, setNewStatus] = useState<string>(STATUS[0] ?? 'active');
   const [newDepartment, setNewDepartment] = useState('');
@@ -104,9 +86,6 @@ export default function UsersPageComponent() {
   const [newPhone, setNewPhone] = useState('');
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-  const [passwordStrength, setPasswordStrength] = useState<
-    'weak' | 'medium' | 'strong' | null
-  >(null);
   const emailInputRef = useRef<HTMLInputElement | null>(null);
 
   // Loading states
@@ -140,8 +119,6 @@ export default function UsersPageComponent() {
   const resetAddForm = () => {
     setNewEmail('');
     setNewFullName('');
-    setNewPassword('');
-    setConfirmPassword('');
     setNewRole(ROLES[0] ?? 'user');
     setNewStatus(STATUS[0] ?? 'active');
     setNewDepartment('');
@@ -149,7 +126,6 @@ export default function UsersPageComponent() {
     setNewPhone('');
     setNewAvatarUrl('');
     setFormError(null);
-    setPasswordStrength(null);
   };
 
   useEffect(() => {
@@ -159,10 +135,6 @@ export default function UsersPageComponent() {
       resetAddForm();
     }
   }, [showAddModal]);
-
-  useEffect(() => {
-    setPasswordStrength(getPasswordStrength(newPassword));
-  }, [newPassword]);
 
   // Set mounted state after hydration
   useEffect(() => {
@@ -382,23 +354,6 @@ export default function UsersPageComponent() {
       return;
     }
 
-    if (!newPassword) {
-      setFormError('Password is required.');
-      return;
-    }
-
-    if (passwordChecks.some(check => !check.test(newPassword))) {
-      setFormError(
-        'Password must be at least 8 characters and include uppercase, lowercase, and a number.'
-      );
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setFormError('Passwords do not match.');
-      return;
-    }
-
     setAddLoading(true);
 
     try {
@@ -409,7 +364,6 @@ export default function UsersPageComponent() {
         },
         body: JSON.stringify({
           email: newEmail,
-          password: newPassword,
           full_name: newFullName,
           role: newRole,
           status: newStatus,
@@ -428,7 +382,7 @@ export default function UsersPageComponent() {
 
       toast({
         title: 'User created',
-        description: `${newEmail} has been added successfully.`,
+        description: `${newEmail} has been added. A temporary password email was sent.`,
       });
 
       setShowAddModal(false);
@@ -754,6 +708,11 @@ export default function UsersPageComponent() {
             </DialogDescription>
           </DialogHeader>
           <div className='space-y-4'>
+            <div className='rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900'>
+              The system generates a secure temporary password and emails it to the
+              user with reset instructions. They’ll be asked to set their own
+              password on first login.
+            </div>
             <div className='grid gap-4 md:grid-cols-2'>
               <div>
                 <label className='mb-2 block text-sm font-medium'>Email</label>
@@ -772,44 +731,6 @@ export default function UsersPageComponent() {
                   placeholder='John Doe'
                   value={newFullName}
                   onChange={e => setNewFullName(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className='mb-2 block text-sm font-medium'>Password</label>
-                <Input
-                  type='password'
-                  placeholder='Enter password'
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                />
-                <div className='mt-2 flex items-center text-xs'>
-                  <Lock className='mr-1 h-3 w-3 text-muted-foreground' />
-                  <span
-                    className={
-                      passwordStrength === 'strong'
-                        ? 'text-green-600'
-                        : passwordStrength === 'medium'
-                        ? 'text-yellow-600'
-                        : 'text-red-600'
-                    }
-                  >
-                    {passwordStrength
-                      ? `${passwordStrength.charAt(0).toUpperCase()}${passwordStrength.slice(
-                          1
-                        )} password`
-                      : 'Use uppercase, lowercase, and numbers'}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <label className='mb-2 block text-sm font-medium'>
-                  Confirm Password
-                </label>
-                <Input
-                  type='password'
-                  placeholder='Confirm password'
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
                 />
               </div>
               <div>
