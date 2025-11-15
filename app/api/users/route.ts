@@ -233,7 +233,8 @@ export async function POST(request: NextRequest) {
       const bytes = randomBytes(length);
       let password = '';
       for (let i = 0; i < length; i++) {
-        password += alphabet[bytes[i] % alphabet.length];
+        const byte = bytes[i] ?? 0;
+        password += alphabet[byte % alphabet.length];
       }
       return password;
     };
@@ -251,9 +252,9 @@ export async function POST(request: NextRequest) {
         full_name,
         role: role || 'user',
         status: status || 'pending',
-        department,
-        position,
-        phone,
+        department: department || null,
+        position: position || null,
+        phone: phone || null,
       },
     });
 
@@ -279,9 +280,6 @@ export async function POST(request: NextRequest) {
         full_name,
         role: role || 'user',
         status: status || 'pending',
-        department,
-        position,
-        phone,
       })
       .select()
       .single();
