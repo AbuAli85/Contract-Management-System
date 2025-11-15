@@ -92,20 +92,22 @@ export async function GET(request: NextRequest) {
     console.log('✅ Admin access granted. Fetching users from:', tableName);
 
     // Get all users from the appropriate table
+    const selectFields = [
+      'id',
+      'email',
+      'full_name',
+      'role',
+      'status',
+      tableName === 'profiles' ? 'phone' : null,
+      'created_at',
+      'updated_at',
+    ]
+      .filter(Boolean)
+      .join(', ');
+
     const { data: users, error: usersListError } = await supabase
       .from(tableName)
-      .select(
-        `
-        id,
-        email,
-        full_name,
-        role,
-        status,
-        phone,
-        created_at,
-        updated_at
-      `
-      )
+      .select(selectFields)
       .order('created_at', { ascending: false });
 
     if (usersListError) {
