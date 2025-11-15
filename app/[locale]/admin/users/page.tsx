@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -23,31 +24,62 @@ import {
   Mail,
   Phone,
   Calendar,
+  Search,
 } from 'lucide-react';
 
 interface User {
   id: string;
   email: string;
-  full_name: string;
-  role: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  roles: string[];
+  permissions: string[];
   status: string;
   phone?: string;
-  created_at: string;
-  updated_at: string;
+  department?: string;
+  position?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_sign_in_at?: string;
+}
+
+interface UserStats {
+  total: number;
+  active: number;
+  pending: number;
+  inactive: number;
+  admins: number;
+}
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface AdminContext {
+  roles: string[];
+  permissions: string[];
 }
 
 const ROLE_OPTIONS = [
-  { value: 'user', label: 'User' },
-  { value: 'provider', label: 'Provider' },
-  { value: 'client', label: 'Client' },
-  { value: 'admin', label: 'Admin' },
   { value: 'super_admin', label: 'Super Admin' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'promoter', label: 'Promoter' },
+  { value: 'user', label: 'User' },
+  { value: 'viewer', label: 'Viewer' },
 ];
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
   { value: 'active', label: 'Active' },
+  { value: 'suspended', label: 'Suspended' },
   { value: 'inactive', label: 'Inactive' },
+  { value: 'deleted', label: 'Deleted' },
 ];
 
 export default function UserManagementPage() {
@@ -56,36 +88,106 @@ export default function UserManagementPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [stats, setStats] = useState<UserStats>({
+    total: 0,
+    active: 0,
+    pending: 0,
+    inactive: 0,
+    admins: 0,
+  });
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 25,
+    total: 0,
+    totalPages: 0,
+  });
+  const [context, setContext] = useState<AdminContext>({
+    roles: [],
+    permissions: [],
+  });
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const router = useRouter();
 
   const supabase = createClient();
 
   useEffect(() => {
-    if (supabase) {
-      fetchUsers();
-    }
-  }, [supabase]);
+    if (!supabase) return;
+    const timer = setTimeout(() => setSearchTerm(searchInput.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [searchInput, supabase]);
 
-  const fetchUsers = async () => {
+  useEffect(() => {
+    if (!supabase) return;
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase, searchTerm, roleFilter, statusFilter]);
+
+  const fetchUsers = async (options?: { skipGlobalLoading?: boolean }) => {
     try {
-      setLoading(true);
+      if (!options?.skipGlobalLoading) {
+        setLoading(true);
+      }
       setError('');
 
-      const response = await fetch('/api/users/management');
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (roleFilter !== 'all') params.append('role', roleFilter);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      params.append('limit', pagination.limit.toString());
+
+      const response = await fetch(
+        `/api/users/management?${params.toString()}`,
+        {
+          cache: 'no-store',
+        }
+      );
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch users');
       }
 
-      setUsers(data.users || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to fetch users'
+      setUsers(Array.isArray(data.users) ? data.users : []);
+      setStats(
+        data.stats || {
+          total: 0,
+          active: 0,
+          pending: 0,
+          inactive: 0,
+          admins: 0,
+        }
       );
+      setPagination(
+        data.pagination || {
+          page: 1,
+          limit: pagination.limit,
+          total: data.users?.length || 0,
+          totalPages: 1,
+        }
+      );
+      setContext(
+        data.context || {
+          roles: [],
+          permissions: [],
+        }
+      );
+    } catch (fetchError) {
+      console.error('Error fetching users:', fetchError);
+      setError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : 'Failed to fetch users'
+      );
+      setUsers([]);
     } finally {
-      setLoading(false);
+      if (!options?.skipGlobalLoading) {
+        setLoading(false);
+      }
+      setIsRefreshing(false);
     }
   };
 
@@ -118,7 +220,7 @@ export default function UserManagementPage() {
         throw new Error(data.error || 'Action failed');
       }
 
-      setSuccess(data.message);
+      setSuccess(data.message || 'Action completed');
       await fetchUsers(); // Refresh the list
     } catch (error) {
       console.error('Error performing action:', error);
@@ -132,7 +234,10 @@ export default function UserManagementPage() {
     const variants = {
       pending: 'bg-yellow-100 text-yellow-800',
       active: 'bg-green-100 text-green-800',
+      approved: 'bg-blue-100 text-blue-800',
       inactive: 'bg-red-100 text-red-800',
+      suspended: 'bg-orange-100 text-orange-800',
+      deleted: 'bg-gray-200 text-gray-700',
     };
     return (
       <Badge
@@ -150,8 +255,9 @@ export default function UserManagementPage() {
     const variants = {
       super_admin: 'bg-purple-100 text-purple-800',
       admin: 'bg-blue-100 text-blue-800',
-      provider: 'bg-green-100 text-green-800',
-      client: 'bg-orange-100 text-orange-800',
+      manager: 'bg-teal-100 text-teal-800',
+      promoter: 'bg-green-100 text-green-800',
+      viewer: 'bg-slate-100 text-slate-800',
       user: 'bg-gray-100 text-gray-800',
     };
     return (
@@ -165,8 +271,10 @@ export default function UserManagementPage() {
     );
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '—';
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '—';
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
@@ -186,17 +294,101 @@ export default function UserManagementPage() {
     );
   }
 
+  const renderRoleBadges = (roles: string[], userId: string) => {
+    if (!roles || roles.length === 0) {
+      return (
+        <span key={`${userId}-unassigned`}>{getRoleBadge('user')}</span>
+      );
+    }
+    return roles.map(role => (
+      <span key={`${userId}-${role}`}>{getRoleBadge(role)}</span>
+    ));
+  };
+
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    fetchUsers({ skipGlobalLoading: true });
+  };
+
+  const primaryRole = (user: User) => user.roles[0] || 'user';
+
   return (
     <div className='min-h-screen bg-gray-50 p-4'>
       <div className='max-w-7xl mx-auto'>
-        <div className='mb-6'>
-          <h1 className='text-3xl font-bold text-gray-900 flex items-center gap-2'>
-            <Users className='h-8 w-8' />
-            User Management
-          </h1>
-          <p className='text-gray-600 mt-2'>
-            Manage user accounts, roles, and permissions
-          </p>
+        <div className='mb-6 space-y-4'>
+          <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+            <div>
+              <h1 className='text-3xl font-bold text-gray-900 flex items-center gap-2'>
+                <Users className='h-8 w-8' />
+                User Management
+              </h1>
+              <p className='text-gray-600 mt-2'>
+                Manage user accounts, roles, and permissions
+              </p>
+            </div>
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                onClick={() => router.push('/en/dashboard')}
+              >
+                Back to Dashboard
+              </Button>
+              <Button onClick={handleManualRefresh} disabled={loading}>
+                {loading || isRefreshing ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Refreshing...
+                  </>
+                ) : (
+                  'Refresh'
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className='flex flex-col gap-4 md:flex-row md:items-center'>
+            <div className='relative flex-1'>
+              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
+              <Input
+                placeholder='Search by email, name, or phone'
+                className='pl-9'
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+              />
+            </div>
+            <Select
+              value={roleFilter}
+              onValueChange={value => setRoleFilter(value)}
+            >
+              <SelectTrigger className='w-full md:w-48'>
+                <SelectValue placeholder='Filter by role' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>All roles</SelectItem>
+                {ROLE_OPTIONS.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={statusFilter}
+              onValueChange={value => setStatusFilter(value)}
+            >
+              <SelectTrigger className='w-full md:w-48'>
+                <SelectValue placeholder='Filter by status' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>All statuses</SelectItem>
+                {STATUS_OPTIONS.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {error && (
@@ -213,14 +405,76 @@ export default function UserManagementPage() {
           </Alert>
         )}
 
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6'>
+          <Card>
+            <CardContent className='pt-6'>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <p className='text-sm text-gray-500'>Total Users</p>
+                  <p className='text-2xl font-semibold'>{stats.total}</p>
+                </div>
+                <Users className='h-8 w-8 text-gray-400' />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className='pt-6'>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <p className='text-sm text-gray-500'>Active</p>
+                  <p className='text-2xl font-semibold text-green-600'>
+                    {stats.active}
+                  </p>
+                </div>
+                <UserCheck className='h-8 w-8 text-green-500' />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className='pt-6'>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <p className='text-sm text-gray-500'>Pending</p>
+                  <p className='text-2xl font-semibold text-yellow-600'>
+                    {stats.pending}
+                  </p>
+                </div>
+                <UserX className='h-8 w-8 text-yellow-500' />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className='pt-6'>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <p className='text-sm text-gray-500'>Admins</p>
+                  <p className='text-2xl font-semibold text-purple-600'>
+                    {stats.admins}
+                  </p>
+                </div>
+                <Shield className='h-8 w-8 text-purple-500' />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {context.roles.length > 0 && (
+          <p className='mb-4 text-sm text-gray-600'>
+            You have access as:{' '}
+            <span className='font-medium'>
+              {context.roles.join(', ') || 'user'}
+            </span>
+          </p>
+        )}
+
         <div className='grid gap-6'>
           {users.map(user => (
             <Card key={user.id}>
               <CardHeader>
-                <div className='flex items-start justify-between'>
+                <div className='flex flex-col gap-4 md:flex-row md:items-start md:justify-between'>
                   <div>
                     <CardTitle className='text-lg'>
-                      {user.full_name || 'No name'}
+                      {user.full_name || 'Unnamed user'}
                     </CardTitle>
                     <p className='text-sm text-gray-600 flex items-center gap-1 mt-1'>
                       <Mail className='h-4 w-4' />
@@ -233,19 +487,27 @@ export default function UserManagementPage() {
                       </p>
                     )}
                   </div>
-                  <div className='flex gap-2'>
+                  <div className='flex flex-wrap gap-2'>
                     {getStatusBadge(user.status)}
-                    {getRoleBadge(user.role)}
+                    {renderRoleBadges(user.roles, user.id)}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className='space-y-4'>
-                  <div className='flex items-center gap-2 text-sm text-gray-500'>
-                    <Calendar className='h-4 w-4' />
-                    <span>Created: {formatDate(user.created_at)}</span>
-                    <span>•</span>
-                    <span>Updated: {formatDate(user.updated_at)}</span>
+                  <div className='flex flex-wrap gap-4 text-sm text-gray-500'>
+                    <div className='flex items-center gap-2'>
+                      <Calendar className='h-4 w-4' />
+                      <span>Created: {formatDate(user.created_at)}</span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Calendar className='h-4 w-4' />
+                      <span>Updated: {formatDate(user.updated_at)}</span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Calendar className='h-4 w-4' />
+                      <span>Last sign-in: {formatDate(user.last_sign_in_at)}</span>
+                    </div>
                   </div>
 
                   <div className='flex flex-wrap gap-2'>
@@ -281,14 +543,14 @@ export default function UserManagementPage() {
                     )}
 
                     <Select
-                      value={user.role}
+                      value={primaryRole(user)}
                       onValueChange={value =>
                         handleUserAction('update_role', user.id, value)
                       }
                       disabled={actionLoading === user.id}
                     >
-                      <SelectTrigger className='w-32'>
-                        <SelectValue />
+                      <SelectTrigger className='w-40'>
+                        <SelectValue placeholder='Set role' />
                       </SelectTrigger>
                       <SelectContent>
                         {ROLE_OPTIONS.map(option => (
@@ -306,8 +568,8 @@ export default function UserManagementPage() {
                       }
                       disabled={actionLoading === user.id}
                     >
-                      <SelectTrigger className='w-32'>
-                        <SelectValue />
+                      <SelectTrigger className='w-40'>
+                        <SelectValue placeholder='Set status' />
                       </SelectTrigger>
                       <SelectContent>
                         {STATUS_OPTIONS.map(option => (
@@ -324,38 +586,19 @@ export default function UserManagementPage() {
           ))}
         </div>
 
-        {users.length === 0 && (
-          <Card>
+        {users.length === 0 && !loading && (
+          <Card className='mt-6'>
             <CardContent className='text-center py-8'>
               <Users className='h-12 w-12 text-gray-400 mx-auto mb-4' />
               <h3 className='text-lg font-medium text-gray-900 mb-2'>
                 No users found
               </h3>
               <p className='text-gray-600'>
-                No users have been registered yet.
+                Try adjusting the filters or search criteria.
               </p>
             </CardContent>
           </Card>
         )}
-
-        <div className='mt-6 flex justify-between'>
-          <Button
-            variant='outline'
-            onClick={() => router.push('/en/dashboard')}
-          >
-            Back to Dashboard
-          </Button>
-          <Button onClick={fetchUsers} disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                Refreshing...
-              </>
-            ) : (
-              'Refresh'
-            )}
-          </Button>
-        </div>
       </div>
     </div>
   );
