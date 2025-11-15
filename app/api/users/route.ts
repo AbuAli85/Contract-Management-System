@@ -187,9 +187,19 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!email || !full_name) {
+    if (!email || !full_name || !password) {
       return NextResponse.json(
-        { error: 'Email and full name are required' },
+        { error: 'Email, full name, and password are required' },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        {
+          error:
+            'Password must be at least 8 characters and include uppercase, lowercase, and a number',
+        },
         { status: 400 }
       );
     }
@@ -226,10 +236,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user profile
-    const { data: newUser, error: createError } = await adminSupabase
+    // Create auth user using service role
+    const {
+      data: authResult,
+      error: authError,
+    } = await adminSupabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: false,
+      user_metadata: {
+        full_name,
+        role: role || 'user',
+        status: status || 'pending',
+        department,
+        position,
+        phone,
+      },
+    });
+
+    if (authError || !authResult?.user) {
+      console.error('Error creating auth user:', authError);
+      return NextResponse.json(
+        { error: authError?.message || 'Failed to create user' },
+        { status: 500 }
+      );
+    }
+
+    const authUserId = authResult.user.id;
+
+    // Create user profile record
+    const { data: newProfile, error: createError } = await adminSupabase
       .from('profiles')
       .insert({
+        id: authUserId,
         email,
         full_name,
         role: role || 'user',
@@ -242,9 +281,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating user:', createError);
+      console.error('Error creating profile:', createError);
+      // Roll back auth user so we don't leave orphaned accounts
+      await adminSupabase.auth.admin.deleteUser(authUserId);
       return NextResponse.json(
-        { error: 'Failed to create user' },
+        { error: 'Failed to create profile for user' },
         { status: 500 }
       );
     }
@@ -252,7 +293,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'User created successfully',
-      user: newUser,
+      user: {
+        auth: authResult.user,
+        profile: newProfile,
+      },
     });
   } catch (error) {
     console.error('Error in POST /api/users:', error);
