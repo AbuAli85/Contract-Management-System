@@ -22,6 +22,18 @@ WHERE passport_url LIKE '%NO_PASSPORT%'
 ORDER BY name_en;
 
 -- ============================================================================
+-- STEP 1.5: SPECIFIC FIX - kashif ali
+-- ============================================================================
+-- Quick fix for kashif ali NO_PASSPORT placeholder
+
+UPDATE promoters
+SET 
+  passport_url = NULL,
+  updated_at = NOW()
+WHERE name_en = 'kashif ali'
+  AND passport_url LIKE '%NO_PASSPORT%';
+
+-- ============================================================================
 -- STEP 2: COUNT BEFORE CLEANUP
 -- ============================================================================
 
