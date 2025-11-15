@@ -227,10 +227,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create auth user using service role
-    const generatedPassword = randomBytes(16)
-      .toString('base64')
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .slice(0, 16);
+    const generateSecurePassword = (length = 16) => {
+      const alphabet =
+        'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
+      const bytes = randomBytes(length);
+      let password = '';
+      for (let i = 0; i < length; i++) {
+        password += alphabet[bytes[i] % alphabet.length];
+      }
+      return password;
+    };
+
+    const generatedPassword = generateSecurePassword(18);
 
     const {
       data: authResult,
@@ -252,7 +260,10 @@ export async function POST(request: NextRequest) {
     if (authError || !authResult?.user) {
       console.error('Error creating auth user:', authError);
       return NextResponse.json(
-        { error: authError?.message || 'Failed to create user' },
+        {
+          error: 'Failed to create user',
+          details: authError?.message,
+        },
         { status: 500 }
       );
     }
@@ -280,7 +291,10 @@ export async function POST(request: NextRequest) {
       // Roll back auth user so we don't leave orphaned accounts
       await adminSupabase.auth.admin.deleteUser(authUserId);
       return NextResponse.json(
-        { error: 'Failed to create profile for user' },
+        {
+          error: 'Failed to create user profile',
+          details: createError.message,
+        },
         { status: 500 }
       );
     }
