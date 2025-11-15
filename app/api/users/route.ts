@@ -226,14 +226,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowedStatuses = new Set([
-      'pending',
-      'approved',
-      'active',
-      'suspended',
-      'inactive',
-      'deleted',
-    ]);
+    const allowedStatuses = new Set(['pending', 'approved', 'active', 'inactive']);
     const normalizedStatus =
       typeof status === 'string' && allowedStatuses.has(status.toLowerCase())
         ? status.toLowerCase()
