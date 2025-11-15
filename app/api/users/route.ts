@@ -226,11 +226,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowedStatuses = new Set(['pending', 'approved', 'active', 'inactive']);
-    const normalizedStatus =
-      typeof status === 'string' && allowedStatuses.has(status.toLowerCase())
-        ? status.toLowerCase()
-        : 'pending';
+    // Profiles table currently enforces status = pending/approved/active via a check constraint.
+    // To keep inserts portable across environments, default every newly created user to 'pending';
+    // admins can promote them via the management API once created.
+    const normalizedStatus = 'pending';
 
     // Create auth user using service role
     const generateSecurePassword = (length = 16) => {
