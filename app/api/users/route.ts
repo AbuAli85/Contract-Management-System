@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('id')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       return NextResponse.json(
@@ -246,30 +246,42 @@ export async function POST(request: NextRequest) {
 
     const generatedPassword = generateSecurePassword(18);
 
-    const {
-      data: authResult,
-      error: authError,
-    } = await adminSupabase.auth.admin.createUser({
-      email,
-      password: generatedPassword,
-      email_confirm: false,
-      user_metadata: {
-        full_name,
-        role: role || 'user',
-        status: normalizedStatus,
-        department: department || null,
-        position: position || null,
-        phone: phone || null,
-      },
-    });
-
-    if (authError || !authResult?.user) {
-      console.error('Error creating auth user:', authError);
-      return NextResponse.json(
-        {
-          error: 'Failed to create user',
-          details: authError?.message,
+    let authResult;
+    let createErrorDetails: string | undefined;
+    try {
+      const { data, error } = await adminSupabase.auth.admin.createUser({
+        email,
+        password: generatedPassword,
+        email_confirm: false,
+        user_metadata: {
+          full_name,
+          role: role || 'user',
+          status: normalizedStatus,
+          department: department || null,
+          position: position || null,
+          phone: phone || null,
         },
+      });
+
+      if (error || !data?.user) {
+        throw new Error(error?.message || 'Auth user creation failed');
+      }
+      authResult = data;
+    } catch (authError: any) {
+      const message = authError?.message || 'Auth user creation failed';
+      if (
+        typeof message === 'string' &&
+        (message.includes('already registered') ||
+          message.includes('duplicate key value'))
+      ) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: 'Failed to create user', details: message },
         { status: 500 }
       );
     }
@@ -291,12 +303,24 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       console.error('Error creating profile:', createError);
+      createErrorDetails = createError.message;
       // Roll back auth user so we don't leave orphaned accounts
       await adminSupabase.auth.admin.deleteUser(authUserId);
+
+      if (
+        typeof createErrorDetails === 'string' &&
+        createErrorDetails.includes('profiles_email_key')
+      ) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
         {
           error: 'Failed to create user profile',
-          details: createError.message,
+          details: createErrorDetails,
         },
         { status: 500 }
       );
