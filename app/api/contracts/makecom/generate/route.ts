@@ -193,6 +193,19 @@ export const POST = withAnyRBAC(
             '✅ Fetched promoter data for contract generation:',
             promoter.name_en
           );
+          
+          // Log passport URL details for debugging
+          if (promoter.passport_url) {
+            console.log('📸 Passport URL from database:', {
+              raw_url: promoter.passport_url,
+              is_full_url: promoter.passport_url.startsWith('http'),
+              contains_placeholder: promoter.passport_url.includes('NO_PASSPORT') || promoter.passport_url.toLowerCase().includes('placeholder'),
+              url_length: promoter.passport_url.length,
+            });
+          } else {
+            console.warn('⚠️ No passport URL found for promoter:', promoter.name_en);
+          }
+          
           // Add promoter image URLs to contract data for webhook
           enrichedContractData = {
             ...enrichedContractData,
@@ -272,6 +285,39 @@ export const POST = withAnyRBAC(
       const placeholderSignature =
         'https://i.imgur.com/zQeWKYc.png'; // 200x100 dark gray placeholder
 
+      // Function to normalize Supabase storage URLs (convert partial URLs to full public URLs)
+      const normalizeSupabaseUrl = (
+        url: string | null | undefined,
+        bucket: string = 'promoter-documents'
+      ): string | null => {
+        if (!url || url.toString().trim() === '') {
+          return null;
+        }
+        
+        const urlString = url.toString().trim();
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        
+        // If it's already a full URL, return as-is
+        if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+          return urlString;
+        }
+        
+        // If it's a partial URL (just filename), convert to full public URL
+        if (supabaseUrl) {
+          // Extract project ID from Supabase URL (e.g., https://xxxxx.supabase.co)
+          const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/);
+          if (urlMatch) {
+            const projectId = urlMatch[1];
+            // Remove any leading slashes from filename
+            const cleanFilename = urlString.replace(/^\/+/, '');
+            return `https://${projectId}.supabase.co/storage/v1/object/public/${bucket}/${cleanFilename}`;
+          }
+        }
+        
+        // If we can't normalize it, return null
+        return null;
+      };
+
       // Function to ensure valid URL with strict validation
       const ensureValidUrl = (
         url: string | null | undefined,
@@ -283,8 +329,14 @@ export const POST = withAnyRBAC(
           return undefined;
         }
         
-        // Basic URL validation
-        const urlString = url.toString().trim();
+        // Normalize Supabase storage URLs (convert partial URLs to full public URLs)
+        let urlString = url.toString().trim();
+        const normalizedUrl = normalizeSupabaseUrl(urlString);
+        if (normalizedUrl) {
+          urlString = normalizedUrl;
+          console.log(`✅ Normalized ${type} URL: ${urlString}`);
+        }
+        
         try {
           const parsedUrl = new URL(urlString);
           // Ensure it's http or https
@@ -294,13 +346,72 @@ export const POST = withAnyRBAC(
           }
           
           // Check if it's a Supabase storage URL with "NO_PASSPORT" or similar placeholders
-          if (urlString.includes('NO_PASSPORT') || urlString.includes('NO_ID_CARD')) {
-            console.warn(`⚠️ Placeholder document detected in URL, skipping ${type}`);
+          // Also check for case-insensitive matches and common variations
+          const urlLower = urlString.toLowerCase();
+          if (
+            urlLower.includes('no_passport') || 
+            urlLower.includes('no_id_card') ||
+            urlLower.includes('no-passport') ||
+            urlLower.includes('no-id-card') ||
+            urlString.includes('NO_PASSPORT') || 
+            urlString.includes('NO_ID_CARD')
+          ) {
+            console.warn(`⚠️ Placeholder document detected in URL (${urlString}), skipping ${type}`);
             return undefined;
+          }
+          
+          // Check for "REAL_PASSPORT" marker - this might indicate a placeholder file
+          // If the filename contains REAL_PASSPORT but no actual passport number, it's likely a placeholder
+          if (urlLower.includes('real_passport') && type === 'image') {
+            // Extract filename from URL
+            const filenameMatch = urlString.match(/\/([^\/]+\.(png|jpeg|jpg|gif))$/i);
+            if (filenameMatch) {
+              const filename = filenameMatch[1];
+              const filenameLower = filename.toLowerCase();
+              // If filename has REAL_PASSPORT but no passport number pattern, it's likely a placeholder
+              // Passport numbers are typically alphanumeric codes (e.g., fu5097601, fd4227081, eg4128603)
+              // Check for passport number patterns (case-insensitive)
+              const hasPassportNumber = /\d{7,}/.test(filenameLower) || /[a-z]{2}\d{7}/i.test(filenameLower);
+              if (!hasPassportNumber) {
+                console.warn(`⚠️ REAL_PASSPORT marker found but no passport number pattern detected in ${filename}, skipping ${type}`);
+                return undefined;
+              } else {
+                // REAL_PASSPORT file exists but has passport number - this is valid, allow it
+                console.log(`✅ REAL_PASSPORT file with passport number detected: ${filename}, allowing ${type}`);
+              }
+            }
+          }
+          
+          // Additional validation: Check for common broken image patterns
+          // Some URLs might point to error pages or screenshots instead of actual images
+          const brokenImagePatterns = [
+            /image.*not.*available/i,
+            /404.*not.*found/i,
+            /broken.*image/i,
+            /screenshot/i,
+            /placeholder/i,
+          ];
+          
+          for (const pattern of brokenImagePatterns) {
+            if (pattern.test(urlString)) {
+              console.warn(`⚠️ Potential broken image URL detected (matches pattern: ${pattern}), skipping ${type}`);
+              return undefined;
+            }
           }
           
           return urlString;
         } catch {
+          // If URL parsing fails, try to normalize it as a Supabase storage URL
+          const normalized = normalizeSupabaseUrl(urlString);
+          if (normalized) {
+            try {
+              new URL(normalized); // Validate the normalized URL
+              return normalized;
+            } catch {
+              console.warn(`⚠️ Invalid URL format even after normalization: ${urlString}, skipping ${type}`);
+              return undefined;
+            }
+          }
           console.warn(`⚠️ Invalid URL format: ${urlString}, skipping ${type}`);
           return undefined;
         }
@@ -404,6 +515,17 @@ export const POST = withAnyRBAC(
         first_party_logo: enrichedContractData.first_party_logo,
         image_12: enrichedContractData.image_12,
       });
+      
+      // Special logging for passport URL processing
+      if (enrichedContractData.promoter_passport_url) {
+        console.log('✅ Passport URL after validation:', {
+          final_url: enrichedContractData.promoter_passport_url,
+          is_valid: !!enrichedContractData.promoter_passport_url,
+          url_type: enrichedContractData.promoter_passport_url.startsWith('https://') ? 'full_url' : 'partial_url',
+        });
+      } else {
+        console.warn('⚠️ Passport URL was filtered out during validation - will use placeholder or skip');
+      }
 
       // Log enriched data before webhook generation
       console.log('📊 Enriched contract data before webhook generation:', {
