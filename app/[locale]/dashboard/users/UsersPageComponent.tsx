@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -9,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +35,7 @@ import {
   XCircle,
   AlertCircle,
   Shield,
+  Lock,
 } from 'lucide-react';
 import { debounce } from 'lodash';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
@@ -43,6 +46,21 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+const passwordChecks = [
+  { label: '8+ characters', test: (value: string) => value.length >= 8 },
+  { label: 'Uppercase letter', test: (value: string) => /[A-Z]/.test(value) },
+  { label: 'Lowercase letter', test: (value: string) => /[a-z]/.test(value) },
+  { label: 'Number', test: (value: string) => /\d/.test(value) },
+];
+
+function getPasswordStrength(value: string): 'weak' | 'medium' | 'strong' | null {
+  if (!value) return null;
+  const passed = passwordChecks.filter(check => check.test(value)).length;
+  if (passed <= 1) return 'weak';
+  if (passed === passwordChecks.length) return 'strong';
+  return 'medium';
 }
 
 function getInitials(email: string) {
@@ -76,10 +94,20 @@ export default function UsersPageComponent() {
 
   // Form states
   const [newEmail, setNewEmail] = useState('');
+  const [newFullName, setNewFullName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [newRole, setNewRole] = useState<string>(ROLES[0] ?? 'user');
   const [newStatus, setNewStatus] = useState<string>(STATUS[0] ?? 'active');
+  const [newDepartment, setNewDepartment] = useState('');
+  const [newPosition, setNewPosition] = useState('');
+  const [newPhone, setNewPhone] = useState('');
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState<
+    'weak' | 'medium' | 'strong' | null
+  >(null);
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
 
   // Loading states
   const [addLoading, setAddLoading] = useState(false);
@@ -108,6 +136,33 @@ export default function UsersPageComponent() {
   // Filtered and paginated users - using simple state instead of useMemo
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [paginatedUsers, setPaginatedUsers] = useState<any[]>([]);
+
+  const resetAddForm = () => {
+    setNewEmail('');
+    setNewFullName('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setNewRole(ROLES[0] ?? 'user');
+    setNewStatus(STATUS[0] ?? 'active');
+    setNewDepartment('');
+    setNewPosition('');
+    setNewPhone('');
+    setNewAvatarUrl('');
+    setFormError(null);
+    setPasswordStrength(null);
+  };
+
+  useEffect(() => {
+    if (showAddModal) {
+      setTimeout(() => emailInputRef.current?.focus(), 75);
+    } else {
+      resetAddForm();
+    }
+  }, [showAddModal]);
+
+  useEffect(() => {
+    setPasswordStrength(getPasswordStrength(newPassword));
+  }, [newPassword]);
 
   // Set mounted state after hydration
   useEffect(() => {
@@ -312,6 +367,80 @@ export default function UsersPageComponent() {
 
   // Calculate total pages
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+
+  const handleCreateUser = async () => {
+    setFormError(null);
+
+    if (!isValidEmail(newEmail)) {
+      setFormError('Please enter a valid email address.');
+      emailInputRef.current?.focus();
+      return;
+    }
+
+    if (!newFullName.trim()) {
+      setFormError('Full name is required.');
+      return;
+    }
+
+    if (!newPassword) {
+      setFormError('Password is required.');
+      return;
+    }
+
+    if (passwordChecks.some(check => !check.test(newPassword))) {
+      setFormError(
+        'Password must be at least 8 characters and include uppercase, lowercase, and a number.'
+      );
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setFormError('Passwords do not match.');
+      return;
+    }
+
+    setAddLoading(true);
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newEmail,
+          password: newPassword,
+          full_name: newFullName,
+          role: newRole,
+          status: newStatus,
+          department: newDepartment || null,
+          position: newPosition || null,
+          phone: newPhone || null,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setFormError(data?.error || 'Failed to create user.');
+        return;
+      }
+
+      toast({
+        title: 'User created',
+        description: `${newEmail} has been added successfully.`,
+      });
+
+      setShowAddModal(false);
+      resetAddForm();
+      fetchUsers();
+    } catch (error) {
+      console.error('Error creating user:', error);
+      setFormError('Unexpected error creating user. Please try again.');
+    } finally {
+      setAddLoading(false);
+    }
+  };
 
   // Don't render anything until mounted to prevent hydration mismatches
   if (!mounted) {
@@ -613,73 +742,162 @@ export default function UsersPageComponent() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription className='text-sm text-muted-foreground'>
+              Create an account, then manage granular permissions from{' '}
+              <Link
+                href='/en/admin/users'
+                className='font-medium text-primary underline-offset-2 hover:underline'
+              >
+                Advanced Permissions
+              </Link>
+              .
+            </DialogDescription>
           </DialogHeader>
           <div className='space-y-4'>
-            <div>
-              <label className='mb-2 block text-sm font-medium'>Email</label>
-              <Input
-                type='email'
-                placeholder='user@example.com'
-                value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className='mb-2 block text-sm font-medium'>Role</label>
-              <Select value={newRole} onValueChange={(value: string) => setNewRole(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROLES.map(role => (
-                    <SelectItem key={role} value={role}>
-                      {getRoleDisplay(role).displayText}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className='mb-2 block text-sm font-medium'>Status</label>
-              <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className='mb-2 block text-sm font-medium'>
-                Avatar URL (Optional)
-              </label>
-              <Input
-                type='url'
-                placeholder='https://example.com/avatar.jpg'
-                value={newAvatarUrl}
-                onChange={e => setNewAvatarUrl(e.target.value)}
-              />
+            <div className='grid gap-4 md:grid-cols-2'>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Email</label>
+                <Input
+                  ref={emailInputRef}
+                  type='email'
+                  placeholder='user@example.com'
+                  value={newEmail}
+                  onChange={e => setNewEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Full Name</label>
+                <Input
+                  type='text'
+                  placeholder='John Doe'
+                  value={newFullName}
+                  onChange={e => setNewFullName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Password</label>
+                <Input
+                  type='password'
+                  placeholder='Enter password'
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                />
+                <div className='mt-2 flex items-center text-xs'>
+                  <Lock className='mr-1 h-3 w-3 text-muted-foreground' />
+                  <span
+                    className={
+                      passwordStrength === 'strong'
+                        ? 'text-green-600'
+                        : passwordStrength === 'medium'
+                        ? 'text-yellow-600'
+                        : 'text-red-600'
+                    }
+                  >
+                    {passwordStrength
+                      ? `${passwordStrength.charAt(0).toUpperCase()}${passwordStrength.slice(
+                          1
+                        )} password`
+                      : 'Use uppercase, lowercase, and numbers'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>
+                  Confirm Password
+                </label>
+                <Input
+                  type='password'
+                  placeholder='Confirm password'
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Role</label>
+                <Select value={newRole} onValueChange={(value: string) => setNewRole(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map(role => (
+                      <SelectItem key={role} value={role}>
+                        {getRoleDisplay(role).displayText}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Status</label>
+                <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Department</label>
+                <Input
+                  type='text'
+                  placeholder='HR'
+                  value={newDepartment}
+                  onChange={e => setNewDepartment(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Position</label>
+                <Input
+                  type='text'
+                  placeholder='Junior'
+                  value={newPosition}
+                  onChange={e => setNewPosition(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>Phone</label>
+                <Input
+                  type='tel'
+                  placeholder='+1 (555) 123-4567'
+                  value={newPhone}
+                  onChange={e => setNewPhone(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className='mb-2 block text-sm font-medium'>
+                  Avatar URL (Optional)
+                </label>
+                <Input
+                  type='url'
+                  placeholder='https://example.com/avatar.jpg'
+                  value={newAvatarUrl}
+                  onChange={e => setNewAvatarUrl(e.target.value)}
+                />
+              </div>
             </div>
             {formError && (
-              <div className='text-sm text-red-600'>{formError}</div>
+              <div className='rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700'>
+                {formError}
+              </div>
             )}
             <div className='flex justify-end space-x-2'>
               <Button variant='outline' onClick={() => setShowAddModal(false)}>
                 Cancel
               </Button>
-              <Button disabled={addLoading}>
+              <Button onClick={handleCreateUser} disabled={addLoading}>
                 {addLoading ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     Adding...
                   </>
                 ) : (
-                  'Add User'
+                  'Create User'
                 )}
               </Button>
             </div>
