@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient as createServerClient } from '@/lib/supabase/server';
 import {
-  createClient as createSupabaseClient,
-  type SupabaseClient,
-} from '@supabase/supabase-js';
+  ensureUserCanManageUsers,
+  getAuthenticatedUser,
+  getServiceRoleClient,
+  type ServiceClient,
+} from '../admin-utils';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-type ServiceClient = SupabaseClient<any, any, any>;
-
-const REQUIRED_ROLES = ['super_admin', 'admin', 'manager'];
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 100;
 const SORTABLE_FIELDS = new Set([
@@ -21,103 +18,6 @@ const SORTABLE_FIELDS = new Set([
   'email',
   'full_name',
 ]);
-
-type PermissionCacheRow = {
-  roles: string[] | null;
-  permissions: string[] | null;
-};
-
-type RoleAssignmentRow = {
-  roles: { name: string | null } | null;
-};
-
-function getServiceRoleClient(): ServiceClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error('Missing Supabase service role credentials');
-  }
-
-  return createSupabaseClient(url, key, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }) as ServiceClient;
-}
-
-async function getAuthenticatedUser() {
-  const supabaseServer = await createServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabaseServer.auth.getUser();
-
-  if (error || !user) {
-    throw new Error(error?.message || 'Unauthorized');
-  }
-
-  return user;
-}
-
-async function ensureUserCanManageUsers(
-  userId: string,
-  adminClient: ServiceClient
-) {
-  try {
-    const { data, error } = await adminClient
-      .from('user_permissions_cache')
-      .select('roles, permissions')
-      .eq('user_id', userId)
-      .single<PermissionCacheRow>();
-
-    if (error) {
-      console.warn(
-        '⚠️ Unable to read user_permissions_cache, falling back to user_role_assignments:',
-        error.message
-      );
-      const { data: fallbackRoles, error: fallbackError } = await adminClient
-        .from('user_role_assignments')
-        .select('roles(name)')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .returns<RoleAssignmentRow[]>();
-
-      if (fallbackError) {
-        throw fallbackError;
-      }
-
-      const mappedRoles =
-        fallbackRoles
-          ?.map(entry => entry.roles?.name)
-          .filter(Boolean) || [];
-
-      if (!mappedRoles.some(role => REQUIRED_ROLES.includes(role as string))) {
-        throw new Error('Insufficient permissions');
-      }
-
-      return {
-        roles: mappedRoles,
-        permissions: [],
-      };
-    }
-
-    const roles = data?.roles || [];
-    if (!roles.some(role => REQUIRED_ROLES.includes(role))) {
-      throw new Error('Insufficient permissions');
-    }
-
-    return {
-      roles,
-      permissions: data?.permissions || [],
-    };
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Insufficient permissions';
-    throw new Error(message);
-  }
-}
 
 function sanitizeSearchTerm(raw: string) {
   return raw.replace(/[%_]/g, '').trim();
@@ -465,7 +365,13 @@ export async function POST(request: NextRequest) {
     await ensureUserCanManageUsers(currentUser.id, serviceClient);
 
     const body = await request.json();
-    const { action, userId, role, status } = body;
+    const {
+      action,
+      userId,
+      role,
+      status,
+      permissions: requestedPermissions,
+    } = body;
 
     if (!action || !userId) {
       return NextResponse.json(
@@ -570,6 +476,174 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           message: `Status updated to ${status}`,
+        });
+      }
+
+      case 'assign_permissions': {
+        if (
+          !Array.isArray(requestedPermissions) ||
+          requestedPermissions.length === 0
+        ) {
+          return NextResponse.json(
+            { error: 'At least one permission must be selected' },
+            { status: 400 }
+          );
+        }
+
+        const normalizedPermissions = Array.from(
+          new Set(
+            requestedPermissions
+              .map((perm: unknown) =>
+                typeof perm === 'string' ? perm.trim() : ''
+              )
+              .filter(Boolean)
+          )
+        );
+
+        if (normalizedPermissions.length === 0) {
+          return NextResponse.json(
+            { error: 'At least one permission must be selected' },
+            { status: 400 }
+          );
+        }
+
+        const { data: permissionRecords, error: permissionLookupError } =
+          await serviceClient
+            .from('permissions')
+            .select('id, name')
+            .in('name', normalizedPermissions);
+
+        if (permissionLookupError) {
+          console.error(
+            '❌ Error fetching permissions:',
+            permissionLookupError
+          );
+          return NextResponse.json(
+            {
+              error: 'Failed to fetch permissions',
+              details: permissionLookupError.message,
+            },
+            { status: 500 }
+          );
+        }
+
+        if (
+          !permissionRecords ||
+          permissionRecords.length !== normalizedPermissions.length
+        ) {
+          const foundNames = permissionRecords?.map(record => record.name) || [];
+          const missing = normalizedPermissions.filter(
+            name => !foundNames.includes(name)
+          );
+          return NextResponse.json(
+            {
+              error: 'Some permissions were not found',
+              details: { missing },
+            },
+            { status: 400 }
+          );
+        }
+
+        const roleName = `custom-${userId}`;
+        let roleId: string | null = null;
+
+        const { data: existingRole, error: roleLookupError } =
+          await serviceClient
+            .from('roles')
+            .select('id')
+            .eq('name', roleName)
+            .single();
+
+        if (roleLookupError && roleLookupError.code !== 'PGRST116') {
+          console.error('❌ Error reading custom role:', roleLookupError);
+          return NextResponse.json(
+            {
+              error: 'Failed to fetch custom role',
+              details: roleLookupError.message,
+            },
+            { status: 500 }
+          );
+        }
+
+        if (existingRole?.id) {
+          roleId = existingRole.id;
+        } else {
+          const { data: createdRole, error: roleCreateError } =
+            await serviceClient
+              .from('roles')
+              .insert({
+                name: roleName,
+                display_name: `Custom permissions for ${userId}`,
+                description: 'Per-user custom permission set',
+                category: 'custom',
+                is_system_role: false,
+              })
+              .select('id')
+              .single();
+
+          if (roleCreateError || !createdRole) {
+            console.error('❌ Error creating custom role:', roleCreateError);
+            return NextResponse.json(
+              { error: 'Failed to create custom role' },
+              { status: 500 }
+            );
+          }
+
+          roleId = createdRole.id;
+        }
+
+        const { error: clearPermissionsError } = await serviceClient
+          .from('role_permissions')
+          .delete()
+          .eq('role_id', roleId);
+
+        if (clearPermissionsError) {
+          console.error(
+            '❌ Error clearing custom role permissions:',
+            clearPermissionsError
+          );
+          return NextResponse.json(
+            {
+              error: 'Failed to reset custom role permissions',
+              details: clearPermissionsError.message,
+            },
+            { status: 500 }
+          );
+        }
+
+        const rolePermissionPayload = permissionRecords.map(record => ({
+          role_id: roleId,
+          permission_id: record.id,
+        }));
+
+        if (rolePermissionPayload.length > 0) {
+          const { error: assignmentError } = await serviceClient
+            .from('role_permissions')
+            .insert(rolePermissionPayload);
+
+          if (assignmentError) {
+            console.error(
+              '❌ Error assigning permissions to custom role:',
+              assignmentError
+            );
+            return NextResponse.json(
+              {
+                error: 'Failed to assign permissions',
+                details: assignmentError.message,
+              },
+              { status: 500 }
+            );
+          }
+        }
+
+        await assignRoleToUser(serviceClient, userId, roleName, currentUser.id);
+        await refreshPermissionsCache(serviceClient);
+
+        return NextResponse.json({
+          success: true,
+          message: 'Permissions assigned successfully',
+          role: roleName,
+          permissions: normalizedPermissions,
         });
       }
 

@@ -16,6 +16,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import {
   Loader2,
   Users,
   UserCheck,
@@ -64,6 +74,16 @@ interface AdminContext {
   permissions: string[];
 }
 
+interface PermissionDefinition {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  resource?: string;
+  action?: string;
+  scope?: string;
+}
+
 const ROLE_OPTIONS = [
   { value: 'super_admin', label: 'Super Admin' },
   { value: 'admin', label: 'Admin' },
@@ -110,6 +130,21 @@ export default function UserManagementPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [permissionLibrary, setPermissionLibrary] = useState<
+    PermissionDefinition[]
+  >([]);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [permissionsError, setPermissionsError] = useState('');
+  const [permissionDialogError, setPermissionDialogError] = useState('');
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
+  const [permissionDialogUser, setPermissionDialogUser] = useState<User | null>(
+    null
+  );
+  const [permissionSelection, setPermissionSelection] = useState<Set<string>>(
+    new Set()
+  );
+  const [permissionSearch, setPermissionSearch] = useState('');
+  const [permissionSaving, setPermissionSaving] = useState(false);
   const router = useRouter();
 
   const supabase = createClient();
@@ -125,6 +160,36 @@ export default function UserManagementPage() {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, searchTerm, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    const loadPermissions = async () => {
+      try {
+        setPermissionsLoading(true);
+        setPermissionsError('');
+        const response = await fetch('/api/users/permissions', {
+          cache: 'no-store',
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch permissions');
+        }
+        setPermissionLibrary(
+          Array.isArray(data.permissions) ? data.permissions : []
+        );
+      } catch (error) {
+        console.error('Error loading permissions:', error);
+        setPermissionsError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load permissions'
+        );
+      } finally {
+        setPermissionsLoading(false);
+      }
+    };
+
+    loadPermissions();
+  }, []);
 
   const fetchUsers = async (options?: { skipGlobalLoading?: boolean }) => {
     try {
@@ -151,7 +216,17 @@ export default function UserManagementPage() {
         throw new Error(data.error || 'Failed to fetch users');
       }
 
-      setUsers(Array.isArray(data.users) ? data.users : []);
+      const normalizedUsers = (Array.isArray(data.users)
+        ? data.users
+        : []) as User[];
+
+      setUsers(
+        normalizedUsers.map(user => ({
+          ...user,
+          roles: user.roles || [],
+          permissions: user.permissions || [],
+        }))
+      );
       setStats(
         data.stats || {
           total: 0,
@@ -221,7 +296,7 @@ export default function UserManagementPage() {
       }
 
       setSuccess(data.message || 'Action completed');
-      await fetchUsers(); // Refresh the list
+      await fetchUsers({ skipGlobalLoading: true }); // Refresh the list
     } catch (error) {
       console.error('Error performing action:', error);
       setError(error instanceof Error ? error.message : 'Action failed');
@@ -290,6 +365,10 @@ export default function UserManagementPage() {
           <Loader2 className='h-8 w-8 animate-spin mx-auto mb-4' />
           <p>Loading users...</p>
         </div>
+
+        {permissionsError && (
+          <p className='text-sm text-red-500'>{permissionsError}</p>
+        )}
       </div>
     );
   }
@@ -312,9 +391,103 @@ export default function UserManagementPage() {
 
   const primaryRole = (user: User) => user.roles[0] || 'user';
 
+  const openPermissionDialog = (user: User) => {
+    setPermissionDialogUser(user);
+    setPermissionSelection(new Set(user.permissions || []));
+    setPermissionSearch('');
+    setPermissionDialogError('');
+    setPermissionDialogOpen(true);
+  };
+
+  const closePermissionDialog = () => {
+    setPermissionDialogOpen(false);
+    setPermissionDialogUser(null);
+    setPermissionSelection(new Set());
+    setPermissionSearch('');
+    setPermissionSaving(false);
+    setPermissionDialogError('');
+  };
+
+  const togglePermission = (permissionName: string) => {
+    setPermissionSelection(prev => {
+      const next = new Set(prev);
+      if (next.has(permissionName)) {
+        next.delete(permissionName);
+      } else {
+        next.add(permissionName);
+      }
+      return next;
+    });
+  };
+
+  const filteredPermissions = permissionLibrary.filter(permission => {
+    if (!permissionSearch.trim()) return true;
+    const search = permissionSearch.toLowerCase();
+    return (
+      permission.name.toLowerCase().includes(search) ||
+      (permission.description || '').toLowerCase().includes(search) ||
+      `${permission.resource}:${permission.action}`
+        .toLowerCase()
+        .includes(search)
+    );
+  });
+
+  const groupedPermissions = filteredPermissions.reduce<
+    Record<string, PermissionDefinition[]>
+  >((acc, permission) => {
+    const key = permission.category || 'general';
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(permission);
+    return acc;
+  }, {});
+
+  const handleSavePermissions = async () => {
+    if (!permissionDialogUser) return;
+    if (permissionSelection.size === 0) {
+      setPermissionDialogError('Select at least one permission');
+      return;
+    }
+
+    try {
+      setPermissionSaving(true);
+      setPermissionDialogError('');
+      const response = await fetch('/api/users/management', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'assign_permissions',
+          userId: permissionDialogUser.id,
+          permissions: Array.from(permissionSelection),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to assign permissions');
+      }
+
+      setSuccess(data.message || 'Permissions updated successfully');
+      closePermissionDialog();
+      await fetchUsers({ skipGlobalLoading: true });
+    } catch (error) {
+      console.error('Error assigning permissions:', error);
+      setPermissionDialogError(
+        error instanceof Error ? error.message : 'Failed to assign permissions'
+      );
+    } finally {
+      setPermissionSaving(false);
+    }
+  };
+
   return (
-    <div className='min-h-screen bg-gray-50 p-4'>
-      <div className='max-w-7xl mx-auto'>
+    <>
+      <div className='min-h-screen bg-gray-50 p-4'>
+        <div className='max-w-7xl mx-auto'>
         <div className='mb-6 space-y-4'>
           <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
             <div>
@@ -390,6 +563,9 @@ export default function UserManagementPage() {
             </Select>
           </div>
         </div>
+        {permissionsError && (
+          <p className='text-sm text-red-500'>{permissionsError}</p>
+        )}
 
         {error && (
           <Alert className='mb-6' variant='destructive'>
@@ -579,6 +755,26 @@ export default function UserManagementPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    <Button
+                      size='sm'
+                      variant='secondary'
+                      onClick={() => openPermissionDialog(user)}
+                      disabled={permissionsLoading}
+                    >
+                      Manage Permissions
+                    </Button>
+                  </div>
+
+                  <div className='text-xs text-muted-foreground'>
+                    {user.permissions && user.permissions.length > 0 ? (
+                      <span>
+                        Permissions:{' '}
+                        {user.permissions.slice(0, 6).join(', ')}
+                        {user.permissions.length > 6 ? '…' : ''}
+                      </span>
+                    ) : (
+                      <span>No custom permissions assigned.</span>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -599,7 +795,107 @@ export default function UserManagementPage() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
-    </div>
+
+      <Dialog
+        open={permissionDialogOpen}
+        onOpenChange={open => {
+          if (!open) {
+            closePermissionDialog();
+          }
+        }}
+      >
+        <DialogContent className='max-w-3xl'>
+          <DialogHeader>
+            <DialogTitle>Manage Permissions</DialogTitle>
+            <DialogDescription>
+              {permissionDialogUser
+                ? `Select specific permissions for ${permissionDialogUser.email}`
+                : 'Select specific permissions for the user.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-4'>
+            <Input
+              placeholder='Search permissions'
+              value={permissionSearch}
+              onChange={e => setPermissionSearch(e.target.value)}
+            />
+            {permissionDialogError && (
+              <p className='text-sm text-red-500'>{permissionDialogError}</p>
+            )}
+            <div className='max-h-[24rem] overflow-y-auto space-y-4 pr-1'>
+              {Object.entries(groupedPermissions).map(
+                ([category, permissions]) => (
+                  <div key={category} className='space-y-2'>
+                    <Label className='text-sm font-semibold capitalize'>
+                      {category.replace(/_/g, ' ')}
+                    </Label>
+                    <div className='space-y-2'>
+                      {permissions.map(permission => {
+                        const checked = permissionSelection.has(
+                          permission.name
+                        );
+                        return (
+                          <label
+                            key={permission.id}
+                            className={`flex items-start gap-3 rounded-lg border p-3 text-sm ${
+                              checked
+                                ? 'border-primary/50 bg-primary/5'
+                                : 'border-border'
+                            }`}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() =>
+                                togglePermission(permission.name)
+                              }
+                            />
+                            <div className='space-y-1'>
+                              <p className='font-medium'>{permission.name}</p>
+                              <p className='text-xs text-muted-foreground'>
+                                {permission.description ||
+                                  `${permission.resource}:${permission.action}`}
+                              </p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              )}
+              {Object.keys(groupedPermissions).length === 0 && (
+                <p className='text-sm text-muted-foreground'>
+                  {permissionsLoading
+                    ? 'Loading permissions…'
+                    : 'No permissions match your search.'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant='outline' onClick={closePermissionDialog}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSavePermissions}
+              disabled={permissionSaving || permissionSelection.size === 0}
+            >
+              {permissionSaving ? (
+                <>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  Saving…
+                </>
+              ) : (
+                'Save Permissions'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
