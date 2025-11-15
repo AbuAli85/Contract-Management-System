@@ -226,6 +226,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const allowedStatuses = new Set([
+      'pending',
+      'approved',
+      'active',
+      'suspended',
+      'inactive',
+      'deleted',
+    ]);
+    const normalizedStatus =
+      typeof status === 'string' && allowedStatuses.has(status.toLowerCase())
+        ? status.toLowerCase()
+        : 'pending';
+
     // Create auth user using service role
     const generateSecurePassword = (length = 16) => {
       const alphabet =
@@ -251,7 +264,7 @@ export async function POST(request: NextRequest) {
       user_metadata: {
         full_name,
         role: role || 'user',
-        status: status || 'pending',
+        status: normalizedStatus,
         department: department || null,
         position: position || null,
         phone: phone || null,
@@ -279,7 +292,7 @@ export async function POST(request: NextRequest) {
         email,
         full_name,
         role: role || 'user',
-        status: status || 'pending',
+        status: normalizedStatus,
       })
       .select()
       .single();
