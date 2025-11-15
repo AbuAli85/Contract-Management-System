@@ -20,9 +20,7 @@ export async function GET(request: NextRequest) {
 
     const { data: permissions, error } = await serviceClient
       .from('permissions')
-      .select('id, name, description, category, resource, action, scope')
-      .order('category', { ascending: true })
-      .order('name', { ascending: true });
+      .select('*');
 
     if (error) {
       console.error('❌ Error fetching permissions:', error);
@@ -32,16 +30,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const transformedPermissions =
-      permissions?.map(permission => ({
-        id: permission.id,
-        name: permission.name,
-        description: permission.description,
-        category: permission.category || 'general',
-        resource: permission.resource,
-        action: permission.action,
-        scope: permission.scope,
-      })) || [];
+    const basePermissions = (permissions ?? []) as Array<Record<string, any>>;
+    const sortedPermissions = basePermissions.sort((a, b) => {
+      const keyA =
+        (a.category as string | undefined) ||
+        (a.resource as string | undefined) ||
+        '';
+      const keyB =
+        (b.category as string | undefined) ||
+        (b.resource as string | undefined) ||
+        '';
+      const compareKey = keyA.localeCompare(keyB);
+      if (compareKey !== 0) {
+        return compareKey;
+      }
+      return String(a.name ?? '').localeCompare(String(b.name ?? ''));
+    });
+
+    const transformedPermissions = sortedPermissions.map(permission => ({
+      id: permission.id,
+      name: permission.name,
+      description: permission.description ?? null,
+      category: permission.category ?? null,
+      resource: permission.resource ?? null,
+      action: permission.action ?? null,
+      scope: permission.scope ?? null,
+    }));
 
     return NextResponse.json({
       success: true,

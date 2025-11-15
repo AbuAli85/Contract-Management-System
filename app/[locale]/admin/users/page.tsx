@@ -435,7 +435,11 @@ export default function UserManagementPage() {
   const groupedPermissions = filteredPermissions.reduce<
     Record<string, PermissionDefinition[]>
   >((acc, permission) => {
-    const key = permission.category || 'general';
+    const key =
+      permission.category ||
+      permission.resource ||
+      permission.action ||
+      'general';
     if (!acc[key]) {
       acc[key] = [];
     }
