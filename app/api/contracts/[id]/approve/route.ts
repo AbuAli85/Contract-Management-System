@@ -78,10 +78,10 @@ export const POST = withAnyRBAC(['contract:approve', 'contract:approve:all'], as
 
     switch (action) {
       case 'approve':
-        // Validate contract is in pending state
-        if (contract.status !== 'pending') {
+        // Validate contract is in pending or generated state
+        if (!['pending', 'generated'].includes(contract.status)) {
           return NextResponse.json(
-            { success: false, error: `Cannot approve contract with status: ${contract.status}. Only pending contracts can be approved.` },
+            { success: false, error: `Cannot approve contract with status: ${contract.status}. Only pending or generated contracts can be approved.` },
             { status: 400 }
           );
         }
@@ -100,10 +100,10 @@ export const POST = withAnyRBAC(['contract:approve', 'contract:approve:all'], as
         break;
 
       case 'reject':
-        // Validate contract is in pending state
-        if (contract.status !== 'pending') {
+        // Validate contract is in pending or generated state
+        if (!['pending', 'generated'].includes(contract.status)) {
           return NextResponse.json(
-            { success: false, error: `Cannot reject contract with status: ${contract.status}. Only pending contracts can be rejected.` },
+            { success: false, error: `Cannot reject contract with status: ${contract.status}. Only pending or generated contracts can be rejected.` },
             { status: 400 }
           );
         }
@@ -122,6 +122,14 @@ export const POST = withAnyRBAC(['contract:approve', 'contract:approve:all'], as
         break;
 
       case 'request_changes':
+        // Can request changes from pending or generated status
+        if (!['pending', 'generated'].includes(contract.status)) {
+          return NextResponse.json(
+            { success: false, error: `Cannot request changes for contract with status: ${contract.status}. Only pending or generated contracts can have changes requested.` },
+            { status: 400 }
+          );
+        }
+        
         updateData = {
           ...updateData,
           status: 'draft', // Send back to draft for edits
@@ -135,6 +143,7 @@ export const POST = withAnyRBAC(['contract:approve', 'contract:approve:all'], as
       case 'send_to_legal':
         updateData = {
           ...updateData,
+          status: 'legal_review', // Update status to legal_review
           sent_to_legal_by: user.id,
           sent_to_legal_at: new Date().toISOString(),
         };
@@ -144,6 +153,7 @@ export const POST = withAnyRBAC(['contract:approve', 'contract:approve:all'], as
       case 'send_to_hr':
         updateData = {
           ...updateData,
+          status: 'hr_review', // Update status to hr_review
           sent_to_hr_by: user.id,
           sent_to_hr_at: new Date().toISOString(),
         };
