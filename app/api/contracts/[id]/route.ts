@@ -224,13 +224,8 @@ export const PUT = withRBAC(
       if (body.work_location !== undefined) dataToUpdate.work_location = body.work_location;
       if (body.email !== undefined) dataToUpdate.email = body.email;
       if (body.id_card_number !== undefined) dataToUpdate.id_card_number = body.id_card_number;
-      if (body.special_terms !== undefined) dataToUpdate.special_terms = body.special_terms;
-      if (body.department !== undefined) dataToUpdate.department = body.department;
-      if (body.allowances !== undefined && body.allowances !== null) {
-        dataToUpdate.allowances = typeof body.allowances === 'string' 
-          ? parseFloat(body.allowances) || null 
-          : body.allowances;
-      }
+      // Note: special_terms, department, and allowances don't exist in the contracts table schema
+      // These fields are removed to prevent database errors
 
       console.log('🔄 Updating contract with data:', dataToUpdate);
 

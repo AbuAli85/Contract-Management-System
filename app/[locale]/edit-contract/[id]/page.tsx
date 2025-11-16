@@ -236,28 +236,30 @@ export default function EditContractPage() {
 
     try {
       // Only update fields that actually exist in the contracts table
-      const updateData = {
+      // Note: department, special_terms, and allowances don't exist in the schema
+      const updateData: any = {
         status: formData.status,
         contract_start_date: formData.contract_start_date || null,
         contract_end_date: formData.contract_end_date || null,
         basic_salary: formData.basic_salary
           ? parseFloat(formData.basic_salary)
           : null,
-        allowances: formData.allowances
-          ? parseFloat(formData.allowances)
-          : null,
         currency: formData.currency,
         job_title: formData.job_title,
-        department: formData.department,
-        work_location: formData.work_location,
-        email: formData.email,
+        work_location: formData.work_location || null,
+        email: formData.email || null,
         contract_type: formData.contract_type,
         contract_number: formData.contract_number,
-        id_card_number: formData.id_card_number,
-        special_terms: formData.special_terms,
+        id_card_number: formData.id_card_number || null,
         pdf_url: formData.pdf_url || null,
         updated_at: new Date().toISOString(),
       };
+      
+      // Remove fields that don't exist in the database schema
+      // These are kept in formData for UI purposes but not sent to API
+      delete updateData.department;
+      delete updateData.allowances;
+      delete updateData.special_terms;
 
       console.log('🔄 Saving contract with data:', updateData);
 
