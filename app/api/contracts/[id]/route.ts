@@ -306,11 +306,13 @@ export const PUT = withRBAC(
           return NextResponse.json(
             {
               error: 'Invalid status value',
-              details: `The status "${dataToUpdate.status}" is not allowed by the database constraint. Current status: "${currentStatus}". Try using one of the safe statuses: draft, pending, active, completed, terminated, expired`,
+              details: `The status "${dataToUpdate.status}" is not allowed by the current database constraint. Current status: "${currentStatus}".`,
               code: error.code,
-              hint: 'The status may not be supported by your current database schema. Please use a status from the safe list.',
+              hint: `To enable "${dataToUpdate.status}" status, run the migration: supabase/migrations/20251116_add_rejected_and_extended_statuses.sql. For now, use one of these safe statuses: draft, pending, active, completed, terminated, expired`,
               attemptedStatus: dataToUpdate.status,
               currentStatus: currentStatus,
+              safeStatuses: ['draft', 'pending', 'active', 'completed', 'terminated', 'expired'],
+              migrationFile: 'supabase/migrations/20251116_add_rejected_and_extended_statuses.sql',
             },
             { status: 400 }
           );
