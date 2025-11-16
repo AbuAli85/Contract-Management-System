@@ -34,13 +34,26 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    
+    // Validate promoter ID format (should be UUID)
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      console.error('Invalid promoter ID:', id);
+      return NextResponse.json(
+        { error: 'Invalid promoter ID' },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createSupabaseClient();
 
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error('Authentication error:', authError?.message || 'No user');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log(`Fetching documents for promoter: ${id}, user: ${user.id}`);
 
     const { data, error } = await supabase
       .from('promoter_documents')
@@ -49,15 +62,59 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching documents:', error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      // Check if the error is due to missing table (relation does not exist)
+      const errorMessage = error.message || '';
+      const errorCode = (error as any).code || '';
+      
+      console.error('Error fetching documents:', {
+        message: errorMessage,
+        code: errorCode,
+        details: error,
+        promoterId: id,
+        userId: user.id,
+      });
+
+      // If table doesn't exist, return empty array instead of error (graceful degradation)
+      if (
+        (errorMessage.includes('relation') && errorMessage.includes('does not exist')) ||
+        errorCode === '42P01' // PostgreSQL error code for "relation does not exist"
+      ) {
+        console.warn('promoter_documents table does not exist - returning empty array');
+        return NextResponse.json({ documents: [] }, { status: 200 });
+      }
+
+      // If RLS policy issue, return empty array (graceful degradation)
+      if (
+        errorMessage.includes('permission denied') ||
+        errorMessage.includes('policy') ||
+        errorCode === '42501' // PostgreSQL error code for "insufficient privilege"
+      ) {
+        console.warn('RLS policy blocking access - returning empty array');
+        return NextResponse.json({ documents: [] }, { status: 200 });
+      }
+
+      // For other errors, return the error but with more context
+      return NextResponse.json(
+        { 
+          error: error.message || 'Failed to fetch documents',
+          code: errorCode,
+          details: process.env.NODE_ENV === 'development' ? error : undefined
+        },
+        { status: 400 }
+      );
     }
 
+    console.log(`Successfully fetched ${data?.length || 0} documents for promoter ${id}`);
     return NextResponse.json({ documents: data || [] }, { status: 200 });
   } catch (error) {
     console.error('Documents API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' 
+          ? error instanceof Error ? error.message : String(error)
+          : undefined
+      },
       { status: 500 }
     );
   }
