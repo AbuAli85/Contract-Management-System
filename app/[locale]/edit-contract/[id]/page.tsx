@@ -108,10 +108,11 @@ export default function EditContractPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isRefreshingAfterSave, setIsRefreshingAfterSave] = useState(false);
 
   // Load contract data into form when contract is fetched
   useEffect(() => {
-    if (contract) {
+    if (contract && !isRefreshingAfterSave) {
       console.log('📋 Loading contract data into form, PDF URL:', contract.pdf_url);
       setFormData(prev => {
         // Only update if the PDF URL actually changed to avoid unnecessary re-renders
@@ -147,8 +148,26 @@ export default function EditContractPage() {
           promoter_id: contract.promoter_id || '',
         };
       });
+    } else if (contract && isRefreshingAfterSave) {
+      // When refreshing after save, only update PDF URL if it changed
+      const newPdfUrl = contract.pdf_url || '';
+      setFormData(prev => {
+        if (newPdfUrl !== prev.pdf_url) {
+          console.log('📄 PDF URL updated after save from contract:', {
+            old: prev.pdf_url,
+            new: newPdfUrl,
+          });
+          return {
+            ...prev,
+            pdf_url: newPdfUrl,
+          };
+        }
+        return prev;
+      });
+      // Reset the flag after a short delay
+      setTimeout(() => setIsRefreshingAfterSave(false), 500);
     }
-  }, [contract]);
+  }, [contract, isRefreshingAfterSave]);
 
   // Warning for unsaved changes
   useEffect(() => {
@@ -264,6 +283,17 @@ export default function EditContractPage() {
       console.log('✅ Contract saved successfully:', result);
 
       setSaveSuccess(true);
+      setIsRefreshingAfterSave(true);
+      
+      // Update PDF URL immediately from API response if available
+      const apiPdfUrl = result.contract?.pdf_url;
+      if (apiPdfUrl !== undefined && apiPdfUrl !== null) {
+        console.log('📄 Updating PDF URL from API response:', apiPdfUrl);
+        setFormData(prev => ({
+          ...prev,
+          pdf_url: apiPdfUrl,
+        }));
+      }
       
       // Invalidate the query cache to force a fresh fetch
       queryClient.invalidateQueries({ 
@@ -271,15 +301,8 @@ export default function EditContractPage() {
         exact: true,
       });
       
-      // Update PDF URL immediately from API response if available
-      const apiPdfUrl = result.contract?.pdf_url;
-      if (apiPdfUrl !== undefined) {
-        console.log('📄 Updating PDF URL from API response:', apiPdfUrl);
-        setFormData(prev => ({
-          ...prev,
-          pdf_url: apiPdfUrl || prev.pdf_url,
-        }));
-      }
+      // Wait a small moment to ensure database write is committed
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // Force a fresh refetch to bypass cache and get the latest data from database
       // This ensures we get any updates that might have happened elsewhere (webhooks, etc.)
@@ -288,25 +311,36 @@ export default function EditContractPage() {
       
       if (refetchResult.data) {
         const refetchedPdfUrl = refetchResult.data.pdf_url;
-        console.log('📄 Refetched PDF URL:', refetchedPdfUrl);
+        console.log('📄 Refetched PDF URL from database:', refetchedPdfUrl);
+        console.log('📄 Current form PDF URL:', formData.pdf_url);
         
         // Always update the form with the refetched PDF URL to ensure we have the latest
-        setFormData(prev => {
-          const newPdfUrl = refetchedPdfUrl || prev.pdf_url;
-          if (newPdfUrl !== prev.pdf_url) {
-            console.log('📄 PDF URL changed, updating form:', {
-              old: prev.pdf_url,
-              new: newPdfUrl,
-            });
-          }
-          return {
+        // Use the refetched value if it exists, otherwise keep the current value
+        const finalPdfUrl = refetchedPdfUrl || apiPdfUrl || formData.pdf_url;
+        
+        if (finalPdfUrl !== formData.pdf_url) {
+          console.log('📄 PDF URL changed, updating form:', {
+            old: formData.pdf_url,
+            new: finalPdfUrl,
+            fromApi: apiPdfUrl,
+            fromRefetch: refetchedPdfUrl,
+          });
+          
+          setFormData(prev => ({
             ...prev,
-            pdf_url: newPdfUrl,
-          };
-        });
+            pdf_url: finalPdfUrl,
+          }));
+        } else {
+          console.log('📄 PDF URL unchanged:', finalPdfUrl);
+        }
       } else if (refetchResult.error) {
         console.warn('⚠️ Refetch had an error, but continuing:', refetchResult.error);
+      } else {
+        console.warn('⚠️ Refetch returned no data');
       }
+      
+      // Reset the flag after refetch completes
+      setTimeout(() => setIsRefreshingAfterSave(false), 300);
       
       setHasUnsavedChanges(false);
       // Auto-hide success message after 5 seconds
