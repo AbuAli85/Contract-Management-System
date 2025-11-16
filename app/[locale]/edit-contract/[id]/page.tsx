@@ -236,8 +236,8 @@ export default function EditContractPage() {
 
     try {
       // Only update fields that actually exist in the contracts table
-      // Note: department, special_terms, and allowances don't exist in the schema
-      // These fields are NOT included in updateData to prevent database errors
+      // Note: department, special_terms, allowances, email, work_location, and id_card_number 
+      // don't exist in the schema and are NOT included in updateData
       const updateData: Record<string, any> = {
         status: formData.status,
         contract_start_date: formData.contract_start_date || null,
@@ -247,20 +247,20 @@ export default function EditContractPage() {
           : null,
         currency: formData.currency,
         job_title: formData.job_title,
-        work_location: formData.work_location || null,
-        email: formData.email || null,
         contract_type: formData.contract_type,
         contract_number: formData.contract_number,
-        id_card_number: formData.id_card_number || null,
         pdf_url: formData.pdf_url || null,
         updated_at: new Date().toISOString(),
       };
       
       // Explicitly ensure these fields are NOT in the payload
       // (They don't exist in the database schema)
-      if ('department' in updateData) delete updateData.department;
-      if ('allowances' in updateData) delete updateData.allowances;
-      if ('special_terms' in updateData) delete updateData.special_terms;
+      const fieldsToExclude = ['department', 'allowances', 'special_terms', 'email', 'work_location', 'id_card_number'];
+      fieldsToExclude.forEach(field => {
+        if (field in updateData) {
+          delete updateData[field];
+        }
+      });
 
       console.log('🔄 Saving contract with data:', updateData);
 

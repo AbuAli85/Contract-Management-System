@@ -198,7 +198,7 @@ export const PUT = withRBAC(
 
       // Remove fields that don't exist in the database schema
       // These fields cause PGRST204 errors if included
-      const fieldsToIgnore = ['department', 'special_terms', 'allowances'];
+      const fieldsToIgnore = ['department', 'special_terms', 'allowances', 'email', 'work_location', 'id_card_number'];
       fieldsToIgnore.forEach(field => {
         if (field in body) {
           delete body[field];
@@ -230,11 +230,8 @@ export const PUT = withRBAC(
       if (body.description) dataToUpdate.description = body.description;
       if (body.terms) dataToUpdate.terms = body.terms;
       if (body.pdf_url !== undefined) dataToUpdate.pdf_url = body.pdf_url;
-      if (body.work_location !== undefined) dataToUpdate.work_location = body.work_location;
-      if (body.email !== undefined) dataToUpdate.email = body.email;
-      if (body.id_card_number !== undefined) dataToUpdate.id_card_number = body.id_card_number;
-      // Note: special_terms, department, and allowances don't exist in the contracts table schema
-      // These fields are removed to prevent database errors
+      // Note: work_location, email, id_card_number, special_terms, department, and allowances 
+      // don't exist in the contracts table schema and are filtered out above
 
       console.log('🔄 Updating contract with data:', dataToUpdate);
 
