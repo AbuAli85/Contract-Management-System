@@ -198,12 +198,13 @@ export const PUT = withRBAC(
 
       // Remove fields that don't exist in the database schema
       // These fields cause PGRST204 errors if included
+      // Must be removed completely, even if they're null
       const fieldsToIgnore = ['department', 'special_terms', 'allowances', 'email', 'work_location', 'id_card_number'];
       fieldsToIgnore.forEach(field => {
-        if (field in body) {
-          delete body[field];
-        }
+        delete body[field]; // Unconditionally delete, don't check if exists
       });
+      
+      console.log('📋 Request body after filtering invalid fields:', Object.keys(body));
 
       // Build update payload with only fields that exist in the schema
       const dataToUpdate: any = {

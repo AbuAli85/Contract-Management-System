@@ -253,14 +253,15 @@ export default function EditContractPage() {
         updated_at: new Date().toISOString(),
       };
       
-      // Explicitly ensure these fields are NOT in the payload
-      // (They don't exist in the database schema)
+      // Explicitly remove fields that don't exist in the database schema
+      // These must be completely removed, not just set to null
       const fieldsToExclude = ['department', 'allowances', 'special_terms', 'email', 'work_location', 'id_card_number'];
       fieldsToExclude.forEach(field => {
-        if (field in updateData) {
-          delete updateData[field];
-        }
+        delete updateData[field];
       });
+      
+      // Log the final payload to verify no invalid fields are included
+      console.log('📤 Final update payload (invalid fields removed):', updateData);
 
       console.log('🔄 Saving contract with data:', updateData);
 
