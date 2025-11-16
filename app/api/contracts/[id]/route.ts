@@ -211,8 +211,46 @@ export const PUT = withRBAC(
         updated_at: new Date().toISOString(),
       };
 
-      // Only add fields that are provided and valid
-      if (body.status) dataToUpdate.status = body.status;
+      // Validate and set status
+      // Use the most restrictive constraint list to be safe
+      // Based on migration: 20250125_update_contracts_status_enum.sql
+      // This constraint does NOT include 'rejected', 'approved', 'processing', 'generated', 'soon-to-expire'
+      const safeStatuses = [
+        'draft',
+        'pending',
+        'legal_review',
+        'hr_review',
+        'final_approval',
+        'signature',
+        'active',
+        'completed',
+        'terminated',
+        'expired',
+      ];
+      
+      // Extended statuses that might be in some database versions
+      const extendedStatuses = [
+        'approved',
+        'rejected',
+        'processing',
+        'generated',
+        'soon-to-expire',
+      ];
+      
+      if (body.status) {
+        // Try safe statuses first (most restrictive)
+        if (safeStatuses.includes(body.status)) {
+          dataToUpdate.status = body.status;
+        } else if (extendedStatuses.includes(body.status)) {
+          // Try extended statuses - if database rejects it, error will be caught below
+          console.warn(`⚠️ Using extended status "${body.status}" - may not be supported by current constraint`);
+          dataToUpdate.status = body.status;
+        } else {
+          console.warn(`⚠️ Invalid status "${body.status}". Skipping status update.`);
+          console.warn(`⚠️ Safe statuses: ${safeStatuses.join(', ')}`);
+          // Don't include status in the update to prevent constraint violation
+        }
+      }
       if (body.start_date) dataToUpdate.start_date = body.start_date;
       if (body.end_date) dataToUpdate.end_date = body.end_date;
       if (body.contract_start_date)
@@ -253,6 +291,31 @@ export const PUT = withRBAC(
           hint: error.hint,
           dataToUpdate,
         });
+        
+        // Special handling for status constraint violations
+        if (error.code === '23514' && error.message.includes('status_check')) {
+          // Get current contract status to suggest valid alternatives
+          const { data: currentContract } = await supabase
+            .from('contracts')
+            .select('status')
+            .eq('id', id)
+            .single();
+          
+          const currentStatus = currentContract?.status || 'unknown';
+          
+          return NextResponse.json(
+            {
+              error: 'Invalid status value',
+              details: `The status "${dataToUpdate.status}" is not allowed by the database constraint. Current status: "${currentStatus}". Try using one of the safe statuses: draft, pending, active, completed, terminated, expired`,
+              code: error.code,
+              hint: 'The status may not be supported by your current database schema. Please use a status from the safe list.',
+              attemptedStatus: dataToUpdate.status,
+              currentStatus: currentStatus,
+            },
+            { status: 400 }
+          );
+        }
+        
         return NextResponse.json(
           {
             error: 'Update failed',
