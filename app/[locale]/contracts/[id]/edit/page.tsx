@@ -25,7 +25,11 @@ export default function ContractEditRedirectPage() {
   useEffect(() => {
     // Redirect to the existing edit route
     if (contractId) {
+      // Use replace with prefetch disabled to prevent Next.js from trying to prefetch the route
       router.replace(`/${locale}/edit-contract/${contractId}`);
+    } else {
+      // If no contract ID, redirect to contracts list
+      router.replace(`/${locale}/contracts`);
     }
   }, [contractId, locale, router]);
 
