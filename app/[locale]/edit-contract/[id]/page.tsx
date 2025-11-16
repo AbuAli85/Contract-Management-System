@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
@@ -45,6 +46,7 @@ import { createClient } from '@/lib/supabase/client';
 export default function EditContractPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const contractId = params?.id as string;
 
   // Extract locale from pathname
@@ -110,29 +112,40 @@ export default function EditContractPage() {
   // Load contract data into form when contract is fetched
   useEffect(() => {
     if (contract) {
-      setFormData({
-        status: contract.status || 'draft',
-        contract_start_date: contract.contract_start_date || contract.start_date || '',
-        contract_end_date: contract.contract_end_date || contract.end_date || '',
-        salary: contract.basic_salary?.toString() || '',
-        basic_salary: contract.basic_salary?.toString() || '',
-        allowances: '', // Not available in ContractWithRelations
-        currency: contract.currency || 'USD',
-        first_party_name_en: contract.first_party?.name_en || '',
-        first_party_name_ar: contract.first_party?.name_ar || '',
-        second_party_name_en: contract.second_party?.name_en || '',
-        second_party_name_ar: contract.second_party?.name_ar || '',
-        job_title: contract.job_title || contract.title || '',
-        department: '', // Not available in ContractWithRelations
-        work_location: contract.work_location || '',
-        email: contract.email || '',
-        contract_type: contract.contract_type || '',
-        contract_number: contract.contract_number || '',
-        id_card_number: contract.id_card_number || '',
-        pdf_url: contract.pdf_url || '',
-        special_terms: '', // Not available in ContractWithRelations
-        google_doc_url: '',
-        promoter_id: contract.promoter_id || '',
+      console.log('📋 Loading contract data into form, PDF URL:', contract.pdf_url);
+      setFormData(prev => {
+        // Only update if the PDF URL actually changed to avoid unnecessary re-renders
+        const newPdfUrl = contract.pdf_url || '';
+        if (newPdfUrl !== prev.pdf_url) {
+          console.log('📄 PDF URL updated in form from contract:', {
+            old: prev.pdf_url,
+            new: newPdfUrl,
+          });
+        }
+        return {
+          status: contract.status || 'draft',
+          contract_start_date: contract.contract_start_date || contract.start_date || '',
+          contract_end_date: contract.contract_end_date || contract.end_date || '',
+          salary: contract.basic_salary?.toString() || '',
+          basic_salary: contract.basic_salary?.toString() || '',
+          allowances: '', // Not available in ContractWithRelations
+          currency: contract.currency || 'USD',
+          first_party_name_en: contract.first_party?.name_en || '',
+          first_party_name_ar: contract.first_party?.name_ar || '',
+          second_party_name_en: contract.second_party?.name_en || '',
+          second_party_name_ar: contract.second_party?.name_ar || '',
+          job_title: contract.job_title || contract.title || '',
+          department: '', // Not available in ContractWithRelations
+          work_location: contract.work_location || '',
+          email: contract.email || '',
+          contract_type: contract.contract_type || '',
+          contract_number: contract.contract_number || '',
+          id_card_number: contract.id_card_number || '',
+          pdf_url: newPdfUrl, // Always use the latest PDF URL from contract
+          special_terms: '', // Not available in ContractWithRelations
+          google_doc_url: '',
+          promoter_id: contract.promoter_id || '',
+        };
       });
     }
   }, [contract]);
@@ -252,26 +265,47 @@ export default function EditContractPage() {
 
       setSaveSuccess(true);
       
-      // If the API returned updated contract data, update PDF URL immediately
-      if (result.contract?.pdf_url !== undefined) {
+      // Invalidate the query cache to force a fresh fetch
+      queryClient.invalidateQueries({ 
+        queryKey: ['contract', contractId],
+        exact: true,
+      });
+      
+      // Update PDF URL immediately from API response if available
+      const apiPdfUrl = result.contract?.pdf_url;
+      if (apiPdfUrl !== undefined) {
+        console.log('📄 Updating PDF URL from API response:', apiPdfUrl);
         setFormData(prev => ({
           ...prev,
-          pdf_url: result.contract.pdf_url || prev.pdf_url,
+          pdf_url: apiPdfUrl || prev.pdf_url,
         }));
       }
       
-      // Refresh contract data to get the latest PDF URL and other updates from database
+      // Force a fresh refetch to bypass cache and get the latest data from database
       // This ensures we get any updates that might have happened elsewhere (webhooks, etc.)
+      console.log('🔄 Refetching contract data...');
       const refetchResult = await refetch();
+      
       if (refetchResult.data) {
-        // The useEffect will automatically update formData when contract changes
-        // But we can also update PDF URL immediately if it changed
-        if (refetchResult.data.pdf_url !== formData.pdf_url) {
-          setFormData(prev => ({
+        const refetchedPdfUrl = refetchResult.data.pdf_url;
+        console.log('📄 Refetched PDF URL:', refetchedPdfUrl);
+        
+        // Always update the form with the refetched PDF URL to ensure we have the latest
+        setFormData(prev => {
+          const newPdfUrl = refetchedPdfUrl || prev.pdf_url;
+          if (newPdfUrl !== prev.pdf_url) {
+            console.log('📄 PDF URL changed, updating form:', {
+              old: prev.pdf_url,
+              new: newPdfUrl,
+            });
+          }
+          return {
             ...prev,
-            pdf_url: refetchResult.data?.pdf_url || prev.pdf_url,
-          }));
-        }
+            pdf_url: newPdfUrl,
+          };
+        });
+      } else if (refetchResult.error) {
+        console.warn('⚠️ Refetch had an error, but continuing:', refetchResult.error);
       }
       
       setHasUnsavedChanges(false);
