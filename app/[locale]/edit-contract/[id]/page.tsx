@@ -223,6 +223,7 @@ export default function EditContractPage() {
         contract_number: formData.contract_number,
         id_card_number: formData.id_card_number,
         special_terms: formData.special_terms,
+        pdf_url: formData.pdf_url || null,
         updated_at: new Date().toISOString(),
       };
 
@@ -250,8 +251,29 @@ export default function EditContractPage() {
       console.log('✅ Contract saved successfully:', result);
 
       setSaveSuccess(true);
-      // Refresh contract data
-      await refetch();
+      
+      // If the API returned updated contract data, update PDF URL immediately
+      if (result.contract?.pdf_url !== undefined) {
+        setFormData(prev => ({
+          ...prev,
+          pdf_url: result.contract.pdf_url || prev.pdf_url,
+        }));
+      }
+      
+      // Refresh contract data to get the latest PDF URL and other updates from database
+      // This ensures we get any updates that might have happened elsewhere (webhooks, etc.)
+      const refetchResult = await refetch();
+      if (refetchResult.data) {
+        // The useEffect will automatically update formData when contract changes
+        // But we can also update PDF URL immediately if it changed
+        if (refetchResult.data.pdf_url !== formData.pdf_url) {
+          setFormData(prev => ({
+            ...prev,
+            pdf_url: refetchResult.data?.pdf_url || prev.pdf_url,
+          }));
+        }
+      }
+      
       setHasUnsavedChanges(false);
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);

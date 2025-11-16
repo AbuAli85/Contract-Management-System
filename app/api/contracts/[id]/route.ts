@@ -220,6 +220,7 @@ export const PUT = withRBAC(
         dataToUpdate.contract_number = body.contract_number;
       if (body.description) dataToUpdate.description = body.description;
       if (body.terms) dataToUpdate.terms = body.terms;
+      if (body.pdf_url !== undefined) dataToUpdate.pdf_url = body.pdf_url;
 
       console.log('🔄 Updating contract with data:', dataToUpdate);
 
