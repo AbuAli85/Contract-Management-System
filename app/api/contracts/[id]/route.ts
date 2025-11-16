@@ -221,6 +221,16 @@ export const PUT = withRBAC(
       if (body.description) dataToUpdate.description = body.description;
       if (body.terms) dataToUpdate.terms = body.terms;
       if (body.pdf_url !== undefined) dataToUpdate.pdf_url = body.pdf_url;
+      if (body.work_location !== undefined) dataToUpdate.work_location = body.work_location;
+      if (body.email !== undefined) dataToUpdate.email = body.email;
+      if (body.id_card_number !== undefined) dataToUpdate.id_card_number = body.id_card_number;
+      if (body.special_terms !== undefined) dataToUpdate.special_terms = body.special_terms;
+      if (body.department !== undefined) dataToUpdate.department = body.department;
+      if (body.allowances !== undefined && body.allowances !== null) {
+        dataToUpdate.allowances = typeof body.allowances === 'string' 
+          ? parseFloat(body.allowances) || null 
+          : body.allowances;
+      }
 
       console.log('🔄 Updating contract with data:', dataToUpdate);
 
@@ -234,10 +244,19 @@ export const PUT = withRBAC(
 
       if (error) {
         console.error('API PUT /contracts/[id] error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          dataToUpdate,
+        });
         return NextResponse.json(
           {
             error: 'Update failed',
             details: error.message,
+            code: error.code,
+            hint: error.hint,
           },
           { status: 500 }
         );
@@ -267,10 +286,12 @@ export const PUT = withRBAC(
       );
     } catch (error) {
       console.error('Error in PUT /api/contracts/[id]:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       return NextResponse.json(
         {
           error: 'Internal server error',
           details: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : typeof error,
         },
         { status: 500 }
       );
