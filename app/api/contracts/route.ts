@@ -165,8 +165,14 @@ async function handleContractsRequest(
             promoter_id
           `
         )
-        .or(`employer_id.eq.${partyId},client_id.eq.${partyId}`)
-        .eq('status', status);
+        .or(`employer_id.eq.${partyId},client_id.eq.${partyId}`);
+      
+      // Special handling: "pending" status should include both "pending" and "generated" contracts
+      if (status === 'pending') {
+        query = query.in('status', ['pending', 'generated']);
+      } else {
+        query = query.eq('status', status);
+      }
 
       // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in OR created
       if (!isAdmin) {
@@ -218,8 +224,15 @@ async function handleContractsRequest(
     // ✅ FIX: Apply status filter if provided
     if (status && status !== 'all') {
       logger.debug(`Filtering contracts by status: ${status}`, { requestId }, 'ContractsAPI');
-      // Simple direct status filtering for new workflow
-      query = query.eq('status', status);
+      
+      // Special handling: "pending" status should include both "pending" and "generated" contracts
+      if (status === 'pending') {
+        query = query.in('status', ['pending', 'generated']);
+        logger.debug('Including both pending and generated contracts', { requestId }, 'ContractsAPI');
+      } else {
+        // Simple direct status filtering for other statuses
+        query = query.eq('status', status);
+      }
     }
 
     // Non-admin users only see contracts they're involved in OR created
