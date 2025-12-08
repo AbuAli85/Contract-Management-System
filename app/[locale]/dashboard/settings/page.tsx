@@ -44,7 +44,9 @@ export default function SettingsPage() {
     const loadSettings = async () => {
       try {
         // Load notification settings from localStorage as fallback
-        const savedNotifications = localStorage.getItem('notification-settings');
+        const savedNotifications = localStorage.getItem(
+          'notification-settings'
+        );
         if (savedNotifications) {
           setNotificationSettings(JSON.parse(savedNotifications));
         }
@@ -66,8 +68,11 @@ export default function SettingsPage() {
     setIsSaving(true);
     try {
       // Save to localStorage (can be replaced with API call)
-      localStorage.setItem('notification-settings', JSON.stringify(notificationSettings));
-      
+      localStorage.setItem(
+        'notification-settings',
+        JSON.stringify(notificationSettings)
+      );
+
       toast({
         title: '✅ Settings Saved',
         description: 'Your notification preferences have been updated.',
@@ -87,8 +92,11 @@ export default function SettingsPage() {
     setIsSaving(true);
     try {
       // Save to localStorage (can be replaced with API call)
-      localStorage.setItem('integration-settings', JSON.stringify(integrationSettings));
-      
+      localStorage.setItem(
+        'integration-settings',
+        JSON.stringify(integrationSettings)
+      );
+
       toast({
         title: '✅ Settings Saved',
         description: 'Your integration settings have been updated.',
@@ -120,7 +128,9 @@ export default function SettingsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(integrationSettings.apiKey && { 'X-API-Key': integrationSettings.apiKey }),
+          ...(integrationSettings.apiKey && {
+            'X-API-Key': integrationSettings.apiKey,
+          }),
         },
         body: JSON.stringify({
           test: true,
@@ -144,7 +154,8 @@ export default function SettingsPage() {
     } catch (error) {
       toast({
         title: '❌ Webhook Test Failed',
-        description: 'Could not reach the webhook URL. Please check the URL and try again.',
+        description:
+          'Could not reach the webhook URL. Please check the URL and try again.',
         variant: 'destructive',
       });
     } finally {
@@ -169,7 +180,7 @@ export default function SettingsPage() {
               <TabsTrigger value='notifications'>Notifications</TabsTrigger>
               <TabsTrigger value='integrations'>Integrations</TabsTrigger>
             </TabsList>
-            
+
             {/* General Settings Tab */}
             <TabsContent value='general'>
               <Card>
@@ -195,21 +206,24 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             {/* Notifications Settings Tab */}
             <TabsContent value='notifications'>
               <Card>
                 <CardHeader>
                   <CardTitle>Notification Settings</CardTitle>
                   <CardDescription>
-                    Configure how you receive notifications about contracts and workforce.
+                    Configure how you receive notifications about contracts and
+                    workforce.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='space-y-6'>
                   <div className='space-y-4'>
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
-                        <Label htmlFor='email-notifications'>Email Notifications</Label>
+                        <Label htmlFor='email-notifications'>
+                          Email Notifications
+                        </Label>
                         <p className='text-sm text-muted-foreground'>
                           Receive email updates about your contracts
                         </p>
@@ -217,15 +231,20 @@ export default function SettingsPage() {
                       <Switch
                         id='email-notifications'
                         checked={notificationSettings.emailNotifications}
-                        onCheckedChange={(checked) =>
-                          setNotificationSettings({ ...notificationSettings, emailNotifications: checked })
+                        onCheckedChange={checked =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            emailNotifications: checked,
+                          })
                         }
                       />
                     </div>
 
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
-                        <Label htmlFor='contract-expiry'>Contract Expiry Alerts</Label>
+                        <Label htmlFor='contract-expiry'>
+                          Contract Expiry Alerts
+                        </Label>
                         <p className='text-sm text-muted-foreground'>
                           Get notified 30 days before contract expiration
                         </p>
@@ -233,15 +252,20 @@ export default function SettingsPage() {
                       <Switch
                         id='contract-expiry'
                         checked={notificationSettings.contractExpiry}
-                        onCheckedChange={(checked) =>
-                          setNotificationSettings({ ...notificationSettings, contractExpiry: checked })
+                        onCheckedChange={checked =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            contractExpiry: checked,
+                          })
                         }
                       />
                     </div>
 
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
-                        <Label htmlFor='document-expiry'>Document Expiry Alerts</Label>
+                        <Label htmlFor='document-expiry'>
+                          Document Expiry Alerts
+                        </Label>
                         <p className='text-sm text-muted-foreground'>
                           Alerts for expiring promoter documents
                         </p>
@@ -249,15 +273,20 @@ export default function SettingsPage() {
                       <Switch
                         id='document-expiry'
                         checked={notificationSettings.documentExpiry}
-                        onCheckedChange={(checked) =>
-                          setNotificationSettings({ ...notificationSettings, documentExpiry: checked })
+                        onCheckedChange={checked =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            documentExpiry: checked,
+                          })
                         }
                       />
                     </div>
 
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
-                        <Label htmlFor='new-contracts'>New Contract Notifications</Label>
+                        <Label htmlFor='new-contracts'>
+                          New Contract Notifications
+                        </Label>
                         <p className='text-sm text-muted-foreground'>
                           Notify when new contracts are created
                         </p>
@@ -265,15 +294,20 @@ export default function SettingsPage() {
                       <Switch
                         id='new-contracts'
                         checked={notificationSettings.newContracts}
-                        onCheckedChange={(checked) =>
-                          setNotificationSettings({ ...notificationSettings, newContracts: checked })
+                        onCheckedChange={checked =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            newContracts: checked,
+                          })
                         }
                       />
                     </div>
 
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
-                        <Label htmlFor='weekly-digest'>Weekly Summary Digest</Label>
+                        <Label htmlFor='weekly-digest'>
+                          Weekly Summary Digest
+                        </Label>
                         <p className='text-sm text-muted-foreground'>
                           Receive a weekly summary every Monday
                         </p>
@@ -281,15 +315,20 @@ export default function SettingsPage() {
                       <Switch
                         id='weekly-digest'
                         checked={notificationSettings.weeklyDigest}
-                        onCheckedChange={(checked) =>
-                          setNotificationSettings({ ...notificationSettings, weeklyDigest: checked })
+                        onCheckedChange={checked =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            weeklyDigest: checked,
+                          })
                         }
                       />
                     </div>
 
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
-                        <Label htmlFor='push-notifications'>Push Notifications</Label>
+                        <Label htmlFor='push-notifications'>
+                          Push Notifications
+                        </Label>
                         <p className='text-sm text-muted-foreground'>
                           Enable browser push notifications
                         </p>
@@ -297,21 +336,26 @@ export default function SettingsPage() {
                       <Switch
                         id='push-notifications'
                         checked={notificationSettings.pushNotifications}
-                        onCheckedChange={(checked) =>
-                          setNotificationSettings({ ...notificationSettings, pushNotifications: checked })
+                        onCheckedChange={checked =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            pushNotifications: checked,
+                          })
                         }
                       />
                     </div>
                   </div>
 
                   <Button onClick={handleSaveNotifications} disabled={isSaving}>
-                    {isSaving && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+                    {isSaving && (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
                     Save Changes
                   </Button>
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             {/* Integrations Settings Tab */}
             <TabsContent value='integrations'>
               <Card>
@@ -330,12 +374,16 @@ export default function SettingsPage() {
                         type='url'
                         placeholder='https://hook.eu2.make.com/...'
                         value={integrationSettings.webhookUrl}
-                        onChange={(e) =>
-                          setIntegrationSettings({ ...integrationSettings, webhookUrl: e.target.value })
+                        onChange={e =>
+                          setIntegrationSettings({
+                            ...integrationSettings,
+                            webhookUrl: e.target.value,
+                          })
                         }
                       />
                       <p className='text-xs text-muted-foreground'>
-                        Receive real-time updates about contracts and workforce changes.
+                        Receive real-time updates about contracts and workforce
+                        changes.
                       </p>
                     </div>
 
@@ -346,8 +394,11 @@ export default function SettingsPage() {
                         type='password'
                         placeholder='Enter your API key'
                         value={integrationSettings.apiKey}
-                        onChange={(e) =>
-                          setIntegrationSettings({ ...integrationSettings, apiKey: e.target.value })
+                        onChange={e =>
+                          setIntegrationSettings({
+                            ...integrationSettings,
+                            apiKey: e.target.value,
+                          })
                         }
                       />
                       <p className='text-xs text-muted-foreground'>
@@ -357,16 +408,25 @@ export default function SettingsPage() {
                   </div>
 
                   <div className='flex gap-2'>
-                    <Button onClick={handleSaveIntegrations} disabled={isSaving}>
-                      {isSaving && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+                    <Button
+                      onClick={handleSaveIntegrations}
+                      disabled={isSaving}
+                    >
+                      {isSaving && (
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      )}
                       Save Settings
                     </Button>
-                    <Button 
-                      variant='outline' 
+                    <Button
+                      variant='outline'
                       onClick={handleTestWebhook}
-                      disabled={isTestingWebhook || !integrationSettings.webhookUrl}
+                      disabled={
+                        isTestingWebhook || !integrationSettings.webhookUrl
+                      }
                     >
-                      {isTestingWebhook && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+                      {isTestingWebhook && (
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      )}
                       Test Webhook
                     </Button>
                   </div>

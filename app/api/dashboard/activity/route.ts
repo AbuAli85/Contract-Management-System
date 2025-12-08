@@ -10,8 +10,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -37,7 +40,8 @@ export async function GET(request: NextRequest) {
     const activities = (contracts || []).map((contract: any) => ({
       id: contract.id,
       type: 'contract',
-      action: contract.created_at === contract.updated_at ? 'created' : 'updated',
+      action:
+        contract.created_at === contract.updated_at ? 'created' : 'updated',
       title: contract.contract_number,
       description: contract.title || 'Untitled Contract',
       timestamp: contract.updated_at || contract.created_at,
@@ -56,4 +60,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

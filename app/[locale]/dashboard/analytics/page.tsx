@@ -24,7 +24,14 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Loader2, Users, FileText, HardDrive, AlertTriangle, Zap } from 'lucide-react';
+import {
+  Loader2,
+  Users,
+  FileText,
+  HardDrive,
+  AlertTriangle,
+  Zap,
+} from 'lucide-react';
 
 const COLORS = [
   '#8884d8',
@@ -165,7 +172,9 @@ export default function AnalyticsPage() {
     <div className='space-y-8 p-6'>
       <div className='mb-6 flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Analytics Dashboard</h1>
+          <h1 className='text-3xl font-bold tracking-tight'>
+            Analytics Dashboard
+          </h1>
           <p className='text-muted-foreground mt-2'>
             Overview of contracts, promoters, and company metrics
           </p>
@@ -203,8 +212,7 @@ export default function AnalyticsPage() {
             href='/analytics/quick-document-fix'
             className='inline-flex items-center justify-center rounded-md bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:from-green-700 hover:to-emerald-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 animate-pulse'
           >
-            <Zap className='mr-2 h-4 w-4' />
-            ⚡ Quick Fix (266)
+            <Zap className='mr-2 h-4 w-4' />⚡ Quick Fix (266)
           </a>
         </div>
       </div>

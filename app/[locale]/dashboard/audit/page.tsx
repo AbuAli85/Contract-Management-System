@@ -192,7 +192,10 @@ export default function AuditLogsPage() {
   }, [logs, searchTerm, sortKey, sortDirection]);
 
   const currentPageSize = pageSize ?? PAGE_SIZE_OPTIONS[0];
-  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / currentPageSize));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredLogs.length / currentPageSize)
+  );
   const paginatedLogs = useMemo(() => {
     const start = (page - 1) * currentPageSize;
     return filteredLogs.slice(start, start + currentPageSize);

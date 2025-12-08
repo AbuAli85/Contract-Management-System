@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { extractApiKey, validateApiKey, withApiKeyAuth } from '@/lib/api-key-auth';
+import {
+  extractApiKey,
+  validateApiKey,
+  withApiKeyAuth,
+} from '@/lib/api-key-auth';
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
@@ -13,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   // Check if API key is provided
   const apiKey = extractApiKey(request);
-  
+
   // If API key is provided, validate it (but don't require it)
   if (apiKey) {
     const validation = await validateApiKey(apiKey);
@@ -23,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
     // Invalid API key - continue with public stats
   }
-  
+
   // No API key or invalid key - return basic public stats
   return getBasicStats(request);
 }
@@ -74,7 +78,9 @@ async function getBasicStats(request: NextRequest) {
     const partiesResult = results[2] || { count: 0 };
 
     // Check for errors
-    const errors = results.filter((r: any) => r?.error).map((r: any) => r.error);
+    const errors = results
+      .filter((r: any) => r?.error)
+      .map((r: any) => r.error);
     if (errors.length > 0) {
       console.warn('🔍 Public stats: Some database errors:', errors);
     }
@@ -121,13 +127,22 @@ async function getEnhancedStats(request: NextRequest, apiKey: any) {
       // Total contracts
       supabase.from('contracts').select('*', { count: 'exact', head: true }),
       // Active contracts
-      supabase.from('contracts').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      supabase
+        .from('contracts')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active'),
       // Pending contracts
-      supabase.from('contracts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase
+        .from('contracts')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending'),
       // Total promoters
       supabase.from('promoters').select('*', { count: 'exact', head: true }),
       // Active promoters
-      supabase.from('promoters').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      supabase
+        .from('promoters')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active'),
       // Total parties
       supabase.from('parties').select('*', { count: 'exact', head: true }),
     ];
@@ -139,7 +154,10 @@ async function getEnhancedStats(request: NextRequest, apiKey: any) {
           return result;
         } catch (error) {
           console.error(`🔍 Enhanced stats: Query ${index} failed:`, error);
-          return { count: 0, error: error instanceof Error ? error.message : 'Unknown error' };
+          return {
+            count: 0,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          };
         }
       })
     );

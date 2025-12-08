@@ -9,7 +9,10 @@ interface PromotersPageClientProps {
   isDevelopment: boolean;
 }
 
-export function PromotersPageClient({ locale, isDevelopment }: PromotersPageClientProps) {
+export function PromotersPageClient({
+  locale,
+  isDevelopment,
+}: PromotersPageClientProps) {
   return (
     <ErrorBoundary componentName='Promoters Page'>
       <div className='space-y-6'>
@@ -19,4 +22,3 @@ export function PromotersPageClient({ locale, isDevelopment }: PromotersPageClie
     </ErrorBoundary>
   );
 }
-

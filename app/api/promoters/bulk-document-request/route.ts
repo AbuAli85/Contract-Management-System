@@ -1,13 +1,16 @@
 /**
  * API Route: Bulk Document Request
  * POST /api/promoters/bulk-document-request
- * 
+ *
  * Sends document requests to multiple promoters at once
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { sendDocumentRequest, sendBulkNotifications } from '@/lib/services/promoter-notification.service';
+import {
+  sendDocumentRequest,
+  sendBulkNotifications,
+} from '@/lib/services/promoter-notification.service';
 import type { BulkNotificationConfig } from '@/lib/services/promoter-notification.service';
 
 const requestSchema = {
@@ -25,16 +28,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields
-    if (!body.promoterIds || !Array.isArray(body.promoterIds) || body.promoterIds.length === 0) {
+    if (
+      !body.promoterIds ||
+      !Array.isArray(body.promoterIds) ||
+      body.promoterIds.length === 0
+    ) {
       return NextResponse.json(
         { success: false, error: 'promoterIds array is required' },
         { status: 400 }
       );
     }
 
-    if (!body.documentType || !['id_card', 'passport', 'both'].includes(body.documentType)) {
+    if (
+      !body.documentType ||
+      !['id_card', 'passport', 'both'].includes(body.documentType)
+    ) {
       return NextResponse.json(
-        { success: false, error: 'Invalid documentType. Must be: id_card, passport, or both' },
+        {
+          success: false,
+          error: 'Invalid documentType. Must be: id_card, passport, or both',
+        },
         { status: 400 }
       );
     }
@@ -46,18 +59,24 @@ export async function POST(request: NextRequest) {
       reason,
       deadline,
       sendEmail = true,
-      sendSms = false
+      sendSms = false,
     } = body;
 
     // Validate at least one notification channel is selected
     if (!sendEmail && !sendSms) {
       return NextResponse.json(
-        { success: false, error: 'At least one notification channel (email or SMS) must be selected' },
+        {
+          success: false,
+          error:
+            'At least one notification channel (email or SMS) must be selected',
+        },
         { status: 400 }
       );
     }
 
-    console.log(`📤 Processing bulk document request for ${promoterIds.length} promoters...`);
+    console.log(
+      `📤 Processing bulk document request for ${promoterIds.length} promoters...`
+    );
 
     // Get promoter information
     const supabase = await createClient();
@@ -97,26 +116,26 @@ export async function POST(request: NextRequest) {
           email: boolean;
           sms: boolean;
         };
-      }>
+      }>,
     };
 
     // Determine which documents to request
-    const documentsToRequest: Array<'id_card' | 'passport'> = 
+    const documentsToRequest: Array<'id_card' | 'passport'> =
       documentType === 'both' ? ['id_card', 'passport'] : [documentType];
 
     // Send requests to each promoter
     for (const promoter of promoters) {
-        const promoterResult = {
-          promoterId: promoter.id,
-          promoterName: promoter.full_name,
-          success: true,
-          error: undefined as string | undefined,
-          channels: {
-            email: false,
-            sms: false
-          }
-        };
-        
+      const promoterResult = {
+        promoterId: promoter.id,
+        promoterName: promoter.full_name,
+        success: true,
+        error: undefined as string | undefined,
+        channels: {
+          email: false,
+          sms: false,
+        },
+      };
+
       try {
         // Send request for each document type
         for (const docType of documentsToRequest) {
@@ -125,7 +144,7 @@ export async function POST(request: NextRequest) {
             documentType: docType,
             reason,
             deadline,
-            priority: priority as 'low' | 'medium' | 'high' | 'urgent'
+            priority: priority as 'low' | 'medium' | 'high' | 'urgent',
           });
 
           if (requestResult.success) {
@@ -151,10 +170,10 @@ export async function POST(request: NextRequest) {
         } else {
           results.failureCount++;
         }
-
       } catch (error) {
         promoterResult.success = false;
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorMsg =
+          error instanceof Error ? error.message : 'Unknown error';
         promoterResult.error = errorMsg;
         results.errors.push(`Error for ${promoter.full_name}: ${errorMsg}`);
         results.failureCount++;
@@ -170,7 +189,7 @@ export async function POST(request: NextRequest) {
       successCount: results.successCount,
       failureCount: results.failureCount,
       emailsSent: results.emailsSent,
-      smsSent: results.smsSent
+      smsSent: results.smsSent,
     });
 
     return NextResponse.json({
@@ -182,17 +201,16 @@ export async function POST(request: NextRequest) {
         failureCount: results.failureCount,
         emailsSent: results.emailsSent,
         smsSent: results.smsSent,
-        details: results.details
+        details: results.details,
       },
-      errors: results.errors.length > 0 ? results.errors : undefined
+      errors: results.errors.length > 0 ? results.errors : undefined,
     });
-
   } catch (error) {
     console.error('Error in bulk document request:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error'
+        error: error instanceof Error ? error.message : 'Internal server error',
       },
       { status: 500 }
     );
@@ -216,8 +234,7 @@ export async function GET() {
       reason: 'Document renewal required for contract assignment',
       deadline: '2025-11-15',
       sendEmail: true,
-      sendSms: false
-    }
+      sendSms: false,
+    },
   });
 }
-

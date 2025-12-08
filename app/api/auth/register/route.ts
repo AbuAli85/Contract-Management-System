@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
         remaining: rateLimitResult.remaining,
         retryInMinutes: Math.ceil((rateLimitResult.reset - Date.now()) / 60000),
       };
-      console.warn('⚠️ Registration rate limit exceeded:', JSON.stringify(violation));
+      console.warn(
+        '⚠️ Registration rate limit exceeded:',
+        JSON.stringify(violation)
+      );
 
       return NextResponse.json(
         {
@@ -74,11 +77,15 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ ENHANCED: Comprehensive password validation
-    const validation = await validatePasswordComprehensive(password, undefined, {
-      checkBreach: true,
-      checkHistory: false, // No history for new users
-      requireMinimumStrength: true,
-    });
+    const validation = await validatePasswordComprehensive(
+      password,
+      undefined,
+      {
+        checkBreach: true,
+        checkHistory: false, // No history for new users
+        requireMinimumStrength: true,
+      }
+    );
 
     if (!validation.isValid) {
       return NextResponse.json(
@@ -183,7 +190,10 @@ export async function POST(request: NextRequest) {
         });
 
       if (historyError) {
-        console.error('🔐 Register API - Password history error:', historyError);
+        console.error(
+          '🔐 Register API - Password history error:',
+          historyError
+        );
         // Don't fail registration if history save fails
       } else {
         console.log('🔐 Register API - Password added to history');

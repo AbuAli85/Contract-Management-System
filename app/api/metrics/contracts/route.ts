@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // Get user role from users table (proper source)
     let userRole = 'user'; // default role
-    
+
     if (user) {
       // Try profiles table first
       const { data: userData } = await supabase
@@ -73,17 +73,16 @@ export async function GET(request: NextRequest) {
     });
 
     const scope = userRole === 'admin' ? 'system-wide' : 'user-specific';
-    const scopeLabel = userRole === 'admin' 
-      ? 'All contracts in system' 
-      : 'Your contracts only';
+    const scopeLabel =
+      userRole === 'admin' ? 'All contracts in system' : 'Your contracts only';
 
     // Validate metrics before returning
     const validation = validateContractMetrics(metrics);
-    
+
     if (!validation.isValid) {
       console.error('📊 Metrics API: Validation failed:', validation.errors);
     }
-    
+
     if (validation.warnings.length > 0) {
       console.warn('📊 Metrics API: Validation warnings:', validation.warnings);
     }
@@ -121,4 +120,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

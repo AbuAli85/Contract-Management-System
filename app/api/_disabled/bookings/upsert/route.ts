@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  upsertBooking,
-  createBookingPayload,
-} from '@/lib/booking-service';
+import { upsertBooking, createBookingPayload } from '@/lib/booking-service';
 import type { BookingWithDetails } from '@/types/booking';
 import { createClient } from '@/lib/supabase/server';
 
@@ -31,7 +28,10 @@ export async function POST(request: NextRequest) {
     // Create booking payload with defaults
     const bookingPayload = createBookingPayload(
       body as Partial<BookingWithDetails> &
-        Pick<BookingWithDetails, 'service_id' | 'provider_company_id' | 'client_id'>
+        Pick<
+          BookingWithDetails,
+          'service_id' | 'provider_company_id' | 'client_id'
+        >
     );
 
     // Perform upsert
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bookingNumber = result.data?.booking_number || bookingPayload.booking_number;
+    const bookingNumber =
+      result.data?.booking_number || bookingPayload.booking_number;
 
     return NextResponse.json({
       success: true,

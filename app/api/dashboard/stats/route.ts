@@ -64,9 +64,13 @@ export async function GET(request: NextRequest) {
 
     // Get previous month metrics for growth calculations
     const now = new Date();
-    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthStart = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1
+    );
     const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-    
+
     const previousMetrics = await getDashboardMetrics({
       ...(user?.id && { userId: user.id }),
       userRole,
@@ -108,14 +112,16 @@ export async function GET(request: NextRequest) {
       cacheHit: !forceRefresh,
 
       // Previous month data for growth calculations
-      previousMonth: previousMetrics ? {
-        totalContracts: previousMetrics.contracts.total,
-        activeContracts: previousMetrics.contracts.active,
-        pendingContracts: previousMetrics.contracts.pending,
-        completedContracts: previousMetrics.contracts.completed,
-        totalPromoters: previousMetrics.promoters.total,
-        activePromoters: previousMetrics.promoters.active,
-      } : null,
+      previousMonth: previousMetrics
+        ? {
+            totalContracts: previousMetrics.contracts.total,
+            activeContracts: previousMetrics.contracts.active,
+            pendingContracts: previousMetrics.contracts.pending,
+            completedContracts: previousMetrics.contracts.completed,
+            totalPromoters: previousMetrics.promoters.total,
+            activePromoters: previousMetrics.promoters.active,
+          }
+        : null,
 
       // Debug info
       debug: {
@@ -136,11 +142,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(stats);
   } catch (error) {
     console.error('🔍 Dashboard stats: Unexpected error:', error);
-    
+
     // Handle different error types
     let errorMessage = 'Unknown error';
     let errorType = 'Unknown';
-    
+
     if (error instanceof Error) {
       errorMessage = error.message;
       errorType = error.constructor.name;
@@ -152,7 +158,7 @@ export async function GET(request: NextRequest) {
       errorMessage = error;
       errorType = 'StringError';
     }
-    
+
     return NextResponse.json(
       {
         error: 'Failed to fetch dashboard statistics',

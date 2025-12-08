@@ -7,8 +7,11 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -41,7 +44,7 @@ export async function GET(request: NextRequest) {
         .single();
 
       const userRole = (userProfile as any)?.role || 'user';
-      
+
       const { data: defaultLayout } = await supabase
         .from('default_layouts_by_role')
         .select('*')
@@ -83,8 +86,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -168,8 +174,11 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -224,10 +233,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Delete old widget configurations
-    await supabase
-      .from('widget_configurations')
-      .delete()
-      .eq('layout_id', id);
+    await supabase.from('widget_configurations').delete().eq('layout_id', id);
 
     // Save new widget configurations
     if (widgets && widgets.length > 0) {
@@ -240,9 +246,7 @@ export async function PUT(request: NextRequest) {
         refresh_interval: w.config?.refreshInterval || 60,
       }));
 
-      await supabase
-        .from('widget_configurations')
-        .insert(widgetConfigs);
+      await supabase.from('widget_configurations').insert(widgetConfigs);
     }
 
     return NextResponse.json({
@@ -262,7 +266,7 @@ export async function PUT(request: NextRequest) {
 // Helper functions
 function parseLayoutData(layoutData: any): any[] {
   if (!layoutData) return [];
-  
+
   // layoutData is an array of widget positions
   return layoutData.map((position: any) => ({
     id: position.i,
@@ -286,4 +290,3 @@ function formatLayout(layout: any): any {
     updatedAt: layout.updated_at,
   };
 }
-

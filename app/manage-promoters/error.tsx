@@ -36,12 +36,13 @@ export default function Error({
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <p className='text-muted-foreground'>
-            Error: {error.message}
-          </p>
+          <p className='text-muted-foreground'>Error: {error.message}</p>
           <div className='flex gap-2 justify-center'>
             <Button onClick={() => reset()}>Try Again</Button>
-            <Button variant='outline' onClick={() => window.location.href = '/en/promoters'}>
+            <Button
+              variant='outline'
+              onClick={() => (window.location.href = '/en/promoters')}
+            >
               Go to Promoters
             </Button>
           </div>

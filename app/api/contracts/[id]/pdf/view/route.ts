@@ -95,7 +95,9 @@ export const GET = withRBAC(
       }
 
       // Check if contract is approved and has PDF
-      const isApproved = contract.status === 'approved' || contract.approval_status === 'approved';
+      const isApproved =
+        contract.status === 'approved' ||
+        contract.approval_status === 'approved';
       let hasPDF = !!contract.pdf_url;
 
       if (!isApproved) {
@@ -130,38 +132,46 @@ export const GET = withRBAC(
             storedFilename = decodeURIComponent(urlParts[1]); // Decode %20 to space
           }
         }
-        
+
         console.log('🔍 Searching for PDF file...');
         console.log('📋 Contract number:', contract.contract_number);
         console.log('📋 Stored filename from URL:', storedFilename);
         console.log('📋 Full stored URL:', contract.pdf_url);
-        
+
         // List ALL files in storage using service client
         const { data: fileList, error: listError } = await serviceClient.storage
           .from('contracts')
           .list('', {
             limit: 1000, // Increased limit to find all files
           });
-        
+
         if (listError) {
           console.error('❌ Error listing storage files:', listError);
-          console.error('❌ List error details:', JSON.stringify(listError, null, 2));
+          console.error(
+            '❌ List error details:',
+            JSON.stringify(listError, null, 2)
+          );
           return NextResponse.json(
             { error: 'Failed to access storage', details: listError.message },
             { status: 500 }
           );
         }
-        
+
         console.log(`📁 Found ${fileList?.length || 0} files in storage`);
-        
+
         // Log first few file names for debugging
         if (fileList && fileList.length > 0) {
-          console.log('📄 Sample files:', fileList.slice(0, 5).map(f => f.name));
+          console.log(
+            '📄 Sample files:',
+            fileList.slice(0, 5).map(f => f.name)
+          );
         }
-        
+
         // First, try exact match with stored filename (decoded)
         if (storedFilename && fileList) {
-          const exactMatch = fileList.find(file => file.name === storedFilename);
+          const exactMatch = fileList.find(
+            file => file.name === storedFilename
+          );
           if (exactMatch) {
             pdfFileName = exactMatch.name;
             console.log('✅ Found exact match:', pdfFileName);
@@ -169,39 +179,48 @@ export const GET = withRBAC(
             console.log('⚠️ No exact match found for:', storedFilename);
           }
         }
-        
+
         // If no exact match, search for files matching contract number
         if (!pdfFileName && fileList) {
-          console.log(`🔍 Searching for files starting with: "${contract.contract_number}"`);
+          console.log(
+            `🔍 Searching for files starting with: "${contract.contract_number}"`
+          );
           const matchingFiles = fileList.filter(
-            (file) =>
+            file =>
               file.name.startsWith(contract.contract_number!) &&
               file.name.endsWith('.pdf')
           );
-          
-          console.log(`🔍 Found ${matchingFiles.length} files matching contract number`);
+
+          console.log(
+            `🔍 Found ${matchingFiles.length} files matching contract number`
+          );
           if (matchingFiles.length > 0) {
-            console.log('📋 Matching files:', matchingFiles.map(f => f.name));
-            
+            console.log(
+              '📋 Matching files:',
+              matchingFiles.map(f => f.name)
+            );
+
             // Get the most recent matching file
             const sortedFiles = matchingFiles.sort((a, b) => {
               const aTime = new Date(a.created_at || 0).getTime();
               const bTime = new Date(b.created_at || 0).getTime();
               return bTime - aTime;
             });
-            
+
             const matchingFile = sortedFiles[0];
-            
+
             if (matchingFile) {
               pdfFileName = matchingFile.name;
-              
+
               // Update contract with correct URL in background using service client
-              const { data: { publicUrl } } = serviceClient.storage
+              const {
+                data: { publicUrl },
+              } = serviceClient.storage
                 .from('contracts')
                 .getPublicUrl(matchingFile.name);
-              
+
               pdfUrl = publicUrl;
-              
+
               // Update contract with correct URL (fire and forget)
               void (async () => {
                 try {
@@ -214,7 +233,7 @@ export const GET = withRBAC(
                   console.warn('⚠️ Failed to auto-fix PDF URL:', err);
                 }
               })();
-              
+
               console.log('🔧 Found matching PDF file:', pdfFileName);
             }
           } else {
@@ -223,15 +242,25 @@ export const GET = withRBAC(
             const allPdfs = fileList.filter(f => f.name.endsWith('.pdf'));
             console.log(`📄 Total PDF files in storage: ${allPdfs.length}`);
             if (allPdfs.length > 0) {
-              console.log('📄 Sample PDF files:', allPdfs.slice(0, 10).map(f => f.name));
+              console.log(
+                '📄 Sample PDF files:',
+                allPdfs.slice(0, 10).map(f => f.name)
+              );
             }
           }
         }
       } catch (fixError) {
         console.error('❌ Error searching for PDF file:', fixError);
-        console.error('❌ Error stack:', fixError instanceof Error ? fixError.stack : 'No stack trace');
+        console.error(
+          '❌ Error stack:',
+          fixError instanceof Error ? fixError.stack : 'No stack trace'
+        );
         return NextResponse.json(
-          { error: 'Failed to search for PDF file', details: fixError instanceof Error ? fixError.message : 'Unknown error' },
+          {
+            error: 'Failed to search for PDF file',
+            details:
+              fixError instanceof Error ? fixError.message : 'Unknown error',
+          },
           { status: 500 }
         );
       }
@@ -242,11 +271,12 @@ export const GET = withRBAC(
         console.error('📋 Contract number:', contract.contract_number);
         console.error('📋 Stored PDF URL:', contract.pdf_url);
         return NextResponse.json(
-          { 
+          {
             error: 'PDF file not found in storage',
             contractNumber: contract.contract_number,
             storedUrl: contract.pdf_url,
-            message: 'The PDF file does not exist in Supabase storage. Please regenerate the PDF or check the file name.',
+            message:
+              'The PDF file does not exist in Supabase storage. Please regenerate the PDF or check the file name.',
           },
           { status: 404 }
         );
@@ -257,16 +287,21 @@ export const GET = withRBAC(
         console.log('📥 Fetching PDF from storage:', pdfFileName);
         console.log('📥 Filename length:', pdfFileName.length);
         console.log('📥 Filename includes space:', pdfFileName.includes(' '));
-        
-        const { data: pdfData, error: downloadError } = await serviceClient.storage
-          .from('contracts')
-          .download(pdfFileName);
-        
+
+        const { data: pdfData, error: downloadError } =
+          await serviceClient.storage.from('contracts').download(pdfFileName);
+
         if (downloadError) {
-          console.error('❌ Failed to download PDF from storage:', downloadError);
-          console.error('❌ Error details:', JSON.stringify(downloadError, null, 2));
+          console.error(
+            '❌ Failed to download PDF from storage:',
+            downloadError
+          );
+          console.error(
+            '❌ Error details:',
+            JSON.stringify(downloadError, null, 2)
+          );
           return NextResponse.json(
-            { 
+            {
               error: 'Failed to download PDF from storage',
               details: downloadError.message,
               fileName: pdfFileName,
@@ -285,7 +320,7 @@ export const GET = withRBAC(
 
         const arrayBuffer = await pdfData.arrayBuffer();
         const pdfBuffer = new Uint8Array(arrayBuffer);
-        
+
         if (pdfBuffer.length === 0) {
           console.error('❌ PDF buffer is empty');
           return NextResponse.json(
@@ -293,14 +328,14 @@ export const GET = withRBAC(
             { status: 500 }
           );
         }
-        
+
         console.log('✅ PDF fetched from storage:', pdfBuffer.length, 'bytes');
-        
+
         // URL encode filename for Content-Disposition header if it contains spaces
-        const encodedFileName = pdfFileName.includes(' ') 
+        const encodedFileName = pdfFileName.includes(' ')
           ? encodeURIComponent(pdfFileName)
           : pdfFileName;
-        
+
         // Return the actual PDF from storage (not generated)
         return new NextResponse(pdfBuffer, {
           status: 200,
@@ -312,11 +347,17 @@ export const GET = withRBAC(
         });
       } catch (fetchError) {
         console.error('❌ Error fetching PDF from storage:', fetchError);
-        console.error('❌ Fetch error details:', fetchError instanceof Error ? fetchError.message : String(fetchError));
+        console.error(
+          '❌ Fetch error details:',
+          fetchError instanceof Error ? fetchError.message : String(fetchError)
+        );
         return NextResponse.json(
-          { 
+          {
             error: 'Failed to fetch PDF from storage',
-            details: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+            details:
+              fetchError instanceof Error
+                ? fetchError.message
+                : 'Unknown error',
             fileName: pdfFileName,
           },
           { status: 500 }

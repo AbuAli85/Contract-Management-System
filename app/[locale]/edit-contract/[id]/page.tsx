@@ -113,7 +113,10 @@ export default function EditContractPage() {
   // Load contract data into form when contract is fetched
   useEffect(() => {
     if (contract && !isRefreshingAfterSave) {
-      console.log('📋 Loading contract data into form, PDF URL:', contract.pdf_url);
+      console.log(
+        '📋 Loading contract data into form, PDF URL:',
+        contract.pdf_url
+      );
       setFormData(prev => {
         // Only update if the PDF URL actually changed to avoid unnecessary re-renders
         const newPdfUrl = contract.pdf_url || '';
@@ -125,8 +128,10 @@ export default function EditContractPage() {
         }
         return {
           status: contract.status || 'draft',
-          contract_start_date: contract.contract_start_date || contract.start_date || '',
-          contract_end_date: contract.contract_end_date || contract.end_date || '',
+          contract_start_date:
+            contract.contract_start_date || contract.start_date || '',
+          contract_end_date:
+            contract.contract_end_date || contract.end_date || '',
           salary: contract.basic_salary?.toString() || '',
           basic_salary: contract.basic_salary?.toString() || '',
           allowances: '', // Not available in ContractWithRelations
@@ -236,7 +241,7 @@ export default function EditContractPage() {
 
     try {
       // Only update fields that actually exist in the contracts table
-      // Note: department, special_terms, allowances, email, work_location, and id_card_number 
+      // Note: department, special_terms, allowances, email, work_location, and id_card_number
       // don't exist in the schema and are NOT included in updateData
       const updateData: Record<string, any> = {
         status: formData.status,
@@ -252,16 +257,26 @@ export default function EditContractPage() {
         pdf_url: formData.pdf_url || null,
         updated_at: new Date().toISOString(),
       };
-      
+
       // Explicitly remove fields that don't exist in the database schema
       // These must be completely removed, not just set to null
-      const fieldsToExclude = ['department', 'allowances', 'special_terms', 'email', 'work_location', 'id_card_number'];
+      const fieldsToExclude = [
+        'department',
+        'allowances',
+        'special_terms',
+        'email',
+        'work_location',
+        'id_card_number',
+      ];
       fieldsToExclude.forEach(field => {
         delete updateData[field];
       });
-      
+
       // Log the final payload to verify no invalid fields are included
-      console.log('📤 Final update payload (invalid fields removed):', updateData);
+      console.log(
+        '📤 Final update payload (invalid fields removed):',
+        updateData
+      );
 
       console.log('🔄 Saving contract with data:', updateData);
 
@@ -288,7 +303,7 @@ export default function EditContractPage() {
 
       setSaveSuccess(true);
       setIsRefreshingAfterSave(true);
-      
+
       // Update PDF URL immediately from API response if available
       const apiPdfUrl = result.contract?.pdf_url;
       if (apiPdfUrl !== undefined && apiPdfUrl !== null) {
@@ -298,30 +313,30 @@ export default function EditContractPage() {
           pdf_url: apiPdfUrl,
         }));
       }
-      
+
       // Invalidate the query cache to force a fresh fetch
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: ['contract', contractId],
         exact: true,
       });
-      
+
       // Wait a small moment to ensure database write is committed
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // Force a fresh refetch to bypass cache and get the latest data from database
       // This ensures we get any updates that might have happened elsewhere (webhooks, etc.)
       console.log('🔄 Refetching contract data...');
       const refetchResult = await refetch();
-      
+
       if (refetchResult.data) {
         const refetchedPdfUrl = refetchResult.data.pdf_url;
         console.log('📄 Refetched PDF URL from database:', refetchedPdfUrl);
         console.log('📄 Current form PDF URL:', formData.pdf_url);
-        
+
         // Always update the form with the refetched PDF URL to ensure we have the latest
         // Use the refetched value if it exists, otherwise keep the current value
         const finalPdfUrl = refetchedPdfUrl || apiPdfUrl || formData.pdf_url;
-        
+
         if (finalPdfUrl !== formData.pdf_url) {
           console.log('📄 PDF URL changed, updating form:', {
             old: formData.pdf_url,
@@ -329,7 +344,7 @@ export default function EditContractPage() {
             fromApi: apiPdfUrl,
             fromRefetch: refetchedPdfUrl,
           });
-          
+
           setFormData(prev => ({
             ...prev,
             pdf_url: finalPdfUrl,
@@ -338,14 +353,17 @@ export default function EditContractPage() {
           console.log('📄 PDF URL unchanged:', finalPdfUrl);
         }
       } else if (refetchResult.error) {
-        console.warn('⚠️ Refetch had an error, but continuing:', refetchResult.error);
+        console.warn(
+          '⚠️ Refetch had an error, but continuing:',
+          refetchResult.error
+        );
       } else {
         console.warn('⚠️ Refetch returned no data');
       }
-      
+
       // Reset the flag after refetch completes
       setTimeout(() => setIsRefreshingAfterSave(false), 300);
-      
+
       setHasUnsavedChanges(false);
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);

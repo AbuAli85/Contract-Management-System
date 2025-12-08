@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-service';
 
 export default function SimpleDashboardPage() {
   const params = useParams();
-  
+
   if (!params || !params.locale) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
@@ -15,7 +15,7 @@ export default function SimpleDashboardPage() {
       </div>
     );
   }
-  
+
   const locale = params.locale as string;
   const { user, loading, mounted } = useAuth();
 

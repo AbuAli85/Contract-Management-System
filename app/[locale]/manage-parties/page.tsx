@@ -4,8 +4,21 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PartyForm from '@/components/party-form';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Building2, Users, Briefcase, FileText, Loader2 } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  ArrowLeft,
+  Building2,
+  Users,
+  Briefcase,
+  FileText,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -20,7 +33,7 @@ export default function ManagePartiesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  
+
   // Check if we're editing an existing party
   const partyId = searchParams?.get('id');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,7 +63,7 @@ export default function ManagePartiesPage() {
           });
           return;
         }
-        
+
         const { data, error } = await supabase
           .from('parties')
           .select('*')
@@ -93,9 +106,11 @@ export default function ManagePartiesPage() {
   const handleFormSuccess = () => {
     toast({
       title: 'Success',
-      description: partyId ? 'Party updated successfully' : 'Party created successfully',
+      description: partyId
+        ? 'Party updated successfully'
+        : 'Party created successfully',
     });
-    
+
     // Redirect to the appropriate view based on party type
     // This will be handled by the form component
     router.push('/en/manage-parties/employers');
@@ -123,7 +138,9 @@ export default function ManagePartiesPage() {
           <CardContent className='pt-6 flex flex-col items-center justify-center min-h-[400px]'>
             <div className='text-center'>
               <p className='text-red-600 font-semibold mb-4'>{loadError}</p>
-              <Button onClick={() => router.push('/en/manage-parties/employers')}>
+              <Button
+                onClick={() => router.push('/en/manage-parties/employers')}
+              >
                 <ArrowLeft className='mr-2 h-4 w-4' />
                 Back to Parties
               </Button>
@@ -149,36 +166,35 @@ export default function ManagePartiesPage() {
               {partyId ? 'Edit Party' : 'Add New Party'}
             </h1>
             <p className='text-muted-foreground mt-1'>
-              {partyId 
-                ? 'Update party information and details' 
-                : 'Create a new party (Employer, Client, or Generic)'
-              }
+              {partyId
+                ? 'Update party information and details'
+                : 'Create a new party (Employer, Client, or Generic)'}
             </p>
           </div>
         </div>
 
         {/* Quick Links */}
         <Card className='bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800'>
-        <CardHeader>
+          <CardHeader>
             <CardTitle className='text-lg flex items-center gap-2'>
               <FileText className='h-5 w-5 text-blue-600' />
               Quick Navigation
-          </CardTitle>
+            </CardTitle>
             <CardDescription>
               View existing parties organized by type
             </CardDescription>
           </CardHeader>
-        <CardContent>
+          <CardContent>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
               <Link href='/en/manage-parties/employers'>
-                <Button 
-                  variant='outline' 
+                <Button
+                  variant='outline'
                   className='w-full h-auto py-4 flex flex-col items-start gap-2 hover:bg-blue-100 dark:hover:bg-blue-900'
                 >
                   <div className='flex items-center gap-2 w-full'>
                     <Building2 className='h-5 w-5 text-blue-600' />
                     <span className='font-semibold'>Employers</span>
-                </div>
+                  </div>
                   <span className='text-xs text-muted-foreground'>
                     View all employer parties
                   </span>
@@ -186,14 +202,14 @@ export default function ManagePartiesPage() {
               </Link>
 
               <Link href='/en/manage-parties/clients'>
-                <Button 
-                  variant='outline' 
+                <Button
+                  variant='outline'
                   className='w-full h-auto py-4 flex flex-col items-start gap-2 hover:bg-green-100 dark:hover:bg-green-900'
                 >
                   <div className='flex items-center gap-2 w-full'>
                     <Users className='h-5 w-5 text-green-600' />
                     <span className='font-semibold'>Clients</span>
-            </div>
+                  </div>
                   <span className='text-xs text-muted-foreground'>
                     View all client parties
                   </span>
@@ -201,14 +217,14 @@ export default function ManagePartiesPage() {
               </Link>
 
               <Link href='/en/manage-parties/generic'>
-                <Button 
-                  variant='outline' 
+                <Button
+                  variant='outline'
                   className='w-full h-auto py-4 flex flex-col items-start gap-2 hover:bg-purple-100 dark:hover:bg-purple-900'
                 >
                   <div className='flex items-center gap-2 w-full'>
                     <Briefcase className='h-5 w-5 text-purple-600' />
                     <span className='font-semibold'>Generic</span>
-            </div>
+                  </div>
                   <span className='text-xs text-muted-foreground'>
                     View all generic parties
                   </span>
@@ -217,21 +233,19 @@ export default function ManagePartiesPage() {
             </div>
           </CardContent>
         </Card>
-                                </div>
-                                
+      </div>
+
       {/* Party Form */}
       <Card className='shadow-lg'>
         <CardHeader className='border-b'>
           <CardTitle className='text-xl'>Party Information</CardTitle>
           <CardDescription>
-            Fill in the required information to {partyId ? 'update' : 'create'} a party
+            Fill in the required information to {partyId ? 'update' : 'create'}{' '}
+            a party
           </CardDescription>
         </CardHeader>
         <CardContent className='pt-6'>
-          <PartyForm
-            partyToEdit={partyData}
-            onFormSubmit={handleFormSuccess}
-          />
+          <PartyForm partyToEdit={partyData} onFormSubmit={handleFormSuccess} />
         </CardContent>
       </Card>
     </div>

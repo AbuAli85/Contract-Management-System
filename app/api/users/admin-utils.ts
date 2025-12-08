@@ -106,4 +106,3 @@ export async function ensureUserCanManageUsers(
     throw new Error(message);
   }
 }
-

@@ -8,12 +8,12 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    
+
     // In a real implementation, you would:
     // 1. Verify user authentication
     // 2. Update notification read status in database
     // 3. Return updated notification
-    
+
     // For now, simulate successful update
     return NextResponse.json({
       success: true,
@@ -28,4 +28,3 @@ export async function PATCH(
     );
   }
 }
-

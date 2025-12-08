@@ -728,7 +728,10 @@ export default function NewUsersPage() {
 
   // Calculate total pages
   const currentPageSize = pageSize ?? 25;
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / currentPageSize));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredUsers.length / currentPageSize)
+  );
 
   // Don't render anything until mounted to prevent hydration mismatches
   if (!mounted) {
@@ -1566,35 +1569,43 @@ export default function NewUsersPage() {
 
       {/* Permissions Manager Modal */}
       <PermissionsManager
-        user={selectedUser ? (() => {
-          const mappedRole = 
-            selectedUser.role === 'super_admin' || selectedUser.role === 'moderator' || selectedUser.role === 'guest'
-              ? 'admin'
-              : selectedUser.role === 'admin' || selectedUser.role === 'manager' || selectedUser.role === 'user'
-              ? selectedUser.role
-              : 'user';
-          
-          const userObj: {
-            id: string;
-            email: string;
-            full_name?: string;
-            role: 'admin' | 'manager' | 'user' | 'viewer';
-            status?: string;
-          } = {
-            id: selectedUser.id,
-            email: selectedUser.email,
-            role: mappedRole as 'admin' | 'manager' | 'user' | 'viewer',
-          };
-          
-          if (selectedUser.full_name) {
-            userObj.full_name = selectedUser.full_name;
-          }
-          if (selectedUser.status) {
-            userObj.status = selectedUser.status;
-          }
-          
-          return userObj;
-        })() : null}
+        user={
+          selectedUser
+            ? (() => {
+                const mappedRole =
+                  selectedUser.role === 'super_admin' ||
+                  selectedUser.role === 'moderator' ||
+                  selectedUser.role === 'guest'
+                    ? 'admin'
+                    : selectedUser.role === 'admin' ||
+                        selectedUser.role === 'manager' ||
+                        selectedUser.role === 'user'
+                      ? selectedUser.role
+                      : 'user';
+
+                const userObj: {
+                  id: string;
+                  email: string;
+                  full_name?: string;
+                  role: 'admin' | 'manager' | 'user' | 'viewer';
+                  status?: string;
+                } = {
+                  id: selectedUser.id,
+                  email: selectedUser.email,
+                  role: mappedRole as 'admin' | 'manager' | 'user' | 'viewer',
+                };
+
+                if (selectedUser.full_name) {
+                  userObj.full_name = selectedUser.full_name;
+                }
+                if (selectedUser.status) {
+                  userObj.status = selectedUser.status;
+                }
+
+                return userObj;
+              })()
+            : null
+        }
         open={showPermissionsModal}
         onOpenChange={setShowPermissionsModal}
         onPermissionsUpdate={fetchUsers}

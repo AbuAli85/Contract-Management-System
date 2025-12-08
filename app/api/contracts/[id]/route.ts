@@ -124,7 +124,8 @@ export const GET = withRBAC(
           partiesMap.get(contract.second_party_id) ||
           partiesMap.get(contract.employer_id),
         promoters: promoterData ? [promoterData] : null,
-        contract_start_date: contract.start_date || contract.contract_start_date,
+        contract_start_date:
+          contract.start_date || contract.contract_start_date,
         contract_end_date: contract.end_date || contract.contract_end_date,
         job_title: contract.title || contract.job_title,
         contract_value:
@@ -199,12 +200,22 @@ export const PUT = withRBAC(
       // Remove fields that don't exist in the database schema
       // These fields cause PGRST204 errors if included
       // Must be removed completely, even if they're null
-      const fieldsToIgnore = ['department', 'special_terms', 'allowances', 'email', 'work_location', 'id_card_number'];
+      const fieldsToIgnore = [
+        'department',
+        'special_terms',
+        'allowances',
+        'email',
+        'work_location',
+        'id_card_number',
+      ];
       fieldsToIgnore.forEach(field => {
         delete body[field]; // Unconditionally delete, don't check if exists
       });
-      
-      console.log('📋 Request body after filtering invalid fields:', Object.keys(body));
+
+      console.log(
+        '📋 Request body after filtering invalid fields:',
+        Object.keys(body)
+      );
 
       // Build update payload with only fields that exist in the schema
       const dataToUpdate: any = {
@@ -227,7 +238,7 @@ export const PUT = withRBAC(
         'terminated',
         'expired',
       ];
-      
+
       // Extended statuses that might be in some database versions
       const extendedStatuses = [
         'approved',
@@ -236,17 +247,21 @@ export const PUT = withRBAC(
         'generated',
         'soon-to-expire',
       ];
-      
+
       if (body.status) {
         // Try safe statuses first (most restrictive)
         if (safeStatuses.includes(body.status)) {
           dataToUpdate.status = body.status;
         } else if (extendedStatuses.includes(body.status)) {
           // Try extended statuses - if database rejects it, error will be caught below
-          console.warn(`⚠️ Using extended status "${body.status}" - may not be supported by current constraint`);
+          console.warn(
+            `⚠️ Using extended status "${body.status}" - may not be supported by current constraint`
+          );
           dataToUpdate.status = body.status;
         } else {
-          console.warn(`⚠️ Invalid status "${body.status}". Skipping status update.`);
+          console.warn(
+            `⚠️ Invalid status "${body.status}". Skipping status update.`
+          );
           console.warn(`⚠️ Safe statuses: ${safeStatuses.join(', ')}`);
           // Don't include status in the update to prevent constraint violation
         }
@@ -269,7 +284,7 @@ export const PUT = withRBAC(
       if (body.description) dataToUpdate.description = body.description;
       if (body.terms) dataToUpdate.terms = body.terms;
       if (body.pdf_url !== undefined) dataToUpdate.pdf_url = body.pdf_url;
-      // Note: work_location, email, id_card_number, special_terms, department, and allowances 
+      // Note: work_location, email, id_card_number, special_terms, department, and allowances
       // don't exist in the contracts table schema and are filtered out above
 
       console.log('🔄 Updating contract with data:', dataToUpdate);
@@ -291,7 +306,7 @@ export const PUT = withRBAC(
           hint: error.hint,
           dataToUpdate,
         });
-        
+
         // Special handling for status constraint violations
         if (error.code === '23514' && error.message.includes('status_check')) {
           // Get current contract status to suggest valid alternatives
@@ -300,9 +315,9 @@ export const PUT = withRBAC(
             .select('status')
             .eq('id', id)
             .single();
-          
+
           const currentStatus = currentContract?.status || 'unknown';
-          
+
           return NextResponse.json(
             {
               error: 'Invalid status value',
@@ -311,13 +326,21 @@ export const PUT = withRBAC(
               hint: `To enable "${dataToUpdate.status}" status, run the migration: supabase/migrations/20251116_add_rejected_and_extended_statuses.sql. For now, use one of these safe statuses: draft, pending, active, completed, terminated, expired`,
               attemptedStatus: dataToUpdate.status,
               currentStatus: currentStatus,
-              safeStatuses: ['draft', 'pending', 'active', 'completed', 'terminated', 'expired'],
-              migrationFile: 'supabase/migrations/20251116_add_rejected_and_extended_statuses.sql',
+              safeStatuses: [
+                'draft',
+                'pending',
+                'active',
+                'completed',
+                'terminated',
+                'expired',
+              ],
+              migrationFile:
+                'supabase/migrations/20251116_add_rejected_and_extended_statuses.sql',
             },
             { status: 400 }
           );
         }
-        
+
         return NextResponse.json(
           {
             error: 'Update failed',
@@ -353,7 +376,10 @@ export const PUT = withRBAC(
       );
     } catch (error) {
       console.error('Error in PUT /api/contracts/[id]:', error);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error(
+        'Error stack:',
+        error instanceof Error ? error.stack : 'No stack trace'
+      );
       return NextResponse.json(
         {
           error: 'Internal server error',
@@ -394,11 +420,7 @@ export const DELETE = withRBAC(
         .eq('id', user.id)
         .single();
 
-      if (
-        userError ||
-        !userProfile ||
-        (userProfile as any)?.role !== 'admin'
-      ) {
+      if (userError || !userProfile || (userProfile as any)?.role !== 'admin') {
         return NextResponse.json(
           { error: 'Only administrators can delete contracts' },
           { status: 403 }
@@ -474,4 +496,3 @@ export const DELETE = withRBAC(
     }
   }
 );
-

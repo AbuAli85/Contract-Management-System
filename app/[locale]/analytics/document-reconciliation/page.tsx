@@ -11,7 +11,14 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertTriangle, CheckCircle, Link as LinkIcon, RefreshCw, Download } from 'lucide-react';
+import {
+  Loader2,
+  AlertTriangle,
+  CheckCircle,
+  Link as LinkIcon,
+  RefreshCw,
+  Download,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ReconciliationIssue {
@@ -77,7 +84,9 @@ export default function DocumentReconciliationPage() {
       // Fetch all promoters
       const { data: promoters, error: promotersError } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, id_card_url, passport_url, id_card_number, passport_number');
+        .select(
+          'id, name_en, name_ar, id_card_url, passport_url, id_card_number, passport_number'
+        );
 
       if (promotersError) {
         console.error('Error fetching promoters:', promotersError);
@@ -92,17 +101,27 @@ export default function DocumentReconciliationPage() {
       const promotersData = promoters || [];
 
       // Calculate basic stats
-      const withIdCard = promotersData.filter(p => p.id_card_url && p.id_card_url.trim() !== '').length;
-      const withPassport = promotersData.filter(p => p.passport_url && p.passport_url.trim() !== '').length;
-      const complete = promotersData.filter(p => 
-        p.id_card_url && p.id_card_url.trim() !== '' && 
-        p.passport_url && p.passport_url.trim() !== ''
+      const withIdCard = promotersData.filter(
+        p => p.id_card_url && p.id_card_url.trim() !== ''
+      ).length;
+      const withPassport = promotersData.filter(
+        p => p.passport_url && p.passport_url.trim() !== ''
+      ).length;
+      const complete = promotersData.filter(
+        p =>
+          p.id_card_url &&
+          p.id_card_url.trim() !== '' &&
+          p.passport_url &&
+          p.passport_url.trim() !== ''
       ).length;
 
       // Check for missing URLs but has document numbers
       promotersData.forEach(promoter => {
         // ID Card issues
-        if (promoter.id_card_number && (!promoter.id_card_url || promoter.id_card_url.trim() === '')) {
+        if (
+          promoter.id_card_number &&
+          (!promoter.id_card_url || promoter.id_card_url.trim() === '')
+        ) {
           foundIssues.push({
             type: 'missing_url',
             severity: 'high',
@@ -115,7 +134,10 @@ export default function DocumentReconciliationPage() {
         }
 
         // Passport issues
-        if (promoter.passport_number && (!promoter.passport_url || promoter.passport_url.trim() === '')) {
+        if (
+          promoter.passport_number &&
+          (!promoter.passport_url || promoter.passport_url.trim() === '')
+        ) {
           foundIssues.push({
             type: 'missing_url',
             severity: 'high',
@@ -128,8 +150,10 @@ export default function DocumentReconciliationPage() {
         }
 
         // No documents at all
-        if ((!promoter.id_card_url || promoter.id_card_url.trim() === '') && 
-            (!promoter.passport_url || promoter.passport_url.trim() === '')) {
+        if (
+          (!promoter.id_card_url || promoter.id_card_url.trim() === '') &&
+          (!promoter.passport_url || promoter.passport_url.trim() === '')
+        ) {
           foundIssues.push({
             type: 'missing_url',
             severity: 'medium',
@@ -154,7 +178,10 @@ export default function DocumentReconciliationPage() {
           });
         }
 
-        if (promoter.passport_url && !promoter.passport_url.startsWith('http')) {
+        if (
+          promoter.passport_url &&
+          !promoter.passport_url.startsWith('http')
+        ) {
           foundIssues.push({
             type: 'broken_link',
             severity: 'high',
@@ -261,19 +288,25 @@ export default function DocumentReconciliationPage() {
       const fixableIssues = issues.filter(i => i.fixable);
 
       for (const issue of fixableIssues) {
-        if (issue.type === 'broken_link' && issue.promoterId && issue.documentType) {
+        if (
+          issue.type === 'broken_link' &&
+          issue.promoterId &&
+          issue.documentType
+        ) {
           // Try to construct proper URL from broken path
           const brokenUrl = issue.fileUrl || '';
-          
+
           // If it's a relative path, construct full Supabase URL
           if (brokenUrl && !brokenUrl.startsWith('http')) {
-            const { data: { publicUrl } } = supabase
-              .storage
+            const {
+              data: { publicUrl },
+            } = supabase.storage
               .from('promoter-documents')
               .getPublicUrl(brokenUrl);
 
-            const updateField = issue.documentType === 'id_card' ? 'id_card_url' : 'passport_url';
-            
+            const updateField =
+              issue.documentType === 'id_card' ? 'id_card_url' : 'passport_url';
+
             const { error } = await supabase
               .from('promoters')
               .update({ [updateField]: publicUrl })
@@ -306,7 +339,14 @@ export default function DocumentReconciliationPage() {
   };
 
   const exportReport = () => {
-    const headers = ['Type', 'Severity', 'Promoter', 'Document Type', 'Description', 'Fixable'];
+    const headers = [
+      'Type',
+      'Severity',
+      'Promoter',
+      'Document Type',
+      'Description',
+      'Fixable',
+    ];
     const rows = issues.map(issue => [
       issue.type,
       issue.severity,
@@ -318,7 +358,7 @@ export default function DocumentReconciliationPage() {
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -349,14 +389,18 @@ export default function DocumentReconciliationPage() {
     <div className='container mx-auto space-y-8 p-6'>
       <div className='mb-8 flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Document Reconciliation</h1>
+          <h1 className='text-3xl font-bold tracking-tight'>
+            Document Reconciliation
+          </h1>
           <p className='text-muted-foreground mt-2'>
             Find and fix document assignment issues
           </p>
         </div>
         <div className='flex gap-3'>
           <Button onClick={scanForIssues} disabled={scanning} variant='outline'>
-            <RefreshCw className={`h-4 w-4 mr-2 ${scanning ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${scanning ? 'animate-spin' : ''}`}
+            />
             Rescan
           </Button>
           {fixableIssues > 0 && (
@@ -383,8 +427,12 @@ export default function DocumentReconciliationPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <AlertTriangle className='h-8 w-8 mx-auto text-red-600 mb-2' />
-              <p className='text-4xl font-bold text-red-700'>{highSeverityIssues}</p>
-              <p className='text-sm text-muted-foreground mt-1'>High Severity</p>
+              <p className='text-4xl font-bold text-red-700'>
+                {highSeverityIssues}
+              </p>
+              <p className='text-sm text-muted-foreground mt-1'>
+                High Severity
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -393,7 +441,9 @@ export default function DocumentReconciliationPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <CheckCircle className='h-8 w-8 mx-auto text-green-600 mb-2' />
-              <p className='text-4xl font-bold text-green-700'>{fixableIssues}</p>
+              <p className='text-4xl font-bold text-green-700'>
+                {fixableIssues}
+              </p>
               <p className='text-sm text-muted-foreground mt-1'>Auto-Fixable</p>
             </div>
           </CardContent>
@@ -403,11 +453,17 @@ export default function DocumentReconciliationPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <p className='text-4xl font-bold'>{stats.promotersComplete}</p>
-              <p className='text-sm text-muted-foreground mt-1'>Complete Promoters</p>
+              <p className='text-sm text-muted-foreground mt-1'>
+                Complete Promoters
+              </p>
               <p className='text-xs text-muted-foreground'>
-                {stats.totalPromoters > 0 
-                  ? ((stats.promotersComplete / stats.totalPromoters) * 100).toFixed(1) 
-                  : '0'}%
+                {stats.totalPromoters > 0
+                  ? (
+                      (stats.promotersComplete / stats.totalPromoters) *
+                      100
+                    ).toFixed(1)
+                  : '0'}
+                %
               </p>
             </div>
           </CardContent>
@@ -465,19 +521,36 @@ export default function DocumentReconciliationPage() {
             <div className='text-center py-12'>
               <CheckCircle className='h-16 w-16 mx-auto text-green-500 mb-4' />
               <p className='text-lg font-semibold'>No Issues Found!</p>
-              <p className='text-muted-foreground'>All documents are properly assigned</p>
+              <p className='text-muted-foreground'>
+                All documents are properly assigned
+              </p>
             </div>
           ) : (
             <div className='space-y-3 max-h-[600px] overflow-y-auto'>
               {issues.map((issue, index) => (
-                <Card key={index} className='border-l-4' style={{
-                  borderLeftColor: issue.severity === 'high' ? '#ef4444' : issue.severity === 'medium' ? '#f59e0b' : '#3b82f6'
-                }}>
+                <Card
+                  key={index}
+                  className='border-l-4'
+                  style={{
+                    borderLeftColor:
+                      issue.severity === 'high'
+                        ? '#ef4444'
+                        : issue.severity === 'medium'
+                          ? '#f59e0b'
+                          : '#3b82f6',
+                  }}
+                >
                   <CardContent className='p-4'>
                     <div className='flex items-start justify-between'>
                       <div className='flex-1'>
                         <div className='flex items-center gap-2 mb-2'>
-                          <Badge variant={issue.severity === 'high' ? 'destructive' : 'secondary'}>
+                          <Badge
+                            variant={
+                              issue.severity === 'high'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
                             {issue.severity.toUpperCase()}
                           </Badge>
                           <Badge variant='outline'>
@@ -485,7 +558,9 @@ export default function DocumentReconciliationPage() {
                           </Badge>
                           {issue.documentType && (
                             <Badge variant='outline'>
-                              {issue.documentType === 'id_card' ? '🆔 ID Card' : '📕 Passport'}
+                              {issue.documentType === 'id_card'
+                                ? '🆔 ID Card'
+                                : '📕 Passport'}
                             </Badge>
                           )}
                           {issue.fixable && (
@@ -494,7 +569,9 @@ export default function DocumentReconciliationPage() {
                             </Badge>
                           )}
                         </div>
-                        <p className='text-sm font-medium'>{issue.description}</p>
+                        <p className='text-sm font-medium'>
+                          {issue.description}
+                        </p>
                         {issue.promoterName && (
                           <p className='text-xs text-muted-foreground mt-1'>
                             Promoter: {issue.promoterName}
@@ -517,4 +594,3 @@ export default function DocumentReconciliationPage() {
     </div>
   );
 }
-

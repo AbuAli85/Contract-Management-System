@@ -101,10 +101,10 @@ export const GET = withAnyRBAC(
       // Handle both UUID and slug-based lookups
       const isFullUUID = isUUID(id);
       const searchId = isFullUUID ? id : extractIdFromSlug(id);
-      
+
       // Fetch promoter data (simplified to avoid relationship issues)
       let promoterQuery = supabase.from('promoters').select('*');
-      
+
       if (isFullUUID) {
         // Exact match for full UUID
         promoterQuery = promoterQuery.eq('id', searchId);
@@ -112,7 +112,7 @@ export const GET = withAnyRBAC(
         // Partial match for slug (search by first 8 characters of UUID)
         promoterQuery = promoterQuery.like('id', `${searchId}%`);
       }
-      
+
       const { data: promoter, error } = await promoterQuery.single();
 
       if (error) {

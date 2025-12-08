@@ -115,7 +115,10 @@ import { useTranslations } from 'next-intl';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
-import { ContractsLoadingState, PermissionsLoadingState } from '@/components/contracts/enhanced-loading-state';
+import {
+  ContractsLoadingState,
+  PermissionsLoadingState,
+} from '@/components/contracts/enhanced-loading-state';
 import { EnhancedEmptyState } from '@/components/contracts/enhanced-empty-state';
 
 import { FileTextIcon } from '@radix-ui/react-icons';
@@ -153,9 +156,9 @@ const getLocalizedName = (
   fallback: string = 'N/A'
 ): string => {
   if (!entity || typeof entity !== 'object') return fallback;
-  
+
   if (!('name_en' in entity)) return fallback;
-  
+
   if (locale === 'ar') {
     return entity.name_ar || entity.name_en || fallback;
   }
@@ -165,7 +168,7 @@ const getLocalizedName = (
 // Safe date parsing functions to prevent "Invalid time value" errors
 const safeParseISO = (dateString: string | null | undefined): Date | null => {
   if (!dateString || typeof dateString !== 'string') return null;
-  
+
   try {
     const parsed = parseISO(dateString);
     if (isValid(parsed)) {
@@ -174,7 +177,7 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
   } catch (error) {
     console.warn('Invalid ISO date string:', dateString, error);
   }
-  
+
   // Try alternative parsing for common formats
   try {
     const formats = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy'];
@@ -185,19 +188,26 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
       }
     }
   } catch (error) {
-    console.warn('Failed to parse date with alternative formats:', dateString, error);
+    console.warn(
+      'Failed to parse date with alternative formats:',
+      dateString,
+      error
+    );
   }
-  
+
   return null;
 };
 
-const safeFormatDate = (dateString: string | null | undefined, formatStr: string = 'dd-MM-yyyy'): string => {
+const safeFormatDate = (
+  dateString: string | null | undefined,
+  formatStr: string = 'dd-MM-yyyy'
+): string => {
   // Return immediately for null/undefined/empty values
   if (!dateString || dateString === 'Invalid date') return 'N/A';
-  
+
   const date = safeParseISO(dateString);
   if (!date) return 'N/A';
-  
+
   try {
     const formatted = format(date, formatStr);
     return formatted;
@@ -207,10 +217,13 @@ const safeFormatDate = (dateString: string | null | undefined, formatStr: string
   }
 };
 
-const safeDifferenceInDays = (dateString: string | null | undefined, compareDate: Date = new Date()): number | null => {
+const safeDifferenceInDays = (
+  dateString: string | null | undefined,
+  compareDate: Date = new Date()
+): number | null => {
   const date = safeParseISO(dateString);
   if (!date) return null;
-  
+
   try {
     return differenceInDays(date, compareDate);
   } catch (error) {
@@ -219,7 +232,15 @@ const safeDifferenceInDays = (dateString: string | null | undefined, compareDate
   }
 };
 
-type ContractStatus = 'draft' | 'pending' | 'processing' | 'approved' | 'Active' | 'Expired' | 'Upcoming' | 'Unknown';
+type ContractStatus =
+  | 'draft'
+  | 'pending'
+  | 'processing'
+  | 'approved'
+  | 'Active'
+  | 'Expired'
+  | 'Upcoming'
+  | 'Unknown';
 
 function getContractStatus(contract: ContractWithRelations): ContractStatus {
   try {
@@ -231,16 +252,15 @@ function getContractStatus(contract: ContractWithRelations): ContractStatus {
         return dbStatus as ContractStatus;
       }
     }
-    
+
     // ✅ PRIORITY 2: Calculate status based on dates (for contracts without explicit workflow status)
-    if (!contract.start_date || !contract.end_date)
-      return 'Unknown';
+    if (!contract.start_date || !contract.end_date) return 'Unknown';
     const now = new Date();
     const startDate = safeParseISO(contract.start_date);
     const endDate = safeParseISO(contract.end_date);
-    
+
     if (!startDate || !endDate) return 'Unknown';
-    
+
     if (now >= startDate && now <= endDate) return 'Active';
     if (now > endDate) return 'Expired';
     if (now < startDate) return 'Upcoming';
@@ -263,7 +283,8 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
     // Safe date calculations with proper null checks
     if (contract.end_date) {
       try {
-        days_until_expiry = safeDifferenceInDays(contract.end_date, now) ?? undefined;
+        days_until_expiry =
+          safeDifferenceInDays(contract.end_date, now) ?? undefined;
       } catch (error) {
         console.warn('Error calculating days until expiry:', error);
         days_until_expiry = undefined;
@@ -331,7 +352,7 @@ function ContractsContent() {
 
   // Add authentication check
   const { user, loading: authLoading } = useAuth();
-  
+
   // Get user's preferred currency
   const { preferredCurrency } = useCurrencyPreference();
 
@@ -360,7 +381,7 @@ function ContractsContent() {
       contract_number: contracts[0].contract_number,
       promoter_id: contracts[0].promoter_id,
       promoters: contracts[0].promoters,
-      has_promoter_data: !!contracts[0].promoters
+      has_promoter_data: !!contracts[0].promoters,
     });
   }
 
@@ -410,11 +431,11 @@ function ContractsContent() {
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
     }
-    
+
     searchDebounceRef.current = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
     }, CONSTANTS.SEARCH_DEBOUNCE_MS);
-    
+
     return () => {
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
@@ -451,9 +472,15 @@ function ContractsContent() {
       const now = new Date();
 
       // ✅ Count actual workflow statuses from database
-      const pendingCount = enhanced.filter(c => getContractStatus(c) === 'pending').length;
-      const draftCount = enhanced.filter(c => getContractStatus(c) === 'draft').length;
-      const processingCount = enhanced.filter(c => getContractStatus(c) === 'processing').length;
+      const pendingCount = enhanced.filter(
+        c => getContractStatus(c) === 'pending'
+      ).length;
+      const draftCount = enhanced.filter(
+        c => getContractStatus(c) === 'draft'
+      ).length;
+      const processingCount = enhanced.filter(
+        c => getContractStatus(c) === 'processing'
+      ).length;
 
       return {
         // Use totalCount (actual DB total) not enhanced.length (paginated results)
@@ -519,10 +546,18 @@ function ContractsContent() {
         // ✅ PERFORMANCE: Use debounced search term
         const matchesSearch =
           !debouncedSearchTerm ||
-          contract.id.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-          firstParty.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-          secondParty.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-          (promoterName || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          contract.id
+            .toLowerCase()
+            .includes(debouncedSearchTerm.toLowerCase()) ||
+          firstParty
+            .toLowerCase()
+            .includes(debouncedSearchTerm.toLowerCase()) ||
+          secondParty
+            .toLowerCase()
+            .includes(debouncedSearchTerm.toLowerCase()) ||
+          (promoterName || '')
+            .toLowerCase()
+            .includes(debouncedSearchTerm.toLowerCase()) ||
           (contract.job_title &&
             contract.job_title
               .toLowerCase()
@@ -666,33 +701,34 @@ function ContractsContent() {
     }
 
     setIsDownloading(contract.id);
-    
+
     try {
       // Use the internal API endpoint that fetches from storage
       const apiUrl = `/api/contracts/${contract.id}/pdf/view`;
       console.log('📥 Downloading PDF via API:', apiUrl);
-      
+
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/pdf',
+          Accept: 'application/pdf',
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}`;
+        const errorMessage =
+          errorData.error || errorData.message || `HTTP ${response.status}`;
         console.error('❌ PDF API failed:', response.status, errorMessage);
         throw new Error(errorMessage);
       }
 
       const blob = await response.blob();
       console.log('✅ PDF blob received:', blob.size, 'bytes');
-      
+
       if (blob.size === 0) {
         throw new Error('Downloaded file is empty');
       }
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -712,7 +748,10 @@ function ContractsContent() {
       console.error('❌ Download error:', error);
       toast({
         title: '❌ Download Failed',
-        description: error instanceof Error ? error.message : 'Failed to download contract PDF. The file may not be accessible.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to download contract PDF. The file may not be accessible.',
         variant: 'destructive',
       });
     } finally {
@@ -897,25 +936,25 @@ function ContractsContent() {
   const getStatusBadge = (status: ContractStatus) => {
     // Normalize status to lowercase for consistency
     const normalizedStatus = status.toLowerCase();
-    
+
     // Map calculated statuses to proper workflow statuses
     const statusMap: Record<string, string> = {
-      'active': 'active',
-      'expired': 'expired', 
-      'upcoming': 'pending', // Upcoming contracts are pending approval
-      'unknown': 'draft', // Unknown defaults to draft
-      'draft': 'draft',
-      'pending': 'pending',
-      'processing': 'processing',
-      'approved': 'approved',
+      active: 'active',
+      expired: 'expired',
+      upcoming: 'pending', // Upcoming contracts are pending approval
+      unknown: 'draft', // Unknown defaults to draft
+      draft: 'draft',
+      pending: 'pending',
+      processing: 'processing',
+      approved: 'approved',
     };
-    
+
     const mappedStatus = statusMap[normalizedStatus] || normalizedStatus;
-    
+
     return (
-      <ContractStatusBadge 
-        status={mappedStatus as any} 
-        size="sm"
+      <ContractStatusBadge
+        status={mappedStatus as any}
+        size='sm'
         showIcon={true}
       />
     );
@@ -939,8 +978,8 @@ function ContractsContent() {
                     </div>
                     <p className='text-2xl font-bold'>{contractStats.total}</p>
                     <p className='text-xs text-blue-200 mt-1'>
-                      {totalCount === contractStats.total 
-                        ? 'All contracts in database' 
+                      {totalCount === contractStats.total
+                        ? 'All contracts in database'
                         : `Showing ${contracts.length} of ${contractStats.total}`}
                     </p>
                   </div>
@@ -969,11 +1008,15 @@ function ContractsContent() {
                 <div className='flex items-center justify-between'>
                   <div>
                     <div className='flex items-center gap-1'>
-                      <p className='text-sm text-green-100 font-medium'>Active</p>
+                      <p className='text-sm text-green-100 font-medium'>
+                        Active
+                      </p>
                       <Info className='h-3 w-3 text-green-200' />
                     </div>
                     <p className='text-2xl font-bold'>{contractStats.active}</p>
-                    <p className='text-xs text-green-200 mt-1'>Currently active</p>
+                    <p className='text-xs text-green-200 mt-1'>
+                      Currently active
+                    </p>
                   </div>
                   <div className='p-2 bg-green-400/20 rounded-lg'>
                     <CheckCircle className='h-6 w-6 text-green-200' />
@@ -1034,11 +1077,17 @@ function ContractsContent() {
                 <div className='flex items-center justify-between'>
                   <div>
                     <div className='flex items-center gap-1'>
-                      <p className='text-sm text-purple-100 font-medium'>Pending</p>
+                      <p className='text-sm text-purple-100 font-medium'>
+                        Pending
+                      </p>
                       <Info className='h-3 w-3 text-purple-200' />
                     </div>
-                    <p className='text-2xl font-bold'>{contractStats.pending}</p>
-                    <p className='text-xs text-purple-200 mt-1'>Awaiting approval</p>
+                    <p className='text-2xl font-bold'>
+                      {contractStats.pending}
+                    </p>
+                    <p className='text-xs text-purple-200 mt-1'>
+                      Awaiting approval
+                    </p>
                   </div>
                   <div className='p-2 bg-purple-400/20 rounded-lg'>
                     <Clock className='h-6 w-6 text-purple-200' />
@@ -1065,10 +1114,10 @@ function ContractsContent() {
               <p className='text-lg font-bold'>
                 <CurrencyDisplay
                   amount={contractStats.total_value}
-                  currency="USD"
+                  currency='USD'
                   displayCurrency={preferredCurrency}
                   showTooltip={true}
-                  className="text-white"
+                  className='text-white'
                 />
               </p>
               <p className='text-xs text-indigo-200 mt-1'>All contracts</p>
@@ -1153,7 +1202,9 @@ function ContractsContent() {
               <AlertTriangle className='h-4 w-4' />
               <AlertDescription>
                 <div className='space-y-2'>
-                  <p className='font-medium'>{error?.message || error?.toString() || 'Unknown error'}</p>
+                  <p className='font-medium'>
+                    {error?.message || error?.toString() || 'Unknown error'}
+                  </p>
                   {process.env.NODE_ENV === 'development' && (
                     <details className='mt-2'>
                       <summary className='cursor-pointer text-sm font-medium text-muted-foreground'>
@@ -1221,47 +1272,50 @@ function ContractsContent() {
   return (
     <>
       <main className='space-y-6 p-4 md:p-6'>
-      {/* Page Header */}
-      <header className='mb-6'>
-        <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
-          {t('dashboard.title')}
-        </h1>
-        <p className='text-gray-600 dark:text-gray-400 mt-2'>
-          {t('dashboard.description')}
-        </p>
-      </header>
+        {/* Page Header */}
+        <header className='mb-6'>
+          <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
+            {t('dashboard.title')}
+          </h1>
+          <p className='text-gray-600 dark:text-gray-400 mt-2'>
+            {t('dashboard.description')}
+          </p>
+        </header>
 
-      {/* Currency Indicator */}
-      <div className='mb-4'>
-        <CurrencyIndicator currency={preferredCurrency} />
-      </div>
+        {/* Currency Indicator */}
+        <div className='mb-4'>
+          <CurrencyIndicator currency={preferredCurrency} />
+        </div>
 
-      {/* Statistics Cards */}
-      {showStats && (
-        <section className='mb-6' aria-labelledby='stats-heading'>
-          <div className='mb-4 flex items-center justify-between'>
-            <h2 id='stats-heading' className='text-lg font-semibold'>
-              {t('dashboard.statistics')}
-            </h2>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => setShowStats(!showStats)}
-                    aria-label={showStats ? 'Hide statistics' : 'Show statistics'}
-                  >
-                    {showStats ? tCommon('close') : tCommon('view')}
-                  </Button>
-          </div>
-          <StatisticsCards />
-        </section>
-      )}
+        {/* Statistics Cards */}
+        {showStats && (
+          <section className='mb-6' aria-labelledby='stats-heading'>
+            <div className='mb-4 flex items-center justify-between'>
+              <h2 id='stats-heading' className='text-lg font-semibold'>
+                {t('dashboard.statistics')}
+              </h2>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => setShowStats(!showStats)}
+                aria-label={showStats ? 'Hide statistics' : 'Show statistics'}
+              >
+                {showStats ? tCommon('close') : tCommon('view')}
+              </Button>
+            </div>
+            <StatisticsCards />
+          </section>
+        )}
 
-      <section aria-labelledby='contracts-heading'>
+        <section aria-labelledby='contracts-heading'>
           <Card>
             <CardHeader>
               <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
                 <div>
-                  <CardTitle id='contracts-heading' className='flex items-center gap-2'>
+                  <CardTitle
+                    id='contracts-heading'
+                    className='flex items-center gap-2'
+                  >
                     <FileText className='h-5 w-5' aria-hidden='true' />
                     {t('dashboard.allContracts')}
                   </CardTitle>
@@ -1270,833 +1324,949 @@ function ContractsContent() {
                   </CardDescription>
                 </div>
 
-              <div className='flex items-center gap-2'>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='outline'
-                        size='icon'
-                        onClick={handleRefresh}
-                        disabled={isFetching}
-                        className='hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:border-blue-800 transition-colors duration-200'
-                      >
-                        <RefreshCw
-                          className={cn(
-                            'h-4 w-4',
-                            isFetching && 'animate-spin text-blue-600'
-                          )}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Refresh data</p>
-                      {isFetching && !isLoading && (
-                        <p className='text-xs text-gray-400'>
-                          Updating in background...
-                        </p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='outline'
-                        size='icon'
-                        onClick={() =>
-                          setCurrentView(
-                            currentView === 'table' ? 'grid' : 'table'
-                          )
-                        }
-                      >
-                        {currentView === 'table' ? (
-                          <Grid className='h-4 w-4' />
-                        ) : (
-                          <List className='h-4 w-4' />
+                <div className='flex items-center gap-2'>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='outline'
+                          size='icon'
+                          onClick={handleRefresh}
+                          disabled={isFetching}
+                          className='hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:border-blue-800 transition-colors duration-200'
+                        >
+                          <RefreshCw
+                            className={cn(
+                              'h-4 w-4',
+                              isFetching && 'animate-spin text-blue-600'
+                            )}
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Refresh data</p>
+                        {isFetching && !isLoading && (
+                          <p className='text-xs text-gray-400'>
+                            Updating in background...
+                          </p>
                         )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Toggle view</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
-                {canExportContracts && (
-                  <Button
-                    variant='outline'
-                    onClick={handleExportCSV}
-                    disabled={isExporting}
-                  >
-                    {isExporting ? (
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    ) : (
-                      <Download className='mr-2 h-4 w-4' />
-                    )}
-                    Export CSV
-                  </Button>
-                )}
-
-                {canCreateContract && (
-                  <Button asChild>
-                    <Link href={`/${locale}/dashboard/generate-contract`}>
-                      Create New Contract
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className='space-y-4'>
-            {/* Filters and Search */}
-            <div className='flex flex-col items-center gap-4 md:flex-row'>
-              <div className='relative w-full flex-grow md:w-auto'>
-                <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-                <Input
-                  type='search'
-                  placeholder='Search by ID, parties, promoter, job title...'
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className='w-full pl-8'
-                />
-              </div>
-              <div className='flex w-full items-center gap-2 md:w-auto'>
-                <Filter className='h-5 w-5 text-muted-foreground' />
-                <Select
-                  value={statusFilter}
-                  onValueChange={value =>
-                    setStatusFilter(value as 'all' | ContractStatus)
-                  }
-                >
-                  <SelectTrigger className='w-full md:w-[180px]'>
-                    <SelectValue placeholder='Filter by status' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>
-                      <span className='font-medium'>All Statuses</span>
-                    </SelectItem>
-                    <SelectItem value='draft'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-gray-500'></div>
-                        Draft
-                      </div>
-                    </SelectItem>
-                    <SelectItem value='pending'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-orange-500'></div>
-                        Pending
-                      </div>
-                    </SelectItem>
-                    <SelectItem value='approved'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-blue-500'></div>
-                        Approved
-                      </div>
-                    </SelectItem>
-                    <SelectItem value='Active'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-green-500'></div>
-                        Active
-                      </div>
-                    </SelectItem>
-                    <SelectItem value='Expired'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-red-500'></div>
-                        Expired
-                      </div>
-                    </SelectItem>
-                    <SelectItem value='Upcoming'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-purple-500'></div>
-                        Upcoming
-                      </div>
-                    </SelectItem>
-                    <SelectItem value='processing'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 rounded-full bg-yellow-500'></div>
-                        Processing
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Bulk Actions */}
-            {selectedContracts.length > 0 && canDeleteContract && (
-              <div className='flex items-center gap-2 rounded-lg bg-muted p-3'>
-                <span className='text-sm font-medium'>
-                  {selectedContracts.length} contract(s) selected
-                </span>
-                <Button
-                  variant='destructive'
-                  size='sm'
-                  onClick={handleBulkDelete}
-                  disabled={bulkActionLoading}
-                >
-                  {bulkActionLoading ? (
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  ) : (
-                    <Trash2 className='mr-2 h-4 w-4' />
-                  )}
-                  Delete Selected
-                </Button>
-              </div>
-            )}
-
-            {/* Content */}
-            {filteredAndSortedContracts.length === 0 ? (
-              searchTerm || statusFilter !== 'all' ? (
-                <EmptySearchState
-                  searchTerm={searchTerm || `status: ${statusFilter}`}
-                  onClearSearch={() => {
-                    setSearchTerm('');
-                    setStatusFilter('all');
-                  }}
-                />
-              ) : canCreateContract ? (
-                <EmptyState
-                  icon={FileText}
-                  title={t('dashboard.noContractsFound')}
-                  description={t('dashboard.noContractsDescription')}
-                  action={{
-                    label: t('dashboard.createNewContract'),
-                    href: `/${locale}/dashboard/generate-contract`,
-                  }}
-                  secondaryAction={{
-                    label: 'Learn More',
-                    href: `/${locale}/help`,
-                  }}
-                />
-              ) : (
-                <EmptyState
-                  icon={FileText}
-                  title={t('dashboard.noContractsFound')}
-                  description={t('dashboard.noContractsDescription')}
-                  secondaryAction={{
-                    label: 'Learn More',
-                    href: `/${locale}/help`,
-                  }}
-                />
-              )
-            ) : currentView === 'table' ? (
-              <>
-                <div className='overflow-x-auto'>
-                  <Table role='table' aria-label='Contracts table'>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className='w-12' scope='col'>
-                          {canDeleteContract && (
-                            <Checkbox
-                              checked={
-                                selectedContracts.length ===
-                                filteredAndSortedContracts.length
-                              }
-                              onCheckedChange={handleSelectAll}
-                              aria-label='Select all contracts'
-                            />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant='outline'
+                          size='icon'
+                          onClick={() =>
+                            setCurrentView(
+                              currentView === 'table' ? 'grid' : 'table'
+                            )
+                          }
+                        >
+                          {currentView === 'table' ? (
+                            <Grid className='h-4 w-4' />
+                          ) : (
+                            <List className='h-4 w-4' />
                           )}
-                        </TableHead>
-                        <TableHead
-                          className='cursor-pointer'
-                          onClick={() => handleSort('id')}
-                          scope='col'
-                          aria-sort={sortColumn === 'id' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                        >
-                          Contract ID {renderSortIcon('id')}
-                        </TableHead>
-                        <TableHead scope='col'>First Party</TableHead>
-                        <TableHead scope='col'>Second Party</TableHead>
-                        <TableHead scope='col'>Promoter</TableHead>
-                        <TableHead
-                          className='cursor-pointer'
-                          onClick={() => handleSort('start_date')}
-                          scope='col'
-                          aria-sort={sortColumn === 'start_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                        >
-                          Start Date {renderSortIcon('start_date')}
-                        </TableHead>
-                        <TableHead
-                          className='cursor-pointer'
-                          onClick={() => handleSort('end_date')}
-                          scope='col'
-                          aria-sort={sortColumn === 'end_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                        >
-                          End Date {renderSortIcon('end_date')}
-                        </TableHead>
-                        <TableHead
-                          className='cursor-pointer'
-                          onClick={() => handleSort('status')}
-                          scope='col'
-                          aria-sort={sortColumn === 'status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                        >
-                          Status {renderSortIcon('status')}
-                        </TableHead>
-                        <TableHead scope='col'>PDF</TableHead>
-                        <TableHead className='text-right' scope='col'>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredAndSortedContracts.map(contract => {
-                        try {
-                          const contractStatus = getContractStatus(contract);
-                          const enhanced = enhanceContract(contract);
-                        const promoterName: string = contract.promoters
-                          ? locale === 'ar'
-                            ? contract.promoters.name_ar ||
-                              contract.promoters.name_en || ''
-                            : contract.promoters.name_en ||
-                              contract.promoters.name_ar || ''
-                          : '';
-                        return (
-                          <TableRow
-                            key={contract.id}
-                            className='group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200'
-                          >
-                            <TableCell className='py-4'>
-                              {canDeleteContract && (
-                                <Checkbox
-                                  checked={selectedContracts.includes(
-                                    contract.id
-                                  )}
-                                  onCheckedChange={checked =>
-                                    handleSelectContract(
-                                      contract.id,
-                                      checked as boolean
-                                    )
-                                  }
-                                  className='data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600'
-                                  aria-label={`Select contract ${contract.id.substring(0, 8)}`}
-                                />
-                              )}
-                            </TableCell>
-                            <TableCell className='py-4'>
-                              <div className='flex items-center gap-2'>
-                                <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger className='font-mono text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors'>
-                                      {contract.id.substring(0, 8)}...
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className='font-mono text-xs'>
-                                        Full ID: {contract.id}
-                                      </p>
-                                      <p className='text-xs text-gray-400 mt-1'>
-                                        Click to copy
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className='flex items-center gap-2'>
-                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900'>
-                                  <Building2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
-                                </div>
-                                <span>
-                                  {contract.first_party &&
-                                  typeof contract.first_party === 'object' &&
-                                  'name_en' in contract.first_party
-                                    ? locale === 'ar'
-                                      ? contract.first_party.name_ar ||
-                                        contract.first_party.name_en ||
-                                        'N/A'
-                                      : contract.first_party.name_en ||
-                                        contract.first_party.name_ar ||
-                                        'N/A'
-                                    : 'N/A'}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className='flex items-center gap-2'>
-                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900'>
-                                  <Building2 className='h-4 w-4 text-green-600 dark:text-green-400' />
-                                </div>
-                                <span>
-                                  {contract.second_party &&
-                                  typeof contract.second_party === 'object' &&
-                                  'name_en' in contract.second_party
-                                    ? locale === 'ar'
-                                      ? contract.second_party.name_ar ||
-                                        contract.second_party.name_en ||
-                                        'N/A'
-                                      : contract.second_party.name_en ||
-                                        contract.second_party.name_ar ||
-                                        'N/A'
-                                    : 'N/A'}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className='flex items-center gap-2'>
-                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900'>
-                                  <User className='h-4 w-4 text-purple-600 dark:text-purple-400' />
-                                </div>
-                                <span>{promoterName || 'N/A'}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {safeFormatDate(contract.start_date, 'dd-MM-yyyy')}
-                            </TableCell>
-                            <TableCell>
-                              <div className='flex flex-col'>
-                                <span>
-                                  {safeFormatDate(contract.end_date, 'dd-MM-yyyy')}
-                                </span>
-                                {enhanced.days_until_expiry !== undefined &&
-                                  enhanced.days_until_expiry <= 30 &&
-                                  enhanced.days_until_expiry > 0 && (
-                                    <span className='text-xs font-medium text-amber-600'>
-                                      {enhanced.days_until_expiry} days left
-                                    </span>
-                                  )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(contractStatus)}
-                            </TableCell>
-                            <TableCell className='py-4'>
-                              {contract.pdf_url ? (
-                                <div className='flex items-center gap-2'>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={() => window.open(`/api/contracts/${contract.id}/pdf/view`, '_blank')}
-                                          className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-400 transition-colors duration-200'
-                                          title='View contract PDF'
-                                        >
-                                          <Eye className='h-4 w-4' />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>View PDF</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={() =>
-                                            handleDownloadContract(contract)
-                                          }
-                                          disabled={isDownloading === contract.id}
-                                          className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
-                                          title='Download contract PDF'
-                                        >
-                                          {isDownloading === contract.id ? (
-                                            <Loader2 className='h-4 w-4 animate-spin' />
-                                          ) : (
-                                            <Download className='h-4 w-4' />
-                                          )}
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Download PDF</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              ) : (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'>
-                                        <FileText className='h-4 w-4' />
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>No PDF available</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </TableCell>
-                            <TableCell className='text-right py-4'>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant='ghost'
-                                    size='icon'
-                                    className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                                  >
-                                    <MoreHorizontal className='h-4 w-4' />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align='end' className='w-48'>
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      console.log('📄 Navigating to contract:', contract.id);
-                                      router.push(`/${locale}/contracts/${contract.id}`);
-                                    }}
-                                    className='cursor-pointer'
-                                  >
-                                    <Eye className='mr-2 h-4 w-4' /> View Details
-                                  </DropdownMenuItem>
-                                  {contract.pdf_url && (
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        handleDownloadContract(contract)
-                                      }
-                                    >
-                                      <FileDown className='mr-2 h-4 w-4' />{' '}
-                                      Download PDF
-                                    </DropdownMenuItem>
-                                  )}
-                                  {contract.pdf_url && (
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        handleEmailContract(contract)
-                                      }
-                                    >
-                                      <Mail className='mr-2 h-4 w-4' /> Send via
-                                      Email
-                                    </DropdownMenuItem>
-                                  )}
-                                  {canEditContract && (
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        router.push(`/${locale}/contracts/${contract.id}/edit`);
-                                      }}
-                                      className='cursor-pointer'
-                                    >
-                                      <Edit className='mr-2 h-4 w-4' /> Edit
-                                    </DropdownMenuItem>
-                                  )}
-                                  {canCreateContract && (
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        toast({
-                                          title: 'Duplicate Contract',
-                                          description: 'Feature coming soon!',
-                                        });
-                                      }}
-                                    >
-                                      <Copy className='mr-2 h-4 w-4' />{' '}
-                                      Duplicate
-                                    </DropdownMenuItem>
-                                  )}
-                                  {contract.pdf_url && (
-                                    <DropdownMenuItem
-                                      onClick={() => window.open(`/api/contracts/${contract.id}/pdf/view`, '_blank')}
-                                    >
-                                      <Eye className='mr-2 h-4 w-4' />{' '}
-                                      View PDF
-                                    </DropdownMenuItem>
-                                  )}
-                                  {canDeleteContract && (
-                                    <>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          handleDeleteClick(contract)
-                                        }
-                                        className='text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-700/20'
-                                      >
-                                        <Trash2 className='mr-2 h-4 w-4' />{' '}
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        );
-                        } catch (renderError) {
-                          console.error('Error rendering contract row:', contract.id, renderError);
-                          // Return a fallback row for contracts that fail to render
-                          return (
-                            <TableRow key={contract.id} className='bg-red-50'>
-                              <TableCell colSpan={10} className='text-center text-red-600'>
-                                Error displaying contract {contract.contract_number || contract.id.substring(0, 8)}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        }
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Toggle view</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
-                {/* Pagination Controls */}
-                <div className='px-2 py-4 border-t'>
-                  <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={Math.ceil(totalCount / pageSize)}
-                    pageSize={pageSize}
-                    totalItems={totalCount}
+                  {canExportContracts && (
+                    <Button
+                      variant='outline'
+                      onClick={handleExportCSV}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? (
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      ) : (
+                        <Download className='mr-2 h-4 w-4' />
+                      )}
+                      Export CSV
+                    </Button>
+                  )}
+
+                  {canCreateContract && (
+                    <Button asChild>
+                      <Link href={`/${locale}/dashboard/generate-contract`}>
+                        Create New Contract
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className='space-y-4'>
+              {/* Filters and Search */}
+              <div className='flex flex-col items-center gap-4 md:flex-row'>
+                <div className='relative w-full flex-grow md:w-auto'>
+                  <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                  <Input
+                    type='search'
+                    placeholder='Search by ID, parties, promoter, job title...'
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className='w-full pl-8'
                   />
                 </div>
-              </>
-            ) : (
-              <>
-                {/* Grid View */}
-                <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-                  {filteredAndSortedContracts.map(contract => {
-                    try {
-                      const contractStatus = getContractStatus(contract);
-                      const enhanced = enhanceContract(contract);
-                    const promoterName: string = contract.promoters
-                      ? locale === 'ar'
-                        ? contract.promoters.name_ar ||
-                          contract.promoters.name_en || ''
-                        : contract.promoters.name_en ||
-                          contract.promoters.name_ar || ''
-                      : '';
+                <div className='flex w-full items-center gap-2 md:w-auto'>
+                  <Filter className='h-5 w-5 text-muted-foreground' />
+                  <Select
+                    value={statusFilter}
+                    onValueChange={value =>
+                      setStatusFilter(value as 'all' | ContractStatus)
+                    }
+                  >
+                    <SelectTrigger className='w-full md:w-[180px]'>
+                      <SelectValue placeholder='Filter by status' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='all'>
+                        <span className='font-medium'>All Statuses</span>
+                      </SelectItem>
+                      <SelectItem value='draft'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-2 h-2 rounded-full bg-gray-500'></div>
+                          Draft
+                        </div>
+                      </SelectItem>
+                      <SelectItem value='pending'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-2 h-2 rounded-full bg-orange-500'></div>
+                          Pending
+                        </div>
+                      </SelectItem>
+                      <SelectItem value='approved'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-2 h-2 rounded-full bg-blue-500'></div>
+                          Approved
+                        </div>
+                      </SelectItem>
+                      <SelectItem value='Active'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-2 h-2 rounded-full bg-green-500'></div>
+                          Active
+                        </div>
+                      </SelectItem>
+                      <SelectItem value='Expired'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-2 h-2 rounded-full bg-red-500'></div>
+                          Expired
+                        </div>
+                      </SelectItem>
+                      <SelectItem value='Upcoming'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-2 h-2 rounded-full bg-purple-500'></div>
+                          Upcoming
+                        </div>
+                      </SelectItem>
+                      <SelectItem value='processing'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-2 h-2 rounded-full bg-yellow-500'></div>
+                          Processing
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-                    return (
-                      <Card
-                        key={contract.id}
-                        className='group transition-shadow hover:shadow-md'
-                      >
-                        <CardContent className='p-4'>
-                          <div className='mb-3 flex items-start justify-between'>
-                            <div className='flex items-center gap-2'>
-                              {canDeleteContract && (
-                                <Checkbox
-                                  checked={selectedContracts.includes(
-                                    contract.id
+              {/* Bulk Actions */}
+              {selectedContracts.length > 0 && canDeleteContract && (
+                <div className='flex items-center gap-2 rounded-lg bg-muted p-3'>
+                  <span className='text-sm font-medium'>
+                    {selectedContracts.length} contract(s) selected
+                  </span>
+                  <Button
+                    variant='destructive'
+                    size='sm'
+                    onClick={handleBulkDelete}
+                    disabled={bulkActionLoading}
+                  >
+                    {bulkActionLoading ? (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    ) : (
+                      <Trash2 className='mr-2 h-4 w-4' />
+                    )}
+                    Delete Selected
+                  </Button>
+                </div>
+              )}
+
+              {/* Content */}
+              {filteredAndSortedContracts.length === 0 ? (
+                searchTerm || statusFilter !== 'all' ? (
+                  <EmptySearchState
+                    searchTerm={searchTerm || `status: ${statusFilter}`}
+                    onClearSearch={() => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                    }}
+                  />
+                ) : canCreateContract ? (
+                  <EmptyState
+                    icon={FileText}
+                    title={t('dashboard.noContractsFound')}
+                    description={t('dashboard.noContractsDescription')}
+                    action={{
+                      label: t('dashboard.createNewContract'),
+                      href: `/${locale}/dashboard/generate-contract`,
+                    }}
+                    secondaryAction={{
+                      label: 'Learn More',
+                      href: `/${locale}/help`,
+                    }}
+                  />
+                ) : (
+                  <EmptyState
+                    icon={FileText}
+                    title={t('dashboard.noContractsFound')}
+                    description={t('dashboard.noContractsDescription')}
+                    secondaryAction={{
+                      label: 'Learn More',
+                      href: `/${locale}/help`,
+                    }}
+                  />
+                )
+              ) : currentView === 'table' ? (
+                <>
+                  <div className='overflow-x-auto'>
+                    <Table role='table' aria-label='Contracts table'>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className='w-12' scope='col'>
+                            {canDeleteContract && (
+                              <Checkbox
+                                checked={
+                                  selectedContracts.length ===
+                                  filteredAndSortedContracts.length
+                                }
+                                onCheckedChange={handleSelectAll}
+                                aria-label='Select all contracts'
+                              />
+                            )}
+                          </TableHead>
+                          <TableHead
+                            className='cursor-pointer'
+                            onClick={() => handleSort('id')}
+                            scope='col'
+                            aria-sort={
+                              sortColumn === 'id'
+                                ? sortDirection === 'asc'
+                                  ? 'ascending'
+                                  : 'descending'
+                                : 'none'
+                            }
+                          >
+                            Contract ID {renderSortIcon('id')}
+                          </TableHead>
+                          <TableHead scope='col'>First Party</TableHead>
+                          <TableHead scope='col'>Second Party</TableHead>
+                          <TableHead scope='col'>Promoter</TableHead>
+                          <TableHead
+                            className='cursor-pointer'
+                            onClick={() => handleSort('start_date')}
+                            scope='col'
+                            aria-sort={
+                              sortColumn === 'start_date'
+                                ? sortDirection === 'asc'
+                                  ? 'ascending'
+                                  : 'descending'
+                                : 'none'
+                            }
+                          >
+                            Start Date {renderSortIcon('start_date')}
+                          </TableHead>
+                          <TableHead
+                            className='cursor-pointer'
+                            onClick={() => handleSort('end_date')}
+                            scope='col'
+                            aria-sort={
+                              sortColumn === 'end_date'
+                                ? sortDirection === 'asc'
+                                  ? 'ascending'
+                                  : 'descending'
+                                : 'none'
+                            }
+                          >
+                            End Date {renderSortIcon('end_date')}
+                          </TableHead>
+                          <TableHead
+                            className='cursor-pointer'
+                            onClick={() => handleSort('status')}
+                            scope='col'
+                            aria-sort={
+                              sortColumn === 'status'
+                                ? sortDirection === 'asc'
+                                  ? 'ascending'
+                                  : 'descending'
+                                : 'none'
+                            }
+                          >
+                            Status {renderSortIcon('status')}
+                          </TableHead>
+                          <TableHead scope='col'>PDF</TableHead>
+                          <TableHead className='text-right' scope='col'>
+                            Actions
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAndSortedContracts.map(contract => {
+                          try {
+                            const contractStatus = getContractStatus(contract);
+                            const enhanced = enhanceContract(contract);
+                            const promoterName: string = contract.promoters
+                              ? locale === 'ar'
+                                ? contract.promoters.name_ar ||
+                                  contract.promoters.name_en ||
+                                  ''
+                                : contract.promoters.name_en ||
+                                  contract.promoters.name_ar ||
+                                  ''
+                              : '';
+                            return (
+                              <TableRow
+                                key={contract.id}
+                                className='group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200'
+                              >
+                                <TableCell className='py-4'>
+                                  {canDeleteContract && (
+                                    <Checkbox
+                                      checked={selectedContracts.includes(
+                                        contract.id
+                                      )}
+                                      onCheckedChange={checked =>
+                                        handleSelectContract(
+                                          contract.id,
+                                          checked as boolean
+                                        )
+                                      }
+                                      className='data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600'
+                                      aria-label={`Select contract ${contract.id.substring(0, 8)}`}
+                                    />
                                   )}
-                                  onCheckedChange={checked =>
-                                    handleSelectContract(
-                                      contract.id,
-                                      checked as boolean
-                                    )
-                                  }
-                                />
-                              )}
-                              <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600'>
-                                <FileText className='h-5 w-5 text-white' />
-                              </div>
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant='ghost'
-                                  size='icon'
-                                  className='opacity-0 group-hover:opacity-100'
-                                >
-                                  <MoreHorizontal className='h-4 w-4' />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align='end' className='w-48'>
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    console.log('📄 Navigating to contract:', contract.id);
-                                    router.push(`/${locale}/contracts/${contract.id}`);
-                                  }}
-                                  className='cursor-pointer'
-                                >
-                                  <Eye className='mr-2 h-4 w-4' /> View Details
-                                </DropdownMenuItem>
-                                {contract.pdf_url && (
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleDownloadContract(contract)
-                                    }
-                                  >
-                                    <FileDown className='mr-2 h-4 w-4' />{' '}
-                                    Download PDF
-                                  </DropdownMenuItem>
-                                )}
-                                {contract.pdf_url && (
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleEmailContract(contract)
-                                    }
-                                  >
-                                    <Mail className='mr-2 h-4 w-4' /> Send via
-                                    Email
-                                  </DropdownMenuItem>
-                                )}
-                                {canEditContract && (
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      router.push(`/${locale}/contracts/${contract.id}/edit`);
-                                    }}
-                                    className='cursor-pointer'
-                                  >
-                                    <Edit className='mr-2 h-4 w-4' /> Edit
-                                  </DropdownMenuItem>
-                                )}
-                                {contract.pdf_url && (
-                                  <DropdownMenuItem
-                                    onClick={() => window.open(`/api/contracts/${contract.id}/pdf/view`, '_blank')}
-                                  >
-                                    <Eye className='mr-2 h-4 w-4' />{' '}
-                                    View PDF
-                                  </DropdownMenuItem>
-                                )}
-                                {canDeleteContract && (
-                                  <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      onClick={() => handleDeleteClick(contract)}
-                                      className='text-red-600 focus:bg-red-50 focus:text-red-600'
-                                    >
-                                      <Trash2 className='mr-2 h-4 w-4' /> Delete
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-
-                          <div className='space-y-2'>
-                            <div className='flex items-center justify-between'>
-                              <h3 className='text-sm font-medium'>
-                                Contract #{contract.id.substring(0, 8)}...
-                              </h3>
-                              {getStatusBadge(contractStatus)}
-                            </div>
-
-                            <div className='space-y-1 text-sm text-muted-foreground'>
-                              <div className='flex items-center gap-1'>
-                                <Building2 className='h-3 w-3' />
-                                <span className='font-medium'>
-                                  First Party:
-                                </span>
-                                <span>
-                                  {contract.first_party &&
-                                  typeof contract.first_party === 'object' &&
-                                  'name_en' in contract.first_party
-                                    ? contract.first_party.name_en || 'N/A'
-                                    : 'N/A'}
-                                </span>
-                              </div>
-                              <div className='flex items-center gap-1'>
-                                <Building2 className='h-3 w-3' />
-                                <span className='font-medium'>
-                                  Second Party:
-                                </span>
-                                <span>
-                                  {contract.second_party &&
-                                  typeof contract.second_party === 'object' &&
-                                  'name_en' in contract.second_party
-                                    ? contract.second_party.name_en || 'N/A'
-                                    : 'N/A'}
-                                </span>
-                              </div>
-                              <div className='flex items-center gap-1'>
-                                <User className='h-3 w-3' />
-                                <span className='font-medium'>Promoter:</span>
-                                <span>{promoterName || 'N/A'}</span>
-                              </div>
-                            </div>
-
-                            <div className='flex items-center justify-between border-t pt-2'>
-                              <div className='text-xs text-muted-foreground'>
-                                {contract.start_date &&
-                                  contract.end_date && (
-                                    <>
-                                      {safeFormatDate(contract.start_date, 'dd-MM-yyyy')}{' '}
-                                      -{' '}
-                                      {safeFormatDate(contract.end_date, 'dd-MM-yyyy')}
-                                      {enhanced.days_until_expiry !==
-                                        undefined &&
-                                        enhanced.days_until_expiry <= 30 &&
-                                        enhanced.days_until_expiry > 0 && (
-                                          <div className='font-medium text-amber-600'>
-                                            {enhanced.days_until_expiry} days
-                                            left
+                                </TableCell>
+                                <TableCell className='py-4'>
+                                  <div className='flex items-center gap-2'>
+                                    <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger className='font-mono text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors'>
+                                          {contract.id.substring(0, 8)}...
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className='font-mono text-xs'>
+                                            Full ID: {contract.id}
+                                          </p>
+                                          <p className='text-xs text-gray-400 mt-1'>
+                                            Click to copy
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className='flex items-center gap-2'>
+                                    <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900'>
+                                      <Building2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+                                    </div>
+                                    <span>
+                                      {contract.first_party &&
+                                      typeof contract.first_party ===
+                                        'object' &&
+                                      'name_en' in contract.first_party
+                                        ? locale === 'ar'
+                                          ? contract.first_party.name_ar ||
+                                            contract.first_party.name_en ||
+                                            'N/A'
+                                          : contract.first_party.name_en ||
+                                            contract.first_party.name_ar ||
+                                            'N/A'
+                                        : 'N/A'}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className='flex items-center gap-2'>
+                                    <div className='flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900'>
+                                      <Building2 className='h-4 w-4 text-green-600 dark:text-green-400' />
+                                    </div>
+                                    <span>
+                                      {contract.second_party &&
+                                      typeof contract.second_party ===
+                                        'object' &&
+                                      'name_en' in contract.second_party
+                                        ? locale === 'ar'
+                                          ? contract.second_party.name_ar ||
+                                            contract.second_party.name_en ||
+                                            'N/A'
+                                          : contract.second_party.name_en ||
+                                            contract.second_party.name_ar ||
+                                            'N/A'
+                                        : 'N/A'}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className='flex items-center gap-2'>
+                                    <div className='flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900'>
+                                      <User className='h-4 w-4 text-purple-600 dark:text-purple-400' />
+                                    </div>
+                                    <span>{promoterName || 'N/A'}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {safeFormatDate(
+                                    contract.start_date,
+                                    'dd-MM-yyyy'
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className='flex flex-col'>
+                                    <span>
+                                      {safeFormatDate(
+                                        contract.end_date,
+                                        'dd-MM-yyyy'
+                                      )}
+                                    </span>
+                                    {enhanced.days_until_expiry !== undefined &&
+                                      enhanced.days_until_expiry <= 30 &&
+                                      enhanced.days_until_expiry > 0 && (
+                                        <span className='text-xs font-medium text-amber-600'>
+                                          {enhanced.days_until_expiry} days left
+                                        </span>
+                                      )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {getStatusBadge(contractStatus)}
+                                </TableCell>
+                                <TableCell className='py-4'>
+                                  {contract.pdf_url ? (
+                                    <div className='flex items-center gap-2'>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              onClick={() =>
+                                                window.open(
+                                                  `/api/contracts/${contract.id}/pdf/view`,
+                                                  '_blank'
+                                                )
+                                              }
+                                              className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-400 transition-colors duration-200'
+                                              title='View contract PDF'
+                                            >
+                                              <Eye className='h-4 w-4' />
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>View PDF</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              onClick={() =>
+                                                handleDownloadContract(contract)
+                                              }
+                                              disabled={
+                                                isDownloading === contract.id
+                                              }
+                                              className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                                              title='Download contract PDF'
+                                            >
+                                              {isDownloading === contract.id ? (
+                                                <Loader2 className='h-4 w-4 animate-spin' />
+                                              ) : (
+                                                <Download className='h-4 w-4' />
+                                              )}
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Download PDF</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                  ) : (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'>
+                                            <FileText className='h-4 w-4' />
                                           </div>
-                                        )}
-                                    </>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>No PDF available</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   )}
-                              </div>
-                              <div className='flex items-center gap-2'>
-                                {contract.pdf_url && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
+                                </TableCell>
+                                <TableCell className='text-right py-4'>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant='ghost'
+                                        size='icon'
+                                        className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                      >
+                                        <MoreHorizontal className='h-4 w-4' />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                      align='end'
+                                      className='w-48'
+                                    >
+                                      <DropdownMenuLabel>
+                                        Actions
+                                      </DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          console.log(
+                                            '📄 Navigating to contract:',
+                                            contract.id
+                                          );
+                                          router.push(
+                                            `/${locale}/contracts/${contract.id}`
+                                          );
+                                        }}
+                                        className='cursor-pointer'
+                                      >
+                                        <Eye className='mr-2 h-4 w-4' /> View
+                                        Details
+                                      </DropdownMenuItem>
+                                      {contract.pdf_url && (
+                                        <DropdownMenuItem
                                           onClick={() =>
                                             handleDownloadContract(contract)
                                           }
-                                          disabled={
-                                            isDownloading === contract.id
-                                          }
-                                          className='text-primary hover:text-primary/80 transition-colors disabled:opacity-50'
-                                          title='Download contract PDF'
                                         >
-                                          {isDownloading === contract.id ? (
-                                            <Loader2 className='h-4 w-4 animate-spin' />
-                                          ) : (
-                                            <Download className='h-4 w-4' />
-                                          )}
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Download PDF</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                                {contract.pdf_url && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
+                                          <FileDown className='mr-2 h-4 w-4' />{' '}
+                                          Download PDF
+                                        </DropdownMenuItem>
+                                      )}
+                                      {contract.pdf_url && (
+                                        <DropdownMenuItem
                                           onClick={() =>
                                             handleEmailContract(contract)
                                           }
-                                          className='text-primary hover:text-primary/80 transition-colors'
-                                          title='Send via email'
                                         >
-                                          <Mail className='h-4 w-4' />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Send via Email</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                    } catch (renderError) {
-                      console.error('Error rendering contract card:', contract.id, renderError);
-                      // Return a fallback card for contracts that fail to render
-                      return (
-                        <Card key={contract.id} className='border-red-200 bg-red-50'>
-                          <CardContent className='p-4 text-center text-red-600'>
-                            <p className='font-semibold'>Error displaying contract</p>
-                            <p className='text-sm'>{contract.contract_number || contract.id.substring(0, 8)}</p>
-                          </CardContent>
-                        </Card>
-                      );
-                    }
-                  })}
-                </div>
+                                          <Mail className='mr-2 h-4 w-4' /> Send
+                                          via Email
+                                        </DropdownMenuItem>
+                                      )}
+                                      {canEditContract && (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            router.push(
+                                              `/${locale}/contracts/${contract.id}/edit`
+                                            );
+                                          }}
+                                          className='cursor-pointer'
+                                        >
+                                          <Edit className='mr-2 h-4 w-4' /> Edit
+                                        </DropdownMenuItem>
+                                      )}
+                                      {canCreateContract && (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            toast({
+                                              title: 'Duplicate Contract',
+                                              description:
+                                                'Feature coming soon!',
+                                            });
+                                          }}
+                                        >
+                                          <Copy className='mr-2 h-4 w-4' />{' '}
+                                          Duplicate
+                                        </DropdownMenuItem>
+                                      )}
+                                      {contract.pdf_url && (
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            window.open(
+                                              `/api/contracts/${contract.id}/pdf/view`,
+                                              '_blank'
+                                            )
+                                          }
+                                        >
+                                          <Eye className='mr-2 h-4 w-4' /> View
+                                          PDF
+                                        </DropdownMenuItem>
+                                      )}
+                                      {canDeleteContract && (
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              handleDeleteClick(contract)
+                                            }
+                                            className='text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-700/20'
+                                          >
+                                            <Trash2 className='mr-2 h-4 w-4' />{' '}
+                                            Delete
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          } catch (renderError) {
+                            console.error(
+                              'Error rendering contract row:',
+                              contract.id,
+                              renderError
+                            );
+                            // Return a fallback row for contracts that fail to render
+                            return (
+                              <TableRow key={contract.id} className='bg-red-50'>
+                                <TableCell
+                                  colSpan={10}
+                                  className='text-center text-red-600'
+                                >
+                                  Error displaying contract{' '}
+                                  {contract.contract_number ||
+                                    contract.id.substring(0, 8)}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
 
-                {/* Pagination Controls for Grid View */}
-                <div className='px-2 py-4 border-t'>
-                  <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={Math.ceil(totalCount / pageSize)}
-                    pageSize={pageSize}
-                    totalItems={totalCount}
-                  />
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                  {/* Pagination Controls */}
+                  <div className='px-2 py-4 border-t'>
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalPages={Math.ceil(totalCount / pageSize)}
+                      pageSize={pageSize}
+                      totalItems={totalCount}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Grid View */}
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+                    {filteredAndSortedContracts.map(contract => {
+                      try {
+                        const contractStatus = getContractStatus(contract);
+                        const enhanced = enhanceContract(contract);
+                        const promoterName: string = contract.promoters
+                          ? locale === 'ar'
+                            ? contract.promoters.name_ar ||
+                              contract.promoters.name_en ||
+                              ''
+                            : contract.promoters.name_en ||
+                              contract.promoters.name_ar ||
+                              ''
+                          : '';
+
+                        return (
+                          <Card
+                            key={contract.id}
+                            className='group transition-shadow hover:shadow-md'
+                          >
+                            <CardContent className='p-4'>
+                              <div className='mb-3 flex items-start justify-between'>
+                                <div className='flex items-center gap-2'>
+                                  {canDeleteContract && (
+                                    <Checkbox
+                                      checked={selectedContracts.includes(
+                                        contract.id
+                                      )}
+                                      onCheckedChange={checked =>
+                                        handleSelectContract(
+                                          contract.id,
+                                          checked as boolean
+                                        )
+                                      }
+                                    />
+                                  )}
+                                  <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600'>
+                                    <FileText className='h-5 w-5 text-white' />
+                                  </div>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      className='opacity-0 group-hover:opacity-100'
+                                    >
+                                      <MoreHorizontal className='h-4 w-4' />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align='end'
+                                    className='w-48'
+                                  >
+                                    <DropdownMenuLabel>
+                                      Actions
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        console.log(
+                                          '📄 Navigating to contract:',
+                                          contract.id
+                                        );
+                                        router.push(
+                                          `/${locale}/contracts/${contract.id}`
+                                        );
+                                      }}
+                                      className='cursor-pointer'
+                                    >
+                                      <Eye className='mr-2 h-4 w-4' /> View
+                                      Details
+                                    </DropdownMenuItem>
+                                    {contract.pdf_url && (
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleDownloadContract(contract)
+                                        }
+                                      >
+                                        <FileDown className='mr-2 h-4 w-4' />{' '}
+                                        Download PDF
+                                      </DropdownMenuItem>
+                                    )}
+                                    {contract.pdf_url && (
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleEmailContract(contract)
+                                        }
+                                      >
+                                        <Mail className='mr-2 h-4 w-4' /> Send
+                                        via Email
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canEditContract && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          router.push(
+                                            `/${locale}/contracts/${contract.id}/edit`
+                                          );
+                                        }}
+                                        className='cursor-pointer'
+                                      >
+                                        <Edit className='mr-2 h-4 w-4' /> Edit
+                                      </DropdownMenuItem>
+                                    )}
+                                    {contract.pdf_url && (
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          window.open(
+                                            `/api/contracts/${contract.id}/pdf/view`,
+                                            '_blank'
+                                          )
+                                        }
+                                      >
+                                        <Eye className='mr-2 h-4 w-4' /> View
+                                        PDF
+                                      </DropdownMenuItem>
+                                    )}
+                                    {canDeleteContract && (
+                                      <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleDeleteClick(contract)
+                                          }
+                                          className='text-red-600 focus:bg-red-50 focus:text-red-600'
+                                        >
+                                          <Trash2 className='mr-2 h-4 w-4' />{' '}
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+
+                              <div className='space-y-2'>
+                                <div className='flex items-center justify-between'>
+                                  <h3 className='text-sm font-medium'>
+                                    Contract #{contract.id.substring(0, 8)}...
+                                  </h3>
+                                  {getStatusBadge(contractStatus)}
+                                </div>
+
+                                <div className='space-y-1 text-sm text-muted-foreground'>
+                                  <div className='flex items-center gap-1'>
+                                    <Building2 className='h-3 w-3' />
+                                    <span className='font-medium'>
+                                      First Party:
+                                    </span>
+                                    <span>
+                                      {contract.first_party &&
+                                      typeof contract.first_party ===
+                                        'object' &&
+                                      'name_en' in contract.first_party
+                                        ? contract.first_party.name_en || 'N/A'
+                                        : 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div className='flex items-center gap-1'>
+                                    <Building2 className='h-3 w-3' />
+                                    <span className='font-medium'>
+                                      Second Party:
+                                    </span>
+                                    <span>
+                                      {contract.second_party &&
+                                      typeof contract.second_party ===
+                                        'object' &&
+                                      'name_en' in contract.second_party
+                                        ? contract.second_party.name_en || 'N/A'
+                                        : 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div className='flex items-center gap-1'>
+                                    <User className='h-3 w-3' />
+                                    <span className='font-medium'>
+                                      Promoter:
+                                    </span>
+                                    <span>{promoterName || 'N/A'}</span>
+                                  </div>
+                                </div>
+
+                                <div className='flex items-center justify-between border-t pt-2'>
+                                  <div className='text-xs text-muted-foreground'>
+                                    {contract.start_date &&
+                                      contract.end_date && (
+                                        <>
+                                          {safeFormatDate(
+                                            contract.start_date,
+                                            'dd-MM-yyyy'
+                                          )}{' '}
+                                          -{' '}
+                                          {safeFormatDate(
+                                            contract.end_date,
+                                            'dd-MM-yyyy'
+                                          )}
+                                          {enhanced.days_until_expiry !==
+                                            undefined &&
+                                            enhanced.days_until_expiry <= 30 &&
+                                            enhanced.days_until_expiry > 0 && (
+                                              <div className='font-medium text-amber-600'>
+                                                {enhanced.days_until_expiry}{' '}
+                                                days left
+                                              </div>
+                                            )}
+                                        </>
+                                      )}
+                                  </div>
+                                  <div className='flex items-center gap-2'>
+                                    {contract.pdf_url && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              onClick={() =>
+                                                handleDownloadContract(contract)
+                                              }
+                                              disabled={
+                                                isDownloading === contract.id
+                                              }
+                                              className='text-primary hover:text-primary/80 transition-colors disabled:opacity-50'
+                                              title='Download contract PDF'
+                                            >
+                                              {isDownloading === contract.id ? (
+                                                <Loader2 className='h-4 w-4 animate-spin' />
+                                              ) : (
+                                                <Download className='h-4 w-4' />
+                                              )}
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Download PDF</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                    {contract.pdf_url && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              onClick={() =>
+                                                handleEmailContract(contract)
+                                              }
+                                              className='text-primary hover:text-primary/80 transition-colors'
+                                              title='Send via email'
+                                            >
+                                              <Mail className='h-4 w-4' />
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Send via Email</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      } catch (renderError) {
+                        console.error(
+                          'Error rendering contract card:',
+                          contract.id,
+                          renderError
+                        );
+                        // Return a fallback card for contracts that fail to render
+                        return (
+                          <Card
+                            key={contract.id}
+                            className='border-red-200 bg-red-50'
+                          >
+                            <CardContent className='p-4 text-center text-red-600'>
+                              <p className='font-semibold'>
+                                Error displaying contract
+                              </p>
+                              <p className='text-sm'>
+                                {contract.contract_number ||
+                                  contract.id.substring(0, 8)}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        );
+                      }
+                    })}
+                  </div>
+
+                  {/* Pagination Controls for Grid View */}
+                  <div className='px-2 py-4 border-t'>
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalPages={Math.ceil(totalCount / pageSize)}
+                      pageSize={pageSize}
+                      totalItems={totalCount}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </section>
       </main>
 

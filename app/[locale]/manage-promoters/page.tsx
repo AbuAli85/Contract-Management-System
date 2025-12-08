@@ -24,7 +24,9 @@ export default function PromoterManagement({
     <div className='min-h-screen bg-background px-4 py-8 flex items-center justify-center'>
       <div className='text-center'>
         <Loader2 className='h-8 w-8 animate-spin mx-auto mb-4 text-primary' />
-        <p className='text-muted-foreground'>Redirecting to Promoters Intelligence Hub...</p>
+        <p className='text-muted-foreground'>
+          Redirecting to Promoters Intelligence Hub...
+        </p>
       </div>
     </div>
   );

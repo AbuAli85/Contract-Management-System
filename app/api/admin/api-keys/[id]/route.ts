@@ -3,6 +3,23 @@ import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { withRBAC } from '@/lib/rbac/guard';
 
+// Type for api_keys table (not in auto-generated types)
+interface ApiKey {
+  id: string;
+  name: string;
+  key_hash: string;
+  key_prefix: string;
+  permissions: string[];
+  allowed_origins: string[] | null;
+  rate_limit_per_minute: number;
+  is_active: boolean;
+  expires_at: string | null;
+  last_used_at: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
@@ -10,162 +27,178 @@ export const dynamic = 'force-dynamic';
  * PUT /api/admin/api-keys/[id]
  * Update an API key
  */
-export const PUT = withRBAC('system:admin:all', async (
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) => {
-  try {
-    const supabase = await createClient();
-    const { id } = await params;
-    
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+export const PUT = withRBAC(
+  'system:admin:all',
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    try {
+      const supabase = await createClient();
+      const { id } = await params;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+      // Get current user
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+      // Verify admin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    // Parse request body
-    const body = await request.json();
-    const updates: any = {};
+      if (profile?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Admin access required' },
+          { status: 403 }
+        );
+      }
 
-    if (body.name !== undefined) updates.name = body.name;
-    if (body.permissions !== undefined) updates.permissions = body.permissions;
-    if (body.allowedOrigins !== undefined) updates.allowed_origins = body.allowedOrigins;
-    if (body.rateLimitPerMinute !== undefined) updates.rate_limit_per_minute = body.rateLimitPerMinute;
-    if (body.isActive !== undefined) updates.is_active = body.isActive;
-    if (body.expiresAt !== undefined) updates.expires_at = body.expiresAt || null;
+      // Parse request body
+      const body = await request.json();
+      const updates: Record<string, unknown> = {};
 
-    // Use admin client to bypass RLS for admin operations
-    const adminClient = getSupabaseAdmin();
+      if (body.name !== undefined) updates.name = body.name;
+      if (body.permissions !== undefined)
+        updates.permissions = body.permissions;
+      if (body.allowedOrigins !== undefined)
+        updates.allowed_origins = body.allowedOrigins;
+      if (body.rateLimitPerMinute !== undefined)
+        updates.rate_limit_per_minute = body.rateLimitPerMinute;
+      if (body.isActive !== undefined) updates.is_active = body.isActive;
+      if (body.expiresAt !== undefined)
+        updates.expires_at = body.expiresAt || null;
 
-    // Update API key using admin client (bypasses RLS)
-    const { data: updatedKey, error } = await adminClient
-      .from('api_keys')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+      // Use admin client to bypass RLS for admin operations
+      const adminClient = getSupabaseAdmin();
 
-    if (error) {
-      console.error('Error updating API key:', error);
+      // Update API key using admin client (bypasses RLS)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: updatedKey, error } = await (adminClient as any)
+        .from('api_keys')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single() as { data: ApiKey | null; error: Error | null };
+
+      if (error) {
+        console.error('Error updating API key:', error);
+        return NextResponse.json(
+          { error: 'Failed to update API key', details: error.message },
+          { status: 500 }
+        );
+      }
+
+      if (!updatedKey) {
+        return NextResponse.json(
+          { error: 'API key not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'API key updated successfully',
+        apiKey: {
+          id: updatedKey.id,
+          name: updatedKey.name,
+          keyPrefix: updatedKey.key_prefix,
+          permissions: updatedKey.permissions,
+          allowedOrigins: updatedKey.allowed_origins,
+          rateLimitPerMinute: updatedKey.rate_limit_per_minute,
+          isActive: updatedKey.is_active,
+          expiresAt: updatedKey.expires_at,
+          lastUsedAt: updatedKey.last_used_at,
+        },
+      });
+    } catch (error) {
+      console.error('Error in PUT /api/admin/api-keys/[id]:', error);
       return NextResponse.json(
-        { error: 'Failed to update API key', details: error.message },
+        {
+          error: 'Internal server error',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
         { status: 500 }
       );
     }
-
-    if (!updatedKey) {
-      return NextResponse.json(
-        { error: 'API key not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'API key updated successfully',
-      apiKey: {
-        id: updatedKey.id,
-        name: updatedKey.name,
-        keyPrefix: updatedKey.key_prefix,
-        permissions: updatedKey.permissions,
-        allowedOrigins: updatedKey.allowed_origins,
-        rateLimitPerMinute: updatedKey.rate_limit_per_minute,
-        isActive: updatedKey.is_active,
-        expiresAt: updatedKey.expires_at,
-        lastUsedAt: updatedKey.last_used_at,
-      },
-    });
-  } catch (error) {
-    console.error('Error in PUT /api/admin/api-keys/[id]:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
   }
-});
+);
 
 /**
  * DELETE /api/admin/api-keys/[id]
  * Delete (deactivate) an API key
  */
-export const DELETE = withRBAC('system:admin:all', async (
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) => {
-  try {
-    const supabase = await createClient();
-    const { id } = await params;
-    
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+export const DELETE = withRBAC(
+  'system:admin:all',
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    try {
+      const supabase = await createClient();
+      const { id } = await params;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+      // Get current user
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+      // Verify admin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    // Use admin client to bypass RLS for admin operations
-    const adminClient = getSupabaseAdmin();
+      if (profile?.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Admin access required' },
+          { status: 403 }
+        );
+      }
 
-    // Soft delete by deactivating using admin client (bypasses RLS)
-    const { error } = await adminClient
-      .from('api_keys')
-      .update({ is_active: false })
-      .eq('id', id);
+      // Use admin client to bypass RLS for admin operations
+      const adminClient = getSupabaseAdmin();
 
-    if (error) {
-      console.error('Error deleting API key:', error);
+      // Soft delete by deactivating using admin client (bypasses RLS)
+      const { error } = await adminClient
+        .from('api_keys')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting API key:', error);
+        return NextResponse.json(
+          { error: 'Failed to delete API key', details: error.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'API key deactivated successfully',
+      });
+    } catch (error) {
+      console.error('Error in DELETE /api/admin/api-keys/[id]:', error);
       return NextResponse.json(
-        { error: 'Failed to delete API key', details: error.message },
+        {
+          error: 'Internal server error',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
         { status: 500 }
       );
     }
-
-    return NextResponse.json({
-      success: true,
-      message: 'API key deactivated successfully',
-    });
-  } catch (error) {
-    console.error('Error in DELETE /api/admin/api-keys/[id]:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
   }
-});
-
+);

@@ -78,8 +78,26 @@ export function useSupabase() {
   if (!context) {
     throw new Error('useSupabase must be used within an AuthProvider');
   }
-  const { user, session, loading, initialLoading, isProfileSynced, supabase, signOut, refreshSession } = context;
-  return { user, session, loading, initialLoading, isProfileSynced, supabase, signOut, refreshSession };
+  const {
+    user,
+    session,
+    loading,
+    initialLoading,
+    isProfileSynced,
+    supabase,
+    signOut,
+    refreshSession,
+  } = context;
+  return {
+    user,
+    session,
+    loading,
+    initialLoading,
+    isProfileSynced,
+    supabase,
+    signOut,
+    refreshSession,
+  };
 }
 
 // Auth Provider
@@ -490,7 +508,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           },
           mutations: {
             retry: 1,
-            onError: (error) => {
+            onError: error => {
               console.error('Mutation error:', error);
             },
           },

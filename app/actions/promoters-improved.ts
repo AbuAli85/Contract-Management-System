@@ -1,6 +1,6 @@
 /**
  * Improved Promoter Actions
- * 
+ *
  * Enhanced server actions with:
  * - Granular cache invalidation using tags
  * - Better error handling with detailed responses
@@ -145,7 +145,9 @@ export async function getPromoters(filters?: {
 /**
  * Get a single promoter by ID
  */
-export async function getPromoterById(id: string): Promise<ActionResult<Promoter>> {
+export async function getPromoterById(
+  id: string
+): Promise<ActionResult<Promoter>> {
   try {
     const supabase = await createClient();
 
@@ -326,11 +328,11 @@ export async function updatePromoter(
         'work_location',
         'employer_id',
       ];
-      
+
       const affectsAnalytics = analyticsFields.some(
-        (field) => field in promoterData
+        field => field in promoterData
       );
-      
+
       if (affectsAnalytics) {
         invalidateAnalytics();
       }
@@ -474,7 +476,9 @@ export async function bulkDeletePromoters(
  * Manually revalidate all promoter caches
  * Useful for admin operations or after bulk external updates
  */
-export async function revalidateAllPromoterCaches(): Promise<ActionResult<void>> {
+export async function revalidateAllPromoterCaches(): Promise<
+  ActionResult<void>
+> {
   try {
     invalidateAllPromoterCaches();
 
@@ -514,4 +518,3 @@ export async function revalidatePromoterCache(
     };
   }
 }
-

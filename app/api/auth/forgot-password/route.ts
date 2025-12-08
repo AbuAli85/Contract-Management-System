@@ -36,9 +36,10 @@ export async function POST(request: NextRequest) {
       console.log(`🔐 Password reset requested for: ${email}`);
 
       // Generate password reset link using Supabase Auth
-      const { data, error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io'}/en/reset-password`,
-      });
+      const { data, error: resetError } =
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io'}/en/reset-password`,
+        });
 
       if (resetError) {
         console.error('❌ Supabase reset error:', resetError);
@@ -68,20 +69,33 @@ export async function POST(request: NextRequest) {
           });
 
           if (emailResult.success) {
-            console.log('✅ Custom password reset email sent via Resend:', emailResult.messageId);
+            console.log(
+              '✅ Custom password reset email sent via Resend:',
+              emailResult.messageId
+            );
           } else {
-            console.warn('⚠️ Failed to send custom email, Supabase email will be used:', emailResult.error);
+            console.warn(
+              '⚠️ Failed to send custom email, Supabase email will be used:',
+              emailResult.error
+            );
           }
         } catch (emailError) {
-          console.error('⚠️ Custom email error (Supabase email will still be sent):', emailError);
+          console.error(
+            '⚠️ Custom email error (Supabase email will still be sent):',
+            emailError
+          );
           // Don't fail the request if custom email fails
           // User will still receive Supabase's default email
         }
       } else {
-        console.log('📧 RESEND_API_KEY not configured, using Supabase default email');
+        console.log(
+          '📧 RESEND_API_KEY not configured, using Supabase default email'
+        );
       }
     } else {
-      console.log(`⚠️ Password reset attempted for non-existent email: ${email}`);
+      console.log(
+        `⚠️ Password reset attempted for non-existent email: ${email}`
+      );
       // Don't log this as an error to prevent email enumeration
     }
 

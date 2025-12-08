@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { validateMetrics, checkDataConsistency, runFullDataIntegrityCheck } from '@/lib/metrics';
+import {
+  validateMetrics,
+  checkDataConsistency,
+  runFullDataIntegrityCheck,
+} from '@/lib/metrics';
 import { getPromoterMetrics } from '@/lib/metrics';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +12,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /api/diagnostics/metrics
  * Returns comprehensive metrics diagnostics including validation and consistency checks
- * 
+ *
  * Query params:
  *  - check: 'validation' | 'consistency' | 'full' (default: 'full')
  *  - format: 'json' | 'markdown' (default: 'json')
@@ -66,7 +70,9 @@ export async function GET(request: Request) {
       .eq('status', 'active')
       .not('promoter_id', 'is', null);
 
-    const uniqueAssigned = new Set(assignedContracts?.map(c => c.promoter_id) || []).size;
+    const uniqueAssigned = new Set(
+      assignedContracts?.map(c => c.promoter_id) || []
+    ).size;
 
     result.rawCounts = {
       totalPromoters: totalPromoters || 0,
@@ -116,8 +122,12 @@ function formatAsMarkdown(result: any): string {
     lines.push('');
     lines.push(`- **Total Promoters:** ${result.rawCounts.totalPromoters}`);
     lines.push(`- **Active Promoters:** ${result.rawCounts.activePromoters}`);
-    lines.push(`- **Promoters on Active Contracts:** ${result.rawCounts.uniquePromotersOnActiveContracts}`);
-    lines.push(`- **Available Promoters:** ${result.rawCounts.availablePromoters}`);
+    lines.push(
+      `- **Promoters on Active Contracts:** ${result.rawCounts.uniquePromotersOnActiveContracts}`
+    );
+    lines.push(
+      `- **Available Promoters:** ${result.rawCounts.availablePromoters}`
+    );
     lines.push('');
   }
 
@@ -125,7 +135,9 @@ function formatAsMarkdown(result: any): string {
   if (result.metricsValidation) {
     lines.push('## Metrics Validation');
     lines.push('');
-    lines.push(`**Status:** ${result.metricsValidation.isValid ? '✅ PASS' : '❌ FAIL'}`);
+    lines.push(
+      `**Status:** ${result.metricsValidation.isValid ? '✅ PASS' : '❌ FAIL'}`
+    );
     lines.push('');
 
     if (result.metricsValidation.errors.length > 0) {
@@ -144,7 +156,10 @@ function formatAsMarkdown(result: any): string {
       lines.push('');
     }
 
-    if (result.metricsValidation.errors.length === 0 && result.metricsValidation.warnings.length === 0) {
+    if (
+      result.metricsValidation.errors.length === 0 &&
+      result.metricsValidation.warnings.length === 0
+    ) {
       lines.push('✅ No validation issues found');
       lines.push('');
     }
@@ -156,7 +171,12 @@ function formatAsMarkdown(result: any): string {
     lines.push('');
 
     result.consistencyChecks.forEach((check: any) => {
-      const emoji = check.status === 'PASS' ? '✅' : check.status === 'WARNING' ? '⚠️' : '❌';
+      const emoji =
+        check.status === 'PASS'
+          ? '✅'
+          : check.status === 'WARNING'
+            ? '⚠️'
+            : '❌';
       lines.push(`### ${emoji} ${check.checkName}`);
       lines.push(`**Status:** ${check.status}`);
       lines.push(`**Message:** ${check.message}`);
@@ -176,7 +196,12 @@ function formatAsMarkdown(result: any): string {
     lines.push('');
     lines.push('## Overall Status');
     lines.push('');
-    const emoji = result.overallStatus === 'PASS' ? '✅' : result.overallStatus === 'WARNING' ? '⚠️' : '❌';
+    const emoji =
+      result.overallStatus === 'PASS'
+        ? '✅'
+        : result.overallStatus === 'WARNING'
+          ? '⚠️'
+          : '❌';
     lines.push(`### ${emoji} ${result.overallStatus}`);
     lines.push('');
   }
@@ -186,15 +211,23 @@ function formatAsMarkdown(result: any): string {
   lines.push('');
 
   if (result.metricsValidation?.errors.length > 0) {
-    lines.push('1. **Fix Data Errors:** Address the validation errors listed above');
+    lines.push(
+      '1. **Fix Data Errors:** Address the validation errors listed above'
+    );
   }
 
-  if (result.rawCounts?.totalPromoters === result.rawCounts?.availablePromoters) {
-    lines.push('2. **All Promoters Unassigned:** Consider assigning promoters to contracts');
+  if (
+    result.rawCounts?.totalPromoters === result.rawCounts?.availablePromoters
+  ) {
+    lines.push(
+      '2. **All Promoters Unassigned:** Consider assigning promoters to contracts'
+    );
   }
 
   if (result.metricsValidation?.warnings.length > 0) {
-    lines.push('3. **Review Warnings:** Investigate the warnings to ensure data consistency');
+    lines.push(
+      '3. **Review Warnings:** Investigate the warnings to ensure data consistency'
+    );
   }
 
   lines.push('');
@@ -204,4 +237,3 @@ function formatAsMarkdown(result: any): string {
 
   return lines.join('\n');
 }
-

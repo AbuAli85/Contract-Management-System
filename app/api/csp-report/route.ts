@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * CSP Violation Reporting Endpoint
- * 
+ *
  * This endpoint receives and logs Content Security Policy violations
  * to help identify security issues and misconfigurations.
- * 
+ *
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
  */
 
 interface CSPReport {
   'csp-report': {
     'document-uri': string;
-    'referrer': string;
+    referrer: string;
     'violated-directive': string;
     'effective-directive': string;
     'original-policy': string;
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // - Send to Datadog
     // - Store in database for analysis
     // - Send to Report URI service
-    
+
     // Example Sentry integration:
     // if (process.env.SENTRY_DSN) {
     //   Sentry.captureMessage('CSP Violation', {
@@ -67,10 +67,7 @@ export async function POST(request: NextRequest) {
     //   });
     // }
 
-    return NextResponse.json(
-      { received: true },
-      { status: 204 }
-    );
+    return NextResponse.json({ received: true }, { status: 204 });
   } catch (error) {
     console.error('Error processing CSP report:', error);
     return NextResponse.json(
@@ -91,4 +88,3 @@ export async function OPTIONS() {
     },
   });
 }
-

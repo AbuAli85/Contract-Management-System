@@ -34,7 +34,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
+
     // Validate promoter ID format (should be UUID)
     if (!id || typeof id !== 'string' || id.trim() === '') {
       console.error('Invalid promoter ID:', id);
@@ -47,7 +47,10 @@ export async function GET(
     const supabase = await createSupabaseClient();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       console.error('Authentication error:', authError?.message || 'No user');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -65,7 +68,7 @@ export async function GET(
       // Check if the error is due to missing table (relation does not exist)
       const errorMessage = error.message || '';
       const errorCode = (error as any).code || '';
-      
+
       console.error('Error fetching documents:', {
         message: errorMessage,
         code: errorCode,
@@ -76,10 +79,13 @@ export async function GET(
 
       // If table doesn't exist, return empty array instead of error (graceful degradation)
       if (
-        (errorMessage.includes('relation') && errorMessage.includes('does not exist')) ||
+        (errorMessage.includes('relation') &&
+          errorMessage.includes('does not exist')) ||
         errorCode === '42P01' // PostgreSQL error code for "relation does not exist"
       ) {
-        console.warn('promoter_documents table does not exist - returning empty array');
+        console.warn(
+          'promoter_documents table does not exist - returning empty array'
+        );
         return NextResponse.json({ documents: [] }, { status: 200 });
       }
 
@@ -95,25 +101,30 @@ export async function GET(
 
       // For other errors, return the error but with more context
       return NextResponse.json(
-        { 
+        {
           error: error.message || 'Failed to fetch documents',
           code: errorCode,
-          details: process.env.NODE_ENV === 'development' ? error : undefined
+          details: process.env.NODE_ENV === 'development' ? error : undefined,
         },
         { status: 400 }
       );
     }
 
-    console.log(`Successfully fetched ${data?.length || 0} documents for promoter ${id}`);
+    console.log(
+      `Successfully fetched ${data?.length || 0} documents for promoter ${id}`
+    );
     return NextResponse.json({ documents: data || [] }, { status: 200 });
   } catch (error) {
     console.error('Documents API error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' 
-          ? error instanceof Error ? error.message : String(error)
-          : undefined
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
@@ -130,25 +141,24 @@ export async function POST(
     const supabase = await createSupabaseClient();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const {
-      document_type,
-      file_name,
-      file_path,
-      file_size,
-      mime_type,
-      notes,
-    } = body;
+    const { document_type, file_name, file_path, file_size, mime_type, notes } =
+      body;
 
     // Validate required fields
     if (!document_type || !file_name || !file_path) {
       return NextResponse.json(
-        { error: 'Missing required fields: document_type, file_name, file_path' },
+        {
+          error: 'Missing required fields: document_type, file_name, file_path',
+        },
         { status: 400 }
       );
     }
@@ -197,7 +207,10 @@ export async function PATCH(
     const supabase = await createSupabaseClient();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -261,7 +274,10 @@ export async function DELETE(
     const supabase = await createSupabaseClient();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -325,10 +341,10 @@ export async function DELETE(
     // }
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: 'Document deleted successfully',
-        deletedDocument: document 
+        deletedDocument: document,
       },
       { status: 200 }
     );

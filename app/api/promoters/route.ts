@@ -25,7 +25,7 @@ const promoterSchema = z.object({
     .string()
     .optional()
     .refine(
-      (val) => {
+      val => {
         if (!val || val.trim() === '') return true; // Optional field
         const digitsOnly = val.replace(/\D/g, '');
         // Must have at least 10 digits and not be incomplete (> 4 digits)
@@ -59,7 +59,7 @@ const promoterSchema = z.object({
     .string()
     .optional()
     .refine(
-      (val) => {
+      val => {
         if (!val || val.trim() === '') return true; // Optional field
         const digitsOnly = val.replace(/\D/g, '');
         // Must have at least 10 digits and not be incomplete (> 4 digits)
@@ -115,18 +115,18 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       console.error('❌ Missing Supabase credentials:', {
         hasUrl: !!supabaseUrl,
         hasAnonKey: !!supabaseAnonKey,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Server configuration error',
           details: 'Missing Supabase environment variables',
           debug: {
             hasUrl: !!supabaseUrl,
             hasAnonKey: !!supabaseAnonKey,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         },
         { status: 500 }
       );
@@ -159,18 +159,19 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         authError: authError?.message,
         hasUser: !!user,
         userId: user?.id,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return NextResponse.json(
         {
           success: false,
           error: 'Authentication required',
-          details: authError?.message || 'Please log in to access promoters data',
+          details:
+            authError?.message || 'Please log in to access promoters data',
           debug: {
             hasUser: !!user,
             authError: authError?.message,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         },
         { status: 401 }
       );
@@ -186,12 +187,12 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       .single();
 
     const isAdmin = userProfile?.role === 'admin';
-    
-    console.log('🔐 User role check:', { 
-      userId: user.id, 
-      email: user.email, 
-      role: userProfile?.role, 
-      isAdmin 
+
+    console.log('🔐 User role check:', {
+      userId: user.id,
+      email: user.email,
+      role: userProfile?.role,
+      isAdmin,
     });
 
     // Parse pagination and filters from query params
@@ -202,7 +203,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       200 // Increased max limit
     );
     const offset = (page - 1) * limit;
-    
+
     // Server-side filtering parameters
     const searchTerm = url.searchParams.get('search') || '';
     const statusFilter = url.searchParams.get('status') || '';
@@ -211,18 +212,23 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     const sortField = url.searchParams.get('sortField') || 'created_at';
     const sortOrder = url.searchParams.get('sortOrder') || 'desc';
 
-    console.log('📊 Query params:', { 
-      page, limit, offset, searchTerm, statusFilter, 
-      documentFilter, assignmentFilter, sortField, sortOrder,
-      userScoped: !isAdmin
+    console.log('📊 Query params:', {
+      page,
+      limit,
+      offset,
+      searchTerm,
+      statusFilter,
+      documentFilter,
+      assignmentFilter,
+      sortField,
+      sortOrder,
+      userScoped: !isAdmin,
     });
 
     // ✅ SECURITY: Query with RLS policies + user scoping
     // Admins see all data, non-admins see only their created promoters
-    let query = supabase
-      .from('promoters')
-      .select(
-        `
+    let query = supabase.from('promoters').select(
+      `
         id, name_en, name_ar, email, mobile_number, phone,
         profile_picture_url, status, job_title,
         id_card_number, id_card_expiry_date, id_card_url,
@@ -233,13 +239,15 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
           id, name_en, name_ar, type, status
         )
       `,
-        { count: 'exact' }
-      );
+      { count: 'exact' }
+    );
 
     // ✅ SECURITY: Scope data by user role
-    // Non-admin users only see promoters they created  
+    // Non-admin users only see promoters they created
     if (!isAdmin) {
-      console.log('🔒 Non-admin user: applying data scope via created_by filter');
+      console.log(
+        '🔒 Non-admin user: applying data scope via created_by filter'
+      );
       // Uncomment when created_by column is added via scripts/add-created-by-column.sql:
       // query = query.eq('created_by', user.id);
     }
@@ -274,11 +282,15 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     // Apply document filter
     if (documentFilter && documentFilter !== 'all') {
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-      const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
+      const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+
       if (documentFilter === 'expired') {
         // Documents that have already expired
-        query = query.or(`id_card_expiry_date.lt.${today},passport_expiry_date.lt.${today}`);
+        query = query.or(
+          `id_card_expiry_date.lt.${today},passport_expiry_date.lt.${today}`
+        );
       } else if (documentFilter === 'expiring') {
         // Documents expiring within 30 days
         query = query.or(
@@ -286,7 +298,9 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         );
       } else if (documentFilter === 'missing') {
         // Missing document information
-        query = query.or('id_card_expiry_date.is.null,passport_expiry_date.is.null,id_card_number.is.null,passport_number.is.null');
+        query = query.or(
+          'id_card_expiry_date.is.null,passport_expiry_date.is.null,id_card_number.is.null,passport_number.is.null'
+        );
       }
     }
 
@@ -300,10 +314,19 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     }
 
     // Apply sorting
-    const validSortFields = ['name_en', 'name_ar', 'email', 'status', 'created_at', 'updated_at'];
-    const actualSortField = validSortFields.includes(sortField) ? sortField : 'created_at';
+    const validSortFields = [
+      'name_en',
+      'name_ar',
+      'email',
+      'status',
+      'created_at',
+      'updated_at',
+    ];
+    const actualSortField = validSortFields.includes(sortField)
+      ? sortField
+      : 'created_at';
     const actualSortOrder = sortOrder === 'asc' ? true : false;
-    
+
     query = query.order(actualSortField, { ascending: actualSortOrder });
 
     // Apply pagination
@@ -317,7 +340,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         code: error.code,
         details: error.details,
         hint: error.hint,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return NextResponse.json(
         {
@@ -328,8 +351,8 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
             code: error.code,
             details: error.details,
             hint: error.hint,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         },
         { status: 500 }
       );
@@ -496,7 +519,7 @@ export const POST = withRBAC(
 
       console.log('📝 Creating promoter with user tracking:', {
         createdBy: user.id,
-        email: user.email
+        email: user.email,
       });
 
       // Insert promoter into database

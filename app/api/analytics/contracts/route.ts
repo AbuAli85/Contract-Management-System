@@ -9,14 +9,14 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get query parameters
@@ -36,8 +36,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate overview metrics
     const total_contracts = contracts?.length || 0;
-    const active_contracts = contracts?.filter(c => c.status === 'active').length || 0;
-    const total_value = contracts?.reduce((sum, c) => sum + (c.value || 0), 0) || 0;
+    const active_contracts =
+      contracts?.filter(c => c.status === 'active').length || 0;
+    const total_value =
+      contracts?.reduce((sum, c) => sum + (c.value || 0), 0) || 0;
 
     // Get approval stats
     const { data: approvals } = await supabase
@@ -45,14 +47,16 @@ export async function GET(request: NextRequest) {
       .select('*')
       .gte('created_at', startDate.toISOString());
 
-    const approvedApprovals = approvals?.filter(a => a.status === 'approved' && a.approved_at) || [];
-    const avg_approval_time = approvedApprovals.length > 0
-      ? approvedApprovals.reduce((sum, a) => {
-          const created = new Date(a.created_at).getTime();
-          const approved = new Date(a.approved_at!).getTime();
-          return sum + (approved - created) / (1000 * 60 * 60); // hours
-        }, 0) / approvedApprovals.length
-      : 0;
+    const approvedApprovals =
+      approvals?.filter(a => a.status === 'approved' && a.approved_at) || [];
+    const avg_approval_time =
+      approvedApprovals.length > 0
+        ? approvedApprovals.reduce((sum, a) => {
+            const created = new Date(a.created_at).getTime();
+            const approved = new Date(a.approved_at!).getTime();
+            return sum + (approved - created) / (1000 * 60 * 60); // hours
+          }, 0) / approvedApprovals.length
+        : 0;
 
     // Get expiring contracts
     const thirtyDaysFromNow = new Date();
@@ -159,4 +163,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

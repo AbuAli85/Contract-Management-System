@@ -136,13 +136,15 @@ export async function GET(request: NextRequest) {
 
       // If not found in 'users', try 'profiles' table as fallback
       if (profileError && profileError.code === 'PGRST116') {
-        console.log('🔐 Auth Check: User not in users table, trying profiles table');
+        console.log(
+          '🔐 Auth Check: User not in users table, trying profiles table'
+        );
         const profilesResult = await supabase
           .from('profiles')
           .select('id, email, role, full_name')
           .eq('id', user.id)
           .single();
-        
+
         userProfile = profilesResult.data;
         profileError = profilesResult.error;
       }
@@ -171,15 +173,17 @@ export async function GET(request: NextRequest) {
               updated_at: user.updated_at,
               user_metadata: user.user_metadata,
               role: user.user_metadata?.role || 'user',
-              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || `User ${user.id.substring(0, 8)}`,
+              full_name:
+                user.user_metadata?.full_name ||
+                user.email?.split('@')[0] ||
+                `User ${user.id.substring(0, 8)}`,
             },
             session: {
               access_token: null, // Not available with getUser()
               refresh_token: null, // Not available with getUser()
               expires_at: null, // Not available with getUser()
             },
-            warning:
-              'User profile not found in database, using auth metadata',
+            warning: 'User profile not found in database, using auth metadata',
           });
         }
 
@@ -196,7 +200,10 @@ export async function GET(request: NextRequest) {
               updated_at: user.updated_at,
               user_metadata: user.user_metadata,
               role: user.user_metadata?.role || 'user',
-              full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || `User ${user.id.substring(0, 8)}`,
+              full_name:
+                user.user_metadata?.full_name ||
+                user.email?.split('@')[0] ||
+                `User ${user.id.substring(0, 8)}`,
             },
             session: {
               access_token: null, // Not available with getUser()
@@ -219,7 +226,10 @@ export async function GET(request: NextRequest) {
 
       // Check if user status is active (if status field exists)
       if (userProfile?.status && userProfile.status !== 'active') {
-        console.warn('🔐 Auth Check: User account is not active:', userProfile.status);
+        console.warn(
+          '🔐 Auth Check: User account is not active:',
+          userProfile.status
+        );
         return NextResponse.json(
           {
             authenticated: false,
@@ -245,7 +255,11 @@ export async function GET(request: NextRequest) {
           updated_at: user.updated_at,
           user_metadata: user.user_metadata,
           role: userProfile?.role || user.user_metadata?.role || 'user',
-          full_name: userProfile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || null,
+          full_name:
+            userProfile?.full_name ||
+            user.user_metadata?.full_name ||
+            user.email?.split('@')[0] ||
+            null,
         },
         session: {
           access_token: null, // Not available with getUser()
@@ -258,7 +272,7 @@ export async function GET(request: NextRequest) {
         '🔐 Auth Check: Profile validation error, using auth metadata:',
         profileError
       );
-      
+
       // In case of error, return auth data with fallback
       return NextResponse.json({
         authenticated: true,
@@ -269,7 +283,8 @@ export async function GET(request: NextRequest) {
           updated_at: user.updated_at,
           user_metadata: user.user_metadata,
           role: user.user_metadata?.role || 'user',
-          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || null,
+          full_name:
+            user.user_metadata?.full_name || user.email?.split('@')[0] || null,
         },
         session: {
           access_token: null,

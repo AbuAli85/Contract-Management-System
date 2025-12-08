@@ -35,7 +35,7 @@ export default function ExtraContractsPage() {
 
   return (
     <div className='container mx-auto py-6'>
-      <SimpleContractGenerator pageTitle="eXtra Contracts" />
+      <SimpleContractGenerator pageTitle='eXtra Contracts' />
     </div>
   );
 }

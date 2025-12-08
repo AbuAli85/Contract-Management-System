@@ -4,30 +4,32 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
-    
+
     console.log('🔍 PDF Generation Debug - Received request:', body);
 
     // Generate actual PDF content using HTML template
-    const pdfBuffer = await generateContractPDF(body, body.contractNumber || 'DEBUG-001');
+    const pdfBuffer = await generateContractPDF(
+      body,
+      body.contractNumber || 'DEBUG-001'
+    );
 
     // For debug purposes, return the PDF content as base64
     const pdfBase64 = pdfBuffer.toString('base64');
-    
+
     return NextResponse.json({
       success: true,
       pdf_base64: pdfBase64,
       pdf_size: pdfBuffer.length,
       contract_data: body,
-      message: 'PDF generated successfully (debug mode)'
+      message: 'PDF generated successfully (debug mode)',
     });
-    
   } catch (error) {
     console.error('PDF Generation Debug error:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
+      {
+        error: 'Internal server error',
         details: (error as Error).message,
-        stack: (error as Error).stack
+        stack: (error as Error).stack,
       },
       { status: 500 }
     );

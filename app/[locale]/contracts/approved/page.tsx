@@ -12,7 +12,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, Search, Filter, Download, Eye, ShieldAlert, Mail, RefreshCw, AlertTriangle, Loader2 } from 'lucide-react';
+import {
+  CheckCircle,
+  Search,
+  Filter,
+  Download,
+  Eye,
+  ShieldAlert,
+  Mail,
+  RefreshCw,
+  AlertTriangle,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/use-permissions';
 import { ContractsCardSkeleton } from '@/components/contracts/ContractsSkeleton';
@@ -45,11 +56,11 @@ export default function ApprovedContractsPage() {
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const forceLoadRef = useRef(false);
-  
+
   // Check permissions
   const permissions = usePermissions();
-  const hasPermission = useMemo(() => 
-    permissions.can('contract:read:own') || permissions.isAdmin, 
+  const hasPermission = useMemo(
+    () => permissions.can('contract:read:own') || permissions.isAdmin,
     [permissions.can, permissions.isAdmin]
   );
 
@@ -62,16 +73,16 @@ export default function ApprovedContractsPage() {
     }
 
     fetchAttemptedRef.current = true;
-    
+
     // ✅ FIX: Cancel previous request if still pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     // Create new AbortController for this request
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    
+
     let timeoutId: NodeJS.Timeout | null = null;
     timeoutId = setTimeout(() => {
       console.warn('⏱️ Request timeout - aborting after 10 seconds');
@@ -86,20 +97,20 @@ export default function ApprovedContractsPage() {
     }, 3000);
 
     const startTime = Date.now();
-    
+
     try {
       setLoading(true);
       setError(null);
       setPermissionError(false);
       setShowSlowLoadingMessage(false);
-      
+
       console.log('🔍 Approved Contracts Debug:', {
         timestamp: new Date().toISOString(),
         endpoint: '/api/contracts?status=approved',
         timeout: '10 seconds',
-        retryCount
+        retryCount,
       });
-      
+
       const response = await fetch('/api/contracts?status=approved', {
         signal: controller.signal,
         headers: {
@@ -107,12 +118,12 @@ export default function ApprovedContractsPage() {
         },
         cache: 'no-store',
       });
-      
+
       if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
       console.log(`⏱️ API Response time: ${queryTime}ms`);
-      
+
       const data = await response.json();
 
       if (!mountedRef.current) return;
@@ -121,7 +132,7 @@ export default function ApprovedContractsPage() {
         // ✅ FIX: Clear timeouts on permission error
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
+
         setPermissionError(true);
         setError('Insufficient permissions to view approved contracts');
         console.error('❌ Permission denied for approved contracts:', data);
@@ -129,74 +140,84 @@ export default function ApprovedContractsPage() {
         // ✅ FIX: Clear timeouts on auth error
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
+
         setError('Please log in to view approved contracts');
         console.error('❌ Authentication required for approved contracts');
       } else if (response.status === 504) {
         // ✅ FIX: Clear timeouts on server timeout
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
-        setError('Server timeout - the request took too long. Please try again.');
+
+        setError(
+          'Server timeout - the request took too long. Please try again.'
+        );
         console.error('❌ Server timeout for approved contracts:', {
           status: response.status,
           data,
-          queryTime: `${queryTime}ms`
+          queryTime: `${queryTime}ms`,
         });
       } else if (response.ok && data.success !== false) {
         // ✅ FIX: Clear timeouts on success
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
+
         const contractsList = data.contracts || [];
         setContracts(contractsList);
         setError(null);
-        
+
         console.log('✅ Loaded approved contracts:', {
           count: contractsList.length,
           queryTime: `${queryTime}ms`,
           sampleIds: contractsList.slice(0, 3).map((c: any) => c.id),
           totalActive: data.activeContracts,
           requestId: data.requestId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        
+
         if (contractsList.length === 0) {
-          console.log('ℹ️ No approved contracts found - this is normal, not an error');
+          console.log(
+            'ℹ️ No approved contracts found - this is normal, not an error'
+          );
         }
       } else {
         // ✅ FIX: Clear timeouts on error
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
-        setError(data.error || data.message || 'Failed to fetch approved contracts');
+
+        setError(
+          data.error || data.message || 'Failed to fetch approved contracts'
+        );
         console.error('❌ Error fetching approved contracts:', {
           status: response.status,
           data,
-          queryTime: `${queryTime}ms`
+          queryTime: `${queryTime}ms`,
         });
       }
     } catch (err: any) {
       if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
-      
+
       if (!mountedRef.current) return;
-      
+
       if (err.name === 'AbortError') {
-        setError('Request timeout - the server took too long to respond. Please try again.');
+        setError(
+          'Request timeout - the server took too long to respond. Please try again.'
+        );
         console.error('❌ Request timeout after 10 seconds:', {
           queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } else {
-        setError(`Network error: ${err.message || 'Please check your connection and try again.'}`);
+        setError(
+          `Network error: ${err.message || 'Please check your connection and try again.'}`
+        );
         console.error('❌ Exception fetching approved contracts:', {
           error: err,
           message: err.message,
           name: err.name,
           queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     } finally {
@@ -214,7 +235,7 @@ export default function ApprovedContractsPage() {
   // ✅ FIX: Simplified useEffect with proper dependencies
   useEffect(() => {
     mountedRef.current = true;
-    
+
     console.log('📋 Approved Contracts - Permission Check:', {
       hasPermission,
       isAdmin: permissions.isAdmin,
@@ -222,13 +243,15 @@ export default function ApprovedContractsPage() {
       canRead: permissions.can('contract:read:own'),
       forceLoad,
       timestamp: new Date().toISOString(),
-      fetchAttempted: fetchAttemptedRef.current
+      fetchAttempted: fetchAttemptedRef.current,
     });
 
     // ✅ FIX: Force load after 4 seconds regardless of permissions (safety net)
     const forceLoadTimeout = setTimeout(() => {
       if (!fetchAttemptedRef.current) {
-        console.warn('⚠️ Force loading after 4 seconds - permissions check may be stuck');
+        console.warn(
+          '⚠️ Force loading after 4 seconds - permissions check may be stuck'
+        );
         forceLoadRef.current = true;
         setForceLoad(true);
       }
@@ -237,7 +260,9 @@ export default function ApprovedContractsPage() {
     // ✅ FIX: Add timeout to prevent infinite loading if permissions never load
     const permissionTimeout = setTimeout(() => {
       if (permissions.isLoading && !fetchAttemptedRef.current) {
-        console.warn('⚠️ Permissions taking too long to load, proceeding with fetch anyway...');
+        console.warn(
+          '⚠️ Permissions taking too long to load, proceeding with fetch anyway...'
+        );
         fetchApprovedContracts();
       }
     }, 2000); // Reduced to 2 seconds for faster response
@@ -245,9 +270,11 @@ export default function ApprovedContractsPage() {
     if (!permissions.isLoading || forceLoadRef.current) {
       clearTimeout(permissionTimeout);
       clearTimeout(forceLoadTimeout);
-      
+
       if (hasPermission || forceLoadRef.current) {
-        console.log('✅ Permission granted (or forced), fetching approved contracts...');
+        console.log(
+          '✅ Permission granted (or forced), fetching approved contracts...'
+        );
         // Call fetchApprovedContracts directly to avoid dependency loop
         fetchApprovedContracts();
       } else {
@@ -255,7 +282,7 @@ export default function ApprovedContractsPage() {
           required: 'contract:read:own or admin role',
           hasPermission,
           isAdmin: permissions.isAdmin,
-          canRead: permissions.can('contract:read:own')
+          canRead: permissions.can('contract:read:own'),
         });
         setLoading(false);
         setPermissionError(true);
@@ -273,7 +300,7 @@ export default function ApprovedContractsPage() {
         abortControllerRef.current.abort();
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permissions.isLoading]); // ✅ FIX: Only depend on isLoading. fetchApprovedContracts is intentionally excluded to prevent infinite loop
 
   // ✅ FIX: Add manual retry function
@@ -310,12 +337,12 @@ export default function ApprovedContractsPage() {
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
-    
+
     try {
       const date = new Date(dateString);
       // Check if date is valid
       if (isNaN(date.getTime())) return 'Invalid Date';
-      
+
       // Return DD/MM/YYYY format
       const day = String(date.getDate()).padStart(2, '0');
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -346,11 +373,19 @@ export default function ApprovedContractsPage() {
           <AlertTitle>Insufficient Permissions</AlertTitle>
           <AlertDescription className='space-y-3'>
             <p>
-              You don't have permission to view approved contracts. This page requires one of the following:
+              You don't have permission to view approved contracts. This page
+              requires one of the following:
             </p>
             <ul className='list-disc list-inside space-y-1 ml-2'>
-              <li><strong>Permission:</strong> <code className='bg-muted px-1.5 py-0.5 rounded'>contract:read:own</code></li>
-              <li><strong>OR Admin Role:</strong> System administrator access</li>
+              <li>
+                <strong>Permission:</strong>{' '}
+                <code className='bg-muted px-1.5 py-0.5 rounded'>
+                  contract:read:own
+                </code>
+              </li>
+              <li>
+                <strong>OR Admin Role:</strong> System administrator access
+              </li>
             </ul>
             <div className='flex gap-2 mt-4'>
               <Button variant='outline' asChild>
@@ -375,10 +410,14 @@ export default function ApprovedContractsPage() {
               <ShieldAlert className='mx-auto mb-4 h-12 w-12 text-red-500' />
               <h3 className='text-lg font-semibold mb-2'>Access Restricted</h3>
               <p className='text-sm mb-4'>
-                Contact your system administrator to request the necessary permissions.
+                Contact your system administrator to request the necessary
+                permissions.
               </p>
               <p className='text-xs text-muted-foreground'>
-                Required Permission: <code className='bg-muted px-2 py-1 rounded'>contract:read:own</code>
+                Required Permission:{' '}
+                <code className='bg-muted px-2 py-1 rounded'>
+                  contract:read:own
+                </code>
               </p>
             </div>
           </CardContent>
@@ -400,24 +439,27 @@ export default function ApprovedContractsPage() {
             </p>
           </div>
         </div>
-        
+
         {showSlowLoadingMessage ? (
           <Card>
             <CardContent className='py-12'>
               <div className='flex flex-col items-center justify-center space-y-4'>
                 <Loader2 className='h-12 w-12 animate-spin text-green-600' />
                 <div className='text-center space-y-2'>
-                  <p className='text-base font-medium'>Loading approved contracts...</p>
+                  <p className='text-base font-medium'>
+                    Loading approved contracts...
+                  </p>
                   <p className='text-sm text-muted-foreground'>
-                    This is taking longer than expected. The server might be busy.
+                    This is taking longer than expected. The server might be
+                    busy.
                   </p>
                   <p className='text-xs text-muted-foreground'>
                     Request will timeout after 10 seconds
                   </p>
                 </div>
                 <div className='flex gap-2'>
-                  <Button 
-                    variant='outline' 
+                  <Button
+                    variant='outline'
                     size='sm'
                     onClick={handleCancel}
                     className='mt-4'
@@ -425,8 +467,8 @@ export default function ApprovedContractsPage() {
                     <AlertTriangle className='mr-2 h-4 w-4' />
                     Cancel Request
                   </Button>
-                  <Button 
-                    variant='default' 
+                  <Button
+                    variant='default'
                     size='sm'
                     onClick={handleRetry}
                     className='mt-4 bg-green-600 hover:bg-green-700'
@@ -473,9 +515,9 @@ export default function ApprovedContractsPage() {
               </ul>
             </div>
             <div className='flex flex-wrap gap-2 mt-4'>
-              <Button 
-                onClick={handleRetry} 
-                variant='default' 
+              <Button
+                onClick={handleRetry}
+                variant='default'
                 size='sm'
                 className='bg-green-600 hover:bg-green-700'
               >
@@ -511,26 +553,31 @@ export default function ApprovedContractsPage() {
               <CardTitle className='flex items-center gap-2'>
                 Approved Contracts
                 {contracts.length > 0 && (
-                  <Badge variant='secondary' className='ml-2 bg-green-100 text-green-800'>
+                  <Badge
+                    variant='secondary'
+                    className='ml-2 bg-green-100 text-green-800'
+                  >
                     {contracts.length}
                   </Badge>
                 )}
               </CardTitle>
               <CardDescription>
-                {filteredContracts.length === contracts.length 
+                {filteredContracts.length === contracts.length
                   ? `${contracts.length} ${contracts.length === 1 ? 'contract' : 'contracts'} approved`
                   : `Showing ${filteredContracts.length} of ${contracts.length} contracts`}
               </CardDescription>
             </div>
             <div className='flex items-center gap-2'>
-              <Button 
-                variant='outline' 
+              <Button
+                variant='outline'
                 size='sm'
                 onClick={handleRetry}
                 disabled={loading}
                 className='hover:bg-green-50 hover:border-green-200'
               >
-                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                />
                 Refresh
               </Button>
               <div className='relative'>
@@ -553,18 +600,21 @@ export default function ApprovedContractsPage() {
               </div>
               <div className='text-center space-y-2'>
                 <h3 className='text-lg font-semibold'>
-                  {searchTerm ? 'No Matching Contracts' : 'No Approved Contracts'}
+                  {searchTerm
+                    ? 'No Matching Contracts'
+                    : 'No Approved Contracts'}
                 </h3>
                 <p className='text-muted-foreground max-w-md'>
                   {searchTerm ? (
                     <>
-                      No contracts match your search criteria "<strong>{searchTerm}</strong>". 
-                      Try adjusting your search or clear filters.
+                      No contracts match your search criteria "
+                      <strong>{searchTerm}</strong>". Try adjusting your search
+                      or clear filters.
                     </>
                   ) : contracts.length === 0 ? (
                     <>
-                      There are currently no approved contracts. 
-                      Contracts will appear here once they are approved by administrators.
+                      There are currently no approved contracts. Contracts will
+                      appear here once they are approved by administrators.
                     </>
                   ) : (
                     'Filters removed all results. Try adjusting your filters.'
@@ -573,8 +623,8 @@ export default function ApprovedContractsPage() {
               </div>
               <div className='flex gap-2'>
                 {searchTerm && (
-                  <Button 
-                    variant='default' 
+                  <Button
+                    variant='default'
                     size='sm'
                     onClick={() => setSearchTerm('')}
                     className='bg-green-600 hover:bg-green-700'
@@ -589,11 +639,7 @@ export default function ApprovedContractsPage() {
                     View All Contracts
                   </Link>
                 </Button>
-                <Button 
-                  variant='outline' 
-                  size='sm'
-                  onClick={handleRetry}
-                >
+                <Button variant='outline' size='sm' onClick={handleRetry}>
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Refresh
                 </Button>
@@ -601,7 +647,8 @@ export default function ApprovedContractsPage() {
               {!searchTerm && contracts.length === 0 && (
                 <div className='mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
                   <p className='text-sm text-blue-800 text-center'>
-                    ℹ️ Approved contracts are those that have been reviewed and approved by administrators.
+                    ℹ️ Approved contracts are those that have been reviewed and
+                    approved by administrators.
                   </p>
                 </div>
               )}
@@ -619,9 +666,9 @@ export default function ApprovedContractsPage() {
                         <h3 className='font-semibold'>
                           {contract.contract_number}
                         </h3>
-                        <ContractStatusBadge 
-                          status={contract.status as any} 
-                          size="sm"
+                        <ContractStatusBadge
+                          status={contract.status as any}
+                          size='sm'
                         />
                       </div>
                       <p className='mb-1 text-sm text-muted-foreground'>
@@ -635,7 +682,10 @@ export default function ApprovedContractsPage() {
                           Employer: {contract.second_party?.name_en || 'N/A'}
                         </span>
                         <span>
-                          Employee: {contract.promoters?.name_en || contract.promoter?.name_en || 'N/A'}
+                          Employee:{' '}
+                          {contract.promoters?.name_en ||
+                            contract.promoter?.name_en ||
+                            'N/A'}
                         </span>
                         <span>
                           Approved:{' '}

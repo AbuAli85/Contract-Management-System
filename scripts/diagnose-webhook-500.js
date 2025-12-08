@@ -3,6 +3,16 @@
 // ============================================================================
 // This script diagnoses the 500 Internal Server Error
 // ============================================================================
+require('dotenv').config({ path: '.env.local' });
+
+const WEBHOOK_SECRET = process.env.MAKE_WEBHOOK_SECRET;
+const WEBHOOK_URL = process.env.MAKECOM_WEBHOOK_URL_SIMPLE || 'https://portal.thesmartpro.io/api/webhook/makecom-simple';
+
+if (!WEBHOOK_SECRET) {
+  console.error('❌ Error: MAKE_WEBHOOK_SECRET environment variable is not set');
+  console.error('Please set it in your .env.local file');
+  process.exit(1);
+}
 
 async function diagnoseWebhook500() {
   console.log('🔍 Diagnosing webhook 500 error...');
@@ -42,7 +52,7 @@ async function diagnoseWebhook500() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Webhook-Secret': 'make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806',
+        'X-Webhook-Secret': WEBHOOK_SECRET,
         'X-Request-ID': `diagnostic-${Date.now()}`
       },
       body: JSON.stringify(minimalPayload)
@@ -86,7 +96,7 @@ async function diagnoseWebhook500() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Webhook-Secret': 'make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806',
+        'X-Webhook-Secret': WEBHOOK_SECRET,
         'X-Request-ID': `diagnostic-complete-${Date.now()}`
       },
       body: JSON.stringify(completePayload)
@@ -143,7 +153,7 @@ async function diagnoseWebhook500() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Webhook-Secret': 'make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806',
+        'X-Webhook-Secret': WEBHOOK_SECRET,
         'X-Request-ID': `diagnostic-missing-${Date.now()}`
       },
       body: JSON.stringify({
@@ -192,7 +202,7 @@ async function testExactFailingPayload() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Webhook-Secret': 'make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806',
+        'X-Webhook-Secret': WEBHOOK_SECRET,
         'X-Request-ID': '960531e3406b4336bea96153cf35ce3c'
       },
       body: JSON.stringify(failingPayload)

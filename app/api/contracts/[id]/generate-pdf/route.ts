@@ -18,9 +18,8 @@ function createServiceClient() {
 const MAKE_WEBHOOK_URL_SHARAF_DG = process.env.MAKECOM_WEBHOOK_URL_SHARAF_DG;
 const MAKE_WEBHOOK_URL_EXTRA = process.env.MAKECOM_WEBHOOK_URL_EXTRA;
 const MAKE_WEBHOOK_URL_GENERAL = process.env.MAKECOM_WEBHOOK_URL_GENERAL;
-const MAKE_WEBHOOK_URL_LEGACY = 
-  process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL || 
-  process.env.MAKECOM_WEBHOOK_URL;
+const MAKE_WEBHOOK_URL_LEGACY =
+  process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL || process.env.MAKECOM_WEBHOOK_URL;
 
 // Interface is just for reference - actual contract data structure varies
 interface ContractData {
@@ -40,7 +39,7 @@ interface ContractData {
   end_date: string;
   notice_period: number | null;
   metadata: any; // JSONB field containing additional data
-  
+
   // Joined promoter data
   promoters?: {
     name_en: string;
@@ -52,7 +51,7 @@ interface ContractData {
     passport_url: string | null;
     passport_number: string | null;
   };
-  
+
   // Joined party data
   first_party?: {
     name_en: string;
@@ -60,7 +59,7 @@ interface ContractData {
     crn: string | null;
     logo_url: string | null;
   };
-  
+
   second_party?: {
     name_en: string;
     name_ar: string;
@@ -78,21 +77,22 @@ export async function POST(
 
     // 1. Check authentication using server client (has cookies)
     const supabaseServer = await createServerClient();
-    const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseServer.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 2. Fetch complete contract data with relations using service client
     const supabase = createServiceClient();
-    
+
     // Try to fetch with first_party_id/second_party_id, fallback to employer_id/client_id
     let { data: contract, error: fetchError } = await supabase
       .from('contracts')
-      .select(`
+      .select(
+        `
         *,
         promoters:promoter_id (
           name_en,
@@ -128,7 +128,8 @@ export async function POST(
           crn,
           logo_url
         )
-      `)
+      `
+      )
       .eq('id', contractId)
       .single();
 
@@ -136,10 +137,11 @@ export async function POST(
       console.error('Contract fetch error:', fetchError);
       console.error('Contract ID:', contractId);
       return NextResponse.json(
-        { 
+        {
           error: 'Contract not found',
-          details: fetchError?.message || 'No contract found with the provided ID',
-          contractId 
+          details:
+            fetchError?.message || 'No contract found with the provided ID',
+          contractId,
         },
         { status: 404 }
       );
@@ -152,16 +154,20 @@ export async function POST(
     } else {
       promoterData = contract.promoters || null;
     }
-    
+
     // If promoter data is missing but promoter_id exists, try to fetch it separately
     if (!promoterData && contract.promoter_id) {
-      console.warn('⚠️ Promoter data not returned in query, fetching separately...');
+      console.warn(
+        '⚠️ Promoter data not returned in query, fetching separately...'
+      );
       const { data: promoter, error: promoterError } = await supabase
         .from('promoters')
-        .select('name_en, name_ar, mobile_number, email, id_card_number, id_card_url, passport_url, passport_number')
+        .select(
+          'name_en, name_ar, mobile_number, email, id_card_number, id_card_url, passport_url, passport_number'
+        )
         .eq('id', contract.promoter_id)
         .single();
-      
+
       if (promoterError) {
         console.error('Failed to fetch promoter separately:', promoterError);
       } else if (promoter) {
@@ -169,7 +175,7 @@ export async function POST(
         console.log('✅ Successfully fetched promoter data separately');
       }
     }
-    
+
     contract.promoters = promoterData;
 
     // Log contract data for debugging (without sensitive info)
@@ -201,7 +207,7 @@ export async function POST(
 
     // 3. Validate required fields (relaxed validation)
     const missingFields: string[] = [];
-    
+
     if (!contract.contract_number) missingFields.push('contract_number');
     if (!contract.start_date) missingFields.push('start_date');
     if (!contract.end_date) missingFields.push('end_date');
@@ -209,47 +215,67 @@ export async function POST(
     // Validate promoter data
     if (contract.promoter_id && !contract.promoters) {
       // Promoter ID exists but promoter data couldn't be fetched
-      console.error('❌ Promoter ID exists but promoter data is missing:', contract.promoter_id);
+      console.error(
+        '❌ Promoter ID exists but promoter data is missing:',
+        contract.promoter_id
+      );
       missingFields.push('promoter data (promoter not found in database)');
     } else if (contract.promoters) {
       // Promoter data exists, validate it
       if (!contract.promoters.name_en && !contract.promoters.name_ar) {
         missingFields.push('promoter name (at least one language)');
       }
-      
+
       // Validate that promoter images are NOT placeholders
       // ID card is required for PDF generation
       if (contract.promoters.id_card_url) {
-        if (contract.promoters.id_card_url.includes('NO_ID_CARD') || 
-            contract.promoters.id_card_url.toLowerCase().includes('placeholder')) {
-          missingFields.push('valid ID card image (current image is a placeholder)');
+        if (
+          contract.promoters.id_card_url.includes('NO_ID_CARD') ||
+          contract.promoters.id_card_url.toLowerCase().includes('placeholder')
+        ) {
+          missingFields.push(
+            'valid ID card image (current image is a placeholder)'
+          );
         }
       } else {
         missingFields.push('ID card image');
       }
-      
+
       // Passport image is optional - warn but don't block if placeholder
       // The webhook will handle missing/placeholder passport images gracefully
       if (!contract.promoters.passport_url) {
-        console.warn('⚠️ No passport image provided - PDF will be generated without passport image');
-      } else if (contract.promoters.passport_url.includes('NO_PASSPORT') || 
-                 contract.promoters.passport_url.toLowerCase().includes('placeholder')) {
-        console.warn('⚠️ Passport image is a placeholder - PDF will be generated without passport image');
+        console.warn(
+          '⚠️ No passport image provided - PDF will be generated without passport image'
+        );
+      } else if (
+        contract.promoters.passport_url.includes('NO_PASSPORT') ||
+        contract.promoters.passport_url.toLowerCase().includes('placeholder')
+      ) {
+        console.warn(
+          '⚠️ Passport image is a placeholder - PDF will be generated without passport image'
+        );
         // Don't block PDF generation for placeholder passport images
       }
-      
+
       // Passport number is optional - warn but don't block
       // Only require it if passport image is provided and valid
       if (!contract.promoters.passport_number) {
-        const hasValidPassportImage = contract.promoters.passport_url && 
+        const hasValidPassportImage =
+          contract.promoters.passport_url &&
           !contract.promoters.passport_url.includes('NO_PASSPORT') &&
-          !contract.promoters.passport_url.toLowerCase().includes('placeholder');
-        
+          !contract.promoters.passport_url
+            .toLowerCase()
+            .includes('placeholder');
+
         if (hasValidPassportImage) {
-          console.warn('⚠️ Passport number missing but passport image is provided');
+          console.warn(
+            '⚠️ Passport number missing but passport image is provided'
+          );
           // Only warn, don't block - the PDF can still be generated
         } else {
-          console.warn('⚠️ No passport number provided - PDF will be generated without passport number');
+          console.warn(
+            '⚠️ No passport number provided - PDF will be generated without passport number'
+          );
         }
       }
     } else {
@@ -288,7 +314,7 @@ export async function POST(
         has_first_party: !!contract.first_party,
         has_second_party: !!contract.second_party,
       });
-      
+
       return NextResponse.json(
         {
           error: 'Missing required fields for PDF generation',
@@ -306,28 +332,31 @@ export async function POST(
     const imageUrls = [
       contract.promoters?.id_card_url,
       contract.promoters?.passport_url,
-    ].filter(url => 
-      url && 
-      !url.includes('NO_PASSPORT') && 
-      !url.includes('NO_ID_CARD') &&
-      !url.toLowerCase().includes('placeholder')
+    ].filter(
+      url =>
+        url &&
+        !url.includes('NO_PASSPORT') &&
+        !url.includes('NO_ID_CARD') &&
+        !url.toLowerCase().includes('placeholder')
     );
 
-    console.log(`🔍 Checking ${imageUrls.length} image URLs for accessibility...`);
+    console.log(
+      `🔍 Checking ${imageUrls.length} image URLs for accessibility...`
+    );
 
     for (const url of imageUrls) {
       try {
         // Create abort controller for timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch(url as string, { 
-          method: 'HEAD', 
-          signal: controller.signal 
+
+        const response = await fetch(url as string, {
+          method: 'HEAD',
+          signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (!response.ok) {
           console.warn(`⚠️ Image not accessible (${response.status}): ${url}`);
           // Don't fail - just log warning
@@ -367,16 +396,17 @@ export async function POST(
       contract_id: contract.id,
       contract_number: contract.contract_number,
       contract_type: contract.contract_type || 'employment_contract',
-      
+
       // Contract details - use correct column names from database
       job_title: contract.title || 'Employment Contract', // 'title' column, not 'job_title'
       department: contract.metadata?.department,
       work_location: contract.metadata?.work_location,
-      basic_salary: contract.basic_salary || contract.value || contract.total_value,
+      basic_salary:
+        contract.basic_salary || contract.value || contract.total_value,
       contract_start_date: contract.start_date,
       contract_end_date: contract.end_date,
       special_terms: contract.description || contract.terms,
-      
+
       // Employment terms (from metadata)
       probation_period: contract.metadata?.probation_period,
       notice_period: contract.notice_period || contract.metadata?.notice_period,
@@ -392,39 +422,49 @@ export async function POST(
       webhookPayload.promoter_name_ar = contract.promoters.name_ar;
       webhookPayload.promoter_mobile_number = contract.promoters.mobile_number;
       webhookPayload.promoter_email = contract.promoters.email;
-      webhookPayload.promoter_id_card_number = contract.promoters.id_card_number;
-      webhookPayload.promoter_passport_number = contract.promoters.passport_number;
+      webhookPayload.promoter_id_card_number =
+        contract.promoters.id_card_number;
+      webhookPayload.promoter_passport_number =
+        contract.promoters.passport_number;
       // Aliases for Make.com template compatibility
       webhookPayload.id_card_number = contract.promoters.id_card_number;
       webhookPayload.passport_number = contract.promoters.passport_number;
       webhookPayload.employee_name_en = contract.promoters.name_en;
       webhookPayload.employee_name_ar = contract.promoters.name_ar;
-      
+
       // Only add image URLs if they're valid (not placeholders)
       // Check for both specific placeholders (NO_ID_CARD, NO_PASSPORT) and generic "placeholder"
-      const isValidIdCardUrl = contract.promoters.id_card_url && 
+      const isValidIdCardUrl =
+        contract.promoters.id_card_url &&
         !contract.promoters.id_card_url.includes('NO_ID_CARD') &&
         !contract.promoters.id_card_url.toLowerCase().includes('placeholder');
-      
-      const isValidPassportUrl = contract.promoters.passport_url && 
+
+      const isValidPassportUrl =
+        contract.promoters.passport_url &&
         !contract.promoters.passport_url.includes('NO_PASSPORT') &&
         !contract.promoters.passport_url.toLowerCase().includes('placeholder');
-      
+
       if (isValidIdCardUrl) {
         webhookPayload.promoter_id_card_url = contract.promoters.id_card_url;
         webhookPayload.id_card_url = contract.promoters.id_card_url;
       } else {
-        console.warn('⚠️ Skipping ID card URL - placeholder or invalid:', contract.promoters.id_card_url);
+        console.warn(
+          '⚠️ Skipping ID card URL - placeholder or invalid:',
+          contract.promoters.id_card_url
+        );
       }
-      
+
       if (isValidPassportUrl) {
         webhookPayload.promoter_passport_url = contract.promoters.passport_url;
         webhookPayload.passport_url = contract.promoters.passport_url;
       } else {
-        console.warn('⚠️ Skipping passport URL - placeholder or invalid:', contract.promoters.passport_url);
+        console.warn(
+          '⚠️ Skipping passport URL - placeholder or invalid:',
+          contract.promoters.passport_url
+        );
       }
     }
-    
+
     // Add first party information if available
     if (contract.first_party) {
       webhookPayload.first_party_id = contract.first_party_id;
@@ -436,7 +476,7 @@ export async function POST(
         webhookPayload.first_party_logo_url = contract.first_party.logo_url;
       }
     }
-    
+
     // Add second party information if available
     if (contract.second_party) {
       webhookPayload.second_party_id = contract.second_party_id;
@@ -454,14 +494,23 @@ export async function POST(
       webhookPayload.supplier_brand_name_en = supplierBrandData.name_en;
       webhookPayload.supplier_brand_name_ar = supplierBrandData.name_ar;
     } else if (contract.metadata?.supplier_brand_name_en) {
-      webhookPayload.supplier_brand_name_en = contract.metadata.supplier_brand_name_en;
-      webhookPayload.supplier_brand_name_ar = contract.metadata.supplier_brand_name_ar;
+      webhookPayload.supplier_brand_name_en =
+        contract.metadata.supplier_brand_name_en;
+      webhookPayload.supplier_brand_name_ar =
+        contract.metadata.supplier_brand_name_ar;
     }
 
-    console.log('📤 Prepared webhook payload with keys:', Object.keys(webhookPayload));
+    console.log(
+      '📤 Prepared webhook payload with keys:',
+      Object.keys(webhookPayload)
+    );
     console.log('📤 Image URLs being sent to Make.com:', {
-      id_card: webhookPayload.promoter_id_card_url || '(not included - placeholder or missing)',
-      passport: webhookPayload.promoter_passport_url || '(not included - placeholder or missing)',
+      id_card:
+        webhookPayload.promoter_id_card_url ||
+        '(not included - placeholder or missing)',
+      passport:
+        webhookPayload.promoter_passport_url ||
+        '(not included - placeholder or missing)',
     });
 
     // 7. Determine which webhook URL to use based on contract type
@@ -476,17 +525,22 @@ export async function POST(
       }
     }
 
-    const isSharafDG = 
+    const isSharafDG =
       contract.contract_type?.toLowerCase().includes('sharaf') ||
       contract.contract_type?.toLowerCase().includes('deployment') ||
       contract.title?.toLowerCase().includes('sharaf') ||
       contract.title?.toLowerCase().includes('deployment') ||
       contract.description?.toLowerCase().includes('sharaf') ||
-      (contract.terms && typeof contract.terms === 'string' && contract.terms.toLowerCase().includes('sharaf-dg')) ||
-      (termsData && typeof termsData === 'object' && termsData.contract_subtype === 'sharaf-dg-deployment') ||
-      (contract.metadata && typeof contract.metadata === 'object' && 
-       (contract.metadata.contract_subtype === 'sharaf-dg-deployment' || 
-        JSON.stringify(contract.metadata).toLowerCase().includes('sharaf')));
+      (contract.terms &&
+        typeof contract.terms === 'string' &&
+        contract.terms.toLowerCase().includes('sharaf-dg')) ||
+      (termsData &&
+        typeof termsData === 'object' &&
+        termsData.contract_subtype === 'sharaf-dg-deployment') ||
+      (contract.metadata &&
+        typeof contract.metadata === 'object' &&
+        (contract.metadata.contract_subtype === 'sharaf-dg-deployment' ||
+          JSON.stringify(contract.metadata).toLowerCase().includes('sharaf')));
 
     console.log('🔍 Contract type detection:', {
       contract_type: contract.contract_type,
@@ -513,25 +567,37 @@ export async function POST(
       console.log('📄 Using general contracts webhook');
     } else if (MAKE_WEBHOOK_URL_LEGACY) {
       webhookUrl = MAKE_WEBHOOK_URL_LEGACY;
-      usedEnvVar = process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL ? 'MAKE_CONTRACT_PDF_WEBHOOK_URL' : 'MAKECOM_WEBHOOK_URL';
+      usedEnvVar = process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL
+        ? 'MAKE_CONTRACT_PDF_WEBHOOK_URL'
+        : 'MAKECOM_WEBHOOK_URL';
       console.log('🔄 Using legacy webhook URL');
     }
 
     if (!webhookUrl) {
       console.error('❌ Make.com webhook URL not configured');
-      const requiredVars = isSharafDG 
+      const requiredVars = isSharafDG
         ? ['MAKECOM_WEBHOOK_URL_SHARAF_DG']
-        : ['MAKECOM_WEBHOOK_URL_EXTRA', 'MAKECOM_WEBHOOK_URL_GENERAL', 'MAKE_CONTRACT_PDF_WEBHOOK_URL', 'MAKECOM_WEBHOOK_URL'];
-      
+        : [
+            'MAKECOM_WEBHOOK_URL_EXTRA',
+            'MAKECOM_WEBHOOK_URL_GENERAL',
+            'MAKE_CONTRACT_PDF_WEBHOOK_URL',
+            'MAKECOM_WEBHOOK_URL',
+          ];
+
       throw new Error(
         `Make.com webhook URL not configured. ` +
-        `For ${isSharafDG ? 'Sharaf DG' : 'this contract type'}, please set: ${requiredVars.join(' or ')}`
+          `For ${isSharafDG ? 'Sharaf DG' : 'this contract type'}, please set: ${requiredVars.join(' or ')}`
       );
     }
 
     console.log('📤 Using webhook URL from environment variable:', usedEnvVar);
     console.log('📤 Webhook URL (full):', webhookUrl);
-    console.log('📤 Webhook URL (masked):', webhookUrl.substring(0, 30) + '...' + webhookUrl.substring(webhookUrl.length - 10));
+    console.log(
+      '📤 Webhook URL (masked):',
+      webhookUrl.substring(0, 30) +
+        '...' +
+        webhookUrl.substring(webhookUrl.length - 10)
+    );
     console.log('📤 Webhook URL length:', webhookUrl.length);
     console.log('📤 Available webhook URLs:', {
       SHARAF_DG: MAKE_WEBHOOK_URL_SHARAF_DG ? '✅ Set' : '❌ Not set',
@@ -541,10 +607,15 @@ export async function POST(
     });
 
     // Validate webhook URL format before calling
-    if (!webhookUrl.startsWith('https://hook.eu2.make.com/') && 
-        !webhookUrl.startsWith('https://hook.make.com/') &&
-        !webhookUrl.startsWith('https://hook.us1.make.com/')) {
-      console.warn('⚠️ Webhook URL format may be incorrect:', webhookUrl.substring(0, 50));
+    if (
+      !webhookUrl.startsWith('https://hook.eu2.make.com/') &&
+      !webhookUrl.startsWith('https://hook.make.com/') &&
+      !webhookUrl.startsWith('https://hook.us1.make.com/')
+    ) {
+      console.warn(
+        '⚠️ Webhook URL format may be incorrect:',
+        webhookUrl.substring(0, 50)
+      );
     }
 
     console.log('📤 Sending payload to Make.com webhook...');
@@ -560,7 +631,7 @@ export async function POST(
     if (!webhookResponse.ok) {
       const errorText = await webhookResponse.text();
       let errorMessage = `Webhook failed with status ${webhookResponse.status}`;
-      
+
       // Parse error response if it's JSON
       try {
         const errorJson = JSON.parse(errorText);
@@ -570,10 +641,10 @@ export async function POST(
         console.error('Make.com webhook error (raw):', errorText);
         errorMessage = errorText || errorMessage;
       }
-      
+
       // Provide specific guidance for 404 errors
       if (webhookResponse.status === 404) {
-        const maskedUrl = webhookUrl 
+        const maskedUrl = webhookUrl
           ? `${webhookUrl.substring(0, 30)}...${webhookUrl.substring(webhookUrl.length - 10)}`
           : 'not configured';
         errorMessage = `Make.com webhook not found (404). The webhook endpoint does not exist or the URL is incorrect.`;
@@ -582,12 +653,19 @@ export async function POST(
         console.error('   1. The webhook URL is correct in Make.com');
         console.error('   2. The Make.com scenario is active and running');
         console.error('   3. The webhook trigger module is enabled');
-        console.error('   4. The environment variable', usedEnvVar, 'contains the correct URL');
+        console.error(
+          '   4. The environment variable',
+          usedEnvVar,
+          'contains the correct URL'
+        );
       }
-      
+
       console.error('Webhook response status:', webhookResponse.status);
-      console.error('Webhook response headers:', Object.fromEntries(webhookResponse.headers.entries()));
-      
+      console.error(
+        'Webhook response headers:',
+        Object.fromEntries(webhookResponse.headers.entries())
+      );
+
       // Update contract with error status (using notes since pdf_status doesn't exist)
       await supabase
         .from('contracts')
@@ -602,9 +680,10 @@ export async function POST(
           error: 'PDF generation failed',
           message: errorMessage,
           statusCode: webhookResponse.status,
-          details: webhookResponse.status === 404 
-            ? 'The Make.com webhook URL appears to be incorrect or the webhook endpoint does not exist. Please check your environment variables (MAKE_CONTRACT_PDF_WEBHOOK_URL, MAKECOM_WEBHOOK_URL_EXTRA, or MAKECOM_WEBHOOK_URL).'
-            : 'Failed to trigger PDF generation workflow in Make.com',
+          details:
+            webhookResponse.status === 404
+              ? 'The Make.com webhook URL appears to be incorrect or the webhook endpoint does not exist. Please check your environment variables (MAKE_CONTRACT_PDF_WEBHOOK_URL, MAKECOM_WEBHOOK_URL_EXTRA, or MAKECOM_WEBHOOK_URL).'
+              : 'Failed to trigger PDF generation workflow in Make.com',
         },
         { status: 500 }
       );
@@ -618,10 +697,12 @@ export async function POST(
       contractId: contract.id,
       contractNumber: contract.contract_number,
     });
-
   } catch (error) {
     console.error('PDF generation error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error(
+      'Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
 
     // Get contract ID from params or from earlier
     const errorContractId = params?.id;
@@ -645,7 +726,8 @@ export async function POST(
     return NextResponse.json(
       {
         error: 'PDF generation failed',
-        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        message:
+          error instanceof Error ? error.message : 'Unknown error occurred',
         details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }

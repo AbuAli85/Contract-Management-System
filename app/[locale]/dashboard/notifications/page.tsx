@@ -50,7 +50,7 @@ import clsx from 'clsx';
 // Safe date parsing functions to prevent "Invalid time value" errors
 const safeParseISO = (dateString: string | null | undefined): Date | null => {
   if (!dateString || typeof dateString !== 'string') return null;
-  
+
   try {
     const parsed = parseISO(dateString);
     if (isValid(parsed)) {
@@ -59,7 +59,7 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
   } catch (error) {
     console.warn('Invalid ISO date string:', dateString, error);
   }
-  
+
   // Try alternative parsing for common formats
   try {
     const formats = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy'];
@@ -70,9 +70,13 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
       }
     }
   } catch (error) {
-    console.warn('Failed to parse date with alternative formats:', dateString, error);
+    console.warn(
+      'Failed to parse date with alternative formats:',
+      dateString,
+      error
+    );
   }
-  
+
   return null;
 };
 import { toast } from '@/hooks/use-toast';
@@ -178,7 +182,9 @@ export default function NotificationsPage() {
     // Real-time subscription
     const supabase = createClient();
     if (!supabase) {
-      console.error('Failed to initialize Supabase client for real-time subscription');
+      console.error(
+        'Failed to initialize Supabase client for real-time subscription'
+      );
       return;
     }
     const channel = supabase

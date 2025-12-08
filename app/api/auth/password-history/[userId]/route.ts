@@ -21,10 +21,7 @@ export async function GET(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { userId } = params;
@@ -68,7 +65,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      hashes: (history || []).map((h) => h.password_hash),
+      hashes: (history || []).map(h => h.password_hash),
       count: history?.length || 0,
     });
   } catch (error) {
@@ -79,4 +76,3 @@ export async function GET(
     );
   }
 }
-

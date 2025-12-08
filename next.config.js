@@ -207,13 +207,20 @@ const nextConfig = {
   },
 
   // Enable ESLint during build for better code quality
+  // Note: Set to true temporarily if there are blocking errors during deployment
+  // dirs: defines which directories to lint
   eslint: {
-    ignoreDuringBuilds: true, // Temporarily disabled to allow deployment
+    ignoreDuringBuilds: process.env.SKIP_LINT === 'true',
+    // Only lint specific directories to speed up build
+    dirs: ['app', 'components', 'lib', 'hooks'],
   },
 
   // Enable TypeScript checking during build
+  // TECHNICAL DEBT: TypeScript checking is currently disabled due to legacy code issues
+  // TODO: Fix type errors and enable strict checking
+  // See docs/system-overview/TECHNICAL_DEBT.md for details
   typescript: {
-    ignoreBuildErrors: true, // Temporarily disabled to allow deployment
+    ignoreBuildErrors: true,
   },
 
   // Image domains with security considerations and optimization

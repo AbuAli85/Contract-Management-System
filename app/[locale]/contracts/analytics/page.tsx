@@ -111,7 +111,7 @@ export default function ContractAnalyticsPage() {
       console.error('Supabase client not available');
       return;
     }
-    
+
     setLoading(true);
     try {
       // Fetch submissions over time

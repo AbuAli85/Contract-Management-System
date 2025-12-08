@@ -83,8 +83,11 @@ export async function POST(request: NextRequest) {
     // Get current user from request (has access to cookies/session)
     const { createClient } = await import('@/lib/supabase/server');
     const supabase = await createClient();
-    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user: currentUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !currentUser) {
       return NextResponse.json(
         {
@@ -96,7 +99,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create contract in database with user ID
-    const contract = await generalContractService.createContract(contractData, currentUser.id);
+    const contract = await generalContractService.createContract(
+      contractData,
+      currentUser.id
+    );
     console.log('✅ Contract created:', contract.id);
 
     // Trigger Make.com webhook for general contracts with retry
@@ -106,8 +112,10 @@ export async function POST(request: NextRequest) {
         '🔄 About to trigger Make.com webhook for contract:',
         contract.id
       );
-      const webhookResult =
-        await generalContractService.triggerMakeComWebhook(contract.id, 3);
+      const webhookResult = await generalContractService.triggerMakeComWebhook(
+        contract.id,
+        3
+      );
       console.log('📊 Make.com webhook result:', webhookResult);
 
       makecomResponse = {

@@ -54,7 +54,7 @@ export async function POST(
     // 2. Search storage for files starting with contract number
     const bucketName = 'contracts';
     let allFiles: any[] = [];
-    
+
     try {
       // List all files in the bucket (we'll filter by contract number)
       const { data: fileList, error: listError } = await supabase.storage
@@ -76,39 +76,42 @@ export async function POST(
 
       // Filter files that start with contract number and end with .pdf
       const matchingFiles = allFiles.filter(
-        (file) =>
+        file =>
           file.name.startsWith(contract.contract_number) &&
           file.name.endsWith('.pdf')
       );
 
-      console.log(`🔍 Found ${matchingFiles.length} matching PDF files:`, matchingFiles.map(f => f.name));
+      console.log(
+        `🔍 Found ${matchingFiles.length} matching PDF files:`,
+        matchingFiles.map(f => f.name)
+      );
 
       if (matchingFiles.length === 0) {
         return NextResponse.json(
           {
             error: 'No PDF file found in storage',
             contractNumber: contract.contract_number,
-            message: 'No PDF file found in storage that matches this contract number',
+            message:
+              'No PDF file found in storage that matches this contract number',
           },
           { status: 404 }
         );
       }
 
       // 3. Find the most recent file (or the one that matches the pattern)
-      const matchingFile = matchingFiles
-        .sort((a, b) => {
-          // Sort by created_at descending (most recent first)
-          const aTime = new Date(a.created_at || 0).getTime();
-          const bTime = new Date(b.created_at || 0).getTime();
-          return bTime - aTime;
-        })[0];
+      const matchingFile = matchingFiles.sort((a, b) => {
+        // Sort by created_at descending (most recent first)
+        const aTime = new Date(a.created_at || 0).getTime();
+        const bTime = new Date(b.created_at || 0).getTime();
+        return bTime - aTime;
+      })[0];
 
       console.log('✅ Found matching PDF file:', matchingFile.name);
 
       // 4. Generate correct public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(matchingFile.name);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(bucketName).getPublicUrl(matchingFile.name);
 
       console.log('📝 Correct PDF URL:', publicUrl);
 
@@ -164,4 +167,3 @@ export async function POST(
     );
   }
 }
-

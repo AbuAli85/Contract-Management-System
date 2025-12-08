@@ -5,10 +5,10 @@ import { generateContractPDF } from '@/lib/pdf-generator';
 /**
  * Native PDF Generation Endpoint
  * Uses jsPDF to generate contract PDFs without external dependencies
- * 
+ *
  * POST /api/pdf/generate-contract
  * Body: { contractId: string }
- * 
+ *
  * Returns: PDF file or uploads to Supabase Storage
  */
 
@@ -83,7 +83,8 @@ export async function POST(request: Request) {
 
     // 4. Verify user has access to this contract
     const isOwner = contract.created_by === user.id;
-    const isAssignedPromoter = contract.promoter_id && contract.promoter?.email === user.email;
+    const isAssignedPromoter =
+      contract.promoter_id && contract.promoter?.email === user.email;
 
     if (!isOwner && !isAssignedPromoter) {
       // Check if user has admin/manager role
@@ -93,7 +94,8 @@ export async function POST(request: Request) {
         .eq('id', user.id)
         .single();
 
-      const hasAdminAccess = userRole?.role === 'admin' || userRole?.role === 'manager';
+      const hasAdminAccess =
+        userRole?.role === 'admin' || userRole?.role === 'manager';
 
       if (!hasAdminAccess) {
         return NextResponse.json(
@@ -106,14 +108,18 @@ export async function POST(request: Request) {
     // 5. Generate PDF using jsPDF
     console.log('🔧 Generating PDF with jsPDF...');
     const pdfBuffer = await generateContractPDF(contract);
-    console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+    console.log(
+      '✅ PDF generated successfully, size:',
+      pdfBuffer.length,
+      'bytes'
+    );
 
     // 6. Handle return type
     if (returnType === 'download') {
       // Return PDF directly for download
       // Convert Buffer to Uint8Array for NextResponse
       const pdfArrayBuffer = new Uint8Array(pdfBuffer);
-      
+
       return new NextResponse(pdfArrayBuffer, {
         status: 200,
         headers: {
@@ -169,7 +175,9 @@ export async function POST(request: Request) {
     if (body.sendEmail && contract.promoter?.email) {
       try {
         const { sendEmail } = await import('@/lib/services/email.service');
-        const { standardNotificationEmail } = await import('@/lib/email-templates');
+        const { standardNotificationEmail } = await import(
+          '@/lib/email-templates'
+        );
 
         const emailContent = standardNotificationEmail({
           title: 'Contract PDF Ready',
@@ -211,4 +219,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

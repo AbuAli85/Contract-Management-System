@@ -27,7 +27,8 @@ const fontLexend = Lexend({
   variable: '--font-lexend',
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io';
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -113,7 +114,8 @@ export default async function RootLayout({
       ratingValue: '4.8',
       ratingCount: '127',
     },
-    description: 'Professional contract management and workforce tracking system',
+    description:
+      'Professional contract management and workforce tracking system',
     url: 'https://portal.thesmartpro.io',
   };
 
@@ -134,7 +136,7 @@ export default async function RootLayout({
           href='https://fonts.gstatic.com'
           crossOrigin='anonymous'
         />
-        
+
         {/* Google Fonts for Arabic support */}
         <link
           href='https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap'

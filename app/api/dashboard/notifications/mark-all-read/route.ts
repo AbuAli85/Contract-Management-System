@@ -8,7 +8,7 @@ export async function PATCH(request: NextRequest) {
     // 1. Verify user authentication
     // 2. Mark all user's notifications as read in database
     // 3. Return count of updated notifications
-    
+
     // For now, simulate successful update
     return NextResponse.json({
       success: true,
@@ -23,4 +23,3 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
-

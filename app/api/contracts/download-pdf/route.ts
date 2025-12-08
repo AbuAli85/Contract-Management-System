@@ -81,7 +81,9 @@ export const GET = withRBAC(
       }
 
       // Check if contract is approved
-      const isApproved = contract.status === 'approved' || contract.approval_status === 'approved';
+      const isApproved =
+        contract.status === 'approved' ||
+        contract.approval_status === 'approved';
       const hasPDF = !!contract.pdf_url;
       const canDownload = isApproved && hasPDF;
 

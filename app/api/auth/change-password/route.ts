@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Rate limit exceeded',
-          message: 'Too many password change attempts. Please wait before trying again.',
+          message:
+            'Too many password change attempts. Please wait before trying again.',
           retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
         },
         {
@@ -53,10 +54,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { currentPassword, newPassword } = await request.json();
@@ -82,11 +80,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Comprehensive password validation
-    const validation = await validatePasswordComprehensive(newPassword, user.id, {
-      checkBreach: true,
-      checkHistory: true,
-      requireMinimumStrength: true,
-    });
+    const validation = await validatePasswordComprehensive(
+      newPassword,
+      user.id,
+      {
+        checkBreach: true,
+        checkHistory: true,
+        requireMinimumStrength: true,
+      }
+    );
 
     if (!validation.isValid) {
       return NextResponse.json(
@@ -172,10 +174,7 @@ export async function POST(request: NextRequest) {
 /**
  * Send email notification when password is changed
  */
-async function sendPasswordChangeNotification(
-  request: NextRequest,
-  user: any
-) {
+async function sendPasswordChangeNotification(request: NextRequest, user: any) {
   try {
     // Get client information
     const ip =
@@ -281,4 +280,3 @@ async function sendPasswordChangeNotification(
     };
   }
 }
-

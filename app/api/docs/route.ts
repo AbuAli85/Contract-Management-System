@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
  * API Documentation endpoint
  */
 export async function GET(request: NextRequest) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io';
-  
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io';
+
   const documentation = {
     title: 'TheSmartPro.io Platform API',
     version: '1.0.0',
@@ -32,7 +33,8 @@ export async function GET(request: NextRequest) {
     endpoints: {
       public: {
         'GET /api/dashboard/public-stats': {
-          description: 'Get public platform statistics (no authentication required)',
+          description:
+            'Get public platform statistics (no authentication required)',
           authentication: 'Optional (API key for enhanced stats)',
           parameters: {},
           response: {
@@ -53,7 +55,7 @@ export async function GET(request: NextRequest) {
           example: {
             url: `${baseUrl}/api/dashboard/public-stats`,
             headers: {
-              'Authorization': 'Bearer tsp_...',
+              Authorization: 'Bearer tsp_...',
             },
           },
         },
@@ -89,7 +91,8 @@ export async function GET(request: NextRequest) {
           parameters: {
             page: 'number (optional, default: 1)',
             limit: 'number (optional, default: 20)',
-            status: 'string (optional: all, active, pending, approved, expired)',
+            status:
+              'string (optional: all, active, pending, approved, expired)',
             party_id: 'string (optional, UUID)',
           },
           response: {
@@ -238,4 +241,3 @@ curl -X GET "${baseUrl}/api/dashboard/public-stats" \\
     },
   });
 }
-

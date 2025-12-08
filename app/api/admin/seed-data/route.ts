@@ -7,9 +7,10 @@ export const POST = withRBAC('data:seed:all', async (request: NextRequest) => {
     // 🔒 SECURITY: Disable seed data endpoint in production
     if (process.env.NODE_ENV === 'production') {
       return NextResponse.json(
-        { 
+        {
           error: 'Seed data endpoint is disabled in production',
-          message: 'This endpoint is only available in development environments'
+          message:
+            'This endpoint is only available in development environments',
         },
         { status: 403 }
       );

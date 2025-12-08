@@ -138,11 +138,14 @@ export const POST = withAnyRBAC(
           contract_type: contractData.contract_type,
           job_title: contractData.job_title,
           basic_salary: contractData.basic_salary,
-        }
+        },
       });
 
       if (!contractType || !contractData) {
-        console.error('❌ Missing required data:', { contractType, hasContractData: !!contractData });
+        console.error('❌ Missing required data:', {
+          contractType,
+          hasContractData: !!contractData,
+        });
         return NextResponse.json(
           {
             success: false,
@@ -153,11 +156,22 @@ export const POST = withAnyRBAC(
       }
 
       // Validate required contract data fields
-      const requiredFields = ['promoter_id', 'first_party_id', 'second_party_id', 'job_title', 'basic_salary'];
-      const missingFields = requiredFields.filter(field => !contractData[field]);
-      
+      const requiredFields = [
+        'promoter_id',
+        'first_party_id',
+        'second_party_id',
+        'job_title',
+        'basic_salary',
+      ];
+      const missingFields = requiredFields.filter(
+        field => !contractData[field]
+      );
+
       if (missingFields.length > 0) {
-        console.error('❌ Missing required contract data fields:', missingFields);
+        console.error(
+          '❌ Missing required contract data fields:',
+          missingFields
+        );
         return NextResponse.json(
           {
             success: false,
@@ -165,20 +179,22 @@ export const POST = withAnyRBAC(
             details: {
               missingFields,
               receivedFields: Object.keys(contractData),
-            }
+            },
           },
           { status: 400 }
         );
       }
 
       // Set location fields - use bilingual fields if available, otherwise fallback to work_location
-      const location_en = contractData.location_en || contractData.work_location || '';
-      const location_ar = contractData.location_ar || contractData.work_location || '';
+      const location_en =
+        contractData.location_en || contractData.work_location || '';
+      const location_ar =
+        contractData.location_ar || contractData.work_location || '';
 
       // Fetch promoter data including image URLs if promoter_id is provided
       let enrichedContractData = { ...contractData };
       const supabaseService = createSupabaseServiceClient();
-      
+
       if (contractData.promoter_id) {
         const { data: promoter, error: promoterError } = await supabaseService
           .from('promoters')
@@ -193,19 +209,24 @@ export const POST = withAnyRBAC(
             '✅ Fetched promoter data for contract generation:',
             promoter.name_en
           );
-          
+
           // Log passport URL details for debugging
           if (promoter.passport_url) {
             console.log('📸 Passport URL from database:', {
               raw_url: promoter.passport_url,
               is_full_url: promoter.passport_url.startsWith('http'),
-              contains_placeholder: promoter.passport_url.includes('NO_PASSPORT') || promoter.passport_url.toLowerCase().includes('placeholder'),
+              contains_placeholder:
+                promoter.passport_url.includes('NO_PASSPORT') ||
+                promoter.passport_url.toLowerCase().includes('placeholder'),
               url_length: promoter.passport_url.length,
             });
           } else {
-            console.warn('⚠️ No passport URL found for promoter:', promoter.name_en);
+            console.warn(
+              '⚠️ No passport URL found for promoter:',
+              promoter.name_en
+            );
           }
-          
+
           // Add promoter image URLs to contract data for webhook
           enrichedContractData = {
             ...enrichedContractData,
@@ -229,11 +250,12 @@ export const POST = withAnyRBAC(
 
       // Fetch first party (employer) data if first_party_id is provided
       if (contractData.first_party_id) {
-        const { data: firstParty, error: firstPartyError } = await supabaseService
-          .from('parties')
-          .select('id, name_en, name_ar, crn, logo_url')
-          .eq('id', contractData.first_party_id)
-          .single();
+        const { data: firstParty, error: firstPartyError } =
+          await supabaseService
+            .from('parties')
+            .select('id, name_en, name_ar, crn, logo_url')
+            .eq('id', contractData.first_party_id)
+            .single();
 
         if (!firstPartyError && firstParty) {
           console.log('✅ Fetched first party data:', firstParty.name_en);
@@ -252,11 +274,12 @@ export const POST = withAnyRBAC(
 
       // Fetch second party data if second_party_id is provided
       if (contractData.second_party_id) {
-        const { data: secondParty, error: secondPartyError } = await supabaseService
-          .from('parties')
-          .select('id, name_en, name_ar, crn, logo_url')
-          .eq('id', contractData.second_party_id)
-          .single();
+        const { data: secondParty, error: secondPartyError } =
+          await supabaseService
+            .from('parties')
+            .select('id, name_en, name_ar, crn, logo_url')
+            .eq('id', contractData.second_party_id)
+            .single();
 
         if (!secondPartyError && secondParty) {
           console.log('✅ Fetched second party data:', secondParty.name_en);
@@ -278,12 +301,9 @@ export const POST = withAnyRBAC(
 
       // Add default placeholder URLs for ALL possible template images to prevent empty URL errors
       // Using publicly accessible imgur placeholders instead of via.placeholder.com for better reliability
-      const placeholderImage =
-        'https://i.imgur.com/7DrMrhN.png'; // 200x200 light gray placeholder
-      const placeholderLogo =
-        'https://i.imgur.com/YlUKsz7.png'; // 300x100 blue placeholder
-      const placeholderSignature =
-        'https://i.imgur.com/zQeWKYc.png'; // 200x100 dark gray placeholder
+      const placeholderImage = 'https://i.imgur.com/7DrMrhN.png'; // 200x200 light gray placeholder
+      const placeholderLogo = 'https://i.imgur.com/YlUKsz7.png'; // 300x100 blue placeholder
+      const placeholderSignature = 'https://i.imgur.com/zQeWKYc.png'; // 200x100 dark gray placeholder
 
       // Function to normalize Supabase storage URLs (convert partial URLs to full public URLs)
       const normalizeSupabaseUrl = (
@@ -293,19 +313,24 @@ export const POST = withAnyRBAC(
         if (!url || url.toString().trim() === '') {
           return null;
         }
-        
+
         const urlString = url.toString().trim();
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        
+
         // If it's already a full URL, return as-is
-        if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+        if (
+          urlString.startsWith('http://') ||
+          urlString.startsWith('https://')
+        ) {
           return urlString;
         }
-        
+
         // If it's a partial URL (just filename), convert to full public URL
         if (supabaseUrl) {
           // Extract project ID from Supabase URL (e.g., https://xxxxx.supabase.co)
-          const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/);
+          const urlMatch = supabaseUrl.match(
+            /https?:\/\/([^.]+)\.supabase\.co/
+          );
           if (urlMatch) {
             const projectId = urlMatch[1];
             // Remove any leading slashes from filename
@@ -313,7 +338,7 @@ export const POST = withAnyRBAC(
             return `https://${projectId}.supabase.co/storage/v1/object/public/${bucket}/${cleanFilename}`;
           }
         }
-        
+
         // If we can't normalize it, return null
         return null;
       };
@@ -328,7 +353,7 @@ export const POST = withAnyRBAC(
           console.warn(`⚠️ Empty URL detected, skipping ${type} replacement`);
           return undefined;
         }
-        
+
         // Normalize Supabase storage URLs (convert partial URLs to full public URLs)
         let urlString = url.toString().trim();
         const normalizedUrl = normalizeSupabaseUrl(urlString);
@@ -336,52 +361,67 @@ export const POST = withAnyRBAC(
           urlString = normalizedUrl;
           console.log(`✅ Normalized ${type} URL: ${urlString}`);
         }
-        
+
         try {
           const parsedUrl = new URL(urlString);
           // Ensure it's http or https
-          if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-            console.warn(`⚠️ Invalid protocol: ${parsedUrl.protocol}, skipping ${type}`);
+          if (
+            parsedUrl.protocol !== 'http:' &&
+            parsedUrl.protocol !== 'https:'
+          ) {
+            console.warn(
+              `⚠️ Invalid protocol: ${parsedUrl.protocol}, skipping ${type}`
+            );
             return undefined;
           }
-          
+
           // Check if it's a Supabase storage URL with "NO_PASSPORT" or similar placeholders
           // Also check for case-insensitive matches and common variations
           const urlLower = urlString.toLowerCase();
           if (
-            urlLower.includes('no_passport') || 
+            urlLower.includes('no_passport') ||
             urlLower.includes('no_id_card') ||
             urlLower.includes('no-passport') ||
             urlLower.includes('no-id-card') ||
-            urlString.includes('NO_PASSPORT') || 
+            urlString.includes('NO_PASSPORT') ||
             urlString.includes('NO_ID_CARD')
           ) {
-            console.warn(`⚠️ Placeholder document detected in URL (${urlString}), skipping ${type}`);
+            console.warn(
+              `⚠️ Placeholder document detected in URL (${urlString}), skipping ${type}`
+            );
             return undefined;
           }
-          
+
           // Check for "REAL_PASSPORT" marker - this might indicate a placeholder file
           // If the filename contains REAL_PASSPORT but no actual passport number, it's likely a placeholder
           if (urlLower.includes('real_passport') && type === 'image') {
             // Extract filename from URL
-            const filenameMatch = urlString.match(/\/([^\/]+\.(png|jpeg|jpg|gif))$/i);
+            const filenameMatch = urlString.match(
+              /\/([^\/]+\.(png|jpeg|jpg|gif))$/i
+            );
             if (filenameMatch) {
               const filename = filenameMatch[1];
               const filenameLower = filename.toLowerCase();
               // If filename has REAL_PASSPORT but no passport number pattern, it's likely a placeholder
               // Passport numbers are typically alphanumeric codes (e.g., fu5097601, fd4227081, eg4128603)
               // Check for passport number patterns (case-insensitive)
-              const hasPassportNumber = /\d{7,}/.test(filenameLower) || /[a-z]{2}\d{7}/i.test(filenameLower);
+              const hasPassportNumber =
+                /\d{7,}/.test(filenameLower) ||
+                /[a-z]{2}\d{7}/i.test(filenameLower);
               if (!hasPassportNumber) {
-                console.warn(`⚠️ REAL_PASSPORT marker found but no passport number pattern detected in ${filename}, skipping ${type}`);
+                console.warn(
+                  `⚠️ REAL_PASSPORT marker found but no passport number pattern detected in ${filename}, skipping ${type}`
+                );
                 return undefined;
               } else {
                 // REAL_PASSPORT file exists but has passport number - this is valid, allow it
-                console.log(`✅ REAL_PASSPORT file with passport number detected: ${filename}, allowing ${type}`);
+                console.log(
+                  `✅ REAL_PASSPORT file with passport number detected: ${filename}, allowing ${type}`
+                );
               }
             }
           }
-          
+
           // Additional validation: Check for common broken image patterns
           // Some URLs might point to error pages or screenshots instead of actual images
           const brokenImagePatterns = [
@@ -391,14 +431,16 @@ export const POST = withAnyRBAC(
             /screenshot/i,
             /placeholder/i,
           ];
-          
+
           for (const pattern of brokenImagePatterns) {
             if (pattern.test(urlString)) {
-              console.warn(`⚠️ Potential broken image URL detected (matches pattern: ${pattern}), skipping ${type}`);
+              console.warn(
+                `⚠️ Potential broken image URL detected (matches pattern: ${pattern}), skipping ${type}`
+              );
               return undefined;
             }
           }
-          
+
           return urlString;
         } catch {
           // If URL parsing fails, try to normalize it as a Supabase storage URL
@@ -408,7 +450,9 @@ export const POST = withAnyRBAC(
               new URL(normalized); // Validate the normalized URL
               return normalized;
             } catch {
-              console.warn(`⚠️ Invalid URL format even after normalization: ${urlString}, skipping ${type}`);
+              console.warn(
+                `⚠️ Invalid URL format even after normalization: ${urlString}, skipping ${type}`
+              );
               return undefined;
             }
           }
@@ -436,22 +480,58 @@ export const POST = withAnyRBAC(
 
         // Company/Party logos - use ensureValidUrl with 'logo' type
         company_logo: ensureValidUrl(enrichedContractData.company_logo, 'logo'),
-        company_logo_url: ensureValidUrl(enrichedContractData.company_logo_url, 'logo'),
-        first_party_logo: ensureValidUrl(enrichedContractData.first_party_logo, 'logo'),
-        first_party_logo_url: ensureValidUrl(enrichedContractData.first_party_logo_url, 'logo'),
-        second_party_logo: ensureValidUrl(enrichedContractData.second_party_logo, 'logo'),
-        second_party_logo_url: ensureValidUrl(enrichedContractData.second_party_logo_url, 'logo'),
+        company_logo_url: ensureValidUrl(
+          enrichedContractData.company_logo_url,
+          'logo'
+        ),
+        first_party_logo: ensureValidUrl(
+          enrichedContractData.first_party_logo,
+          'logo'
+        ),
+        first_party_logo_url: ensureValidUrl(
+          enrichedContractData.first_party_logo_url,
+          'logo'
+        ),
+        second_party_logo: ensureValidUrl(
+          enrichedContractData.second_party_logo,
+          'logo'
+        ),
+        second_party_logo_url: ensureValidUrl(
+          enrichedContractData.second_party_logo_url,
+          'logo'
+        ),
         party_1_logo: ensureValidUrl(enrichedContractData.party_1_logo, 'logo'),
         party_2_logo: ensureValidUrl(enrichedContractData.party_2_logo, 'logo'),
 
         // Signature images - use ensureValidUrl with 'signature' type
-        first_party_signature: ensureValidUrl(enrichedContractData.first_party_signature, 'signature'),
-        second_party_signature: ensureValidUrl(enrichedContractData.second_party_signature, 'signature'),
-        party_1_signature: ensureValidUrl(enrichedContractData.party_1_signature, 'signature'),
-        party_2_signature: ensureValidUrl(enrichedContractData.party_2_signature, 'signature'),
-        witness_signature: ensureValidUrl(enrichedContractData.witness_signature, 'signature'),
-        signature_1: ensureValidUrl(enrichedContractData.signature_1, 'signature'),
-        signature_2: ensureValidUrl(enrichedContractData.signature_2, 'signature'),
+        first_party_signature: ensureValidUrl(
+          enrichedContractData.first_party_signature,
+          'signature'
+        ),
+        second_party_signature: ensureValidUrl(
+          enrichedContractData.second_party_signature,
+          'signature'
+        ),
+        party_1_signature: ensureValidUrl(
+          enrichedContractData.party_1_signature,
+          'signature'
+        ),
+        party_2_signature: ensureValidUrl(
+          enrichedContractData.party_2_signature,
+          'signature'
+        ),
+        witness_signature: ensureValidUrl(
+          enrichedContractData.witness_signature,
+          'signature'
+        ),
+        signature_1: ensureValidUrl(
+          enrichedContractData.signature_1,
+          'signature'
+        ),
+        signature_2: ensureValidUrl(
+          enrichedContractData.signature_2,
+          'signature'
+        ),
 
         // Official stamps/seals
         stamp_image: ensureValidUrl(enrichedContractData.stamp_image),
@@ -468,24 +548,38 @@ export const POST = withAnyRBAC(
         background_image: ensureValidUrl(enrichedContractData.background_image),
 
         // Promoter images (CRITICAL - these are the main ones)
-        promoter_id_card_url: ensureValidUrl(enrichedContractData.promoter_id_card_url),
-        promoter_passport_url: ensureValidUrl(enrichedContractData.promoter_passport_url),
-        id_card_url: ensureValidUrl(enrichedContractData.promoter_id_card_url || enrichedContractData.id_card_url),
-        passport_url: ensureValidUrl(enrichedContractData.promoter_passport_url || enrichedContractData.passport_url),
-        
+        promoter_id_card_url: ensureValidUrl(
+          enrichedContractData.promoter_id_card_url
+        ),
+        promoter_passport_url: ensureValidUrl(
+          enrichedContractData.promoter_passport_url
+        ),
+        id_card_url: ensureValidUrl(
+          enrichedContractData.promoter_id_card_url ||
+            enrichedContractData.id_card_url
+        ),
+        passport_url: ensureValidUrl(
+          enrichedContractData.promoter_passport_url ||
+            enrichedContractData.passport_url
+        ),
+
         // ✨ Make.com compatible field names (stored_*) - CRITICAL FIX
         stored_promoter_id_card_image_url: ensureValidUrl(
-          enrichedContractData.promoter_id_card_url || enrichedContractData.id_card_url
+          enrichedContractData.promoter_id_card_url ||
+            enrichedContractData.id_card_url
         ),
         stored_promoter_passport_image_url: ensureValidUrl(
-          enrichedContractData.promoter_passport_url || enrichedContractData.passport_url
+          enrichedContractData.promoter_passport_url ||
+            enrichedContractData.passport_url
         ),
         stored_first_party_logo_url: ensureValidUrl(
-          enrichedContractData.first_party_logo_url || enrichedContractData.first_party_logo,
+          enrichedContractData.first_party_logo_url ||
+            enrichedContractData.first_party_logo,
           'logo'
         ),
         stored_second_party_logo_url: ensureValidUrl(
-          enrichedContractData.second_party_logo_url || enrichedContractData.second_party_logo,
+          enrichedContractData.second_party_logo_url ||
+            enrichedContractData.second_party_logo,
           'logo'
         ),
 
@@ -508,23 +602,33 @@ export const POST = withAnyRBAC(
       console.log('🔍 Enriched contract data with ALL image URLs:', {
         promoter_id_card_url: enrichedContractData.promoter_id_card_url,
         promoter_passport_url: enrichedContractData.promoter_passport_url,
-        stored_promoter_id_card_image_url: enrichedContractData.stored_promoter_id_card_image_url,
-        stored_promoter_passport_image_url: enrichedContractData.stored_promoter_passport_image_url,
-        stored_first_party_logo_url: enrichedContractData.stored_first_party_logo_url,
-        stored_second_party_logo_url: enrichedContractData.stored_second_party_logo_url,
+        stored_promoter_id_card_image_url:
+          enrichedContractData.stored_promoter_id_card_image_url,
+        stored_promoter_passport_image_url:
+          enrichedContractData.stored_promoter_passport_image_url,
+        stored_first_party_logo_url:
+          enrichedContractData.stored_first_party_logo_url,
+        stored_second_party_logo_url:
+          enrichedContractData.stored_second_party_logo_url,
         first_party_logo: enrichedContractData.first_party_logo,
         image_12: enrichedContractData.image_12,
       });
-      
+
       // Special logging for passport URL processing
       if (enrichedContractData.promoter_passport_url) {
         console.log('✅ Passport URL after validation:', {
           final_url: enrichedContractData.promoter_passport_url,
           is_valid: !!enrichedContractData.promoter_passport_url,
-          url_type: enrichedContractData.promoter_passport_url.startsWith('https://') ? 'full_url' : 'partial_url',
+          url_type: enrichedContractData.promoter_passport_url.startsWith(
+            'https://'
+          )
+            ? 'full_url'
+            : 'partial_url',
         });
       } else {
-        console.warn('⚠️ Passport URL was filtered out during validation - will use placeholder or skip');
+        console.warn(
+          '⚠️ Passport URL was filtered out during validation - will use placeholder or skip'
+        );
       }
 
       // Log enriched data before webhook generation
@@ -550,7 +654,7 @@ export const POST = withAnyRBAC(
           basic_salary: enrichedContractData.basic_salary,
           contract_start_date: enrichedContractData.contract_start_date,
           contract_end_date: enrichedContractData.contract_end_date,
-        }
+        },
       });
 
       // Remove undefined image URLs before sending to Make.com
@@ -558,13 +662,15 @@ export const POST = withAnyRBAC(
       const undefinedKeys = Object.entries(enrichedContractData)
         .filter(([_, value]) => value === undefined)
         .map(([key]) => key);
-      
+
       if (undefinedKeys.length > 0) {
         console.log('🔍 Skipping undefined image URLs:', undefinedKeys);
       }
-      
+
       const cleanedContractData = Object.fromEntries(
-        Object.entries(enrichedContractData).filter(([_, value]) => value !== undefined)
+        Object.entries(enrichedContractData).filter(
+          ([_, value]) => value !== undefined
+        )
       ) as typeof enrichedContractData;
 
       const sanitizedContractData = { ...cleanedContractData };
@@ -598,7 +704,8 @@ export const POST = withAnyRBAC(
 
       for (const [key, fallback] of Object.entries(imageFallbacks)) {
         if (!sanitizedContractData[key as keyof typeof sanitizedContractData]) {
-          sanitizedContractData[key as keyof typeof sanitizedContractData] = fallback as any;
+          sanitizedContractData[key as keyof typeof sanitizedContractData] =
+            fallback as any;
         }
       }
 
@@ -609,16 +716,18 @@ export const POST = withAnyRBAC(
       console.log('🔧 Generated webhook payload:', {
         hasWebhookPayload: !!webhookPayload,
         webhookPayloadKeys: webhookPayload ? Object.keys(webhookPayload) : [],
-        templateConfig: templateConfig ? {
-          id: templateConfig.id,
-          name: templateConfig.name,
-          googleDocsTemplateId: templateConfig.googleDocsTemplateId,
-        } : null,
+        templateConfig: templateConfig
+          ? {
+              id: templateConfig.id,
+              name: templateConfig.name,
+              googleDocsTemplateId: templateConfig.googleDocsTemplateId,
+            }
+          : null,
         validation: {
           isValid: validation.isValid,
           errors: validation.errors,
           warnings: validation.warnings,
-        }
+        },
       });
 
       if (!validation.isValid) {
@@ -638,8 +747,11 @@ export const POST = withAnyRBAC(
 
       // First, get the authenticated user using the server client (has access to cookies)
       const supabaseServer = await createServerClient();
-      const { data: { user: currentUser }, error: authError } = await supabaseServer.auth.getUser();
-      
+      const {
+        data: { user: currentUser },
+        error: authError,
+      } = await supabaseServer.auth.getUser();
+
       if (authError || !currentUser) {
         console.error('❌ Authentication error:', authError);
         return NextResponse.json(
@@ -651,7 +763,7 @@ export const POST = withAnyRBAC(
           { status: 401 }
         );
       }
-      
+
       // supabaseService already defined above - reuse it for database operations
       const { data: contract, error: contractError } = await supabaseService
         .from('contracts')
@@ -738,21 +850,28 @@ export const POST = withAnyRBAC(
 
           // Trigger Make.com webhook with retry logic
           // Support both MAKECOM_WEBHOOK_URL and MAKECOM_WEBHOOK_URL_EXTRA
-          const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL_EXTRA || process.env.MAKECOM_WEBHOOK_URL;
+          const makecomWebhookUrl =
+            process.env.MAKECOM_WEBHOOK_URL_EXTRA ||
+            process.env.MAKECOM_WEBHOOK_URL;
 
           if (makecomWebhookUrl) {
             console.log('📤 Triggering Make.com webhook:', makecomWebhookUrl);
             console.log('📋 Enhanced payload - checking critical fields:', {
               contract_id: enhancedPayload.contract_id,
               contract_number: enhancedPayload.contract_number,
-              has_stored_id_card: !!enhancedPayload.stored_promoter_id_card_image_url,
-              has_stored_passport: !!enhancedPayload.stored_promoter_passport_image_url,
+              has_stored_id_card:
+                !!enhancedPayload.stored_promoter_id_card_image_url,
+              has_stored_passport:
+                !!enhancedPayload.stored_promoter_passport_image_url,
               has_stored_logo: !!enhancedPayload.stored_first_party_logo_url,
-              stored_promoter_id_card_image_url: enhancedPayload.stored_promoter_id_card_image_url,
-              stored_promoter_passport_image_url: enhancedPayload.stored_promoter_passport_image_url,
-              stored_first_party_logo_url: enhancedPayload.stored_first_party_logo_url,
+              stored_promoter_id_card_image_url:
+                enhancedPayload.stored_promoter_id_card_image_url,
+              stored_promoter_passport_image_url:
+                enhancedPayload.stored_promoter_passport_image_url,
+              stored_first_party_logo_url:
+                enhancedPayload.stored_first_party_logo_url,
             });
-            
+
             // Log comprehensive payload data for debugging
             console.log('🔍 Make.com webhook payload details:', {
               contractInfo: {
@@ -765,8 +884,10 @@ export const POST = withAnyRBAC(
                 name_ar: enhancedPayload.promoter_name_ar,
                 id_card_url: enhancedPayload.promoter_id_card_url,
                 passport_url: enhancedPayload.promoter_passport_url,
-                stored_id_card: enhancedPayload.stored_promoter_id_card_image_url,
-                stored_passport: enhancedPayload.stored_promoter_passport_image_url,
+                stored_id_card:
+                  enhancedPayload.stored_promoter_id_card_image_url,
+                stored_passport:
+                  enhancedPayload.stored_promoter_passport_image_url,
               },
               firstPartyInfo: {
                 name_en: enhancedPayload.first_party_name_en,
@@ -793,26 +914,31 @@ export const POST = withAnyRBAC(
                 image_1: enhancedPayload.image_1,
                 image_2: enhancedPayload.image_2,
                 image_12: enhancedPayload.image_12,
-                totalImageFields: Object.keys(enhancedPayload).filter(key => key.startsWith('image_')).length,
-              }
+                totalImageFields: Object.keys(enhancedPayload).filter(key =>
+                  key.startsWith('image_')
+                ).length,
+              },
             });
-            
+
             // Log full payload in development for debugging
             if (process.env.NODE_ENV === 'development') {
-              console.log('🔍 Full enhanced payload:', JSON.stringify(enhancedPayload, null, 2));
+              console.log(
+                '🔍 Full enhanced payload:',
+                JSON.stringify(enhancedPayload, null, 2)
+              );
             }
 
             // Retry up to 3 times with exponential backoff
             let lastError: any = null;
             let retrySucceeded = false;
-            
+
             for (let attempt = 1; attempt <= 3; attempt++) {
               const controller = new AbortController();
               let timeoutId: NodeJS.Timeout | null = null;
-              
+
               try {
                 console.log(`🔄 Webhook attempt ${attempt}/3...`);
-                
+
                 timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
                 const response = await fetch(makecomWebhookUrl, {
@@ -829,7 +955,7 @@ export const POST = withAnyRBAC(
                 clearTimeout(timeoutId);
 
                 const responseText = await response.text();
-                
+
                 console.log('📥 Webhook response:', {
                   status: response.status,
                   statusText: response.statusText,
@@ -856,20 +982,25 @@ export const POST = withAnyRBAC(
                 };
 
                 if (response.ok) {
-                  console.log(`✅ Make.com webhook triggered successfully on attempt ${attempt}`);
+                  console.log(
+                    `✅ Make.com webhook triggered successfully on attempt ${attempt}`
+                  );
                   console.log('📊 Make.com response data:', parsedResponse);
 
                   // Update contract status to processing
                   const { error: updateError } = await supabaseService
                     .from('contracts')
-                    .update({ 
+                    .update({
                       status: 'processing',
-                      updated_at: new Date().toISOString()
+                      updated_at: new Date().toISOString(),
                     })
                     .eq('id', contract.id);
 
                   if (updateError) {
-                    console.error('❌ Failed to update contract status:', updateError);
+                    console.error(
+                      '❌ Failed to update contract status:',
+                      updateError
+                    );
                   } else {
                     console.log('✅ Contract status updated to processing');
                   }
@@ -877,12 +1008,15 @@ export const POST = withAnyRBAC(
                   retrySucceeded = true;
                   break; // Success, exit retry loop
                 } else {
-                  console.error(`❌ Make.com webhook failed (attempt ${attempt}):`, {
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: responseText,
-                  });
-                  
+                  console.error(
+                    `❌ Make.com webhook failed (attempt ${attempt}):`,
+                    {
+                      status: response.status,
+                      statusText: response.statusText,
+                      body: responseText,
+                    }
+                  );
+
                   lastError = {
                     status: response.status,
                     statusText: response.statusText,
@@ -892,7 +1026,10 @@ export const POST = withAnyRBAC(
 
                   // Wait before retry (exponential backoff)
                   if (attempt < 3) {
-                    const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
+                    const waitTime = Math.min(
+                      1000 * Math.pow(2, attempt),
+                      10000
+                    );
                     console.log(`⏳ Waiting ${waitTime}ms before retry...`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                   }
@@ -901,11 +1038,17 @@ export const POST = withAnyRBAC(
                 if (timeoutId) {
                   clearTimeout(timeoutId);
                 }
-                
-                console.error(`❌ Webhook request error (attempt ${attempt}):`, fetchError);
-                
+
+                console.error(
+                  `❌ Webhook request error (attempt ${attempt}):`,
+                  fetchError
+                );
+
                 lastError = {
-                  error: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+                  error:
+                    fetchError instanceof Error
+                      ? fetchError.message
+                      : 'Unknown error',
                   attempt,
                 };
 
@@ -952,21 +1095,23 @@ export const POST = withAnyRBAC(
       }
 
       // Enhanced response with better Make.com status
-      const makecomStatus = makecomResponse ? {
-        triggered: triggerMakecom,
-        success: makecomResponse.success,
-        status: makecomResponse.status,
-        response: makecomResponse.parsedResponse || makecomResponse.body,
-        error: makecomResponse.error || null,
-        attempt: makecomResponse.attempt,
-        timestamp: makecomResponse.timestamp,
-        webhook_url: process.env.MAKECOM_WEBHOOK_URL,
-      } : {
-        triggered: false,
-        success: false,
-        error: 'Make.com webhook not configured',
-        timestamp: new Date().toISOString(),
-      };
+      const makecomStatus = makecomResponse
+        ? {
+            triggered: triggerMakecom,
+            success: makecomResponse.success,
+            status: makecomResponse.status,
+            response: makecomResponse.parsedResponse || makecomResponse.body,
+            error: makecomResponse.error || null,
+            attempt: makecomResponse.attempt,
+            timestamp: makecomResponse.timestamp,
+            webhook_url: process.env.MAKECOM_WEBHOOK_URL,
+          }
+        : {
+            triggered: false,
+            success: false,
+            error: 'Make.com webhook not configured',
+            timestamp: new Date().toISOString(),
+          };
 
       return NextResponse.json({
         success: true,

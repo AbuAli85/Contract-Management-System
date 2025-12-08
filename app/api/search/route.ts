@@ -15,7 +15,7 @@ interface SearchResult {
 /**
  * GET /api/search
  * Global search across contracts, promoters, and parties
- * 
+ *
  * Query parameters:
  * - q: Search query (required, minimum 2 characters)
  * - limit: Maximum results per type (default: 5)
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     const { data: contracts } = await contractsQuery;
 
     if (contracts) {
-      contracts.forEach((contract) => {
+      contracts.forEach(contract => {
         results.push({
           id: contract.id,
           type: 'contract',
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
         .limit(limit);
 
       if (promoters) {
-        promoters.forEach((promoter) => {
+        promoters.forEach(promoter => {
           results.push({
             id: promoter.id,
             type: 'promoter',
@@ -120,11 +120,13 @@ export async function GET(request: NextRequest) {
     const { data: parties } = await supabase
       .from('parties')
       .select('id, name, party_type, contact_person, email')
-      .or(`name.ilike.${searchTerm},contact_person.ilike.${searchTerm},email.ilike.${searchTerm}`)
+      .or(
+        `name.ilike.${searchTerm},contact_person.ilike.${searchTerm},email.ilike.${searchTerm}`
+      )
       .limit(limit);
 
     if (parties) {
-      parties.forEach((party) => {
+      parties.forEach(party => {
         results.push({
           id: party.id,
           type: 'party',

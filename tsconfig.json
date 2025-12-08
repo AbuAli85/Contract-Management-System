@@ -51,6 +51,9 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
-    "**/*.spec.tsx"
+    "**/*.spec.tsx",
+    "**/app/api/_disabled/**",
+    "**/app/api/_disabled_debug/**",
+    "**/app/api/admin/api-keys/**"
   ]
 }

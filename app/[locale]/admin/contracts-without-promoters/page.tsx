@@ -90,8 +90,12 @@ export default function ContractsWithoutPromotersPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
-  const [assignments, setAssignments] = useState<Map<string, string>>(new Map());
+  const [selectedContracts, setSelectedContracts] = useState<Set<string>>(
+    new Set()
+  );
+  const [assignments, setAssignments] = useState<Map<string, string>>(
+    new Map()
+  );
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
@@ -103,14 +107,16 @@ export default function ContractsWithoutPromotersPage() {
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (priorityFilter !== 'all') params.append('priority', priorityFilter);
 
-      const response = await fetch(`/api/admin/contracts-without-promoters?${params}`);
-      
+      const response = await fetch(
+        `/api/admin/contracts-without-promoters?${params}`
+      );
+
       if (!response.ok) {
         throw new Error('Failed to fetch contracts');
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         setContracts(data.data.contracts);
         setStats(data.data.stats);
@@ -147,7 +153,7 @@ export default function ContractsWithoutPromotersPage() {
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast({
           title: 'Success',
@@ -170,7 +176,7 @@ export default function ContractsWithoutPromotersPage() {
     const newAssignments = new Map(assignments);
     newAssignments.set(contractId, promoterId);
     setAssignments(newAssignments);
-    
+
     // Also add to selected contracts
     const newSelected = new Set(selectedContracts);
     newSelected.add(contractId);
@@ -191,10 +197,12 @@ export default function ContractsWithoutPromotersPage() {
     try {
       setSaving(true);
 
-      const assignmentsArray = Array.from(assignments.entries()).map(([contract_id, promoter_id]) => ({
-        contract_id,
-        promoter_id,
-      }));
+      const assignmentsArray = Array.from(assignments.entries()).map(
+        ([contract_id, promoter_id]) => ({
+          contract_id,
+          promoter_id,
+        })
+      );
 
       const response = await fetch('/api/admin/contracts-without-promoters', {
         method: 'PUT',
@@ -207,17 +215,17 @@ export default function ContractsWithoutPromotersPage() {
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast({
           title: 'Success!',
           description: `Assigned promoters to ${data.data.summary.successful} contracts`,
         });
-        
+
         // Clear selections and assignments
         setAssignments(new Map());
         setSelectedContracts(new Set());
-        
+
         // Refresh contracts list
         fetchContracts();
       } else {
@@ -258,7 +266,7 @@ export default function ContractsWithoutPromotersPage() {
   // Auto-assign top suggestions for selected contracts
   const autoAssignTopSuggestions = () => {
     const newAssignments = new Map(assignments);
-    
+
     selectedContracts.forEach(contractId => {
       const contract = contracts.find(c => c.id === contractId);
       if (contract && contract.suggestions.length > 0) {
@@ -268,9 +276,9 @@ export default function ContractsWithoutPromotersPage() {
         }
       }
     });
-    
+
     setAssignments(newAssignments);
-    
+
     toast({
       title: 'Auto-assigned',
       description: `Assigned top suggestions to ${newAssignments.size} contracts`,
@@ -280,92 +288,105 @@ export default function ContractsWithoutPromotersPage() {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'high':
-        return <Badge variant="destructive">High Priority</Badge>;
+        return <Badge variant='destructive'>High Priority</Badge>;
       case 'medium':
-        return <Badge className="bg-amber-500">Medium Priority</Badge>;
+        return <Badge className='bg-amber-500'>Medium Priority</Badge>;
       case 'low':
-        return <Badge variant="secondary">Low Priority</Badge>;
+        return <Badge variant='secondary'>Low Priority</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge variant='outline'>Unknown</Badge>;
     }
   };
 
   if (loading && contracts.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className='flex h-64 items-center justify-center'>
+        <Loader2 className='h-8 w-8 animate-spin' />
       </div>
     );
   }
 
   return (
     <ProtectedRoute>
-      <div className="space-y-6 p-4 md:p-6">
+      <div className='space-y-6 p-4 md:p-6'>
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Contracts Without Promoters</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage and assign promoters to contracts missing promoter assignments
+          <h1 className='text-3xl font-bold'>Contracts Without Promoters</h1>
+          <p className='text-muted-foreground mt-2'>
+            Manage and assign promoters to contracts missing promoter
+            assignments
           </p>
         </div>
 
         {/* Statistics Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Contracts</p>
-                    <p className="text-2xl font-bold">{stats.total_contracts}</p>
+                    <p className='text-sm text-muted-foreground'>
+                      Total Contracts
+                    </p>
+                    <p className='text-2xl font-bold'>
+                      {stats.total_contracts}
+                    </p>
                   </div>
-                  <FileText className="h-8 w-8 text-blue-500" />
+                  <FileText className='h-8 w-8 text-blue-500' />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
                   <div>
-                    <p className="text-sm text-muted-foreground">With Promoters</p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className='text-sm text-muted-foreground'>
+                      With Promoters
+                    </p>
+                    <p className='text-2xl font-bold text-green-600'>
                       {stats.contracts_with_promoter}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className='text-xs text-muted-foreground'>
                       {stats.percentage_complete}% complete
                     </p>
                   </div>
-                  <CheckCircle className="h-8 w-8 text-green-500" />
+                  <CheckCircle className='h-8 w-8 text-green-500' />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
                   <div>
-                    <p className="text-sm text-muted-foreground">Without Promoters</p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className='text-sm text-muted-foreground'>
+                      Without Promoters
+                    </p>
+                    <p className='text-2xl font-bold text-red-600'>
                       {stats.contracts_without_promoter}
                     </p>
                   </div>
-                  <AlertTriangle className="h-8 w-8 text-red-500" />
+                  <AlertTriangle className='h-8 w-8 text-red-500' />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
                   <div>
-                    <p className="text-sm text-muted-foreground">High Priority</p>
-                    <p className="text-2xl font-bold text-orange-600">
+                    <p className='text-sm text-muted-foreground'>
+                      High Priority
+                    </p>
+                    <p className='text-2xl font-bold text-orange-600'>
                       {stats.high_priority_missing}
                     </p>
-                    <p className="text-xs text-muted-foreground">Active/Pending</p>
+                    <p className='text-xs text-muted-foreground'>
+                      Active/Pending
+                    </p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-orange-500" />
+                  <TrendingUp className='h-8 w-8 text-orange-500' />
                 </div>
               </CardContent>
             </Card>
@@ -375,44 +396,51 @@ export default function ContractsWithoutPromotersPage() {
         {/* Filters and Actions */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className='flex items-center justify-between'>
               <div>
-                <CardTitle>Contracts Needing Promoters ({contracts.length})</CardTitle>
+                <CardTitle>
+                  Contracts Needing Promoters ({contracts.length})
+                </CardTitle>
                 <CardDescription>
                   Select contracts and assign promoters using AI suggestions
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Priority" />
+              <div className='flex items-center gap-2'>
+                <Select
+                  value={priorityFilter}
+                  onValueChange={setPriorityFilter}
+                >
+                  <SelectTrigger className='w-[150px]'>
+                    <SelectValue placeholder='Priority' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Priorities</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value='all'>All Priorities</SelectItem>
+                    <SelectItem value='high'>High</SelectItem>
+                    <SelectItem value='medium'>Medium</SelectItem>
+                    <SelectItem value='low'>Low</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Status" />
+                  <SelectTrigger className='w-[150px]'>
+                    <SelectValue placeholder='Status' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value='all'>All Statuses</SelectItem>
+                    <SelectItem value='draft'>Draft</SelectItem>
+                    <SelectItem value='pending'>Pending</SelectItem>
+                    <SelectItem value='active'>Active</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={fetchContracts}
                   disabled={loading}
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
+                  />
                   Refresh
                 </Button>
               </div>
@@ -422,27 +450,27 @@ export default function ContractsWithoutPromotersPage() {
           <CardContent>
             {/* Bulk Actions */}
             {selectedContracts.size > 0 && (
-              <Alert className="mb-4">
-                <AlertDescription className="flex items-center justify-between">
+              <Alert className='mb-4'>
+                <AlertDescription className='flex items-center justify-between'>
                   <span>{selectedContracts.size} contract(s) selected</span>
-                  <div className="flex gap-2">
+                  <div className='flex gap-2'>
                     <Button
-                      size="sm"
-                      variant="outline"
+                      size='sm'
+                      variant='outline'
                       onClick={autoAssignTopSuggestions}
                     >
-                      <Sparkles className="h-4 w-4 mr-2" />
+                      <Sparkles className='h-4 w-4 mr-2' />
                       Auto-assign Top Suggestions
                     </Button>
                     <Button
-                      size="sm"
+                      size='sm'
                       onClick={handleBulkSave}
                       disabled={saving || assignments.size === 0}
                     >
                       {saving ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                       ) : (
-                        <Save className="h-4 w-4 mr-2" />
+                        <Save className='h-4 w-4 mr-2' />
                       )}
                       Save Assignments ({assignments.size})
                     </Button>
@@ -453,23 +481,25 @@ export default function ContractsWithoutPromotersPage() {
 
             {/* Contracts Table */}
             {contracts.length === 0 ? (
-              <div className="text-center py-12">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">All contracts have promoters!</h3>
-                <p className="text-muted-foreground">
+              <div className='text-center py-12'>
+                <CheckCircle className='h-12 w-12 text-green-500 mx-auto mb-4' />
+                <h3 className='text-lg font-semibold mb-2'>
+                  All contracts have promoters!
+                </h3>
+                <p className='text-muted-foreground'>
                   No contracts found without promoter assignments.
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className='overflow-x-auto'>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">
+                      <TableHead className='w-12'>
                         <Checkbox
                           checked={selectedContracts.size === contracts.length}
                           onCheckedChange={handleSelectAll}
-                          aria-label="Select all"
+                          aria-label='Select all'
                         />
                       </TableHead>
                       <TableHead>Contract</TableHead>
@@ -482,51 +512,71 @@ export default function ContractsWithoutPromotersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contracts.map((contract) => (
+                    {contracts.map(contract => (
                       <TableRow key={contract.id}>
                         <TableCell>
                           <Checkbox
                             checked={selectedContracts.has(contract.id)}
-                            onCheckedChange={(checked) =>
-                              handleSelectContract(contract.id, checked as boolean)
+                            onCheckedChange={checked =>
+                              handleSelectContract(
+                                contract.id,
+                                checked as boolean
+                              )
                             }
                           />
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{contract.contract_number}</p>
-                            <p className="text-sm text-muted-foreground">{contract.title}</p>
+                            <p className='font-medium'>
+                              {contract.contract_number}
+                            </p>
+                            <p className='text-sm text-muted-foreground'>
+                              {contract.title}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">
+                          <div className='text-sm'>
                             <p>{contract.first_party_name || 'N/A'}</p>
-                            <p className="text-muted-foreground">{contract.second_party_name || 'N/A'}</p>
+                            <p className='text-muted-foreground'>
+                              {contract.second_party_name || 'N/A'}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge>{contract.status}</Badge>
                         </TableCell>
-                        <TableCell>{getPriorityBadge(contract.priority)}</TableCell>
-                        <TableCell>{contract.days_without_promoter} days</TableCell>
+                        <TableCell>
+                          {getPriorityBadge(contract.priority)}
+                        </TableCell>
+                        <TableCell>
+                          {contract.days_without_promoter} days
+                        </TableCell>
                         <TableCell>
                           {contract.suggestions.length > 0 ? (
                             <Select
                               value={assignments.get(contract.id) || ''}
-                              onValueChange={(value) => handlePromoterSelect(contract.id, value)}
+                              onValueChange={value =>
+                                handlePromoterSelect(contract.id, value)
+                              }
                             >
-                              <SelectTrigger className="w-[200px]">
-                                <SelectValue placeholder="Select promoter" />
+                              <SelectTrigger className='w-[200px]'>
+                                <SelectValue placeholder='Select promoter' />
                               </SelectTrigger>
                               <SelectContent>
-                                {contract.suggestions.map((suggestion) => (
+                                {contract.suggestions.map(suggestion => (
                                   <SelectItem
                                     key={suggestion.promoters.id}
                                     value={suggestion.promoters.id}
                                   >
-                                    <div className="flex items-center gap-2">
-                                      <span>{suggestion.promoters.name_en}</span>
-                                      <Badge variant="outline" className="text-xs">
+                                    <div className='flex items-center gap-2'>
+                                      <span>
+                                        {suggestion.promoters.name_en}
+                                      </span>
+                                      <Badge
+                                        variant='outline'
+                                        className='text-xs'
+                                      >
                                         {suggestion.confidence_score}%
                                       </Badge>
                                     </div>
@@ -536,19 +586,22 @@ export default function ContractsWithoutPromotersPage() {
                             </Select>
                           ) : (
                             <Button
-                              size="sm"
-                              variant="outline"
+                              size='sm'
+                              variant='outline'
                               onClick={() => generateSuggestions(contract.id)}
                             >
-                              <Sparkles className="h-4 w-4 mr-2" />
+                              <Sparkles className='h-4 w-4 mr-2' />
                               Generate
                             </Button>
                           )}
                         </TableCell>
                         <TableCell>
                           {assignments.has(contract.id) && (
-                            <Badge variant="secondary" className="text-green-600">
-                              <CheckCircle className="h-3 w-3 mr-1" />
+                            <Badge
+                              variant='secondary'
+                              className='text-green-600'
+                            >
+                              <CheckCircle className='h-3 w-3 mr-1' />
                               Ready to save
                             </Badge>
                           )}
@@ -565,4 +618,3 @@ export default function ContractsWithoutPromotersPage() {
     </ProtectedRoute>
   );
 }
-

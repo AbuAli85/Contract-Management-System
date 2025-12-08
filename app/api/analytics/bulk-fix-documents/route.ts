@@ -28,11 +28,17 @@ export async function POST() {
     const supabase = await createClient();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication required', details: 'Please log in to use this feature' },
+        {
+          error: 'Authentication required',
+          details: 'Please log in to use this feature',
+        },
         { status: 401 }
       );
     }
@@ -41,7 +47,9 @@ export async function POST() {
     // Using service role to bypass RLS for this admin operation
     const { data: promoters, error: promotersError } = await supabase
       .from('promoters')
-      .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url');
+      .select(
+        'id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url'
+      );
 
     if (promotersError) {
       return NextResponse.json(
@@ -51,7 +59,11 @@ export async function POST() {
     }
 
     if (!promoters || promoters.length === 0) {
-      return NextResponse.json({ success: true, fixed: [], message: 'No promoters found' });
+      return NextResponse.json({
+        success: true,
+        fixed: [],
+        message: 'No promoters found',
+      });
     }
 
     const results: FixResult[] = [];
@@ -67,7 +79,7 @@ export async function POST() {
 
       try {
         const updates: any = {};
-        
+
         // Fix ID Card URL if missing
         if (!promoter.id_card_url && promoter.id_card_number) {
           // Try different filename patterns
@@ -82,7 +94,7 @@ export async function POST() {
 
           for (const filename of possibleIdCardNames) {
             const constructedUrl = `${projectUrl}/storage/v1/object/public/promoter-documents/${filename}`;
-            
+
             // Check if file exists by trying to get it
             const { data: fileCheck } = await supabase.storage
               .from('promoter-documents')
@@ -115,7 +127,7 @@ export async function POST() {
 
           for (const filename of possiblePassportNames) {
             const constructedUrl = `${projectUrl}/storage/v1/object/public/promoter-documents/${filename}`;
-            
+
             const { data: fileCheck } = await supabase.storage
               .from('promoter-documents')
               .list('', {
@@ -174,4 +186,3 @@ export async function POST() {
     );
   }
 }
-

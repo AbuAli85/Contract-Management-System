@@ -5,13 +5,16 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request): Promise<NextResponse> {
   const startTime = Date.now();
   const TIMEOUT_MS = 80000; // 80 seconds timeout
-  
+
   try {
     // Set up timeout handling
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Contract generation timeout')), TIMEOUT_MS);
+      setTimeout(
+        () => reject(new Error('Contract generation timeout')),
+        TIMEOUT_MS
+      );
     });
-    
+
     const processPromise = (async () => {
       // Parse request body
       const body = await request.json();
@@ -22,18 +25,21 @@ export async function POST(request: Request): Promise<NextResponse> {
         data: { user },
         error: authError,
       } = await supabase.auth.getUser();
-      
+
       console.log('Auth check result:', { user: !!user, authError });
 
       if (authError || !user) {
-        return NextResponse.json({ 
-          error: 'Unauthorized',
-          details: authError?.message || 'No user found',
-          debug: {
-            hasUser: !!user,
-            authError: authError?.message
-          }
-        }, { status: 401 });
+        return NextResponse.json(
+          {
+            error: 'Unauthorized',
+            details: authError?.message || 'No user found',
+            debug: {
+              hasUser: !!user,
+              authError: authError?.message,
+            },
+          },
+          { status: 401 }
+        );
       }
 
       // PDF Generation API URL
@@ -53,7 +59,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      
+
       if (!pdfRes.ok) {
         const errorText = await pdfRes.text();
         console.error('PDF generation failed:', errorText);
@@ -62,10 +68,10 @@ export async function POST(request: Request): Promise<NextResponse> {
           { status: 500 }
         );
       }
-      
+
       const pdfResult = await pdfRes.json();
       const pdfUrl = pdfResult.pdf_url;
-      
+
       if (!pdfUrl) {
         return NextResponse.json(
           { error: 'PDF URL missing from generation response' },
@@ -79,37 +85,39 @@ export async function POST(request: Request): Promise<NextResponse> {
         .from('contracts')
         .update({ pdf_url: pdfUrl, status: 'completed', updated_by: user.id })
         .eq('id', contractId);
-        
+
       if (updateError) {
         console.error('Contract update error:', updateError);
         return NextResponse.json(
-          { error: 'Failed to update contract with PDF URL', details: updateError.message },
+          {
+            error: 'Failed to update contract with PDF URL',
+            details: updateError.message,
+          },
           { status: 500 }
         );
       }
 
       // Return PDF URL
-      return NextResponse.json({ 
+      return NextResponse.json({
         pdf_url: pdfUrl,
         processing_time: Date.now() - startTime,
         user_id: user.id,
-        contract_id: contractId
+        contract_id: contractId,
       });
     })();
-    
+
     // Race between processing and timeout
     const result = await Promise.race([processPromise, timeoutPromise]);
     return result as NextResponse;
-    
   } catch (error) {
     const processingTime = Date.now() - startTime;
     console.error('Contract generation error:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
+      {
+        error: 'Internal server error',
         details: (error as Error).message,
         processing_time: processingTime,
-        timeout: error instanceof Error && error.message.includes('timeout')
+        timeout: error instanceof Error && error.message.includes('timeout'),
       },
       { status: 500 }
     );

@@ -8,7 +8,7 @@ export async function DELETE(request: NextRequest) {
     // 1. Verify user authentication
     // 2. Delete all user's notifications from database
     // 3. Return count of deleted notifications
-    
+
     // For now, simulate successful deletion
     return NextResponse.json({
       success: true,
@@ -23,4 +23,3 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-

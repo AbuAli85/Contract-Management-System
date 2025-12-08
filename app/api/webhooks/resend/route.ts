@@ -84,7 +84,10 @@ export async function POST(req: NextRequest) {
 
           // Handle hard bounces - mark email as invalid
           if (payload.data.bounce.type === 'hard') {
-            console.error('🚨 HARD BOUNCE - Invalid email:', payload.data.to[0]);
+            console.error(
+              '🚨 HARD BOUNCE - Invalid email:',
+              payload.data.to[0]
+            );
             // TODO: Update database to mark email as invalid
             // const { createClient } = await import('@/lib/supabase/server');
             // const supabase = await createClient();
@@ -124,4 +127,3 @@ export async function POST(req: NextRequest) {
 
 // Allow POST requests without authentication (webhooks)
 export const dynamic = 'force-dynamic';
-

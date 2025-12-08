@@ -1,7 +1,7 @@
 /**
  * Enhanced Promoter Metrics API
  * GET /api/promoters/enhanced-metrics
- * 
+ *
  * Returns comprehensive promoter workforce metrics with clear status categories
  */
 
@@ -23,13 +23,19 @@ export async function GET(request: NextRequest) {
 
     // Validate metrics before returning
     const validation = validatePromoterMetrics(metrics);
-    
+
     if (!validation.isValid) {
-      console.error('❌ Promoter metrics validation failed:', validation.errors);
+      console.error(
+        '❌ Promoter metrics validation failed:',
+        validation.errors
+      );
     }
-    
+
     if (validation.warnings.length > 0) {
-      console.warn('⚠️ Promoter metrics validation warnings:', validation.warnings);
+      console.warn(
+        '⚠️ Promoter metrics validation warnings:',
+        validation.warnings
+      );
     }
 
     return NextResponse.json({
@@ -45,7 +51,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('❌ Enhanced promoter metrics error:', error);
-    
+
     return NextResponse.json(
       {
         success: false,
@@ -56,4 +62,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

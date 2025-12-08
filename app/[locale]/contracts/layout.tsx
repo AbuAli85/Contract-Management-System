@@ -2,8 +2,16 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Contracts Dashboard | Smart Pro Portal',
-  description: 'View, manage, and track all your contracts in real-time. Access contract details, download PDFs, and monitor contract status.',
-  keywords: ['contracts', 'dashboard', 'management', 'business', 'legal', 'agreements'],
+  description:
+    'View, manage, and track all your contracts in real-time. Access contract details, download PDFs, and monitor contract status.',
+  keywords: [
+    'contracts',
+    'dashboard',
+    'management',
+    'business',
+    'legal',
+    'agreements',
+  ],
   openGraph: {
     title: 'Contracts Dashboard | Smart Pro Portal',
     description: 'View, manage, and track all your contracts in real-time.',

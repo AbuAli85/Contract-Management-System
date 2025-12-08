@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Link from 'next/link';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -709,9 +708,9 @@ export default function UsersPageComponent() {
           </DialogHeader>
           <div className='space-y-4'>
             <div className='rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900'>
-              The system generates a secure temporary password and emails it to the
-              user with reset instructions. They’ll be asked to set their own
-              password on first login.
+              The system generates a secure temporary password and emails it to
+              the user with reset instructions. They’ll be asked to set their
+              own password on first login.
             </div>
             <div className='grid gap-4 md:grid-cols-2'>
               <div>
@@ -725,7 +724,9 @@ export default function UsersPageComponent() {
                 />
               </div>
               <div>
-                <label className='mb-2 block text-sm font-medium'>Full Name</label>
+                <label className='mb-2 block text-sm font-medium'>
+                  Full Name
+                </label>
                 <Input
                   type='text'
                   placeholder='John Doe'
@@ -735,7 +736,10 @@ export default function UsersPageComponent() {
               </div>
               <div>
                 <label className='mb-2 block text-sm font-medium'>Role</label>
-                <Select value={newRole} onValueChange={(value: string) => setNewRole(value)}>
+                <Select
+                  value={newRole}
+                  onValueChange={(value: string) => setNewRole(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -750,7 +754,10 @@ export default function UsersPageComponent() {
               </div>
               <div>
                 <label className='mb-2 block text-sm font-medium'>Status</label>
-                <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value)}>
+                <Select
+                  value={newStatus}
+                  onValueChange={(value: string) => setNewStatus(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -764,7 +771,9 @@ export default function UsersPageComponent() {
                 </Select>
               </div>
               <div>
-                <label className='mb-2 block text-sm font-medium'>Department</label>
+                <label className='mb-2 block text-sm font-medium'>
+                  Department
+                </label>
                 <Input
                   type='text'
                   placeholder='HR'
@@ -773,7 +782,9 @@ export default function UsersPageComponent() {
                 />
               </div>
               <div>
-                <label className='mb-2 block text-sm font-medium'>Position</label>
+                <label className='mb-2 block text-sm font-medium'>
+                  Position
+                </label>
                 <Input
                   type='text'
                   placeholder='Junior'
@@ -844,7 +855,10 @@ export default function UsersPageComponent() {
             </div>
             <div>
               <label className='mb-2 block text-sm font-medium'>Role</label>
-              <Select value={newRole} onValueChange={(value: string) => setNewRole(value)}>
+              <Select
+                value={newRole}
+                onValueChange={(value: string) => setNewRole(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -859,7 +873,10 @@ export default function UsersPageComponent() {
             </div>
             <div>
               <label className='mb-2 block text-sm font-medium'>Status</label>
-              <Select value={newStatus} onValueChange={(value: string) => setNewStatus(value)}>
+              <Select
+                value={newStatus}
+                onValueChange={(value: string) => setNewStatus(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

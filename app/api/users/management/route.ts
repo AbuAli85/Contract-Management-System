@@ -23,8 +23,7 @@ function sanitizeSearchTerm(raw: string) {
   return raw.replace(/[%_]/g, '').trim();
 }
 
-async function refreshPermissionsCache(adminClient: ServiceClient
-) {
+async function refreshPermissionsCache(adminClient: ServiceClient) {
   try {
     const { error } = await adminClient.rpc('refresh_user_permissions_cache');
     if (error) {
@@ -267,13 +266,16 @@ export async function GET(request: NextRequest) {
           permissionsError.message
         );
       } else if (permissionsData) {
-        permissionsByUser = permissionsData.reduce((acc, entry) => {
-          acc[entry.user_id] = {
-            roles: entry.roles || [],
-            permissions: entry.permissions || [],
-          };
-          return acc;
-        }, {} as Record<string, { roles: string[]; permissions: string[] }>);
+        permissionsByUser = permissionsData.reduce(
+          (acc, entry) => {
+            acc[entry.user_id] = {
+              roles: entry.roles || [],
+              permissions: entry.permissions || [],
+            };
+            return acc;
+          },
+          {} as Record<string, { roles: string[]; permissions: string[] }>
+        );
       }
     }
 
@@ -344,8 +346,8 @@ export async function GET(request: NextRequest) {
       message === 'Unauthorized'
         ? 401
         : message === 'Insufficient permissions'
-        ? 403
-        : 500;
+          ? 403
+          : 500;
 
     return NextResponse.json(
       {
@@ -398,7 +400,12 @@ export async function POST(request: NextRequest) {
         }
 
         const targetRole = role || 'user';
-        await assignRoleToUser(serviceClient, userId, targetRole, currentUser.id);
+        await assignRoleToUser(
+          serviceClient,
+          userId,
+          targetRole,
+          currentUser.id
+        );
         await deactivateOtherRoles(serviceClient, userId, targetRole);
         await refreshPermissionsCache(serviceClient);
 
@@ -531,7 +538,8 @@ export async function POST(request: NextRequest) {
           !permissionRecords ||
           permissionRecords.length !== normalizedPermissions.length
         ) {
-          const foundNames = permissionRecords?.map(record => record.name) || [];
+          const foundNames =
+            permissionRecords?.map(record => record.name) || [];
           const missing = normalizedPermissions.filter(
             name => !foundNames.includes(name)
           );
@@ -660,8 +668,8 @@ export async function POST(request: NextRequest) {
       message === 'Unauthorized'
         ? 401
         : message === 'Insufficient permissions'
-        ? 403
-        : 500;
+          ? 403
+          : 500;
 
     return NextResponse.json(
       {

@@ -8,12 +8,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
+
     // In a real implementation, you would:
     // 1. Verify user authentication
     // 2. Delete notification from database
     // 3. Return success response
-    
+
     // For now, simulate successful deletion
     return NextResponse.json({
       success: true,
@@ -28,4 +28,3 @@ export async function DELETE(
     );
   }
 }
-

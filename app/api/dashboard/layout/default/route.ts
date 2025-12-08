@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role') || 'user';
 
     const supabase = await createClient();
-    
+
     const { data: defaultLayout, error } = await supabase
       .from('default_layouts_by_role')
       .select('*')
@@ -26,10 +26,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (!defaultLayout) {
-      return NextResponse.json({
-        success: false,
-        error: 'No default layout found for this role',
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No default layout found for this role',
+        },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest) {
 
 function parseLayoutData(layoutData: any): any[] {
   if (!layoutData) return [];
-  
+
   return layoutData.map((position: any) => ({
     id: position.i,
     type: position.i.split('_')[0],
@@ -63,4 +66,3 @@ function parseLayoutData(layoutData: any): any[] {
     isVisible: true,
   }));
 }
-

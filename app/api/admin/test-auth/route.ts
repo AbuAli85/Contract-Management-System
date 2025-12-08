@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Try to get user
     const {
       data: { user },
@@ -28,10 +28,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       authenticated: !!user,
-      user: user ? {
-        id: user.id,
-        email: user.email,
-      } : null,
+      user: user
+        ? {
+            id: user.id,
+            email: user.email,
+          }
+        : null,
       authError: authError?.message || null,
       hasSession: !!session,
       sessionError: sessionError?.message || null,
@@ -44,11 +46,13 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json({
-      error: 'Failed to check authentication',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to check authentication',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
-

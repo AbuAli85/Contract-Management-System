@@ -69,12 +69,9 @@ export async function GET(request: NextRequest) {
       errorMessage === 'Unauthorized'
         ? 401
         : errorMessage === 'Insufficient permissions'
-        ? 403
-        : 500;
+          ? 403
+          : 500;
 
-    return NextResponse.json(
-      { error: errorMessage },
-      { status }
-    );
+    return NextResponse.json({ error: errorMessage }, { status });
   }
 }

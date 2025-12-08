@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 /**
  * Test Email Endpoint
- * 
+ *
  * Use this to test if Resend is working
  * Access: GET /api/test-email
  */
@@ -23,11 +23,11 @@ export async function GET() {
 
     // Try to send a test email
     const { sendEmail } = await import('@/lib/services/email.service');
-    
+
     const testEmail = process.env.TEST_EMAIL || 'chairman@falconeyegroup.net';
-    
+
     console.log(`📧 Sending test email to: ${testEmail}`);
-    
+
     const result = await sendEmail({
       to: testEmail,
       subject: `🧪 Test Email - ${new Date().toLocaleString()}`,
@@ -53,11 +53,13 @@ export async function GET() {
     if (result.success) {
       return NextResponse.json({
         success: true,
-        message: 'Test email sent successfully! Check your inbox (and spam folder).',
+        message:
+          'Test email sent successfully! Check your inbox (and spam folder).',
         details: {
           messageId: result.messageId,
           to: testEmail,
-          from: process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io',
+          from:
+            process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io',
           timestamp: new Date().toISOString(),
         },
         instructions: [
@@ -68,28 +70,35 @@ export async function GET() {
         ],
       });
     } else {
-      return NextResponse.json({
-        success: false,
-        error: result.error || 'Failed to send email',
-        message: 'Email sending failed',
-        troubleshooting: [
-          'Check if domain is verified: https://resend.com/domains',
-          'Check if API key is valid: https://resend.com/api-keys',
-          'Check DNS records (SPF, DKIM)',
-          'Check Resend account status',
-        ],
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error || 'Failed to send email',
+          message: 'Email sending failed',
+          troubleshooting: [
+            'Check if domain is verified: https://resend.com/domains',
+            'Check if API key is valid: https://resend.com/api-keys',
+            'Check DNS records (SPF, DKIM)',
+            'Check Resend account status',
+          ],
+        },
+        { status: 500 }
+      );
     }
-
   } catch (error) {
     console.error('❌ Test email error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      message: 'Failed to send test email',
-      stack: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined,
-    }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        message: 'Failed to send test email',
+        stack:
+          process.env.NODE_ENV === 'development'
+            ? (error as Error).stack
+            : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
-

@@ -24,8 +24,10 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Get current user for ownership tracking
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+
     if (!currentUser) {
       return NextResponse.json(
         { error: 'You must be logged in to create contracts' },

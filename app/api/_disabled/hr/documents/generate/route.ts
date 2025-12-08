@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
     const templateData = {
       employee: {
         ...employee,
-        department_name: Array.isArray(employee.departments) 
-          ? employee.departments[0]?.name 
+        department_name: Array.isArray(employee.departments)
+          ? employee.departments[0]?.name
           : (employee.departments as any)?.name,
         current_date: new Date().toLocaleDateString('en-US', {
           year: 'numeric',

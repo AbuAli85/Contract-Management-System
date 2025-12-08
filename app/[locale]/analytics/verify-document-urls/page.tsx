@@ -90,10 +90,10 @@ export default function VerifyDocumentUrlsPage() {
 
       for (let i = 0; i < promoters.length; i++) {
         const promoter = promoters[i];
-        
+
         // Skip if promoter is undefined (TypeScript safety check)
         if (!promoter) continue;
-        
+
         setCurrentPromoter(promoter.name_en);
         setProgress(Math.round(((i + 1) / promoters.length) * 100));
 
@@ -137,8 +137,8 @@ export default function VerifyDocumentUrlsPage() {
         }
       }
 
-      const complete = promoters.filter(p => 
-        p.id_card_url && p.passport_url
+      const complete = promoters.filter(
+        p => p.id_card_url && p.passport_url
       ).length;
 
       setStats({
@@ -155,7 +155,8 @@ export default function VerifyDocumentUrlsPage() {
       toast({
         title: 'Verification Complete',
         description: `Found ${brokenIdCards + brokenPassports} broken URLs`,
-        variant: brokenIdCards + brokenPassports > 0 ? 'destructive' : 'default',
+        variant:
+          brokenIdCards + brokenPassports > 0 ? 'destructive' : 'default',
       });
     } catch (error) {
       console.error('Verification error:', error);
@@ -223,21 +224,28 @@ export default function VerifyDocumentUrlsPage() {
   if (!isClient) return null;
 
   const brokenCount = stats.brokenIdCards + stats.brokenPassports;
-  const actualCompletion = stats.total > 0
-    ? ((stats.validIdCards / stats.total) * 100).toFixed(1)
-    : '0';
+  const actualCompletion =
+    stats.total > 0
+      ? ((stats.validIdCards / stats.total) * 100).toFixed(1)
+      : '0';
 
   return (
     <div className='container mx-auto space-y-8 p-6'>
       <div className='mb-8 flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Verify Document URLs</h1>
+          <h1 className='text-3xl font-bold tracking-tight'>
+            Verify Document URLs
+          </h1>
           <p className='text-muted-foreground mt-2'>
             Check which document URLs actually point to existing files
           </p>
         </div>
         <div className='flex gap-3'>
-          <Button onClick={verifyAllUrls} disabled={verifying} variant='outline'>
+          <Button
+            onClick={verifyAllUrls}
+            disabled={verifying}
+            variant='outline'
+          >
             {verifying ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -248,7 +256,11 @@ export default function VerifyDocumentUrlsPage() {
             )}
           </Button>
           {brokenCount > 0 && (
-            <Button onClick={cleanupBrokenUrls} disabled={cleaning} variant='destructive'>
+            <Button
+              onClick={cleanupBrokenUrls}
+              disabled={cleaning}
+              variant='destructive'
+            >
               {cleaning ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -286,7 +298,9 @@ export default function VerifyDocumentUrlsPage() {
           <Card className='border-green-200 bg-green-50'>
             <CardContent className='pt-6 text-center'>
               <CheckCircle className='h-6 w-6 mx-auto text-green-600 mb-1' />
-              <p className='text-3xl font-bold text-green-700'>{stats.validIdCards}</p>
+              <p className='text-3xl font-bold text-green-700'>
+                {stats.validIdCards}
+              </p>
               <p className='text-xs text-muted-foreground'>Valid ID Cards</p>
             </CardContent>
           </Card>
@@ -294,7 +308,9 @@ export default function VerifyDocumentUrlsPage() {
           <Card className='border-green-200 bg-green-50'>
             <CardContent className='pt-6 text-center'>
               <CheckCircle className='h-6 w-6 mx-auto text-green-600 mb-1' />
-              <p className='text-3xl font-bold text-green-700'>{stats.validPassports}</p>
+              <p className='text-3xl font-bold text-green-700'>
+                {stats.validPassports}
+              </p>
               <p className='text-xs text-muted-foreground'>Valid Passports</p>
             </CardContent>
           </Card>
@@ -302,7 +318,9 @@ export default function VerifyDocumentUrlsPage() {
           <Card className='border-red-200 bg-red-50'>
             <CardContent className='pt-6 text-center'>
               <XCircle className='h-6 w-6 mx-auto text-red-600 mb-1' />
-              <p className='text-3xl font-bold text-red-700'>{stats.brokenIdCards}</p>
+              <p className='text-3xl font-bold text-red-700'>
+                {stats.brokenIdCards}
+              </p>
               <p className='text-xs text-muted-foreground'>Broken ID URLs</p>
             </CardContent>
           </Card>
@@ -310,8 +328,12 @@ export default function VerifyDocumentUrlsPage() {
           <Card className='border-red-200 bg-red-50'>
             <CardContent className='pt-6 text-center'>
               <XCircle className='h-6 w-6 mx-auto text-red-600 mb-1' />
-              <p className='text-3xl font-bold text-red-700'>{stats.brokenPassports}</p>
-              <p className='text-xs text-muted-foreground'>Broken Passport URLs</p>
+              <p className='text-3xl font-bold text-red-700'>
+                {stats.brokenPassports}
+              </p>
+              <p className='text-xs text-muted-foreground'>
+                Broken Passport URLs
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -319,7 +341,13 @@ export default function VerifyDocumentUrlsPage() {
 
       {/* Actual Completion */}
       {stats.total > 0 && (
-        <Card className={brokenCount > 0 ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'}>
+        <Card
+          className={
+            brokenCount > 0
+              ? 'border-yellow-200 bg-yellow-50'
+              : 'border-green-200 bg-green-50'
+          }
+        >
           <CardContent className='pt-6'>
             <div className='text-center'>
               <p className='text-5xl font-bold'>{actualCompletion}%</p>
@@ -327,7 +355,8 @@ export default function VerifyDocumentUrlsPage() {
                 Actual Document Completion Rate
               </p>
               <p className='text-xs text-muted-foreground mt-1'>
-                ({stats.validIdCards} valid ID cards out of {stats.total} promoters)
+                ({stats.validIdCards} valid ID cards out of {stats.total}{' '}
+                promoters)
               </p>
             </div>
           </CardContent>
@@ -350,20 +379,26 @@ export default function VerifyDocumentUrlsPage() {
                   <CardContent className='p-4'>
                     <div className='flex items-start justify-between'>
                       <div className='flex-1'>
-                        <h4 className='font-semibold mb-2'>{result.promoterName}</h4>
-                        
+                        <h4 className='font-semibold mb-2'>
+                          {result.promoterName}
+                        </h4>
+
                         <div className='space-y-2 text-xs'>
                           {result.idCardBroken && (
                             <div className='flex items-center gap-2'>
                               <XCircle className='h-4 w-4 text-red-600' />
-                              <span className='text-red-600'>ID Card: File not found</span>
+                              <span className='text-red-600'>
+                                ID Card: File not found
+                              </span>
                             </div>
                           )}
-                          
+
                           {result.passportBroken && (
                             <div className='flex items-center gap-2'>
                               <XCircle className='h-4 w-4 text-red-600' />
-                              <span className='text-red-600'>Passport: File not found</span>
+                              <span className='text-red-600'>
+                                Passport: File not found
+                              </span>
                             </div>
                           )}
 
@@ -374,7 +409,7 @@ export default function VerifyDocumentUrlsPage() {
                               </p>
                             </div>
                           )}
-                          
+
                           {result.passportUrl && result.passportBroken && (
                             <div className='mt-1'>
                               <p className='text-muted-foreground font-mono truncate'>
@@ -399,8 +434,14 @@ export default function VerifyDocumentUrlsPage() {
           <CardTitle className='text-sm'>💡 What This Tool Does</CardTitle>
         </CardHeader>
         <CardContent className='text-sm space-y-2'>
-          <p><strong>Verification:</strong> Checks every document URL to see if the file actually exists in storage</p>
-          <p><strong>Cleanup:</strong> Removes broken URLs from database (sets them to NULL)</p>
+          <p>
+            <strong>Verification:</strong> Checks every document URL to see if
+            the file actually exists in storage
+          </p>
+          <p>
+            <strong>Cleanup:</strong> Removes broken URLs from database (sets
+            them to NULL)
+          </p>
           <p className='text-xs text-muted-foreground mt-3'>
             This ensures your database only contains valid, working URLs
           </p>
@@ -409,5 +450,3 @@ export default function VerifyDocumentUrlsPage() {
     </div>
   );
 }
-
-

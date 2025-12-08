@@ -1,6 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -63,7 +69,8 @@ export default function HelpPage() {
       category: 'Promoters Management',
       questions: [
         {
-          question: 'What is the difference between Promoters Intelligence Hub and Promoters List?',
+          question:
+            'What is the difference between Promoters Intelligence Hub and Promoters List?',
           answer:
             'The Promoters Intelligence Hub provides analytics, insights, and performance dashboards with visual data representations. The Promoters List is a detailed table view where you can view, search, filter, and manage individual promoter records.',
         },
@@ -165,54 +172,56 @@ export default function HelpPage() {
   ];
 
   const filteredFaqs = searchQuery
-    ? faqs.map(category => ({
-        ...category,
-        questions: category.questions.filter(
-          q =>
-            q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            q.answer.toLowerCase().includes(searchQuery.toLowerCase())
-        ),
-      })).filter(category => category.questions.length > 0)
+    ? faqs
+        .map(category => ({
+          ...category,
+          questions: category.questions.filter(
+            q =>
+              q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              q.answer.toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+        }))
+        .filter(category => category.questions.length > 0)
     : faqs;
 
   return (
-    <div className="container mx-auto space-y-6 py-6">
+    <div className='container mx-auto space-y-6 py-6'>
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold">Help & Documentation</h1>
-        <p className="text-muted-foreground text-lg">
+      <div className='text-center space-y-2'>
+        <h1 className='text-4xl font-bold'>Help & Documentation</h1>
+        <p className='text-muted-foreground text-lg'>
           Everything you need to know about using the Smart Pro Contracts Portal
         </p>
       </div>
 
       {/* Search */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <CardContent className='pt-6'>
+          <div className='relative max-w-2xl mx-auto'>
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground' />
             <Input
-              type="search"
-              placeholder="Search for help topics, features, or questions..."
-              className="pl-10 h-12 text-base"
+              type='search'
+              placeholder='Search for help topics, features, or questions...'
+              className='pl-10 h-12 text-base'
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Quick Links */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         {quickLinks.map((link, index) => (
           <a key={index} href={link.href}>
-            <Card className="h-full transition-shadow hover:shadow-md cursor-pointer">
+            <Card className='h-full transition-shadow hover:shadow-md cursor-pointer'>
               <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <link.icon className="h-6 w-6 text-primary" />
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-lg bg-primary/10'>
+                    <link.icon className='h-6 w-6 text-primary' />
                   </div>
                   <div>
-                    <CardTitle className="text-base">{link.title}</CardTitle>
+                    <CardTitle className='text-base'>{link.title}</CardTitle>
                   </div>
                 </div>
                 <CardDescription>{link.description}</CardDescription>
@@ -223,19 +232,19 @@ export default function HelpPage() {
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="faqs" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="faqs">FAQs</TabsTrigger>
-          <TabsTrigger value="guides">Guides</TabsTrigger>
-          <TabsTrigger value="support">Support</TabsTrigger>
+      <Tabs defaultValue='faqs' className='space-y-4'>
+        <TabsList className='grid w-full grid-cols-3'>
+          <TabsTrigger value='faqs'>FAQs</TabsTrigger>
+          <TabsTrigger value='guides'>Guides</TabsTrigger>
+          <TabsTrigger value='support'>Support</TabsTrigger>
         </TabsList>
 
         {/* FAQs Tab */}
-        <TabsContent value="faqs" className="space-y-4">
+        <TabsContent value='faqs' className='space-y-4'>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HelpCircle className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <HelpCircle className='h-5 w-5' />
                 Frequently Asked Questions
               </CardTitle>
               <CardDescription>
@@ -244,30 +253,35 @@ export default function HelpPage() {
                   : 'Find answers to common questions'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className='space-y-6'>
               {filteredFaqs.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <HelpCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <div className='text-center py-8 text-muted-foreground'>
+                  <HelpCircle className='h-12 w-12 mx-auto mb-3 opacity-50' />
                   <p>No results found for "{searchQuery}"</p>
                   <Button
-                    variant="link"
+                    variant='link'
                     onClick={() => setSearchQuery('')}
-                    className="mt-2"
+                    className='mt-2'
                   >
                     Clear search
                   </Button>
                 </div>
               ) : (
                 filteredFaqs.map((category, idx) => (
-                  <div key={idx} className="space-y-3">
-                    <h3 className="text-lg font-semibold">{category.category}</h3>
-                    <Accordion type="single" collapsible className="w-full">
+                  <div key={idx} className='space-y-3'>
+                    <h3 className='text-lg font-semibold'>
+                      {category.category}
+                    </h3>
+                    <Accordion type='single' collapsible className='w-full'>
                       {category.questions.map((faq, faqIdx) => (
-                        <AccordionItem key={faqIdx} value={`item-${idx}-${faqIdx}`}>
-                          <AccordionTrigger className="text-left">
+                        <AccordionItem
+                          key={faqIdx}
+                          value={`item-${idx}-${faqIdx}`}
+                        >
+                          <AccordionTrigger className='text-left'>
                             {faq.question}
                           </AccordionTrigger>
-                          <AccordionContent className="text-muted-foreground">
+                          <AccordionContent className='text-muted-foreground'>
                             {faq.answer}
                           </AccordionContent>
                         </AccordionItem>
@@ -281,36 +295,36 @@ export default function HelpPage() {
         </TabsContent>
 
         {/* Guides Tab */}
-        <TabsContent value="guides" className="space-y-4">
+        <TabsContent value='guides' className='space-y-4'>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Book className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Book className='h-5 w-5' />
                 User Guides & Tutorials
               </CardTitle>
               <CardDescription>
                 Step-by-step instructions for common tasks
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className='space-y-4'>
               {tutorials.map((tutorial, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-4 p-4 rounded-lg border hover:bg-accent transition-colors cursor-pointer"
+                  className='flex items-start gap-4 p-4 rounded-lg border hover:bg-accent transition-colors cursor-pointer'
                 >
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Video className="h-5 w-5 text-primary" />
+                  <div className='p-2 rounded-lg bg-primary/10'>
+                    <Video className='h-5 w-5 text-primary' />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{tutorial.title}</h4>
-                    <p className="text-sm text-muted-foreground">
+                  <div className='flex-1'>
+                    <h4 className='font-medium'>{tutorial.title}</h4>
+                    <p className='text-sm text-muted-foreground'>
                       {tutorial.description}
                     </p>
-                    <span className="text-xs text-muted-foreground">
+                    <span className='text-xs text-muted-foreground'>
                       {tutorial.duration}
                     </span>
                   </div>
-                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  <ExternalLink className='h-4 w-4 text-muted-foreground' />
                 </div>
               ))}
             </CardContent>
@@ -321,46 +335,46 @@ export default function HelpPage() {
             <CardHeader>
               <CardTitle>Feature Documentation</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <Link href="/promoters">
-                <div className="flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors">
-                  <Users className="h-5 w-5 text-primary mt-0.5" />
+            <CardContent className='grid gap-4 md:grid-cols-2'>
+              <Link href='/promoters'>
+                <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
+                  <Users className='h-5 w-5 text-primary mt-0.5' />
                   <div>
-                    <h4 className="font-medium">Promoters Intelligence Hub</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className='font-medium'>Promoters Intelligence Hub</h4>
+                    <p className='text-sm text-muted-foreground'>
                       Analytics and insights dashboard
                     </p>
                   </div>
                 </div>
               </Link>
-              <Link href="/manage-promoters">
-                <div className="flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors">
-                  <FileText className="h-5 w-5 text-primary mt-0.5" />
+              <Link href='/manage-promoters'>
+                <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
+                  <FileText className='h-5 w-5 text-primary mt-0.5' />
                   <div>
-                    <h4 className="font-medium">Promoters List</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className='font-medium'>Promoters List</h4>
+                    <p className='text-sm text-muted-foreground'>
                       Manage promoter records
                     </p>
                   </div>
                 </div>
               </Link>
-              <Link href="/contracts">
-                <div className="flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors">
-                  <FileCheck className="h-5 w-5 text-primary mt-0.5" />
+              <Link href='/contracts'>
+                <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
+                  <FileCheck className='h-5 w-5 text-primary mt-0.5' />
                   <div>
-                    <h4 className="font-medium">Contract Management</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className='font-medium'>Contract Management</h4>
+                    <p className='text-sm text-muted-foreground'>
                       Generate and manage contracts
                     </p>
                   </div>
                 </div>
               </Link>
-              <Link href="/profile">
-                <div className="flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors">
-                  <Settings className="h-5 w-5 text-primary mt-0.5" />
+              <Link href='/profile'>
+                <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
+                  <Settings className='h-5 w-5 text-primary mt-0.5' />
                   <div>
-                    <h4 className="font-medium">Profile & Settings</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className='font-medium'>Profile & Settings</h4>
+                    <p className='text-sm text-muted-foreground'>
                       Manage your account
                     </p>
                   </div>
@@ -371,85 +385,86 @@ export default function HelpPage() {
         </TabsContent>
 
         {/* Support Tab */}
-        <TabsContent value="support" className="space-y-4">
+        <TabsContent value='support' className='space-y-4'>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Mail className='h-5 w-5' />
                 Contact Support
               </CardTitle>
-              <CardDescription>
-                Get help from our support team
-              </CardDescription>
+              <CardDescription>Get help from our support team</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="flex flex-col items-center text-center p-4 rounded-lg border">
-                  <div className="p-3 rounded-full bg-primary/10 mb-3">
-                    <Mail className="h-6 w-6 text-primary" />
+            <CardContent className='space-y-6'>
+              <div className='grid gap-4 md:grid-cols-3'>
+                <div className='flex flex-col items-center text-center p-4 rounded-lg border'>
+                  <div className='p-3 rounded-full bg-primary/10 mb-3'>
+                    <Mail className='h-6 w-6 text-primary' />
                   </div>
-                  <h4 className="font-medium mb-1">Email Support</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <h4 className='font-medium mb-1'>Email Support</h4>
+                  <p className='text-sm text-muted-foreground mb-3'>
                     Response within 24 hours
                   </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href="mailto:support@smartpro.com">Send Email</a>
+                  <Button variant='outline' size='sm' asChild>
+                    <a href='mailto:support@smartpro.com'>Send Email</a>
                   </Button>
                 </div>
 
-                <div className="flex flex-col items-center text-center p-4 rounded-lg border">
-                  <div className="p-3 rounded-full bg-primary/10 mb-3">
-                    <MessageCircle className="h-6 w-6 text-primary" />
+                <div className='flex flex-col items-center text-center p-4 rounded-lg border'>
+                  <div className='p-3 rounded-full bg-primary/10 mb-3'>
+                    <MessageCircle className='h-6 w-6 text-primary' />
                   </div>
-                  <h4 className="font-medium mb-1">Live Chat</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <h4 className='font-medium mb-1'>Live Chat</h4>
+                  <p className='text-sm text-muted-foreground mb-3'>
                     Available 9AM - 5PM
                   </p>
-                  <Button variant="outline" size="sm">Start Chat</Button>
+                  <Button variant='outline' size='sm'>
+                    Start Chat
+                  </Button>
                 </div>
 
-                <div className="flex flex-col items-center text-center p-4 rounded-lg border">
-                  <div className="p-3 rounded-full bg-primary/10 mb-3">
-                    <Phone className="h-6 w-6 text-primary" />
+                <div className='flex flex-col items-center text-center p-4 rounded-lg border'>
+                  <div className='p-3 rounded-full bg-primary/10 mb-3'>
+                    <Phone className='h-6 w-6 text-primary' />
                   </div>
-                  <h4 className="font-medium mb-1">Phone Support</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <h4 className='font-medium mb-1'>Phone Support</h4>
+                  <p className='text-sm text-muted-foreground mb-3'>
                     Call us directly
                   </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href="tel:+1234567890">Call Now</a>
+                  <Button variant='outline' size='sm' asChild>
+                    <a href='tel:+1234567890'>Call Now</a>
                   </Button>
                 </div>
               </div>
 
-              <Card className="bg-muted/50">
+              <Card className='bg-muted/50'>
                 <CardHeader>
-                  <CardTitle className="text-base">System Status</CardTitle>
+                  <CardTitle className='text-base'>System Status</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-sm">All systems operational</span>
+                  <div className='flex items-center gap-2'>
+                    <div className='h-2 w-2 rounded-full bg-green-500 animate-pulse'></div>
+                    <span className='text-sm'>All systems operational</span>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-primary/5 border-primary/20">
+              <Card className='bg-primary/5 border-primary/20'>
                 <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
+                  <CardTitle className='text-base flex items-center gap-2'>
+                    <Shield className='h-4 w-4' />
                     Security & Privacy
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  <p className="mb-2">
-                    Your data is protected with industry-standard encryption and security measures.
+                <CardContent className='text-sm text-muted-foreground'>
+                  <p className='mb-2'>
+                    Your data is protected with industry-standard encryption and
+                    security measures.
                   </p>
-                  <div className="flex gap-2">
-                    <Button variant="link" size="sm" className="h-auto p-0">
+                  <div className='flex gap-2'>
+                    <Button variant='link' size='sm' className='h-auto p-0'>
                       Privacy Policy
                     </Button>
-                    <Button variant="link" size="sm" className="h-auto p-0">
+                    <Button variant='link' size='sm' className='h-auto p-0'>
                       Terms of Service
                     </Button>
                   </div>

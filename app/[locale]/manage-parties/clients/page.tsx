@@ -7,12 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import type { Party } from '@/lib/types';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -73,7 +68,7 @@ interface EnhancedParty extends Party {
 export default function ClientsPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const [clients, setClients] = useState<EnhancedParty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,7 +81,7 @@ export default function ClientsPage() {
     try {
       const response = await fetch('/api/parties');
       const data = await response.json();
-      
+
       if (data.success) {
         // Filter only clients
         const clientParties = (data.parties || [])
@@ -118,17 +113,20 @@ export default function ClientsPage() {
 
   // Helper function to enhance party data
   const enhanceParty = (party: Party): EnhancedParty => {
-    const crExpiryDays = party.cr_expiry_date 
-      ? differenceInDays(parseISO(party.cr_expiry_date), new Date()) 
+    const crExpiryDays = party.cr_expiry_date
+      ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
       : null;
-    const licenseExpiryDays = party.license_expiry 
-      ? differenceInDays(parseISO(party.license_expiry), new Date()) 
+    const licenseExpiryDays = party.license_expiry
+      ? differenceInDays(parseISO(party.license_expiry), new Date())
       : null;
 
     return {
       ...party,
       cr_status: getDocumentStatus(crExpiryDays, party.cr_expiry_date),
-      license_status: getDocumentStatus(licenseExpiryDays, party.license_expiry),
+      license_status: getDocumentStatus(
+        licenseExpiryDays,
+        party.license_expiry
+      ),
       days_until_cr_expiry: crExpiryDays ?? undefined,
       days_until_license_expiry: licenseExpiryDays ?? undefined,
       contract_count: party.total_contracts || party.active_contracts || 0,
@@ -164,17 +162,26 @@ export default function ClientsPage() {
   // Filter clients
   const filteredClients = useMemo(() => {
     return clients.filter(client => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch =
+        !searchTerm ||
         client.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.name_ar?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.crn?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || client.status === statusFilter;
 
-      const matchesDocument = documentFilter === 'all' ||
-        (documentFilter === 'expired' && (client.cr_status === 'expired' || client.license_status === 'expired')) ||
-        (documentFilter === 'expiring' && (client.cr_status === 'expiring' || client.license_status === 'expiring')) ||
-        (documentFilter === 'valid' && client.cr_status === 'valid' && client.license_status === 'valid');
+      const matchesDocument =
+        documentFilter === 'all' ||
+        (documentFilter === 'expired' &&
+          (client.cr_status === 'expired' ||
+            client.license_status === 'expired')) ||
+        (documentFilter === 'expiring' &&
+          (client.cr_status === 'expiring' ||
+            client.license_status === 'expiring')) ||
+        (documentFilter === 'valid' &&
+          client.cr_status === 'valid' &&
+          client.license_status === 'valid');
 
       return matchesSearch && matchesStatus && matchesDocument;
     });
@@ -185,9 +192,16 @@ export default function ClientsPage() {
     return {
       total: clients.length,
       active: clients.filter(c => c.status === 'Active').length,
-      expiring: clients.filter(c => c.cr_status === 'expiring' || c.license_status === 'expiring').length,
-      expired: clients.filter(c => c.cr_status === 'expired' || c.license_status === 'expired').length,
-      total_contracts: clients.reduce((sum, c) => sum + (c.contract_count || 0), 0),
+      expiring: clients.filter(
+        c => c.cr_status === 'expiring' || c.license_status === 'expiring'
+      ).length,
+      expired: clients.filter(
+        c => c.cr_status === 'expired' || c.license_status === 'expired'
+      ).length,
+      total_contracts: clients.reduce(
+        (sum, c) => sum + (c.contract_count || 0),
+        0
+      ),
     };
   }, [clients]);
 
@@ -235,13 +249,17 @@ export default function ClientsPage() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>{stats.total}</div>
-            <p className='text-xs text-muted-foreground'>{stats.active} active</p>
+            <p className='text-xs text-muted-foreground'>
+              {stats.active} active
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Contracts</CardTitle>
+            <CardTitle className='text-sm font-medium'>
+              Total Contracts
+            </CardTitle>
             <FileText className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
@@ -256,18 +274,24 @@ export default function ClientsPage() {
             <Calendar className='h-4 w-4 text-yellow-600' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-yellow-600'>{stats.expiring}</div>
+            <div className='text-2xl font-bold text-yellow-600'>
+              {stats.expiring}
+            </div>
             <p className='text-xs text-muted-foreground'>Documents expiring</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Expired Documents</CardTitle>
+            <CardTitle className='text-sm font-medium'>
+              Expired Documents
+            </CardTitle>
             <AlertTriangle className='h-4 w-4 text-red-600' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-red-600'>{stats.expired}</div>
+            <div className='text-2xl font-bold text-red-600'>
+              {stats.expired}
+            </div>
             <p className='text-xs text-muted-foreground'>Requires attention</p>
           </CardContent>
         </Card>
@@ -291,7 +315,7 @@ export default function ClientsPage() {
                   id='search'
                   placeholder='Search clients...'
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className='pl-10'
                 />
               </div>
@@ -361,7 +385,7 @@ export default function ClientsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClients.map((client) => (
+                  {filteredClients.map(client => (
                     <TableRow key={client.id}>
                       <TableCell>
                         <div>
@@ -378,13 +402,17 @@ export default function ClientsPage() {
                           {client.contact_email && (
                             <div className='flex items-center gap-1'>
                               <Mail className='h-3 w-3 text-muted-foreground' />
-                              <span className='text-xs'>{client.contact_email}</span>
+                              <span className='text-xs'>
+                                {client.contact_email}
+                              </span>
                             </div>
                           )}
                           {client.contact_phone && (
                             <div className='flex items-center gap-1'>
                               <Phone className='h-3 w-3 text-muted-foreground' />
-                              <span className='text-xs'>{client.contact_phone}</span>
+                              <span className='text-xs'>
+                                {client.contact_phone}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -395,8 +423,8 @@ export default function ClientsPage() {
                             client.status === 'Active'
                               ? 'default'
                               : client.status === 'Inactive'
-                              ? 'secondary'
-                              : 'destructive'
+                                ? 'secondary'
+                                : 'destructive'
                           }
                         >
                           {client.status}
@@ -406,14 +434,19 @@ export default function ClientsPage() {
                         {client.cr_expiry_date ? (
                           <div className='text-sm'>
                             <div>{formatDateSafely(client.cr_expiry_date)}</div>
-                            <div className={cn(
-                              'text-xs',
-                              client.cr_status === 'expired' && 'text-red-600',
-                              client.cr_status === 'expiring' && 'text-yellow-600',
-                              client.cr_status === 'valid' && 'text-green-600'
-                            )}>
+                            <div
+                              className={cn(
+                                'text-xs',
+                                client.cr_status === 'expired' &&
+                                  'text-red-600',
+                                client.cr_status === 'expiring' &&
+                                  'text-yellow-600',
+                                client.cr_status === 'valid' && 'text-green-600'
+                              )}
+                            >
                               {client.cr_status === 'expired' && 'Expired'}
-                              {client.cr_status === 'expiring' && `${client.days_until_cr_expiry} days left`}
+                              {client.cr_status === 'expiring' &&
+                                `${client.days_until_cr_expiry} days left`}
                               {client.cr_status === 'valid' && 'Valid'}
                             </div>
                           </div>
@@ -425,14 +458,20 @@ export default function ClientsPage() {
                         {client.license_expiry ? (
                           <div className='text-sm'>
                             <div>{formatDateSafely(client.license_expiry)}</div>
-                            <div className={cn(
-                              'text-xs',
-                              client.license_status === 'expired' && 'text-red-600',
-                              client.license_status === 'expiring' && 'text-yellow-600',
-                              client.license_status === 'valid' && 'text-green-600'
-                            )}>
+                            <div
+                              className={cn(
+                                'text-xs',
+                                client.license_status === 'expired' &&
+                                  'text-red-600',
+                                client.license_status === 'expiring' &&
+                                  'text-yellow-600',
+                                client.license_status === 'valid' &&
+                                  'text-green-600'
+                              )}
+                            >
                               {client.license_status === 'expired' && 'Expired'}
-                              {client.license_status === 'expiring' && `${client.days_until_license_expiry} days left`}
+                              {client.license_status === 'expiring' &&
+                                `${client.days_until_license_expiry} days left`}
                               {client.license_status === 'valid' && 'Valid'}
                             </div>
                           </div>
@@ -441,7 +480,9 @@ export default function ClientsPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant='outline'>{client.contract_count || 0}</Badge>
+                        <Badge variant='outline'>
+                          {client.contract_count || 0}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -452,11 +493,21 @@ export default function ClientsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => router.push(`/en/manage-parties?id=${client.id}`)}>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(
+                                  `/en/manage-parties?id=${client.id}`
+                                )
+                              }
+                            >
                               <EditIcon className='mr-2 h-4 w-4' />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/en/manage-parties/${client.id}`)}>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/en/manage-parties/${client.id}`)
+                              }
+                            >
                               <Eye className='mr-2 h-4 w-4' />
                               View Details
                             </DropdownMenuItem>
@@ -474,4 +525,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-

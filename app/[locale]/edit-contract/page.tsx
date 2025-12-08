@@ -27,4 +27,3 @@ export default function EditContractRedirectPage() {
 
   return <LoadingSpinner />;
 }
-

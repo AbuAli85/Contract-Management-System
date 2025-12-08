@@ -53,9 +53,10 @@ export async function GET() {
     // Build employer-promoter mapping
     const employersWithPromoters = (employers || []).map(employer => {
       // Get contracts where this employer is either first_party or employer_id
-      const employerContracts = contracts?.filter(
-        c => c.employer_id === employer.id || c.first_party_id === employer.id
-      ) || [];
+      const employerContracts =
+        contracts?.filter(
+          c => c.employer_id === employer.id || c.first_party_id === employer.id
+        ) || [];
 
       // Get unique promoter IDs from contracts
       const promoterIdsFromContracts = [
@@ -67,9 +68,12 @@ export async function GET() {
       ];
 
       // Get promoters associated with this employer (via employer_id or contracts)
-      const employerPromoters = allPromoters?.filter(
-        p => p.employer_id === employer.id || promoterIdsFromContracts.includes(p.id)
-      ) || [];
+      const employerPromoters =
+        allPromoters?.filter(
+          p =>
+            p.employer_id === employer.id ||
+            promoterIdsFromContracts.includes(p.id)
+        ) || [];
 
       return {
         ...employer,
@@ -81,9 +85,8 @@ export async function GET() {
     // Calculate summary statistics
     const totalEmployers = employers?.length || 0;
     const totalPromoters = allPromoters?.length || 0;
-    const avgPromotersPerEmployer = totalEmployers > 0 
-      ? (totalPromoters / totalEmployers).toFixed(1) 
-      : '0';
+    const avgPromotersPerEmployer =
+      totalEmployers > 0 ? (totalPromoters / totalEmployers).toFixed(1) : '0';
 
     return NextResponse.json({
       success: true,
@@ -99,12 +102,11 @@ export async function GET() {
   } catch (error) {
     console.error('Error in employer-promoters analytics API:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
   }
 }
-

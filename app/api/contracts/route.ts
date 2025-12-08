@@ -15,84 +15,102 @@ export const dynamic = 'force-dynamic';
 const API_TIMEOUT_MS = 3000; // 3 second timeout
 
 // ✅ SECURITY: RBAC enabled with rate limiting
-export const GET = withRBAC('contract:read:own', async (request: NextRequest) => {
-  const startTime = Date.now();
-  const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
-  try {
-    const { searchParams } = new URL(request.url);
-    const partyId = searchParams.get('party_id');
-    const status = searchParams.get('status') || 'all'; // ✅ FIX: Default to 'all' instead of 'active' to show all contracts
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-    
-    logger.info('Contracts API: Starting request', {
-      requestId,
-      status,
-      partyId,
-      page,
-      limit,
-      timestamp: new Date().toISOString(),
-    }, 'ContractsAPI');
+export const GET = withRBAC(
+  'contract:read:own',
+  async (request: NextRequest) => {
+    const startTime = Date.now();
+    const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    const supabase = await createClient();
-    
-    // Wrap the entire operation with timeout
-    const result = await withTimeout(
-      handleContractsRequest(supabase, partyId, status, requestId, page, limit),
-      API_TIMEOUT_MS,
-      'Contracts API GET'
-    );
-    
-    const duration = Date.now() - startTime;
-    logApiCall('/api/contracts', 'GET', duration, 200, true, {
-      requestId,
-      status,
-      contractCount: result.contracts?.length || 0,
-    });
-    
-    return NextResponse.json(result);
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    logger.error('Contracts API: Unexpected error', {
-      requestId,
-      error,
-      message: (error as Error).message,
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString(),
-    }, 'ContractsAPI');
-    
-    logApiCall('/api/contracts', 'GET', duration, 500, false, {
-      requestId,
-      error: (error as Error).message,
-    });
-    
-    // Check if it's a timeout error
-    if ((error as Error).message?.includes('timeout')) {
+    try {
+      const { searchParams } = new URL(request.url);
+      const partyId = searchParams.get('party_id');
+      const status = searchParams.get('status') || 'all'; // ✅ FIX: Default to 'all' instead of 'active' to show all contracts
+      const page = parseInt(searchParams.get('page') || '1', 10);
+      const limit = parseInt(searchParams.get('limit') || '20', 10);
+
+      logger.info(
+        'Contracts API: Starting request',
+        {
+          requestId,
+          status,
+          partyId,
+          page,
+          limit,
+          timestamp: new Date().toISOString(),
+        },
+        'ContractsAPI'
+      );
+
+      const supabase = await createClient();
+
+      // Wrap the entire operation with timeout
+      const result = await withTimeout(
+        handleContractsRequest(
+          supabase,
+          partyId,
+          status,
+          requestId,
+          page,
+          limit
+        ),
+        API_TIMEOUT_MS,
+        'Contracts API GET'
+      );
+
+      const duration = Date.now() - startTime;
+      logApiCall('/api/contracts', 'GET', duration, 200, true, {
+        requestId,
+        status,
+        contractCount: result.contracts?.length || 0,
+      });
+
+      return NextResponse.json(result);
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logger.error(
+        'Contracts API: Unexpected error',
+        {
+          requestId,
+          error,
+          message: (error as Error).message,
+          duration: `${duration}ms`,
+          timestamp: new Date().toISOString(),
+        },
+        'ContractsAPI'
+      );
+
+      logApiCall('/api/contracts', 'GET', duration, 500, false, {
+        requestId,
+        error: (error as Error).message,
+      });
+
+      // Check if it's a timeout error
+      if ((error as Error).message?.includes('timeout')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Request timeout',
+            message: 'The server took too long to respond. Please try again.',
+            details: (error as Error).message,
+            requestId,
+          },
+          { status: 504 } // Gateway Timeout
+        );
+      }
+
       return NextResponse.json(
         {
           success: false,
-          error: 'Request timeout',
-          message: 'The server took too long to respond. Please try again.',
+          error: 'Internal server error',
+          message: 'An unexpected error occurred while fetching contracts.',
           details: (error as Error).message,
           requestId,
         },
-        { status: 504 } // Gateway Timeout
+        { status: 500 }
       );
     }
-    
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        message: 'An unexpected error occurred while fetching contracts.',
-        details: (error as Error).message,
-        requestId,
-      },
-      { status: 500 }
-    );
   }
-});
+);
 
 async function handleContractsRequest(
   supabase: any,
@@ -107,7 +125,11 @@ async function handleContractsRequest(
 
   // Check if we're using a mock client
   if (!supabase || typeof supabase.from !== 'function') {
-    logger.error('Contracts API: Using mock client - environment variables may be missing', { requestId }, 'ContractsAPI');
+    logger.error(
+      'Contracts API: Using mock client - environment variables may be missing',
+      { requestId },
+      'ContractsAPI'
+    );
     return {
       success: true, // Return success to avoid errors
       contracts: [],
@@ -119,14 +141,18 @@ async function handleContractsRequest(
     };
   }
 
-  logger.debug('Contracts API: Fetching contracts from database...', { requestId }, 'ContractsAPI');
+  logger.debug(
+    'Contracts API: Fetching contracts from database...',
+    { requestId },
+    'ContractsAPI'
+  );
 
   // ✅ SECURITY FIX: Get user info for query scoping
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
-  
+
   if (userError || !user) {
     throw new Error('Unauthorized: ' + (userError?.message || 'No user found'));
   }
@@ -144,12 +170,20 @@ async function handleContractsRequest(
       .single();
 
     isAdmin = (userProfile as any)?.role === 'admin';
-    
+
     // Store in cache
     permissionCache.set(cacheKey, isAdmin);
-    logger.debug('Permission cached for user', { userId: user.id, isAdmin }, 'PermissionCache');
+    logger.debug(
+      'Permission cached for user',
+      { userId: user.id, isAdmin },
+      'PermissionCache'
+    );
   } else {
-    logger.debug('Permission loaded from cache', { userId: user.id, isAdmin }, 'PermissionCache');
+    logger.debug(
+      'Permission loaded from cache',
+      { userId: user.id, isAdmin },
+      'PermissionCache'
+    );
   }
 
   // If party_id is provided, try to fetch contracts for that party
@@ -166,7 +200,7 @@ async function handleContractsRequest(
           `
         )
         .or(`employer_id.eq.${partyId},client_id.eq.${partyId}`);
-      
+
       // Special handling: "pending" status should include both "pending" and "generated" contracts
       if (status === 'pending') {
         query = query.in('status', ['pending', 'generated']);
@@ -176,16 +210,21 @@ async function handleContractsRequest(
 
       // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in OR created
       if (!isAdmin) {
-        query = query.or(`employer_id.eq.${user.id},client_id.eq.${user.id},user_id.eq.${user.id}`);
+        query = query.or(
+          `employer_id.eq.${user.id},client_id.eq.${user.id},user_id.eq.${user.id}`
+        );
       }
 
       const { data: contracts, error: contractsError } = await query.limit(10);
 
       if (contractsError) {
-        console.warn('⚠️ Contracts API: Error fetching party contracts, returning empty:', {
-          requestId,
-          error: contractsError.message,
-        });
+        console.warn(
+          '⚠️ Contracts API: Error fetching party contracts, returning empty:',
+          {
+            requestId,
+            error: contractsError.message,
+          }
+        );
         return {
           success: true,
           contracts: [],
@@ -202,7 +241,9 @@ async function handleContractsRequest(
         requestId,
       };
     } catch (error) {
-      console.warn('⚠️ Contracts API: Party query failed, returning empty', { requestId });
+      console.warn('⚠️ Contracts API: Party query failed, returning empty', {
+        requestId,
+      });
       return {
         success: true,
         contracts: [],
@@ -215,7 +256,7 @@ async function handleContractsRequest(
   // Enhanced query to fetch all contracts with proper relationships
   let contracts: any[] = [];
   let totalCount: number | null = 0;
-  
+
   try {
     // ✅ ENHANCED QUERY: Get all contracts with comprehensive data
     // Use simple select with count option directly
@@ -223,12 +264,20 @@ async function handleContractsRequest(
 
     // ✅ FIX: Apply status filter if provided
     if (status && status !== 'all') {
-      logger.debug(`Filtering contracts by status: ${status}`, { requestId }, 'ContractsAPI');
-      
+      logger.debug(
+        `Filtering contracts by status: ${status}`,
+        { requestId },
+        'ContractsAPI'
+      );
+
       // Special handling: "pending" status should include both "pending" and "generated" contracts
       if (status === 'pending') {
         query = query.in('status', ['pending', 'generated']);
-        logger.debug('Including both pending and generated contracts', { requestId }, 'ContractsAPI');
+        logger.debug(
+          'Including both pending and generated contracts',
+          { requestId },
+          'ContractsAPI'
+        );
       } else {
         // Simple direct status filtering for other statuses
         query = query.eq('status', status);
@@ -237,165 +286,90 @@ async function handleContractsRequest(
 
     // Non-admin users only see contracts they're involved in OR created
     if (!isAdmin) {
-      query = query.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`);
+      query = query.or(
+        `first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`
+      );
     }
 
     const queryStartTime = Date.now();
-    
+
     // ✅ OPTIMIZED: Use database-level pagination
-    const { data: contractsData, error: contractsError, count } = await query
+    const {
+      data: contractsData,
+      error: contractsError,
+      count,
+    } = await query
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
-    
-    totalCount = count;
-    
-    const queryTime = Date.now() - queryStartTime;
-    logger.info('Query execution', {
-      requestId,
-      status: status || 'all',
-      queryTime: `${queryTime}ms`,
-      resultCount: contractsData?.length || 0,
-      totalCount: totalCount || 0,
-      page,
-      limit,
-      isAdmin,
-      timestamp: new Date().toISOString(),
-    }, 'ContractsAPI');
 
-      if (contractsError) {
-        logger.warn('Contracts API: Error fetching contracts', {
+    totalCount = count;
+
+    const queryTime = Date.now() - queryStartTime;
+    logger.info(
+      'Query execution',
+      {
+        requestId,
+        status: status || 'all',
+        queryTime: `${queryTime}ms`,
+        resultCount: contractsData?.length || 0,
+        totalCount: totalCount || 0,
+        page,
+        limit,
+        isAdmin,
+        timestamp: new Date().toISOString(),
+      },
+      'ContractsAPI'
+    );
+
+    if (contractsError) {
+      logger.warn(
+        'Contracts API: Error fetching contracts',
+        {
           error: contractsError.message,
           requestId,
-        }, 'ContractsAPI');
-        
-        // Try a simpler query as fallback
-        let fallbackQuery = supabase
-          .from('contracts')
-          .select('*', { count: 'exact' })
-          .order('created_at', { ascending: false })
-          .range(offset, offset + limit - 1);
+        },
+        'ContractsAPI'
+      );
 
-        // Apply RBAC to fallback query too
-        if (!isAdmin) {
-          fallbackQuery = fallbackQuery.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`);
-        }
+      // Try a simpler query as fallback
+      let fallbackQuery = supabase
+        .from('contracts')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-        const { data: fallbackData, error: fallbackError, count: fallbackCount } = await fallbackQuery;
+      // Apply RBAC to fallback query too
+      if (!isAdmin) {
+        fallbackQuery = fallbackQuery.or(
+          `first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`
+        );
+      }
 
-        if (fallbackError) {
-          logger.error('Contracts API: Fallback query also failed', {
+      const {
+        data: fallbackData,
+        error: fallbackError,
+        count: fallbackCount,
+      } = await fallbackQuery;
+
+      if (fallbackError) {
+        logger.error(
+          'Contracts API: Fallback query also failed',
+          {
             error: fallbackError.message,
             requestId,
-          }, 'ContractsAPI');
-          contracts = [];
-        } else {
-          contracts = fallbackData || [];
-          totalCount = fallbackCount;
-          // Transform fallback data as well (simplified since we don't have relationships)
-          contracts = contracts.map((contract: any) => ({
-            ...contract,
-            first_party: null,
-            second_party: null,
-            promoters: null,
-            contract_start_date:
-              contract.start_date || contract.contract_start_date,
-            contract_end_date: contract.end_date || contract.contract_end_date,
-            job_title: contract.title || contract.job_title,
-            contract_value:
-              contract.value ||
-              contract.contract_value ||
-              contract.basic_salary ||
-              contract.amount,
-          }));
-        }
+          },
+          'ContractsAPI'
+        );
+        contracts = [];
       } else {
-        contracts = contractsData || [];
-      }
-
-      // Fetch related data separately and transform contracts
-      const partyIds = new Set();
-      const promoterIds = new Set();
-
-      contracts.forEach((contract: any) => {
-        if (contract.first_party_id) partyIds.add(contract.first_party_id);
-        if (contract.second_party_id) partyIds.add(contract.second_party_id);
-        if (contract.client_id) partyIds.add(contract.client_id);
-        if (contract.employer_id) partyIds.add(contract.employer_id);
-        if (contract.promoter_id) promoterIds.add(contract.promoter_id);
-      });
-
-      // Fetch parties data
-      let partiesData: any[] = [];
-      if (partyIds.size > 0) {
-        const { data: parties, error: partiesError } = await supabase
-          .from('parties')
-          .select('id, name_en, name_ar, crn, type')
-          .in('id', Array.from(partyIds));
-
-        if (!partiesError && parties) {
-          partiesData = parties;
-        }
-      }
-
-      // Fetch promoters data
-      let promotersData: any[] = [];
-      if (promoterIds.size > 0) {
-        const { data: promoters, error: promotersError } = await supabase
-          .from('promoters')
-          .select(
-            'id, name_en, name_ar, id_card_number, id_card_url, passport_url, status, mobile_number'
-          )
-          .in('id', Array.from(promoterIds));
-
-        if (promotersError) {
-          logger.warn('Contracts API: Error fetching promoters', {
-            error: promotersError.message,
-            requestId,
-          }, 'ContractsAPI');
-        }
-        
-        if (!promotersError && promoters) {
-          promotersData = promoters;
-          logger.debug(`Fetched ${promoters.length} promoters`, { requestId }, 'ContractsAPI');
-        }
-      }
-
-      // Create lookup maps
-      const partiesMap = new Map(partiesData.map(p => [p.id, p]));
-      const promotersMap = new Map(promotersData.map(p => [p.id, p]));
-
-      // Transform contracts to normalize party relationships
-      contracts = contracts.map((contract: any) => {
-        // Get party data from lookup maps
-        const firstParty = contract.first_party_id
-          ? partiesMap.get(contract.first_party_id)
-          : contract.client_id
-            ? partiesMap.get(contract.client_id)
-            : null;
-        const secondParty = contract.second_party_id
-          ? partiesMap.get(contract.second_party_id)
-          : contract.employer_id
-            ? partiesMap.get(contract.employer_id)
-            : null;
-        const promoter = contract.promoter_id
-          ? promotersMap.get(contract.promoter_id)
-          : null;
-
-        // Log warning if promoter_id exists but promoter data is missing
-        if (contract.promoter_id && !promoter) {
-          logger.warn('Promoter data not found for contract', {
-            contractId: contract.id,
-            promoterId: contract.promoter_id,
-            requestId,
-          }, 'ContractsAPI');
-        }
-
-        return {
+        contracts = fallbackData || [];
+        totalCount = fallbackCount;
+        // Transform fallback data as well (simplified since we don't have relationships)
+        contracts = contracts.map((contract: any) => ({
           ...contract,
-          first_party: firstParty,
-          second_party: secondParty,
-          promoters: promoter,  // ✅ FIX: Return as object, not array (matches TypeScript type definition)
-          // Ensure we have the right field names for the frontend
+          first_party: null,
+          second_party: null,
+          promoters: null,
           contract_start_date:
             contract.start_date || contract.contract_start_date,
           contract_end_date: contract.end_date || contract.contract_end_date,
@@ -405,90 +379,220 @@ async function handleContractsRequest(
             contract.contract_value ||
             contract.basic_salary ||
             contract.amount,
-        };
-      });
-    } catch (error) {
-      logger.warn('Contracts API: Contract fetch failed', {
-        error: (error as Error).message,
-        requestId,
-      }, 'ContractsAPI');
-      contracts = [];
+        }));
+      }
+    } else {
+      contracts = contractsData || [];
     }
 
-    // Get comprehensive metrics using centralized service
-    // This ensures consistency across all pages
-    let metrics;
-    try {
-      metrics = await getContractMetrics({
-        userId: user.id,
-        userRole: isAdmin ? 'admin' : 'user',
-        includeExpiringSoon: true,
-        expiryDaysThreshold: 30,
-      });
-      logger.info('Using centralized metrics', {
+    // Fetch related data separately and transform contracts
+    const partyIds = new Set();
+    const promoterIds = new Set();
+
+    contracts.forEach((contract: any) => {
+      if (contract.first_party_id) partyIds.add(contract.first_party_id);
+      if (contract.second_party_id) partyIds.add(contract.second_party_id);
+      if (contract.client_id) partyIds.add(contract.client_id);
+      if (contract.employer_id) partyIds.add(contract.employer_id);
+      if (contract.promoter_id) promoterIds.add(contract.promoter_id);
+    });
+
+    // Fetch parties data
+    let partiesData: any[] = [];
+    if (partyIds.size > 0) {
+      const { data: parties, error: partiesError } = await supabase
+        .from('parties')
+        .select('id, name_en, name_ar, crn, type')
+        .in('id', Array.from(partyIds));
+
+      if (!partiesError && parties) {
+        partiesData = parties;
+      }
+    }
+
+    // Fetch promoters data
+    let promotersData: any[] = [];
+    if (promoterIds.size > 0) {
+      const { data: promoters, error: promotersError } = await supabase
+        .from('promoters')
+        .select(
+          'id, name_en, name_ar, id_card_number, id_card_url, passport_url, status, mobile_number'
+        )
+        .in('id', Array.from(promoterIds));
+
+      if (promotersError) {
+        logger.warn(
+          'Contracts API: Error fetching promoters',
+          {
+            error: promotersError.message,
+            requestId,
+          },
+          'ContractsAPI'
+        );
+      }
+
+      if (!promotersError && promoters) {
+        promotersData = promoters;
+        logger.debug(
+          `Fetched ${promoters.length} promoters`,
+          { requestId },
+          'ContractsAPI'
+        );
+      }
+    }
+
+    // Create lookup maps
+    const partiesMap = new Map(partiesData.map(p => [p.id, p]));
+    const promotersMap = new Map(promotersData.map(p => [p.id, p]));
+
+    // Transform contracts to normalize party relationships
+    contracts = contracts.map((contract: any) => {
+      // Get party data from lookup maps
+      const firstParty = contract.first_party_id
+        ? partiesMap.get(contract.first_party_id)
+        : contract.client_id
+          ? partiesMap.get(contract.client_id)
+          : null;
+      const secondParty = contract.second_party_id
+        ? partiesMap.get(contract.second_party_id)
+        : contract.employer_id
+          ? partiesMap.get(contract.employer_id)
+          : null;
+      const promoter = contract.promoter_id
+        ? promotersMap.get(contract.promoter_id)
+        : null;
+
+      // Log warning if promoter_id exists but promoter data is missing
+      if (contract.promoter_id && !promoter) {
+        logger.warn(
+          'Promoter data not found for contract',
+          {
+            contractId: contract.id,
+            promoterId: contract.promoter_id,
+            requestId,
+          },
+          'ContractsAPI'
+        );
+      }
+
+      return {
+        ...contract,
+        first_party: firstParty,
+        second_party: secondParty,
+        promoters: promoter, // ✅ FIX: Return as object, not array (matches TypeScript type definition)
+        // Ensure we have the right field names for the frontend
+        contract_start_date:
+          contract.start_date || contract.contract_start_date,
+        contract_end_date: contract.end_date || contract.contract_end_date,
+        job_title: contract.title || contract.job_title,
+        contract_value:
+          contract.value ||
+          contract.contract_value ||
+          contract.basic_salary ||
+          contract.amount,
+      };
+    });
+  } catch (error) {
+    logger.warn(
+      'Contracts API: Contract fetch failed',
+      {
+        error: (error as Error).message,
+        requestId,
+      },
+      'ContractsAPI'
+    );
+    contracts = [];
+  }
+
+  // Get comprehensive metrics using centralized service
+  // This ensures consistency across all pages
+  let metrics;
+  try {
+    metrics = await getContractMetrics({
+      userId: user.id,
+      userRole: isAdmin ? 'admin' : 'user',
+      includeExpiringSoon: true,
+      expiryDaysThreshold: 30,
+    });
+    logger.info(
+      'Using centralized metrics',
+      {
         total: metrics.total,
         active: metrics.active,
         pending: metrics.pending,
         scope: isAdmin ? 'admin (all contracts)' : 'user (own contracts)',
         requestId,
-      }, 'ContractsAPI');
-    } catch (error) {
-      logger.warn('Failed to get centralized metrics, using fallback', {
+      },
+      'ContractsAPI'
+    );
+  } catch (error) {
+    logger.warn(
+      'Failed to get centralized metrics, using fallback',
+      {
         error: (error as Error).message,
         requestId,
-      }, 'ContractsAPI');
-      // Fallback to basic counts if metrics service fails
-      const { count: totalCount } = await supabase
-        .from('contracts')
-        .select('*', { count: 'exact', head: true });
-      
-      metrics = {
-        total: totalCount || 0,
-        active: 0,
-        pending: 0,
-        approved: 0,
-        expired: 0,
-        completed: 0,
-        cancelled: 0,
-        expiringSoon: 0,
-        totalValue: 0,
-        averageDuration: 0,
-        byStatus: {},
-      };
-    }
+      },
+      'ContractsAPI'
+    );
+    // Fallback to basic counts if metrics service fails
+    const { count: totalCount } = await supabase
+      .from('contracts')
+      .select('*', { count: 'exact', head: true });
 
-    // Map centralized metrics to legacy stats format for backward compatibility
-    const stats = {
-      total: contracts.length, // Current page count
-      active: metrics.active,
-      expired: metrics.expired,
-      upcoming: 0, // Not in centralized metrics yet
-      unknown: 0,
-      expiring_soon: metrics.expiringSoon,
-      total_value: metrics.totalValue,
-      avg_duration: metrics.averageDuration,
-      generated: 0,
-      pending: metrics.pending,
-      completed: metrics.completed,
-      cancelled: metrics.cancelled,
+    metrics = {
+      total: totalCount || 0,
+      active: 0,
+      pending: 0,
+      approved: 0,
+      expired: 0,
+      completed: 0,
+      cancelled: 0,
+      expiringSoon: 0,
+      totalValue: 0,
+      averageDuration: 0,
+      byStatus: {},
     };
+  }
+
+  // Map centralized metrics to legacy stats format for backward compatibility
+  const stats = {
+    total: contracts.length, // Current page count
+    active: metrics.active,
+    expired: metrics.expired,
+    upcoming: 0, // Not in centralized metrics yet
+    unknown: 0,
+    expiring_soon: metrics.expiringSoon,
+    total_value: metrics.totalValue,
+    avg_duration: metrics.averageDuration,
+    generated: 0,
+    pending: metrics.pending,
+    completed: metrics.completed,
+    cancelled: metrics.cancelled,
+  };
 
   // ✅ FIX DATA INCONSISTENCY: Use totalCount from query, not metrics.total
   // This ensures the count matches the filtered results
-  const actualTotal = totalCount !== null && totalCount !== undefined ? totalCount : contracts.length;
-  
-  logger.info('Successfully fetched contracts', {
-    requestId,
-    status: status || 'all',
-    pageSize: contracts.length,
-    totalFiltered: actualTotal,
-    page,
-    limit,
-    pending: stats.pending,
-    active: stats.active,
-    sampleIds: contracts.slice(0, 3).map((c) => c.id),
-    timestamp: new Date().toISOString(),
-  }, 'ContractsAPI');
+  const actualTotal =
+    totalCount !== null && totalCount !== undefined
+      ? totalCount
+      : contracts.length;
+
+  logger.info(
+    'Successfully fetched contracts',
+    {
+      requestId,
+      status: status || 'all',
+      pageSize: contracts.length,
+      totalFiltered: actualTotal,
+      page,
+      limit,
+      pending: stats.pending,
+      active: stats.active,
+      sampleIds: contracts.slice(0, 3).map(c => c.id),
+      timestamp: new Date().toISOString(),
+    },
+    'ContractsAPI'
+  );
 
   return {
     success: true,
@@ -500,7 +604,7 @@ async function handleContractsRequest(
     totalPages: Math.ceil((actualTotal || 0) / limit),
     currentPage: page,
     pageSize: limit,
-    hasNextPage: (page * limit) < (actualTotal || 0),
+    hasNextPage: page * limit < (actualTotal || 0),
     hasPreviousPage: page > 1,
     // Global metrics (not filtered by current status)
     globalMetrics: {
@@ -532,11 +636,7 @@ async function handleContractsRequest(
 }
 
 export const POST = withAnyRBAC(
-  [
-    'contract:create:own',
-    'contract:generate:own',
-    'contract:message:own',
-  ],
+  ['contract:create:own', 'contract:generate:own', 'contract:message:own'],
   async (request: NextRequest) => {
     try {
       const supabase = await createClient();
@@ -661,19 +761,23 @@ export const POST = withAnyRBAC(
       const intFirstPartyId = validClientId ? validClientId : undefined;
       const intSecondPartyId = validEmployerId ? validEmployerId : undefined;
 
-      logger.debug('Contract creation debug info', {
-        originalClientId: clientId,
-        originalEmployerId: employerId,
-        originalPromoterId: promoterId,
-        validClientId,
-        validEmployerId,
-        validPromoterId,
-        uuidClientId,
-        uuidEmployerId,
-        uuidPromoterId,
-        contractType,
-        title,
-      }, 'ContractsAPI');
+      logger.debug(
+        'Contract creation debug info',
+        {
+          originalClientId: clientId,
+          originalEmployerId: employerId,
+          originalPromoterId: promoterId,
+          validClientId,
+          validEmployerId,
+          validPromoterId,
+          uuidClientId,
+          uuidEmployerId,
+          uuidPromoterId,
+          contractType,
+          title,
+        },
+        'ContractsAPI'
+      );
 
       const variantsRaw: Record<string, any>[] = [
         // Variant A: Complete schema with all fields (preferred)

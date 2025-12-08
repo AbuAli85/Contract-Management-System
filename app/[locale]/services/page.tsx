@@ -94,9 +94,14 @@ function ServicesListContent() {
         const transformedServices: Service[] = data.map((service: any) => ({
           id: service.id,
           service_name: service.service_name,
-          status: (service.status === 'pending' || service.status === 'approved' || service.status === 'rejected' || service.status === 'active' || service.status === 'inactive')
-            ? service.status
-            : 'pending' as Service['status'],
+          status:
+            service.status === 'pending' ||
+            service.status === 'approved' ||
+            service.status === 'rejected' ||
+            service.status === 'active' ||
+            service.status === 'inactive'
+              ? service.status
+              : ('pending' as Service['status']),
           provider_id: service.provider_id,
           provider_name: service.profiles?.full_name || 'Unknown Provider',
           created_at: service.created_at,
@@ -143,13 +148,18 @@ function ServicesListContent() {
   const handleStatusUpdate = (serviceId: string, newStatus: string) => {
     setServices(prev =>
       prev.map(service =>
-        service.id === serviceId 
-          ? { 
-              ...service, 
-              status: (newStatus === 'pending' || newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'active' || newStatus === 'inactive')
-                ? newStatus as Service['status']
-                : service.status
-            } 
+        service.id === serviceId
+          ? {
+              ...service,
+              status:
+                newStatus === 'pending' ||
+                newStatus === 'approved' ||
+                newStatus === 'rejected' ||
+                newStatus === 'active' ||
+                newStatus === 'inactive'
+                  ? (newStatus as Service['status'])
+                  : service.status,
+            }
           : service
       )
     );

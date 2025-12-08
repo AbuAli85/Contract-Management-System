@@ -16,9 +16,6 @@ export default function PromotersPage({
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
-    <PromotersPageClient 
-      locale={params.locale} 
-      isDevelopment={isDevelopment} 
-    />
+    <PromotersPageClient locale={params.locale} isDevelopment={isDevelopment} />
   );
 }

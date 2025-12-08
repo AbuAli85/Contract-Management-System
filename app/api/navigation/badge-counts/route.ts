@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /api/navigation/badge-counts
  * Returns badge counts for navigation items
- * 
+ *
  * Returns meaningful counts that users should act on:
  * - Critical/expiring items for promoters
  * - Pending approvals for contracts
@@ -156,4 +156,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

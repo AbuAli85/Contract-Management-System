@@ -11,7 +11,14 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, HardDrive, FileImage, Database, RefreshCw, FolderOpen } from 'lucide-react';
+import {
+  Loader2,
+  HardDrive,
+  FileImage,
+  Database,
+  RefreshCw,
+  FolderOpen,
+} from 'lucide-react';
 
 interface StorageStats {
   totalFiles: number;
@@ -75,20 +82,27 @@ export default function StorageAnalysisPage() {
 
       const dbStatsData = {
         totalPromoters: promoters?.length || 0,
-        promotersWithIdUrl: promoters?.filter(p => p.id_card_url && p.id_card_url.trim() !== '').length || 0,
-        promotersWithPassportUrl: promoters?.filter(p => p.passport_url && p.passport_url.trim() !== '').length || 0,
-        promotersWithBothUrls: promoters?.filter(p => 
-          p.id_card_url && p.id_card_url.trim() !== '' && 
-          p.passport_url && p.passport_url.trim() !== ''
-        ).length || 0,
+        promotersWithIdUrl:
+          promoters?.filter(p => p.id_card_url && p.id_card_url.trim() !== '')
+            .length || 0,
+        promotersWithPassportUrl:
+          promoters?.filter(p => p.passport_url && p.passport_url.trim() !== '')
+            .length || 0,
+        promotersWithBothUrls:
+          promoters?.filter(
+            p =>
+              p.id_card_url &&
+              p.id_card_url.trim() !== '' &&
+              p.passport_url &&
+              p.passport_url.trim() !== ''
+          ).length || 0,
       };
 
       setDbStats(dbStatsData);
 
       // Try to list files from storage bucket
       try {
-        const { data: files, error: storageError } = await supabase
-          .storage
+        const { data: files, error: storageError } = await supabase.storage
           .from('promoter-documents')
           .list('', {
             limit: 1000,
@@ -98,19 +112,30 @@ export default function StorageAnalysisPage() {
         if (storageError) {
           console.error('Storage list error:', storageError);
           // This is expected if we don't have direct storage access
-          setError('Note: Direct storage listing requires elevated permissions. Showing database URL statistics instead.');
+          setError(
+            'Note: Direct storage listing requires elevated permissions. Showing database URL statistics instead.'
+          );
         }
 
         if (files && files.length > 0) {
-          const totalSize = files.reduce((sum, file) => sum + (file.metadata?.size || 0), 0);
-          const idCards = files.filter(f => f.name.includes('id') || f.name.includes('card')).length;
-          const passports = files.filter(f => f.name.includes('passport')).length;
+          const totalSize = files.reduce(
+            (sum, file) => sum + (file.metadata?.size || 0),
+            0
+          );
+          const idCards = files.filter(
+            f => f.name.includes('id') || f.name.includes('card')
+          ).length;
+          const passports = files.filter(f =>
+            f.name.includes('passport')
+          ).length;
 
           const filesList = files.map(file => ({
             name: file.name,
             size: file.metadata?.size || 0,
             created_at: file.created_at || '',
-            url: supabase.storage.from('promoter-documents').getPublicUrl(file.name).data.publicUrl,
+            url: supabase.storage
+              .from('promoter-documents')
+              .getPublicUrl(file.name).data.publicUrl,
           }));
 
           setStats({
@@ -119,20 +144,23 @@ export default function StorageAnalysisPage() {
             totalPassports: passports,
             totalSizeBytes: totalSize,
             totalSizeMB: parseFloat((totalSize / (1024 * 1024)).toFixed(2)),
-            promotersWithDocs: new Set(files.map(f => f.name.split('/')[0])).size,
+            promotersWithDocs: new Set(files.map(f => f.name.split('/')[0]))
+              .size,
             filesList,
           });
         } else {
           // Use database statistics as fallback
           setStats({
-            totalFiles: dbStatsData.promotersWithIdUrl + dbStatsData.promotersWithPassportUrl,
+            totalFiles:
+              dbStatsData.promotersWithIdUrl +
+              dbStatsData.promotersWithPassportUrl,
             totalIdCards: dbStatsData.promotersWithIdUrl,
             totalPassports: dbStatsData.promotersWithPassportUrl,
             totalSizeBytes: 0,
             totalSizeMB: 0,
             promotersWithDocs: new Set([
-              ...promoters?.filter(p => p.id_card_url).map(p => p.id) || [],
-              ...promoters?.filter(p => p.passport_url).map(p => p.id) || [],
+              ...(promoters?.filter(p => p.id_card_url).map(p => p.id) || []),
+              ...(promoters?.filter(p => p.passport_url).map(p => p.id) || []),
             ]).size,
             filesList: [],
           });
@@ -141,21 +169,26 @@ export default function StorageAnalysisPage() {
         console.error('Storage access error:', storageErr);
         // Use database statistics as fallback
         setStats({
-          totalFiles: dbStatsData.promotersWithIdUrl + dbStatsData.promotersWithPassportUrl,
+          totalFiles:
+            dbStatsData.promotersWithIdUrl +
+            dbStatsData.promotersWithPassportUrl,
           totalIdCards: dbStatsData.promotersWithIdUrl,
           totalPassports: dbStatsData.promotersWithPassportUrl,
           totalSizeBytes: 0,
           totalSizeMB: 0,
           promotersWithDocs: new Set([
-            ...promoters?.filter(p => p.id_card_url).map(p => p.id) || [],
-            ...promoters?.filter(p => p.passport_url).map(p => p.id) || [],
+            ...(promoters?.filter(p => p.id_card_url).map(p => p.id) || []),
+            ...(promoters?.filter(p => p.passport_url).map(p => p.id) || []),
           ]).size,
           filesList: [],
         });
       }
     } catch (error) {
       console.error('Error in fetchStorageStats:', error);
-      setError('Failed to load statistics: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setError(
+        'Failed to load statistics: ' +
+          (error instanceof Error ? error.message : 'Unknown error')
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -186,7 +219,9 @@ export default function StorageAnalysisPage() {
     <div className='container mx-auto space-y-8 p-6'>
       <div className='mb-8 flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Storage Analysis</h1>
+          <h1 className='text-3xl font-bold tracking-tight'>
+            Storage Analysis
+          </h1>
           <p className='text-muted-foreground mt-2'>
             Analysis of promoter documents in Supabase Storage
           </p>
@@ -197,7 +232,9 @@ export default function StorageAnalysisPage() {
           )}
         </div>
         <Button onClick={handleRefresh} disabled={refreshing} variant='outline'>
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`}
+          />
           Refresh
         </Button>
       </div>
@@ -208,8 +245,12 @@ export default function StorageAnalysisPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <FileImage className='h-8 w-8 mx-auto text-blue-600 mb-2' />
-              <p className='text-4xl font-bold text-blue-700'>{stats.totalFiles}</p>
-              <p className='text-sm text-muted-foreground mt-1'>Total Documents</p>
+              <p className='text-4xl font-bold text-blue-700'>
+                {stats.totalFiles}
+              </p>
+              <p className='text-sm text-muted-foreground mt-1'>
+                Total Documents
+              </p>
               <p className='text-xs text-blue-600 mt-1'>in storage/database</p>
             </div>
           </CardContent>
@@ -219,7 +260,9 @@ export default function StorageAnalysisPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <div className='text-3xl mb-2'>🆔</div>
-              <p className='text-4xl font-bold text-green-700'>{stats.totalIdCards}</p>
+              <p className='text-4xl font-bold text-green-700'>
+                {stats.totalIdCards}
+              </p>
               <p className='text-sm text-muted-foreground mt-1'>ID Cards</p>
               <p className='text-xs text-green-600 mt-1'>uploaded</p>
             </div>
@@ -230,7 +273,9 @@ export default function StorageAnalysisPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <div className='text-3xl mb-2'>📕</div>
-              <p className='text-4xl font-bold text-purple-700'>{stats.totalPassports}</p>
+              <p className='text-4xl font-bold text-purple-700'>
+                {stats.totalPassports}
+              </p>
               <p className='text-sm text-muted-foreground mt-1'>Passports</p>
               <p className='text-xs text-purple-600 mt-1'>uploaded</p>
             </div>
@@ -241,7 +286,9 @@ export default function StorageAnalysisPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <FolderOpen className='h-8 w-8 mx-auto text-orange-600 mb-2' />
-              <p className='text-4xl font-bold text-orange-700'>{stats.promotersWithDocs}</p>
+              <p className='text-4xl font-bold text-orange-700'>
+                {stats.promotersWithDocs}
+              </p>
               <p className='text-sm text-muted-foreground mt-1'>Promoters</p>
               <p className='text-xs text-orange-600 mt-1'>with documents</p>
             </div>
@@ -265,16 +312,23 @@ export default function StorageAnalysisPage() {
                 <p className='text-2xl font-bold'>{stats.totalSizeMB} MB</p>
               </div>
               <div>
-                <p className='text-sm text-muted-foreground'>Average per File</p>
+                <p className='text-sm text-muted-foreground'>
+                  Average per File
+                </p>
                 <p className='text-2xl font-bold'>
-                  {stats.totalFiles > 0 
-                    ? (stats.totalSizeMB / stats.totalFiles).toFixed(2) 
-                    : '0'} MB
+                  {stats.totalFiles > 0
+                    ? (stats.totalSizeMB / stats.totalFiles).toFixed(2)
+                    : '0'}{' '}
+                  MB
                 </p>
               </div>
               <div>
-                <p className='text-sm text-muted-foreground'>Total Storage Used</p>
-                <p className='text-2xl font-bold'>{(stats.totalSizeBytes / 1024).toFixed(0)} KB</p>
+                <p className='text-sm text-muted-foreground'>
+                  Total Storage Used
+                </p>
+                <p className='text-2xl font-bold'>
+                  {(stats.totalSizeBytes / 1024).toFixed(0)} KB
+                </p>
               </div>
             </div>
           </CardContent>
@@ -300,29 +354,48 @@ export default function StorageAnalysisPage() {
             </div>
             <div className='space-y-2'>
               <p className='text-sm text-muted-foreground'>With ID Card URL</p>
-              <p className='text-3xl font-bold text-green-600'>{dbStats.promotersWithIdUrl}</p>
+              <p className='text-3xl font-bold text-green-600'>
+                {dbStats.promotersWithIdUrl}
+              </p>
               <Badge variant='outline' className='text-xs'>
-                {dbStats.totalPromoters > 0 
-                  ? ((dbStats.promotersWithIdUrl / dbStats.totalPromoters) * 100).toFixed(1) 
-                  : '0'}%
+                {dbStats.totalPromoters > 0
+                  ? (
+                      (dbStats.promotersWithIdUrl / dbStats.totalPromoters) *
+                      100
+                    ).toFixed(1)
+                  : '0'}
+                %
               </Badge>
             </div>
             <div className='space-y-2'>
               <p className='text-sm text-muted-foreground'>With Passport URL</p>
-              <p className='text-3xl font-bold text-blue-600'>{dbStats.promotersWithPassportUrl}</p>
+              <p className='text-3xl font-bold text-blue-600'>
+                {dbStats.promotersWithPassportUrl}
+              </p>
               <Badge variant='outline' className='text-xs'>
-                {dbStats.totalPromoters > 0 
-                  ? ((dbStats.promotersWithPassportUrl / dbStats.totalPromoters) * 100).toFixed(1) 
-                  : '0'}%
+                {dbStats.totalPromoters > 0
+                  ? (
+                      (dbStats.promotersWithPassportUrl /
+                        dbStats.totalPromoters) *
+                      100
+                    ).toFixed(1)
+                  : '0'}
+                %
               </Badge>
             </div>
             <div className='space-y-2'>
               <p className='text-sm text-muted-foreground'>With Both URLs</p>
-              <p className='text-3xl font-bold text-purple-600'>{dbStats.promotersWithBothUrls}</p>
+              <p className='text-3xl font-bold text-purple-600'>
+                {dbStats.promotersWithBothUrls}
+              </p>
               <Badge variant='outline' className='text-xs'>
-                {dbStats.totalPromoters > 0 
-                  ? ((dbStats.promotersWithBothUrls / dbStats.totalPromoters) * 100).toFixed(1) 
-                  : '0'}%
+                {dbStats.totalPromoters > 0
+                  ? (
+                      (dbStats.promotersWithBothUrls / dbStats.totalPromoters) *
+                      100
+                    ).toFixed(1)
+                  : '0'}
+                %
               </Badge>
             </div>
           </div>
@@ -341,14 +414,15 @@ export default function StorageAnalysisPage() {
           <CardContent>
             <div className='space-y-2 max-h-96 overflow-y-auto'>
               {stats.filesList.slice(0, 20).map((file, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className='flex items-center justify-between p-3 border rounded-lg hover:bg-accent'
                 >
                   <div className='flex-1'>
                     <p className='font-medium text-sm'>{file.name}</p>
                     <p className='text-xs text-muted-foreground'>
-                      {new Date(file.created_at).toLocaleDateString()} • {(file.size / 1024).toFixed(1)} KB
+                      {new Date(file.created_at).toLocaleDateString()} •{' '}
+                      {(file.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
                   <a
@@ -377,7 +451,12 @@ export default function StorageAnalysisPage() {
         <CardContent>
           <div className='flex items-center gap-4'>
             <div className='flex-1'>
-              <p className='text-sm mb-2'>Bucket: <code className='bg-white px-2 py-1 rounded text-xs'>promoter-documents</code></p>
+              <p className='text-sm mb-2'>
+                Bucket:{' '}
+                <code className='bg-white px-2 py-1 rounded text-xs'>
+                  promoter-documents
+                </code>
+              </p>
               <p className='text-xs text-muted-foreground'>
                 Project: reootcngcptfogfozlmz
               </p>
@@ -396,4 +475,3 @@ export default function StorageAnalysisPage() {
     </div>
   );
 }
-

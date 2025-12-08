@@ -23,10 +23,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user role - only admins can run full checks
@@ -106,4 +103,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

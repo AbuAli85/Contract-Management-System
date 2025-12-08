@@ -62,7 +62,14 @@ export const POST = withRBAC(
         );
       }
 
-      const headers = lines[0].split(',').map(h => h.trim());
+      const firstLine = lines[0];
+      if (!firstLine) {
+        return NextResponse.json(
+          { success: false, error: 'CSV file is empty' },
+          { status: 400 }
+        );
+      }
+      const headers = firstLine.split(',').map(h => h.trim());
       const dataRows = lines.slice(1);
 
       let processed = 0;

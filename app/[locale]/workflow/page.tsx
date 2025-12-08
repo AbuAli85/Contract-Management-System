@@ -36,10 +36,7 @@ export default function WorkflowPage() {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      <ComprehensiveWorkflowSystem
-        userRole={role}
-        userId={user?.id || ''}
-      />
+      <ComprehensiveWorkflowSystem userRole={role} userId={user?.id || ''} />
     </div>
   );
 }

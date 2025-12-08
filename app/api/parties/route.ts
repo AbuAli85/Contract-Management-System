@@ -8,7 +8,9 @@ import { withRBAC } from '@/lib/rbac/guard';
 export const dynamic = 'force-dynamic';
 
 // Check if RBAC bypass is enabled for debugging
-const RBAC_BYPASS = process.env.RBAC_BYPASS === 'true' || process.env.RBAC_ENFORCEMENT === 'disabled';
+const RBAC_BYPASS =
+  process.env.RBAC_BYPASS === 'true' ||
+  process.env.RBAC_ENFORCEMENT === 'disabled';
 
 // Validation schema for party data
 const partySchema = z.object({
@@ -39,18 +41,22 @@ const partySchema = z.object({
 async function handleGET(request: Request) {
   const startTime = Date.now();
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
+
   try {
     console.log(`[${requestId}] 🚀 Parties API Request started`);
-    
+
     // Validate environment variables
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_URL environment variable is not set');
+      throw new Error(
+        'NEXT_PUBLIC_SUPABASE_URL environment variable is not set'
+      );
     }
     if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is not set');
+      throw new Error(
+        'NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is not set'
+      );
     }
-    
+
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -96,63 +102,86 @@ async function handleGET(request: Request) {
         const authResult = await supabase.auth.getUser();
         user = authResult.data.user;
         authError = authResult.error;
-        
+
         if (authError) {
-          console.warn(`[${requestId}] ⚠️ Auth attempt ${authAttempts} failed:`, {
-            message: authError.message,
-            status: authError.status,
-          });
-          
+          console.warn(
+            `[${requestId}] ⚠️ Auth attempt ${authAttempts} failed:`,
+            {
+              message: authError.message,
+              status: authError.status,
+            }
+          );
+
           // Wait before retry (exponential backoff)
           if (authAttempts < maxAuthAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * authAttempts));
+            await new Promise(resolve =>
+              setTimeout(resolve, 1000 * authAttempts)
+            );
           }
         }
       } catch (error) {
-        console.error(`[${requestId}] 💥 Auth attempt ${authAttempts} threw error:`, error);
+        console.error(
+          `[${requestId}] 💥 Auth attempt ${authAttempts} threw error:`,
+          error
+        );
         authError = error;
-        
+
         if (authAttempts < maxAuthAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * authAttempts));
+          await new Promise(resolve =>
+            setTimeout(resolve, 1000 * authAttempts)
+          );
         }
       }
     }
 
     const authDuration = Date.now() - authStartTime;
-    console.log(`[${requestId}] 🔐 Auth check completed in ${authDuration}ms (${authAttempts} attempts)`);
+    console.log(
+      `[${requestId}] 🔐 Auth check completed in ${authDuration}ms (${authAttempts} attempts)`
+    );
 
     if (authError) {
-      console.error(`[${requestId}] ❌ Auth failed after ${authAttempts} attempts:`, {
-        message: authError.message,
-        status: authError.status,
-        attempts: authAttempts,
-      });
+      console.error(
+        `[${requestId}] ❌ Auth failed after ${authAttempts} attempts:`,
+        {
+          message: authError.message,
+          status: authError.status,
+          attempts: authAttempts,
+        }
+      );
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Authentication failed',
           message: authError.message,
-          details: process.env.NODE_ENV === 'development' ? {
-            attempts: authAttempts,
-            duration: `${authDuration}ms`,
-          } : undefined,
-        }, 
+          details:
+            process.env.NODE_ENV === 'development'
+              ? {
+                  attempts: authAttempts,
+                  duration: `${authDuration}ms`,
+                }
+              : undefined,
+        },
         { status: 401 }
       );
     }
 
     if (!user) {
-      console.warn(`[${requestId}] ⚠️ No authenticated user found after ${authAttempts} attempts`);
+      console.warn(
+        `[${requestId}] ⚠️ No authenticated user found after ${authAttempts} attempts`
+      );
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Unauthorized',
           message: 'You must be logged in to access this resource',
-          details: process.env.NODE_ENV === 'development' ? {
-            attempts: authAttempts,
-            duration: `${authDuration}ms`,
-          } : undefined,
-        }, 
+          details:
+            process.env.NODE_ENV === 'development'
+              ? {
+                  attempts: authAttempts,
+                  duration: `${authDuration}ms`,
+                }
+              : undefined,
+        },
         { status: 401 }
       );
     }
@@ -166,11 +195,11 @@ async function handleGET(request: Request) {
     );
     const offset = (page - 1) * limit;
 
-    console.log(`[${requestId}] 📊 Query params:`, { 
-      page, 
-      limit, 
+    console.log(`[${requestId}] 📊 Query params:`, {
+      page,
+      limit,
       offset,
-      userId: user.id 
+      userId: user.id,
     });
 
     // Fetch parties from the database with pagination and retry logic
@@ -184,66 +213,84 @@ async function handleGET(request: Request) {
     while (queryAttempts < maxQueryAttempts && !parties && !queryError) {
       queryAttempts++;
       try {
-        console.log(`[${requestId}] 📝 Database query attempt ${queryAttempts}`);
-        
+        console.log(
+          `[${requestId}] 📝 Database query attempt ${queryAttempts}`
+        );
+
         const queryResult = await supabase
           .from('parties')
           .select('*', { count: 'exact' })
           .order('created_at', { ascending: false })
           .range(offset, offset + limit - 1);
-        
+
         parties = queryResult.data;
         count = queryResult.count;
         queryError = queryResult.error;
-        
+
         if (queryError) {
-          console.warn(`[${requestId}] ⚠️ Query attempt ${queryAttempts} failed:`, {
-            message: queryError.message,
-            code: queryError.code,
-            hint: queryError.hint,
-          });
-          
+          console.warn(
+            `[${requestId}] ⚠️ Query attempt ${queryAttempts} failed:`,
+            {
+              message: queryError.message,
+              code: queryError.code,
+              hint: queryError.hint,
+            }
+          );
+
           // Wait before retry (exponential backoff)
           if (queryAttempts < maxQueryAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * queryAttempts));
+            await new Promise(resolve =>
+              setTimeout(resolve, 1000 * queryAttempts)
+            );
           }
         }
       } catch (error) {
-        console.error(`[${requestId}] 💥 Query attempt ${queryAttempts} threw error:`, error);
+        console.error(
+          `[${requestId}] 💥 Query attempt ${queryAttempts} threw error:`,
+          error
+        );
         queryError = error;
-        
+
         if (queryAttempts < maxQueryAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * queryAttempts));
+          await new Promise(resolve =>
+            setTimeout(resolve, 1000 * queryAttempts)
+          );
         }
       }
     }
 
     const queryDuration = Date.now() - queryStartTime;
-    console.log(`[${requestId}] 📝 Database query completed in ${queryDuration}ms (${queryAttempts} attempts)`);
+    console.log(
+      `[${requestId}] 📝 Database query completed in ${queryDuration}ms (${queryAttempts} attempts)`
+    );
 
     if (queryError) {
-      console.error(`[${requestId}] ❌ Database query failed after ${queryAttempts} attempts:`, {
-        message: queryError.message,
-        details: queryError.details,
-        hint: queryError.hint,
-        code: queryError.code,
-        attempts: queryAttempts,
-      });
-      
+      console.error(
+        `[${requestId}] ❌ Database query failed after ${queryAttempts} attempts:`,
+        {
+          message: queryError.message,
+          details: queryError.details,
+          hint: queryError.hint,
+          code: queryError.code,
+          attempts: queryAttempts,
+        }
+      );
+
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Failed to fetch parties',
           message: 'A database error occurred while fetching parties',
-          details: process.env.NODE_ENV === 'development' 
-            ? {
-                message: queryError.message,
-                code: queryError.code,
-                hint: queryError.hint,
-                attempts: queryAttempts,
-                duration: `${queryDuration}ms`,
-              }
-            : undefined,
+          details:
+            process.env.NODE_ENV === 'development'
+              ? {
+                  message: queryError.message,
+                  code: queryError.code,
+                  hint: queryError.hint,
+                  attempts: queryAttempts,
+                  duration: `${queryDuration}ms`,
+                }
+              : undefined,
         },
         { status: 500 }
       );
@@ -251,23 +298,29 @@ async function handleGET(request: Request) {
 
     // Validate and check results
     if (!parties) {
-      console.warn(`[${requestId}] ⚠️ Parties data is null - this might indicate a database issue`);
+      console.warn(
+        `[${requestId}] ⚠️ Parties data is null - this might indicate a database issue`
+      );
       parties = [];
     }
 
     if (!Array.isArray(parties)) {
-      console.error(`[${requestId}] ❌ Parties data is not an array:`, typeof parties);
+      console.error(
+        `[${requestId}] ❌ Parties data is not an array:`,
+        typeof parties
+      );
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Invalid data format',
           message: 'The server returned invalid data format',
-          details: process.env.NODE_ENV === 'development' 
-            ? {
-                dataType: typeof parties,
-                isArray: Array.isArray(parties),
-              }
-            : undefined,
+          details:
+            process.env.NODE_ENV === 'development'
+              ? {
+                  dataType: typeof parties,
+                  isArray: Array.isArray(parties),
+                }
+              : undefined,
         },
         { status: 500 }
       );
@@ -276,7 +329,9 @@ async function handleGET(request: Request) {
     if (parties.length === 0) {
       console.log(`[${requestId}] ℹ️ No parties found (empty result set)`);
     } else {
-      console.log(`[${requestId}] ✅ Retrieved ${parties.length} parties successfully`);
+      console.log(
+        `[${requestId}] ✅ Retrieved ${parties.length} parties successfully`
+      );
     }
 
     const totalDuration = Date.now() - startTime;
@@ -287,27 +342,32 @@ async function handleGET(request: Request) {
       breakdown: {
         auth: `${authDuration}ms`,
         query: `${queryDuration}ms`,
-      }
+      },
     });
 
     // Fetch contract counts for all parties
     const contractCountsStartTime = Date.now();
     let contractCounts: Record<string, { total: number; active: number }> = {};
-    
+
     try {
       console.log(`[${requestId}] 📊 Fetching contract counts for parties`);
-      
+
       // Get party IDs from the current batch
       const partyIds = parties.map(p => p.id);
-      
+
       // Query contracts to count by party
       // Check all possible foreign key columns: employer_id, client_id, first_party_id, second_party_id
       const { data: contractData, error: contractError } = await supabase
         .from('contracts')
-        .select('employer_id, client_id, first_party_id, second_party_id, status');
-      
+        .select(
+          'employer_id, client_id, first_party_id, second_party_id, status'
+        );
+
       if (contractError) {
-        console.warn(`[${requestId}] ⚠️ Failed to fetch contracts for counting:`, contractError.message);
+        console.warn(
+          `[${requestId}] ⚠️ Failed to fetch contracts for counting:`,
+          contractError.message
+        );
       } else if (contractData) {
         // Count contracts for each party
         contractData.forEach((contract: any) => {
@@ -322,32 +382,44 @@ async function handleGET(request: Request) {
             .filter(id => id != null) // Filter out null/undefined
             .map(id => String(id)) // Convert to string for safe comparison
             .filter(id => partyIds.includes(id)); // Check if in current batch
-          
+
           // Count unique party involvements
           const uniquePartyIds = [...new Set(partyIdFields)];
-          
+
           uniquePartyIds.forEach(partyId => {
             if (!contractCounts[partyId]) {
               contractCounts[partyId] = { total: 0, active: 0 };
             }
             contractCounts[partyId].total += 1;
-            
+
             // Count active contracts (active, pending, or approved status)
-            if (contract.status && ['active', 'pending', 'approved'].includes(contract.status.toLowerCase())) {
+            if (
+              contract.status &&
+              ['active', 'pending', 'approved'].includes(
+                contract.status.toLowerCase()
+              )
+            ) {
               contractCounts[partyId].active += 1;
             }
           });
         });
-        
-        console.log(`[${requestId}] ✅ Contract counts calculated for ${Object.keys(contractCounts).length} parties`);
+
+        console.log(
+          `[${requestId}] ✅ Contract counts calculated for ${Object.keys(contractCounts).length} parties`
+        );
       }
     } catch (error) {
-      console.error(`[${requestId}] ❌ Error fetching contract counts:`, error instanceof Error ? error.message : 'Unknown error');
+      console.error(
+        `[${requestId}] ❌ Error fetching contract counts:`,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
       // Continue with empty counts
     }
-    
+
     const contractCountsDuration = Date.now() - contractCountsStartTime;
-    console.log(`[${requestId}] 📊 Contract counts fetched in ${contractCountsDuration}ms`);
+    console.log(
+      `[${requestId}] 📊 Contract counts fetched in ${contractCountsDuration}ms`
+    );
 
     // Transform data to include contract counts with validation
     const partiesWithCounts = parties.map(party => {
@@ -373,7 +445,7 @@ async function handleGET(request: Request) {
           partyId: party.id,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
-        
+
         // Return a safe fallback
         return {
           id: party.id || 'unknown',
@@ -402,17 +474,20 @@ async function handleGET(request: Request) {
         hasPrev: page > 1,
       },
       timestamp: new Date().toISOString(),
-      _meta: process.env.NODE_ENV === 'development' ? {
-        requestId,
-        duration: `${totalDuration}ms`,
-        authAttempts,
-        queryAttempts,
-        breakdown: {
-          auth: `${authDuration}ms`,
-          query: `${queryDuration}ms`,
-          contractCounts: `${contractCountsDuration}ms`,
-        },
-      } : undefined,
+      _meta:
+        process.env.NODE_ENV === 'development'
+          ? {
+              requestId,
+              duration: `${totalDuration}ms`,
+              authAttempts,
+              queryAttempts,
+              breakdown: {
+                auth: `${authDuration}ms`,
+                query: `${queryDuration}ms`,
+                contractCounts: `${contractCountsDuration}ms`,
+              },
+            }
+          : undefined,
     };
 
     console.log(`[${requestId}] ✅ Response prepared:`, {
@@ -424,7 +499,7 @@ async function handleGET(request: Request) {
     return NextResponse.json(response);
   } catch (error) {
     const totalDuration = Date.now() - startTime;
-    
+
     // Enhanced error logging with more context
     const errorDetails = {
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -437,32 +512,43 @@ async function handleGET(request: Request) {
       method: request.method,
       userAgent: request.headers.get('user-agent'),
     };
-    
+
     console.error(`[${requestId}] 💥 Unexpected error:`, errorDetails);
-    
+
     // Log to external service if configured (e.g., Sentry, LogRocket)
     if (process.env.NODE_ENV === 'production') {
       // Example: Sentry.captureException(error, { extra: errorDetails });
-      console.error('Production error - consider logging to external service:', errorDetails);
+      console.error(
+        'Production error - consider logging to external service:',
+        errorDetails
+      );
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Internal server error',
         message: 'An unexpected error occurred while processing your request',
-        details: process.env.NODE_ENV === 'development'
-          ? {
-              message: error instanceof Error ? error.message : 'Unknown error',
-              type: error instanceof Error ? error.constructor.name : typeof error,
-              stack: error instanceof Error ? error.stack : undefined,
-            }
-          : undefined,
-        _meta: process.env.NODE_ENV === 'development' ? {
-          requestId,
-          duration: `${totalDuration}ms`,
-          timestamp: new Date().toISOString(),
-        } : undefined,
+        details:
+          process.env.NODE_ENV === 'development'
+            ? {
+                message:
+                  error instanceof Error ? error.message : 'Unknown error',
+                type:
+                  error instanceof Error
+                    ? error.constructor.name
+                    : typeof error,
+                stack: error instanceof Error ? error.stack : undefined,
+              }
+            : undefined,
+        _meta:
+          process.env.NODE_ENV === 'development'
+            ? {
+                requestId,
+                duration: `${totalDuration}ms`,
+                timestamp: new Date().toISOString(),
+              }
+            : undefined,
       },
       { status: 500 }
     );
@@ -470,11 +556,11 @@ async function handleGET(request: Request) {
 }
 
 // Export GET with optional RBAC protection
-export const GET = RBAC_BYPASS 
-  ? (async (request: Request) => {
+export const GET = RBAC_BYPASS
+  ? async (request: Request) => {
       console.log('⚠️ RBAC BYPASS ENABLED - Running without permission checks');
       return handleGET(request);
-    })
+    }
   : withRBAC('party:read:own', handleGET);
 
 export async function POST(request: Request) {

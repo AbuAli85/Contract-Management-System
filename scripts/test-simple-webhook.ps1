@@ -1,7 +1,14 @@
 # Test Simple Webhook Endpoint
+# SECURITY: This script uses environment variables for secrets
+# Set MAKE_WEBHOOK_SECRET in your environment before running
 Write-Host "Testing Simple Webhook Endpoint..." -ForegroundColor Cyan
 
-$webhookSecret = "make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806"
+$webhookSecret = $env:MAKE_WEBHOOK_SECRET
+if (-not $webhookSecret) {
+    Write-Host "ERROR: MAKE_WEBHOOK_SECRET environment variable is not set" -ForegroundColor Red
+    Write-Host "Set it with: `$env:MAKE_WEBHOOK_SECRET = 'your-secret-here'" -ForegroundColor Yellow
+    exit 1
+}
 $testData = @{
     contract_id = "test-001"
     contract_number = "TEST-001"

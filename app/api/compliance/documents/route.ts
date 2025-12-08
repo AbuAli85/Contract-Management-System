@@ -6,13 +6,13 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/compliance/documents
- * 
+ *
  * Returns comprehensive document compliance report including:
  * - Summary statistics (expired, expiring, compliant)
  * - Detailed alerts categorized by severity
  * - Breakdown by document type (ID cards vs passports)
  * - Compliance rate percentage
- * 
+ *
  * Used for:
  * - Compliance dashboard
  * - Proactive monitoring
@@ -37,11 +37,11 @@ export const GET = withRBAC('promoter:read:own', async () => {
       success: true,
       report,
       meta: {
-        totalAlerts: 
+        totalAlerts:
           report.alerts.critical.length +
           report.alerts.urgent.length +
           report.alerts.warning.length,
-        requiresImmediateAction: 
+        requiresImmediateAction:
           report.alerts.critical.length + report.alerts.urgent.length,
       },
     });
@@ -60,7 +60,7 @@ export const GET = withRBAC('promoter:read:own', async () => {
 
 /**
  * POST /api/compliance/documents/send-alerts
- * 
+ *
  * Manually trigger alerts for urgent documents
  * Should be called by cron job or admin action
  */
@@ -95,4 +95,3 @@ export async function POST() {
     );
   }
 }
-

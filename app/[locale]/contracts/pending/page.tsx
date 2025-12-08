@@ -12,26 +12,46 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Clock, Search, Filter, Eye, AlertTriangle, ShieldAlert, Mail, RefreshCw, Loader2, CheckCircle, XCircle, Edit, Send, Users, FileText, MoreHorizontal } from 'lucide-react';
+import {
+  Clock,
+  Search,
+  Filter,
+  Eye,
+  AlertTriangle,
+  ShieldAlert,
+  Mail,
+  RefreshCw,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Edit,
+  Send,
+  Users,
+  FileText,
+  MoreHorizontal,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/use-permissions';
-import { ContractsCardSkeleton, ContractsTableSkeleton } from '@/components/contracts/ContractsSkeleton';
+import {
+  ContractsCardSkeleton,
+  ContractsTableSkeleton,
+} from '@/components/contracts/ContractsSkeleton';
 import { ContractsErrorBoundary } from '@/components/error-boundary/ContractsErrorBoundary';
 import { performanceMonitor } from '@/lib/performance-monitor';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator 
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -61,7 +81,7 @@ function PendingContractsPageContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  
+
   // Action states
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [actionDialog, setActionDialog] = useState<{
@@ -87,11 +107,11 @@ function PendingContractsPageContent() {
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const forceLoadRef = useRef(false);
-  
+
   // Check permissions
   const permissions = usePermissions();
-  const hasPermission = useMemo(() => 
-    permissions.can('contract:read:own') || permissions.isAdmin || false, 
+  const hasPermission = useMemo(
+    () => permissions.can('contract:read:own') || permissions.isAdmin || false,
     [permissions.can, permissions.isAdmin]
   );
 
@@ -104,16 +124,16 @@ function PendingContractsPageContent() {
     }
 
     fetchAttemptedRef.current = true;
-    
+
     // ✅ FIX: Cancel previous request if still pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     // Create new AbortController for this request
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    
+
     // Setup timeout to abort request after 10 seconds
     const timeoutId = setTimeout(() => {
       console.warn('⏱️ Request timeout - aborting after 10 seconds');
@@ -128,27 +148,30 @@ function PendingContractsPageContent() {
     }, 3000);
 
     // Start performance tracking
-    const operationId = performanceMonitor.startOperation('fetch-pending-contracts', {
-      retryCount,
-      endpoint: '/api/contracts?status=pending',
-    });
+    const operationId = performanceMonitor.startOperation(
+      'fetch-pending-contracts',
+      {
+        retryCount,
+        endpoint: '/api/contracts?status=pending',
+      }
+    );
 
     const startTime = Date.now();
-    
+
     try {
       setLoading(true);
       setError(null);
       setPermissionError(false);
       setShowSlowLoadingMessage(false);
       setShowPartialResults(false);
-      
+
       console.log('🔍 Pending Contracts Debug:', {
         timestamp: new Date().toISOString(),
         endpoint: '/api/contracts?status=pending',
         timeout: '10 seconds',
-        retryCount
+        retryCount,
       });
-      
+
       const response = await fetch('/api/contracts?status=pending', {
         signal: controller.signal,
         headers: {
@@ -157,12 +180,12 @@ function PendingContractsPageContent() {
         // Add cache control to prevent stale data
         cache: 'no-store',
       });
-      
+
       if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
       console.log(`⏱️ API Response time: ${queryTime}ms`);
-      
+
       const data = await response.json();
 
       if (!mountedRef.current) return;
@@ -171,9 +194,13 @@ function PendingContractsPageContent() {
         // ✅ FIX: Clear timeouts on permission error
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
+
         // Permission denied
-        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Permission denied');
+        performanceMonitor.endOperation(
+          'fetch-pending-contracts',
+          false,
+          'Permission denied'
+        );
         setPermissionError(true);
         setError('Insufficient permissions to view pending contracts');
         console.error('❌ Permission denied for pending contracts:', data);
@@ -181,40 +208,55 @@ function PendingContractsPageContent() {
         // ✅ FIX: Clear timeouts on auth error
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
+
         // Not authenticated
-        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Not authenticated');
+        performanceMonitor.endOperation(
+          'fetch-pending-contracts',
+          false,
+          'Not authenticated'
+        );
         setError('Please log in to view pending contracts');
         console.error('❌ Authentication required for pending contracts');
       } else if (response.status === 504) {
         // ✅ FIX: Clear timeouts on server timeout
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
+
         // Gateway timeout
-        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Server timeout');
-        setError('Server timeout - the request took too long. Please try again.');
+        performanceMonitor.endOperation(
+          'fetch-pending-contracts',
+          false,
+          'Server timeout'
+        );
+        setError(
+          'Server timeout - the request took too long. Please try again.'
+        );
         console.error('❌ Server timeout for pending contracts:', {
           status: response.status,
           data,
-          queryTime: `${queryTime}ms`
+          queryTime: `${queryTime}ms`,
         });
       } else if (response.ok && data.success !== false) {
         // ✅ FIX: Clear timeouts on success
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
+
         // ✅ FIX: Handle both success=true and undefined success (backward compatibility)
         const contractsList = data.contracts || [];
         setContracts(contractsList);
         setError(null); // Clear any previous errors
-        
-        performanceMonitor.endOperation('fetch-pending-contracts', true, undefined, {
-          count: contractsList.length,
-          queryTime: `${queryTime}ms`,
-          requestId: data.requestId,
-        });
-        
+
+        performanceMonitor.endOperation(
+          'fetch-pending-contracts',
+          true,
+          undefined,
+          {
+            count: contractsList.length,
+            queryTime: `${queryTime}ms`,
+            requestId: data.requestId,
+          }
+        );
+
         console.log('✅ Loaded pending contracts:', {
           count: contractsList.length,
           queryTime: `${queryTime}ms`,
@@ -222,49 +264,69 @@ function PendingContractsPageContent() {
           totalPending: data.pendingContracts,
           stats: data.stats,
           requestId: data.requestId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        
+
         // Show helpful message if 0 results
         if (contractsList.length === 0) {
-          console.log('ℹ️ No pending contracts found - this is normal, not an error');
+          console.log(
+            'ℹ️ No pending contracts found - this is normal, not an error'
+          );
         }
       } else {
         // ✅ FIX: Clear timeouts on error
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
-        
-        performanceMonitor.endOperation('fetch-pending-contracts', false, data.error || 'Unknown error');
-        setError(data.error || data.message || 'Failed to fetch pending contracts');
+
+        performanceMonitor.endOperation(
+          'fetch-pending-contracts',
+          false,
+          data.error || 'Unknown error'
+        );
+        setError(
+          data.error || data.message || 'Failed to fetch pending contracts'
+        );
         console.error('❌ Error fetching pending contracts:', {
           status: response.status,
           data,
-          queryTime: `${queryTime}ms`
+          queryTime: `${queryTime}ms`,
         });
       }
     } catch (err: any) {
       if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
-      
+
       if (!mountedRef.current) return;
-      
+
       if (err.name === 'AbortError') {
-        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Request aborted/timeout');
-        setError('Request timeout - the server took too long to respond. Please try again.');
+        performanceMonitor.endOperation(
+          'fetch-pending-contracts',
+          false,
+          'Request aborted/timeout'
+        );
+        setError(
+          'Request timeout - the server took too long to respond. Please try again.'
+        );
         console.error('❌ Request timeout after 10 seconds:', {
           queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } else {
-        performanceMonitor.endOperation('fetch-pending-contracts', false, err.message || 'Network error');
-        setError(`Network error: ${err.message || 'Please check your connection and try again.'}`);
+        performanceMonitor.endOperation(
+          'fetch-pending-contracts',
+          false,
+          err.message || 'Network error'
+        );
+        setError(
+          `Network error: ${err.message || 'Please check your connection and try again.'}`
+        );
         console.error('❌ Exception fetching pending contracts:', {
           error: err,
           message: err.message,
           name: err.name,
           queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     } finally {
@@ -282,7 +344,7 @@ function PendingContractsPageContent() {
   // ✅ FIX: Simplified useEffect with proper dependencies
   useEffect(() => {
     mountedRef.current = true;
-    
+
     // Log permission check for debugging
     console.log('📋 Pending Contracts - Permission Check:', {
       hasPermission,
@@ -291,13 +353,15 @@ function PendingContractsPageContent() {
       canRead: permissions.can('contract:read:own'),
       forceLoad,
       timestamp: new Date().toISOString(),
-      fetchAttempted: fetchAttemptedRef.current
+      fetchAttempted: fetchAttemptedRef.current,
     });
 
     // ✅ FIX: Force load after 4 seconds regardless of permissions (safety net)
     const forceLoadTimeout = setTimeout(() => {
       if (!fetchAttemptedRef.current) {
-        console.warn('⚠️ Force loading after 4 seconds - permissions check may be stuck');
+        console.warn(
+          '⚠️ Force loading after 4 seconds - permissions check may be stuck'
+        );
         forceLoadRef.current = true;
         setForceLoad(true);
       }
@@ -306,7 +370,9 @@ function PendingContractsPageContent() {
     // ✅ FIX: Add timeout to prevent infinite loading if permissions never load
     const permissionTimeout = setTimeout(() => {
       if (permissions.isLoading && !fetchAttemptedRef.current) {
-        console.warn('⚠️ Permissions taking too long to load, proceeding with fetch anyway...');
+        console.warn(
+          '⚠️ Permissions taking too long to load, proceeding with fetch anyway...'
+        );
         fetchPendingContracts();
       }
     }, 2000); // Reduced to 2 seconds for faster response
@@ -314,9 +380,11 @@ function PendingContractsPageContent() {
     if (!permissions.isLoading || forceLoadRef.current) {
       clearTimeout(permissionTimeout);
       clearTimeout(forceLoadTimeout);
-      
+
       if (hasPermission || forceLoadRef.current) {
-        console.log('✅ Permission granted (or forced), fetching pending contracts...');
+        console.log(
+          '✅ Permission granted (or forced), fetching pending contracts...'
+        );
         // Call fetchPendingContracts directly to avoid dependency loop
         fetchPendingContracts();
       } else {
@@ -324,7 +392,7 @@ function PendingContractsPageContent() {
           required: 'contract:read:own or admin role',
           hasPermission,
           isAdmin: permissions.isAdmin,
-          canRead: permissions.can('contract:read:own')
+          canRead: permissions.can('contract:read:own'),
         });
         setLoading(false);
         setPermissionError(true);
@@ -342,7 +410,7 @@ function PendingContractsPageContent() {
         abortControllerRef.current.abort();
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permissions.isLoading]); // ✅ FIX: Only depend on isLoading. fetchPendingContracts is intentionally excluded to prevent infinite loop
 
   // ✅ FIX: Add manual retry function
@@ -364,94 +432,103 @@ function PendingContractsPageContent() {
   }, []);
 
   // Action handlers
-  const handleContractAction = useCallback((action: string, contractId: string) => {
-    const actionConfig = {
-      approve: {
-        title: 'Approve Contract',
-        description: 'Are you sure you want to approve this contract? This will activate the contract.',
-        requiresReason: false,
-      },
-      reject: {
-        title: 'Reject Contract',
-        description: 'Are you sure you want to reject this contract? Please provide a reason.',
-        requiresReason: true,
-      },
-      request_changes: {
-        title: 'Request Changes',
-        description: 'Request changes to this contract. Please provide details about what needs to be changed.',
-        requiresReason: true,
-      },
-      send_to_legal: {
-        title: 'Send to Legal Review',
-        description: 'Send this contract to the legal team for review.',
-        requiresReason: false,
-      },
-      send_to_hr: {
-        title: 'Send to HR Review',
-        description: 'Send this contract to the HR team for review.',
-        requiresReason: false,
-      },
-    };
+  const handleContractAction = useCallback(
+    (action: string, contractId: string) => {
+      const actionConfig = {
+        approve: {
+          title: 'Approve Contract',
+          description:
+            'Are you sure you want to approve this contract? This will activate the contract.',
+          requiresReason: false,
+        },
+        reject: {
+          title: 'Reject Contract',
+          description:
+            'Are you sure you want to reject this contract? Please provide a reason.',
+          requiresReason: true,
+        },
+        request_changes: {
+          title: 'Request Changes',
+          description:
+            'Request changes to this contract. Please provide details about what needs to be changed.',
+          requiresReason: true,
+        },
+        send_to_legal: {
+          title: 'Send to Legal Review',
+          description: 'Send this contract to the legal team for review.',
+          requiresReason: false,
+        },
+        send_to_hr: {
+          title: 'Send to HR Review',
+          description: 'Send this contract to the HR team for review.',
+          requiresReason: false,
+        },
+      };
 
-    const config = actionConfig[action as keyof typeof actionConfig];
-    if (config) {
-      setActionDialog({
-        isOpen: true,
-        action,
-        contractId,
-        title: config.title,
-        description: config.description,
-        requiresReason: config.requiresReason,
-      });
-    }
-  }, []);
+      const config = actionConfig[action as keyof typeof actionConfig];
+      if (config) {
+        setActionDialog({
+          isOpen: true,
+          action,
+          contractId,
+          title: config.title,
+          description: config.description,
+          requiresReason: config.requiresReason,
+        });
+      }
+    },
+    []
+  );
 
-  const handleBulkAction = useCallback((action: string) => {
-    if (selectedContracts.length === 0) {
-      toast.error('Please select contracts to perform bulk action');
-      return;
-    }
+  const handleBulkAction = useCallback(
+    (action: string) => {
+      if (selectedContracts.length === 0) {
+        toast.error('Please select contracts to perform bulk action');
+        return;
+      }
 
-    const actionConfig = {
-      approve: {
-        title: 'Approve Selected Contracts',
-        description: `Are you sure you want to approve ${selectedContracts.length} contracts?`,
-        requiresReason: false,
-      },
-      reject: {
-        title: 'Reject Selected Contracts',
-        description: `Are you sure you want to reject ${selectedContracts.length} contracts? Please provide a reason.`,
-        requiresReason: true,
-      },
-      request_changes: {
-        title: 'Request Changes',
-        description: `Request changes for ${selectedContracts.length} contracts. Please provide details.`,
-        requiresReason: true,
-      },
-      send_to_legal: {
-        title: 'Send to Legal Review',
-        description: `Send ${selectedContracts.length} contracts to the legal team for review.`,
-        requiresReason: false,
-      },
-      send_to_hr: {
-        title: 'Send to HR Review',
-        description: `Send ${selectedContracts.length} contracts to the HR team for review.`,
-        requiresReason: false,
-      },
-    };
+      const actionConfig = {
+        approve: {
+          title: 'Approve Selected Contracts',
+          description: `Are you sure you want to approve ${selectedContracts.length} contracts?`,
+          requiresReason: false,
+        },
+        reject: {
+          title: 'Reject Selected Contracts',
+          description: `Are you sure you want to reject ${selectedContracts.length} contracts? Please provide a reason.`,
+          requiresReason: true,
+        },
+        request_changes: {
+          title: 'Request Changes',
+          description: `Request changes for ${selectedContracts.length} contracts. Please provide details.`,
+          requiresReason: true,
+        },
+        send_to_legal: {
+          title: 'Send to Legal Review',
+          description: `Send ${selectedContracts.length} contracts to the legal team for review.`,
+          requiresReason: false,
+        },
+        send_to_hr: {
+          title: 'Send to HR Review',
+          description: `Send ${selectedContracts.length} contracts to the HR team for review.`,
+          requiresReason: false,
+        },
+      };
 
-    const config = actionConfig[action as keyof typeof actionConfig];
-    if (config) {
-      setActionDialog({
-        isOpen: true,
-        action,
-        contractIds: selectedContracts,
-        title: config.title,
-        description: config.description,
-        requiresReason: config.requiresReason,
-      });
-    }
-  }, [selectedContracts]);
+      const config = actionConfig[action as keyof typeof actionConfig];
+      if (config) {
+        setActionDialog({
+          isOpen: true,
+          action,
+          contractIds: selectedContracts,
+          title: config.title,
+          description: config.description,
+          requiresReason: config.requiresReason,
+        });
+      }
+    },
+    [selectedContracts]
+  );
 
   const executeAction = useCallback(async () => {
     if (!actionDialog.action) return;
@@ -460,16 +537,19 @@ function PendingContractsPageContent() {
     try {
       // Handle individual contract actions
       if (actionDialog.contractId) {
-        const response = await fetch(`/api/contracts/${actionDialog.contractId}/approve`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: actionDialog.action,
-            reason: actionReason,
-          }),
-        });
+        const response = await fetch(
+          `/api/contracts/${actionDialog.contractId}/approve`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: actionDialog.action,
+              reason: actionReason,
+            }),
+          }
+        );
 
         const data = await response.json();
 
@@ -497,16 +577,24 @@ function PendingContractsPageContent() {
 
         const results = await Promise.all(promises);
         const successCount = results.filter(r => r.success).length;
-        
+
         if (successCount > 0) {
-          toast.success(`${successCount} contract${successCount > 1 ? 's' : ''} ${actionDialog.action}ed successfully`);
+          toast.success(
+            `${successCount} contract${successCount > 1 ? 's' : ''} ${actionDialog.action}ed successfully`
+          );
           fetchPendingContracts(); // Refresh the list
         } else {
           toast.error('All actions failed');
         }
       }
 
-      setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
+      setActionDialog({
+        isOpen: false,
+        action: '',
+        title: '',
+        description: '',
+        requiresReason: false,
+      });
       setActionReason('');
       setSelectedContracts([]);
     } catch (error) {
@@ -517,13 +605,16 @@ function PendingContractsPageContent() {
     }
   }, [actionDialog, actionReason, fetchPendingContracts]);
 
-  const handleSelectContract = useCallback((contractId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedContracts(prev => [...prev, contractId]);
-    } else {
-      setSelectedContracts(prev => prev.filter(id => id !== contractId));
-    }
-  }, []);
+  const handleSelectContract = useCallback(
+    (contractId: string, checked: boolean) => {
+      if (checked) {
+        setSelectedContracts(prev => [...prev, contractId]);
+      } else {
+        setSelectedContracts(prev => prev.filter(id => id !== contractId));
+      }
+    },
+    []
+  );
 
   const filteredContracts = contracts.filter(
     contract =>
@@ -545,22 +636,25 @@ function PendingContractsPageContent() {
         .includes(searchTerm.toLowerCase())
   );
 
-  const handleSelectAll = useCallback((checked: boolean) => {
-    if (checked) {
-      setSelectedContracts(filteredContracts.map(contract => contract.id));
-    } else {
-      setSelectedContracts([]);
-    }
-  }, [filteredContracts]);
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedContracts(filteredContracts.map(contract => contract.id));
+      } else {
+        setSelectedContracts([]);
+      }
+    },
+    [filteredContracts]
+  );
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
-    
+
     try {
       const date = new Date(dateString);
       // Check if date is valid
       if (isNaN(date.getTime())) return 'Invalid Date';
-      
+
       // Return DD/MM/YYYY format
       const day = String(date.getDate()).padStart(2, '0');
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -625,11 +719,19 @@ function PendingContractsPageContent() {
           <AlertTitle>Insufficient Permissions</AlertTitle>
           <AlertDescription className='space-y-3'>
             <p>
-              You don't have permission to view pending contracts. This page requires one of the following:
+              You don't have permission to view pending contracts. This page
+              requires one of the following:
             </p>
             <ul className='list-disc list-inside space-y-1 ml-2'>
-              <li><strong>Permission:</strong> <code className='bg-muted px-1.5 py-0.5 rounded'>contract:read:own</code></li>
-              <li><strong>OR Admin Role:</strong> System administrator access</li>
+              <li>
+                <strong>Permission:</strong>{' '}
+                <code className='bg-muted px-1.5 py-0.5 rounded'>
+                  contract:read:own
+                </code>
+              </li>
+              <li>
+                <strong>OR Admin Role:</strong> System administrator access
+              </li>
             </ul>
             <div className='flex gap-2 mt-4'>
               <Button variant='outline' asChild>
@@ -654,10 +756,14 @@ function PendingContractsPageContent() {
               <ShieldAlert className='mx-auto mb-4 h-12 w-12 text-red-500' />
               <h3 className='text-lg font-semibold mb-2'>Access Restricted</h3>
               <p className='text-sm mb-4'>
-                Contact your system administrator to request the necessary permissions.
+                Contact your system administrator to request the necessary
+                permissions.
               </p>
               <p className='text-xs text-muted-foreground'>
-                Required Permission: <code className='bg-muted px-2 py-1 rounded'>contract:read:own</code>
+                Required Permission:{' '}
+                <code className='bg-muted px-2 py-1 rounded'>
+                  contract:read:own
+                </code>
               </p>
             </div>
           </CardContent>
@@ -679,24 +785,27 @@ function PendingContractsPageContent() {
             </p>
           </div>
         </div>
-        
+
         {showSlowLoadingMessage ? (
           <Card>
             <CardContent className='py-12'>
               <div className='flex flex-col items-center justify-center space-y-4'>
                 <Loader2 className='h-12 w-12 animate-spin text-orange-600' />
                 <div className='text-center space-y-2'>
-                  <p className='text-base font-medium'>Loading pending contracts...</p>
+                  <p className='text-base font-medium'>
+                    Loading pending contracts...
+                  </p>
                   <p className='text-sm text-muted-foreground'>
-                    This is taking longer than expected. The server might be busy.
+                    This is taking longer than expected. The server might be
+                    busy.
                   </p>
                   <p className='text-xs text-muted-foreground'>
                     Request will timeout after 10 seconds
                   </p>
                 </div>
                 <div className='flex gap-2'>
-                  <Button 
-                    variant='outline' 
+                  <Button
+                    variant='outline'
                     size='sm'
                     onClick={handleCancel}
                     className='mt-4'
@@ -704,8 +813,8 @@ function PendingContractsPageContent() {
                     <AlertTriangle className='mr-2 h-4 w-4' />
                     Cancel Request
                   </Button>
-                  <Button 
-                    variant='default' 
+                  <Button
+                    variant='default'
                     size='sm'
                     onClick={handleRetry}
                     className='mt-4 bg-orange-600 hover:bg-orange-700'
@@ -752,9 +861,9 @@ function PendingContractsPageContent() {
               </ul>
             </div>
             <div className='flex flex-wrap gap-2 mt-4'>
-              <Button 
-                onClick={handleRetry} 
-                variant='default' 
+              <Button
+                onClick={handleRetry}
+                variant='default'
                 size='sm'
                 className='bg-orange-600 hover:bg-orange-700'
               >
@@ -797,7 +906,10 @@ function PendingContractsPageContent() {
                 {filteredContracts.length > 0 && (
                   <div className='flex items-center gap-2 ml-4'>
                     <Checkbox
-                      checked={selectedContracts.length === filteredContracts.length && filteredContracts.length > 0}
+                      checked={
+                        selectedContracts.length === filteredContracts.length &&
+                        filteredContracts.length > 0
+                      }
                       onCheckedChange={handleSelectAll}
                     />
                     <span className='text-sm text-muted-foreground'>
@@ -807,23 +919,25 @@ function PendingContractsPageContent() {
                 )}
               </CardTitle>
               <CardDescription>
-                {filteredContracts.length === contracts.length 
+                {filteredContracts.length === contracts.length
                   ? `${contracts.length} ${contracts.length === 1 ? 'contract' : 'contracts'} awaiting approval`
                   : `Showing ${filteredContracts.length} of ${contracts.length} contracts`}
               </CardDescription>
             </div>
             <div className='flex items-center gap-2'>
-              <Button 
-                variant='outline' 
+              <Button
+                variant='outline'
                 size='sm'
                 onClick={handleRetry}
                 disabled={loading}
                 className='hover:bg-orange-50 hover:border-orange-200'
               >
-                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                />
                 Refresh
               </Button>
-              
+
               {/* Bulk Actions */}
               {selectedContracts.length > 0 && (
                 <div className='flex items-center gap-2'>
@@ -838,25 +952,35 @@ function PendingContractsPageContent() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleBulkAction('approve')}>
+                      <DropdownMenuItem
+                        onClick={() => handleBulkAction('approve')}
+                      >
                         <CheckCircle className='mr-2 h-4 w-4' />
                         Approve Selected
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleBulkAction('reject')}>
+                      <DropdownMenuItem
+                        onClick={() => handleBulkAction('reject')}
+                      >
                         <XCircle className='mr-2 h-4 w-4' />
                         Reject Selected
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleBulkAction('send_to_legal')}>
+                      <DropdownMenuItem
+                        onClick={() => handleBulkAction('send_to_legal')}
+                      >
                         <FileText className='mr-2 h-4 w-4' />
                         Send to Legal
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleBulkAction('send_to_hr')}>
+                      <DropdownMenuItem
+                        onClick={() => handleBulkAction('send_to_hr')}
+                      >
                         <Users className='mr-2 h-4 w-4' />
                         Send to HR
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleBulkAction('request_changes')}>
+                      <DropdownMenuItem
+                        onClick={() => handleBulkAction('request_changes')}
+                      >
                         <Edit className='mr-2 h-4 w-4' />
                         Request Changes
                       </DropdownMenuItem>
@@ -871,7 +995,7 @@ function PendingContractsPageContent() {
                   </Button>
                 </div>
               )}
-              
+
               <div className='relative'>
                 <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400' />
                 <Input
@@ -892,18 +1016,21 @@ function PendingContractsPageContent() {
               </div>
               <div className='text-center space-y-2'>
                 <h3 className='text-lg font-semibold'>
-                  {searchTerm ? 'No Matching Contracts' : 'No Pending Contracts'}
+                  {searchTerm
+                    ? 'No Matching Contracts'
+                    : 'No Pending Contracts'}
                 </h3>
                 <p className='text-muted-foreground max-w-md'>
                   {searchTerm ? (
                     <>
-                      No contracts match your search criteria "<strong>{searchTerm}</strong>". 
-                      Try adjusting your search or clear filters.
+                      No contracts match your search criteria "
+                      <strong>{searchTerm}</strong>". Try adjusting your search
+                      or clear filters.
                     </>
                   ) : contracts.length === 0 ? (
                     <>
-                      There are currently no contracts awaiting approval. 
-                      All contracts have been reviewed and approved. Great work!
+                      There are currently no contracts awaiting approval. All
+                      contracts have been reviewed and approved. Great work!
                     </>
                   ) : (
                     'Filters removed all results. Try adjusting your filters.'
@@ -912,8 +1039,8 @@ function PendingContractsPageContent() {
               </div>
               <div className='flex gap-2'>
                 {searchTerm && (
-                  <Button 
-                    variant='default' 
+                  <Button
+                    variant='default'
                     size='sm'
                     onClick={() => setSearchTerm('')}
                     className='bg-orange-600 hover:bg-orange-700'
@@ -928,11 +1055,7 @@ function PendingContractsPageContent() {
                     View All Contracts
                   </Link>
                 </Button>
-                <Button 
-                  variant='outline' 
-                  size='sm'
-                  onClick={handleRetry}
-                >
+                <Button variant='outline' size='sm' onClick={handleRetry}>
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Refresh
                 </Button>
@@ -940,7 +1063,8 @@ function PendingContractsPageContent() {
               {!searchTerm && contracts.length === 0 && (
                 <div className='mt-4 p-4 bg-green-50 border border-green-200 rounded-lg'>
                   <p className='text-sm text-green-800 text-center'>
-                    ✅ All contracts are up to date. Check back later for new submissions.
+                    ✅ All contracts are up to date. Check back later for new
+                    submissions.
                   </p>
                 </div>
               )}
@@ -956,16 +1080,21 @@ function PendingContractsPageContent() {
                     <div className='flex items-center gap-3 flex-1'>
                       <Checkbox
                         checked={selectedContracts.includes(contract.id)}
-                        onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                        onCheckedChange={checked =>
+                          handleSelectContract(contract.id, checked as boolean)
+                        }
                       />
                       <div className='flex-1'>
                         <div className='mb-2 flex items-center gap-3'>
                           <h3 className='font-semibold'>
                             {contract.contract_number}
                           </h3>
-                          <ContractStatusBadge 
-                            status={contract.approval_status || contract.status as any} 
-                            size="sm"
+                          <ContractStatusBadge
+                            status={
+                              contract.approval_status ||
+                              (contract.status as any)
+                            }
+                            size='sm'
                           />
                         </div>
                         <p className='mb-1 text-sm text-muted-foreground'>
@@ -980,7 +1109,9 @@ function PendingContractsPageContent() {
                           </span>
                           <span>
                             Employee:{' '}
-                            {contract.promoters?.name_en || contract.promoter?.name_en || 'N/A'}
+                            {contract.promoters?.name_en ||
+                              contract.promoter?.name_en ||
+                              'N/A'}
                           </span>
                           <span>
                             Submitted:{' '}
@@ -999,7 +1130,7 @@ function PendingContractsPageContent() {
                           View
                         </Link>
                       </Button>
-                      
+
                       {/* Action Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -1008,25 +1139,48 @@ function PendingContractsPageContent() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
-                          <DropdownMenuItem onClick={() => handleContractAction('approve', contract.id)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleContractAction('approve', contract.id)
+                            }
+                          >
                             <CheckCircle className='mr-2 h-4 w-4' />
                             Approve Contract
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleContractAction('reject', contract.id)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleContractAction('reject', contract.id)
+                            }
+                          >
                             <XCircle className='mr-2 h-4 w-4' />
                             Reject Contract
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleContractAction('send_to_legal', contract.id)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleContractAction('send_to_legal', contract.id)
+                            }
+                          >
                             <FileText className='mr-2 h-4 w-4' />
                             Send to Legal
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleContractAction('send_to_hr', contract.id)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleContractAction('send_to_hr', contract.id)
+                            }
+                          >
                             <Users className='mr-2 h-4 w-4' />
                             Send to HR
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleContractAction('request_changes', contract.id)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleContractAction(
+                                'request_changes',
+                                contract.id
+                              )
+                            }
+                          >
                             <Edit className='mr-2 h-4 w-4' />
                             Request Changes
                           </DropdownMenuItem>
@@ -1042,40 +1196,62 @@ function PendingContractsPageContent() {
       </Card>
 
       {/* Action Dialog */}
-      <Dialog open={actionDialog.isOpen} onOpenChange={(open) => {
-        if (!open) {
-          setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
-          setActionReason('');
-        }
-      }}>
+      <Dialog
+        open={actionDialog.isOpen}
+        onOpenChange={open => {
+          if (!open) {
+            setActionDialog({
+              isOpen: false,
+              action: '',
+              title: '',
+              description: '',
+              requiresReason: false,
+            });
+            setActionReason('');
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{actionDialog.title}</DialogTitle>
             <DialogDescription>{actionDialog.description}</DialogDescription>
           </DialogHeader>
-          
+
           {actionDialog.requiresReason && (
             <div className='space-y-2'>
               <label className='text-sm font-medium'>
-                {actionDialog.action === 'reject' ? 'Reason for rejection' : 
-                 actionDialog.action === 'request_changes' ? 'Changes requested' : 'Reason'}
+                {actionDialog.action === 'reject'
+                  ? 'Reason for rejection'
+                  : actionDialog.action === 'request_changes'
+                    ? 'Changes requested'
+                    : 'Reason'}
               </label>
               <Textarea
-                placeholder={actionDialog.action === 'reject' ? 'Please provide a reason for rejecting this contract...' :
-                           actionDialog.action === 'request_changes' ? 'Please describe what changes are needed...' :
-                           'Please provide additional details...'}
+                placeholder={
+                  actionDialog.action === 'reject'
+                    ? 'Please provide a reason for rejecting this contract...'
+                    : actionDialog.action === 'request_changes'
+                      ? 'Please describe what changes are needed...'
+                      : 'Please provide additional details...'
+                }
                 value={actionReason}
-                onChange={(e) => setActionReason(e.target.value)}
+                onChange={e => setActionReason(e.target.value)}
                 rows={3}
               />
             </div>
           )}
-          
+
           <DialogFooter>
             <Button
               variant='outline'
               onClick={() => {
-                setActionDialog({ isOpen: false, action: '', title: '', description: '', requiresReason: false });
+                setActionDialog({
+                  isOpen: false,
+                  action: '',
+                  title: '',
+                  description: '',
+                  requiresReason: false,
+                });
                 setActionReason('');
               }}
               disabled={actionLoading}
@@ -1084,14 +1260,25 @@ function PendingContractsPageContent() {
             </Button>
             <Button
               onClick={executeAction}
-              disabled={actionLoading || (actionDialog.requiresReason && !actionReason.trim())}
+              disabled={
+                actionLoading ||
+                (actionDialog.requiresReason && !actionReason.trim())
+              }
             >
-              {actionLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-              {actionDialog.action === 'approve' ? 'Approve' :
-               actionDialog.action === 'reject' ? 'Reject' :
-               actionDialog.action === 'request_changes' ? 'Request Changes' :
-               actionDialog.action === 'send_to_legal' ? 'Send to Legal' :
-               actionDialog.action === 'send_to_hr' ? 'Send to HR' : 'Confirm'}
+              {actionLoading && (
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              )}
+              {actionDialog.action === 'approve'
+                ? 'Approve'
+                : actionDialog.action === 'reject'
+                  ? 'Reject'
+                  : actionDialog.action === 'request_changes'
+                    ? 'Request Changes'
+                    : actionDialog.action === 'send_to_legal'
+                      ? 'Send to Legal'
+                      : actionDialog.action === 'send_to_hr'
+                        ? 'Send to HR'
+                        : 'Confirm'}
             </Button>
           </DialogFooter>
         </DialogContent>

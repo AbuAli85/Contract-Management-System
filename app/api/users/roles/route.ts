@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Roles API: Starting GET request');
-    
+
     const supabase = await createClient();
 
     // Get current user to check permissions
@@ -20,9 +20,12 @@ export async function GET(request: NextRequest) {
 
     if (authError) {
       console.error('❌ Auth error:', authError);
-      return NextResponse.json({ error: 'Unauthorized', details: authError.message }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized', details: authError.message },
+        { status: 401 }
+      );
     }
-    
+
     if (!user) {
       console.error('❌ No user found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Try to get user profile from users table first, then profiles table
     let userProfile = null;
     let tableName = 'users';
-    
+
     const { data: usersData, error: usersError } = await supabase
       .from('users')
       .select('role')
@@ -45,7 +48,7 @@ export async function GET(request: NextRequest) {
       tableName = 'users';
     } else if (usersError) {
       console.log('⚠️ Users table query failed, trying profiles...');
-      
+
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('role')
@@ -109,7 +112,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('❌ Error in GET /api/users/roles:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: 'Internal server error', message: errorMessage },
       { status: 500 }
@@ -121,7 +125,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('🔍 Roles API: Starting POST request');
-    
+
     const supabase = await createClient();
 
     // Get current user to check permissions
@@ -132,9 +136,12 @@ export async function POST(request: NextRequest) {
 
     if (authError) {
       console.error('❌ Auth error:', authError);
-      return NextResponse.json({ error: 'Unauthorized', details: authError.message }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized', details: authError.message },
+        { status: 401 }
+      );
     }
-    
+
     if (!user) {
       console.error('❌ No user found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -144,7 +151,7 @@ export async function POST(request: NextRequest) {
 
     // Try to get user profile from users table first, then profiles table
     let userProfile = null;
-    
+
     const { data: usersData, error: usersError } = await supabase
       .from('users')
       .select('role')
@@ -155,7 +162,7 @@ export async function POST(request: NextRequest) {
       userProfile = usersData;
     } else if (usersError) {
       console.log('⚠️ Users table query failed, trying profiles...');
-      
+
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('role')
@@ -179,7 +186,10 @@ export async function POST(request: NextRequest) {
     if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
       console.error('❌ Insufficient permissions. Role:', userProfile?.role);
       return NextResponse.json(
-        { error: 'Only admins can create roles', currentRole: userProfile?.role },
+        {
+          error: 'Only admins can create roles',
+          currentRole: userProfile?.role,
+        },
         { status: 403 }
       );
     }
@@ -267,7 +277,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('❌ Error in POST /api/users/roles:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: 'Internal server error', message: errorMessage },
       { status: 500 }

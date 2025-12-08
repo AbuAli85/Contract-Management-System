@@ -3,7 +3,7 @@ import { getEmailStatus } from '@/lib/services/email.service';
 
 /**
  * Get Email Status API
- * 
+ *
  * Check the status of a sent email by message ID
  * GET /api/email-status/[messageId]
  */
@@ -27,9 +27,9 @@ export async function GET(
 
     if (!result.success) {
       return NextResponse.json(
-        { 
+        {
           error: result.error,
-          messageId 
+          messageId,
         },
         { status: 500 }
       );
@@ -42,12 +42,11 @@ export async function GET(
       details: result.details,
       interpretation: interpretStatus(result.status),
     });
-
   } catch (error) {
     console.error('❌ Error checking email status:', error);
     return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -60,7 +59,7 @@ export async function GET(
 function interpretStatus(status?: string): string {
   switch (status) {
     case 'delivered':
-      return '✅ Email was delivered to the recipient\'s mail server';
+      return "✅ Email was delivered to the recipient's mail server";
     case 'sent':
       return '📤 Email was sent but delivery not yet confirmed';
     case 'bounced':
@@ -77,10 +76,3 @@ function interpretStatus(status?: string): string {
       return '❓ Status unknown';
   }
 }
-
-
-
-
-
-
-

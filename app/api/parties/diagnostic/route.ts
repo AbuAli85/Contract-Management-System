@@ -29,7 +29,9 @@ export async function GET(request: Request) {
     details?: any
   ) => {
     diagnosticResults.checks.push({ name, status, message, details });
-    diagnosticResults.summary[status === 'pass' ? 'passed' : status === 'fail' ? 'failed' : 'warnings']++;
+    diagnosticResults.summary[
+      status === 'pass' ? 'passed' : status === 'fail' ? 'failed' : 'warnings'
+    ]++;
   };
 
   try {
@@ -37,11 +39,15 @@ export async function GET(request: Request) {
     console.log('🔍 Checking environment variables...');
     const envVars = {
       NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY:
+        !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       RBAC_ENFORCEMENT: process.env.RBAC_ENFORCEMENT || 'not set',
     };
 
-    if (envVars.NEXT_PUBLIC_SUPABASE_URL && envVars.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    if (
+      envVars.NEXT_PUBLIC_SUPABASE_URL &&
+      envVars.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
       addCheck(
         'Environment Variables',
         'pass',
@@ -91,19 +97,19 @@ export async function GET(request: Request) {
         'Supabase client created successfully'
       );
     } catch (error) {
-      addCheck(
-        'Supabase Client',
-        'fail',
-        'Failed to create Supabase client',
-        { error: error instanceof Error ? error.message : String(error) }
-      );
+      addCheck('Supabase Client', 'fail', 'Failed to create Supabase client', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return NextResponse.json(diagnosticResults);
     }
 
     // Check 3: Authentication
     console.log('🔍 Checking authentication...');
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
       if (authError) {
         addCheck(
@@ -120,20 +126,15 @@ export async function GET(request: Request) {
           { userId: null }
         );
       } else {
-        addCheck(
-          'Authentication',
-          'pass',
-          'User is authenticated',
-          { userId: user.id, email: user.email }
-        );
+        addCheck('Authentication', 'pass', 'User is authenticated', {
+          userId: user.id,
+          email: user.email,
+        });
       }
     } catch (error) {
-      addCheck(
-        'Authentication',
-        'fail',
-        'Authentication check failed',
-        { error: error instanceof Error ? error.message : String(error) }
-      );
+      addCheck('Authentication', 'fail', 'Authentication check failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // Check 4: Database Connection - Test parties table
@@ -242,12 +243,9 @@ export async function GET(request: Request) {
         );
       }
     } catch (error) {
-      addCheck(
-        'Sample Query',
-        'fail',
-        'Sample query threw an exception',
-        { error: error instanceof Error ? error.message : String(error) }
-      );
+      addCheck('Sample Query', 'fail', 'Sample query threw an exception', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // Overall status
@@ -255,8 +253,8 @@ export async function GET(request: Request) {
       diagnosticResults.summary.failed > 0
         ? 'FAILED'
         : diagnosticResults.summary.warnings > 0
-        ? 'WARNING'
-        : 'PASSED';
+          ? 'WARNING'
+          : 'PASSED';
 
     // Recommendations
     diagnosticResults.recommendations = [];
@@ -300,4 +298,3 @@ export async function GET(request: Request) {
     return NextResponse.json(diagnosticResults, { status: 500 });
   }
 }
-

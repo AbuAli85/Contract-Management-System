@@ -72,7 +72,9 @@ export const GET = withRBAC(
       }
 
       // Check if contract is approved and has PDF
-      const isApproved = contract.status === 'approved' || contract.approval_status === 'approved';
+      const isApproved =
+        contract.status === 'approved' ||
+        contract.approval_status === 'approved';
       const hasPDF = !!contract.pdf_url;
 
       if (!isApproved) {
@@ -96,7 +98,7 @@ export const GET = withRBAC(
       // Generate the actual PDF content using the contract data
       try {
         const pdfBuffer = await generateContractPDF(contract);
-        
+
         // Return the actual PDF content for download
         return new NextResponse(new Uint8Array(pdfBuffer), {
           status: 200,
@@ -109,7 +111,11 @@ export const GET = withRBAC(
       } catch (pdfError) {
         console.error('❌ PDF generation failed:', pdfError);
         return NextResponse.json(
-          { error: 'Failed to generate PDF', details: pdfError instanceof Error ? pdfError.message : 'Unknown error' },
+          {
+            error: 'Failed to generate PDF',
+            details:
+              pdfError instanceof Error ? pdfError.message : 'Unknown error',
+          },
           { status: 500 }
         );
       }

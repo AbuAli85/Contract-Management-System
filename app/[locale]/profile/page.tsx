@@ -5,7 +5,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/lib/auth-service';
 import { useToast } from '@/hooks/use-toast';
-import { profileFormSchema, passwordChangeSchema, type ProfileFormData, type PasswordChangeData } from '@/lib/schemas/profile-form-schema';
+import {
+  profileFormSchema,
+  passwordChangeSchema,
+  type ProfileFormData,
+  type PasswordChangeData,
+} from '@/lib/schemas/profile-form-schema';
 import { FormFieldWithValidation } from '@/components/ui/form-field-with-validation';
 import { SelectFieldWithValidation } from '@/components/ui/select-field-with-validation';
 import {
@@ -93,11 +98,14 @@ interface UserStats {
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   // State
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activity, setActivity] = useState<ActivityLog[]>([]);
-  const [stats, setStats] = useState<UserStats>({ contracts_created: 0, promoters_managed: 0 });
+  const [stats, setStats] = useState<UserStats>({
+    contracts_created: 0,
+    promoters_managed: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -143,7 +151,7 @@ export default function ProfilePage() {
   const fetchProfileData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch user profile
       const profileResponse = await fetch('/api/users/profile');
       if (profileResponse.ok) {
@@ -160,8 +168,10 @@ export default function ProfilePage() {
           preferences: {
             language: profileData.preferences?.language || 'en',
             timezone: profileData.preferences?.timezone || 'UTC',
-            email_notifications: profileData.preferences?.email_notifications !== false,
-            sms_notifications: profileData.preferences?.sms_notifications === true,
+            email_notifications:
+              profileData.preferences?.email_notifications !== false,
+            sms_notifications:
+              profileData.preferences?.sms_notifications === true,
           },
         });
       }
@@ -197,7 +207,7 @@ export default function ProfilePage() {
   const handleSaveProfile = async (data: ProfileFormData) => {
     try {
       setSaving(true);
-      
+
       const response = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -226,7 +236,9 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -252,7 +264,7 @@ export default function ProfilePage() {
 
     try {
       setUploadingAvatar(true);
-      
+
       const formData = new FormData();
       formData.append('avatar', file);
 
@@ -326,7 +338,7 @@ export default function ProfilePage() {
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map((n) => n[0])
+      .map(n => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -334,10 +346,10 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading profile...</span>
+      <div className='container mx-auto py-6'>
+        <div className='flex h-64 items-center justify-center'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary' />
+          <span className='ml-2'>Loading profile...</span>
         </div>
       </div>
     );
@@ -345,10 +357,10 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="container mx-auto py-6">
+      <div className='container mx-auto py-6'>
         <Card>
-          <CardContent className="flex h-32 flex-col items-center justify-center">
-            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+          <CardContent className='flex h-32 flex-col items-center justify-center'>
+            <AlertCircle className='h-8 w-8 text-red-500 mb-2' />
             <p>Failed to load profile data</p>
           </CardContent>
         </Card>
@@ -357,78 +369,78 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto space-y-6 py-6">
+    <div className='container mx-auto space-y-6 py-6'>
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Profile Settings</h1>
-          <p className="text-muted-foreground">
-          Manage your account settings and preferences
-        </p>
+          <h1 className='text-3xl font-bold'>Profile Settings</h1>
+          <p className='text-muted-foreground'>
+            Manage your account settings and preferences
+          </p>
         </div>
-        <Button 
-          onClick={profileForm.handleSubmit(handleSaveProfile)} 
+        <Button
+          onClick={profileForm.handleSubmit(handleSaveProfile)}
           disabled={saving || !profileForm.formState.isValid}
         >
           {saving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               Saving...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className='mr-2 h-4 w-4' />
               Save Changes
             </>
           )}
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className='grid gap-6 md:grid-cols-3'>
         {/* Left Column - Main Profile */}
-        <div className="space-y-6 md:col-span-2">
+        <div className='space-y-6 md:col-span-2'>
           {/* User Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <User className='h-5 w-5' />
                 User Information
               </CardTitle>
               <CardDescription>
                 Update your personal information
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className='space-y-6'>
               {/* Avatar Upload */}
-              <div className="flex items-center gap-4">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage 
-                    src={profileForm.watch('avatar_url') || profile.avatar_url} 
-                    alt={profile.full_name} 
+              <div className='flex items-center gap-4'>
+                <Avatar className='h-24 w-24'>
+                  <AvatarImage
+                    src={profileForm.watch('avatar_url') || profile.avatar_url}
+                    alt={profile.full_name}
                   />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className='text-2xl'>
                     {getInitials(profile.full_name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-2">
-                  <Label htmlFor="avatar-upload" className="cursor-pointer">
-                    <div className="flex items-center gap-2">
+                <div className='space-y-2'>
+                  <Label htmlFor='avatar-upload' className='cursor-pointer'>
+                    <div className='flex items-center gap-2'>
                       <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
+                        type='button'
+                        variant='outline'
+                        size='sm'
                         disabled={uploadingAvatar}
                         asChild
                       >
                         <span>
                           {uploadingAvatar ? (
                             <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                               Uploading...
                             </>
                           ) : (
                             <>
-                              <Camera className="mr-2 h-4 w-4" />
+                              <Camera className='mr-2 h-4 w-4' />
                               Change Avatar
                             </>
                           )}
@@ -437,16 +449,16 @@ export default function ProfilePage() {
                     </div>
                   </Label>
                   <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
+                    id='avatar-upload'
+                    type='file'
+                    accept='image/*'
+                    className='hidden'
                     onChange={handleAvatarUpload}
                     disabled={uploadingAvatar}
-                    aria-label="Upload avatar image"
-                    title="Upload avatar image"
+                    aria-label='Upload avatar image'
+                    title='Upload avatar image'
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className='text-xs text-muted-foreground'>
                     JPG, PNG or GIF. Max size 2MB.
                   </p>
                 </div>
@@ -455,18 +467,21 @@ export default function ProfilePage() {
               <Separator />
 
               {/* Form Fields */}
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className='grid gap-4 md:grid-cols-2'>
                 {/* Full Name - with validation */}
                 <Controller
-                  name="full_name"
+                  name='full_name'
                   control={profileForm.control}
                   render={({ field }) => (
-                    <div className="space-y-2">
-                      <Label htmlFor="full_name">Full Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <div className='space-y-2'>
+                      <Label htmlFor='full_name'>Full Name</Label>
+                      <div className='relative'>
+                        <User
+                          className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'
+                          aria-hidden='true'
+                        />
                         <Input
-                          id="full_name"
+                          id='full_name'
                           value={field.value}
                           onChange={field.onChange}
                           onBlur={field.onBlur}
@@ -475,8 +490,8 @@ export default function ProfilePage() {
                         />
                       </div>
                       {profileForm.formState.errors.full_name && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
+                        <p className='text-sm text-red-500 flex items-center gap-1'>
+                          <AlertCircle className='h-3 w-3' />
                           {profileForm.formState.errors.full_name.message}
                         </p>
                       )}
@@ -485,27 +500,30 @@ export default function ProfilePage() {
                 />
 
                 {/* Email - Read only */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <div className='space-y-2'>
+                  <Label htmlFor='email'>Email Address</Label>
+                  <div className='relative'>
+                    <Mail
+                      className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'
+                      aria-hidden='true'
+                    />
                     <Input
-                      id="email"
-                      type="email"
+                      id='email'
+                      type='email'
                       value={profile.email}
                       disabled
-                      className="pl-9 bg-muted"
+                      className='pl-9 bg-muted'
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <p className='text-xs text-muted-foreground flex items-center gap-1'>
                     {profile.email_verified ? (
                       <>
-                        <CheckCircle2 className="h-3 w-3 text-green-500" />
+                        <CheckCircle2 className='h-3 w-3 text-green-500' />
                         Verified
                       </>
                     ) : (
                       <>
-                        <AlertCircle className="h-3 w-3 text-amber-500" />
+                        <AlertCircle className='h-3 w-3 text-amber-500' />
                         Not verified
                       </>
                     )}
@@ -514,27 +532,30 @@ export default function ProfilePage() {
 
                 {/* Phone - with validation */}
                 <Controller
-                  name="phone"
+                  name='phone'
                   control={profileForm.control}
                   render={({ field }) => (
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <div className='space-y-2'>
+                      <Label htmlFor='phone'>Phone Number</Label>
+                      <div className='relative'>
+                        <Phone
+                          className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'
+                          aria-hidden='true'
+                        />
                         <Input
-                          id="phone"
-                          type="tel"
+                          id='phone'
+                          type='tel'
                           value={field.value || ''}
                           onChange={field.onChange}
                           onBlur={field.onBlur}
                           className={`pl-9 ${profileForm.formState.errors.phone ? 'border-red-500' : field.value && profileForm.formState.dirtyFields.phone ? 'border-green-500' : ''}`}
-                          placeholder="+1 (555) 000-0000"
+                          placeholder='+1 (555) 000-0000'
                           disabled={saving}
                         />
                       </div>
                       {profileForm.formState.errors.phone && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
+                        <p className='text-sm text-red-500 flex items-center gap-1'>
+                          <AlertCircle className='h-3 w-3' />
                           {profileForm.formState.errors.phone.message}
                         </p>
                       )}
@@ -544,26 +565,29 @@ export default function ProfilePage() {
 
                 {/* Department - with validation */}
                 <Controller
-                  name="department"
+                  name='department'
                   control={profileForm.control}
                   render={({ field }) => (
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
-                      <div className="relative">
-                        <Building className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <div className='space-y-2'>
+                      <Label htmlFor='department'>Department</Label>
+                      <div className='relative'>
+                        <Building
+                          className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'
+                          aria-hidden='true'
+                        />
                         <Input
-                          id="department"
+                          id='department'
                           value={field.value || ''}
                           onChange={field.onChange}
                           onBlur={field.onBlur}
                           className={`pl-9 ${profileForm.formState.errors.department ? 'border-red-500' : field.value && profileForm.formState.dirtyFields.department ? 'border-green-500' : ''}`}
-                          placeholder="e.g., Human Resources"
+                          placeholder='e.g., Human Resources'
                           disabled={saving}
                         />
                       </div>
                       {profileForm.formState.errors.department && (
-                        <p className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
+                        <p className='text-sm text-red-500 flex items-center gap-1'>
+                          <AlertCircle className='h-3 w-3' />
                           {profileForm.formState.errors.department.message}
                         </p>
                       )}
@@ -572,28 +596,31 @@ export default function ProfilePage() {
                 />
 
                 {/* Position - with validation */}
-                <div className="space-y-2 md:col-span-2">
+                <div className='space-y-2 md:col-span-2'>
                   <Controller
-                    name="position"
+                    name='position'
                     control={profileForm.control}
                     render={({ field }) => (
                       <>
-                        <Label htmlFor="position">Position</Label>
-                        <div className="relative">
-                          <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                        <Label htmlFor='position'>Position</Label>
+                        <div className='relative'>
+                          <Briefcase
+                            className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'
+                            aria-hidden='true'
+                          />
                           <Input
-                            id="position"
+                            id='position'
                             value={field.value || ''}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
                             className={`pl-9 ${profileForm.formState.errors.position ? 'border-red-500' : field.value && profileForm.formState.dirtyFields.position ? 'border-green-500' : ''}`}
-                            placeholder="e.g., HR Manager"
+                            placeholder='e.g., HR Manager'
                             disabled={saving}
                           />
                         </div>
                         {profileForm.formState.errors.position && (
-                          <p className="text-sm text-red-500 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
+                          <p className='text-sm text-red-500 flex items-center gap-1'>
+                            <AlertCircle className='h-3 w-3' />
                             {profileForm.formState.errors.position.message}
                           </p>
                         )}
@@ -608,26 +635,29 @@ export default function ProfilePage() {
           {/* Account Settings */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Shield className='h-5 w-5' />
                 Account Settings
               </CardTitle>
               <CardDescription>
                 Manage your account security and authentication
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+            <CardContent className='space-y-4'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <p className="font-medium">Password</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className='font-medium'>Password</p>
+                  <p className='text-sm text-muted-foreground'>
                     Change your account password
                   </p>
                 </div>
-                <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+                <Dialog
+                  open={showPasswordDialog}
+                  onOpenChange={setShowPasswordDialog}
+                >
                   <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <Key className="mr-2 h-4 w-4" />
+                    <Button variant='outline'>
+                      <Key className='mr-2 h-4 w-4' />
                       Change Password
                     </Button>
                   </DialogTrigger>
@@ -638,82 +668,115 @@ export default function ProfilePage() {
                         Enter your current password and choose a new one
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className='space-y-4'>
                       {/* Current Password */}
                       <Controller
-                        name="currentPassword"
+                        name='currentPassword'
                         control={passwordForm.control}
                         render={({ field }) => (
-                          <div className="space-y-2">
-                            <Label htmlFor="current-password">Current Password</Label>
+                          <div className='space-y-2'>
+                            <Label htmlFor='current-password'>
+                              Current Password
+                            </Label>
                             <Input
-                              id="current-password"
-                              type="password"
+                              id='current-password'
+                              type='password'
                               value={field.value}
                               onChange={field.onChange}
                               onBlur={field.onBlur}
-                              className={passwordForm.formState.errors.currentPassword ? 'border-red-500' : ''}
+                              className={
+                                passwordForm.formState.errors.currentPassword
+                                  ? 'border-red-500'
+                                  : ''
+                              }
                               disabled={saving}
                             />
                             {passwordForm.formState.errors.currentPassword && (
-                              <p className="text-sm text-red-500 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />
-                                {passwordForm.formState.errors.currentPassword.message}
+                              <p className='text-sm text-red-500 flex items-center gap-1'>
+                                <AlertCircle className='h-3 w-3' />
+                                {
+                                  passwordForm.formState.errors.currentPassword
+                                    .message
+                                }
                               </p>
                             )}
                           </div>
                         )}
                       />
-                      
+
                       {/* New Password */}
                       <Controller
-                        name="newPassword"
+                        name='newPassword'
                         control={passwordForm.control}
                         render={({ field }) => (
-                          <div className="space-y-2">
-                            <Label htmlFor="new-password">New Password</Label>
+                          <div className='space-y-2'>
+                            <Label htmlFor='new-password'>New Password</Label>
                             <Input
-                              id="new-password"
-                              type="password"
+                              id='new-password'
+                              type='password'
                               value={field.value}
                               onChange={field.onChange}
                               onBlur={field.onBlur}
-                              className={passwordForm.formState.errors.newPassword ? 'border-red-500' : field.value && !passwordForm.formState.errors.newPassword ? 'border-green-500' : ''}
+                              className={
+                                passwordForm.formState.errors.newPassword
+                                  ? 'border-red-500'
+                                  : field.value &&
+                                      !passwordForm.formState.errors.newPassword
+                                    ? 'border-green-500'
+                                    : ''
+                              }
                               disabled={saving}
                             />
                             {passwordForm.formState.errors.newPassword && (
-                              <p className="text-sm text-red-500 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />
-                                {passwordForm.formState.errors.newPassword.message}
+                              <p className='text-sm text-red-500 flex items-center gap-1'>
+                                <AlertCircle className='h-3 w-3' />
+                                {
+                                  passwordForm.formState.errors.newPassword
+                                    .message
+                                }
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground">
-                              Must be at least 8 characters with uppercase, lowercase, and numbers
+                            <p className='text-xs text-muted-foreground'>
+                              Must be at least 8 characters with uppercase,
+                              lowercase, and numbers
                             </p>
                           </div>
                         )}
                       />
-                      
+
                       {/* Confirm Password */}
                       <Controller
-                        name="confirmPassword"
+                        name='confirmPassword'
                         control={passwordForm.control}
                         render={({ field }) => (
-                          <div className="space-y-2">
-                            <Label htmlFor="confirm-password">Confirm New Password</Label>
+                          <div className='space-y-2'>
+                            <Label htmlFor='confirm-password'>
+                              Confirm New Password
+                            </Label>
                             <Input
-                              id="confirm-password"
-                              type="password"
+                              id='confirm-password'
+                              type='password'
                               value={field.value}
                               onChange={field.onChange}
                               onBlur={field.onBlur}
-                              className={passwordForm.formState.errors.confirmPassword ? 'border-red-500' : field.value && !passwordForm.formState.errors.confirmPassword ? 'border-green-500' : ''}
+                              className={
+                                passwordForm.formState.errors.confirmPassword
+                                  ? 'border-red-500'
+                                  : field.value &&
+                                      !passwordForm.formState.errors
+                                        .confirmPassword
+                                    ? 'border-green-500'
+                                    : ''
+                              }
                               disabled={saving}
                             />
                             {passwordForm.formState.errors.confirmPassword && (
-                              <p className="text-sm text-red-500 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />
-                                {passwordForm.formState.errors.confirmPassword.message}
+                              <p className='text-sm text-red-500 flex items-center gap-1'>
+                                <AlertCircle className='h-3 w-3' />
+                                {
+                                  passwordForm.formState.errors.confirmPassword
+                                    .message
+                                }
                               </p>
                             )}
                           </div>
@@ -722,7 +785,7 @@ export default function ProfilePage() {
                     </div>
                     <DialogFooter>
                       <Button
-                        variant="outline"
+                        variant='outline'
                         onClick={() => {
                           setShowPasswordDialog(false);
                           passwordForm.reset();
@@ -731,13 +794,15 @@ export default function ProfilePage() {
                       >
                         Cancel
                       </Button>
-                      <Button 
-                        onClick={passwordForm.handleSubmit(handleChangePassword)} 
+                      <Button
+                        onClick={passwordForm.handleSubmit(
+                          handleChangePassword
+                        )}
                         disabled={saving || !passwordForm.formState.isValid}
                       >
                         {saving ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                             Changing...
                           </>
                         ) : (
@@ -751,24 +816,27 @@ export default function ProfilePage() {
 
               <Separator />
 
-              <div className="grid gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Last Login:</span>
+              <div className='grid gap-3'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <Clock className='h-4 w-4 text-muted-foreground' />
+                    <span className='text-sm'>Last Login:</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">
+                  <span className='text-sm text-muted-foreground'>
                     {profile.last_sign_in
-                      ? format(new Date(profile.last_sign_in), 'MMM d, yyyy h:mm a')
+                      ? format(
+                          new Date(profile.last_sign_in),
+                          'MMM d, yyyy h:mm a'
+                        )
                       : 'Never'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Account Created:</span>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <User className='h-4 w-4 text-muted-foreground' />
+                    <span className='text-sm'>Account Created:</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">
+                  <span className='text-sm text-muted-foreground'>
                     {format(new Date(profile.created_at), 'MMM d, yyyy')}
                   </span>
                 </div>
@@ -777,23 +845,21 @@ export default function ProfilePage() {
           </Card>
 
           {/* Preferences */}
-      <Card>
-        <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
+          <Card>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2'>
+                <Globe className='h-5 w-5' />
                 Preferences
-          </CardTitle>
-          <CardDescription>
-                Customize your experience
-          </CardDescription>
-        </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
+              </CardTitle>
+              <CardDescription>Customize your experience</CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='grid gap-4'>
                 {/* Language */}
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
+                <div className='space-y-2'>
+                  <Label htmlFor='language'>Language</Label>
                   <Controller
-                    name="preferences.language"
+                    name='preferences.language'
                     control={profileForm.control}
                     render={({ field }) => (
                       <Select
@@ -801,12 +867,12 @@ export default function ProfilePage() {
                         onValueChange={field.onChange}
                         disabled={saving}
                       >
-                        <SelectTrigger id="language">
-                          <SelectValue placeholder="Select language" />
+                        <SelectTrigger id='language'>
+                          <SelectValue placeholder='Select language' />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="ar">Arabic (العربية)</SelectItem>
+                          <SelectItem value='en'>English</SelectItem>
+                          <SelectItem value='ar'>Arabic (العربية)</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -814,10 +880,10 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Timezone */}
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
+                <div className='space-y-2'>
+                  <Label htmlFor='timezone'>Timezone</Label>
                   <Controller
-                    name="preferences.timezone"
+                    name='preferences.timezone'
                     control={profileForm.control}
                     render={({ field }) => (
                       <Select
@@ -825,18 +891,32 @@ export default function ProfilePage() {
                         onValueChange={field.onChange}
                         disabled={saving}
                       >
-                        <SelectTrigger id="timezone">
-                          <SelectValue placeholder="Select timezone" />
+                        <SelectTrigger id='timezone'>
+                          <SelectValue placeholder='Select timezone' />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="UTC">UTC</SelectItem>
-                          <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                          <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                          <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                          <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                          <SelectItem value="Europe/London">London (GMT)</SelectItem>
-                          <SelectItem value="Asia/Dubai">Dubai (GST)</SelectItem>
-                          <SelectItem value="Asia/Riyadh">Riyadh (AST)</SelectItem>
+                          <SelectItem value='UTC'>UTC</SelectItem>
+                          <SelectItem value='America/New_York'>
+                            Eastern Time (ET)
+                          </SelectItem>
+                          <SelectItem value='America/Chicago'>
+                            Central Time (CT)
+                          </SelectItem>
+                          <SelectItem value='America/Denver'>
+                            Mountain Time (MT)
+                          </SelectItem>
+                          <SelectItem value='America/Los_Angeles'>
+                            Pacific Time (PT)
+                          </SelectItem>
+                          <SelectItem value='Europe/London'>
+                            London (GMT)
+                          </SelectItem>
+                          <SelectItem value='Asia/Dubai'>
+                            Dubai (GST)
+                          </SelectItem>
+                          <SelectItem value='Asia/Riyadh'>
+                            Riyadh (AST)
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -846,18 +926,18 @@ export default function ProfilePage() {
                 <Separator />
 
                 {/* Email Notifications */}
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Bell className="h-4 w-4" />
+                <div className='flex items-center justify-between'>
+                  <div className='space-y-0.5'>
+                    <Label className='flex items-center gap-2'>
+                      <Bell className='h-4 w-4' />
                       Email Notifications
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className='text-sm text-muted-foreground'>
                       Receive email updates and alerts
                     </p>
                   </div>
                   <Controller
-                    name="preferences.email_notifications"
+                    name='preferences.email_notifications'
                     control={profileForm.control}
                     render={({ field }) => (
                       <Switch
@@ -870,18 +950,18 @@ export default function ProfilePage() {
                 </div>
 
                 {/* SMS Notifications */}
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
+                <div className='flex items-center justify-between'>
+                  <div className='space-y-0.5'>
+                    <Label className='flex items-center gap-2'>
+                      <Phone className='h-4 w-4' />
                       SMS Notifications
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className='text-sm text-muted-foreground'>
                       Receive SMS alerts for important updates
                     </p>
                   </div>
                   <Controller
-                    name="preferences.sms_notifications"
+                    name='preferences.sms_notifications'
                     control={profileForm.control}
                     render={({ field }) => (
                       <Switch
@@ -898,26 +978,36 @@ export default function ProfilePage() {
         </div>
 
         {/* Right Column - Stats and Activity */}
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* Statistics */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Activity className='h-5 w-5' />
                 Statistics
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Contracts Created</span>
-                  <Badge variant="secondary" className="text-base font-semibold">
+            <CardContent className='space-y-4'>
+              <div className='space-y-2'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-sm text-muted-foreground'>
+                    Contracts Created
+                  </span>
+                  <Badge
+                    variant='secondary'
+                    className='text-base font-semibold'
+                  >
                     {stats.contracts_created}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Promoters Managed</span>
-                  <Badge variant="secondary" className="text-base font-semibold">
+                <div className='flex items-center justify-between'>
+                  <span className='text-sm text-muted-foreground'>
+                    Promoters Managed
+                  </span>
+                  <Badge
+                    variant='secondary'
+                    className='text-base font-semibold'
+                  >
                     {stats.promoters_managed}
                   </Badge>
                 </div>
@@ -928,25 +1018,25 @@ export default function ProfilePage() {
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Clock className='h-5 w-5' />
                 Recent Activity
               </CardTitle>
               <CardDescription>Your last 10 actions</CardDescription>
-        </CardHeader>
-        <CardContent>
+            </CardHeader>
+            <CardContent>
               {activity.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className='text-sm text-muted-foreground text-center py-4'>
                   No recent activity
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {activity.map((item) => (
-                    <div key={item.id} className="flex gap-2 text-sm">
-                      <Activity className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 space-y-1">
-                        <p className="leading-none">{item.action}</p>
-                        <p className="text-xs text-muted-foreground">
+                <div className='space-y-3'>
+                  {activity.map(item => (
+                    <div key={item.id} className='flex gap-2 text-sm'>
+                      <Activity className='h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0' />
+                      <div className='flex-1 space-y-1'>
+                        <p className='leading-none'>{item.action}</p>
+                        <p className='text-xs text-muted-foreground'>
                           {format(new Date(item.timestamp), 'MMM d, h:mm a')}
                         </p>
                       </div>
@@ -954,8 +1044,8 @@ export default function ProfilePage() {
                   ))}
                 </div>
               )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

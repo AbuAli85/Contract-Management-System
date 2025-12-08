@@ -7,12 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import type { Party } from '@/lib/types';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -72,7 +67,7 @@ interface EnhancedParty extends Party {
 export default function GenericPartiesPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const [genericParties, setGenericParties] = useState<EnhancedParty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,7 +80,7 @@ export default function GenericPartiesPage() {
     try {
       const response = await fetch('/api/parties');
       const data = await response.json();
-      
+
       if (data.success) {
         // Filter only generic parties
         const generic = (data.parties || [])
@@ -117,17 +112,20 @@ export default function GenericPartiesPage() {
 
   // Helper function to enhance party data
   const enhanceParty = (party: Party): EnhancedParty => {
-    const crExpiryDays = party.cr_expiry_date 
-      ? differenceInDays(parseISO(party.cr_expiry_date), new Date()) 
+    const crExpiryDays = party.cr_expiry_date
+      ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
       : null;
-    const licenseExpiryDays = party.license_expiry 
-      ? differenceInDays(parseISO(party.license_expiry), new Date()) 
+    const licenseExpiryDays = party.license_expiry
+      ? differenceInDays(parseISO(party.license_expiry), new Date())
       : null;
 
     return {
       ...party,
       cr_status: getDocumentStatus(crExpiryDays, party.cr_expiry_date),
-      license_status: getDocumentStatus(licenseExpiryDays, party.license_expiry),
+      license_status: getDocumentStatus(
+        licenseExpiryDays,
+        party.license_expiry
+      ),
       days_until_cr_expiry: crExpiryDays ?? undefined,
       days_until_license_expiry: licenseExpiryDays ?? undefined,
       contract_count: party.total_contracts || party.active_contracts || 0,
@@ -163,17 +161,26 @@ export default function GenericPartiesPage() {
   // Filter generic parties
   const filteredGenericParties = useMemo(() => {
     return genericParties.filter(party => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch =
+        !searchTerm ||
         party.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         party.name_ar?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         party.crn?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesStatus = statusFilter === 'all' || party.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || party.status === statusFilter;
 
-      const matchesDocument = documentFilter === 'all' ||
-        (documentFilter === 'expired' && (party.cr_status === 'expired' || party.license_status === 'expired')) ||
-        (documentFilter === 'expiring' && (party.cr_status === 'expiring' || party.license_status === 'expiring')) ||
-        (documentFilter === 'valid' && party.cr_status === 'valid' && party.license_status === 'valid');
+      const matchesDocument =
+        documentFilter === 'all' ||
+        (documentFilter === 'expired' &&
+          (party.cr_status === 'expired' ||
+            party.license_status === 'expired')) ||
+        (documentFilter === 'expiring' &&
+          (party.cr_status === 'expiring' ||
+            party.license_status === 'expiring')) ||
+        (documentFilter === 'valid' &&
+          party.cr_status === 'valid' &&
+          party.license_status === 'valid');
 
       return matchesSearch && matchesStatus && matchesDocument;
     });
@@ -184,9 +191,16 @@ export default function GenericPartiesPage() {
     return {
       total: genericParties.length,
       active: genericParties.filter(p => p.status === 'Active').length,
-      expiring: genericParties.filter(p => p.cr_status === 'expiring' || p.license_status === 'expiring').length,
-      expired: genericParties.filter(p => p.cr_status === 'expired' || p.license_status === 'expired').length,
-      total_contracts: genericParties.reduce((sum, p) => sum + (p.contract_count || 0), 0),
+      expiring: genericParties.filter(
+        p => p.cr_status === 'expiring' || p.license_status === 'expiring'
+      ).length,
+      expired: genericParties.filter(
+        p => p.cr_status === 'expired' || p.license_status === 'expired'
+      ).length,
+      total_contracts: genericParties.reduce(
+        (sum, p) => sum + (p.contract_count || 0),
+        0
+      ),
     };
   }, [genericParties]);
 
@@ -234,13 +248,17 @@ export default function GenericPartiesPage() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>{stats.total}</div>
-            <p className='text-xs text-muted-foreground'>{stats.active} active</p>
+            <p className='text-xs text-muted-foreground'>
+              {stats.active} active
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Contracts</CardTitle>
+            <CardTitle className='text-sm font-medium'>
+              Total Contracts
+            </CardTitle>
             <FileText className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
@@ -255,18 +273,24 @@ export default function GenericPartiesPage() {
             <Calendar className='h-4 w-4 text-yellow-600' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-yellow-600'>{stats.expiring}</div>
+            <div className='text-2xl font-bold text-yellow-600'>
+              {stats.expiring}
+            </div>
             <p className='text-xs text-muted-foreground'>Documents expiring</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Expired Documents</CardTitle>
+            <CardTitle className='text-sm font-medium'>
+              Expired Documents
+            </CardTitle>
             <AlertTriangle className='h-4 w-4 text-red-600' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-red-600'>{stats.expired}</div>
+            <div className='text-2xl font-bold text-red-600'>
+              {stats.expired}
+            </div>
             <p className='text-xs text-muted-foreground'>Requires attention</p>
           </CardContent>
         </Card>
@@ -290,7 +314,7 @@ export default function GenericPartiesPage() {
                   id='search'
                   placeholder='Search parties...'
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className='pl-10'
                 />
               </div>
@@ -343,7 +367,9 @@ export default function GenericPartiesPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Generic Parties ({filteredGenericParties.length})</CardTitle>
+            <CardTitle>
+              Generic Parties ({filteredGenericParties.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className='overflow-x-auto'>
@@ -360,7 +386,7 @@ export default function GenericPartiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredGenericParties.map((party) => (
+                  {filteredGenericParties.map(party => (
                     <TableRow key={party.id}>
                       <TableCell>
                         <div>
@@ -377,13 +403,17 @@ export default function GenericPartiesPage() {
                           {party.contact_email && (
                             <div className='flex items-center gap-1'>
                               <Mail className='h-3 w-3 text-muted-foreground' />
-                              <span className='text-xs'>{party.contact_email}</span>
+                              <span className='text-xs'>
+                                {party.contact_email}
+                              </span>
                             </div>
                           )}
                           {party.contact_phone && (
                             <div className='flex items-center gap-1'>
                               <Phone className='h-3 w-3 text-muted-foreground' />
-                              <span className='text-xs'>{party.contact_phone}</span>
+                              <span className='text-xs'>
+                                {party.contact_phone}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -394,8 +424,8 @@ export default function GenericPartiesPage() {
                             party.status === 'Active'
                               ? 'default'
                               : party.status === 'Inactive'
-                              ? 'secondary'
-                              : 'destructive'
+                                ? 'secondary'
+                                : 'destructive'
                           }
                         >
                           {party.status}
@@ -405,14 +435,18 @@ export default function GenericPartiesPage() {
                         {party.cr_expiry_date ? (
                           <div className='text-sm'>
                             <div>{formatDateSafely(party.cr_expiry_date)}</div>
-                            <div className={cn(
-                              'text-xs',
-                              party.cr_status === 'expired' && 'text-red-600',
-                              party.cr_status === 'expiring' && 'text-yellow-600',
-                              party.cr_status === 'valid' && 'text-green-600'
-                            )}>
+                            <div
+                              className={cn(
+                                'text-xs',
+                                party.cr_status === 'expired' && 'text-red-600',
+                                party.cr_status === 'expiring' &&
+                                  'text-yellow-600',
+                                party.cr_status === 'valid' && 'text-green-600'
+                              )}
+                            >
                               {party.cr_status === 'expired' && 'Expired'}
-                              {party.cr_status === 'expiring' && `${party.days_until_cr_expiry} days left`}
+                              {party.cr_status === 'expiring' &&
+                                `${party.days_until_cr_expiry} days left`}
                               {party.cr_status === 'valid' && 'Valid'}
                             </div>
                           </div>
@@ -424,14 +458,20 @@ export default function GenericPartiesPage() {
                         {party.license_expiry ? (
                           <div className='text-sm'>
                             <div>{formatDateSafely(party.license_expiry)}</div>
-                            <div className={cn(
-                              'text-xs',
-                              party.license_status === 'expired' && 'text-red-600',
-                              party.license_status === 'expiring' && 'text-yellow-600',
-                              party.license_status === 'valid' && 'text-green-600'
-                            )}>
+                            <div
+                              className={cn(
+                                'text-xs',
+                                party.license_status === 'expired' &&
+                                  'text-red-600',
+                                party.license_status === 'expiring' &&
+                                  'text-yellow-600',
+                                party.license_status === 'valid' &&
+                                  'text-green-600'
+                              )}
+                            >
                               {party.license_status === 'expired' && 'Expired'}
-                              {party.license_status === 'expiring' && `${party.days_until_license_expiry} days left`}
+                              {party.license_status === 'expiring' &&
+                                `${party.days_until_license_expiry} days left`}
                               {party.license_status === 'valid' && 'Valid'}
                             </div>
                           </div>
@@ -440,7 +480,9 @@ export default function GenericPartiesPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant='outline'>{party.contract_count || 0}</Badge>
+                        <Badge variant='outline'>
+                          {party.contract_count || 0}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -451,11 +493,19 @@ export default function GenericPartiesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => router.push(`/en/manage-parties?id=${party.id}`)}>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/en/manage-parties?id=${party.id}`)
+                              }
+                            >
                               <EditIcon className='mr-2 h-4 w-4' />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/en/manage-parties/${party.id}`)}>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/en/manage-parties/${party.id}`)
+                              }
+                            >
                               <Eye className='mr-2 h-4 w-4' />
                               View Details
                             </DropdownMenuItem>
@@ -473,4 +523,3 @@ export default function GenericPartiesPage() {
     </div>
   );
 }
-

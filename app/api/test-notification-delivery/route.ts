@@ -99,7 +99,8 @@ export async function POST(request: NextRequest) {
         success: professionalResult.success,
         messageId: professionalResult.messageId,
         error: professionalResult.error,
-        description: 'Complex HTML with styling - may be blocked by spam filters',
+        description:
+          'Complex HTML with styling - may be blocked by spam filters',
       });
     }
 
@@ -128,7 +129,8 @@ export async function POST(request: NextRequest) {
         success: mediumResult.success,
         messageId: mediumResult.messageId,
         error: mediumResult.error,
-        description: 'Moderate styling - good balance between appearance and deliverability',
+        description:
+          'Moderate styling - good balance between appearance and deliverability',
       });
     }
 
@@ -186,7 +188,7 @@ export async function GET() {
         testType: 'all',
       },
     },
-    description: 'Tests different email formats to identify Microsoft 365 blocking issues',
+    description:
+      'Tests different email formats to identify Microsoft 365 blocking issues',
   });
 }
-

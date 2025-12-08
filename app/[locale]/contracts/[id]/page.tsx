@@ -107,7 +107,9 @@ export default function ContractDetailPage() {
   });
   const [downloading, setDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   // Validate contract ID format
   const isValidContractId =
@@ -126,24 +128,24 @@ export default function ContractDetailPage() {
 
     let pollCount = 0;
     const maxPolls = 40; // 40 polls × 3 seconds = 120 seconds total
-    
+
     console.log('🔄 Starting PDF polling...');
     setPdfStatus(prev => ({ ...prev, is_processing: true }));
-    
+
     const interval = setInterval(async () => {
       try {
         pollCount++;
-        
+
         // Fetch updated contract data
         const response = await fetch(`/api/contracts/${contractId}`);
         if (!response.ok) {
           console.error('❌ Poll fetch failed:', response.status);
           return;
         }
-        
+
         const data = await response.json();
         const updatedContract = data?.contract || data;
-        
+
         console.log(`📊 PDF Poll ${pollCount}/${maxPolls}:`, {
           status: updatedContract?.status,
           has_pdf_url: !!updatedContract?.pdf_url,
@@ -172,7 +174,9 @@ export default function ContractDetailPage() {
           clearInterval(interval);
           setPollingInterval(null);
           setPdfStatus(prev => ({ ...prev, is_processing: false }));
-          setStatusMessage('PDF generation is taking longer than expected. Please check your Make.com scenario or click "Generate PDF" to retry.');
+          setStatusMessage(
+            'PDF generation is taking longer than expected. Please check your Make.com scenario or click "Generate PDF" to retry.'
+          );
         }
       } catch (error) {
         console.error('❌ Poll error:', error);
@@ -186,7 +190,7 @@ export default function ContractDetailPage() {
   useEffect(() => {
     // Set up timeout to stop polling after 2 minutes
     let timeoutId: NodeJS.Timeout | null = null;
-    
+
     if (pollingInterval) {
       console.log('⏰ Setting 2-minute timeout for polling');
       timeoutId = setTimeout(() => {
@@ -195,11 +199,13 @@ export default function ContractDetailPage() {
           clearInterval(pollingInterval);
           setPollingInterval(null);
           setPdfStatus(prev => ({ ...prev, is_processing: false }));
-          setStatusMessage('PDF generation timed out. Please check your Make.com scenario or try generating again.');
+          setStatusMessage(
+            'PDF generation timed out. Please check your Make.com scenario or try generating again.'
+          );
         }
       }, 120000); // 2 minutes
     }
-    
+
     return () => {
       if (pollingInterval) {
         console.log('🧹 Cleaning up polling interval');
@@ -215,25 +221,33 @@ export default function ContractDetailPage() {
   // Check for approved/active contracts (either status='approved' or approval_status='active')
   useEffect(() => {
     if (contract) {
-      const isApproved = 
-        contract.status === 'approved' || 
+      const isApproved =
+        contract.status === 'approved' ||
         contract.approval_status === 'active' ||
         contract.status === 'active';
-      
+
       if (isApproved) {
         fetchPDFStatus();
-        
+
         // If PDF is not available but contract is approved, start polling
         if (!contract.pdf_url && !pdfStatus.is_processing && !pollingInterval) {
           // Check notes field to see if PDF generation was started
           const notes = contract.notes || '';
-          if (notes.includes('PDF generation started') || notes.includes('generation started')) {
+          if (
+            notes.includes('PDF generation started') ||
+            notes.includes('generation started')
+          ) {
             startPDFPolling();
           }
         }
       }
     }
-  }, [contract?.id, contract?.pdf_url, contract?.status, contract?.approval_status]);
+  }, [
+    contract?.id,
+    contract?.pdf_url,
+    contract?.status,
+    contract?.approval_status,
+  ]);
 
   const fetchPDFStatus = async () => {
     if (!contractId) return;
@@ -271,15 +285,16 @@ export default function ContractDetailPage() {
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/pdf',
+          Accept: 'application/pdf',
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}`;
+        const errorMessage =
+          errorData.error || errorData.message || `HTTP ${response.status}`;
         console.error('❌ PDF API failed:', response.status, errorMessage);
-        
+
         // Don't fallback to direct URL as it may be incorrect
         // Instead, show error and suggest regenerating the PDF
         throw new Error(errorMessage);
@@ -294,7 +309,13 @@ export default function ContractDetailPage() {
       }
 
       const blob = await response.blob();
-      console.log('✅ PDF blob received:', blob.size, 'bytes', 'type:', blob.type);
+      console.log(
+        '✅ PDF blob received:',
+        blob.size,
+        'bytes',
+        'type:',
+        blob.type
+      );
 
       if (blob.size === 0) {
         throw new Error('Downloaded file is empty');
@@ -309,7 +330,7 @@ export default function ContractDetailPage() {
       a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
-      
+
       // Cleanup after a short delay
       setTimeout(() => {
         document.body.removeChild(a);
@@ -319,9 +340,10 @@ export default function ContractDetailPage() {
       setStatusMessage('PDF downloaded successfully');
     } catch (error) {
       console.error('❌ Download error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       setStatusMessage(`Download failed: ${errorMessage}`);
-      
+
       // Fallback: try opening API endpoint in new window
       try {
         window.open(`/api/contracts/${contractId}/pdf/view`, '_blank');
@@ -349,7 +371,11 @@ export default function ContractDetailPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = errorData.details || errorData.message || errorData.error || 'Failed to generate PDF';
+        const errorMessage =
+          errorData.details ||
+          errorData.message ||
+          errorData.error ||
+          'Failed to generate PDF';
         console.error('PDF generation error:', errorData);
         setStatusMessage(`Error: ${errorMessage}`);
         return;
@@ -368,7 +394,8 @@ export default function ContractDetailPage() {
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to generate PDF';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to generate PDF';
       setStatusMessage(`Error: ${errorMessage}`);
     } finally {
       setDownloading(false);
@@ -494,8 +521,8 @@ export default function ContractDetailPage() {
   }
 
   // Check if contract is approved/active (for PDF generation)
-  const isApproved = 
-    contract?.status === 'approved' || 
+  const isApproved =
+    contract?.status === 'approved' ||
     contract?.approval_status === 'active' ||
     contract?.status === 'active';
   const hasPDF = !!contract.pdf_url;
@@ -1015,15 +1042,19 @@ export default function ContractDetailPage() {
                         </div>
                       </div>
                       <div className='flex items-center gap-2'>
-                        <Button 
-                          size='sm' 
+                        <Button
+                          size='sm'
                           variant='outline'
-                          onClick={(e) => {
+                          onClick={e => {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleDownloadExistingPDF(contract.pdf_url || undefined).catch((error) => {
+                            handleDownloadExistingPDF(
+                              contract.pdf_url || undefined
+                            ).catch(error => {
                               console.error('Download handler error:', error);
-                              setStatusMessage(`Error: ${error instanceof Error ? error.message : 'Failed to download'}`);
+                              setStatusMessage(
+                                `Error: ${error instanceof Error ? error.message : 'Failed to download'}`
+                              );
                             });
                           }}
                           disabled={downloading}
@@ -1031,16 +1062,21 @@ export default function ContractDetailPage() {
                           <DownloadIcon className='mr-2 h-4 w-4' />
                           {downloading ? 'Downloading...' : 'Download'}
                         </Button>
-                        <Button 
-                          size='sm' 
+                        <Button
+                          size='sm'
                           variant='ghost'
-                          onClick={() => window.open(`/api/contracts/${contractId}/pdf/view`, '_blank')}
+                          onClick={() =>
+                            window.open(
+                              `/api/contracts/${contractId}/pdf/view`,
+                              '_blank'
+                            )
+                          }
                         >
                           <ExternalLinkIcon className='mr-2 h-4 w-4' />
                           Open
                         </Button>
-                        <Button 
-                          size='sm' 
+                        <Button
+                          size='sm'
                           variant='ghost'
                           onClick={() => {
                             if (typeof window !== 'undefined') {
@@ -1050,25 +1086,34 @@ export default function ContractDetailPage() {
                         >
                           <CopyIcon className='h-4 w-4' />
                         </Button>
-                        <Button 
-                          size='sm' 
+                        <Button
+                          size='sm'
                           variant='ghost'
                           title='Fix incorrect PDF URL in database'
                           onClick={async () => {
                             try {
                               setStatusMessage('Fixing PDF URL...');
-                              const response = await fetch(`/api/contracts/${contractId}/fix-pdf-url`, {
-                                method: 'POST',
-                              });
+                              const response = await fetch(
+                                `/api/contracts/${contractId}/fix-pdf-url`,
+                                {
+                                  method: 'POST',
+                                }
+                              );
                               const data = await response.json();
                               if (data.success) {
-                                setStatusMessage(`✅ PDF URL fixed: ${data.fileName}`);
+                                setStatusMessage(
+                                  `✅ PDF URL fixed: ${data.fileName}`
+                                );
                                 refetch();
                               } else {
-                                setStatusMessage(`❌ Error: ${data.error || 'Failed to fix PDF URL'}`);
+                                setStatusMessage(
+                                  `❌ Error: ${data.error || 'Failed to fix PDF URL'}`
+                                );
                               }
                             } catch (error) {
-                              setStatusMessage(`❌ Error: ${error instanceof Error ? error.message : 'Failed to fix PDF URL'}`);
+                              setStatusMessage(
+                                `❌ Error: ${error instanceof Error ? error.message : 'Failed to fix PDF URL'}`
+                              );
                             }
                           }}
                         >
@@ -1246,13 +1291,10 @@ export default function ContractDetailPage() {
                             <p className='mt-2 text-xs font-medium text-red-600'>
                               {formatDate(contract.end_date)}
                             </p>
-                            {new Date(contract.end_date) >
-                              new Date() && (
+                            {new Date(contract.end_date) > new Date() && (
                               <p className='mt-1 text-xs text-red-500'>
                                 {Math.ceil(
-                                  (new Date(
-                                    contract.end_date
-                                  ).getTime() -
+                                  (new Date(contract.end_date).getTime() -
                                     new Date().getTime()) /
                                     (1000 * 60 * 60 * 24)
                                 )}{' '}

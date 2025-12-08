@@ -11,7 +11,15 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Download, CheckCircle2, XCircle, AlertCircle, FileText, Building2 } from 'lucide-react';
+import {
+  Loader2,
+  Download,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  FileText,
+  Building2,
+} from 'lucide-react';
 import type { Party, Promoter } from '@/lib/types';
 
 interface PromoterWithEmployer extends Promoter {
@@ -42,7 +50,9 @@ export default function PromoterDocumentsReportPage() {
     hasIdOnly: 0,
     hasPassportOnly: 0,
   });
-  const [filterStatus, setFilterStatus] = useState<'all' | 'complete' | 'partial' | 'missing'>('all');
+  const [filterStatus, setFilterStatus] = useState<
+    'all' | 'complete' | 'partial' | 'missing'
+  >('all');
 
   useEffect(() => {
     setIsClient(true);
@@ -87,10 +97,16 @@ export default function PromoterDocumentsReportPage() {
         const employerMap = new Map(employers?.map(e => [e.id, e]) || []);
 
         // Process promoters with document status
-        const processedPromoters: PromoterWithEmployer[] = (promotersData || []).map(promoter => {
-          const hasIdCard = !!(promoter.id_card_url && promoter.id_card_url.trim() !== '');
-          const hasPassport = !!(promoter.passport_url && promoter.passport_url.trim() !== '');
-          
+        const processedPromoters: PromoterWithEmployer[] = (
+          promotersData || []
+        ).map(promoter => {
+          const hasIdCard = !!(
+            promoter.id_card_url && promoter.id_card_url.trim() !== ''
+          );
+          const hasPassport = !!(
+            promoter.passport_url && promoter.passport_url.trim() !== ''
+          );
+
           let documentStatus: 'complete' | 'partial' | 'missing';
           if (hasIdCard && hasPassport) {
             documentStatus = 'complete';
@@ -102,7 +118,9 @@ export default function PromoterDocumentsReportPage() {
 
           return {
             ...promoter,
-            employer: promoter.employer_id ? employerMap.get(promoter.employer_id) : null,
+            employer: promoter.employer_id
+              ? employerMap.get(promoter.employer_id)
+              : null,
             hasIdCard,
             hasPassport,
             documentStatus,
@@ -110,11 +128,21 @@ export default function PromoterDocumentsReportPage() {
         });
 
         // Calculate statistics
-        const complete = processedPromoters.filter(p => p.documentStatus === 'complete').length;
-        const partial = processedPromoters.filter(p => p.documentStatus === 'partial').length;
-        const missing = processedPromoters.filter(p => p.documentStatus === 'missing').length;
-        const idOnly = processedPromoters.filter(p => p.hasIdCard && !p.hasPassport).length;
-        const passportOnly = processedPromoters.filter(p => !p.hasIdCard && p.hasPassport).length;
+        const complete = processedPromoters.filter(
+          p => p.documentStatus === 'complete'
+        ).length;
+        const partial = processedPromoters.filter(
+          p => p.documentStatus === 'partial'
+        ).length;
+        const missing = processedPromoters.filter(
+          p => p.documentStatus === 'missing'
+        ).length;
+        const idOnly = processedPromoters.filter(
+          p => p.hasIdCard && !p.hasPassport
+        ).length;
+        const passportOnly = processedPromoters.filter(
+          p => !p.hasIdCard && p.hasPassport
+        ).length;
 
         setStats({
           total: processedPromoters.length,
@@ -152,7 +180,7 @@ export default function PromoterDocumentsReportPage() {
       'Document Status',
       'Email',
       'Phone',
-      'Status'
+      'Status',
     ];
 
     const rows = filteredPromoters.map(p => [
@@ -170,12 +198,12 @@ export default function PromoterDocumentsReportPage() {
       p.documentStatus.toUpperCase(),
       p.email || '',
       p.phone || p.mobile_number || '',
-      p.status || ''
+      p.status || '',
     ]);
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -199,16 +227,18 @@ export default function PromoterDocumentsReportPage() {
     );
   }
 
-  const completionPercentage = stats.total > 0 
-    ? ((stats.complete / stats.total) * 100).toFixed(1) 
-    : '0';
+  const completionPercentage =
+    stats.total > 0 ? ((stats.complete / stats.total) * 100).toFixed(1) : '0';
 
   return (
     <div className='container mx-auto space-y-8 p-6'>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold tracking-tight'>Promoter Documents Report</h1>
+        <h1 className='text-3xl font-bold tracking-tight'>
+          Promoter Documents Report
+        </h1>
         <p className='text-muted-foreground mt-2'>
-          Comprehensive review of promoters, their employers, and document completion status
+          Comprehensive review of promoters, their employers, and document
+          completion status
         </p>
       </div>
 
@@ -219,7 +249,9 @@ export default function PromoterDocumentsReportPage() {
             <div className='text-center'>
               <FileText className='h-8 w-8 mx-auto text-blue-500 mb-2' />
               <p className='text-3xl font-bold'>{stats.total}</p>
-              <p className='text-xs text-muted-foreground mt-1'>Total Promoters</p>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Total Promoters
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -228,9 +260,15 @@ export default function PromoterDocumentsReportPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <CheckCircle2 className='h-8 w-8 mx-auto text-green-600 mb-2' />
-              <p className='text-3xl font-bold text-green-700'>{stats.complete}</p>
-              <p className='text-xs text-muted-foreground mt-1'>Complete Documents</p>
-              <p className='text-xs font-semibold text-green-600'>{completionPercentage}%</p>
+              <p className='text-3xl font-bold text-green-700'>
+                {stats.complete}
+              </p>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Complete Documents
+              </p>
+              <p className='text-xs font-semibold text-green-600'>
+                {completionPercentage}%
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -239,8 +277,12 @@ export default function PromoterDocumentsReportPage() {
           <CardContent className='pt-6'>
             <div className='text-center'>
               <AlertCircle className='h-8 w-8 mx-auto text-yellow-600 mb-2' />
-              <p className='text-3xl font-bold text-yellow-700'>{stats.partialDocs}</p>
-              <p className='text-xs text-muted-foreground mt-1'>Partial Documents</p>
+              <p className='text-3xl font-bold text-yellow-700'>
+                {stats.partialDocs}
+              </p>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Partial Documents
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -270,7 +312,9 @@ export default function PromoterDocumentsReportPage() {
             <div className='text-center'>
               <div className='text-2xl mb-2'>📕</div>
               <p className='text-3xl font-bold'>{stats.hasPassportOnly}</p>
-              <p className='text-xs text-muted-foreground mt-1'>Passport Only</p>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Passport Only
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -283,7 +327,8 @@ export default function PromoterDocumentsReportPage() {
             <div>
               <CardTitle>Promoter Documents List</CardTitle>
               <CardDescription>
-                {filteredPromoters.length} promoter{filteredPromoters.length !== 1 ? 's' : ''} shown
+                {filteredPromoters.length} promoter
+                {filteredPromoters.length !== 1 ? 's' : ''} shown
               </CardDescription>
             </div>
             <Button onClick={exportToCSV} variant='outline'>
@@ -327,17 +372,30 @@ export default function PromoterDocumentsReportPage() {
         </CardHeader>
         <CardContent>
           <div className='space-y-4'>
-            {filteredPromoters.map((promoter) => (
-              <Card key={promoter.id} className='hover:shadow-md transition-shadow'>
+            {filteredPromoters.map(promoter => (
+              <Card
+                key={promoter.id}
+                className='hover:shadow-md transition-shadow'
+              >
                 <CardContent className='p-4'>
                   <div className='grid grid-cols-1 lg:grid-cols-12 gap-4'>
                     {/* Promoter Info */}
                     <div className='lg:col-span-3'>
-                      <h3 className='font-semibold text-lg'>{promoter.name_en}</h3>
-                      <p className='text-sm text-muted-foreground'>{promoter.name_ar}</p>
+                      <h3 className='font-semibold text-lg'>
+                        {promoter.name_en}
+                      </h3>
+                      <p className='text-sm text-muted-foreground'>
+                        {promoter.name_ar}
+                      </p>
                       <div className='mt-2 space-y-1'>
-                        <p className='text-xs'>{promoter.email || 'No email'}</p>
-                        <p className='text-xs'>{promoter.phone || promoter.mobile_number || 'No phone'}</p>
+                        <p className='text-xs'>
+                          {promoter.email || 'No email'}
+                        </p>
+                        <p className='text-xs'>
+                          {promoter.phone ||
+                            promoter.mobile_number ||
+                            'No phone'}
+                        </p>
                       </div>
                     </div>
 
@@ -345,16 +403,26 @@ export default function PromoterDocumentsReportPage() {
                     <div className='lg:col-span-3'>
                       <div className='flex items-center gap-2 mb-1'>
                         <Building2 className='h-4 w-4 text-muted-foreground' />
-                        <span className='text-xs font-medium text-muted-foreground'>EMPLOYER</span>
+                        <span className='text-xs font-medium text-muted-foreground'>
+                          EMPLOYER
+                        </span>
                       </div>
                       {promoter.employer ? (
                         <>
-                          <p className='font-medium'>{promoter.employer.name_en}</p>
-                          <p className='text-sm text-muted-foreground'>{promoter.employer.name_ar}</p>
-                          <p className='text-xs text-muted-foreground mt-1'>CRN: {promoter.employer.crn}</p>
+                          <p className='font-medium'>
+                            {promoter.employer.name_en}
+                          </p>
+                          <p className='text-sm text-muted-foreground'>
+                            {promoter.employer.name_ar}
+                          </p>
+                          <p className='text-xs text-muted-foreground mt-1'>
+                            CRN: {promoter.employer.crn}
+                          </p>
                         </>
                       ) : (
-                        <p className='text-sm text-muted-foreground italic'>Not assigned to employer</p>
+                        <p className='text-sm text-muted-foreground italic'>
+                          Not assigned to employer
+                        </p>
                       )}
                     </div>
 
@@ -362,7 +430,9 @@ export default function PromoterDocumentsReportPage() {
                     <div className='lg:col-span-2'>
                       <div className='space-y-2'>
                         <div className='flex items-center gap-2'>
-                          <span className='text-xs font-medium text-muted-foreground'>ID CARD</span>
+                          <span className='text-xs font-medium text-muted-foreground'>
+                            ID CARD
+                          </span>
                           {promoter.hasIdCard ? (
                             <CheckCircle2 className='h-4 w-4 text-green-600' />
                           ) : (
@@ -391,7 +461,9 @@ export default function PromoterDocumentsReportPage() {
                     <div className='lg:col-span-2'>
                       <div className='space-y-2'>
                         <div className='flex items-center gap-2'>
-                          <span className='text-xs font-medium text-muted-foreground'>PASSPORT</span>
+                          <span className='text-xs font-medium text-muted-foreground'>
+                            PASSPORT
+                          </span>
                           {promoter.hasPassport ? (
                             <CheckCircle2 className='h-4 w-4 text-green-600' />
                           ) : (
@@ -454,4 +526,3 @@ export default function PromoterDocumentsReportPage() {
     </div>
   );
 }
-

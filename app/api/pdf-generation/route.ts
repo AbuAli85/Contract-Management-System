@@ -4,181 +4,184 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   const TIMEOUT_MS = 100000; // 100 seconds timeout
-  
+
   try {
     // Set up timeout handling
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('PDF generation timeout')), TIMEOUT_MS);
     });
-    
+
     const processPromise = (async () => {
       const body = await request.json();
       const supabase = await createClient();
 
       console.log('🔍 PDF Generation API - Received request:', body);
 
-    // Get current user to check permissions
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+      // Get current user to check permissions
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-    console.log('PDF Generation - Auth check:', { 
-      hasUser: !!user, 
-      authError: authError?.message,
-      userId: user?.id 
-    });
+      console.log('PDF Generation - Auth check:', {
+        hasUser: !!user,
+        authError: authError?.message,
+        userId: user?.id,
+      });
 
-    if (authError || !user) {
-      console.error('PDF Generation - Unauthorized:', authError);
-      return NextResponse.json({ 
-        error: 'Unauthorized',
-        details: authError?.message || 'No user found'
-      }, { status: 401 });
-    }
+      if (authError || !user) {
+        console.error('PDF Generation - Unauthorized:', authError);
+        return NextResponse.json(
+          {
+            error: 'Unauthorized',
+            details: authError?.message || 'No user found',
+          },
+          { status: 401 }
+        );
+      }
 
-    // Extract contract data
-    const {
-      contractId,
-      contractNumber,
-      first_party_id,
-      second_party_id,
-      promoter_id,
-      contract_start_date,
-      contract_end_date,
-      email,
-      job_title,
-      work_location,
-      department,
-      contract_type,
-      currency,
-      basic_salary,
-      allowances,
-    } = body;
+      // Extract contract data
+      const {
+        contractId,
+        contractNumber,
+        first_party_id,
+        second_party_id,
+        promoter_id,
+        contract_start_date,
+        contract_end_date,
+        email,
+        job_title,
+        work_location,
+        department,
+        contract_type,
+        currency,
+        basic_salary,
+        allowances,
+      } = body;
 
-    // Validate required fields
-    if (!contractId || !contractNumber) {
-      return NextResponse.json(
-        {
-          error: 'Missing required fields: contractId, contractNumber',
-        },
-        { status: 400 }
-      );
-    }
+      // Validate required fields
+      if (!contractId || !contractNumber) {
+        return NextResponse.json(
+          {
+            error: 'Missing required fields: contractId, contractNumber',
+          },
+          { status: 400 }
+        );
+      }
 
-    console.log('📄 Starting PDF generation for contract:', contractNumber);
+      console.log('📄 Starting PDF generation for contract:', contractNumber);
 
-    // Fetch related data for the contract
-    const { data: contract, error: contractError } = await supabase
-      .from('contracts')
-      .select(
-        `
+      // Fetch related data for the contract
+      const { data: contract, error: contractError } = await supabase
+        .from('contracts')
+        .select(
+          `
         *,
         first_party:parties!first_party_id(*),
         second_party:parties!second_party_id(*),
         promoter:promoters(*)
       `
-      )
-      .eq('id', contractId)
-      .single();
+        )
+        .eq('id', contractId)
+        .single();
 
-    if (contractError || !contract) {
-      return NextResponse.json(
-        {
-          error: 'Contract not found',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Generate actual PDF content using HTML template
-    const pdfBuffer = await generateContractPDF(contract, contractNumber);
-
-    // Upload PDF to Supabase storage
-    const fileName = `contract-${contractNumber}-${Date.now()}.pdf`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('contracts')
-      .upload(fileName, pdfBuffer, {
-        contentType: 'application/pdf',
-        cacheControl: '3600',
-      });
-
-    if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-
-      // Check if it's a bucket not found error
-      if (
-        uploadError.message?.includes('Bucket not found') ||
-        uploadError.message?.includes('404')
-      ) {
+      if (contractError || !contract) {
         return NextResponse.json(
           {
-            error: "Storage bucket 'contracts' not found",
-            details:
-              'Please run the storage setup script or create the bucket manually in Supabase Dashboard',
-            solution: 'Run: npm run setup-storage',
+            error: 'Contract not found',
+          },
+          { status: 404 }
+        );
+      }
+
+      // Generate actual PDF content using HTML template
+      const pdfBuffer = await generateContractPDF(contract, contractNumber);
+
+      // Upload PDF to Supabase storage
+      const fileName = `contract-${contractNumber}-${Date.now()}.pdf`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('contracts')
+        .upload(fileName, pdfBuffer, {
+          contentType: 'application/pdf',
+          cacheControl: '3600',
+        });
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+
+        // Check if it's a bucket not found error
+        if (
+          uploadError.message?.includes('Bucket not found') ||
+          uploadError.message?.includes('404')
+        ) {
+          return NextResponse.json(
+            {
+              error: "Storage bucket 'contracts' not found",
+              details:
+                'Please run the storage setup script or create the bucket manually in Supabase Dashboard',
+              solution: 'Run: npm run setup-storage',
+            },
+            { status: 500 }
+          );
+        }
+
+        return NextResponse.json(
+          {
+            error: 'Failed to upload PDF',
+            details: uploadError.message,
           },
           { status: 500 }
         );
       }
 
-      return NextResponse.json(
-        {
-          error: 'Failed to upload PDF',
-          details: uploadError.message,
+      // Get public URL for the uploaded PDF
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('contracts').getPublicUrl(fileName);
+
+      // Update contract with PDF URL and status
+      const { data: updatedContract, error: updateError } = await supabase
+        .from('contracts')
+        .update({
+          status: 'completed',
+          pdf_url: publicUrl,
+          updated_at: new Date().toISOString(),
+          updated_by: user.id,
+        })
+        .eq('id', contractId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        return NextResponse.json(
+          {
+            error: 'Failed to update contract status',
+            details: updateError.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      // Log the activity
+      await supabase.from('user_activity_log').insert({
+        user_id: user.id,
+        action: 'pdf_generated',
+        resource_type: 'contract',
+        resource_id: contractId,
+        details: {
+          contract_number: contractNumber,
+          pdf_url: publicUrl,
+          file_name: fileName,
         },
-        { status: 500 }
-      );
-    }
+      });
 
-    // Get public URL for the uploaded PDF
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('contracts').getPublicUrl(fileName);
-
-    // Update contract with PDF URL and status
-    const { data: updatedContract, error: updateError } = await supabase
-      .from('contracts')
-      .update({
-        status: 'completed',
-        pdf_url: publicUrl,
-        updated_at: new Date().toISOString(),
-        updated_by: user.id,
-      })
-      .eq('id', contractId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error('Database update error:', updateError);
-      return NextResponse.json(
-        {
-          error: 'Failed to update contract status',
-          details: updateError.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    // Log the activity
-    await supabase.from('user_activity_log').insert({
-      user_id: user.id,
-      action: 'pdf_generated',
-      resource_type: 'contract',
-      resource_id: contractId,
-      details: {
-        contract_number: contractNumber,
-        pdf_url: publicUrl,
-        file_name: fileName,
-      },
-    });
-
-    console.log('✅ PDF generated successfully:', {
-      contractId,
-      contractNumber,
-      pdfUrl: publicUrl,
-      fileName,
-    });
+      console.log('✅ PDF generated successfully:', {
+        contractId,
+        contractNumber,
+        pdfUrl: publicUrl,
+        fileName,
+      });
 
       return NextResponse.json({
         success: true,
@@ -189,14 +192,13 @@ export async function POST(request: NextRequest) {
         processing_time: Date.now() - startTime,
       });
     })();
-    
+
     // Race between processing and timeout
     return await Promise.race([processPromise, timeoutPromise]);
-    
   } catch (error) {
     console.error('PDF Generation API error:', error);
     const processingTime = Date.now() - startTime;
-    
+
     return NextResponse.json(
       {
         error: 'Internal server error',

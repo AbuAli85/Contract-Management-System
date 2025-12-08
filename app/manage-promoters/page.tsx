@@ -16,7 +16,9 @@ export default function ManagePromotersPage() {
     <div className='flex min-h-screen items-center justify-center'>
       <div className='text-center'>
         <Loader2 className='mx-auto h-8 w-8 animate-spin text-primary mb-4' />
-        <p className='text-muted-foreground'>Redirecting to promoters management...</p>
+        <p className='text-muted-foreground'>
+          Redirecting to promoters management...
+        </p>
       </div>
     </div>
   );

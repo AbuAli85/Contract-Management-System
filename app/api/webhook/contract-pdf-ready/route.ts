@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 // Support multiple webhook secret environment variable names
-const PDF_WEBHOOK_SECRET = 
-  process.env.PDF_WEBHOOK_SECRET || 
+const PDF_WEBHOOK_SECRET =
+  process.env.PDF_WEBHOOK_SECRET ||
   process.env.MAKE_WEBHOOK_SECRET ||
   process.env.MAKECOM_WEBHOOK_SECRET;
 
@@ -67,10 +67,13 @@ export async function PATCH(request: Request) {
       const rawBody = await request.text().catch(() => 'Unable to read body');
       console.error('Raw body received:', rawBody);
       return NextResponse.json(
-        { 
+        {
           error: 'Invalid JSON payload',
-          details: parseError instanceof Error ? parseError.message : 'JSON parse error',
-          hint: 'Check Make.com webhook body for syntax errors (missing quotes, commas, etc.)'
+          details:
+            parseError instanceof Error
+              ? parseError.message
+              : 'JSON parse error',
+          hint: 'Check Make.com webhook body for syntax errors (missing quotes, commas, etc.)',
         },
         { status: 400 }
       );
@@ -126,24 +129,27 @@ export async function PATCH(request: Request) {
       // Make.com uploads as: {contract_number}-{promoter_name_en}.pdf
       // But sometimes sends URL as: {contract_number}.pdf
       let pdfUrl = payload.pdf_url;
-      
+
       // If we have file_name or file_path from Make.com upload response, use that
       if (payload.file_name || payload.file_path) {
         const bucketName = 'contracts';
         const fileName = payload.file_name || payload.file_path;
         if (fileName) {
-          const { data: { publicUrl } } = supabase.storage
-            .from(bucketName)
-            .getPublicUrl(fileName);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from(bucketName).getPublicUrl(fileName);
           pdfUrl = publicUrl;
-          console.log('✅ Using file_name from Make.com upload response:', fileName);
+          console.log(
+            '✅ Using file_name from Make.com upload response:',
+            fileName
+          );
         }
       } else if (pdfUrl && pdfUrl.includes('/contracts/')) {
         // Extract filename from URL and verify it exists
         const urlParts = pdfUrl.split('/contracts/');
         if (urlParts.length > 1) {
           const storedFilename = urlParts[1];
-          
+
           // Try to verify file exists, if not search for correct filename
           try {
             const { data: fileList } = await supabase.storage
@@ -152,15 +158,18 @@ export async function PATCH(request: Request) {
                 search: payload.contract_number,
                 limit: 10,
               });
-            
+
             // If file not found at expected path, search for files starting with contract number
-            const fileExists = fileList?.some(file => file.name === storedFilename);
+            const fileExists = fileList?.some(
+              file => file.name === storedFilename
+            );
             if (!fileExists && fileList && fileList.length > 0) {
               // Find the most recent file that starts with contract number
               const matchingFile = fileList
-                .filter(file => 
-                  file.name.startsWith(payload.contract_number) && 
-                  file.name.endsWith('.pdf')
+                .filter(
+                  file =>
+                    file.name.startsWith(payload.contract_number) &&
+                    file.name.endsWith('.pdf')
                 )
                 .sort((a, b) => {
                   // Sort by created_at descending (most recent first)
@@ -168,24 +177,32 @@ export async function PATCH(request: Request) {
                   const bTime = new Date(b.created_at || 0).getTime();
                   return bTime - aTime;
                 })[0];
-              
+
               if (matchingFile) {
-                const { data: { publicUrl } } = supabase.storage
+                const {
+                  data: { publicUrl },
+                } = supabase.storage
                   .from('contracts')
                   .getPublicUrl(matchingFile.name);
                 pdfUrl = publicUrl;
-                console.log('✅ Found PDF with correct filename:', matchingFile.name);
+                console.log(
+                  '✅ Found PDF with correct filename:',
+                  matchingFile.name
+                );
                 console.log('📝 Original URL:', payload.pdf_url);
                 console.log('📝 Corrected URL:', pdfUrl);
               }
             }
           } catch (storageError) {
-            console.warn('⚠️ Could not verify PDF file in storage:', storageError);
+            console.warn(
+              '⚠️ Could not verify PDF file in storage:',
+              storageError
+            );
             // Continue with original URL if verification fails
           }
         }
       }
-      
+
       updateData.pdf_url = pdfUrl;
       updateData.google_doc_url = payload.google_drive_url; // Map to existing column
       // Note: pdf_generated_at, pdf_status, pdf_error_message don't exist in schema
@@ -208,10 +225,10 @@ export async function PATCH(request: Request) {
     if (updateError) {
       console.error('Failed to update contract:', updateError);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to update contract',
           details: updateError.message,
-          hint: updateError.hint 
+          hint: updateError.hint,
         },
         { status: 500 }
       );
@@ -262,7 +279,6 @@ export async function PATCH(request: Request) {
       status: payload.status,
       updated_at: updateData.updated_at,
     });
-
   } catch (error) {
     console.error('Webhook processing error:', error);
     return NextResponse.json(
@@ -289,9 +305,9 @@ async function sendNotification(params: {
   // - Push notification service
   // - Email notification
   // - WebSocket real-time notification
-  
+
   console.log('Notification:', params);
-  
+
   // Example: Store in database
   try {
     const supabase = createServiceClient();

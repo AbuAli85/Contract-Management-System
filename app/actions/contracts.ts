@@ -45,10 +45,14 @@ export async function createContract(newContract: ContractInsert) {
     ...newContract,
     contract_number: (asAny.contract_number as string) || generatedNumber,
     start_date: startDate
-      ? (new Date(startDate as unknown as string).toISOString().split('T')[0] as string)
+      ? (new Date(startDate as unknown as string)
+          .toISOString()
+          .split('T')[0] as string)
       : newContract.start_date,
     end_date: endDate
-      ? (new Date(endDate as unknown as string).toISOString().split('T')[0] as string)
+      ? (new Date(endDate as unknown as string)
+          .toISOString()
+          .split('T')[0] as string)
       : newContract.end_date,
     currency: asAny.currency ?? 'OMR',
     contract_value: asAny.contract_value ?? asAny.basic_salary ?? null,

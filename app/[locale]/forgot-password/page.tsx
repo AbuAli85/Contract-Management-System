@@ -35,9 +35,12 @@ export default function ForgotPasswordPage() {
         setError('Failed to initialize database connection');
         return;
       }
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/reset-password`,
-      });
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/reset-password`,
+        }
+      );
 
       if (resetError) {
         throw resetError;

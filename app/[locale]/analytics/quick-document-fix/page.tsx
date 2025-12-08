@@ -75,7 +75,9 @@ export default function QuickDocumentFixPage() {
       // Fetch all promoters
       const { data: promoters, error: promotersError } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url');
+        .select(
+          'id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url'
+        );
 
       if (promotersError) {
         throw new Error(`Failed to fetch promoters: ${promotersError.message}`);
@@ -96,7 +98,7 @@ export default function QuickDocumentFixPage() {
       for (let i = 0; i < promoters.length; i++) {
         const promoter = promoters[i];
         if (!promoter) continue;
-        
+
         setCurrentPromoter(promoter.name_en || '');
         setProgress(Math.round(((i + 1) / totalPromoters) * 100));
 
@@ -121,7 +123,7 @@ export default function QuickDocumentFixPage() {
 
             for (const filename of possibleNames) {
               const testUrl = `${projectUrl}/storage/v1/object/public/promoter-documents/${filename}`;
-              
+
               // Quick check if file exists by attempting to fetch head
               try {
                 const response = await fetch(testUrl, { method: 'HEAD' });
@@ -151,7 +153,7 @@ export default function QuickDocumentFixPage() {
 
             for (const filename of possibleNames) {
               const testUrl = `${projectUrl}/storage/v1/object/public/promoter-documents/${filename}`;
-              
+
               try {
                 const response = await fetch(testUrl, { method: 'HEAD' });
                 if (response.ok) {
@@ -203,7 +205,8 @@ export default function QuickDocumentFixPage() {
       console.error('Quick fix error:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to run quick fix',
+        description:
+          error instanceof Error ? error.message : 'Failed to run quick fix',
         variant: 'destructive',
       });
     } finally {
@@ -220,9 +223,12 @@ export default function QuickDocumentFixPage() {
   return (
     <div className='container mx-auto space-y-8 p-6'>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold tracking-tight'>⚡ Quick Document Fix</h1>
+        <h1 className='text-3xl font-bold tracking-tight'>
+          ⚡ Quick Document Fix
+        </h1>
         <p className='text-muted-foreground mt-2'>
-          Automatically find and link documents from storage (No special permissions needed!)
+          Automatically find and link documents from storage (No special
+          permissions needed!)
         </p>
       </div>
 
@@ -273,7 +279,8 @@ export default function QuickDocumentFixPage() {
           )}
 
           <p className='text-xs text-muted-foreground'>
-            ⏱️ This may take 3-8 minutes depending on the number of promoters and network speed
+            ⏱️ This may take 3-8 minutes depending on the number of promoters
+            and network speed
           </p>
         </CardContent>
       </Card>
@@ -284,7 +291,9 @@ export default function QuickDocumentFixPage() {
           <Card className='border-green-200 bg-green-50'>
             <CardContent className='pt-6 text-center'>
               <CheckCircle className='h-8 w-8 mx-auto text-green-600 mb-2' />
-              <p className='text-3xl font-bold text-green-700'>{summary.totalFixed}</p>
+              <p className='text-3xl font-bold text-green-700'>
+                {summary.totalFixed}
+              </p>
               <p className='text-xs text-muted-foreground'>Total Fixed</p>
             </CardContent>
           </Card>
@@ -305,9 +314,13 @@ export default function QuickDocumentFixPage() {
             </CardContent>
           </Card>
 
-          <Card className={summary.errors > 0 ? 'border-red-200 bg-red-50' : ''}>
+          <Card
+            className={summary.errors > 0 ? 'border-red-200 bg-red-50' : ''}
+          >
             <CardContent className='pt-6 text-center'>
-              <AlertCircle className={`h-8 w-8 mx-auto mb-2 ${summary.errors > 0 ? 'text-red-600' : 'text-gray-400'}`} />
+              <AlertCircle
+                className={`h-8 w-8 mx-auto mb-2 ${summary.errors > 0 ? 'text-red-600' : 'text-gray-400'}`}
+              />
               <p className='text-3xl font-bold'>{summary.errors}</p>
               <p className='text-xs text-muted-foreground'>Errors</p>
             </CardContent>
@@ -332,7 +345,9 @@ export default function QuickDocumentFixPage() {
                     <div className='flex items-start justify-between'>
                       <div className='flex-1'>
                         <div className='flex items-center gap-2 mb-2'>
-                          <h4 className='font-semibold'>{result.promoterName}</h4>
+                          <h4 className='font-semibold'>
+                            {result.promoterName}
+                          </h4>
                           {result.fixedIdCard && (
                             <Badge className='bg-green-100 text-green-800'>
                               🆔 ID Fixed
@@ -344,16 +359,16 @@ export default function QuickDocumentFixPage() {
                             </Badge>
                           )}
                           {result.error && (
-                            <Badge variant='destructive'>
-                              Error
-                            </Badge>
+                            <Badge variant='destructive'>Error</Badge>
                           )}
                         </div>
-                        
+
                         <div className='space-y-1 text-xs'>
                           {result.idCardUrl && (
                             <div>
-                              <span className='text-muted-foreground'>ID Card: </span>
+                              <span className='text-muted-foreground'>
+                                ID Card:{' '}
+                              </span>
                               <a
                                 href={result.idCardUrl}
                                 target='_blank'
@@ -366,7 +381,9 @@ export default function QuickDocumentFixPage() {
                           )}
                           {result.passportUrl && (
                             <div>
-                              <span className='text-muted-foreground'>Passport: </span>
+                              <span className='text-muted-foreground'>
+                                Passport:{' '}
+                              </span>
                               <a
                                 href={result.passportUrl}
                                 target='_blank'
@@ -401,16 +418,18 @@ export default function QuickDocumentFixPage() {
         <CardContent className='text-sm space-y-2'>
           <p>For each promoter with missing document URLs, this tool will:</p>
           <ol className='list-decimal list-inside ml-4 space-y-1'>
-            <li>Generate possible filenames based on name + ID/passport number</li>
+            <li>
+              Generate possible filenames based on name + ID/passport number
+            </li>
             <li>Check if those files exist in your storage</li>
             <li>Update the database with the correct URLs</li>
           </ol>
           <p className='text-xs text-muted-foreground mt-3'>
-            ✅ Safe to run multiple times • ✅ Only updates missing URLs • ✅ Works with your permissions
+            ✅ Safe to run multiple times • ✅ Only updates missing URLs • ✅
+            Works with your permissions
           </p>
         </CardContent>
       </Card>
     </div>
   );
 }
-

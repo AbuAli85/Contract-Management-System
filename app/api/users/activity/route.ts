@@ -108,13 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      user_id,
-      action,
-      resource_type,
-      resource_id,
-      details,
-    } = body;
+    const { user_id, action, resource_type, resource_id, details } = body;
 
     // Validate required fields
     if (!user_id || !action) {
