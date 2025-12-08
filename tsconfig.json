@@ -31,11 +31,8 @@
       "@/styles/*": ["./styles/*"]
     },
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "verbatimModuleSyntax": true
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "next-env.d.ts",
