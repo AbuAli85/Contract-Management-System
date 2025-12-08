@@ -187,4 +187,3 @@ SELECT
     THEN '✅ No test/mock contracts found - database is clean!'
     ELSE '⚠️ Test/mock contracts still exist - uncomment STEP 2 to delete'
   END as final_status;
-

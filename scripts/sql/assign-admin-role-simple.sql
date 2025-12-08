@@ -73,4 +73,3 @@ BEGIN
     RAISE NOTICE '✅ Cache refreshed';
   END IF;
 END $$;
-

@@ -154,4 +154,3 @@ DROP TABLE IF EXISTS contracts_to_delete;
 
 SELECT 
   '✅ Review complete - uncomment DELETE section if you want to proceed' as final_status;
-

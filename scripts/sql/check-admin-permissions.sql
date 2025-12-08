@@ -205,4 +205,3 @@ LEFT JOIN role_permissions rp ON r.id = rp.role_id
 LEFT JOIN permissions perm ON rp.permission_id = perm.id
 WHERE p.id = auth.uid()
 GROUP BY p.id, p.email, p.full_name;
-

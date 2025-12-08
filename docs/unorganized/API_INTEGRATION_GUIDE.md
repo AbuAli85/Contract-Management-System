@@ -624,4 +624,3 @@ For API integration support:
 **Last Updated:** November 6, 2025  
 **Platform Version:** 1.0.0  
 **Base URL:** `https://portal.thesmartpro.io`
-

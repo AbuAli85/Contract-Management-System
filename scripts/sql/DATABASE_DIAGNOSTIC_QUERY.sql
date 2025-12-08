@@ -147,4 +147,3 @@ FROM status_counts s, totals t;
 -- 3. RLS policies filtering data differently (unlikely in your case)
 -- 4. Case sensitivity issues with status values
 -- ============================================================================
-

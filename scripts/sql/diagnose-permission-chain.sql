@@ -88,4 +88,3 @@ JOIN permissions perm ON rp.permission_id = perm.id
 WHERE p.id = auth.uid()
 AND perm.name = 'system:admin:all'
 AND ura.is_active = TRUE;
-

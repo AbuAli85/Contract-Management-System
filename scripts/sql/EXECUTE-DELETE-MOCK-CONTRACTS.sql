@@ -181,4 +181,3 @@ SELECT
 
 SELECT 
   '✅ Your database is now clean and production-ready!' as message;
-

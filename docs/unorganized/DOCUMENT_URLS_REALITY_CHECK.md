@@ -200,12 +200,3 @@ Even though it's not 100%, you still have:
 **Remember**: 40% with REAL documents is better than 100% with broken links! 
 
 **You now have honest, accurate data.** 📊✅
-
-
-
-
-
-
-
-
-

@@ -218,12 +218,3 @@ Most organizations struggle to get above 50%. You're already at 76.8% and now yo
 **Next Goal**: 🎯 **85% in 2 weeks**
 
 **You're doing great!** 🚀
-
-
-
-
-
-
-
-
-
