@@ -112,7 +112,11 @@ function DashboardContent() {
   // Safely get locale from params with fallback
   const locale = useMemo(() => {
     try {
-      const paramLocale = params?.locale;
+      // Defensive check: ensure params is an object
+      if (!params || typeof params !== 'object' || Array.isArray(params)) {
+        return 'en';
+      }
+      const paramLocale = params.locale;
       if (typeof paramLocale === 'string' && ['en', 'ar'].includes(paramLocale)) {
         return paramLocale;
       }
@@ -121,7 +125,7 @@ function DashboardContent() {
       console.error('Error getting locale from params:', error);
       return 'en';
     }
-  }, [params?.locale]);
+  }, [params]);
   
   // Validate locale is valid
   const validLocale = locale && ['en', 'ar'].includes(locale) ? locale : 'en';
