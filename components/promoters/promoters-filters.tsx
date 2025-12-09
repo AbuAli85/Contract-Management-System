@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,11 @@ import {
   BookmarkPlus,
   History,
   Zap,
+  CheckCircle,
+  AlertTriangle,
+  Calendar,
+  UserX,
+  ShieldAlert,
 } from 'lucide-react';
 import type { OverallStatus } from './types';
 import { Badge } from '@/components/ui/badge';
@@ -83,14 +88,31 @@ interface PromotersFiltersProps {
   onExport: () => void;
   onRefresh: () => void;
   isFetching: boolean;
+  metrics?: {
+    total: number;
+    active: number;
+    critical: number;
+    expiring: number;
+    unassigned: number;
+  };
+  locale?: string;
 }
 
-// Default filter presets
-const DEFAULT_PRESETS: FilterPreset[] = [
+// Filter preset with icon and count support
+interface EnhancedFilterPreset extends FilterPreset {
+  icon: React.ComponentType<{ className?: string }>;
+  category: 'status' | 'document' | 'assignment';
+  count?: number; // Will be populated dynamically
+}
+
+// Default filter presets with icons (replacing emoji)
+const DEFAULT_PRESETS: EnhancedFilterPreset[] = [
   {
     id: 'all-active',
-    name: '🟢 All Active',
+    name: 'All Active',
     description: 'Show all operational promoters',
+    icon: CheckCircle,
+    category: 'status',
     filters: {
       statusFilter: 'active',
       documentFilter: 'all',
@@ -100,8 +122,10 @@ const DEFAULT_PRESETS: FilterPreset[] = [
   },
   {
     id: 'critical-attention',
-    name: '🔴 Needs Attention',
+    name: 'Needs Attention',
     description: 'Critical issues requiring immediate action',
+    icon: AlertTriangle,
+    category: 'status',
     filters: {
       statusFilter: 'critical',
       documentFilter: 'all',
@@ -111,8 +135,10 @@ const DEFAULT_PRESETS: FilterPreset[] = [
   },
   {
     id: 'document-expiring',
-    name: '📄 Documents Expiring',
+    name: 'Documents Expiring',
     description: 'Promoters with expiring documents',
+    icon: Calendar,
+    category: 'document',
     filters: {
       statusFilter: 'all',
       documentFilter: 'expiring',
@@ -122,8 +148,10 @@ const DEFAULT_PRESETS: FilterPreset[] = [
   },
   {
     id: 'unassigned',
-    name: '👤 Unassigned',
+    name: 'Unassigned',
     description: 'Promoters without assignments',
+    icon: UserX,
+    category: 'assignment',
     filters: {
       statusFilter: 'all',
       documentFilter: 'all',
@@ -133,8 +161,10 @@ const DEFAULT_PRESETS: FilterPreset[] = [
   },
   {
     id: 'document-expired',
-    name: '⚠️ Expired Documents',
+    name: 'Expired Documents',
     description: 'Promoters with expired documents',
+    icon: ShieldAlert,
+    category: 'document',
     filters: {
       statusFilter: 'all',
       documentFilter: 'expired',
@@ -144,112 +174,8 @@ const DEFAULT_PRESETS: FilterPreset[] = [
   },
 ];
 
-// Memoized search input to prevent re-renders
-const SearchInput = React.memo(
-  ({
-    searchTerm,
-    onSearchChange,
-    isSearching = false,
-  }: {
-    searchTerm: string;
-    onSearchChange: (value: string) => void;
-    isSearching?: boolean;
-  }) => {
-    const [localValue, setLocalValue] = useState(searchTerm);
-    const [isFocused, setIsFocused] = useState(false);
-
-    // Update local value when searchTerm prop changes (external updates only)
-    useEffect(() => {
-      setLocalValue(searchTerm);
-    }, [searchTerm]);
-
-    const handleChange = useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
-        setLocalValue(newValue);
-        onSearchChange(newValue);
-      },
-      [onSearchChange]
-    );
-
-    const handleClear = useCallback(() => {
-      setLocalValue('');
-      onSearchChange('');
-    }, [onSearchChange]);
-
-    return (
-      <div className='space-y-3'>
-        <div className='flex items-center justify-between'>
-          <Label htmlFor='promoter-search' className='text-sm font-medium'>
-            Search promoters
-          </Label>
-          {isSearching && localValue && (
-            <div className='flex items-center gap-2 text-xs text-blue-600'>
-              <div className='animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full' />
-              <span>Searching...</span>
-            </div>
-          )}
-        </div>
-        <div className='relative'>
-          <Search
-            className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${
-              isFocused || localValue
-                ? 'text-indigo-600'
-                : 'text-muted-foreground'
-            }`}
-          />
-          <Input
-            id='promoter-search'
-            placeholder='Search by name, contact, ID...'
-            className={`pl-10 pr-10 transition-all ${
-              isFocused
-                ? 'bg-white dark:bg-slate-900 border-indigo-500 ring-2 ring-indigo-500/20 shadow-sm'
-                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
-            }`}
-            value={localValue}
-            onChange={handleChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            aria-label='Search promoters by name, contact, or ID'
-            aria-describedby='search-help'
-            autoComplete='off'
-            spellCheck='false'
-          />
-          {localValue && (
-            <button
-              onClick={handleClear}
-              className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
-              aria-label='Clear search'
-            >
-              <X className='h-4 w-4' />
-            </button>
-          )}
-        </div>
-        <div className='flex items-center justify-between'>
-          <p id='search-help' className='text-xs text-muted-foreground'>
-            Press{' '}
-            <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>
-              Ctrl+K
-            </kbd>{' '}
-            for focus •{' '}
-            <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>
-              Esc
-            </kbd>{' '}
-            to clear
-          </p>
-          {localValue && !isSearching && (
-            <div className='flex items-center gap-1 text-xs'>
-              <span className='text-green-600 font-medium'>✓</span>
-              <span className='text-muted-foreground'>Search applied</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-);
-
-SearchInput.displayName = 'SearchInput';
+// Import the enhanced search component with autocomplete
+import { PromotersSearchWithAutocomplete } from './promoters-search-with-autocomplete';
 
 export function PromotersFilters({
   searchTerm,
@@ -265,14 +191,44 @@ export function PromotersFilters({
   onExport,
   onRefresh,
   isFetching = false,
+  metrics,
+  locale = 'en',
 }: PromotersFiltersProps) {
   const [advancedSearchCriteria, setAdvancedSearchCriteria] = useState<
     SearchCriteria[]
   >([]);
   const [filterPresets, setFilterPresets] =
-    useState<FilterPreset[]>(DEFAULT_PRESETS);
+    useState<EnhancedFilterPreset[]>(DEFAULT_PRESETS);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+
+  // Calculate counts for each filter preset based on metrics
+  const presetsWithCounts = useMemo(() => {
+    return filterPresets.map(preset => {
+      let count: number | undefined;
+      if (metrics) {
+        switch (preset.id) {
+          case 'all-active':
+            count = metrics.active;
+            break;
+          case 'critical-attention':
+            count = metrics.critical;
+            break;
+          case 'document-expiring':
+            count = metrics.expiring;
+            break;
+          case 'unassigned':
+            count = metrics.unassigned;
+            break;
+          case 'document-expired':
+            // Calculate expired (critical - expiring)
+            count = Math.max(0, metrics.critical - metrics.expiring);
+            break;
+        }
+      }
+      return { ...preset, count };
+    });
+  }, [filterPresets, metrics]);
 
   // Add to recent searches when search term changes (removed recentSearches dependency to prevent re-renders)
   useEffect(() => {
@@ -329,7 +285,7 @@ export function PromotersFilters({
   }, []);
 
   const applyPreset = useCallback(
-    (preset: FilterPreset) => {
+    (preset: EnhancedFilterPreset | FilterPreset) => {
       const { filters } = preset;
       onStatusFilterChange(filters.statusFilter);
       onDocumentFilterChange(filters.documentFilter);
@@ -422,44 +378,168 @@ export function PromotersFilters({
             </TooltipProvider>
           </div>
 
-          <div className='flex flex-wrap gap-2'>
-            {filterPresets
-              .slice(0, showAdvancedOptions ? undefined : 5)
-              .map(preset => (
-                <TooltipProvider key={preset.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => applyPreset(preset)}
-                        className={cn(
-                          'h-8 px-3 text-xs font-medium transition-all duration-200 hover:scale-105',
-                          'bg-gradient-to-r hover:shadow-md',
-                          preset.id === 'all-active' &&
-                            'from-emerald-50 to-green-50 border-emerald-200 text-emerald-700 hover:from-emerald-100 hover:to-green-100',
-                          preset.id === 'critical-attention' &&
-                            'from-red-50 to-rose-50 border-red-200 text-red-700 hover:from-red-100 hover:to-rose-100',
-                          preset.id === 'document-expiring' &&
-                            'from-amber-50 to-orange-50 border-amber-200 text-amber-700 hover:from-amber-100 hover:to-orange-100',
-                          preset.id === 'unassigned' &&
-                            'from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-indigo-100',
-                          preset.id === 'document-expired' &&
-                            'from-purple-50 to-violet-50 border-purple-200 text-purple-700 hover:from-purple-100 hover:to-violet-100'
-                        )}
-                      >
-                        {preset.name}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className='font-medium'>{preset.name}</p>
-                      <p className='text-xs text-muted-foreground'>
-                        {preset.description}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
+          {/* Group filters by category for better organization */}
+          <div className='space-y-3'>
+            {/* Status Filters */}
+            <div className='space-y-2'>
+              <Label className='text-xs font-medium text-muted-foreground uppercase tracking-wide'>
+                Status
+              </Label>
+              <div className='flex flex-wrap gap-2'>
+                {presetsWithCounts
+                  .filter(p => p.category === 'status')
+                  .map(preset => {
+                    const Icon = preset.icon;
+                    return (
+                      <TooltipProvider key={preset.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => applyPreset(preset)}
+                              className={cn(
+                                'h-9 px-3 text-xs font-medium transition-all duration-200 hover:scale-105',
+                                'bg-gradient-to-r hover:shadow-md flex items-center gap-2',
+                                preset.id === 'all-active' &&
+                                  'from-emerald-50 to-green-50 border-emerald-200 text-emerald-700 hover:from-emerald-100 hover:to-green-100',
+                                preset.id === 'critical-attention' &&
+                                  'from-red-50 to-rose-50 border-red-200 text-red-700 hover:from-red-100 hover:to-rose-100'
+                              )}
+                            >
+                              <Icon className='h-4 w-4' />
+                              <span>{preset.name}</span>
+                              {preset.count !== undefined && (
+                                <Badge
+                                  variant='secondary'
+                                  className='ml-1 bg-white/50 text-xs font-semibold'
+                                >
+                                  {preset.count}
+                                </Badge>
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className='font-medium'>{preset.name}</p>
+                            <p className='text-xs text-muted-foreground'>
+                              {preset.description}
+                              {preset.count !== undefined &&
+                                ` • ${preset.count} promoters`}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Document Filters */}
+            <div className='space-y-2'>
+              <Label className='text-xs font-medium text-muted-foreground uppercase tracking-wide'>
+                Documents
+              </Label>
+              <div className='flex flex-wrap gap-2'>
+                {presetsWithCounts
+                  .filter(p => p.category === 'document')
+                  .map(preset => {
+                    const Icon = preset.icon;
+                    return (
+                      <TooltipProvider key={preset.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => applyPreset(preset)}
+                              className={cn(
+                                'h-9 px-3 text-xs font-medium transition-all duration-200 hover:scale-105',
+                                'bg-gradient-to-r hover:shadow-md flex items-center gap-2',
+                                preset.id === 'document-expiring' &&
+                                  'from-amber-50 to-orange-50 border-amber-200 text-amber-700 hover:from-amber-100 hover:to-orange-100',
+                                preset.id === 'document-expired' &&
+                                  'from-purple-50 to-violet-50 border-purple-200 text-purple-700 hover:from-purple-100 hover:to-violet-100'
+                              )}
+                            >
+                              <Icon className='h-4 w-4' />
+                              <span>{preset.name}</span>
+                              {preset.count !== undefined && (
+                                <Badge
+                                  variant='secondary'
+                                  className='ml-1 bg-white/50 text-xs font-semibold'
+                                >
+                                  {preset.count}
+                                </Badge>
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className='font-medium'>{preset.name}</p>
+                            <p className='text-xs text-muted-foreground'>
+                              {preset.description}
+                              {preset.count !== undefined &&
+                                ` • ${preset.count} promoters`}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Assignment Filters */}
+            <div className='space-y-2'>
+              <Label className='text-xs font-medium text-muted-foreground uppercase tracking-wide'>
+                Assignment
+              </Label>
+              <div className='flex flex-wrap gap-2'>
+                {presetsWithCounts
+                  .filter(p => p.category === 'assignment')
+                  .map(preset => {
+                    const Icon = preset.icon;
+                    return (
+                      <TooltipProvider key={preset.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => applyPreset(preset)}
+                              className={cn(
+                                'h-9 px-3 text-xs font-medium transition-all duration-200 hover:scale-105',
+                                'bg-gradient-to-r hover:shadow-md flex items-center gap-2',
+                                preset.id === 'unassigned' &&
+                                  'from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-indigo-100'
+                              )}
+                            >
+                              <Icon className='h-4 w-4' />
+                              <span>{preset.name}</span>
+                              {preset.count !== undefined && (
+                                <Badge
+                                  variant='secondary'
+                                  className='ml-1 bg-white/50 text-xs font-semibold'
+                                >
+                                  {preset.count}
+                                </Badge>
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className='font-medium'>{preset.name}</p>
+                            <p className='text-xs text-muted-foreground'>
+                              {preset.description}
+                              {preset.count !== undefined &&
+                                ` • ${preset.count} promoters`}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
 
             {showAdvancedOptions && hasFiltersApplied && (
               <TooltipProvider>
@@ -485,10 +565,11 @@ export function PromotersFilters({
         </div>
 
         <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,2fr)]'>
-          <SearchInput
+          <PromotersSearchWithAutocomplete
             searchTerm={searchTerm}
             onSearchChange={onSearchChange}
             isSearching={isFetching && searchTerm.length > 0}
+            locale={locale}
           />
 
           {/* Recent searches - Only show when advanced options are enabled */}
@@ -685,7 +766,7 @@ export function PromotersFilters({
           </div>
         </div>
 
-        {/* Filter Summary */}
+        {/* Filter Summary with Remove Buttons */}
         {(hasFiltersApplied ||
           advancedSearchCriteria.length > 0 ||
           searchTerm) && (
@@ -693,48 +774,102 @@ export function PromotersFilters({
             <div className='flex items-start gap-3'>
               <Filter className='h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0' />
               <div className='flex-1'>
-                <p className='text-sm font-medium text-blue-900 dark:text-blue-100 mb-2'>
-                  Active Filters Summary
-                </p>
-                <div className='flex flex-wrap gap-1 text-xs'>
+                <div className='flex items-center justify-between mb-2'>
+                  <p className='text-sm font-medium text-blue-900 dark:text-blue-100'>
+                    Active Filters ({[
+                      searchTerm ? 1 : 0,
+                      statusFilter !== 'all' ? 1 : 0,
+                      documentFilter !== 'all' ? 1 : 0,
+                      assignmentFilter !== 'all' ? 1 : 0,
+                      advancedSearchCriteria.length > 0 ? 1 : 0,
+                    ].reduce((a, b) => a + b, 0)})
+                  </p>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => {
+                      onResetFilters();
+                      handleClearAdvancedSearch();
+                    }}
+                    className='h-6 px-2 text-xs text-blue-700 hover:text-blue-900 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-800'
+                  >
+                    Clear All
+                  </Button>
+                </div>
+                <div className='flex flex-wrap gap-1.5 text-xs'>
                   {searchTerm && (
                     <Badge
                       variant='secondary'
-                      className='bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
+                      className='group bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 pr-1 flex items-center gap-1'
                     >
-                      Search: "{searchTerm}"
+                      <span>Search: "{searchTerm}"</span>
+                      <button
+                        onClick={() => onSearchChange('')}
+                        className='ml-1 rounded-full hover:bg-blue-200 dark:hover:bg-blue-700 p-0.5 transition-colors'
+                        aria-label='Remove search filter'
+                      >
+                        <X className='h-3 w-3' />
+                      </button>
                     </Badge>
                   )}
                   {statusFilter !== 'all' && (
                     <Badge
                       variant='secondary'
-                      className='bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                      className='group bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 pr-1 flex items-center gap-1'
                     >
-                      Status: {statusFilter}
+                      <span>Status: {statusFilter}</span>
+                      <button
+                        onClick={() => onStatusFilterChange('all')}
+                        className='ml-1 rounded-full hover:bg-green-200 dark:hover:bg-green-700 p-0.5 transition-colors'
+                        aria-label='Remove status filter'
+                      >
+                        <X className='h-3 w-3' />
+                      </button>
                     </Badge>
                   )}
                   {documentFilter !== 'all' && (
                     <Badge
                       variant='secondary'
-                      className='bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100'
+                      className='group bg-amber-100 text-amber-800 dark:bg-amber-800 dark:text-amber-100 pr-1 flex items-center gap-1'
                     >
-                      Documents: {documentFilter}
+                      <span>Documents: {documentFilter}</span>
+                      <button
+                        onClick={() => onDocumentFilterChange('all')}
+                        className='ml-1 rounded-full hover:bg-amber-200 dark:hover:bg-amber-700 p-0.5 transition-colors'
+                        aria-label='Remove document filter'
+                      >
+                        <X className='h-3 w-3' />
+                      </button>
                     </Badge>
                   )}
                   {assignmentFilter !== 'all' && (
                     <Badge
                       variant='secondary'
-                      className='bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'
+                      className='group bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100 pr-1 flex items-center gap-1'
                     >
-                      Assignment: {assignmentFilter}
+                      <span>Assignment: {assignmentFilter}</span>
+                      <button
+                        onClick={() => onAssignmentFilterChange('all')}
+                        className='ml-1 rounded-full hover:bg-purple-200 dark:hover:bg-purple-700 p-0.5 transition-colors'
+                        aria-label='Remove assignment filter'
+                      >
+                        <X className='h-3 w-3' />
+                      </button>
                     </Badge>
                   )}
                   {advancedSearchCriteria.length > 0 && (
                     <Badge
                       variant='secondary'
-                      className='bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100'
+                      className='group bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100 pr-1 flex items-center gap-1'
                     >
-                      Advanced: {advancedSearchCriteria.length} criteria
+                      <span>Advanced: {advancedSearchCriteria.length} criteria</span>
+                      <button
+                        onClick={handleClearAdvancedSearch}
+                        className='ml-1 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-700 p-0.5 transition-colors'
+                        aria-label='Remove advanced search criteria'
+                      >
+                        <X className='h-3 w-3' />
+                      </button>
                     </Badge>
                   )}
                 </div>

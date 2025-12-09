@@ -211,7 +211,7 @@ export function PromotersMetricsCards({
       <EnhancedStatCard
         title='Total promoters'
         value={safeMetrics.total}
-        helper={`${safeMetrics.active} active right now`}
+        helper={`${safeMetrics.active} active right now • Click to view all`}
         icon={Users}
         variant='primary'
         trend={
@@ -221,7 +221,7 @@ export function PromotersMetricsCards({
         }
         trendData={trends?.totalPromoters}
         trendLabel='from last week'
-        tooltip='Total number of registered promoters in the system. Includes active, inactive, and all employment statuses. This is your complete workforce database.'
+        tooltip='Total number of registered promoters in the system. Includes active, inactive, and all employment statuses. This is your complete workforce database. Click this card to view the full list of all promoters.'
         {...(onCardClick && { onClick: () => onCardClick('all') })}
         ariaLabel={`Total promoters: ${safeMetrics.total}. Click to view all promoters.`}
         isActive={activeFilter === 'all'}
@@ -229,39 +229,47 @@ export function PromotersMetricsCards({
       <EnhancedStatCard
         title='Active workforce'
         value={safeMetrics.active}
-        helper={`${safeMetrics.unassigned} awaiting assignment`}
+        helper={`${safeMetrics.unassigned} awaiting assignment • Click to view active`}
         icon={UserCheck}
         variant='neutral'
         trendData={trends?.activeWorkforce}
         trendLabel='from last week'
-        tooltip={`Currently active promoters who are employed and available in the system. Of these ${safeMetrics.active} active promoters, ${safeMetrics.unassigned} are awaiting assignment to a company, while ${safeMetrics.active - safeMetrics.unassigned} are already assigned.`}
+        tooltip={`Currently active promoters who are employed and available in the system. Of these ${safeMetrics.active} active promoters, ${safeMetrics.unassigned} are awaiting assignment to a company, while ${safeMetrics.active - safeMetrics.unassigned} are already assigned. Click this card to view the filtered list of active promoters.`}
         {...(onCardClick && { onClick: () => onCardClick('active') })}
-        ariaLabel={`Active workforce: ${safeMetrics.active}. Click to filter by assigned promoters.`}
+        ariaLabel={`Active workforce: ${safeMetrics.active}. Click to view filtered list of active promoters.`}
         isActive={activeFilter === 'active'}
       />
       <EnhancedStatCard
         title='Document alerts'
         value={safeMetrics.critical}
-        helper={`${safeMetrics.expiring} expiring soon`}
+        helper={
+          safeMetrics.critical > 0
+            ? `${safeMetrics.expiring} expiring soon • Click to view all`
+            : 'All documents are valid'
+        }
         icon={ShieldAlert}
         variant={safeMetrics.critical > 0 ? 'danger' : 'warning'}
         trendData={trends?.criticalDocuments}
         trendLabel='from last week'
         invertTrendColors={true} // Down is good for alerts!
-        tooltip={`Promoters with document compliance issues. ${safeMetrics.critical} have expired documents (ID cards or passports) requiring immediate attention. ${safeMetrics.expiring} have documents expiring within 30 days. Take action now to maintain compliance.`}
+        tooltip={`Promoters with document compliance issues. ${safeMetrics.critical} have expired documents (ID cards or passports) requiring immediate attention. ${safeMetrics.expiring} have documents expiring within 30 days. Click this card to view the filtered list of promoters with document issues.`}
         {...(onCardClick && { onClick: () => onCardClick('alerts') })}
-        ariaLabel={`Document alerts: ${safeMetrics.critical} critical, ${safeMetrics.expiring} expiring soon. Click to filter by document issues.`}
+        ariaLabel={`Document alerts: ${safeMetrics.critical} critical, ${safeMetrics.expiring} expiring soon. Click to view filtered list of promoters with document issues.`}
         isActive={activeFilter === 'alerts'}
       />
       <EnhancedStatCard
         title='Compliance rate'
         value={`${safeMetrics.complianceRate}%`}
-        helper={`${assignedStaff} assigned staff`}
+        helper={
+          safeMetrics.complianceRate >= 90
+            ? `${assignedStaff} assigned staff • Target met ✓`
+            : `${assignedStaff} assigned staff • Click to improve`
+        }
         icon={CheckCircle}
         variant={safeMetrics.complianceRate >= 90 ? 'success' : 'warning'}
         trendData={trends?.complianceRate}
         trendLabel='from last week'
-        tooltip={`Percentage of promoters with all documents valid and up to date. This measures how many promoters have both valid ID cards and passports. Target: 90% or higher for optimal workforce readiness.`}
+        tooltip={`Percentage of promoters with all documents valid and up to date. This measures how many promoters have both valid ID cards and passports. Target: 90% or higher for optimal workforce readiness. ${safeMetrics.complianceRate < 90 ? 'Click this card to view compliant promoters and identify areas for improvement.' : 'Click this card to view the list of compliant promoters.'}`}
         {...(onCardClick && { onClick: () => onCardClick('compliance') })}
         ariaLabel={`Compliance rate: ${safeMetrics.complianceRate}%. Click to view compliant promoters.`}
         isActive={activeFilter === 'compliance'}

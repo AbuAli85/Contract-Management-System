@@ -1810,6 +1810,8 @@ export function EnhancedPromotersViewRefactored({
           onExport={handleExport}
           onRefresh={handleRefresh}
           isFetching={isDataFetching}
+          metrics={metrics}
+          locale={derivedLocale}
         />
       </section>
 

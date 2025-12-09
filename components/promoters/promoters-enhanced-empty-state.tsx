@@ -81,29 +81,29 @@ export function PromotersEnhancedEmptyState({
 
   if (type === 'no-results') {
     return (
-      <Card className='border-2 border-dashed'>
+      <Card className='border-2 border-dashed border-yellow-200 dark:border-yellow-800'>
         <CardContent className='flex flex-col items-center justify-center py-16 px-6'>
           <div className='rounded-full bg-yellow-100 dark:bg-yellow-900 p-6 mb-6'>
             <Search className='h-16 w-16 text-yellow-600 dark:text-yellow-400' />
           </div>
-          <h3 className='text-2xl font-bold mb-2'>No Matching Promoters</h3>
+          <h3 className='text-2xl font-bold mb-2'>No Matching Promoters Found</h3>
           <p className='text-muted-foreground text-center max-w-md mb-6'>
             {searchTerm ? (
               <>
-                No promoters match your search for{' '}
-                <strong>"{searchTerm}"</strong>. Try different keywords or
-                adjust your filters.
+                We couldn't find any promoters matching{' '}
+                <strong className='text-foreground'>"{searchTerm}"</strong>. Try
+                adjusting your search or filters to see more results.
               </>
             ) : (
               <>
-                No promoters match your current filters. Try adjusting your
-                filter criteria or clearing all filters.
+                No promoters match your current filter criteria. Try adjusting
+                your filters or clearing them to view all promoters.
               </>
             )}
           </p>
-          <div className='flex flex-wrap gap-3 justify-center'>
+          <div className='flex flex-wrap gap-3 justify-center mb-6'>
             {onClearFilters && (
-              <Button onClick={onClearFilters} size='lg'>
+              <Button onClick={onClearFilters} size='lg' className='shadow-md'>
                 <Search className='mr-2 h-5 w-5' />
                 Clear All Filters
               </Button>
@@ -115,17 +115,34 @@ export function PromotersEnhancedEmptyState({
               </Button>
             )}
           </div>
-          {searchTerm && (
-            <div className='mt-6 text-sm text-muted-foreground'>
-              <p className='font-medium mb-2'>Search tips:</p>
-              <ul className='space-y-1 text-left'>
-                <li>• Try shorter or more general keywords</li>
-                <li>• Check for typos in the search term</li>
-                <li>• Remove filters to see more results</li>
-                <li>• Search by ID card number for exact match</li>
-              </ul>
+          <div className='mt-4 p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800 max-w-md w-full'>
+            <div className='flex items-start gap-3'>
+              <Search className='h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5' />
+              <div className='text-sm space-y-2'>
+                <p className='font-medium text-yellow-900 dark:text-yellow-100'>
+                  {searchTerm ? 'Search Tips:' : 'Filter Tips:'}
+                </p>
+                <ul className='text-yellow-700 dark:text-yellow-300 space-y-1 ml-1'>
+                  {searchTerm ? (
+                    <>
+                      <li>• Try shorter or more general keywords</li>
+                      <li>• Check for typos in the search term</li>
+                      <li>• Search by name, email, phone, or partial ID (4+ digits)</li>
+                      <li>• Remove some filters to broaden your search</li>
+                      <li>• Use advanced search for complex queries</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Try removing one filter at a time</li>
+                      <li>• Check if status filters are too restrictive</li>
+                      <li>• Verify document health filters</li>
+                      <li>• Clear all filters to see all promoters</li>
+                    </>
+                  )}
+                </ul>
+              </div>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     );
