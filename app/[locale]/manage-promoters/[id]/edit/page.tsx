@@ -39,17 +39,6 @@ export default function EditPromoterPage() {
   const [employers, setEmployers] = useState<Employer[]>([]);
   const [employersLoading, setEmployersLoading] = useState(true);
 
-  // Handle case where locale is undefined during build
-  if (!locale) {
-    return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <div className='text-center'>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Fetch employers for the filter
   useEffect(() => {
     const fetchEmployers = async () => {
@@ -140,6 +129,17 @@ export default function EditPromoterPage() {
 
     fetchPromoter();
   }, [promoterId]);
+
+  // Handle case where locale is undefined during build (after hooks)
+  if (!locale) {
+    return (
+      <div className='flex min-h-screen items-center justify-center'>
+        <div className='text-center'>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleFormSubmit = () => {
     toast({

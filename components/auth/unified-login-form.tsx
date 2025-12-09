@@ -118,7 +118,7 @@ export default function UnifiedLoginForm() {
       console.log('🔐 Unified Login - Email:', formData.email);
 
       // Step 1: Try authentication with CAPTCHA if needed
-      let authOptions: any = {
+      const authOptions: any = {
         email: formData.email.trim(),
         password: formData.password,
       };

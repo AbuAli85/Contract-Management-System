@@ -42,10 +42,10 @@ export default function DiagnosticPage() {
 
   const testDynamicImport = async () => {
     try {
-      const module = await import(
+      const importedModule = await import(
         '@/components/unified-contract-generator-form'
       );
-      if (!module.default) {
+      if (!importedModule.default) {
         throw new Error('Default export not found');
       }
     } catch (error) {

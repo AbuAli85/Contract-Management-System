@@ -80,7 +80,7 @@ export async function POST(request: Request) {
 
     let imported = 0;
     let duplicates = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
     let importedWithCompany = 0;
 
     // Import promoters one by one (could be batched for better performance)

@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Shield, LogIn, AlertCircle, RefreshCw } from 'lucide-react';
 
 // Global state to prevent multiple simultaneous auth checks
-let globalAuthState: {
+const globalAuthState: {
   isChecking: boolean;
   lastCheck: number;
   user: any | null;

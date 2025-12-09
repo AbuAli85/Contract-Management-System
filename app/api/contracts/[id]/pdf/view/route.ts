@@ -98,7 +98,7 @@ export const GET = withRBAC(
       const isApproved =
         contract.status === 'approved' ||
         contract.approval_status === 'approved';
-      let hasPDF = !!contract.pdf_url;
+      const hasPDF = !!contract.pdf_url;
 
       if (!isApproved) {
         console.log('❌ Contract not approved:', contract.approval_status);

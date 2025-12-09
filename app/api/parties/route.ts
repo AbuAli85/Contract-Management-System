@@ -347,7 +347,7 @@ async function handleGET(request: Request) {
 
     // Fetch contract counts for all parties
     const contractCountsStartTime = Date.now();
-    let contractCounts: Record<string, { total: number; active: number }> = {};
+    const contractCounts: Record<string, { total: number; active: number }> = {};
 
     try {
       console.log(`[${requestId}] 📊 Fetching contract counts for parties`);

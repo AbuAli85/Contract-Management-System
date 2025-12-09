@@ -95,7 +95,7 @@ export const POST = async (request: NextRequest) => {
     }
 
     // Update contract based on action
-    let updateData: any = {
+    const updateData: any = {
       updated_at: new Date().toISOString(),
     };
 
@@ -294,7 +294,7 @@ export const PUT = async (request: NextRequest) => {
     }
 
     // Prepare update data
-    let updateData: any = {
+    const updateData: any = {
       updated_at: new Date().toISOString(),
     };
 

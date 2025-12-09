@@ -89,7 +89,7 @@ export async function POST(
     const supabase = createServiceClient();
 
     // Try to fetch with first_party_id/second_party_id, fallback to employer_id/client_id
-    let { data: contract, error: fetchError } = await supabase
+    const { data: contract, error: fetchError } = await supabase
       .from('contracts')
       .select(
         `

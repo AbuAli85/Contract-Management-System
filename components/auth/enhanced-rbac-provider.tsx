@@ -73,7 +73,7 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
 
       // Try to fetch user data from profiles table (which exists)
       let userData = null;
-      let companyData = null;
+      const companyData = null;
 
       // First try profiles table by email
       const { data: profilesData, error: profilesError } = await supabase

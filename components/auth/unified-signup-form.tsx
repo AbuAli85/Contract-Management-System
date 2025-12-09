@@ -190,7 +190,7 @@ export default function UnifiedSignupForm() {
       console.log('🔐 Unified Signup - Role:', formData.role);
 
       // Step 1: Create auth user with CAPTCHA if needed
-      let signupOptions: any = {
+      const signupOptions: any = {
         email: formData.email.trim(),
         password: formData.password,
         options: {

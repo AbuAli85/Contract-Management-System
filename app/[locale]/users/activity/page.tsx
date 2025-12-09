@@ -70,27 +70,6 @@ export default function UserActivityPage() {
     dateRange: '7d',
   });
 
-  // Check permissions
-  if (!canManageUsers()) {
-    return (
-      <div className='container mx-auto p-6'>
-        <Card>
-          <CardContent className='p-6'>
-            <div className='text-center'>
-              <Activity className='mx-auto mb-4 h-12 w-12 text-gray-400' />
-              <h3 className='mb-2 text-lg font-semibold text-gray-900'>
-                Access Denied
-              </h3>
-              <p className='text-gray-600'>
-                You don't have permission to view user activity logs.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   // Fetch user activities
   const fetchUserActivities = async () => {
     try {
@@ -251,6 +230,27 @@ export default function UserActivityPage() {
   const uniqueResourceTypes = [
     ...new Set(activities.map(a => a.resource_type)),
   ].sort();
+
+  // Check permissions (after hooks)
+  if (!canManageUsers()) {
+    return (
+      <div className='container mx-auto p-6'>
+        <Card>
+          <CardContent className='p-6'>
+            <div className='text-center'>
+              <Activity className='mx-auto mb-4 h-12 w-12 text-gray-400' />
+              <h3 className='mb-2 text-lg font-semibold text-gray-900'>
+                Access Denied
+              </h3>
+              <p className='text-gray-600'>
+                You don't have permission to view user activity logs.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className='container mx-auto space-y-6 p-6'>

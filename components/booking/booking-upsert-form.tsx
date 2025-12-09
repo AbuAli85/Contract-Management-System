@@ -65,10 +65,12 @@ export function BookingUpsertForm({
 }: BookingUpsertFormProps) {
   const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
 
+  // Call both hooks unconditionally (React Hooks rule)
+  const mutationAPI = useBookingUpsertAPI({ onSuccess });
+  const mutationDirect = useBookingUpsert({ onSuccess });
+
   // Choose between direct Supabase or API approach
-  const mutation = useAPI
-    ? useBookingUpsertAPI({ onSuccess })
-    : useBookingUpsert({ onSuccess });
+  const mutation = useAPI ? mutationAPI : mutationDirect;
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),

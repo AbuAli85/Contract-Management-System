@@ -83,21 +83,6 @@ export default function RolesAndPermissionsPage() {
     permissions: [] as string[],
   });
 
-  // Check permissions
-  if (!canManageUsers()) {
-    return (
-      <div className='container mx-auto p-6'>
-        <Alert>
-          <XCircle className='h-4 w-4' />
-          <AlertDescription>
-            You don't have permission to access roles and permissions. Please
-            contact an administrator.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   // Fetch roles and permissions
   const fetchData = async () => {
     try {
@@ -128,6 +113,21 @@ export default function RolesAndPermissionsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Check permissions (after hooks)
+  if (!canManageUsers()) {
+    return (
+      <div className='container mx-auto p-6'>
+        <Alert>
+          <XCircle className='h-4 w-4' />
+          <AlertDescription>
+            You don't have permission to access roles and permissions. Please
+            contact an administrator.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   // Handle role creation
   const handleCreateRole = async () => {
