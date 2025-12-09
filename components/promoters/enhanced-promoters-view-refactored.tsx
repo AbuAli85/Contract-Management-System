@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { differenceInDays, format, parseISO } from 'date-fns';
@@ -533,72 +533,103 @@ export function EnhancedPromotersViewRefactored({
     return 'en';
   }, [locale]);
 
+  // Use ref to safely access searchParams.get
+  const getUrlParam = useCallback((key: string, defaultValue: string = ''): string => {
+    try {
+      if (!searchParams) return defaultValue;
+      if (typeof searchParams.get !== 'function') return defaultValue;
+      const value = searchParams.get(key);
+      return value !== null && value !== undefined ? value : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  }, [searchParams]);
+
   // Sync state from URL parameters (runs on mount and when URL changes)
   useEffect(() => {
-    if (!searchParams || typeof searchParams.get !== 'function') {
+    // Guard: ensure searchParams is available
+    if (!searchParams) {
+      return;
+    }
+
+    // Guard: ensure get method exists
+    if (typeof searchParams.get !== 'function') {
+      logger.warn('searchParams.get is not a function');
       return;
     }
 
     try {
       // Read search term
-      const urlSearch = searchParams.get('search');
-      if (urlSearch !== null && urlSearch !== undefined) {
+      const urlSearch = getUrlParam('search');
+      if (urlSearch && urlSearch !== searchTerm) {
         setSearchTerm(urlSearch);
       }
 
       // Read status filter
-      const urlStatus = searchParams.get('status');
+      const urlStatus = getUrlParam('status');
       if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
-        setStatusFilter(urlStatus as OverallStatus);
-      } else if (!urlStatus) {
+        if (statusFilter !== urlStatus) {
+          setStatusFilter(urlStatus as OverallStatus);
+        }
+      } else if (!urlStatus && statusFilter !== 'all') {
         setStatusFilter('all');
       }
 
       // Read document filter
-      const urlDocFilter = searchParams.get('document_filter') || searchParams.get('documents');
+      const urlDocFilter = getUrlParam('document_filter') || getUrlParam('documents');
       if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
-        setDocumentFilter(urlDocFilter as 'expired' | 'expiring' | 'missing');
-      } else if (!urlDocFilter) {
+        if (documentFilter !== urlDocFilter) {
+          setDocumentFilter(urlDocFilter as 'expired' | 'expiring' | 'missing');
+        }
+      } else if (!urlDocFilter && documentFilter !== 'all') {
         setDocumentFilter('all');
       }
 
       // Read assignment filter
-      const urlAssignment = searchParams.get('assignment_filter') || searchParams.get('assignment');
+      const urlAssignment = getUrlParam('assignment_filter') || getUrlParam('assignment');
       if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
-        setAssignmentFilter(urlAssignment as 'assigned' | 'unassigned');
-      } else if (!urlAssignment) {
+        if (assignmentFilter !== urlAssignment) {
+          setAssignmentFilter(urlAssignment as 'assigned' | 'unassigned');
+        }
+      } else if (!urlAssignment && assignmentFilter !== 'all') {
         setAssignmentFilter('all');
       }
 
       // Read sort field
-      const urlSortField = searchParams.get('sortField');
+      const urlSortField = getUrlParam('sortField');
       if (urlSortField && (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents')) {
-        setSortField(urlSortField as SortField);
+        if (sortField !== urlSortField) {
+          setSortField(urlSortField as SortField);
+        }
       }
 
       // Read sort order
-      const urlSortOrder = searchParams.get('sortOrder');
+      const urlSortOrder = getUrlParam('sortOrder');
       if (urlSortOrder && (urlSortOrder === 'asc' || urlSortOrder === 'desc')) {
-        setSortOrder(urlSortOrder as SortOrder);
+        if (sortOrder !== urlSortOrder) {
+          setSortOrder(urlSortOrder as SortOrder);
+        }
       }
 
       // Read view mode
-      const urlView = searchParams.get('view');
+      const urlView = getUrlParam('view');
       if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
-        setViewMode(urlView);
+        if (viewMode !== urlView) {
+          setViewMode(urlView);
+        }
       } else if (typeof window !== 'undefined') {
         // Fallback to localStorage only if no URL param
         const savedView = localStorage.getItem('promoters-view-mode');
         if (savedView && (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics')) {
-          setViewMode(savedView);
+          if (viewMode !== savedView) {
+            setViewMode(savedView);
+          }
         }
       }
     } catch (error) {
       logger.error('Error syncing state from URL:', error);
     }
-    // Only depend on searchParams to avoid circular dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, getUrlParam, searchTerm, statusFilter, documentFilter, assignmentFilter, sortField, sortOrder, viewMode]);
 
   // Debounce search term to prevent excessive API calls
   useEffect(() => {
