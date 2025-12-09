@@ -50,6 +50,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useLocale } from 'next-intl';
 import { EnhancedDashboardCharts } from '@/components/dashboard/enhanced-dashboard-charts';
 import { DashboardActivityFeed } from '@/components/dashboard/dashboard-activity-feed';
 import {
@@ -106,33 +107,79 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
+  const locale = useLocale();
+
+  // Get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (locale === 'ar') {
+      if (hour < 12) return 'صباح الخير';
+      if (hour < 18) return 'مساء الخير';
+      return 'مساء الخير';
+    }
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  // Get role display name
+  const getRoleDisplayName = (role: string) => {
+    const roleMap: Record<string, { en: string; ar: string }> = {
+      admin: { en: 'Administrator', ar: 'مدير النظام' },
+      super_admin: { en: 'Super Administrator', ar: 'مدير عام' },
+      manager: { en: 'Manager', ar: 'مدير' },
+      user: { en: 'User', ar: 'مستخدم' },
+      promoter: { en: 'Promoter', ar: 'مروج' },
+      client: { en: 'Client', ar: 'عميل' },
+    };
+    return roleMap[role]?.[locale as 'en' | 'ar'] || role;
+  };
 
   // Fetch dashboard statistics with React Query for real-time updates
   const {
     data: statsData,
     isLoading: statsLoading,
+    isError: statsError,
+    error: statsErrorDetails,
     refetch: refetchStats,
   } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const [contractsRes, promotersRes] = await Promise.all([
-        fetch('/api/metrics/contracts'),
-        fetch('/api/promoters/enhanced-metrics'),
-      ]);
+      try {
+        const [contractsRes, promotersRes] = await Promise.all([
+          fetch('/api/metrics/contracts', {
+            credentials: 'include',
+            cache: 'no-store',
+          }),
+          fetch('/api/promoters/enhanced-metrics', {
+            credentials: 'include',
+            cache: 'no-store',
+          }),
+        ]);
 
-      const [contractsData, promotersData] = await Promise.all([
-        contractsRes.json(),
-        promotersRes.json(),
-      ]);
+        if (!contractsRes.ok || !promotersRes.ok) {
+          throw new Error('Failed to fetch dashboard statistics');
+        }
 
-      return {
-        contracts: contractsData.success ? contractsData.metrics : null,
-        promoters: promotersData.success ? promotersData.metrics : null,
-        scope: contractsData.scope || 'user-specific',
-      };
+        const [contractsData, promotersData] = await Promise.all([
+          contractsRes.json(),
+          promotersRes.json(),
+        ]);
+
+        return {
+          contracts: contractsData.success ? contractsData.metrics : null,
+          promoters: promotersData.success ? promotersData.metrics : null,
+          scope: contractsData.scope || 'user-specific',
+        };
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        throw error;
+      }
     },
     refetchInterval: 60000, // Auto-refresh every 60 seconds
     staleTime: 30000, // Consider data fresh for 30 seconds
+    retry: 2, // Retry failed requests twice
+    retryDelay: 1000, // Wait 1 second between retries
   });
 
   const stats = statsData?.contracts;
@@ -217,10 +264,13 @@ function DashboardContent() {
   const handleRefresh = useCallback(() => {
     refetchStats();
     toast({
-      title: '✅ Dashboard Refreshed',
-      description: 'All metrics have been updated',
+      title: locale === 'ar' ? '✅ تم تحديث لوحة التحكم' : '✅ Dashboard Refreshed',
+      description:
+        locale === 'ar'
+          ? 'تم تحديث جميع المقاييس والإحصائيات'
+          : 'All metrics and statistics have been updated',
     });
-  }, [refetchStats, toast]);
+  }, [refetchStats, toast, locale]);
 
   // Calculate quick stats with trends using actual growth calculations
   const totalContractsChange = calculateGrowthPercentage(
@@ -242,39 +292,43 @@ function DashboardContent() {
 
   const quickStats: QuickStat[] = [
     {
-      label: 'Total Contracts',
+      label: locale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
       value: stats?.total || 0,
       change: totalContractsChange,
       trend: determineGrowthTrend(totalContractsChange),
-      icon: <FileText className='h-5 w-5' />,
+      icon: <FileText className='h-5 w-5' aria-hidden='true' />,
       color: 'blue',
     },
     {
-      label: 'Active Contracts',
+      label: locale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
       value: stats?.active || 0,
       change: activeContractsChange,
       trend: determineGrowthTrend(activeContractsChange),
-      icon: <Activity className='h-5 w-5' />,
+      icon: <Activity className='h-5 w-5' aria-hidden='true' />,
       color: 'green',
     },
     {
-      label: 'Workforce',
+      label: locale === 'ar' ? 'القوى العاملة' : 'Workforce',
       value: promoterStats?.totalWorkforce || 0,
       change: workforceChange,
       trend: determineGrowthTrend(workforceChange),
-      icon: <Users className='h-5 w-5' />,
+      icon: <Users className='h-5 w-5' aria-hidden='true' />,
       color: 'purple',
     },
     {
-      label: 'Utilization',
+      label: locale === 'ar' ? 'معدل الاستخدام' : 'Utilization',
       value:
-        stats?.active === 0 ? 'N/A' : `${promoterStats?.utilizationRate || 0}%`,
+        stats?.active === 0
+          ? locale === 'ar'
+            ? 'غير متاح'
+            : 'N/A'
+          : `${promoterStats?.utilizationRate || 0}%`,
       change: utilizationChange,
       trend:
         stats?.active === 0
           ? 'neutral'
           : determineGrowthTrend(utilizationChange),
-      icon: <TrendingUp className='h-5 w-5' />,
+      icon: <TrendingUp className='h-5 w-5' aria-hidden='true' />,
       color: 'orange',
     },
   ];
@@ -342,40 +396,145 @@ function DashboardContent() {
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Welcome Section */}
         <div className='mb-8'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <h2 className='text-3xl font-bold text-gray-900 flex items-center gap-3'>
-                Welcome back, {user.full_name || user.email}!
-                <span className='text-2xl'>👋</span>
-              </h2>
-              <p className='text-gray-600 mt-1'>
-                Here's what's happening with your business today •{' '}
-                {format(new Date(), 'EEEE, MMMM d, yyyy')}
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+            <div className='flex-1'>
+              <div className='flex items-center gap-3 mb-2'>
+                <h2
+                  className='text-3xl font-bold text-gray-900 flex items-center gap-3'
+                  aria-label={`${getTimeBasedGreeting()}, ${user.full_name || user.email}`}
+                >
+                  <span className='text-lg font-normal text-gray-600'>
+                    {getTimeBasedGreeting()},
+                  </span>
+                  <span>{user.full_name || user.email}</span>
+                  <span className='text-2xl' role='img' aria-label='waving hand'>
+                    👋
+                  </span>
+                </h2>
+              </div>
+              <p className='text-gray-600 mt-1 flex items-center gap-2 flex-wrap'>
+                <span>
+                  {locale === 'ar'
+                    ? 'إليك ما يحدث في عملك اليوم'
+                    : "Here's what's happening with your business today"}
+                </span>
+                <span className='text-gray-400'>•</span>
+                <time dateTime={new Date().toISOString()}>
+                  {format(new Date(), 'EEEE, MMMM d, yyyy')}
+                </time>
               </p>
             </div>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleRefresh}
-              disabled={statsLoading}
-              className='gap-2'
-            >
-              <RefreshCw
-                className={cn('h-4 w-4', statsLoading && 'animate-spin')}
-              />
-              Refresh
-            </Button>
+            <div className='flex items-center gap-2'>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={handleRefresh}
+                      disabled={statsLoading}
+                      className='gap-2'
+                      aria-label={
+                        locale === 'ar'
+                          ? 'تحديث البيانات'
+                          : 'Refresh dashboard data'
+                      }
+                    >
+                      <RefreshCw
+                        className={cn('h-4 w-4', statsLoading && 'animate-spin')}
+                        aria-hidden='true'
+                      />
+                      <span className='hidden sm:inline'>
+                        {locale === 'ar' ? 'تحديث' : 'Refresh'}
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {locale === 'ar'
+                        ? 'تحديث جميع البيانات والإحصائيات'
+                        : 'Refresh all dashboard data and statistics'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
-          <div className='mt-3 flex items-center gap-2'>
-            <Badge variant='secondary' className='text-sm gap-1.5'>
-              <User className='h-3 w-3' />
-              Role: {user.role}
-            </Badge>
-            <Badge variant='outline' className='text-xs'>
-              {statsData?.scope === 'system-wide'
-                ? '🌐 System-wide view'
-                : '👤 Your data'}
-            </Badge>
+          <div className='mt-4 flex flex-wrap items-center gap-2'>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant='secondary'
+                    className='text-sm gap-1.5 cursor-help'
+                    aria-label={`User role: ${getRoleDisplayName(user.role)}`}
+                  >
+                    <Shield className='h-3 w-3' aria-hidden='true' />
+                    <span>
+                      {locale === 'ar' ? 'الدور:' : 'Role:'}{' '}
+                      {getRoleDisplayName(user.role)}
+                    </span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {locale === 'ar'
+                      ? `دورك الحالي في النظام: ${getRoleDisplayName(user.role)}`
+                      : `Your current system role: ${getRoleDisplayName(user.role)}`}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant='outline'
+                    className='text-xs cursor-help'
+                    aria-label={
+                      statsData?.scope === 'system-wide'
+                        ? locale === 'ar'
+                          ? 'عرض شامل للنظام'
+                          : 'System-wide data view'
+                        : locale === 'ar'
+                          ? 'عرض بياناتك فقط'
+                          : 'Your personal data view'
+                    }
+                  >
+                    {statsData?.scope === 'system-wide' ? (
+                      <>
+                        <span className='mr-1' role='img' aria-label='globe'>
+                          🌐
+                        </span>
+                        <span>
+                          {locale === 'ar' ? 'عرض شامل' : 'System-wide view'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className='mr-1' role='img' aria-label='user'>
+                          👤
+                        </span>
+                        <span>
+                          {locale === 'ar' ? 'بياناتك' : 'Your data'}
+                        </span>
+                      </>
+                    )}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {statsData?.scope === 'system-wide'
+                      ? locale === 'ar'
+                        ? 'أنت تعرض جميع البيانات في النظام (صلاحيات المدير)'
+                        : 'You are viewing all system data (Admin privileges)'
+                      : locale === 'ar'
+                        ? 'أنت تعرض بياناتك الشخصية فقط'
+                        : 'You are viewing only your personal data'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
@@ -456,11 +615,21 @@ function DashboardContent() {
         </div>
 
         {/* Assignment Status Clarity Card */}
-        <Card className='border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50'>
+        <Card
+          className='border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50'
+          role='region'
+          aria-label={
+            locale === 'ar'
+              ? 'فهم مقاييس التعيين'
+              : 'Understanding assignment metrics'
+          }
+        >
           <CardHeader>
             <CardTitle className='flex items-center gap-2 text-base'>
-              <Info className='h-5 w-5 text-blue-600' />
-              Understanding Assignment Metrics
+              <Info className='h-5 w-5 text-blue-600' aria-hidden='true' />
+              {locale === 'ar'
+                ? 'فهم مقاييس التعيين'
+                : 'Understanding Assignment Metrics'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -547,14 +716,27 @@ function DashboardContent() {
         {/* Main Dashboard Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
           {/* Workforce Overview */}
-          <Card className='col-span-1 lg:col-span-2 border-0 shadow-lg'>
+          <Card
+            className='col-span-1 lg:col-span-2 border-0 shadow-lg'
+            role='region'
+            aria-label={
+              locale === 'ar'
+                ? 'نظرة عامة على القوى العاملة'
+                : 'Workforce overview'
+            }
+          >
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>
-                <BarChart3 className='h-5 w-5 text-blue-600' />
-                Workforce Overview
+                <BarChart3
+                  className='h-5 w-5 text-blue-600'
+                  aria-hidden='true'
+                />
+                {locale === 'ar' ? 'نظرة عامة على القوى العاملة' : 'Workforce Overview'}
               </CardTitle>
               <CardDescription>
-                Total workforce: {promoterStats?.totalWorkforce || 0} promoters
+                {locale === 'ar' ? 'إجمالي القوى العاملة:' : 'Total workforce:'}{' '}
+                {promoterStats?.totalWorkforce || 0}{' '}
+                {locale === 'ar' ? 'مروج' : 'promoters'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -577,9 +759,14 @@ function DashboardContent() {
                             <div className='p-4 bg-green-50 rounded-lg border border-green-200 cursor-help'>
                               <div className='flex items-center justify-between'>
                                 <span className='text-sm font-medium text-green-800'>
-                                  Active on Contracts
+                                  {locale === 'ar'
+                                    ? 'نشط في العقود'
+                                    : 'Active on Contracts'}
                                 </span>
-                                <CheckCircle className='h-4 w-4 text-green-600' />
+                                <CheckCircle
+                                  className='h-4 w-4 text-green-600'
+                                  aria-hidden='true'
+                                />
                               </div>
                               <div className='text-2xl font-bold text-green-900 mt-2'>
                                 {promoterStats?.activeOnContracts || 0}
@@ -591,12 +778,15 @@ function DashboardContent() {
                                   100
                                 }
                                 className='mt-2 h-2'
+                                aria-label={`${promoterStats?.activeOnContracts || 0} out of ${promoterStats?.totalWorkforce || 0} promoters active on contracts`}
                               />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              Promoters currently working on active contracts
+                              {locale === 'ar'
+                                ? 'المروجون الذين يعملون حاليًا في عقود نشطة'
+                                : 'Promoters currently working on active contracts'}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -608,9 +798,14 @@ function DashboardContent() {
                             <div className='p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-help'>
                               <div className='flex items-center justify-between'>
                                 <span className='text-sm font-medium text-blue-800'>
-                                  Available for Work
+                                  {locale === 'ar'
+                                    ? 'متاح للعمل'
+                                    : 'Available for Work'}
                                 </span>
-                                <Users className='h-4 w-4 text-blue-600' />
+                                <Users
+                                  className='h-4 w-4 text-blue-600'
+                                  aria-hidden='true'
+                                />
                               </div>
                               <div className='text-2xl font-bold text-blue-900 mt-2'>
                                 {promoterStats?.availableForWork || 0}
@@ -622,12 +817,15 @@ function DashboardContent() {
                                   100
                                 }
                                 className='mt-2 h-2 [&>div]:bg-blue-500'
+                                aria-label={`${promoterStats?.availableForWork || 0} out of ${promoterStats?.totalWorkforce || 0} promoters available for work`}
                               />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              Promoters ready and available for new assignments
+                              {locale === 'ar'
+                                ? 'المروجون الجاهزون والمتاحون للتعيينات الجديدة'
+                                : 'Promoters ready and available for new assignments'}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -638,7 +836,7 @@ function DashboardContent() {
                   {/* Other Status */}
                   <div className='pt-4 border-t'>
                     <div className='text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide'>
-                      Other Status
+                      {locale === 'ar' ? 'حالات أخرى' : 'Other Status'}
                     </div>
                     <div className='grid grid-cols-4 gap-3'>
                       <TooltipProvider>
@@ -646,7 +844,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help'>
                               <div className='text-xs text-gray-600 mb-1'>
-                                On Leave
+                                {locale === 'ar' ? 'في إجازة' : 'On Leave'}
                               </div>
                               <div className='text-lg font-semibold'>
                                 {promoterStats?.onLeave || 0}
@@ -654,7 +852,11 @@ function DashboardContent() {
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Promoters temporarily on leave</p>
+                            <p>
+                              {locale === 'ar'
+                                ? 'المروجون في إجازة مؤقتة'
+                                : 'Promoters temporarily on leave'}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -664,7 +866,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help'>
                               <div className='text-xs text-gray-600 mb-1'>
-                                Inactive
+                                {locale === 'ar' ? 'غير نشط' : 'Inactive'}
                               </div>
                               <div className='text-lg font-semibold'>
                                 {promoterStats?.inactive || 0}
@@ -672,7 +874,11 @@ function DashboardContent() {
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Promoters marked as inactive</p>
+                            <p>
+                              {locale === 'ar'
+                                ? 'المروجون المميزون كغير نشطين'
+                                : 'Promoters marked as inactive'}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -682,7 +888,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help'>
                               <div className='text-xs text-gray-600 mb-1'>
-                                Terminated
+                                {locale === 'ar' ? 'منتهي' : 'Terminated'}
                               </div>
                               <div className='text-lg font-semibold'>
                                 {promoterStats?.terminated || 0}
@@ -690,7 +896,11 @@ function DashboardContent() {
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Former promoters who left the company</p>
+                            <p>
+                              {locale === 'ar'
+                                ? 'المروجون السابقون الذين غادروا الشركة'
+                                : 'Former promoters who left the company'}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -700,7 +910,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help bg-blue-50 rounded-lg p-2'>
                               <div className='text-xs text-blue-600 mb-1 font-medium'>
-                                Compliance
+                                {locale === 'ar' ? 'الامتثال' : 'Compliance'}
                               </div>
                               <div className='text-lg font-semibold text-blue-900'>
                                 {promoterStats?.complianceRate || 0}%
@@ -709,7 +919,9 @@ function DashboardContent() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              Percentage of promoters with all documents valid
+                              {locale === 'ar'
+                                ? 'نسبة المروجين الذين لديهم جميع المستندات صالحة'
+                                : 'Percentage of promoters with all documents valid'}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -845,25 +1057,47 @@ function DashboardContent() {
             </Card>
 
             {/* System Status Card */}
-            <Card className='border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50'>
+            <Card
+              className='border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50'
+              role='region'
+              aria-label={locale === 'ar' ? 'حالة النظام' : 'System status'}
+            >
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
-                  <CheckCircle className='h-5 w-5 text-green-600' />
-                  System Status
+                  <CheckCircle
+                    className='h-5 w-5 text-green-600'
+                    aria-hidden='true'
+                  />
+                  {locale === 'ar' ? 'حالة النظام' : 'System Status'}
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-2'>
                 <div className='flex items-center justify-between text-sm'>
-                  <span className='text-gray-700'>Database</span>
-                  <Badge className='bg-green-500'>Healthy</Badge>
+                  <span className='text-gray-700'>
+                    {locale === 'ar' ? 'قاعدة البيانات' : 'Database'}
+                  </span>
+                  <Badge className='bg-green-500' aria-label='Healthy'>
+                    {locale === 'ar' ? 'سليمة' : 'Healthy'}
+                  </Badge>
                 </div>
                 <div className='flex items-center justify-between text-sm'>
-                  <span className='text-gray-700'>API Services</span>
-                  <Badge className='bg-green-500'>Online</Badge>
+                  <span className='text-gray-700'>
+                    {locale === 'ar' ? 'خدمات API' : 'API Services'}
+                  </span>
+                  <Badge className='bg-green-500' aria-label='Online'>
+                    {locale === 'ar' ? 'متصل' : 'Online'}
+                  </Badge>
                 </div>
                 <div className='flex items-center justify-between text-sm'>
-                  <span className='text-gray-700'>Last Backup</span>
-                  <span className='text-xs text-gray-600'>2 hours ago</span>
+                  <span className='text-gray-700'>
+                    {locale === 'ar' ? 'آخر نسخة احتياطية' : 'Last Backup'}
+                  </span>
+                  <time className='text-xs text-gray-600' dateTime={new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()}>
+                    {formatDistanceToNow(
+                      new Date(Date.now() - 2 * 60 * 60 * 1000),
+                      { addSuffix: true }
+                    )}
+                  </time>
                 </div>
               </CardContent>
             </Card>
