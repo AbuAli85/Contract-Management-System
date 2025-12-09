@@ -50,7 +50,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
-import { useLocaleFromParams } from '@/hooks/use-safe-params';
+import { useParams } from 'next/navigation';
 import { EnhancedDashboardCharts } from '@/components/dashboard/enhanced-dashboard-charts';
 import { DashboardActivityFeed } from '@/components/dashboard/dashboard-activity-feed';
 import {
@@ -107,9 +107,22 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
+  const params = useParams();
+  
   // Safely get locale from params with fallback
-  const locale = useLocaleFromParams();
-
+  const locale = React.useMemo(() => {
+    try {
+      const paramLocale = params?.locale;
+      if (typeof paramLocale === 'string' && ['en', 'ar'].includes(paramLocale)) {
+        return paramLocale;
+      }
+      return 'en';
+    } catch (error) {
+      console.error('Error getting locale from params:', error);
+      return 'en';
+    }
+  }, [params?.locale]);
+  
   // Validate locale is valid
   const validLocale = locale && ['en', 'ar'].includes(locale) ? locale : 'en';
 
