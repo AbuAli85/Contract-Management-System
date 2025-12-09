@@ -57,6 +57,7 @@ import {
   calculateGrowthPercentage,
   determineGrowthTrend,
 } from '@/lib/utils/calculations';
+import { ErrorBoundary } from '@/components/errors/error-boundary';
 
 interface User {
   id: string;
@@ -1143,7 +1144,9 @@ function DashboardContent() {
 export default function DashboardPage() {
   return (
     <AuthGuard requireAuth={true}>
-      <DashboardContent />
+      <ErrorBoundary section="Dashboard">
+        <DashboardContent />
+      </ErrorBoundary>
     </AuthGuard>
   );
 }
