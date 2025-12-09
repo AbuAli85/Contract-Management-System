@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,7 +101,7 @@ interface PromotersFiltersProps {
 
 // Filter preset with icon and count support
 interface EnhancedFilterPreset extends FilterPreset {
-  icon: React.FC<{ className?: string }>;
+  icon: (props: { className?: string }) => React.ReactElement;
   category: 'status' | 'document' | 'assignment';
   count?: number; // Will be populated dynamically
 }
@@ -244,7 +243,6 @@ export function PromotersFilters({
 
       return () => clearTimeout(timer);
     }
-    return undefined;
   }, [searchTerm]); // Removed recentSearches dependency to prevent re-renders during typing
 
   // Keyboard shortcuts
