@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -110,7 +110,7 @@ function DashboardContent() {
   const params = useParams();
   
   // Safely get locale from params with fallback
-  const locale = React.useMemo(() => {
+  const locale = useMemo(() => {
     try {
       const paramLocale = params?.locale;
       if (typeof paramLocale === 'string' && ['en', 'ar'].includes(paramLocale)) {
