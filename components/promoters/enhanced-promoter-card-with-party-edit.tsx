@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { maskIdNumber } from '@/lib/utils/id-masking';
 import {
   Building2,
   Users,
@@ -431,7 +432,7 @@ export function EnhancedPromoterCardWithPartyEdit({
                     )}
                   {promoter.id_card_number && (
                     <p className='text-xs text-muted-foreground font-mono mt-1'>
-                      ID: {promoter.id_card_number}
+                      ID: {maskIdNumber(promoter.id_card_number)}
                     </p>
                   )}
                 </div>

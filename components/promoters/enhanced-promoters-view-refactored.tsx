@@ -11,6 +11,7 @@ import { toTitleCase } from '@/lib/utils/text-formatting';
 import type { Promoter } from '@/lib/types';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import { updatePromoter as updatePromoterAction } from '@/app/actions/promoters-improved';
+import { logger } from '@/lib/utils/logger';
 import type {
   DocumentStatus,
   OverallStatus,
@@ -31,6 +32,7 @@ import { PromotersAlertsPanel } from './promoters-alerts-panel';
 import { PromotersSkeleton } from './promoters-skeleton';
 import { PromotersErrorState } from './promoters-error-state';
 import { PromotersEmptyState } from './promoters-empty-state';
+import { PromotersNoResultsState } from './promoters-no-results-state';
 import { PromotersTimeoutState } from './promoters-timeout-state';
 import { MetricsCardsSkeleton } from './metric-card-skeleton';
 import { RefreshIndicator } from './promoters-refresh-indicator';
@@ -97,7 +99,7 @@ function computeDocumentHealth(
 
   const parsed = parseDateSafe(value);
   if (!parsed) {
-    console.warn('⚠️ Invalid date format:', value);
+    logger.warn('⚠️ Invalid date format:', value);
     return {
       status: 'missing',
       daysRemaining: null,
@@ -175,7 +177,7 @@ function computeOverallStatus(
 
 // Function to fetch ALL promoters for analytics (with proper pagination)
 async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
-  console.log(
+  logger.log(
     '🔄 Fetching ALL promoters for analytics dashboard with pagination...'
   );
 
@@ -200,7 +202,7 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
         sortOrder: 'desc',
       });
 
-      console.log(`📞 Fetching page ${page}/${totalPages} for analytics...`);
+      logger.log(`📞 Fetching page ${page}/${totalPages} for analytics...`);
 
       const response = await fetch(`/api/promoters?${params.toString()}`, {
         method: 'GET',
@@ -237,12 +239,12 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
       if (page === 1) {
         totalCount = payload.total || payload.pagination?.total || 0;
         totalPages = Math.ceil(totalCount / limit);
-        console.log(
+        logger.log(
           `📊 Total workforce: ${totalCount} members across ${totalPages} pages`
         );
       }
 
-      console.log(
+      logger.log(
         `✅ Fetched page ${page}: ${payload.promoters.length} promoters (Total so far: ${allPromoters.length}/${totalCount})`
       );
       page++;
@@ -269,7 +271,7 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
       timestamp: new Date().toISOString(),
     };
 
-    console.log(
+    logger.log(
       `🎉 Successfully fetched ALL ${allPromoters.length} promoters for analytics dashboard!`
     );
     return finalResponse;
@@ -330,7 +332,7 @@ async function fetchPromoters(
 
     timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    console.log(
+    logger.log(
       '📞 Making API request with server-side filtering:',
       params.toString()
     );
@@ -348,7 +350,7 @@ async function fetchPromoters(
       clearTimeout(timeoutId);
     }
 
-    console.log('📡 API Response:', {
+    logger.log('📡 API Response:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok,
@@ -356,7 +358,7 @@ async function fetchPromoters(
     });
 
     if (!response.ok) {
-      console.error('❌ API request failed:', {
+      logger.error('❌ API request failed:', {
         status: response.status,
         statusText: response.statusText,
         url: response.url,
@@ -366,10 +368,10 @@ async function fetchPromoters(
       let errorMessage = `API returned ${response.status}: ${response.statusText}`;
       try {
         const errorData = await response.json();
-        console.error('❌ Error details:', errorData);
+        logger.error('❌ Error details:', errorData);
         errorMessage = errorData.error || errorData.details || errorMessage;
       } catch (e) {
-        console.error('❌ Could not parse error response:', e);
+        logger.error('❌ Could not parse error response:', e);
       }
 
       throw new Error(errorMessage);
@@ -378,7 +380,7 @@ async function fetchPromoters(
     // Validate content type
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      console.error('❌ Invalid content type:', contentType);
+      logger.error('❌ Invalid content type:', contentType);
       throw new Error('Server returned non-JSON response');
     }
 
@@ -386,17 +388,17 @@ async function fetchPromoters(
     try {
       payload = await response.json();
     } catch (e) {
-      console.error('❌ Failed to parse JSON:', e);
+      logger.error('❌ Failed to parse JSON:', e);
       throw new Error('Invalid JSON response from server');
     }
 
     // Validate response structure
     if (!payload || typeof payload !== 'object') {
-      console.error('❌ Invalid payload type:', typeof payload);
+      logger.error('❌ Invalid payload type:', typeof payload);
       throw new Error('Invalid API response format');
     }
 
-    console.log('📦 API Payload received:', {
+    logger.log('📦 API Payload received:', {
       success: payload.success,
       hasPromoters: !!payload.promoters,
       isArray: Array.isArray(payload.promoters),
@@ -406,17 +408,17 @@ async function fetchPromoters(
     });
 
     if (payload.success === false) {
-      console.error('❌ API returned error:', payload.error);
+      logger.error('❌ API returned error:', payload.error);
       throw new Error(payload.error || 'Failed to load promoters.');
     }
 
     // Ensure promoters is an array
     if (!Array.isArray(payload.promoters)) {
-      console.error('❌ Promoters is not an array:', payload.promoters);
+      logger.error('❌ Promoters is not an array:', payload.promoters);
       throw new Error('Invalid promoters data format');
     }
 
-    console.log('✅ Successfully fetched promoters:', payload.promoters.length);
+    logger.log('✅ Successfully fetched promoters:', payload.promoters.length);
     return payload;
   } catch (error) {
     if (timeoutId) {
@@ -425,14 +427,14 @@ async function fetchPromoters(
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        console.error('❌ Request timeout');
+        logger.error('❌ Request timeout');
         throw new Error(
           'Request timeout: Server took too long to respond (30s)'
         );
       }
-      console.error('❌ Fetch error:', error.message);
+      logger.error('❌ Fetch error:', error.message);
     } else {
-      console.error('❌ Unknown error:', error);
+      logger.error('❌ Unknown error:', error);
     }
 
     throw error;
@@ -442,7 +444,7 @@ async function fetchPromoters(
 export function EnhancedPromotersViewRefactored({
   locale,
 }: PromotersViewProps) {
-  console.log('🚀 Enhanced PromotersView component mounted');
+  logger.log('🚀 Enhanced PromotersView component mounted');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -456,7 +458,7 @@ export function EnhancedPromotersViewRefactored({
         }
         return searchParams.get(key) || defaultValue;
       } catch (error) {
-        console.error(`Error getting search param "${key}":`, error);
+        logger.error(`Error getting search param "${key}":`, error);
         return defaultValue;
       }
     },
@@ -701,7 +703,7 @@ export function EnhancedPromotersViewRefactored({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading && !response) {
-        console.warn('⚠️ Load timeout: Data took too long to load');
+        logger.warn('⚠️ Load timeout: Data took too long to load');
         setLoadTimeout(true);
       }
     }, 30000); // Increased to 30 second timeout to prevent premature timeouts
@@ -723,7 +725,7 @@ export function EnhancedPromotersViewRefactored({
   const pagination = (response as PromotersResponse)?.pagination;
 
   // Debug logging
-  console.log('📊 Component state:', {
+  logger.log('📊 Component state:', {
     isLoading,
     isError,
     isFetching,
@@ -735,12 +737,12 @@ export function EnhancedPromotersViewRefactored({
 
   // Regular dashboard promoters (paginated)
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
-    console.log('🔄 Processing promoters for dashboard...');
-    console.log('📊 Raw promoter data sample:', promoters.slice(0, 2));
+    logger.log('🔄 Processing promoters for dashboard...');
+    logger.log('📊 Raw promoter data sample:', promoters.slice(0, 2));
 
     return promoters.map(promoter => {
       // Debug logging for each promoter
-      console.log('🔍 Processing promoter:', {
+      logger.log('🔍 Processing promoter:', {
         id: promoter.id,
         name_en: promoter.name_en,
         name_ar: promoter.name_ar,
@@ -858,7 +860,7 @@ export function EnhancedPromotersViewRefactored({
         createdLabel: formatDisplayDate(promoter.created_at),
       } as DashboardPromoter;
 
-      console.log('✅ Processed promoter result:', {
+      logger.log('✅ Processed promoter result:', {
         id: result.id,
         displayName: result.displayName,
         contactEmail: result.contactEmail,
@@ -878,7 +880,7 @@ export function EnhancedPromotersViewRefactored({
   const loadAnalyticsData = useCallback(
     async (forceRefresh = false) => {
       if (allPromotersData && !isLoadingAnalytics && !forceRefresh) {
-        console.log('📊 Using cached analytics data');
+        logger.log('📊 Using cached analytics data');
         return; // Already loaded
       }
 
@@ -886,12 +888,12 @@ export function EnhancedPromotersViewRefactored({
       setAnalyticsError(null);
 
       try {
-        console.log(
+        logger.log(
           '🔄 Loading ALL promoters for analytics dashboard with pagination...'
         );
         const analyticsData = await fetchAllPromotersForAnalytics();
         setAllPromotersData(analyticsData);
-        console.log(
+        logger.log(
           '✅ Analytics data loaded successfully:',
           analyticsData.promoters.length,
           'out of',
@@ -901,18 +903,18 @@ export function EnhancedPromotersViewRefactored({
 
         // Verify we got all the data
         if (analyticsData.promoters.length !== analyticsData.total) {
-          console.warn('⚠️ Potential data mismatch:', {
+          logger.warn('⚠️ Potential data mismatch:', {
             fetched: analyticsData.promoters.length,
             total: analyticsData.total,
             difference: analyticsData.total - analyticsData.promoters.length,
           });
         } else {
-          console.log(
+          logger.log(
             '✅ Data verification passed: All workforce members loaded'
           );
         }
       } catch (error) {
-        console.error('❌ Failed to load analytics data:', error);
+        logger.error('❌ Failed to load analytics data:', error);
         setAnalyticsError(
           error instanceof Error
             ? error.message
@@ -938,8 +940,8 @@ export function EnhancedPromotersViewRefactored({
       return [];
     }
 
-    console.log('🔄 Processing ALL promoters for analytics dashboard...');
-    console.log('📊 ALL promoters count:', allPromotersData.promoters.length);
+    logger.log('🔄 Processing ALL promoters for analytics dashboard...');
+    logger.log('📊 ALL promoters count:', allPromotersData.promoters.length);
 
     return allPromotersData.promoters.map(promoter => {
       const idDocument = computeDocumentHealth(
@@ -1009,7 +1011,7 @@ export function EnhancedPromotersViewRefactored({
     // ✅ PRIORITY: Use API metrics when available (system-wide data)
     if (apiMetricsData?.metrics) {
       const apiMetrics = apiMetricsData.metrics;
-      console.log('✅ Using system-wide metrics from API:', apiMetrics);
+      logger.log('✅ Using system-wide metrics from API:', apiMetrics);
 
       // Calculate page-specific metrics that don't exist in API
       const companies = new Set(
@@ -1036,7 +1038,7 @@ export function EnhancedPromotersViewRefactored({
     }
 
     // ⚠️ FALLBACK: Calculate from current page only when API fails
-    console.warn(
+    logger.warn(
       '⚠️ API metrics not available, using page-based calculation (may be inaccurate)'
     );
     const total = pagination?.total || dashboardPromoters.length;
@@ -1089,7 +1091,7 @@ export function EnhancedPromotersViewRefactored({
   // ✅ PERFORMANCE: Server-side filtering implemented
   // No need for client-side filtering as the API handles all filtering
   const filteredPromoters = useMemo(() => {
-    console.log(
+    logger.log(
       '✅ Using server-filtered promoters directly (no client-side filtering needed)'
     );
     return dashboardPromoters;
@@ -1098,13 +1100,13 @@ export function EnhancedPromotersViewRefactored({
   // ✅ PERFORMANCE: Server-side sorting implemented
   // No need for client-side sorting as the API handles sorting
   const sortedPromoters = useMemo(() => {
-    console.log(
+    logger.log(
       '✅ Using server-sorted promoters directly (no client-side sorting needed)'
     );
     return filteredPromoters;
   }, [filteredPromoters]);
 
-  console.log('✅ Final sorted promoters:', sortedPromoters.length, 'items');
+  logger.log('✅ Final sorted promoters:', sortedPromoters.length, 'items');
 
   const atRiskPromoters = useMemo(() => {
     return sortedPromoters
@@ -1299,7 +1301,7 @@ export function EnhancedPromotersViewRefactored({
 
         setSelectedPromoters(new Set());
       } catch (error) {
-        console.error('Bulk action error:', error);
+        logger.error('Bulk action error:', error);
         toast({
           variant: 'destructive',
           title: 'Action Failed',
@@ -1478,7 +1480,7 @@ export function EnhancedPromotersViewRefactored({
         // Refetch data to get updated party information
         await refetch();
       } catch (error) {
-        console.error('Error handling party assignment update:', error);
+        logger.error('Error handling party assignment update:', error);
         toast({
           title: 'Error',
           description: 'Failed to refresh data after assignment update',
@@ -1491,7 +1493,7 @@ export function EnhancedPromotersViewRefactored({
 
   const handleSendReminder = useCallback(
     async (promoter: DashboardPromoter) => {
-      console.log('[ACTION] Send reminder to:', promoter.displayName);
+      logger.log('[ACTION] Send reminder to:', promoter.displayName);
 
       try {
         // Determine which document needs reminder based on expiry status
@@ -1542,7 +1544,7 @@ export function EnhancedPromotersViewRefactored({
           throw new Error(result.error || 'Failed to send reminder');
         }
       } catch (error) {
-        console.error('Error sending reminder:', error);
+        logger.error('Error sending reminder:', error);
         toast({
           title: 'Error',
           description:
@@ -1556,7 +1558,7 @@ export function EnhancedPromotersViewRefactored({
 
   const handleRequestDocument = useCallback(
     async (promoter: DashboardPromoter, documentType: 'ID' | 'Passport') => {
-      console.log(
+      logger.log(
         '[ACTION] Request document:',
         documentType,
         'from',
@@ -1585,7 +1587,7 @@ export function EnhancedPromotersViewRefactored({
           throw new Error(result.error || 'Failed to send document request');
         }
       } catch (error) {
-        console.error('Error requesting document:', error);
+        logger.error('Error requesting document:', error);
         toast({
           title: 'Error',
           description:
@@ -1728,6 +1730,18 @@ export function EnhancedPromotersViewRefactored({
 
   // Empty state (no data)
   if (!promoters || promoters.length === 0) {
+    // Show no-results state if filters are applied, otherwise show empty state
+    if (hasFiltersApplied || searchTerm) {
+      return (
+        <PromotersNoResultsState
+          searchTerm={searchTerm}
+          hasFiltersApplied={hasFiltersApplied}
+          onClearFilters={handleResetFilters}
+          onClearSearch={() => setSearchTerm('')}
+          locale={derivedLocale}
+        />
+      );
+    }
     return (
       <PromotersEmptyState
         onAddPromoter={handleAddPromoter}
@@ -1982,7 +1996,7 @@ export function EnhancedPromotersViewRefactored({
                     isLoading={isLoadingAnalytics || metricsLoading}
                     onRefresh={async () => {
                       // Refresh both analytics data and metrics
-                      console.log(
+                      logger.log(
                         '🔄 Manual refresh triggered from analytics toolbar'
                       );
                       await Promise.all([
@@ -1994,7 +2008,7 @@ export function EnhancedPromotersViewRefactored({
                         description: `All data updated • ${allDashboardPromoters.length} workforce members loaded`,
                       });
                     }}
-                    onExport={format => console.log(`Export ${format}`)}
+                    onExport={format => logger.log(`Export ${format}`)}
                     onPrint={() => window.print()}
                     onFullScreen={() =>
                       document.documentElement.requestFullscreen()
