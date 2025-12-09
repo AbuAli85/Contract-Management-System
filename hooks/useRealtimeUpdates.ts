@@ -44,7 +44,7 @@ export function useRealtimeUpdates(options: RealtimeOptions) {
   useEffect(() => {
     const channelName = `${options.table}-changes-${Math.random()}`;
 
-    let channelBuilder = supabase.channel(channelName).on(
+    const channelBuilder = supabase.channel(channelName).on(
       'postgres_changes' as any,
       {
         event: options.event || '*',
