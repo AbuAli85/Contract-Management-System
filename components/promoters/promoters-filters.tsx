@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,7 +102,7 @@ interface PromotersFiltersProps {
 
 // Filter preset with icon and count support
 interface EnhancedFilterPreset extends FilterPreset {
-  icon: (props: { className?: string }) => React.ReactElement;
+  icon: any; // Lucide icon component
   category: 'status' | 'document' | 'assignment';
   count?: number; // Will be populated dynamically
 }
@@ -243,6 +244,7 @@ export function PromotersFilters({
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [searchTerm]); // Removed recentSearches dependency to prevent re-renders during typing
 
   // Keyboard shortcuts
@@ -300,10 +302,13 @@ export function PromotersFilters({
   );
 
   const saveCurrentAsPreset = useCallback(() => {
-    const newPreset: FilterPreset = {
+    // Create an enhanced preset with default icon and category
+    const newPreset: EnhancedFilterPreset = {
       id: `custom-${Date.now()}`,
       name: `Custom Filter ${filterPresets.filter(p => !p.isDefault).length + 1}`,
       description: 'Custom saved filter',
+      icon: Filter, // Default icon
+      category: 'status', // Default category
       filters: {
         statusFilter,
         documentFilter,
@@ -538,27 +543,26 @@ export function PromotersFilters({
             </div>
           </div>
 
-            {showAdvancedOptions && hasFiltersApplied && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={saveCurrentAsPreset}
-                      className='h-8 px-3 text-xs border-dashed hover:border-solid hover:bg-slate-50'
-                    >
-                      <BookmarkPlus className='h-3 w-3 mr-1' />
-                      Save Current
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Save current filters as a preset</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
+          {showAdvancedOptions && hasFiltersApplied && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={saveCurrentAsPreset}
+                    className='h-8 px-3 text-xs border-dashed hover:border-solid hover:bg-slate-50'
+                  >
+                    <BookmarkPlus className='h-3 w-3 mr-1' />
+                    Save Current
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Save current filters as a preset</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
 
         <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,2fr)]'>
