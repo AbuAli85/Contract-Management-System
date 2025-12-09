@@ -466,110 +466,158 @@ export function EnhancedPromotersViewRefactored({
     [searchParams]
   );
 
-  // Get initial values from URL (computed once on mount)
-  const initialValues = useMemo(() => {
-    const getParam = (key: string, defaultValue: string = '') => {
-      try {
-        if (!searchParams || typeof searchParams.get !== 'function') {
-          return defaultValue;
-        }
-        const value = searchParams.get(key);
-        return value !== null && value !== undefined ? value : defaultValue;
-      } catch {
-        return defaultValue;
+  // Get pagination params from URL (inline logic to avoid function dependency issues)
+  const page = useMemo(() => {
+    try {
+      if (!searchParams || typeof searchParams.get !== 'function') {
+        return 1;
       }
-    };
-
-    const urlStatus = getParam('status', '');
-    const urlDocFilter = getParam('document_filter', '') || getParam('documents', '');
-    const urlAssignment = getParam('assignment_filter', '') || getParam('assignment', '');
-    const urlSortField = getParam('sortField', '');
-    const urlSortOrder = getParam('sortOrder', '');
-    const urlView = getParam('view', '');
-    const urlPage = getParam('page', '1');
-    const urlLimit = getParam('limit', '20');
-
-    // Determine view mode (check URL first, then localStorage)
-    let viewMode: 'table' | 'grid' | 'cards' | 'analytics' = 'table';
-    if (
-      urlView === 'table' ||
-      urlView === 'grid' ||
-      urlView === 'cards' ||
-      urlView === 'analytics'
-    ) {
-      viewMode = urlView;
-    } else if (typeof window !== 'undefined') {
-      const savedView = localStorage.getItem('promoters-view-mode');
-      if (
-        savedView === 'table' ||
-        savedView === 'grid' ||
-        savedView === 'cards' ||
-        savedView === 'analytics'
-      ) {
-        viewMode = savedView;
-      }
+      const pageStr = searchParams.get('page') || '1';
+      const parsed = parseInt(pageStr, 10);
+      return isNaN(parsed) || parsed < 1 ? 1 : parsed;
+    } catch {
+      return 1;
     }
+  }, [searchParams]);
 
-    return {
-      searchTerm: getParam('search', ''),
-      statusFilter:
-        urlStatus === 'critical' ||
+  const limit = useMemo(() => {
+    try {
+      if (!searchParams || typeof searchParams.get !== 'function') {
+        return 20;
+      }
+      const limitStr = searchParams.get('limit') || '20';
+      const parsed = parseInt(limitStr, 10);
+      return isNaN(parsed) || parsed < 1 ? 20 : parsed;
+    } catch {
+      return 20;
+    }
+  }, [searchParams]);
+
+  // State management - Initialize from URL parameters using inline logic
+  const [searchTerm, setSearchTerm] = useState(() => {
+    try {
+      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
+        return '';
+      }
+      return searchParams.get('search') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(() => {
+    try {
+      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
+        return 'all';
+      }
+      const urlStatus = searchParams.get('status') || '';
+      return urlStatus === 'critical' ||
         urlStatus === 'active' ||
         urlStatus === 'inactive' ||
         urlStatus === 'warning'
-          ? (urlStatus as OverallStatus)
-          : ('all' as const),
-      documentFilter:
-        urlDocFilter === 'expired' ||
+        ? (urlStatus as OverallStatus)
+        : 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  const [documentFilter, setDocumentFilter] = useState<
+    'all' | 'expired' | 'expiring' | 'missing'
+  >(() => {
+    try {
+      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
+        return 'all';
+      }
+      const urlDocFilter = searchParams.get('document_filter') || searchParams.get('documents') || '';
+      return urlDocFilter === 'expired' ||
         urlDocFilter === 'expiring' ||
         urlDocFilter === 'missing'
-          ? (urlDocFilter as 'expired' | 'expiring' | 'missing')
-          : ('all' as const),
-      assignmentFilter:
-        urlAssignment === 'assigned' || urlAssignment === 'unassigned'
-          ? (urlAssignment as 'assigned' | 'unassigned')
-          : ('all' as const),
-      sortField:
-        urlSortField === 'name' ||
+        ? (urlDocFilter as 'expired' | 'expiring' | 'missing')
+        : 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  const [assignmentFilter, setAssignmentFilter] = useState<
+    'all' | 'assigned' | 'unassigned'
+  >(() => {
+    try {
+      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
+        return 'all';
+      }
+      const urlAssignment = searchParams.get('assignment_filter') || searchParams.get('assignment') || '';
+      return urlAssignment === 'assigned' || urlAssignment === 'unassigned'
+        ? (urlAssignment as 'assigned' | 'unassigned')
+        : 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  const [sortField, setSortField] = useState<SortField>(() => {
+    try {
+      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
+        return 'name';
+      }
+      const urlSortField = searchParams.get('sortField') || '';
+      return urlSortField === 'name' ||
         urlSortField === 'status' ||
         urlSortField === 'created' ||
         urlSortField === 'documents'
-          ? (urlSortField as SortField)
-          : ('name' as SortField),
-      sortOrder:
-        urlSortOrder === 'asc' || urlSortOrder === 'desc'
-          ? (urlSortOrder as SortOrder)
-          : ('asc' as SortOrder),
-      viewMode,
-      page: parseInt(urlPage, 10) || 1,
-      limit: parseInt(urlLimit, 10) || 20,
-    };
-  }, [searchParams]);
-
-  // Get pagination params from initial values
-  const page = initialValues.page;
-  const limit = initialValues.limit;
-
-  // State management - Initialize from computed initial values
-  const [searchTerm, setSearchTerm] = useState(initialValues.searchTerm);
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
-    initialValues.statusFilter
-  );
-  const [documentFilter, setDocumentFilter] = useState<
-    'all' | 'expired' | 'expiring' | 'missing'
-  >(initialValues.documentFilter);
-  const [assignmentFilter, setAssignmentFilter] = useState<
-    'all' | 'assigned' | 'unassigned'
-  >(initialValues.assignmentFilter);
-  const [sortField, setSortField] = useState<SortField>(initialValues.sortField);
-  const [sortOrder, setSortOrder] = useState<SortOrder>(initialValues.sortOrder);
+        ? (urlSortField as SortField)
+        : 'name';
+    } catch {
+      return 'name';
+    }
+  });
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
+    try {
+      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
+        return 'asc';
+      }
+      const urlSortOrder = searchParams.get('sortOrder') || '';
+      return urlSortOrder === 'asc' || urlSortOrder === 'desc'
+        ? (urlSortOrder as SortOrder)
+        : 'asc';
+    } catch {
+      return 'asc';
+    }
+  });
   const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
     new Set()
   );
   const [viewMode, setViewMode] = useState<
     'table' | 'grid' | 'cards' | 'analytics'
-  >(initialValues.viewMode);
+  >(() => {
+    try {
+      // First check URL parameters
+      if (typeof window !== 'undefined' && searchParams && typeof searchParams.get === 'function') {
+        const urlView = searchParams.get('view') || '';
+        if (
+          urlView === 'table' ||
+          urlView === 'grid' ||
+          urlView === 'cards' ||
+          urlView === 'analytics'
+        ) {
+          return urlView;
+        }
+      }
+      // Fallback to localStorage
+      if (typeof window !== 'undefined') {
+        const savedView = localStorage.getItem('promoters-view-mode');
+        if (
+          savedView === 'table' ||
+          savedView === 'grid' ||
+          savedView === 'cards' ||
+          savedView === 'analytics'
+        ) {
+          return savedView;
+        }
+      }
+      return 'table';
+    } catch {
+      return 'table';
+    }
+  });
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
   const [activeMetricFilter, setActiveMetricFilter] = useState<
