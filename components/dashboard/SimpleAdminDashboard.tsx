@@ -11,7 +11,20 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { BarChart3, DollarSign, TrendingUp } from 'lucide-react';
+import {
+  BarChart3,
+  DollarSign,
+  TrendingUp,
+  AlertTriangle,
+  Download,
+  RefreshCw,
+  Target,
+  Plus,
+  FileText,
+  Calendar,
+  Users,
+  Activity,
+} from 'lucide-react';
 
 interface DashboardMetrics {
   totalPromoters: number;

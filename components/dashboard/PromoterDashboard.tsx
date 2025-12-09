@@ -12,7 +12,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, Bell, BarChart3 } from 'lucide-react';
+import {
+  MessageCircle,
+  Bell,
+  BarChart3,
+  TrendingUp,
+  Target,
+  Plus,
+  Award,
+  Star,
+  Trophy,
+  Activity,
+  FileText,
+  Calendar,
+  CheckCircle,
+  Clock,
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 

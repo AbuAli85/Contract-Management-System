@@ -31,11 +31,6 @@ export function PendingApprovalsNotification() {
   const [data, setData] = useState<PendingApprovalsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Only show for admins
-  if (!canManageUsers()) {
-    return null;
-  }
-
   const fetchPendingApprovals = async () => {
     try {
       setLoading(true);
@@ -60,9 +55,19 @@ export function PendingApprovalsNotification() {
     }
   };
 
+  // Move useEffect before conditional return (React Hooks rule)
   useEffect(() => {
-    fetchPendingApprovals();
+    // Only fetch if user has permission
+    if (canManageUsers()) {
+      fetchPendingApprovals();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Only show for admins
+  if (!canManageUsers()) {
+    return null;
+  }
 
   // Don't show if no pending approvals
   if (!loading && (!data || data.count === 0)) {

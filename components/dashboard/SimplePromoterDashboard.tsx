@@ -12,7 +12,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BarChart3, DollarSign, CalendarDays } from 'lucide-react';
+import {
+  BarChart3,
+  DollarSign,
+  CalendarDays,
+  AlertTriangle,
+  RefreshCw,
+  CheckCircle,
+  Star,
+  Trophy,
+  FileText,
+  Eye,
+  Award,
+  Plus,
+  Calendar,
+  Zap,
+} from 'lucide-react';
 
 interface PromoterMetrics {
   personalStats: {

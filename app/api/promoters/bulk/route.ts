@@ -109,7 +109,12 @@ export const POST = withRBAC(
         promoterCount: promoterIds.length,
       });
 
-      const result: any = { success: true, processed: 0, failed: 0, errors: [] };
+      const result: any = {
+        success: true,
+        processed: 0,
+        failed: 0,
+        errors: [],
+      };
 
       switch (action) {
         case 'archive': {
