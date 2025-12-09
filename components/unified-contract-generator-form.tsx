@@ -343,6 +343,74 @@ function UnifiedContractGeneratorForm({
     };
   }, [watchedStartDate, watchedEndDate, watchedSalary, watchedAllowances]);
 
+  // Mutation for form submission - MUST be called before conditional returns
+  const submitMutation = useMutation({
+    mutationFn: async (data: ContractGeneratorFormData) => {
+      if (contract) {
+        // Update existing contract
+        const payload: Partial<ContractInsert> = {
+          ...data,
+          contract_start_date: data.contract_start_date?.toISOString(),
+          contract_end_date: data.contract_end_date?.toISOString(),
+          contract_value: data.basic_salary,
+        };
+        return await updateContract(contract.id, payload);
+      } else {
+        // Generate new contract with Make.com integration
+        return await generateContractWithMakecom({
+          first_party_id: data.first_party_id || '',
+          second_party_id: data.second_party_id || '',
+          promoter_id: data.promoter_id || '',
+          contract_start_date: data.contract_start_date!,
+          contract_end_date: data.contract_end_date,
+          email: data.email || '',
+          job_title: data.job_title || '',
+          work_location: data.work_location || '',
+          department: data.department || '',
+          contract_type: data.contract_type || '',
+          currency: data.currency || 'OMR',
+          basic_salary: data.basic_salary,
+          allowances: data.allowances,
+          special_terms: data.special_terms,
+        });
+      }
+    },
+    onSuccess: result => {
+      if (contract) {
+        toast.success('Contract updated successfully!');
+      } else {
+        // Handle Make.com integration result
+        const makecomResult = result as any; // Type assertion for Make.com result
+        const message =
+          makecomResult.message || 'Contract created successfully!';
+        toast.success(message);
+
+        // Show additional info if available
+        if (makecomResult.google_drive_url) {
+          toast.info('Contract sent to Google Drive for processing');
+        }
+        if (makecomResult.status === 'processing') {
+          toast.info('Contract is being processed by Make.com');
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      onFormSubmit?.();
+      if (autoRedirect) {
+        router.push('/contracts');
+        router.refresh();
+      }
+    },
+    onError: error => {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred.';
+      setValidationErrors([errorMessage]);
+      toast.error(errorMessage);
+    },
+  });
+
   // Auto-fill promoter data when selected
   useEffect(() => {
     if (watchedPromoterId && promoters && Array.isArray(promoters)) {
@@ -602,74 +670,6 @@ function UnifiedContractGeneratorForm({
       </div>
     );
   }
-
-  // Mutation for form submission
-  const submitMutation = useMutation({
-    mutationFn: async (data: ContractGeneratorFormData) => {
-      if (contract) {
-        // Update existing contract
-        const payload: Partial<ContractInsert> = {
-          ...data,
-          contract_start_date: data.contract_start_date?.toISOString(),
-          contract_end_date: data.contract_end_date?.toISOString(),
-          contract_value: data.basic_salary,
-        };
-        return await updateContract(contract.id, payload);
-      } else {
-        // Generate new contract with Make.com integration
-        return await generateContractWithMakecom({
-          first_party_id: data.first_party_id || '',
-          second_party_id: data.second_party_id || '',
-          promoter_id: data.promoter_id || '',
-          contract_start_date: data.contract_start_date!,
-          contract_end_date: data.contract_end_date,
-          email: data.email || '',
-          job_title: data.job_title || '',
-          work_location: data.work_location || '',
-          department: data.department || '',
-          contract_type: data.contract_type || '',
-          currency: data.currency || 'OMR',
-          basic_salary: data.basic_salary,
-          allowances: data.allowances,
-          special_terms: data.special_terms,
-        });
-      }
-    },
-    onSuccess: result => {
-      if (contract) {
-        toast.success('Contract updated successfully!');
-      } else {
-        // Handle Make.com integration result
-        const makecomResult = result as any; // Type assertion for Make.com result
-        const message =
-          makecomResult.message || 'Contract created successfully!';
-        toast.success(message);
-
-        // Show additional info if available
-        if (makecomResult.google_drive_url) {
-          toast.info('Contract sent to Google Drive for processing');
-        }
-        if (makecomResult.status === 'processing') {
-          toast.info('Contract is being processed by Make.com');
-        }
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
-      onFormSubmit?.();
-      if (autoRedirect) {
-        router.push('/contracts');
-        router.refresh();
-      }
-    },
-    onError: error => {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'An unexpected error occurred.';
-      setValidationErrors([errorMessage]);
-      toast.error(errorMessage);
-    },
-  });
 
   const onSubmit = (data: ContractGeneratorFormData) => {
     console.log('Form submission attempted with data:', data);

@@ -49,7 +49,7 @@ export async function verifyUserRoleFromToken(
     }
 
     // Fallback to database check (secure server-side verification)
-    let { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role')
       .eq('id', user.id)

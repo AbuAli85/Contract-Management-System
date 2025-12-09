@@ -127,7 +127,7 @@ export function formatPhoneNumber(phone: string): string {
   if (!phone) return '';
 
   // Remove all non-digit characters except leading +
-  let cleaned = phone.trim();
+  const cleaned = phone.trim();
   const hasPlus = cleaned.startsWith('+');
   const digitsOnly = cleaned.replace(/\D/g, '');
 

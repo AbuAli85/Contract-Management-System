@@ -12,6 +12,7 @@ import {
   Plus,
   Award,
   Zap,
+  ArrowRight,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 
