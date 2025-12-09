@@ -1,10 +1,10 @@
 'use client';
 
-import { EmptyState } from '@/components/ui/empty-state';
 import { Search, FilterX, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface PromotersNoResultsStateProps {
   searchTerm?: string;
@@ -53,17 +53,26 @@ export function PromotersNoResultsState({
       ];
 
   return (
-    <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
-      <EmptyState
-        icon={Search}
-        title={title}
-        description={description}
-        iconClassName='text-muted-foreground'
-      >
-        {/* Active Filters Summary */}
-        {(hasFiltersApplied || searchTerm) && (
-          <div className='mt-6 space-y-4'>
-            <div className='rounded-lg border bg-muted/50 p-4'>
+    <div className='flex flex-col items-center justify-center py-16 px-4 text-center space-y-6'>
+      {/* Icon */}
+      <div className='relative'>
+        <div className='absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-2xl' />
+        <div className='relative w-24 h-24 bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-full flex items-center justify-center'>
+          <Search className='h-12 w-12 text-primary/60' />
+        </div>
+      </div>
+
+      {/* Title and Description */}
+      <div className='space-y-2'>
+        <h3 className='text-xl font-semibold text-foreground'>{title}</h3>
+        <p className='text-muted-foreground max-w-md'>{description}</p>
+      </div>
+
+      {/* Active Filters Summary */}
+      {(hasFiltersApplied || searchTerm) && (
+        <div className='w-full max-w-2xl space-y-4'>
+          <Card className='border bg-muted/50'>
+            <CardContent className='p-4'>
               <div className='flex items-center justify-between mb-3'>
                 <h4 className='text-sm font-semibold text-foreground flex items-center gap-2'>
                   <FilterX className='h-4 w-4' />
@@ -97,14 +106,16 @@ export function PromotersNoResultsState({
                   </Badge>
                 )}
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Suggestions */}
-            <div className='rounded-lg border border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20 p-4'>
+          {/* Suggestions */}
+          <Card className='border border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20'>
+            <CardContent className='p-4'>
               <h4 className='text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2'>
                 {isArabic ? 'اقتراحات' : 'Suggestions'}
               </h4>
-              <ul className='space-y-1.5 text-sm text-blue-800 dark:text-blue-200'>
+              <ul className='space-y-1.5 text-sm text-blue-800 dark:text-blue-200 text-left'>
                 {suggestions.map((suggestion, index) => (
                   <li key={index} className='flex items-start gap-2'>
                     <span className='text-blue-600 dark:text-blue-400 mt-0.5'>
@@ -114,30 +125,30 @@ export function PromotersNoResultsState({
                   </li>
                 ))}
               </ul>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Action Buttons */}
-            <div className='flex flex-wrap gap-2 justify-center'>
-              <Button
-                variant='outline'
-                onClick={onClearFilters}
-                className='gap-2'
-              >
-                <FilterX className='h-4 w-4' />
-                {isArabic ? 'إعادة تعيين المرشحات' : 'Reset Filters'}
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => window.location.reload()}
-                className='gap-2'
-              >
-                <RefreshCw className='h-4 w-4' />
-                {isArabic ? 'تحديث الصفحة' : 'Refresh Page'}
-              </Button>
-            </div>
+          {/* Action Buttons */}
+          <div className='flex flex-wrap gap-2 justify-center'>
+            <Button
+              variant='outline'
+              onClick={onClearFilters}
+              className='gap-2'
+            >
+              <FilterX className='h-4 w-4' />
+              {isArabic ? 'إعادة تعيين المرشحات' : 'Reset Filters'}
+            </Button>
+            <Button
+              variant='outline'
+              onClick={() => window.location.reload()}
+              className='gap-2'
+            >
+              <RefreshCw className='h-4 w-4' />
+              {isArabic ? 'تحديث الصفحة' : 'Refresh Page'}
+            </Button>
           </div>
-        )}
-      </EmptyState>
+        </div>
+      )}
     </div>
   );
 }
