@@ -449,8 +449,8 @@ export function EnhancedPromotersViewRefactored({
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  // Helper function to safely get search params (not a hook)
-  const getParamValue = useCallback(
+  // Helper function to safely get search params (memoized for use in effects and callbacks)
+  const getParamSafely = useCallback(
     (key: string, defaultValue: string = ''): string => {
       try {
         if (!searchParams || typeof searchParams.get !== 'function') {
@@ -465,9 +465,6 @@ export function EnhancedPromotersViewRefactored({
     },
     [searchParams]
   );
-
-  // Memoized version for use in effects and callbacks (stable reference)
-  const getParamSafely = getParamValue;
 
   // Get initial values from URL (computed once on mount)
   const initialValues = useMemo(() => {
@@ -489,6 +486,8 @@ export function EnhancedPromotersViewRefactored({
     const urlSortField = getParam('sortField', '');
     const urlSortOrder = getParam('sortOrder', '');
     const urlView = getParam('view', '');
+    const urlPage = getParam('page', '1');
+    const urlLimit = getParam('limit', '20');
 
     // Determine view mode (check URL first, then localStorage)
     let viewMode: 'table' | 'grid' | 'cards' | 'analytics' = 'table';
@@ -542,18 +541,14 @@ export function EnhancedPromotersViewRefactored({
           ? (urlSortOrder as SortOrder)
           : ('asc' as SortOrder),
       viewMode,
+      page: parseInt(urlPage, 10) || 1,
+      limit: parseInt(urlLimit, 10) || 20,
     };
   }, [searchParams]);
 
-  // Get pagination params from URL (memoized to prevent re-renders)
-  const page = useMemo(
-    () => parseInt(getParamValue('page', '1'), 10),
-    [getParamValue]
-  );
-  const limit = useMemo(
-    () => parseInt(getParamValue('limit', '20'), 10),
-    [getParamValue]
-  );
+  // Get pagination params from initial values
+  const page = initialValues.page;
+  const limit = initialValues.limit;
 
   // State management - Initialize from computed initial values
   const [searchTerm, setSearchTerm] = useState(initialValues.searchTerm);
