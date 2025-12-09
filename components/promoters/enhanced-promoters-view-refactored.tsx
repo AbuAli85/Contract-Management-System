@@ -449,9 +449,8 @@ export function EnhancedPromotersViewRefactored({
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  // Memoized helper function to safely get search params
-  // This ensures the function reference is stable and can be used safely
-  const getParamSafely = useCallback(
+  // Helper function to safely get search params (not a hook)
+  const getParamValue = useCallback(
     (key: string, defaultValue: string = ''): string => {
       try {
         if (!searchParams || typeof searchParams.get !== 'function') {
@@ -467,75 +466,115 @@ export function EnhancedPromotersViewRefactored({
     [searchParams]
   );
 
-  // Get pagination params from URL (memoized to prevent re-renders)
-  const page = useMemo(
-    () => parseInt(getParamSafely('page', '1'), 10),
-    [getParamSafely]
-  );
-  const limit = useMemo(
-    () => parseInt(getParamSafely('limit', '20'), 10),
-    [getParamSafely]
-  );
+  // Memoized version for use in effects and callbacks (stable reference)
+  const getParamSafely = getParamValue;
 
-  // State management - Initialize from URL parameters (using helper function directly)
-  const [searchTerm, setSearchTerm] = useState(
-    () => getParamSafely('search', '')
-  );
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
-    () => {
-      const urlStatus = getParamSafely('status');
-      return urlStatus === 'critical' ||
+  // Get initial values from URL (computed once on mount)
+  const initialValues = useMemo(() => {
+    const getParam = (key: string, defaultValue: string = '') => {
+      try {
+        if (!searchParams || typeof searchParams.get !== 'function') {
+          return defaultValue;
+        }
+        const value = searchParams.get(key);
+        return value !== null && value !== undefined ? value : defaultValue;
+      } catch {
+        return defaultValue;
+      }
+    };
+
+    const urlStatus = getParam('status', '');
+    const urlDocFilter = getParam('document_filter', '') || getParam('documents', '');
+    const urlAssignment = getParam('assignment_filter', '') || getParam('assignment', '');
+    const urlSortField = getParam('sortField', '');
+    const urlSortOrder = getParam('sortOrder', '');
+    const urlView = getParam('view', '');
+
+    // Determine view mode (check URL first, then localStorage)
+    let viewMode: 'table' | 'grid' | 'cards' | 'analytics' = 'table';
+    if (
+      urlView === 'table' ||
+      urlView === 'grid' ||
+      urlView === 'cards' ||
+      urlView === 'analytics'
+    ) {
+      viewMode = urlView;
+    } else if (typeof window !== 'undefined') {
+      const savedView = localStorage.getItem('promoters-view-mode');
+      if (
+        savedView === 'table' ||
+        savedView === 'grid' ||
+        savedView === 'cards' ||
+        savedView === 'analytics'
+      ) {
+        viewMode = savedView;
+      }
+    }
+
+    return {
+      searchTerm: getParam('search', ''),
+      statusFilter:
+        urlStatus === 'critical' ||
         urlStatus === 'active' ||
         urlStatus === 'inactive' ||
         urlStatus === 'warning'
-        ? urlStatus
-        : 'all';
-    }
+          ? (urlStatus as OverallStatus)
+          : ('all' as const),
+      documentFilter:
+        urlDocFilter === 'expired' ||
+        urlDocFilter === 'expiring' ||
+        urlDocFilter === 'missing'
+          ? (urlDocFilter as 'expired' | 'expiring' | 'missing')
+          : ('all' as const),
+      assignmentFilter:
+        urlAssignment === 'assigned' || urlAssignment === 'unassigned'
+          ? (urlAssignment as 'assigned' | 'unassigned')
+          : ('all' as const),
+      sortField:
+        urlSortField === 'name' ||
+        urlSortField === 'status' ||
+        urlSortField === 'created' ||
+        urlSortField === 'documents'
+          ? (urlSortField as SortField)
+          : ('name' as SortField),
+      sortOrder:
+        urlSortOrder === 'asc' || urlSortOrder === 'desc'
+          ? (urlSortOrder as SortOrder)
+          : ('asc' as SortOrder),
+      viewMode,
+    };
+  }, [searchParams]);
+
+  // Get pagination params from URL (memoized to prevent re-renders)
+  const page = useMemo(
+    () => parseInt(getParamValue('page', '1'), 10),
+    [getParamValue]
+  );
+  const limit = useMemo(
+    () => parseInt(getParamValue('limit', '20'), 10),
+    [getParamValue]
+  );
+
+  // State management - Initialize from computed initial values
+  const [searchTerm, setSearchTerm] = useState(initialValues.searchTerm);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
+    initialValues.statusFilter
   );
   const [documentFilter, setDocumentFilter] = useState<
     'all' | 'expired' | 'expiring' | 'missing'
-  >(() => {
-    const urlDocFilter =
-      getParamSafely('document_filter') || getParamSafely('documents');
-    return urlDocFilter === 'expired' ||
-      urlDocFilter === 'expiring' ||
-      urlDocFilter === 'missing'
-      ? urlDocFilter
-      : 'all';
-  });
+  >(initialValues.documentFilter);
   const [assignmentFilter, setAssignmentFilter] = useState<
     'all' | 'assigned' | 'unassigned'
-  >(() => {
-    const urlAssignment =
-      getParamSafely('assignment_filter') || getParamSafely('assignment');
-    return urlAssignment === 'assigned' || urlAssignment === 'unassigned'
-      ? urlAssignment
-      : 'all';
-  });
-  const [sortField, setSortField] = useState<SortField>(() => {
-    const urlSortField = getParamSafely('sortField');
-    return urlSortField === 'name' ||
-      urlSortField === 'status' ||
-      urlSortField === 'created' ||
-      urlSortField === 'documents'
-      ? urlSortField
-      : 'name';
-  });
-  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
-    const urlSortOrder = getParamSafely('sortOrder');
-    return urlSortOrder === 'asc' || urlSortOrder === 'desc'
-      ? urlSortOrder
-      : 'asc';
-  });
+  >(initialValues.assignmentFilter);
+  const [sortField, setSortField] = useState<SortField>(initialValues.sortField);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(initialValues.sortOrder);
   const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
     new Set()
   );
   const [viewMode, setViewMode] = useState<
     'table' | 'grid' | 'cards' | 'analytics'
-  >(() => {
-    // First check URL parameters, then localStorage
-    const urlView = getParamSafely('view');
+  >(initialValues.viewMode);
     if (
       urlView === 'table' ||
       urlView === 'grid' ||
