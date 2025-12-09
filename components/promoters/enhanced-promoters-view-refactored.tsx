@@ -466,7 +466,26 @@ export function EnhancedPromotersViewRefactored({
     [searchParams]
   );
 
-  // Get pagination params from URL (inline logic to avoid function dependency issues)
+  // State management - Initialize with default values (will sync from URL in useEffect)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>('all');
+  const [documentFilter, setDocumentFilter] = useState<
+    'all' | 'expired' | 'expiring' | 'missing'
+  >('all');
+  const [assignmentFilter, setAssignmentFilter] = useState<
+    'all' | 'assigned' | 'unassigned'
+  >('all');
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
+    new Set()
+  );
+  const [viewMode, setViewMode] = useState<
+    'table' | 'grid' | 'cards' | 'analytics'
+  >('table');
+  
+  // Get pagination params from URL
   const page = useMemo(() => {
     try {
       if (!searchParams || typeof searchParams.get !== 'function') {
@@ -493,131 +512,66 @@ export function EnhancedPromotersViewRefactored({
     }
   }, [searchParams]);
 
-  // State management - Initialize from URL parameters using inline logic
-  const [searchTerm, setSearchTerm] = useState(() => {
-    try {
-      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
-        return '';
-      }
-      return searchParams.get('search') || '';
-    } catch {
-      return '';
+  // Initialize state from URL parameters on mount
+  useEffect(() => {
+    if (!searchParams || typeof searchParams.get !== 'function') {
+      return;
     }
-  });
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(() => {
+
     try {
-      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
-        return 'all';
+      // Read search term
+      const urlSearch = searchParams.get('search');
+      if (urlSearch !== null) {
+        setSearchTerm(urlSearch);
       }
-      const urlStatus = searchParams.get('status') || '';
-      return urlStatus === 'critical' ||
-        urlStatus === 'active' ||
-        urlStatus === 'inactive' ||
-        urlStatus === 'warning'
-        ? (urlStatus as OverallStatus)
-        : 'all';
-    } catch {
-      return 'all';
-    }
-  });
-  const [documentFilter, setDocumentFilter] = useState<
-    'all' | 'expired' | 'expiring' | 'missing'
-  >(() => {
-    try {
-      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
-        return 'all';
+
+      // Read status filter
+      const urlStatus = searchParams.get('status');
+      if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
+        setStatusFilter(urlStatus as OverallStatus);
       }
-      const urlDocFilter = searchParams.get('document_filter') || searchParams.get('documents') || '';
-      return urlDocFilter === 'expired' ||
-        urlDocFilter === 'expiring' ||
-        urlDocFilter === 'missing'
-        ? (urlDocFilter as 'expired' | 'expiring' | 'missing')
-        : 'all';
-    } catch {
-      return 'all';
-    }
-  });
-  const [assignmentFilter, setAssignmentFilter] = useState<
-    'all' | 'assigned' | 'unassigned'
-  >(() => {
-    try {
-      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
-        return 'all';
+
+      // Read document filter
+      const urlDocFilter = searchParams.get('document_filter') || searchParams.get('documents');
+      if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
+        setDocumentFilter(urlDocFilter as 'expired' | 'expiring' | 'missing');
       }
-      const urlAssignment = searchParams.get('assignment_filter') || searchParams.get('assignment') || '';
-      return urlAssignment === 'assigned' || urlAssignment === 'unassigned'
-        ? (urlAssignment as 'assigned' | 'unassigned')
-        : 'all';
-    } catch {
-      return 'all';
-    }
-  });
-  const [sortField, setSortField] = useState<SortField>(() => {
-    try {
-      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
-        return 'name';
+
+      // Read assignment filter
+      const urlAssignment = searchParams.get('assignment_filter') || searchParams.get('assignment');
+      if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
+        setAssignmentFilter(urlAssignment as 'assigned' | 'unassigned');
       }
-      const urlSortField = searchParams.get('sortField') || '';
-      return urlSortField === 'name' ||
-        urlSortField === 'status' ||
-        urlSortField === 'created' ||
-        urlSortField === 'documents'
-        ? (urlSortField as SortField)
-        : 'name';
-    } catch {
-      return 'name';
-    }
-  });
-  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
-    try {
-      if (typeof window === 'undefined' || !searchParams || typeof searchParams.get !== 'function') {
-        return 'asc';
+
+      // Read sort field
+      const urlSortField = searchParams.get('sortField');
+      if (urlSortField && (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents')) {
+        setSortField(urlSortField as SortField);
       }
-      const urlSortOrder = searchParams.get('sortOrder') || '';
-      return urlSortOrder === 'asc' || urlSortOrder === 'desc'
-        ? (urlSortOrder as SortOrder)
-        : 'asc';
-    } catch {
-      return 'asc';
-    }
-  });
-  const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
-    new Set()
-  );
-  const [viewMode, setViewMode] = useState<
-    'table' | 'grid' | 'cards' | 'analytics'
-  >(() => {
-    try {
-      // First check URL parameters
-      if (typeof window !== 'undefined' && searchParams && typeof searchParams.get === 'function') {
-        const urlView = searchParams.get('view') || '';
-        if (
-          urlView === 'table' ||
-          urlView === 'grid' ||
-          urlView === 'cards' ||
-          urlView === 'analytics'
-        ) {
-          return urlView;
-        }
+
+      // Read sort order
+      const urlSortOrder = searchParams.get('sortOrder');
+      if (urlSortOrder && (urlSortOrder === 'asc' || urlSortOrder === 'desc')) {
+        setSortOrder(urlSortOrder as SortOrder);
       }
-      // Fallback to localStorage
-      if (typeof window !== 'undefined') {
+
+      // Read view mode
+      const urlView = searchParams.get('view');
+      if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
+        setViewMode(urlView);
+      } else if (typeof window !== 'undefined') {
+        // Fallback to localStorage
         const savedView = localStorage.getItem('promoters-view-mode');
-        if (
-          savedView === 'table' ||
-          savedView === 'grid' ||
-          savedView === 'cards' ||
-          savedView === 'analytics'
-        ) {
-          return savedView;
+        if (savedView && (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics')) {
+          setViewMode(savedView);
         }
       }
-      return 'table';
-    } catch {
-      return 'table';
+    } catch (error) {
+      logger.error('Error initializing state from URL:', error);
     }
-  });
+    // Only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
   const [activeMetricFilter, setActiveMetricFilter] = useState<
@@ -639,67 +593,75 @@ export function EnhancedPromotersViewRefactored({
     return 'en';
   }, [locale]);
 
-  // Sync URL parameters with state when URL changes
+  // Sync URL parameters with state when URL changes (after initial mount)
   useEffect(() => {
-    const urlStatus = getParamSafely('status', '');
-    const urlDocFilter =
-      getParamSafely('document_filter', '') || getParamSafely('documents', '');
-    const urlAssignment =
-      getParamSafely('assignment_filter', '') || getParamSafely('assignment', '');
-    const urlView = getParamSafely('view', '');
-    const urlSearch = getParamSafely('search', '');
-
-    // Update status filter from URL
-    if (
-      urlStatus &&
-      (urlStatus === 'critical' ||
-        urlStatus === 'active' ||
-        urlStatus === 'inactive' ||
-        urlStatus === 'warning')
-    ) {
-      setStatusFilter(urlStatus);
-    } else if (urlStatus === null) {
-      setStatusFilter('all');
+    if (!searchParams || typeof searchParams.get !== 'function') {
+      return;
     }
 
-    // Update document filter from URL
-    if (
-      urlDocFilter &&
-      (urlDocFilter === 'expired' ||
-        urlDocFilter === 'expiring' ||
-        urlDocFilter === 'missing')
-    ) {
-      setDocumentFilter(urlDocFilter);
-    } else if (urlDocFilter === null) {
-      setDocumentFilter('all');
-    }
+    try {
+      const urlStatus = getParamSafely('status', '');
+      const urlDocFilter =
+        getParamSafely('document_filter', '') || getParamSafely('documents', '');
+      const urlAssignment =
+        getParamSafely('assignment_filter', '') || getParamSafely('assignment', '');
+      const urlView = getParamSafely('view', '');
+      const urlSearch = getParamSafely('search', '');
 
-    // Update assignment filter from URL
-    if (
-      urlAssignment &&
-      (urlAssignment === 'assigned' || urlAssignment === 'unassigned')
-    ) {
-      setAssignmentFilter(urlAssignment);
-    } else if (urlAssignment === null) {
-      setAssignmentFilter('all');
-    }
+      // Update status filter from URL
+      if (
+        urlStatus &&
+        (urlStatus === 'critical' ||
+          urlStatus === 'active' ||
+          urlStatus === 'inactive' ||
+          urlStatus === 'warning')
+      ) {
+        setStatusFilter(urlStatus);
+      } else if (!urlStatus) {
+        setStatusFilter('all');
+      }
 
-    // Update view mode from URL
-    if (
-      urlView &&
-      (urlView === 'table' ||
-        urlView === 'grid' ||
-        urlView === 'cards' ||
-        urlView === 'analytics')
-    ) {
-      setViewMode(urlView);
-    }
+      // Update document filter from URL
+      if (
+        urlDocFilter &&
+        (urlDocFilter === 'expired' ||
+          urlDocFilter === 'expiring' ||
+          urlDocFilter === 'missing')
+      ) {
+        setDocumentFilter(urlDocFilter);
+      } else if (!urlDocFilter) {
+        setDocumentFilter('all');
+      }
 
-    // Update search term from URL
-    if (urlSearch !== null) {
-      setSearchTerm(urlSearch || '');
+      // Update assignment filter from URL
+      if (
+        urlAssignment &&
+        (urlAssignment === 'assigned' || urlAssignment === 'unassigned')
+      ) {
+        setAssignmentFilter(urlAssignment);
+      } else if (!urlAssignment) {
+        setAssignmentFilter('all');
+      }
+
+      // Update view mode from URL
+      if (
+        urlView &&
+        (urlView === 'table' ||
+          urlView === 'grid' ||
+          urlView === 'cards' ||
+          urlView === 'analytics')
+      ) {
+        setViewMode(urlView);
+      }
+
+      // Update search term from URL
+      if (urlSearch !== null && urlSearch !== undefined) {
+        setSearchTerm(urlSearch || '');
+      }
+    } catch (error) {
+      logger.error('Error syncing URL parameters:', error);
     }
-  }, [getParamSafely, setStatusFilter, setDocumentFilter, setAssignmentFilter, setViewMode, setSearchTerm]);
+  }, [searchParams, getParamSafely]);
 
   // Debounce search term to prevent excessive API calls
   useEffect(() => {
