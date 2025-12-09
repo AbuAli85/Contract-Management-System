@@ -50,7 +50,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
-import { useLocale } from 'next-intl';
+import { useLocaleFromParams } from '@/hooks/use-safe-params';
 import { EnhancedDashboardCharts } from '@/components/dashboard/enhanced-dashboard-charts';
 import { DashboardActivityFeed } from '@/components/dashboard/dashboard-activity-feed';
 import {
@@ -107,32 +107,47 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
-  const locale = useLocale();
+  // Safely get locale from params with fallback
+  const locale = useLocaleFromParams();
+
+  // Validate locale is valid
+  const validLocale = locale && ['en', 'ar'].includes(locale) ? locale : 'en';
 
   // Get time-based greeting
   const getTimeBasedGreeting = () => {
-    const hour = new Date().getHours();
-    if (locale === 'ar') {
-      if (hour < 12) return 'صباح الخير';
-      if (hour < 18) return 'مساء الخير';
-      return 'مساء الخير';
+    try {
+      const hour = new Date().getHours();
+      if (validLocale === 'ar') {
+        if (hour < 12) return 'صباح الخير';
+        if (hour < 18) return 'مساء الخير';
+        return 'مساء الخير';
+      }
+      if (hour < 12) return 'Good morning';
+      if (hour < 18) return 'Good afternoon';
+      return 'Good evening';
+    } catch (error) {
+      console.error('Error in getTimeBasedGreeting:', error);
+      return 'Hello';
     }
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
   };
 
   // Get role display name
   const getRoleDisplayName = (role: string) => {
-    const roleMap: Record<string, { en: string; ar: string }> = {
-      admin: { en: 'Administrator', ar: 'مدير النظام' },
-      super_admin: { en: 'Super Administrator', ar: 'مدير عام' },
-      manager: { en: 'Manager', ar: 'مدير' },
-      user: { en: 'User', ar: 'مستخدم' },
-      promoter: { en: 'Promoter', ar: 'مروج' },
-      client: { en: 'Client', ar: 'عميل' },
-    };
-    return roleMap[role]?.[locale as 'en' | 'ar'] || role;
+    try {
+      if (!role || typeof role !== 'string') return 'User';
+      const roleMap: Record<string, { en: string; ar: string }> = {
+        admin: { en: 'Administrator', ar: 'مدير النظام' },
+        super_admin: { en: 'Super Administrator', ar: 'مدير عام' },
+        manager: { en: 'Manager', ar: 'مدير' },
+        user: { en: 'User', ar: 'مستخدم' },
+        promoter: { en: 'Promoter', ar: 'مروج' },
+        client: { en: 'Client', ar: 'عميل' },
+      };
+      return roleMap[role]?.[validLocale as 'en' | 'ar'] || role;
+    } catch (error) {
+      console.error('Error in getRoleDisplayName:', error);
+      return role || 'User';
+    }
   };
 
   // Fetch dashboard statistics with React Query for real-time updates
@@ -264,13 +279,13 @@ function DashboardContent() {
   const handleRefresh = useCallback(() => {
     refetchStats();
     toast({
-      title: locale === 'ar' ? '✅ تم تحديث لوحة التحكم' : '✅ Dashboard Refreshed',
+      title: validLocale === 'ar' ? '✅ تم تحديث لوحة التحكم' : '✅ Dashboard Refreshed',
       description:
-        locale === 'ar'
+        validLocale === 'ar'
           ? 'تم تحديث جميع المقاييس والإحصائيات'
           : 'All metrics and statistics have been updated',
     });
-  }, [refetchStats, toast, locale]);
+  }, [refetchStats, toast, validLocale]);
 
   // Calculate quick stats with trends using actual growth calculations
   const totalContractsChange = calculateGrowthPercentage(
@@ -292,7 +307,7 @@ function DashboardContent() {
 
   const quickStats: QuickStat[] = [
     {
-      label: locale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
+      label: validLocale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
       value: stats?.total || 0,
       change: totalContractsChange,
       trend: determineGrowthTrend(totalContractsChange),
@@ -300,7 +315,7 @@ function DashboardContent() {
       color: 'blue',
     },
     {
-      label: locale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
+      label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
       value: stats?.active || 0,
       change: activeContractsChange,
       trend: determineGrowthTrend(activeContractsChange),
@@ -308,7 +323,7 @@ function DashboardContent() {
       color: 'green',
     },
     {
-      label: locale === 'ar' ? 'القوى العاملة' : 'Workforce',
+      label: validLocale === 'ar' ? 'القوى العاملة' : 'Workforce',
       value: promoterStats?.totalWorkforce || 0,
       change: workforceChange,
       trend: determineGrowthTrend(workforceChange),
@@ -316,10 +331,10 @@ function DashboardContent() {
       color: 'purple',
     },
     {
-      label: locale === 'ar' ? 'معدل الاستخدام' : 'Utilization',
+      label: validLocale === 'ar' ? 'معدل الاستخدام' : 'Utilization',
       value:
         stats?.active === 0
-          ? locale === 'ar'
+          ? validLocale === 'ar'
             ? 'غير متاح'
             : 'N/A'
           : `${promoterStats?.utilizationRate || 0}%`,
@@ -414,7 +429,7 @@ function DashboardContent() {
               </div>
               <p className='text-gray-600 mt-1 flex items-center gap-2 flex-wrap'>
                 <span>
-                  {locale === 'ar'
+                  {validLocale === 'ar'
                     ? 'إليك ما يحدث في عملك اليوم'
                     : "Here's what's happening with your business today"}
                 </span>
@@ -435,7 +450,7 @@ function DashboardContent() {
                       disabled={statsLoading}
                       className='gap-2'
                       aria-label={
-                        locale === 'ar'
+                        validLocale === 'ar'
                           ? 'تحديث البيانات'
                           : 'Refresh dashboard data'
                       }
@@ -445,13 +460,13 @@ function DashboardContent() {
                         aria-hidden='true'
                       />
                       <span className='hidden sm:inline'>
-                        {locale === 'ar' ? 'تحديث' : 'Refresh'}
+                        {validLocale === 'ar' ? 'تحديث' : 'Refresh'}
                       </span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>
-                      {locale === 'ar'
+                      {validLocale === 'ar'
                         ? 'تحديث جميع البيانات والإحصائيات'
                         : 'Refresh all dashboard data and statistics'}
                     </p>
@@ -471,14 +486,14 @@ function DashboardContent() {
                   >
                     <Shield className='h-3 w-3' aria-hidden='true' />
                     <span>
-                      {locale === 'ar' ? 'الدور:' : 'Role:'}{' '}
+                      {validLocale === 'ar' ? 'الدور:' : 'Role:'}{' '}
                       {getRoleDisplayName(user.role)}
                     </span>
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    {locale === 'ar'
+                    {validLocale === 'ar'
                       ? `دورك الحالي في النظام: ${getRoleDisplayName(user.role)}`
                       : `Your current system role: ${getRoleDisplayName(user.role)}`}
                   </p>
@@ -493,10 +508,10 @@ function DashboardContent() {
                     className='text-xs cursor-help'
                     aria-label={
                       statsData?.scope === 'system-wide'
-                        ? locale === 'ar'
+                        ? validLocale === 'ar'
                           ? 'عرض شامل للنظام'
                           : 'System-wide data view'
-                        : locale === 'ar'
+                        : validLocale === 'ar'
                           ? 'عرض بياناتك فقط'
                           : 'Your personal data view'
                     }
@@ -507,7 +522,7 @@ function DashboardContent() {
                           🌐
                         </span>
                         <span>
-                          {locale === 'ar' ? 'عرض شامل' : 'System-wide view'}
+                          {validLocale === 'ar' ? 'عرض شامل' : 'System-wide view'}
                         </span>
                       </>
                     ) : (
@@ -516,7 +531,7 @@ function DashboardContent() {
                           👤
                         </span>
                         <span>
-                          {locale === 'ar' ? 'بياناتك' : 'Your data'}
+                          {validLocale === 'ar' ? 'بياناتك' : 'Your data'}
                         </span>
                       </>
                     )}
@@ -525,10 +540,10 @@ function DashboardContent() {
                 <TooltipContent>
                   <p>
                     {statsData?.scope === 'system-wide'
-                      ? locale === 'ar'
+                      ? validLocale === 'ar'
                         ? 'أنت تعرض جميع البيانات في النظام (صلاحيات المدير)'
                         : 'You are viewing all system data (Admin privileges)'
-                      : locale === 'ar'
+                      : validLocale === 'ar'
                         ? 'أنت تعرض بياناتك الشخصية فقط'
                         : 'You are viewing only your personal data'}
                   </p>
@@ -619,7 +634,7 @@ function DashboardContent() {
           className='border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50'
           role='region'
           aria-label={
-            locale === 'ar'
+            validLocale === 'ar'
               ? 'فهم مقاييس التعيين'
               : 'Understanding assignment metrics'
           }
@@ -627,7 +642,7 @@ function DashboardContent() {
           <CardHeader>
             <CardTitle className='flex items-center gap-2 text-base'>
               <Info className='h-5 w-5 text-blue-600' aria-hidden='true' />
-              {locale === 'ar'
+              {validLocale === 'ar'
                 ? 'فهم مقاييس التعيين'
                 : 'Understanding Assignment Metrics'}
             </CardTitle>
@@ -720,7 +735,7 @@ function DashboardContent() {
             className='col-span-1 lg:col-span-2 border-0 shadow-lg'
             role='region'
             aria-label={
-              locale === 'ar'
+              validLocale === 'ar'
                 ? 'نظرة عامة على القوى العاملة'
                 : 'Workforce overview'
             }
@@ -731,12 +746,12 @@ function DashboardContent() {
                   className='h-5 w-5 text-blue-600'
                   aria-hidden='true'
                 />
-                {locale === 'ar' ? 'نظرة عامة على القوى العاملة' : 'Workforce Overview'}
+                {validLocale === 'ar' ? 'نظرة عامة على القوى العاملة' : 'Workforce Overview'}
               </CardTitle>
               <CardDescription>
-                {locale === 'ar' ? 'إجمالي القوى العاملة:' : 'Total workforce:'}{' '}
+                {validLocale === 'ar' ? 'إجمالي القوى العاملة:' : 'Total workforce:'}{' '}
                 {promoterStats?.totalWorkforce || 0}{' '}
-                {locale === 'ar' ? 'مروج' : 'promoters'}
+                {validLocale === 'ar' ? 'مروج' : 'promoters'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -759,7 +774,7 @@ function DashboardContent() {
                             <div className='p-4 bg-green-50 rounded-lg border border-green-200 cursor-help'>
                               <div className='flex items-center justify-between'>
                                 <span className='text-sm font-medium text-green-800'>
-                                  {locale === 'ar'
+                                  {validLocale === 'ar'
                                     ? 'نشط في العقود'
                                     : 'Active on Contracts'}
                                 </span>
@@ -784,7 +799,7 @@ function DashboardContent() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              {locale === 'ar'
+                              {validLocale === 'ar'
                                 ? 'المروجون الذين يعملون حاليًا في عقود نشطة'
                                 : 'Promoters currently working on active contracts'}
                             </p>
@@ -798,7 +813,7 @@ function DashboardContent() {
                             <div className='p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-help'>
                               <div className='flex items-center justify-between'>
                                 <span className='text-sm font-medium text-blue-800'>
-                                  {locale === 'ar'
+                                  {validLocale === 'ar'
                                     ? 'متاح للعمل'
                                     : 'Available for Work'}
                                 </span>
@@ -823,7 +838,7 @@ function DashboardContent() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              {locale === 'ar'
+                              {validLocale === 'ar'
                                 ? 'المروجون الجاهزون والمتاحون للتعيينات الجديدة'
                                 : 'Promoters ready and available for new assignments'}
                             </p>
@@ -836,7 +851,7 @@ function DashboardContent() {
                   {/* Other Status */}
                   <div className='pt-4 border-t'>
                     <div className='text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide'>
-                      {locale === 'ar' ? 'حالات أخرى' : 'Other Status'}
+                      {validLocale === 'ar' ? 'حالات أخرى' : 'Other Status'}
                     </div>
                     <div className='grid grid-cols-4 gap-3'>
                       <TooltipProvider>
@@ -844,7 +859,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help'>
                               <div className='text-xs text-gray-600 mb-1'>
-                                {locale === 'ar' ? 'في إجازة' : 'On Leave'}
+                                {validLocale === 'ar' ? 'في إجازة' : 'On Leave'}
                               </div>
                               <div className='text-lg font-semibold'>
                                 {promoterStats?.onLeave || 0}
@@ -853,7 +868,7 @@ function DashboardContent() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              {locale === 'ar'
+                              {validLocale === 'ar'
                                 ? 'المروجون في إجازة مؤقتة'
                                 : 'Promoters temporarily on leave'}
                             </p>
@@ -866,7 +881,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help'>
                               <div className='text-xs text-gray-600 mb-1'>
-                                {locale === 'ar' ? 'غير نشط' : 'Inactive'}
+                                {validLocale === 'ar' ? 'غير نشط' : 'Inactive'}
                               </div>
                               <div className='text-lg font-semibold'>
                                 {promoterStats?.inactive || 0}
@@ -875,7 +890,7 @@ function DashboardContent() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              {locale === 'ar'
+                              {validLocale === 'ar'
                                 ? 'المروجون المميزون كغير نشطين'
                                 : 'Promoters marked as inactive'}
                             </p>
@@ -888,7 +903,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help'>
                               <div className='text-xs text-gray-600 mb-1'>
-                                {locale === 'ar' ? 'منتهي' : 'Terminated'}
+                                {validLocale === 'ar' ? 'منتهي' : 'Terminated'}
                               </div>
                               <div className='text-lg font-semibold'>
                                 {promoterStats?.terminated || 0}
@@ -897,7 +912,7 @@ function DashboardContent() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              {locale === 'ar'
+                              {validLocale === 'ar'
                                 ? 'المروجون السابقون الذين غادروا الشركة'
                                 : 'Former promoters who left the company'}
                             </p>
@@ -910,7 +925,7 @@ function DashboardContent() {
                           <TooltipTrigger asChild>
                             <div className='text-center cursor-help bg-blue-50 rounded-lg p-2'>
                               <div className='text-xs text-blue-600 mb-1 font-medium'>
-                                {locale === 'ar' ? 'الامتثال' : 'Compliance'}
+                                {validLocale === 'ar' ? 'الامتثال' : 'Compliance'}
                               </div>
                               <div className='text-lg font-semibold text-blue-900'>
                                 {promoterStats?.complianceRate || 0}%
@@ -919,7 +934,7 @@ function DashboardContent() {
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              {locale === 'ar'
+                              {validLocale === 'ar'
                                 ? 'نسبة المروجين الذين لديهم جميع المستندات صالحة'
                                 : 'Percentage of promoters with all documents valid'}
                             </p>
@@ -1060,7 +1075,7 @@ function DashboardContent() {
             <Card
               className='border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50'
               role='region'
-              aria-label={locale === 'ar' ? 'حالة النظام' : 'System status'}
+              aria-label={validLocale === 'ar' ? 'حالة النظام' : 'System status'}
             >
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
@@ -1068,29 +1083,29 @@ function DashboardContent() {
                     className='h-5 w-5 text-green-600'
                     aria-hidden='true'
                   />
-                  {locale === 'ar' ? 'حالة النظام' : 'System Status'}
+                  {validLocale === 'ar' ? 'حالة النظام' : 'System Status'}
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-2'>
                 <div className='flex items-center justify-between text-sm'>
                   <span className='text-gray-700'>
-                    {locale === 'ar' ? 'قاعدة البيانات' : 'Database'}
+                    {validLocale === 'ar' ? 'قاعدة البيانات' : 'Database'}
                   </span>
                   <Badge className='bg-green-500' aria-label='Healthy'>
-                    {locale === 'ar' ? 'سليمة' : 'Healthy'}
+                    {validLocale === 'ar' ? 'سليمة' : 'Healthy'}
                   </Badge>
                 </div>
                 <div className='flex items-center justify-between text-sm'>
                   <span className='text-gray-700'>
-                    {locale === 'ar' ? 'خدمات API' : 'API Services'}
+                    {validLocale === 'ar' ? 'خدمات API' : 'API Services'}
                   </span>
                   <Badge className='bg-green-500' aria-label='Online'>
-                    {locale === 'ar' ? 'متصل' : 'Online'}
+                    {validLocale === 'ar' ? 'متصل' : 'Online'}
                   </Badge>
                 </div>
                 <div className='flex items-center justify-between text-sm'>
                   <span className='text-gray-700'>
-                    {locale === 'ar' ? 'آخر نسخة احتياطية' : 'Last Backup'}
+                    {validLocale === 'ar' ? 'آخر نسخة احتياطية' : 'Last Backup'}
                   </span>
                   <time className='text-xs text-gray-600' dateTime={new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()}>
                     {formatDistanceToNow(
