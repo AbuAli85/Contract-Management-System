@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { EnhancedPromotersViewRefactored } from '@/components/promoters/enhanced-promoters-view-refactored';
 import { PromotersDebugInfo } from '@/components/promoters-debug-info';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth-service';
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   Card,

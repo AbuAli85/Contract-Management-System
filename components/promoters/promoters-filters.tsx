@@ -52,6 +52,7 @@ import {
 import type { OverallStatus } from './types';
 import { Badge } from '@/components/ui/badge';
 import { PromotersAdvancedSearch } from './promoters-advanced-search';
+import { PromotersSearchWithAutocomplete } from './promoters-search-with-autocomplete';
 
 interface SearchCriteria {
   field: string;
@@ -173,9 +174,6 @@ const DEFAULT_PRESETS: EnhancedFilterPreset[] = [
     isDefault: true,
   },
 ];
-
-// Import the enhanced search component with autocomplete
-import { PromotersSearchWithAutocomplete } from './promoters-search-with-autocomplete';
 
 export function PromotersFilters({
   searchTerm,
