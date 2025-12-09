@@ -512,66 +512,6 @@ export function EnhancedPromotersViewRefactored({
     }
   }, [searchParams]);
 
-  // Initialize state from URL parameters on mount
-  useEffect(() => {
-    if (!searchParams || typeof searchParams.get !== 'function') {
-      return;
-    }
-
-    try {
-      // Read search term
-      const urlSearch = searchParams.get('search');
-      if (urlSearch !== null) {
-        setSearchTerm(urlSearch);
-      }
-
-      // Read status filter
-      const urlStatus = searchParams.get('status');
-      if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
-        setStatusFilter(urlStatus as OverallStatus);
-      }
-
-      // Read document filter
-      const urlDocFilter = searchParams.get('document_filter') || searchParams.get('documents');
-      if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
-        setDocumentFilter(urlDocFilter as 'expired' | 'expiring' | 'missing');
-      }
-
-      // Read assignment filter
-      const urlAssignment = searchParams.get('assignment_filter') || searchParams.get('assignment');
-      if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
-        setAssignmentFilter(urlAssignment as 'assigned' | 'unassigned');
-      }
-
-      // Read sort field
-      const urlSortField = searchParams.get('sortField');
-      if (urlSortField && (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents')) {
-        setSortField(urlSortField as SortField);
-      }
-
-      // Read sort order
-      const urlSortOrder = searchParams.get('sortOrder');
-      if (urlSortOrder && (urlSortOrder === 'asc' || urlSortOrder === 'desc')) {
-        setSortOrder(urlSortOrder as SortOrder);
-      }
-
-      // Read view mode
-      const urlView = searchParams.get('view');
-      if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
-        setViewMode(urlView);
-      } else if (typeof window !== 'undefined') {
-        // Fallback to localStorage
-        const savedView = localStorage.getItem('promoters-view-mode');
-        if (savedView && (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics')) {
-          setViewMode(savedView);
-        }
-      }
-    } catch (error) {
-      logger.error('Error initializing state from URL:', error);
-    }
-    // Only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
   const [activeMetricFilter, setActiveMetricFilter] = useState<
@@ -593,75 +533,72 @@ export function EnhancedPromotersViewRefactored({
     return 'en';
   }, [locale]);
 
-  // Sync URL parameters with state when URL changes (after initial mount)
+  // Sync state from URL parameters (runs on mount and when URL changes)
   useEffect(() => {
     if (!searchParams || typeof searchParams.get !== 'function') {
       return;
     }
 
     try {
-      const urlStatus = getParamSafely('status', '');
-      const urlDocFilter =
-        getParamSafely('document_filter', '') || getParamSafely('documents', '');
-      const urlAssignment =
-        getParamSafely('assignment_filter', '') || getParamSafely('assignment', '');
-      const urlView = getParamSafely('view', '');
-      const urlSearch = getParamSafely('search', '');
+      // Read search term
+      const urlSearch = searchParams.get('search');
+      if (urlSearch !== null && urlSearch !== undefined) {
+        setSearchTerm(urlSearch);
+      }
 
-      // Update status filter from URL
-      if (
-        urlStatus &&
-        (urlStatus === 'critical' ||
-          urlStatus === 'active' ||
-          urlStatus === 'inactive' ||
-          urlStatus === 'warning')
-      ) {
-        setStatusFilter(urlStatus);
+      // Read status filter
+      const urlStatus = searchParams.get('status');
+      if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
+        setStatusFilter(urlStatus as OverallStatus);
       } else if (!urlStatus) {
         setStatusFilter('all');
       }
 
-      // Update document filter from URL
-      if (
-        urlDocFilter &&
-        (urlDocFilter === 'expired' ||
-          urlDocFilter === 'expiring' ||
-          urlDocFilter === 'missing')
-      ) {
-        setDocumentFilter(urlDocFilter);
+      // Read document filter
+      const urlDocFilter = searchParams.get('document_filter') || searchParams.get('documents');
+      if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
+        setDocumentFilter(urlDocFilter as 'expired' | 'expiring' | 'missing');
       } else if (!urlDocFilter) {
         setDocumentFilter('all');
       }
 
-      // Update assignment filter from URL
-      if (
-        urlAssignment &&
-        (urlAssignment === 'assigned' || urlAssignment === 'unassigned')
-      ) {
-        setAssignmentFilter(urlAssignment);
+      // Read assignment filter
+      const urlAssignment = searchParams.get('assignment_filter') || searchParams.get('assignment');
+      if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
+        setAssignmentFilter(urlAssignment as 'assigned' | 'unassigned');
       } else if (!urlAssignment) {
         setAssignmentFilter('all');
       }
 
-      // Update view mode from URL
-      if (
-        urlView &&
-        (urlView === 'table' ||
-          urlView === 'grid' ||
-          urlView === 'cards' ||
-          urlView === 'analytics')
-      ) {
-        setViewMode(urlView);
+      // Read sort field
+      const urlSortField = searchParams.get('sortField');
+      if (urlSortField && (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents')) {
+        setSortField(urlSortField as SortField);
       }
 
-      // Update search term from URL
-      if (urlSearch !== null && urlSearch !== undefined) {
-        setSearchTerm(urlSearch || '');
+      // Read sort order
+      const urlSortOrder = searchParams.get('sortOrder');
+      if (urlSortOrder && (urlSortOrder === 'asc' || urlSortOrder === 'desc')) {
+        setSortOrder(urlSortOrder as SortOrder);
+      }
+
+      // Read view mode
+      const urlView = searchParams.get('view');
+      if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
+        setViewMode(urlView);
+      } else if (typeof window !== 'undefined') {
+        // Fallback to localStorage only if no URL param
+        const savedView = localStorage.getItem('promoters-view-mode');
+        if (savedView && (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics')) {
+          setViewMode(savedView);
+        }
       }
     } catch (error) {
-      logger.error('Error syncing URL parameters:', error);
+      logger.error('Error syncing state from URL:', error);
     }
-  }, [searchParams, getParamSafely]);
+    // Only depend on searchParams to avoid circular dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Debounce search term to prevent excessive API calls
   useEffect(() => {
