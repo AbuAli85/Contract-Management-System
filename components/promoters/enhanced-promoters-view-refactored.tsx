@@ -546,6 +546,7 @@ export function EnhancedPromotersViewRefactored({
   }, [searchParams]);
 
   // Sync state from URL parameters (runs on mount and when URL changes)
+  // Only depend on searchParams to avoid circular dependencies
   useEffect(() => {
     // Guard: ensure searchParams is available
     if (!searchParams) {
@@ -554,82 +555,69 @@ export function EnhancedPromotersViewRefactored({
 
     // Guard: ensure get method exists
     if (typeof searchParams.get !== 'function') {
-      logger.warn('searchParams.get is not a function');
       return;
     }
 
     try {
       // Read search term
       const urlSearch = getUrlParam('search');
-      if (urlSearch && urlSearch !== searchTerm) {
-        setSearchTerm(urlSearch);
+      if (urlSearch) {
+        setSearchTerm(prev => prev !== urlSearch ? urlSearch : prev);
       }
 
       // Read status filter
       const urlStatus = getUrlParam('status');
       if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
-        if (statusFilter !== urlStatus) {
-          setStatusFilter(urlStatus as OverallStatus);
-        }
-      } else if (!urlStatus && statusFilter !== 'all') {
-        setStatusFilter('all');
+        setStatusFilter(prev => prev !== urlStatus ? (urlStatus as OverallStatus) : prev);
+      } else if (!urlStatus) {
+        setStatusFilter(prev => prev !== 'all' ? 'all' : prev);
       }
 
       // Read document filter
       const urlDocFilter = getUrlParam('document_filter') || getUrlParam('documents');
       if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
-        if (documentFilter !== urlDocFilter) {
-          setDocumentFilter(urlDocFilter as 'expired' | 'expiring' | 'missing');
-        }
-      } else if (!urlDocFilter && documentFilter !== 'all') {
-        setDocumentFilter('all');
+        setDocumentFilter(prev => prev !== urlDocFilter ? (urlDocFilter as 'expired' | 'expiring' | 'missing') : prev);
+      } else if (!urlDocFilter) {
+        setDocumentFilter(prev => prev !== 'all' ? 'all' : prev);
       }
 
       // Read assignment filter
       const urlAssignment = getUrlParam('assignment_filter') || getUrlParam('assignment');
       if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
-        if (assignmentFilter !== urlAssignment) {
-          setAssignmentFilter(urlAssignment as 'assigned' | 'unassigned');
-        }
-      } else if (!urlAssignment && assignmentFilter !== 'all') {
-        setAssignmentFilter('all');
+        setAssignmentFilter(prev => prev !== urlAssignment ? (urlAssignment as 'assigned' | 'unassigned') : prev);
+      } else if (!urlAssignment) {
+        setAssignmentFilter(prev => prev !== 'all' ? 'all' : prev);
       }
 
       // Read sort field
       const urlSortField = getUrlParam('sortField');
       if (urlSortField && (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents')) {
-        if (sortField !== urlSortField) {
-          setSortField(urlSortField as SortField);
-        }
+        setSortField(prev => prev !== urlSortField ? (urlSortField as SortField) : prev);
       }
 
       // Read sort order
       const urlSortOrder = getUrlParam('sortOrder');
       if (urlSortOrder && (urlSortOrder === 'asc' || urlSortOrder === 'desc')) {
-        if (sortOrder !== urlSortOrder) {
-          setSortOrder(urlSortOrder as SortOrder);
-        }
+        setSortOrder(prev => prev !== urlSortOrder ? (urlSortOrder as SortOrder) : prev);
       }
 
       // Read view mode
       const urlView = getUrlParam('view');
       if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
-        if (viewMode !== urlView) {
-          setViewMode(urlView);
-        }
+        setViewMode(prev => prev !== urlView ? urlView : prev);
       } else if (typeof window !== 'undefined') {
         // Fallback to localStorage only if no URL param
         const savedView = localStorage.getItem('promoters-view-mode');
         if (savedView && (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics')) {
-          if (viewMode !== savedView) {
-            setViewMode(savedView);
-          }
+          setViewMode(prev => prev !== savedView ? savedView : prev);
         }
       }
     } catch (error) {
       logger.error('Error syncing state from URL:', error);
     }
-  }, [searchParams, getUrlParam, searchTerm, statusFilter, documentFilter, assignmentFilter, sortField, sortOrder, viewMode]);
+    // Only depend on searchParams and getUrlParam - NOT on state variables to avoid circular dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Debounce search term to prevent excessive API calls
   useEffect(() => {
