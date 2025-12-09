@@ -51,44 +51,19 @@ const useFormField = () => {
     throw new Error('useFormField must be used within a <FormItem> component');
   }
 
-  // Check if we're on the client side and have a form context
-  if (typeof window === 'undefined') {
-    // Return safe defaults for SSR
-    return {
-      id: itemContext.id,
-      name: fieldContext.name,
-      formItemId: `${itemContext.id}-form-item`,
-      formDescriptionId: `${itemContext.id}-form-item-description`,
-      formMessageId: `${itemContext.id}-form-item-message`,
-      error: undefined,
-      formState: { errors: {} },
-    };
-  }
+  // Call useFormContext unconditionally (React Hooks rule)
+  // This hook must be called at the top level, not conditionally
+  const { getFieldState, formState } = useFormContext();
+  const fieldState = getFieldState(fieldContext.name, formState);
 
-  try {
-    const { getFieldState, formState } = useFormContext();
-    const fieldState = getFieldState(fieldContext.name, formState);
-
-    return {
-      id: itemContext.id,
-      name: fieldContext.name,
-      formItemId: `${itemContext.id}-form-item`,
-      formDescriptionId: `${itemContext.id}-form-item-description`,
-      formMessageId: `${itemContext.id}-form-item-message`,
-      ...fieldState,
-    };
-  } catch (error) {
-    // Return safe defaults if form context is not available
-    return {
-      id: itemContext.id,
-      name: fieldContext.name,
-      formItemId: `${itemContext.id}-form-item`,
-      formDescriptionId: `${itemContext.id}-form-item-description`,
-      formMessageId: `${itemContext.id}-form-item-message`,
-      error: undefined,
-      formState: { errors: {} },
-    };
-  }
+  return {
+    id: itemContext.id,
+    name: fieldContext.name,
+    formItemId: `${itemContext.id}-form-item`,
+    formDescriptionId: `${itemContext.id}-form-item-description`,
+    formMessageId: `${itemContext.id}-form-item-message`,
+    ...fieldState,
+  };
 };
 
 type FormItemContextValue = {

@@ -206,24 +206,8 @@ function UnifiedContractGeneratorForm({
   );
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  // Hydration check - use hook instead of conditional return
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Client-side guard to prevent SSR issues - AFTER all hooks are called
-  if (!mounted) {
-    return (
-      <div className='flex items-center justify-center p-8'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
-          <p>Initializing contract form...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Load parties & promoters with error handling and auth safety
+  // These hooks MUST be called before any conditional returns
   const {
     data: clientParties,
     isLoading: isLoadingClientParties,
@@ -240,39 +224,8 @@ function UnifiedContractGeneratorForm({
     error: promotersError,
   } = usePromoters();
 
-  // Handle data loading errors with auth context
-  useEffect(() => {
-    if (clientError) {
-      console.error('Error loading client parties:', clientError);
-      // Only show error toast if not an auth error
-      if (
-        !clientError.message.includes('Auth') &&
-        !clientError.message.includes('session')
-      ) {
-        toast.error('Failed to load client parties');
-      }
-    }
-    if (employerError) {
-      console.error('Error loading employer parties:', employerError);
-      if (
-        !employerError.message.includes('Auth') &&
-        !employerError.message.includes('session')
-      ) {
-        toast.error('Failed to load employer parties');
-      }
-    }
-    if (promotersError) {
-      console.error('Error loading promoters:', promotersError);
-      if (
-        !promotersError.message.includes('Auth') &&
-        !promotersError.message.includes('session')
-      ) {
-        toast.error('Failed to load promoters');
-      }
-    }
-  }, [clientError, employerError, promotersError]);
-
   // Form setup with enhanced defaults
+  // This hook MUST be called before any conditional returns
   const form = useForm<ContractGeneratorFormData>({
     resolver: zodResolver(contractGeneratorSchema),
     mode: 'onTouched',
@@ -303,6 +256,7 @@ function UnifiedContractGeneratorForm({
 
   // Performance optimization: Direct number input handling to prevent UI blocking
   // Watch form values for calculations and validation (MUST BE DECLARED BEFORE USAGE)
+  // All hooks MUST be called before any conditional returns
   const watchedValues = useWatch({ control: form.control });
   const watchedPromoterId = useWatch({
     control: form.control,
@@ -599,6 +553,55 @@ function UnifiedContractGeneratorForm({
       setSelectedPromoter(null);
     }
   }, [watchedSecondPartyId, form]);
+
+  // Hydration check - use hook instead of conditional return
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle data loading errors with auth context
+  useEffect(() => {
+    if (clientError) {
+      console.error('Error loading client parties:', clientError);
+      // Only show error toast if not an auth error
+      if (
+        !clientError.message.includes('Auth') &&
+        !clientError.message.includes('session')
+      ) {
+        toast.error('Failed to load client parties');
+      }
+    }
+    if (employerError) {
+      console.error('Error loading employer parties:', employerError);
+      if (
+        !employerError.message.includes('Auth') &&
+        !employerError.message.includes('session')
+      ) {
+        toast.error('Failed to load employer parties');
+      }
+    }
+    if (promotersError) {
+      console.error('Error loading promoters:', promotersError);
+      if (
+        !promotersError.message.includes('Auth') &&
+        !promotersError.message.includes('session')
+      ) {
+        toast.error('Failed to load promoters');
+      }
+    }
+  }, [clientError, employerError, promotersError]);
+
+  // Client-side guard to prevent SSR issues - AFTER all hooks are called
+  if (!mounted) {
+    return (
+      <div className='flex items-center justify-center p-8'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
+          <p>Initializing contract form...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Mutation for form submission
   const submitMutation = useMutation({
