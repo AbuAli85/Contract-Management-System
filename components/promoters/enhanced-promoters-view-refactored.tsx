@@ -447,24 +447,40 @@ export function EnhancedPromotersViewRefactored({
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  // Get pagination params from URL (memoized to prevent re-renders)
-  const page = useMemo(
-    () => parseInt(searchParams?.get('page') || '1', 10),
-    [searchParams]
-  );
-  const limit = useMemo(
-    () => parseInt(searchParams?.get('limit') || '20', 10),
+  // Safely get search params with defensive checks
+  const safeGetParam = useCallback(
+    (key: string, defaultValue: string = ''): string => {
+      try {
+        if (!searchParams || typeof searchParams.get !== 'function') {
+          return defaultValue;
+        }
+        return searchParams.get(key) || defaultValue;
+      } catch (error) {
+        console.error(`Error getting search param "${key}":`, error);
+        return defaultValue;
+      }
+    },
     [searchParams]
   );
 
-  // State management - Initialize from URL parameters
+  // Get pagination params from URL (memoized to prevent re-renders)
+  const page = useMemo(
+    () => parseInt(safeGetParam('page', '1'), 10),
+    [safeGetParam]
+  );
+  const limit = useMemo(
+    () => parseInt(safeGetParam('limit', '20'), 10),
+    [safeGetParam]
+  );
+
+  // State management - Initialize from URL parameters (using safe getter)
   const [searchTerm, setSearchTerm] = useState(
-    () => searchParams?.get('search') || ''
+    () => safeGetParam('search', '')
   );
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
     () => {
-      const urlStatus = searchParams?.get('status');
+      const urlStatus = safeGetParam('status');
       return urlStatus === 'critical' ||
         urlStatus === 'active' ||
         urlStatus === 'inactive' ||
@@ -477,7 +493,7 @@ export function EnhancedPromotersViewRefactored({
     'all' | 'expired' | 'expiring' | 'missing'
   >(() => {
     const urlDocFilter =
-      searchParams?.get('document_filter') || searchParams?.get('documents');
+      safeGetParam('document_filter') || safeGetParam('documents');
     return urlDocFilter === 'expired' ||
       urlDocFilter === 'expiring' ||
       urlDocFilter === 'missing'
@@ -488,13 +504,13 @@ export function EnhancedPromotersViewRefactored({
     'all' | 'assigned' | 'unassigned'
   >(() => {
     const urlAssignment =
-      searchParams?.get('assignment_filter') || searchParams?.get('assignment');
+      safeGetParam('assignment_filter') || safeGetParam('assignment');
     return urlAssignment === 'assigned' || urlAssignment === 'unassigned'
       ? urlAssignment
       : 'all';
   });
   const [sortField, setSortField] = useState<SortField>(() => {
-    const urlSortField = searchParams?.get('sortField');
+    const urlSortField = safeGetParam('sortField');
     return urlSortField === 'name' ||
       urlSortField === 'status' ||
       urlSortField === 'created' ||
@@ -503,7 +519,7 @@ export function EnhancedPromotersViewRefactored({
       : 'name';
   });
   const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
-    const urlSortOrder = searchParams?.get('sortOrder');
+    const urlSortOrder = safeGetParam('sortOrder');
     return urlSortOrder === 'asc' || urlSortOrder === 'desc'
       ? urlSortOrder
       : 'asc';
@@ -515,7 +531,7 @@ export function EnhancedPromotersViewRefactored({
     'table' | 'grid' | 'cards' | 'analytics'
   >(() => {
     // First check URL parameters, then localStorage
-    const urlView = searchParams?.get('view');
+    const urlView = safeGetParam('view');
     if (
       urlView === 'table' ||
       urlView === 'grid' ||
@@ -562,13 +578,13 @@ export function EnhancedPromotersViewRefactored({
 
   // Sync URL parameters with state when URL changes
   useEffect(() => {
-    const urlStatus = searchParams?.get('status');
+    const urlStatus = safeGetParam('status');
     const urlDocFilter =
-      searchParams?.get('document_filter') || searchParams?.get('documents');
+      safeGetParam('document_filter') || safeGetParam('documents');
     const urlAssignment =
-      searchParams?.get('assignment_filter') || searchParams?.get('assignment');
-    const urlView = searchParams?.get('view');
-    const urlSearch = searchParams?.get('search');
+      safeGetParam('assignment_filter') || safeGetParam('assignment');
+    const urlView = safeGetParam('view');
+    const urlSearch = safeGetParam('search');
 
     // Update status filter from URL
     if (
@@ -620,7 +636,7 @@ export function EnhancedPromotersViewRefactored({
     if (urlSearch !== null) {
       setSearchTerm(urlSearch || '');
     }
-  }, [searchParams]);
+  }, [safeGetParam]);
 
   // Debounce search term to prevent excessive API calls
   useEffect(() => {
