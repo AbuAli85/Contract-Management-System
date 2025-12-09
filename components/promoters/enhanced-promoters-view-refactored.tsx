@@ -575,29 +575,6 @@ export function EnhancedPromotersViewRefactored({
   const [viewMode, setViewMode] = useState<
     'table' | 'grid' | 'cards' | 'analytics'
   >(initialValues.viewMode);
-    if (
-      urlView === 'table' ||
-      urlView === 'grid' ||
-      urlView === 'cards' ||
-      urlView === 'analytics'
-    ) {
-      return urlView;
-    }
-
-    // Fallback to localStorage
-    if (typeof window !== 'undefined') {
-      const savedView = localStorage.getItem('promoters-view-mode');
-      if (
-        savedView === 'table' ||
-        savedView === 'grid' ||
-        savedView === 'cards' ||
-        savedView === 'analytics'
-      ) {
-        return savedView;
-      }
-    }
-    return 'table';
-  });
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
   const [activeMetricFilter, setActiveMetricFilter] = useState<
