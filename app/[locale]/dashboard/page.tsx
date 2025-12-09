@@ -1,4 +1,5 @@
 'use client';
+// Version: 2025-01-09 - Fixed useMemo import and added ErrorBoundary
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
