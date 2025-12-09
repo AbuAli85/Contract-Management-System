@@ -9,7 +9,8 @@ import { createClient } from '@/lib/supabase/client';
  * Fetches from user profile and provides setter to update
  */
 export function useCurrencyPreference() {
-  const [preferredCurrency, setPreferredCurrency] = useState<CurrencyCode>('USD');
+  const [preferredCurrency, setPreferredCurrency] =
+    useState<CurrencyCode>('USD');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,10 +23,12 @@ export function useCurrencyPreference() {
           setLoading(false);
           return;
         }
-        
+
         // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (!user) {
           setLoading(false);
           return;
@@ -63,10 +66,12 @@ export function useCurrencyPreference() {
         setError('Supabase client not available');
         return false;
       }
-      
+
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         setError('User not authenticated');
         return false;
@@ -101,4 +106,3 @@ export function useCurrencyPreference() {
     error,
   };
 }
-

@@ -58,7 +58,7 @@ export type ContractWithRelations =
     promoters?: {
       id: string;
       name_en: string;
-      name_ar: string | null; 
+      name_ar: string | null;
       email: string | null;
       id_card_number: string | null;
       id_card_url: string | null;
@@ -74,11 +74,11 @@ const fetchContract = async (
 ): Promise<ContractWithRelations | null> => {
   try {
     const supabase = createClient();
-    
+
     if (!supabase) {
       throw new Error('Failed to initialize Supabase client');
     }
-    
+
     const { data, error } = await supabase
       .from('contracts')
       .select(

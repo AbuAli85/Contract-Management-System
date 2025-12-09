@@ -37,7 +37,7 @@ const nextConfig = {
       // Restrict base URIs
       "base-uri 'self'",
       // Upgrade insecure requests
-      "upgrade-insecure-requests",
+      'upgrade-insecure-requests',
       // Restrict form actions
       "form-action 'self'",
       // Allow media from self and Supabase
@@ -68,7 +68,8 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+            value:
+              'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
           {
             key: 'Content-Security-Policy',
@@ -98,7 +99,8 @@ const nextConfig = {
       },
       {
         // Strict caching for authenticated/sensitive pages
-        source: '/:locale(en|ar|es|fr|de)/(dashboard|contracts|promoters|users|settings|profile)/:path*',
+        source:
+          '/:locale(en|ar|es|fr|de)/(dashboard|contracts|promoters|users|settings|profile)/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -120,7 +122,10 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: process.env.ALLOWED_ORIGINS?.split(',')[0] || process.env.NEXT_PUBLIC_APP_URL || '*',
+            value:
+              process.env.ALLOWED_ORIGINS?.split(',')[0] ||
+              process.env.NEXT_PUBLIC_APP_URL ||
+              '*',
           },
           {
             key: 'Access-Control-Allow-Methods',
@@ -128,7 +133,8 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
+            value:
+              'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
           },
           {
             key: 'Access-Control-Allow-Credentials',
@@ -174,7 +180,7 @@ const nextConfig = {
       '@/constants': path.resolve(__dirname, 'constants'),
       '@/styles': path.resolve(__dirname, 'styles'),
     };
-    
+
     // Ensure extensions are resolved
     config.resolve.extensions = [
       '.js',
@@ -191,12 +197,16 @@ const nextConfig = {
   // Experimental features for performance
   experimental: {
     // Enable modern features
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', '@tanstack/react-query'],
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-icons',
+      '@tanstack/react-query',
+    ],
   },
-  
+
   // Enable SWC minification for better performance
   swcMinify: true,
-  
+
   // Production browser source maps (disabled for performance)
   productionBrowserSourceMaps: false,
 

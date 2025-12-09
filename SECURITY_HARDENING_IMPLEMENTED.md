@@ -11,17 +11,20 @@ This document confirms the security hardening requested based on `PRODUCTION_SEC
 ### Issue #1: RBAC Bypassed (CRITICAL 🔴)
 
 **Documented Issue** (`PROMOTERS_PAGE_COMPREHENSIVE_REVIEW.md`, lines 28-50):
+
 > "SECURITY: RBAC Bypassed in API - Authentication & authorization checks are disabled"
 
 **Status**: ✅ **RESOLVED**
 
 **Implementation**:
+
 - `withRBAC('promoter:read:own')` wrapper is ACTIVE on GET endpoint (line 87)
 - `withRBAC('promoter:manage:own')` wrapper is ACTIVE on POST endpoint (line 357)
 - Both endpoints enforce authentication and permissions
 - Rate limiting automatically applied via `withRBAC` integration
 
 **Evidence**:
+
 ```typescript
 // app/api/promoters/route.ts:87
 export const GET = withRBAC('promoter:read:own', async (request: Request) => {
@@ -33,24 +36,27 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 ### Issue #2: No Rate Limiting (HIGH 🟡)
 
 **Documented Issue** (`PROMOTERS_PAGE_COMPREHENSIVE_REVIEW.md`, lines 54-68):
+
 > "API endpoint lacks rate limiting - Risk: API abuse, DoS attacks"
 
 **Status**: ✅ **RESOLVED**
 
 **Implementation**:
+
 - Rate limiting ACTIVE via `ratelimitStrict.limit()` (lines 90-104)
 - Limit: 10 requests/minute per client IP
 - 429 status code returned when exceeded
 - Standard rate limit headers included (`X-RateLimit-*`)
 
 **Evidence**:
+
 ```typescript
 // app/api/promoters/route.ts:90-104
 const rateLimitResult = await ratelimitStrict.limit(identifier);
 if (!rateLimitResult.success) {
   return NextResponse.json(body, {
     status: 429,
-    headers: getRateLimitHeaders(rateLimitResult)
+    headers: getRateLimitHeaders(rateLimitResult),
   });
 }
 ```
@@ -60,11 +66,13 @@ if (!rateLimitResult.success) {
 ### Issue #3: Missing User Scoping
 
 **Documented Issue** (`docs/rbac_implementation_status.md`):
+
 > "GET endpoints need user/role scoping - admins see all, non-admins see filtered"
 
 **Status**: ✅ **RESOLVED**
 
 **Implementation**:
+
 - Admin role check added (lines 182-195)
 - User scoping logic prepared (lines 239-245)
 - `created_by` tracking in POST (line 486)
@@ -72,6 +80,7 @@ if (!rateLimitResult.success) {
 - RLS policies prepared for full enforcement
 
 **Evidence**:
+
 ```typescript
 // app/api/promoters/route.ts:182-195
 const { data: userProfile } = await supabase
@@ -93,11 +102,13 @@ if (!isAdmin) {
 ### Issue #4: Bulk Actions Mocked
 
 **Documented Issue** (`PROMOTERS_ARCHITECTURE_REVIEW.md`):
+
 > "Bulk actions should call a real API rather than toasts"
 
 **Status**: ✅ **RESOLVED**
 
 **Implementation**:
+
 - Real API endpoint at `/api/promoters/bulk` (fully functional)
 - RBAC protected with `withRBAC('promoter:manage:own')`
 - Rate limiting enabled
@@ -107,17 +118,23 @@ if (!isAdmin) {
 - UI properly calls the API (lines 1042-1152 in enhanced-promoters-view-refactored.tsx)
 
 **Evidence**:
+
 ```typescript
 // app/api/promoters/bulk/route.ts:28
-export const POST = withRBAC('promoter:manage:own', async (request: Request) => {
-  // Real database updates, not just toasts
-  await supabase.from('promoters')
-    .update({ status: 'archived' })
-    .in('id', promoterIds);
-});
+export const POST = withRBAC(
+  'promoter:manage:own',
+  async (request: Request) => {
+    // Real database updates, not just toasts
+    await supabase
+      .from('promoters')
+      .update({ status: 'archived' })
+      .in('id', promoterIds);
+  }
+);
 ```
 
 **UI Calls Real API**:
+
 ```typescript
 // components/promoters/enhanced-promoters-view-refactored.tsx:1046-1066
 const response = await fetch('/api/promoters/bulk', {
@@ -137,17 +154,17 @@ await refetch();
 
 ## 📊 Security Comparison: Before vs After
 
-| Security Feature | Before (Docs) | After (Implemented) |
-|------------------|---------------|---------------------|
-| **RBAC on GET** | ❌ Bypassed | ✅ Enabled |
-| **RBAC on POST** | ❌ Bypassed | ✅ Enabled |
-| **Rate Limiting** | ❌ None | ✅ 10 req/min |
-| **User Scoping** | ❌ Missing | ✅ Ready (needs DB migration) |
-| **Bulk Actions API** | ❌ Mocked | ✅ Real + Audit logs |
-| **Authentication** | ⚠️ Basic | ✅ Enhanced with Supabase |
-| **Input Validation** | ⚠️ Basic | ✅ Zod schemas |
-| **Error Handling** | ⚠️ Basic | ✅ Comprehensive utilities |
-| **Audit Logging** | ❌ None | ✅ All modifications tracked |
+| Security Feature     | Before (Docs) | After (Implemented)           |
+| -------------------- | ------------- | ----------------------------- |
+| **RBAC on GET**      | ❌ Bypassed   | ✅ Enabled                    |
+| **RBAC on POST**     | ❌ Bypassed   | ✅ Enabled                    |
+| **Rate Limiting**    | ❌ None       | ✅ 10 req/min                 |
+| **User Scoping**     | ❌ Missing    | ✅ Ready (needs DB migration) |
+| **Bulk Actions API** | ❌ Mocked     | ✅ Real + Audit logs          |
+| **Authentication**   | ⚠️ Basic      | ✅ Enhanced with Supabase     |
+| **Input Validation** | ⚠️ Basic      | ✅ Zod schemas                |
+| **Error Handling**   | ⚠️ Basic      | ✅ Comprehensive utilities    |
+| **Audit Logging**    | ❌ None       | ✅ All modifications tracked  |
 
 ---
 
@@ -163,7 +180,7 @@ await refetch();
    - Check 'promoter:read:own' permission
    - Return 403 if denied
    ↓
-3. Rate Limit Check  
+3. Rate Limit Check
    - Check IP-based limit (10/min)
    - Return 429 if exceeded
    ↓
@@ -219,30 +236,35 @@ await refetch();
 Beyond fixing the documented issues, we also added:
 
 ### 1. API Error Handler (`lib/api/api-error-handler.ts`)
+
 - Centralized error handling
 - User-friendly error messages
 - Retry with backoff logic
 - Development-friendly logging
 
 ### 2. Data Fetching Hook (`hooks/promoters/use-promoters-data.ts`)
+
 - React Query integration
 - Automatic caching (30s stale time)
 - Built-in error handling
 - Query key utilities
 
 ### 3. Bulk Actions Hook (`hooks/promoters/use-bulk-actions.ts`)
+
 - Type-safe action methods
 - Automatic cache invalidation
 - Toast notifications
 - Loading state management
 
 ### 4. Helper Utilities (`lib/utils/promoters-helpers.ts`)
+
 - Safe date parsing
 - Document health calculation
 - Status computation
 - CSV export function
 
 ### 5. Accessibility Components
+
 - `components/ui/accessible-alert.tsx` - ARIA-compliant alerts
 - `components/ui/live-region.tsx` - Screen reader announcements
 
@@ -253,16 +275,18 @@ Beyond fixing the documented issues, we also added:
 ### Required (For Full User Scoping)
 
 1. **Run Database Migration**:
+
    ```bash
    psql $DATABASE_URL -f scripts/add-created-by-column.sql
    ```
 
 2. **Uncomment User Scoping** (after migration):
    In `app/api/promoters/route.ts` line 244:
+
    ```typescript
    // FROM:
    // query = query.eq('created_by', user.id);
-   
+
    // TO:
    query = query.eq('created_by', user.id);
    ```
@@ -287,6 +311,7 @@ UPSTASH_REDIS_REST_TOKEN=your-redis-token
 ## 🧪 Testing Commands
 
 ### Test RBAC
+
 ```bash
 # Should return 401/403 without valid auth
 curl https://your-domain.com/api/promoters
@@ -296,6 +321,7 @@ curl -H "Authorization: Bearer $TOKEN" https://your-domain.com/api/promoters
 ```
 
 ### Test Rate Limiting
+
 ```bash
 # Make 11 requests rapidly
 for i in {1..11}; do
@@ -305,6 +331,7 @@ done
 ```
 
 ### Test Bulk Actions
+
 ```bash
 curl -X POST https://your-domain.com/api/promoters/bulk \
   -H "Content-Type: application/json" \
@@ -313,6 +340,7 @@ curl -X POST https://your-domain.com/api/promoters/bulk \
 ```
 
 ### Test User Scoping (After Migration)
+
 ```bash
 # Login as non-admin - should only see own promoters
 # Login as admin - should see all promoters
@@ -322,22 +350,24 @@ curl -X POST https://your-domain.com/api/promoters/bulk \
 
 ## 📊 Performance Impact
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| **API Response Time** | ~200ms | ~210ms | +10ms (scoping overhead) |
-| **Rate Limit Overhead** | N/A | ~2ms | Minimal |
-| **RBAC Check Time** | N/A | ~15ms | Acceptable |
-| **Cache Hit Rate** | 0% | ~80% | Major improvement |
-| **Failed Requests** | Potential abuse | Protected | Risk reduced |
+| Metric                  | Before          | After     | Change                   |
+| ----------------------- | --------------- | --------- | ------------------------ |
+| **API Response Time**   | ~200ms          | ~210ms    | +10ms (scoping overhead) |
+| **Rate Limit Overhead** | N/A             | ~2ms      | Minimal                  |
+| **RBAC Check Time**     | N/A             | ~15ms     | Acceptable               |
+| **Cache Hit Rate**      | 0%              | ~80%      | Major improvement        |
+| **Failed Requests**     | Potential abuse | Protected | Risk reduced             |
 
 ---
 
 ## 📝 Files Modified/Created
 
 ### Modified Files
+
 - `app/api/promoters/route.ts` - Added user scoping, enhanced security
 
 ### New Files
+
 - `scripts/add-created-by-column.sql` - Database migration for user scoping
 - `lib/api/api-error-handler.ts` - Centralized error handling
 - `hooks/promoters/use-promoters-data.ts` - Data fetching hook
@@ -392,4 +422,3 @@ curl -X POST https://your-domain.com/api/promoters/bulk \
 
 **Implementation Date**: {{ date }}
 **Status**: ✅ Complete and Production-Ready
-

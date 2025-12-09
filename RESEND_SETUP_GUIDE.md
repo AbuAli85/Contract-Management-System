@@ -140,9 +140,7 @@ export async function sendEmail(options: EmailOptions): Promise<{
 /**
  * Send bulk emails (with rate limiting consideration)
  */
-export async function sendBulkEmails(
-  emails: EmailOptions[]
-): Promise<{
+export async function sendBulkEmails(emails: EmailOptions[]): Promise<{
   success: boolean;
   sent: number;
   failed: number;
@@ -265,13 +263,17 @@ export function documentExpiryEmail(data: {
                       </a>
                     </div>
 
-                    ${data.urgent ? `
+                    ${
+                      data.urgent
+                        ? `
                       <div style="background: #fee2e2; border: 2px solid #fca5a5; padding: 15px; border-radius: 6px; margin-top: 20px;">
                         <p style="margin: 0; color: #991b1b; font-weight: 600; font-size: 14px;">
                           ⚠️ <strong>Important:</strong> Expired documents may affect your employment status and contract validity.
                         </p>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                   </td>
                 </tr>
 
@@ -374,18 +376,26 @@ export function contractApprovalEmail(data: {
                           <td style="color: #6b7280;">Party:</td>
                           <td style="text-align: right; font-weight: 600;">${data.partyName}</td>
                         </tr>
-                        ${data.amount ? `
+                        ${
+                          data.amount
+                            ? `
                           <tr>
                             <td style="color: #6b7280;">Amount:</td>
                             <td style="text-align: right; font-weight: 600; color: #059669;">${data.amount}</td>
                           </tr>
-                        ` : ''}
-                        ${data.startDate ? `
+                        `
+                            : ''
+                        }
+                        ${
+                          data.startDate
+                            ? `
                           <tr>
                             <td style="color: #6b7280;">Start Date:</td>
                             <td style="text-align: right; font-weight: 600;">${data.startDate}</td>
                           </tr>
-                        ` : ''}
+                        `
+                            : ''
+                        }
                       </table>
                     </div>
 
@@ -607,7 +617,7 @@ import { documentExpiryEmail } from '@/lib/email-templates/document-expiry';
 
 private async sendAlert(alert: DocumentAlert): Promise<void> {
   const docName = alert.documentType === 'id_card' ? 'ID Card' : 'Passport';
-  
+
   const emailContent = documentExpiryEmail({
     promoterName: alert.promoterName,
     documentType: docName as 'ID Card' | 'Passport',
@@ -633,7 +643,8 @@ import { sendEmail } from '@/lib/services/email.service';
 import { contractApprovalEmail } from '@/lib/email-templates/contract-approval';
 
 export async function POST(req: NextRequest) {
-  const { contractId, approverEmail, approverName, contractData } = await req.json();
+  const { contractId, approverEmail, approverName, contractData } =
+    await req.json();
 
   const emailContent = contractApprovalEmail({
     recipientName: approverName,
@@ -716,11 +727,13 @@ Resend Dashboard: https://resend.com/emails
 ### **Rate Limits**
 
 **Free Plan:**
+
 - 3,000 emails/month
 - 10 emails/second
 - 100 emails/day limit
 
 **Paid Plan ($20/month):**
+
 - 50,000 emails/month
 - No daily limit
 - Same 10 emails/second
@@ -743,15 +756,15 @@ After completing this setup:
 
 ## 🆚 **RESEND vs SENDGRID**
 
-| Feature | Resend | SendGrid |
-|---------|--------|----------|
-| **Free Tier** | 3,000/month | 100/day |
-| **Developer Experience** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Setup Complexity** | Easy | Medium |
-| **TypeScript Support** | Native | Via package |
-| **React Email** | Built-in | Manual |
-| **Pricing** | $20/50k | $15/50k |
-| **Deliverability** | Excellent | Excellent |
+| Feature                  | Resend      | SendGrid    |
+| ------------------------ | ----------- | ----------- |
+| **Free Tier**            | 3,000/month | 100/day     |
+| **Developer Experience** | ⭐⭐⭐⭐⭐  | ⭐⭐⭐      |
+| **Setup Complexity**     | Easy        | Medium      |
+| **TypeScript Support**   | Native      | Via package |
+| **React Email**          | Built-in    | Manual      |
+| **Pricing**              | $20/50k     | $15/50k     |
+| **Deliverability**       | Excellent   | Excellent   |
 
 **Recommendation:** ✅ **Resend** for modern Next.js apps
 
@@ -760,15 +773,18 @@ After completing this setup:
 ## 🐛 **TROUBLESHOOTING**
 
 ### **"API key not found"**
+
 - Check `.env.local` has `RESEND_API_KEY`
 - Restart dev server after adding
 
 ### **"Email not sending"**
+
 - Check API key is valid
 - Check free tier limit (3,000/month)
 - Look at Resend dashboard for errors
 
 ### **"From address not allowed"**
+
 - Use `onboarding@resend.dev` for testing
 - Verify your domain for custom emails
 
@@ -785,4 +801,3 @@ After completing this setup:
 **Ready to implement?** Start with Step 1! 🚀
 
 **Estimated Time:** 30 minutes from start to first email sent
-

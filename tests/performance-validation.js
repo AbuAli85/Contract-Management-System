@@ -1,7 +1,7 @@
 /**
  * Performance and Data Consistency Validation Script
  * Tests the Contracts API for data consistency and performance
- * 
+ *
  * This script validates that:
  * 1. Count queries match data queries
  * 2. Filters work consistently
@@ -18,11 +18,14 @@ const API_ENDPOINT = '/api/contracts';
 const TIMEOUT_MS = 5000;
 
 // Authentication - Get from environment or Supabase client
-const AUTH_TOKEN = process.env.SUPABASE_AUTH_TOKEN || process.env.AUTH_TOKEN || '';
+const AUTH_TOKEN =
+  process.env.SUPABASE_AUTH_TOKEN || process.env.AUTH_TOKEN || '';
 
 if (!AUTH_TOKEN) {
   console.warn('⚠️  WARNING: No authentication token provided.');
-  console.warn('   Set SUPABASE_AUTH_TOKEN or AUTH_TOKEN environment variable.');
+  console.warn(
+    '   Set SUPABASE_AUTH_TOKEN or AUTH_TOKEN environment variable.'
+  );
   console.warn('   Some tests may fail due to authentication requirements.\n');
 }
 
@@ -41,7 +44,7 @@ function makeRequest(url, options = {}) {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url, BASE_URL);
     const protocol = urlObj.protocol === 'https:' ? https : http;
-    
+
     const requestOptions = {
       hostname: urlObj.hostname,
       port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
@@ -49,16 +52,16 @@ function makeRequest(url, options = {}) {
       method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(AUTH_TOKEN && { 'Authorization': `Bearer ${AUTH_TOKEN}` }),
+        ...(AUTH_TOKEN && { Authorization: `Bearer ${AUTH_TOKEN}` }),
         ...(options.headers || {}),
       },
       timeout: TIMEOUT_MS,
     };
 
-    const req = protocol.request(requestOptions, (res) => {
+    const req = protocol.request(requestOptions, res => {
       let data = '';
 
-      res.on('data', (chunk) => {
+      res.on('data', chunk => {
         data += chunk;
       });
 
@@ -76,7 +79,7 @@ function makeRequest(url, options = {}) {
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -130,10 +133,12 @@ function recordTest(name, status, message, details = {}) {
  */
 async function testApiAvailability() {
   console.log('\n📡 Testing API Availability...');
-  
+
   try {
-    const response = await makeRequest(`${BASE_URL}${API_ENDPOINT}?page=1&limit=10`);
-    
+    const response = await makeRequest(
+      `${BASE_URL}${API_ENDPOINT}?page=1&limit=10`
+    );
+
     if (response.status !== 200) {
       return recordTest(
         'API Availability',
@@ -173,12 +178,14 @@ async function testApiAvailability() {
  */
 async function testDataConsistency() {
   console.log('\n🔍 Testing Data Consistency...');
-  
+
   try {
     // Fetch with no filters
-    const allResult = await makeRequest(`${BASE_URL}${API_ENDPOINT}?status=all`);
+    const allResult = await makeRequest(
+      `${BASE_URL}${API_ENDPOINT}?status=all`
+    );
     const allData = allResult.data;
-    
+
     // Validate response structure
     if (!allData.success) {
       return recordTest(
@@ -227,16 +234,18 @@ async function testDataConsistency() {
  */
 async function testFilterConsistency() {
   console.log('\n🔍 Testing Filter Consistency...');
-  
+
   try {
     // Test multiple status filters
     const statuses = ['all', 'active', 'pending', 'completed'];
     const filterResults = {};
 
     for (const status of statuses) {
-      const result = await makeRequest(`${BASE_URL}${API_ENDPOINT}?status=${status}`);
+      const result = await makeRequest(
+        `${BASE_URL}${API_ENDPOINT}?status=${status}`
+      );
       const data = result.data;
-      
+
       if (data.success) {
         filterResults[status] = {
           total: data.totalContracts || data.total || 0,
@@ -244,17 +253,24 @@ async function testFilterConsistency() {
           isValid: true,
         };
 
-        console.log(`  Status "${status}": ${filterResults[status].returned} contracts`);
-        
+        console.log(
+          `  Status "${status}": ${filterResults[status].returned} contracts`
+        );
+
         // Active contracts should not exceed total
         if (status === 'active') {
-          const activeCount = data.contracts?.filter(c => c.status === 'active').length || 0;
+          const activeCount =
+            data.contracts?.filter(c => c.status === 'active').length || 0;
           if (activeCount > filterResults[status].total) {
             return recordTest(
               'Filter Consistency',
               'WARN',
               `Active filter returned ${activeCount} active contracts but reported total of ${filterResults[status].total}`,
-              { status, activeCount, reportedTotal: filterResults[status].total }
+              {
+                status,
+                activeCount,
+                reportedTotal: filterResults[status].total,
+              }
             );
           }
         }
@@ -282,21 +298,20 @@ async function testFilterConsistency() {
  */
 async function testPagination() {
   console.log('\n📄 Testing Pagination...');
-  
+
   try {
     const pageSize = 5;
-    
+
     // Fetch first page
-    const page1Result = await makeRequest(`${BASE_URL}${API_ENDPOINT}?page=1&limit=${pageSize}`);
+    const page1Result = await makeRequest(
+      `${BASE_URL}${API_ENDPOINT}?page=1&limit=${pageSize}`
+    );
     const page1Data = page1Result.data;
-    
+
     if (!page1Data.success) {
-      return recordTest(
-        'Pagination',
-        'FAIL',
-        'First page request failed',
-        { response: page1Data }
-      );
+      return recordTest('Pagination', 'FAIL', 'First page request failed', {
+        response: page1Data,
+      });
     }
 
     const totalContracts = page1Data.totalContracts || page1Data.total || 0;
@@ -307,9 +322,11 @@ async function testPagination() {
 
     // If there are more contracts, test second page
     if (totalContracts > pageSize) {
-      const page2Result = await makeRequest(`${BASE_URL}${API_ENDPOINT}?page=2&limit=${pageSize}`);
+      const page2Result = await makeRequest(
+        `${BASE_URL}${API_ENDPOINT}?page=2&limit=${pageSize}`
+      );
       const page2Data = page2Result.data;
-      
+
       if (page2Data.success) {
         const page2Count = page2Data.contracts?.length || 0;
         console.log(`  Page 2 returned: ${page2Count}`);
@@ -317,9 +334,9 @@ async function testPagination() {
         // Check for duplicates
         const page1Ids = new Set(page1Data.contracts.map(c => c.id));
         const page2Ids = new Set(page2Data.contracts.map(c => c.id));
-        
+
         const duplicates = [...page1Ids].filter(id => page2Ids.has(id));
-        
+
         if (duplicates.length > 0) {
           return recordTest(
             'Pagination',
@@ -359,7 +376,7 @@ async function testPagination() {
  */
 async function testResponseTime() {
   console.log('\n⏱️ Testing Response Time...');
-  
+
   try {
     const startTime = Date.now();
     await makeRequest(`${BASE_URL}${API_ENDPOINT}?status=all`);
@@ -406,7 +423,7 @@ async function testResponseTime() {
  */
 async function testMetricsConsistency() {
   console.log('\n📊 Testing Metrics Consistency...');
-  
+
   try {
     const result = await makeRequest(`${BASE_URL}${API_ENDPOINT}?status=all`);
     const data = result.data;
@@ -430,8 +447,9 @@ async function testMetricsConsistency() {
     console.log(`  Cancelled: ${cancelled}`);
 
     // Check if sum of statuses doesn't exceed total
-    const statusSum = (active || 0) + (pending || 0) + (completed || 0) + (cancelled || 0);
-    
+    const statusSum =
+      (active || 0) + (pending || 0) + (completed || 0) + (cancelled || 0);
+
     if (statusSum > total) {
       recordTest(
         'Metrics Consistency',
@@ -440,12 +458,13 @@ async function testMetricsConsistency() {
         { total, statusSum, active, pending, completed, cancelled }
       );
     } else {
-      recordTest(
-        'Metrics Consistency',
-        'PASS',
-        'Metrics are consistent',
-        { total, active, pending, completed, cancelled }
-      );
+      recordTest('Metrics Consistency', 'PASS', 'Metrics are consistent', {
+        total,
+        active,
+        pending,
+        completed,
+        cancelled,
+      });
     }
   } catch (error) {
     recordTest(
@@ -499,4 +518,3 @@ runAllTests().catch(error => {
   console.error('Fatal error running tests:', error);
   process.exit(1);
 });
-

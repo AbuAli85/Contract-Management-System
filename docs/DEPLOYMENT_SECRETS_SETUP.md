@@ -13,6 +13,7 @@ Add these secrets to your GitHub repository:
 Your Supabase access token for API authentication.
 
 **How to get it:**
+
 1. Go to [Supabase Dashboard](https://app.supabase.com)
 2. Click your profile icon (top right)
 3. Go to **Account Settings** → **Access Tokens**
@@ -28,6 +29,7 @@ Your Supabase access token for API authentication.
 Your Supabase project reference ID (not the project ID).
 
 **How to get it:**
+
 1. Go to your Supabase project dashboard
 2. Click **Settings** (gear icon in sidebar)
 3. Go to **General** tab
@@ -45,6 +47,7 @@ Your Supabase project reference ID (not the project ID).
 If you have a separate staging environment, add this secret with your staging project's reference ID.
 
 **How to get it:**
+
 - Same process as above, but use your staging project's Reference ID
 
 ---
@@ -54,13 +57,15 @@ If you have a separate staging environment, add this secret with your staging pr
 Your database password. **Required if you get authentication errors during linking.**
 
 **How to get it:**
+
 1. Go to your Supabase project dashboard
 2. Click **Settings** → **Database**
 3. Find **Database Password** section
 4. If you don't remember it, you can reset it (be careful!)
 5. Copy the password exactly as shown
 
-**Important Notes:** 
+**Important Notes:**
+
 - Some Supabase projects require the database password for CLI operations
 - If you see "failed SASL auth" or "timeout" errors, add this secret
 - The password is different from your Supabase account password
@@ -105,6 +110,7 @@ After adding the secrets, you can verify they're set correctly by:
 **Cause:** The `SUPABASE_PROJECT_REF` secret is empty or incorrectly formatted.
 
 **Solution:**
+
 1. Verify you're using the **Reference ID**, not the Project ID
 2. Check that the secret name is exactly `SUPABASE_PROJECT_REF` (case-sensitive)
 3. Ensure there are no extra spaces when copying the value
@@ -114,6 +120,7 @@ After adding the secrets, you can verify they're set correctly by:
 **Cause:** Invalid or expired `SUPABASE_ACCESS_TOKEN`.
 
 **Solution:**
+
 1. Generate a new access token in Supabase Dashboard
 2. Update the `SUPABASE_ACCESS_TOKEN` secret with the new token
 
@@ -122,6 +129,7 @@ After adding the secrets, you can verify they're set correctly by:
 **Cause:** Database password might be required or project ref is incorrect.
 
 **Solution:**
+
 1. Try adding `SUPABASE_DB_PASSWORD` secret
 2. Verify the project ref is correct
 3. Check that your access token has the correct permissions
@@ -143,4 +151,3 @@ After adding the secrets, you can verify they're set correctly by:
 - [Supabase CLI Documentation](https://supabase.com/docs/reference/cli)
 - [GitHub Secrets Documentation](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 - [Supabase Project Settings](https://app.supabase.com/project/_/settings/general)
-

@@ -17,6 +17,7 @@ This guide provides comprehensive instructions for testing the security of your 
 ### 1. OWASP ZAP (Zed Attack Proxy)
 
 #### Installation
+
 ```bash
 # Windows (via Chocolatey)
 choco install zap
@@ -31,6 +32,7 @@ sudo snap install zaproxy --classic
 ```
 
 #### Quick Start
+
 ```bash
 # Start ZAP in daemon mode for automated scanning
 zap.sh -daemon -port 8080 -config api.disablekey=true
@@ -42,9 +44,11 @@ zap.sh
 ### 2. Burp Suite Community Edition
 
 #### Installation
+
 Download from: https://portswigger.net/burp/communitydownload
 
 #### Setup
+
 1. Install and launch Burp Suite
 2. Configure browser proxy (127.0.0.1:8080)
 3. Install Burp CA certificate in browser
@@ -53,9 +57,11 @@ Download from: https://portswigger.net/burp/communitydownload
 ### 3. Postman
 
 #### Installation
+
 Download from: https://www.postman.com/downloads/
 
 #### Features
+
 - API testing
 - Request collections
 - Environment variables
@@ -75,6 +81,7 @@ pip install httpie          # User-friendly HTTP client
 ## 🔍 API Endpoint Inventory
 
 ### Public Endpoints (No Authentication)
+
 ```
 GET  /api/health            # Health check
 POST /api/auth/signin       # User login
@@ -84,6 +91,7 @@ GET  /api/auth/verify-email
 ```
 
 ### Authenticated Endpoints
+
 ```
 # Contracts
 GET    /api/contracts              # List contracts
@@ -123,6 +131,7 @@ DELETE /api/users/[id]             # Delete user (admin only)
 ### 1. Authentication & Authorization
 
 #### Test: Unauthenticated Access
+
 ```bash
 # Should return 401 Unauthorized
 curl -X GET https://portal.thesmartpro.io/api/contracts
@@ -134,6 +143,7 @@ curl -X GET https://portal.thesmartpro.io/api/dashboard/analytics
 **Risk:** High if endpoints are accessible
 
 #### Test: Invalid Token
+
 ```bash
 # Should return 401 Unauthorized
 curl -X GET https://portal.thesmartpro.io/api/contracts \
@@ -144,6 +154,7 @@ curl -X GET https://portal.thesmartpro.io/api/contracts \
 **Risk:** High if invalid tokens are accepted
 
 #### Test: Expired Token
+
 ```bash
 # Use an expired JWT token
 curl -X GET https://portal.thesmartpro.io/api/contracts \
@@ -154,6 +165,7 @@ curl -X GET https://portal.thesmartpro.io/api/contracts \
 **Risk:** High if expired tokens work
 
 #### Test: Horizontal Privilege Escalation
+
 ```bash
 # User A tries to access User B's data
 # Login as User A, get their token
@@ -168,6 +180,7 @@ curl -X GET https://portal.thesmartpro.io/api/contracts/user_b_contract_id \
 **Risk:** Critical if User A can access User B's data
 
 #### Test: Vertical Privilege Escalation
+
 ```bash
 # Regular user tries to access admin-only endpoint
 USER_TOKEN="<regular_user_token>"
@@ -182,6 +195,7 @@ curl -X GET https://portal.thesmartpro.io/api/users \
 ### 2. Input Validation
 
 #### Test: SQL Injection
+
 ```bash
 # Test in query parameters
 curl -X GET "https://portal.thesmartpro.io/api/contracts?search='; DROP TABLE contracts; --" \
@@ -202,6 +216,7 @@ curl -X POST https://portal.thesmartpro.io/api/contracts \
 **Risk:** Critical if SQL injection is possible
 
 #### Test: XSS (Cross-Site Scripting)
+
 ```bash
 # Test script injection in fields
 curl -X POST https://portal.thesmartpro.io/api/promoters \
@@ -218,6 +233,7 @@ curl -X POST https://portal.thesmartpro.io/api/promoters \
 **Risk:** High if scripts are stored and executed
 
 #### Test: Command Injection
+
 ```bash
 # Test in file operations
 curl -X POST https://portal.thesmartpro.io/api/contracts/1/generate-pdf \
@@ -232,6 +248,7 @@ curl -X POST https://portal.thesmartpro.io/api/contracts/1/generate-pdf \
 **Risk:** Critical if command injection is possible
 
 #### Test: NoSQL Injection
+
 ```bash
 # Test MongoDB-style injection
 curl -X POST https://portal.thesmartpro.io/api/auth/signin \
@@ -248,6 +265,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/signin \
 ### 3. Rate Limiting
 
 #### Test: Login Rate Limiting
+
 ```bash
 # Send multiple failed login attempts
 for i in {1..10}; do
@@ -265,6 +283,7 @@ done
 **Risk:** Medium if no rate limiting
 
 #### Test: API Rate Limiting
+
 ```bash
 # Send rapid API requests
 for i in {1..150}; do
@@ -279,6 +298,7 @@ done
 ### 4. CORS Testing
 
 #### Test: Unauthorized Origin
+
 ```bash
 # Request from unauthorized origin
 curl -X GET https://portal.thesmartpro.io/api/contracts \
@@ -290,6 +310,7 @@ curl -X GET https://portal.thesmartpro.io/api/contracts \
 **Risk:** High if any origin is allowed
 
 #### Test: Credentials with Wildcard
+
 ```bash
 # Should not be allowed: wildcard + credentials
 curl -X OPTIONS https://portal.thesmartpro.io/api/contracts \
@@ -303,6 +324,7 @@ curl -X OPTIONS https://portal.thesmartpro.io/api/contracts \
 ### 5. CSRF Testing
 
 #### Test: CSRF Token Validation
+
 ```bash
 # POST without CSRF token
 curl -X POST https://portal.thesmartpro.io/api/contracts \
@@ -330,6 +352,7 @@ curl -X POST https://portal.thesmartpro.io/api/contracts \
 ### 6. Mass Assignment
 
 #### Test: Mass Assignment Vulnerability
+
 ```bash
 # Try to set admin role via mass assignment
 curl -X POST https://portal.thesmartpro.io/api/users \
@@ -349,6 +372,7 @@ curl -X POST https://portal.thesmartpro.io/api/users \
 ### 7. File Upload Security
 
 #### Test: File Type Validation
+
 ```bash
 # Upload malicious file
 curl -X POST https://portal.thesmartpro.io/api/upload \
@@ -367,6 +391,7 @@ curl -X POST https://portal.thesmartpro.io/api/upload \
 ### 8. Information Disclosure
 
 #### Test: Verbose Error Messages
+
 ```bash
 # Trigger errors to check error messages
 curl -X GET https://portal.thesmartpro.io/api/contracts/invalid_id \
@@ -383,6 +408,7 @@ curl -X POST https://portal.thesmartpro.io/api/contracts \
 **Risk:** Low-Medium - information leakage
 
 #### Test: Directory Listing
+
 ```bash
 # Check if directory listing is enabled
 curl -X GET https://portal.thesmartpro.io/api/
@@ -474,7 +500,7 @@ zap-cli quick-scan --spider -r \
    - Action: Run macro (login sequence)
 
 3. **Run Active Scan**
-   - Right-click on /api/* requests
+   - Right-click on /api/\* requests
    - Select "Do active scan"
    - Select all insertion points
    - Enable all scan checks
@@ -489,6 +515,7 @@ zap-cli quick-scan --spider -r \
 ## 📊 Security Testing Checklist
 
 ### Authentication & Authorization
+
 - [ ] Unauthenticated access blocked
 - [ ] Invalid tokens rejected
 - [ ] Expired tokens rejected
@@ -498,6 +525,7 @@ zap-cli quick-scan --spider -r \
 - [ ] Token refresh mechanism secure
 
 ### Input Validation
+
 - [ ] SQL injection prevented
 - [ ] NoSQL injection prevented
 - [ ] XSS attacks mitigated
@@ -507,13 +535,15 @@ zap-cli quick-scan --spider -r \
 - [ ] Special characters sanitized
 
 ### Rate Limiting
+
 - [ ] Login endpoint rate limited
 - [ ] Password reset rate limited
 - [ ] API endpoints rate limited
 - [ ] File upload rate limited
-- [ ] Rate limit headers present (X-RateLimit-*)
+- [ ] Rate limit headers present (X-RateLimit-\*)
 
 ### CORS & CSRF
+
 - [ ] CORS restricted to trusted origins
 - [ ] Preflight requests handled correctly
 - [ ] CSRF tokens validated
@@ -521,6 +551,7 @@ zap-cli quick-scan --spider -r \
 - [ ] Cookie security flags set
 
 ### Data Protection
+
 - [ ] Sensitive data encrypted in transit (HTTPS)
 - [ ] Passwords hashed (bcrypt/argon2)
 - [ ] API keys not exposed in responses
@@ -528,6 +559,7 @@ zap-cli quick-scan --spider -r \
 - [ ] Credit card data not stored (if applicable)
 
 ### Error Handling
+
 - [ ] Generic error messages
 - [ ] No stack traces in production
 - [ ] No database errors exposed
@@ -535,6 +567,7 @@ zap-cli quick-scan --spider -r \
 - [ ] Proper HTTP status codes
 
 ### File Operations
+
 - [ ] File type validation
 - [ ] File size limits
 - [ ] Virus scanning (if applicable)
@@ -542,6 +575,7 @@ zap-cli quick-scan --spider -r \
 - [ ] No path traversal in file access
 
 ### Session Management
+
 - [ ] Secure session tokens
 - [ ] Session timeout enforced
 - [ ] Logout invalidates sessions
@@ -557,37 +591,37 @@ zap-cli quick-scan --spider -r \
 ```yaml
 # artillery-config.yml
 config:
-  target: "https://portal.thesmartpro.io"
+  target: 'https://portal.thesmartpro.io'
   phases:
     - duration: 60
       arrivalRate: 10
-      name: "Warm up"
+      name: 'Warm up'
     - duration: 120
       arrivalRate: 50
-      name: "Sustained load"
+      name: 'Sustained load'
     - duration: 60
       arrivalRate: 100
-      name: "Spike test"
+      name: 'Spike test'
   variables:
-    token: "YOUR_AUTH_TOKEN"
-  
+    token: 'YOUR_AUTH_TOKEN'
+
 scenarios:
-  - name: "API Load Test"
+  - name: 'API Load Test'
     flow:
       - get:
-          url: "/api/contracts"
+          url: '/api/contracts'
           headers:
-            Authorization: "Bearer {{ token }}"
+            Authorization: 'Bearer {{ token }}'
       - think: 2
       - get:
-          url: "/api/promoters"
+          url: '/api/promoters'
           headers:
-            Authorization: "Bearer {{ token }}"
+            Authorization: 'Bearer {{ token }}'
       - think: 2
       - get:
-          url: "/api/dashboard/analytics"
+          url: '/api/dashboard/analytics'
           headers:
-            Authorization: "Bearer {{ token }}"
+            Authorization: 'Bearer {{ token }}'
 ```
 
 ```bash
@@ -605,10 +639,11 @@ artillery report report.json
 
 ### Vulnerability Report Format
 
-```markdown
+````markdown
 # Security Vulnerability Report
 
 ## Summary
+
 - **Vulnerability:** [Name]
 - **Severity:** [Critical/High/Medium/Low]
 - **Status:** [Open/In Progress/Resolved]
@@ -616,29 +651,37 @@ artillery report report.json
 - **Endpoint:** [URL]
 
 ## Description
+
 [Detailed description of the vulnerability]
 
 ## Steps to Reproduce
+
 1. Step 1
 2. Step 2
 3. Step 3
 
 ## Proof of Concept
+
 ```bash
 # Command or code that demonstrates the vulnerability
 curl -X POST https://portal.thesmartpro.io/api/...
 ```
+````
 
 ## Impact
+
 [What an attacker could do with this vulnerability]
 
 ## Remediation
+
 [How to fix the vulnerability]
 
 ## References
+
 - [OWASP Link]
 - [CVE Link]
-```
+
+````
 
 ---
 
@@ -661,27 +704,27 @@ on:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.7.0
         with:
           target: 'https://portal.thesmartpro.io'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
-      
+
       - name: Run npm audit
         run: npm audit --audit-level=high
-      
+
       - name: Run Snyk security scan
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
-```
+````
 
 ---
 
@@ -696,6 +739,7 @@ jobs:
 ---
 
 **Next Steps:**
+
 1. Run automated scans weekly
 2. Perform manual testing monthly
 3. Review and remediate findings

@@ -23,7 +23,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDebouncedAutoSave } from '@/hooks/use-auto-save';
-import { AutoSaveIndicator, DraftRecoveryBanner } from '@/components/ui/auto-save-indicator';
+import {
+  AutoSaveIndicator,
+  DraftRecoveryBanner,
+} from '@/components/ui/auto-save-indicator';
 
 import {
   ArrowLeft,
@@ -155,10 +158,10 @@ export default function PromoterForm(props: PromoterFormProps) {
     debounceMs: 3000, // Save 3 seconds after user stops typing
     enabled: !isEditMode, // Only auto-save for new promoters
     excludeFields: ['password', 'confirm_password'], // Don't save sensitive fields
-    onSave: (data) => {
+    onSave: data => {
       console.log('✅ Draft auto-saved');
     },
-    onRestore: (data) => {
+    onRestore: data => {
       console.log('📥 Draft available for restore');
       setShowDraftRecovery(true);
     },
@@ -310,7 +313,7 @@ export default function PromoterForm(props: PromoterFormProps) {
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
-    
+
     // Trigger auto-save after field change
     if (!isEditMode) {
       autoSave.saveDraft(newData);
@@ -613,7 +616,7 @@ export default function PromoterForm(props: PromoterFormProps) {
               <AutoSaveIndicator
                 isSaving={autoSave.isSaving}
                 lastSaved={autoSave.lastSaved}
-                variant="detailed"
+                variant='detailed'
               />
             )}
             <Badge variant={isEditMode ? 'secondary' : 'default'}>

@@ -3,18 +3,21 @@
 ## ✅ Security Hardening Applied
 
 ### 1. RBAC + Rate Limiting ✓
+
 - [x] `withRBAC` wrapper enabled on `/api/promoters` GET and POST
 - [x] Rate limiting active (10 requests/minute via `ratelimitStrict`)
 - [x] User authentication required
 - [x] Role-based permissions enforced
 
 ### 2. User Scoping Implementation ✓
+
 - [x] Admin role check added (lines 182-195)
 - [x] User scoping logic prepared (line 240-247)
 - [x] `created_by` tracking in POST endpoint (line 486)
 - [ ] **ACTION REQUIRED**: Run `scripts/add-created-by-column.sql` to enable full user scoping
 
 ### 3. Bulk Actions API ✓
+
 - [x] Real API endpoint at `/api/promoters/bulk`
 - [x] RBAC protected with `promoter:manage:own`
 - [x] Rate limiting enabled
@@ -22,6 +25,7 @@
 - [x] Audit logging for all operations
 
 ### 4. Enhanced Utilities Created ✓
+
 - [x] `lib/api/api-error-handler.ts` - Centralized error handling
 - [x] `hooks/promoters/use-promoters-data.ts` - Data fetching hook
 - [x] `hooks/promoters/use-bulk-actions.ts` - Bulk actions hook
@@ -43,6 +47,7 @@ psql $DATABASE_URL -f scripts/add-created-by-column.sql
 ```
 
 This will:
+
 - Add `created_by` column to `promoters` table
 - Create indexes for performance
 - Set up RLS policies for user scoping
@@ -92,8 +97,8 @@ SELECT 'YOUR_USER_ID', id FROM roles WHERE name = 'admin'
 ON CONFLICT DO NOTHING;
 
 -- OR update users table directly if role column exists
-UPDATE users 
-SET role = 'admin' 
+UPDATE users
+SET role = 'admin'
 WHERE email = 'your@email.com';
 
 -- Verify
@@ -109,8 +114,8 @@ Ensure RLS is enabled on the promoters table:
 ALTER TABLE promoters ENABLE ROW LEVEL SECURITY;
 
 -- Verify
-SELECT tablename, rowsecurity 
-FROM pg_tables 
+SELECT tablename, rowsecurity
+FROM pg_tables
 WHERE tablename = 'promoters';
 ```
 
@@ -119,6 +124,7 @@ WHERE tablename = 'promoters';
 ## 🧪 Testing Checklist
 
 ### Test 1: RBAC Protection
+
 ```bash
 # Should return 403 Forbidden without auth token
 curl https://your-domain.com/api/promoters
@@ -128,6 +134,7 @@ curl -H "Authorization: Bearer invalid-token" https://your-domain.com/api/promot
 ```
 
 ### Test 2: Rate Limiting
+
 ```bash
 # Make 11 requests rapidly (limit is 10/min)
 for i in {1..11}; do
@@ -138,6 +145,7 @@ done
 ```
 
 ### Test 3: User Scoping
+
 ```bash
 # Log in as non-admin user
 # Should only see promoters created by that user
@@ -147,6 +155,7 @@ done
 ```
 
 ### Test 4: Bulk Actions
+
 ```bash
 # Archive promoters
 curl -X POST https://your-domain.com/api/promoters/bulk \
@@ -167,8 +176,8 @@ Run these after deployment to verify security:
 
 ```sql
 -- Check RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
+SELECT tablename, rowsecurity
+FROM pg_tables
 WHERE tablename = 'promoters';
 
 -- Check RLS policies exist
@@ -187,8 +196,8 @@ FROM users u
 WHERE u.role IN ('admin', 'manager', 'user');
 
 -- Check audit logs are working
-SELECT COUNT(*) 
-FROM audit_logs 
+SELECT COUNT(*)
+FROM audit_logs
 WHERE table_name = 'promoters'
 AND created_at > NOW() - INTERVAL '1 hour';
 ```
@@ -321,4 +330,3 @@ If you encounter issues:
 
 **Last Updated**: {{ date }}
 **Prepared By**: AI Assistant
-

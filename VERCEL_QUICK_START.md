@@ -40,6 +40,7 @@ vercel --prod
 ### Option 3: GitHub Integration (Most Common)
 
 1. **Push to GitHub** (if not already):
+
    ```bash
    git add .
    git commit -m "chore: ready for deployment"
@@ -93,19 +94,23 @@ WEBHOOK_URL=https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn
 ## ✅ Post-Deployment Steps (5 minutes)
 
 ### 1. Update Supabase Auth Callback
+
 In Supabase Dashboard:
+
 ```
 Authentication → URL Configuration → Redirect URLs
 Add: https://your-project.vercel.app/auth/callback
 ```
 
 ### 2. Test Your Deployment
+
 - Visit your Vercel URL
 - Try logging in
 - Create a test contract
 - Generate a PDF
 
 ### 3. Configure Custom Domain (Optional)
+
 ```
 Vercel Dashboard → Settings → Domains
 Add your domain → Follow DNS instructions
@@ -115,13 +120,13 @@ Add your domain → Follow DNS instructions
 
 ## 🐛 Quick Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Build fails | Check build logs in Vercel dashboard |
-| Can't login | Verify Supabase callback URL is correct |
-| Images not loading | Check Supabase storage bucket is public |
-| CORS errors | Update `ALLOWED_ORIGINS` with your Vercel URL |
-| 404 errors | Clear Vercel cache and redeploy |
+| Issue              | Solution                                      |
+| ------------------ | --------------------------------------------- |
+| Build fails        | Check build logs in Vercel dashboard          |
+| Can't login        | Verify Supabase callback URL is correct       |
+| Images not loading | Check Supabase storage bucket is public       |
+| CORS errors        | Update `ALLOWED_ORIGINS` with your Vercel URL |
+| 404 errors         | Clear Vercel cache and redeploy               |
 
 ---
 
@@ -141,4 +146,3 @@ For detailed configuration, see [VERCEL_DEPLOYMENT_GUIDE.md](./VERCEL_DEPLOYMENT
 4. Check browser console for errors
 
 **Tip**: Most issues are caused by missing environment variables! ✅
-

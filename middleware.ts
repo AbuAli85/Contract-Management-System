@@ -15,17 +15,18 @@ const RATE_LIMIT_CONFIG = {
 
 // CORS Configuration - Define allowed origins
 function getAllowedOrigins(): string[] {
-  const envOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+  const envOrigins =
+    process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
   const defaultOrigins = [
     'https://portal.thesmartpro.io',
     'https://www.thesmartpro.io',
   ];
-  
+
   // Add localhost in development
   if (process.env.NODE_ENV === 'development') {
     defaultOrigins.push('http://localhost:3000', 'http://localhost:3001');
   }
-  
+
   return envOrigins.length > 0 ? envOrigins : defaultOrigins;
 }
 
@@ -71,31 +72,48 @@ export function middleware(request: NextRequest) {
 
     // Validate origin for cross-origin requests
     if (origin && !allowedOrigins.includes(origin)) {
-      console.warn(`🚫 CORS: Blocked request from unauthorized origin: ${origin}`);
-      return new NextResponse('Forbidden: Origin not allowed', { 
+      console.warn(
+        `🚫 CORS: Blocked request from unauthorized origin: ${origin}`
+      );
+      return new NextResponse('Forbidden: Origin not allowed', {
         status: 403,
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
       });
     }
 
     // CSRF Protection for state-changing requests
-    if (request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'OPTIONS') {
+    if (
+      request.method !== 'GET' &&
+      request.method !== 'HEAD' &&
+      request.method !== 'OPTIONS'
+    ) {
       const csrfToken = request.headers.get('X-CSRF-Token');
       const sessionToken = request.cookies.get('csrf-token')?.value;
-      
+
       // Skip CSRF check for auth endpoints during login/signup
-      const skipCSRFPaths = ['/api/auth/signin', '/api/auth/signup', '/api/auth/callback'];
-      const shouldSkipCSRF = skipCSRFPaths.some(path => pathname.startsWith(path));
-      
-      if (!shouldSkipCSRF && csrfToken && sessionToken && csrfToken !== sessionToken) {
+      const skipCSRFPaths = [
+        '/api/auth/signin',
+        '/api/auth/signup',
+        '/api/auth/callback',
+      ];
+      const shouldSkipCSRF = skipCSRFPaths.some(path =>
+        pathname.startsWith(path)
+      );
+
+      if (
+        !shouldSkipCSRF &&
+        csrfToken &&
+        sessionToken &&
+        csrfToken !== sessionToken
+      ) {
         console.warn(`🚫 CSRF: Invalid token for ${pathname} from IP: ${ip}`);
-        return new NextResponse('Forbidden: Invalid CSRF token', { 
+        return new NextResponse('Forbidden: Invalid CSRF token', {
           status: 403,
           headers: {
             'Content-Type': 'application/json',
-          }
+          },
         });
       }
     }
@@ -105,9 +123,11 @@ export function middleware(request: NextRequest) {
       return new NextResponse(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': origin || allowedOrigins[0] || 'https://portal.thesmartpro.io',
+          'Access-Control-Allow-Origin':
+            origin || allowedOrigins[0] || 'https://portal.thesmartpro.io',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
+          'Access-Control-Allow-Headers':
+            'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
           'Access-Control-Allow-Credentials': 'true',
           'Access-Control-Max-Age': '86400',
         },

@@ -1,9 +1,9 @@
 /**
  * Script to Record Daily Metrics
- * 
+ *
  * Run this script daily (via cron job or scheduled task) to record
  * historical snapshots of key metrics for trend analysis
- * 
+ *
  * Usage:
  *   npm run record-metrics
  *   OR
@@ -22,7 +22,9 @@ async function recordDailyMetrics() {
 
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('❌ Missing environment variables');
-    console.error('Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
+    console.error(
+      'Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY'
+    );
     process.exit(1);
   }
 
@@ -45,7 +47,7 @@ async function recordDailyMetrics() {
     console.log('   - Compliance Rate');
     console.log('   - Total Contracts');
     console.log('   - Active Contracts');
-    
+
     // Verify the data was inserted
     const { data: verification, error: verifyError } = await supabase
       .from('metrics_history')
@@ -57,8 +59,10 @@ async function recordDailyMetrics() {
       console.error('⚠️  Could not verify metrics:', verifyError.message);
     } else if (verification) {
       console.log('\n📋 Verification:');
-      verification.forEach((metric) => {
-        console.log(`   ${metric.metric_type}.${metric.metric_name} = ${metric.metric_value}`);
+      verification.forEach(metric => {
+        console.log(
+          `   ${metric.metric_type}.${metric.metric_name} = ${metric.metric_value}`
+        );
       });
     }
 
@@ -72,4 +76,3 @@ async function recordDailyMetrics() {
 
 // Run the script
 recordDailyMetrics();
-

@@ -2,9 +2,10 @@
 
 ## ✅ Current Status: Clean Slate Confirmed
 
-You've deleted all contracts and are starting fresh. Smart move! 
+You've deleted all contracts and are starting fresh. Smart move!
 
 **What You Have**:
+
 - ✅ 16 Real Parties (employers & clients)
 - ✅ 114 Promoters (assigned to employers)
 - ✅ 0 Contracts (clean slate)
@@ -19,6 +20,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 ### 1. All Contracts Page (`/[locale]/contracts/page.tsx`)
 
 **Current Features** ✅:
+
 - React Query for data fetching
 - Pagination support
 - Search and filters (status, type, party)
@@ -29,6 +31,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 - Empty state handling
 
 **What to Test When You Add Contracts**:
+
 - [ ] Contracts display correctly
 - [ ] Party names show properly (first_party & second_party)
 - [ ] Promoter names display
@@ -39,6 +42,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 - [ ] Currency conversion displays
 
 **Potential Improvements**:
+
 - Consider adding contract status transitions
 - Add bulk PDF generation
 - Export to CSV/Excel
@@ -49,6 +53,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 ### 2. Approved Contracts Page (`/[locale]/contracts/approved/page.tsx`)
 
 **Current Features** ✅:
+
 - Filters for approved contracts only
 - Search functionality
 - View approved details
@@ -57,6 +62,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 - Retry mechanism for slow loading
 
 **What to Test**:
+
 - [ ] Empty state when no approved contracts
 - [ ] Displays correctly when contracts are approved
 - [ ] approved_at timestamp shows
@@ -65,6 +71,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 - [ ] Filters work properly
 
 **Potential Improvements**:
+
 - Add "time since approval" indicator
 - Bulk export of approved contracts
 - Approval history/audit trail
@@ -75,6 +82,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 ### 3. Pending Contracts Page (`/[locale]/contracts/pending/page.tsx`)
 
 **Current Features** ✅:
+
 - Shows contracts awaiting approval
 - Bulk actions (approve/reject)
 - Individual actions
@@ -85,6 +93,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 - Action dialogs
 
 **What to Test**:
+
 - [ ] Empty state when no pending contracts
 - [ ] Displays correctly when contracts submitted
 - [ ] Bulk approve works
@@ -94,6 +103,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 - [ ] Status updates correctly
 
 **Potential Improvements**:
+
 - Add priority/urgency indicators
 - Time in pending queue indicator
 - Approval workflow tracking
@@ -106,6 +116,7 @@ You've deleted all contracts and are starting fresh. Smart move!
 ### All Three Pages
 
 #### ✅ Already Good
+
 1. Error handling with retry logic
 2. Loading states with skeletons
 3. Permission checks
@@ -121,22 +132,25 @@ Since you're starting fresh, improve empty states:
 
 ```tsx
 // Add helpful messages for empty state
-{contracts.length === 0 && !loading && (
-  <EmptyState
-    icon={FileText}
-    title="No contracts yet"
-    description="Start by creating your first contract. You have 16 parties and 114 promoters ready to go!"
-    action={{
-      label: "Create First Contract",
-      href: "/en/generate-contract"
-    }}
-  />
-)}
+{
+  contracts.length === 0 && !loading && (
+    <EmptyState
+      icon={FileText}
+      title='No contracts yet'
+      description='Start by creating your first contract. You have 16 parties and 114 promoters ready to go!'
+      action={{
+        label: 'Create First Contract',
+        href: '/en/generate-contract',
+      }}
+    />
+  );
+}
 ```
 
 **2. Contract Status Flow**
 
 Ensure status transitions work properly:
+
 - draft → pending (when submitted for review)
 - pending → approved (when approved)
 - pending → rejected (when rejected)
@@ -145,6 +159,7 @@ Ensure status transitions work properly:
 **3. Party Name Display**
 
 The pages check for both `first_party` and `second_party`. With your clean schema:
+
 - employer_id → Second Party (employer)
 - client_id → First Party (client)
 
@@ -159,21 +174,25 @@ Pages check for both `promoter` and `promoters`. Ensure consistency.
 Run these before adding new contracts:
 
 ### 1. Verify Clean Slate
+
 ```sql
 \i verify-clean-slate.sql
 ```
 
 Expected:
+
 - Contracts: 0 ✅
 - Parties: 16 ✅
 - Promoters: 114 ✅
 
 ### 2. Check Party-Promoter Relationships
+
 ```sql
 \i test-promoter-party-analysis.sql
 ```
 
 Expected:
+
 - All promoters have employers
 - Employers distributed properly
 
@@ -184,6 +203,7 @@ Expected:
 Before adding new real contracts:
 
 ### Database ✅
+
 - [x] All contracts deleted (clean slate)
 - [x] Parties intact (16 real companies)
 - [x] Promoters intact (114 workers)
@@ -192,6 +212,7 @@ Before adding new real contracts:
 - [x] Views recreated successfully
 
 ### API Endpoints ✅
+
 - [x] `/api/contracts` - Returns contracts list
 - [x] `/api/contracts?status=approved` - Filters approved
 - [x] `/api/contracts?status=pending` - Filters pending
@@ -199,6 +220,7 @@ Before adding new real contracts:
 - [x] Contract counting logic working
 
 ### UI Pages ✅
+
 - [x] `/contracts` - All contracts page
 - [x] `/contracts/approved` - Approved contracts
 - [x] `/contracts/pending` - Pending contracts
@@ -208,6 +230,7 @@ Before adding new real contracts:
 - [x] Error handling exists
 
 ### Features to Test
+
 - [ ] Create new contract
 - [ ] Submit for approval (draft → pending)
 - [ ] Approve contract (pending → approved)
@@ -235,6 +258,7 @@ const contractNumber = `CNT-${year}-${month}-${randomId}`;
 ### 2. Improve Approval Workflow
 
 Add status tracking:
+
 - submitted_for_review_at timestamp
 - reviewed_by user tracking
 - approval_notes field
@@ -242,6 +266,7 @@ Add status tracking:
 ### 3. Add Audit Trail
 
 Track contract lifecycle:
+
 - Created
 - Submitted for review
 - Approved/Rejected
@@ -251,6 +276,7 @@ Track contract lifecycle:
 ### 4. Empty State Enhancement
 
 Since you're starting fresh, make empty states more helpful:
+
 - Show how many parties are available
 - Show how many promoters are ready
 - Direct link to create contract form
@@ -259,6 +285,7 @@ Since you're starting fresh, make empty states more helpful:
 ### 5. Bulk Operations
 
 For when you have many contracts:
+
 - Bulk PDF generation
 - Bulk status updates
 - Bulk export
@@ -269,6 +296,7 @@ For when you have many contracts:
 ## 🧪 Testing Plan
 
 ### Phase 1: Create First Contract
+
 1. Go to `/generate-contract`
 2. Select a party (employer)
 3. Select a party (client)
@@ -277,29 +305,34 @@ For when you have many contracts:
 6. Submit
 
 **Verify**:
+
 - Contract appears in All Contracts page
 - Party contract count = 1
 - Promoter linked correctly
 - Status = draft
 
 ### Phase 2: Approval Workflow
+
 1. Submit contract for review
 2. Go to Pending Contracts page
 3. Approve the contract
 
 **Verify**:
+
 - Contract moves to Approved page
 - Status changes to approved
 - Party count remains 1
 - Timestamp recorded
 
 ### Phase 3: Bulk Operations
+
 1. Create 5-10 contracts
 2. Test bulk selection
 3. Test bulk approve
 4. Test filters
 
 **Verify**:
+
 - All selected contracts processed
 - Party counts update correctly (1 → 5 → 10)
 - Filters work
@@ -310,5 +343,3 @@ For when you have many contracts:
 ## 📝 Quick Fixes Needed
 
 Let me check for any obvious issues in the pages and create fixes...
-
-

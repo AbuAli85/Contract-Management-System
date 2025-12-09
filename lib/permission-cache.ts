@@ -17,7 +17,7 @@ class PermissionCache {
    */
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
@@ -92,4 +92,3 @@ if (typeof window === 'undefined') {
     permissionCache.clearExpired();
   }, 60 * 1000);
 }
-

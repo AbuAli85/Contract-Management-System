@@ -185,7 +185,12 @@ export interface PartyFilters {
 }
 
 export interface PartySortOptions {
-  field: 'name' | 'cr_expiry_date' | 'license_expiry_date' | 'contracts' | 'created_at';
+  field:
+    | 'name'
+    | 'cr_expiry_date'
+    | 'license_expiry_date'
+    | 'contracts'
+    | 'created_at';
   order: 'asc' | 'desc';
 }
 

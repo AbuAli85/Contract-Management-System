@@ -1,6 +1,6 @@
 /**
  * Custom hook for managing bulk actions on promoters
- * 
+ *
  * Centralizes bulk action logic, API calls, and error handling.
  */
 
@@ -63,8 +63,7 @@ export function useBulkActions() {
 
       try {
         // Map action types to API format
-        const apiAction =
-          action === 'delete' ? 'update_status' : action;
+        const apiAction = action === 'delete' ? 'update_status' : action;
 
         const response = await safeFetch<BulkActionResult>(
           '/api/promoters/bulk',
@@ -186,4 +185,3 @@ export function useBulkActions() {
     updatePromotersStatus,
   };
 }
-

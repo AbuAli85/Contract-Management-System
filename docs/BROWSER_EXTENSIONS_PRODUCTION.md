@@ -7,19 +7,23 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ## Common Culprits
 
 ### 1. **Console Ninja** ⚠️ MOST COMMON
+
 - **Symptoms:** Numbered badges on elements, colored backgrounds, execution timings
 - **Evidence:** Terminal shows `✔ Console Ninja extension is connected to Next.js`
 - **Solution:** Disable the extension when viewing production sites
 
 ### 2. **React Developer Tools**
+
 - **Symptoms:** React component tree overlay, performance markers
 - **Solution:** Disable in production testing
 
 ### 3. **Redux DevTools**
+
 - **Symptoms:** State inspection overlay, action tracking
 - **Solution:** Disable in production testing
 
 ### 4. **Accessibility Testing Tools**
+
 - **Symptoms:** ARIA labels overlay, contrast checkers
 - **Solution:** Disable when not testing accessibility
 
@@ -30,6 +34,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ### Option 1: Disable Browser Extensions (Quick Fix)
 
 **Chrome/Edge:**
+
 ```
 1. Go to: chrome://extensions/
 2. Find the extension (Console Ninja, React DevTools, etc.)
@@ -38,6 +43,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ```
 
 **Firefox:**
+
 ```
 1. Go to: about:addons
 2. Find the extension
@@ -46,6 +52,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ```
 
 **Per-Site Disable (Console Ninja):**
+
 ```
 1. Click the Console Ninja icon in your browser toolbar
 2. Select "Disable for this site"
@@ -59,6 +66,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 **Setup:**
 
 **Chrome/Edge:**
+
 ```
 1. Click your profile icon (top-right)
 2. Click "Add" to create new profile
@@ -68,6 +76,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ```
 
 **Firefox:**
+
 ```
 1. Type "about:profiles" in address bar
 2. Click "Create a New Profile"
@@ -79,6 +88,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ### Option 3: Use Incognito/Private Mode
 
 **Quick Test:**
+
 ```
 1. Open Incognito/Private window (Ctrl+Shift+N / Cmd+Shift+N)
 2. Extensions are disabled by default
@@ -95,10 +105,12 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ### 1. Environment Awareness
 
 **Always know what environment you're in:**
+
 - Development: `http://localhost:3000` or `http://localhost:3003`
 - Production: `https://portal.thesmartpro.io`
 
 **Use different browsers for each:**
+
 - Chrome Profile 1 (Dev Extensions): Local development only
 - Chrome Profile 2 (Clean): Production testing only
 
@@ -107,12 +119,14 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 **Share these rules with your team:**
 
 ✅ **DO:**
+
 - Use development profile for `localhost`
 - Use clean profile for production URLs
 - Disable extensions when taking screenshots
 - Test in incognito mode before reporting issues
 
 ❌ **DON'T:**
+
 - Use development browser for production testing
 - Report "visual bugs" without disabling extensions first
 - Send screenshots with extension artifacts to clients
@@ -121,6 +135,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ### 3. Automated Testing
 
 **For CI/CD:**
+
 ```bash
 # Your GitHub Actions already run tests in clean environments
 # No browser extensions are present in CI/CD pipelines
@@ -133,6 +148,7 @@ If you see **numbered badges, colored backgrounds, or debugging overlays** on yo
 ### What Console Ninja Does
 
 Console Ninja injects:
+
 - Numbered execution order badges
 - Colored backgrounds for console logs
 - Performance timing overlays
@@ -144,6 +160,7 @@ Console Ninja injects:
 ### Why It Appears in Production
 
 Browser extensions run on **all websites** by default, including:
+
 - `localhost:3000` (development)
 - `portal.thesmartpro.io` (production)
 
@@ -159,6 +176,7 @@ Browser extensions run on **all websites** by default, including:
 4. Have a colleague open the site (they won't see artifacts)
 
 If the artifacts:
+
 - ✅ Disappear in incognito → Browser extension issue
 - ✅ Only visible to you → Browser extension issue
 - ❌ Visible to everyone → Actual code issue (investigate further)
@@ -212,6 +230,7 @@ If you've tried all the above and still see artifacts:
 ## ✅ Verification
 
 Your codebase is clean:
+
 - ✅ No Playwright, Puppeteer, Selenium, or Cypress
 - ✅ No browser automation tools in `package.json`
 - ✅ No testing frameworks with visual overlays
@@ -219,4 +238,3 @@ Your codebase is clean:
 - ✅ No automation in GitHub Actions workflows
 
 **The visual artifacts are 100% from browser extensions, not your code.**
-

@@ -16,8 +16,8 @@ export function ResponsiveTable({
 }) {
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
-      <div className="inline-block min-w-full align-middle">
-        <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+      <div className='inline-block min-w-full align-middle'>
+        <div className='overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg'>
           {children}
         </div>
       </div>
@@ -61,9 +61,7 @@ export function ResponsiveForm({
   className?: string;
 }) {
   return (
-    <form className={cn('space-y-4 sm:space-y-6', className)}>
-      {children}
-    </form>
+    <form className={cn('space-y-4 sm:space-y-6', className)}>{children}</form>
   );
 }
 
@@ -122,11 +120,7 @@ export function ResponsiveSpacing({
     lg: 'space-y-6 sm:space-y-8',
   };
 
-  return (
-    <div className={cn(spacingClasses[size], className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn(spacingClasses[size], className)}>{children}</div>;
 }
 
 /**
@@ -149,13 +143,13 @@ export function ResponsiveModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className='fixed inset-0 z-50 overflow-y-auto'>
+      <div className='flex min-h-screen items-end sm:items-center justify-center p-0 sm:p-4'>
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-black/50 transition-opacity"
+          className='fixed inset-0 bg-black/50 transition-opacity'
           onClick={onClose}
-          aria-hidden="true"
+          aria-hidden='true'
         />
 
         {/* Modal */}
@@ -169,36 +163,36 @@ export function ResponsiveModal({
             'transform transition-all',
             className
           )}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='modal-title'
         >
-          <div className="sticky top-0 bg-white border-b px-4 py-3 sm:px-6">
-            <h3 id="modal-title" className="text-lg font-medium">
+          <div className='sticky top-0 bg-white border-b px-4 py-3 sm:px-6'>
+            <h3 id='modal-title' className='text-lg font-medium'>
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="absolute top-3 end-3 p-2 hover:bg-gray-100 rounded"
-              aria-label="Close modal"
+              className='absolute top-3 end-3 p-2 hover:bg-gray-100 rounded'
+              aria-label='Close modal'
             >
               <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                className='h-5 w-5'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d='M6 18L18 6M6 6l12 12'
                 />
               </svg>
             </button>
           </div>
 
-          <div className="px-4 py-5 sm:p-6 overflow-y-auto max-h-[calc(100vh-120px)] sm:max-h-[70vh]">
+          <div className='px-4 py-5 sm:p-6 overflow-y-auto max-h-[calc(100vh-120px)] sm:max-h-[70vh]'>
             {children}
           </div>
         </div>
@@ -206,4 +200,3 @@ export function ResponsiveModal({
     </div>
   );
 }
-

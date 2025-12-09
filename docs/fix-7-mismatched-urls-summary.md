@@ -5,6 +5,7 @@
 From the detailed mismatch analysis, here's what we found:
 
 ### ✅ Case Mismatches (4 cases - These are FINE)
+
 These files exist and work correctly, just have case differences in the passport number:
 
 1. **asad shakeel** - `BS5165582` vs `bs5165582` ✅ (file exists)
@@ -59,15 +60,17 @@ ORDER BY name;
 #### Fix 1: ahmed khalil
 
 **If correct file exists** (`ahmed_khalil_eg4128603.png`):
+
 ```sql
 UPDATE promoters
-SET 
+SET
   passport_url = 'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/ahmed_khalil_eg4128603.png',
   updated_at = NOW()
 WHERE name_en = 'ahmed khalil' AND passport_number = 'eg4128603';
 ```
 
 **If correct file doesn't exist**:
+
 ```sql
 -- Option A: Keep REAL_PASSPORT (it's a valid marker)
 -- No action needed - the code now allows REAL_PASSPORT files with passport numbers
@@ -81,15 +84,17 @@ WHERE name_en = 'ahmed khalil' AND passport_url LIKE '%REAL_PASSPORT%';
 #### Fix 2: ahtisham ul haq
 
 **If correct file exists** (`ahtisham_ul_haq_t9910557.png`):
+
 ```sql
 UPDATE promoters
-SET 
+SET
   passport_url = 'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/ahtisham_ul_haq_t9910557.png',
   updated_at = NOW()
 WHERE name_en = 'ahtisham ul haq' AND passport_number = 't9910557';
 ```
 
 **If correct file doesn't exist**:
+
 ```sql
 -- Check if the current file (vishnu_dathan_binu_t9910557.png) is actually correct
 -- If it's the right passport image, you might need to rename the file in storage
@@ -102,15 +107,17 @@ WHERE name_en = 'ahtisham ul haq';
 #### Fix 3: vishnu dathan binu
 
 **If correct file exists** (`vishnu_dathan_binu_fd4227081.png`):
+
 ```sql
 UPDATE promoters
-SET 
+SET
   passport_url = 'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/vishnu_dathan_binu_fd4227081.png',
   updated_at = NOW()
 WHERE name_en = 'vishnu dathan binu' AND passport_number = 'fd4227081';
 ```
 
 **If correct file doesn't exist**:
+
 ```sql
 -- Check if the current file (Muhammad_qamar_fd4227081.png) is actually correct
 -- If it's the right passport image, you might need to rename the file in storage
@@ -125,12 +132,12 @@ WHERE name_en = 'vishnu dathan binu';
 Run this verification query:
 
 ```sql
-SELECT 
+SELECT
   name_en,
   passport_number,
   passport_url,
-  CASE 
-    WHEN passport_url LIKE '%' || LOWER(REPLACE(name_en, ' ', '_')) || '%' 
+  CASE
+    WHEN passport_url LIKE '%' || LOWER(REPLACE(name_en, ' ', '_')) || '%'
          AND (passport_number IS NULL OR LOWER(passport_url) LIKE '%' || LOWER(passport_number) || '%')
     THEN '✅ Valid'
     ELSE '❌ Needs fix'
@@ -153,6 +160,7 @@ ORDER BY status, name_en;
 ## Code Update
 
 I've also updated the validation code to:
+
 - ✅ Allow `REAL_PASSPORT` files that contain passport numbers (like ahmed khalil's case)
 - ✅ Use case-insensitive matching for passport numbers
 
@@ -165,4 +173,3 @@ The code in `app/api/contracts/makecom/generate/route.ts` now properly handles t
 - **2 cases**: Find correct files or fix URLs
 
 After fixes, all 32 valid passport URLs should be fully matched! 🎉
-

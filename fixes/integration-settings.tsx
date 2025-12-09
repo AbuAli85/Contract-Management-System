@@ -1,9 +1,9 @@
 /**
  * Integration Settings Component
- * 
+ *
  * Complete implementation for third-party integrations (Make.com webhooks, etc.)
  * Replaces placeholder text with functional integration management.
- * 
+ *
  * Location: app/[locale]/dashboard/settings/page.tsx (Integrations tab)
  */
 
@@ -13,9 +13,23 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Webhook, Key, CheckCircle, XCircle, ExternalLink, Copy } from 'lucide-react';
+import {
+  Loader2,
+  Webhook,
+  Key,
+  CheckCircle,
+  XCircle,
+  ExternalLink,
+  Copy,
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
@@ -33,12 +47,18 @@ export default function IntegrationSettings() {
     webhookSecret: '',
     apiKey: '',
     enableWebhooks: false,
-    webhookEvents: ['contract.created', 'contract.updated', 'document.expiring'],
+    webhookEvents: [
+      'contract.created',
+      'contract.updated',
+      'document.expiring',
+    ],
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [testResult, setTestResult] = useState<'success' | 'error' | null>(
+    null
+  );
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,7 +91,8 @@ export default function IntegrationSettings() {
       if (response.ok) {
         toast({
           title: '✅ Settings Saved',
-          description: 'Your integration settings have been updated successfully.',
+          description:
+            'Your integration settings have been updated successfully.',
         });
       } else {
         throw new Error('Failed to save settings');
@@ -104,7 +125,7 @@ export default function IntegrationSettings() {
       const response = await fetch('/api/integrations/test-webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           webhookUrl: settings.webhookUrl,
           webhookSecret: settings.webhookSecret,
         }),
@@ -114,7 +135,8 @@ export default function IntegrationSettings() {
         setTestResult('success');
         toast({
           title: '✅ Webhook Test Successful',
-          description: 'Your webhook URL is working correctly and received the test payload.',
+          description:
+            'Your webhook URL is working correctly and received the test payload.',
         });
       } else {
         setTestResult('error');
@@ -129,7 +151,8 @@ export default function IntegrationSettings() {
       setTestResult('error');
       toast({
         title: '❌ Test Error',
-        description: 'Failed to test webhook. Please check the URL and try again.',
+        description:
+          'Failed to test webhook. Please check the URL and try again.',
         variant: 'destructive',
       });
     } finally {
@@ -145,10 +168,11 @@ export default function IntegrationSettings() {
 
       if (response.ok) {
         const { apiKey } = await response.json();
-        setSettings((prev) => ({ ...prev, apiKey }));
+        setSettings(prev => ({ ...prev, apiKey }));
         toast({
           title: '🔑 API Key Generated',
-          description: 'A new API key has been generated. Make sure to save it!',
+          description:
+            'A new API key has been generated. Make sure to save it!',
         });
       }
     } catch (error) {
@@ -170,86 +194,91 @@ export default function IntegrationSettings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className='flex items-center justify-center p-8'>
+        <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
       <div>
-        <h3 className="text-lg font-medium">Third-Party Integrations</h3>
-        <p className="text-sm text-muted-foreground">
-          Connect external services to automate your workflow and receive real-time updates.
+        <h3 className='text-lg font-medium'>Third-Party Integrations</h3>
+        <p className='text-sm text-muted-foreground'>
+          Connect external services to automate your workflow and receive
+          real-time updates.
         </p>
       </div>
 
       {/* Make.com Webhook Integration */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Webhook className="h-5 w-5 text-blue-600" />
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <Webhook className='h-5 w-5 text-blue-600' />
               <CardTitle>Make.com Webhook</CardTitle>
             </div>
             {testResult === 'success' && (
-              <Badge variant="outline" className="gap-1">
-                <CheckCircle className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">Connected</span>
+              <Badge variant='outline' className='gap-1'>
+                <CheckCircle className='h-3 w-3 text-green-600' />
+                <span className='text-green-600'>Connected</span>
               </Badge>
             )}
             {testResult === 'error' && (
-              <Badge variant="outline" className="gap-1">
-                <XCircle className="h-3 w-3 text-red-600" />
-                <span className="text-red-600">Failed</span>
+              <Badge variant='outline' className='gap-1'>
+                <XCircle className='h-3 w-3 text-red-600' />
+                <span className='text-red-600'>Failed</span>
               </Badge>
             )}
           </div>
           <CardDescription>
-            Receive real-time updates about contracts, documents, and workforce changes
+            Receive real-time updates about contracts, documents, and workforce
+            changes
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="webhook-url">Webhook URL</Label>
-            <div className="flex gap-2">
+        <CardContent className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='webhook-url'>Webhook URL</Label>
+            <div className='flex gap-2'>
               <Input
-                id="webhook-url"
-                type="url"
-                placeholder="https://hook.eu2.make.com/..."
+                id='webhook-url'
+                type='url'
+                placeholder='https://hook.eu2.make.com/...'
                 value={settings.webhookUrl}
-                onChange={(e) =>
-                  setSettings((prev) => ({ ...prev, webhookUrl: e.target.value }))
+                onChange={e =>
+                  setSettings(prev => ({ ...prev, webhookUrl: e.target.value }))
                 }
               />
               <Button
-                variant="outline"
-                size="icon"
+                variant='outline'
+                size='icon'
                 onClick={() => copyToClipboard(settings.webhookUrl)}
                 disabled={!settings.webhookUrl}
               >
-                <Copy className="h-4 w-4" />
+                <Copy className='h-4 w-4' />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className='text-xs text-muted-foreground'>
               Create a webhook in Make.com and paste the URL here
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="webhook-secret">Webhook Secret (Optional)</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='webhook-secret'>Webhook Secret (Optional)</Label>
             <Input
-              id="webhook-secret"
-              type="password"
-              placeholder="Enter a secret for webhook authentication"
+              id='webhook-secret'
+              type='password'
+              placeholder='Enter a secret for webhook authentication'
               value={settings.webhookSecret}
-              onChange={(e) =>
-                setSettings((prev) => ({ ...prev, webhookSecret: e.target.value }))
+              onChange={e =>
+                setSettings(prev => ({
+                  ...prev,
+                  webhookSecret: e.target.value,
+                }))
               }
             />
-            <p className="text-xs text-muted-foreground">
+            <p className='text-xs text-muted-foreground'>
               Add an extra layer of security by validating webhook requests
             </p>
           </div>
@@ -257,24 +286,27 @@ export default function IntegrationSettings() {
           <Separator />
 
           <div>
-            <Label className="mb-2 block">Webhook Events</Label>
-            <div className="flex flex-wrap gap-2">
-              {settings.webhookEvents.map((event) => (
-                <Badge key={event} variant="secondary">
+            <Label className='mb-2 block'>Webhook Events</Label>
+            <div className='flex flex-wrap gap-2'>
+              {settings.webhookEvents.map(event => (
+                <Badge key={event} variant='secondary'>
                   {event}
                 </Badge>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className='text-xs text-muted-foreground mt-2'>
               These events will trigger webhook notifications
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button onClick={testWebhook} disabled={testing || !settings.webhookUrl}>
+          <div className='flex gap-2'>
+            <Button
+              onClick={testWebhook}
+              disabled={testing || !settings.webhookUrl}
+            >
               {testing ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Testing...
                 </>
               ) : (
@@ -282,10 +314,15 @@ export default function IntegrationSettings() {
               )}
             </Button>
             <Button
-              variant="outline"
-              onClick={() => window.open('https://www.make.com/en/integrations/webhooks', '_blank')}
+              variant='outline'
+              onClick={() =>
+                window.open(
+                  'https://www.make.com/en/integrations/webhooks',
+                  '_blank'
+                )
+              }
             >
-              <ExternalLink className="mr-2 h-4 w-4" />
+              <ExternalLink className='mr-2 h-4 w-4' />
               Make.com Docs
             </Button>
           </div>
@@ -295,56 +332,57 @@ export default function IntegrationSettings() {
       {/* API Key Management */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Key className="h-5 w-5 text-purple-600" />
+          <div className='flex items-center gap-2'>
+            <Key className='h-5 w-5 text-purple-600' />
             <CardTitle>API Access</CardTitle>
           </div>
           <CardDescription>
             Generate and manage API keys for programmatic access
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="api-key">API Key</Label>
-            <div className="flex gap-2">
+        <CardContent className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='api-key'>API Key</Label>
+            <div className='flex gap-2'>
               <Input
-                id="api-key"
-                type="password"
-                placeholder="No API key generated"
+                id='api-key'
+                type='password'
+                placeholder='No API key generated'
                 value={settings.apiKey}
                 readOnly
               />
               <Button
-                variant="outline"
-                size="icon"
+                variant='outline'
+                size='icon'
                 onClick={() => copyToClipboard(settings.apiKey)}
                 disabled={!settings.apiKey}
               >
-                <Copy className="h-4 w-4" />
+                <Copy className='h-4 w-4' />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className='text-xs text-muted-foreground'>
               Use this key to authenticate API requests
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={generateApiKey}>
+          <div className='flex gap-2'>
+            <Button variant='outline' onClick={generateApiKey}>
               {settings.apiKey ? 'Regenerate API Key' : 'Generate API Key'}
             </Button>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => window.open('/docs/api', '_blank')}
             >
-              <ExternalLink className="mr-2 h-4 w-4" />
+              <ExternalLink className='mr-2 h-4 w-4' />
               API Documentation
             </Button>
           </div>
 
           {settings.apiKey && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-sm text-yellow-800">
-                ⚠️ Keep your API key secure. Don't share it or commit it to version control.
+            <div className='p-3 bg-yellow-50 border border-yellow-200 rounded-md'>
+              <p className='text-sm text-yellow-800'>
+                ⚠️ Keep your API key secure. Don't share it or commit it to
+                version control.
               </p>
             </div>
           )}
@@ -352,14 +390,14 @@ export default function IntegrationSettings() {
       </Card>
 
       {/* Save Button */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={loadSettings} disabled={saving}>
+      <div className='flex justify-end gap-2'>
+        <Button variant='outline' onClick={loadSettings} disabled={saving}>
           Reset
         </Button>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               Saving...
             </>
           ) : (
@@ -370,4 +408,3 @@ export default function IntegrationSettings() {
     </div>
   );
 }
-

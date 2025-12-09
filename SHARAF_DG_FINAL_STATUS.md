@@ -8,27 +8,28 @@ Your Sharaf DG Deployment form is now fully compatible with your production data
 
 ## ✅ **What's Been Fixed (Complete List):**
 
-| Issue | Solution | Status |
-|-------|----------|--------|
-| 1. Not in sidebar | Added to navigation | ✅ Deployed |
-| 2. Wrong party labels | Client first, Employer second | ✅ Deployed |
-| 3. No auto contract number | Auto-generate SDG-YYYYMMDD-XXX | ✅ Deployed |
-| 4. Supplier shows wrong type | Shows Client parties | ✅ Deployed |
-| 5. All promoters showing | Filter by employer | ✅ Deployed |
-| 6. PGRST204: department | Store in terms JSON | ✅ Deployed |
-| 7. PGRST204: metadata | Use terms field | ✅ Deployed |
-| 8. PGRST204: job_title | Store in terms JSON | ✅ Deployed |
-| 9. PGRST204: work_location | Store in terms JSON | ✅ Deployed |
-| 10. PGRST204: pdf_status | Removed from insert | ✅ Deployed |
-| 11. Invalid contract_type | Use 'employment' | ✅ Deployed |
-| 12. first_party_id missing | Use client_id | ✅ Deployed |
-| 13. second_party_id missing | Use employer_id | ✅ Deployed |
+| Issue                        | Solution                       | Status      |
+| ---------------------------- | ------------------------------ | ----------- |
+| 1. Not in sidebar            | Added to navigation            | ✅ Deployed |
+| 2. Wrong party labels        | Client first, Employer second  | ✅ Deployed |
+| 3. No auto contract number   | Auto-generate SDG-YYYYMMDD-XXX | ✅ Deployed |
+| 4. Supplier shows wrong type | Shows Client parties           | ✅ Deployed |
+| 5. All promoters showing     | Filter by employer             | ✅ Deployed |
+| 6. PGRST204: department      | Store in terms JSON            | ✅ Deployed |
+| 7. PGRST204: metadata        | Use terms field                | ✅ Deployed |
+| 8. PGRST204: job_title       | Store in terms JSON            | ✅ Deployed |
+| 9. PGRST204: work_location   | Store in terms JSON            | ✅ Deployed |
+| 10. PGRST204: pdf_status     | Removed from insert            | ✅ Deployed |
+| 11. Invalid contract_type    | Use 'employment'               | ✅ Deployed |
+| 12. first_party_id missing   | Use client_id                  | ✅ Deployed |
+| 13. second_party_id missing  | Use employer_id                | ✅ Deployed |
 
 ---
 
 ## 📊 **Current Database Schema Compatibility:**
 
 ### **✅ Columns Used (Exist in Database):**
+
 ```sql
 contract_number  ✅
 title           ✅
@@ -46,6 +47,7 @@ terms           ✅ (JSON storage for extra fields)
 ```
 
 ### **✅ Data Stored in 'terms' JSON:**
+
 ```json
 {
   "contract_subtype": "sharaf-dg-deployment",
@@ -68,16 +70,20 @@ terms           ✅ (JSON storage for extra fields)
 ## 🧪 **Test Right Now:**
 
 ### **Step 1: Open Form**
+
 https://portal.thesmartpro.io/en/contracts/sharaf-dg
 
 ### **Step 2: Hard Refresh**
+
 ```
 Ctrl + Shift + R (Windows)
 Cmd + Shift + R (Mac)
 ```
 
 ### **Step 3: Open Console (F12)**
+
 You should see:
+
 ```
 ✅ Loaded X promoters, Y clients, Z employers
 ```
@@ -85,31 +91,37 @@ You should see:
 ### **Step 4: Fill Form IN THIS ORDER:**
 
 **1. Second Party (Employer) - YOUR COMPANY**
-   - Select from dropdown
-   - Should show toast: "Employer Selected"
-   - Promoters will filter
+
+- Select from dropdown
+- Should show toast: "Employer Selected"
+- Promoters will filter
 
 **2. Select Promoter**
-   - Dropdown now enabled
-   - Shows only promoters from selected employer
-   - Choose one with green badges (ID Card ✓, Passport ✓)
+
+- Dropdown now enabled
+- Shows only promoters from selected employer
+- Choose one with green badges (ID Card ✓, Passport ✓)
 
 **3. First Party (Client) - SHARAF DG**
-   - Select Sharaf DG from dropdown
+
+- Select Sharaf DG from dropdown
 
 **4. Supplier/Brand - BRAND NAME**
-   - Select Samsung, LG, or other brand
+
+- Select Samsung, LG, or other brand
 
 **5. Contract Details:**
-   - Contract Number: Already auto-generated!
-   - Start Date: Select date
-   - End Date: Select date
-   - Job Title: Enter (e.g., "Sales Promoter")
-   - Work Location: Enter (e.g., "Sharaf DG Mall of Oman")
+
+- Contract Number: Already auto-generated!
+- Start Date: Select date
+- End Date: Select date
+- Job Title: Enter (e.g., "Sales Promoter")
+- Work Location: Enter (e.g., "Sharaf DG Mall of Oman")
 
 ### **Step 5: Click "Create Contract"**
 
 **Console should show:**
+
 ```
 📝 Form submitted, validating...
 ✅ Validation passed, creating contract...
@@ -118,6 +130,7 @@ You should see:
 ```
 
 **Page should show:**
+
 ```
 ✅ Contract Created Successfully!
 Contract Number: SDG-20250126-547 has been saved.
@@ -133,11 +146,13 @@ Now generate the PDF.
 ### **Copy This Info:**
 
 **1. Console Errors (All Messages):**
+
 ```
 (Copy everything from console - errors in red)
 ```
 
 **2. Form Data:**
+
 ```
 Which fields have values?
 - Promoter: YES/NO
@@ -147,6 +162,7 @@ Which fields have values?
 ```
 
 **3. Selected Promoter:**
+
 ```
 Does selected promoter have:
 - ID card image? YES/NO
@@ -154,6 +170,7 @@ Does selected promoter have:
 ```
 
 **4. Network Tab Error:**
+
 ```
 POST /rest/v1/contracts
 Status: ???
@@ -165,17 +182,20 @@ Response: ???
 ## 🎯 **What Should Work Now:**
 
 ### **✅ Contract Creation:**
+
 ```
 Fill form → Click Create Contract → ✅ Saves to database
 ```
 
 ### **✅ Data Storage:**
+
 ```
 Main fields → Direct columns
 Extra fields → terms JSON
 ```
 
 ### **✅ Make.com Webhook:**
+
 ```
 Click Generate PDF → Sends all data to webhook → PDF created
 ```
@@ -185,6 +205,7 @@ Click Generate PDF → Sends all data to webhook → PDF created
 ## 📞 **Make.com Integration:**
 
 ### **Webhook Receives:**
+
 ```json
 {
   "contract_id": "uuid",
@@ -209,12 +230,13 @@ Click Generate PDF → Sends all data to webhook → PDF created
   },
   "job_title": "Sales Promoter",
   "department": "Electronics",
-  "work_location": "Sharaf DG Mall",
+  "work_location": "Sharaf DG Mall"
   // ... all other fields
 }
 ```
 
 ### **Make.com Should:**
+
 1. Receive webhook data
 2. Generate PDF with images
 3. Upload to Google Drive
@@ -251,14 +273,14 @@ If you want automatic PDF tracking, run this migration in Supabase:
 
 ```sql
 -- Add PDF tracking columns
-ALTER TABLE contracts 
+ALTER TABLE contracts
 ADD COLUMN IF NOT EXISTS pdf_url TEXT,
 ADD COLUMN IF NOT EXISTS google_drive_url TEXT,
 ADD COLUMN IF NOT EXISTS pdf_generated_at TIMESTAMPTZ;
 
 -- Create index
-CREATE INDEX IF NOT EXISTS idx_contracts_pdf_url 
-ON contracts(pdf_url) 
+CREATE INDEX IF NOT EXISTS idx_contracts_pdf_url
+ON contracts(pdf_url)
 WHERE pdf_url IS NOT NULL;
 ```
 
@@ -269,6 +291,7 @@ Then the form will automatically show download links!
 ## 🎉 **Current Status:**
 
 **Form Features:**
+
 - ✅ Auto-generated contract numbers
 - ✅ Smart promoter filtering by employer
 - ✅ Correct party labels (Client/Employer)
@@ -278,6 +301,7 @@ Then the form will automatically show download links!
 - ✅ Comprehensive error logging
 
 **Ready to Use:**
+
 - ✅ Create contracts
 - ✅ Generate PDFs via Make.com
 - ✅ All three webhooks configured
@@ -302,4 +326,3 @@ If you still have issues, **share the console output** and I'll help further! �
 **Last Updated**: October 26, 2025  
 **Status**: ✅ All Database Compatibility Issues Resolved  
 **Deployment**: Live on production
-

@@ -49,20 +49,24 @@ export function OverviewTab({ contract }: OverviewTabProps) {
 
         <KeyMetricCard
           title='Duration'
-          value={calculateDuration(
-            contract?.start_date,
-            contract?.end_date
-          ).value}
+          value={
+            calculateDuration(contract?.start_date, contract?.end_date).value
+          }
           icon={CalendarIcon}
           colorClass='bg-gradient-to-br from-green-50 to-green-100 border-green-200'
         />
 
         <KeyMetricCard
           title='Value'
-          value={formatCurrency(
-            contract?.value ?? contract?.contract_value ?? contract?.basic_salary ?? undefined,
-            { currency: contract?.currency || 'USD' }
-          ).value}
+          value={
+            formatCurrency(
+              contract?.value ??
+                contract?.contract_value ??
+                contract?.basic_salary ??
+                undefined,
+              { currency: contract?.currency || 'USD' }
+            ).value
+          }
           icon={TagIcon}
           colorClass='bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
         />

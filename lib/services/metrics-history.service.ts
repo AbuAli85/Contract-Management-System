@@ -1,6 +1,6 @@
 /**
  * Metrics History Service
- * 
+ *
  * Handles recording and retrieving historical metrics for trend analysis
  */
 
@@ -45,15 +45,13 @@ export async function recordMetricsSnapshot(
   try {
     const supabase = await createClient();
 
-    const { error } = await supabase
-      .from('metrics_history')
-      .insert({
-        metric_type: metricType,
-        metric_name: metricName,
-        metric_value: metricValue,
-        snapshot_date: new Date().toISOString().split('T')[0],
-        breakdown,
-      });
+    const { error } = await supabase.from('metrics_history').insert({
+      metric_type: metricType,
+      metric_name: metricName,
+      metric_value: metricValue,
+      snapshot_date: new Date().toISOString().split('T')[0],
+      breakdown,
+    });
 
     if (error) {
       console.error('Error recording metric snapshot:', error);
@@ -150,7 +148,7 @@ export async function getMultipleMetricTrends(
   const trends: Record<string, TrendData | null> = {};
 
   await Promise.all(
-    metrics.map(async (metric) => {
+    metrics.map(async metric => {
       const key = `${metric.type}_${metric.name}`;
       trends[key] = await getMetricTrend(metric.type, metric.name, daysBack);
     })
@@ -196,9 +194,7 @@ export async function getMetricHistory(
 /**
  * Get promoter-specific metrics for trends
  */
-export async function getPromoterMetricsTrends(
-  daysBack: number = 7
-): Promise<{
+export async function getPromoterMetricsTrends(daysBack: number = 7): Promise<{
   totalPromoters: TrendData | null;
   activeWorkforce: TrendData | null;
   criticalDocuments: TrendData | null;
@@ -255,4 +251,3 @@ export function calculateSimpleTrend(
     previousValue,
   };
 }
-

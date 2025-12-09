@@ -20,9 +20,9 @@ export interface AccessibleButtonProps extends ButtonProps {
 
 /**
  * Accessible Button Component
- * 
+ *
  * Provides proper ARIA labels, keyboard navigation, and visual feedback
- * 
+ *
  * @example
  * ```tsx
  * <AccessibleButton
@@ -61,39 +61,39 @@ export function AccessibleButton({
       {...props}
     >
       {Icon && !isLoading && !isSuccess && (
-        <Icon className="h-4 w-4 me-2" aria-hidden="true" />
+        <Icon className='h-4 w-4 me-2' aria-hidden='true' />
       )}
-      
+
       {isLoading && (
         <span
-          className="inline-block h-4 w-4 me-2 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-          role="status"
-          aria-label="Loading"
+          className='inline-block h-4 w-4 me-2 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]'
+          role='status'
+          aria-label='Loading'
         />
       )}
-      
+
       {isSuccess && (
         <svg
-          className="h-4 w-4 me-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
+          className='h-4 w-4 me-2'
+          fill='none'
+          viewBox='0 0 24 24'
+          stroke='currentColor'
+          aria-hidden='true'
         >
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            strokeLinecap='round'
+            strokeLinejoin='round'
             strokeWidth={2}
-            d="M5 13l4 4L19 7"
+            d='M5 13l4 4L19 7'
           />
         </svg>
       )}
-      
+
       <span>{children}</span>
-      
+
       {kbd && !isLoading && !isSuccess && (
         <kbd
-          className="ms-2 px-1.5 py-0.5 text-xs font-mono rounded bg-black/10 dark:bg-white/10"
+          className='ms-2 px-1.5 py-0.5 text-xs font-mono rounded bg-black/10 dark:bg-white/10'
           aria-label={`Keyboard shortcut: ${kbd}`}
         >
           {kbd}
@@ -122,9 +122,8 @@ export function AccessibleIconButton({
       )}
       {...props}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
-      <span className="sr-only">{ariaLabel}</span>
+      <Icon className='h-4 w-4' aria-hidden='true' />
+      <span className='sr-only'>{ariaLabel}</span>
     </Button>
   );
 }
-

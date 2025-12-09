@@ -1,15 +1,19 @@
 # Contract Metrics Standardization
 
 ## Overview
+
 This document describes the standardized metrics system implemented to ensure consistent contract counting across the application.
 
 ## Problem Statement
+
 The application previously showed inconsistent contract counts:
+
 - Dashboard: 24 contracts
 - Contracts page: 10 contracts
 - Previously observed: 100 contracts
 
 ### Root Causes
+
 1. **Multiple counting methods** - Different pages used different queries
 2. **No role-based filtering consistency** - Some pages applied RBAC, others didn't
 3. **No caching** - Each request recalculated metrics
@@ -23,13 +27,22 @@ The application previously showed inconsistent contract counts:
 Created a single source of truth for all metrics:
 
 ```typescript
-export async function getContractMetrics(options: MetricsOptions): Promise<ContractMetrics>
-export async function getPromoterMetrics(options: MetricsOptions): Promise<PromoterMetrics>
-export async function getPartyMetrics(options: MetricsOptions): Promise<PartyMetrics>
-export async function getDashboardMetrics(options: MetricsOptions): Promise<DashboardMetrics>
+export async function getContractMetrics(
+  options: MetricsOptions
+): Promise<ContractMetrics>;
+export async function getPromoterMetrics(
+  options: MetricsOptions
+): Promise<PromoterMetrics>;
+export async function getPartyMetrics(
+  options: MetricsOptions
+): Promise<PartyMetrics>;
+export async function getDashboardMetrics(
+  options: MetricsOptions
+): Promise<DashboardMetrics>;
 ```
 
 **Features:**
+
 - **Role-based access control**: Admins see all contracts, users see only their own
 - **In-memory caching**: 5-minute TTL to reduce database load
 - **Consistent counting logic**: Same query structure everywhere
@@ -47,12 +60,16 @@ All endpoints now use the centralized metrics service:
 ### 3. Clear UI Labeling
 
 #### Scope Badges
+
 All pages now show whether metrics are:
+
 - 🌐 **System-wide** (admin view) - All contracts in system
 - 👤 **Your Contracts** (user view) - Only contracts you created
 
 #### Tooltips
+
 Every metric has a tooltip explaining:
+
 - What is being counted
 - What filters are applied
 - Whether it's system-wide or user-specific
@@ -60,12 +77,14 @@ Every metric has a tooltip explaining:
 #### Examples
 
 **Dashboard:**
+
 ```
 Total Contracts: 24
 [System-wide view] ℹ️ All contracts in the system across all users
 ```
 
 **Contracts Page:**
+
 ```
 Total Contracts: 10
 [Your contracts only] ℹ️ Only contracts you created or have access to
@@ -76,12 +95,14 @@ Total Contracts: 10
 **Cache TTL:** 5 minutes
 
 **Cache Keys:**
+
 - `contracts:admin:all` - Admin view (all contracts)
 - `contracts:user:${userId}` - User view (own contracts)
 - `promoters:admin:all` - All promoters
 - `dashboard:admin:all` - Full dashboard metrics
 
 **Cache Control:**
+
 - Automatic expiration after 5 minutes
 - Manual refresh via `?refresh=true` query parameter
 - Cache cleared on data mutations (create/update/delete)
@@ -90,17 +111,18 @@ Total Contracts: 10
 
 ```typescript
 interface ContractMetrics {
-  total: number;              // Total contracts
-  active: number;             // Status = 'active'
-  pending: number;            // Status = 'pending'
-  approved: number;           // Status = 'approved'
-  expired: number;            // Status = 'expired'
-  completed: number;          // Status = 'completed'
-  cancelled: number;          // Status = 'cancelled'
-  expiringSoon: number;       // Expiring within 30 days
-  totalValue: number;         // Sum of all contract values
-  averageDuration: number;    // Average contract length in days
-  byStatus: {                 // Status distribution
+  total: number; // Total contracts
+  active: number; // Status = 'active'
+  pending: number; // Status = 'pending'
+  approved: number; // Status = 'approved'
+  expired: number; // Status = 'expired'
+  completed: number; // Status = 'completed'
+  cancelled: number; // Status = 'cancelled'
+  expiringSoon: number; // Expiring within 30 days
+  totalValue: number; // Sum of all contract values
+  averageDuration: number; // Average contract length in days
+  byStatus: {
+    // Status distribution
     [key: string]: number;
   };
 }
@@ -139,10 +161,7 @@ if (userRole === 'admin') {
 
 // User sees only their contracts
 else {
-  query = supabase
-    .from('contracts')
-    .select('*')
-    .eq('created_by', userId);
+  query = supabase.from('contracts').select('*').eq('created_by', userId);
 }
 ```
 
@@ -151,6 +170,7 @@ else {
 ### Manual Testing Steps
 
 1. **As Admin:**
+
    ```
    - Login as admin
    - Check dashboard shows "System-wide view"
@@ -160,6 +180,7 @@ else {
    ```
 
 2. **As Regular User:**
+
    ```
    - Login as regular user
    - Check dashboard shows "Your contracts only"
@@ -178,11 +199,11 @@ else {
 
 ### Expected Results
 
-| User Role | Dashboard | Contracts Page | Pending Page | Scope Label |
-|-----------|-----------|----------------|--------------|-------------|
-| Admin     | All contracts (e.g., 100) | 100 | All pending | System-wide |
-| User A    | User A's contracts (e.g., 24) | 24 | User A's pending | Your contracts |
-| User B    | User B's contracts (e.g., 10) | 10 | User B's pending | Your contracts |
+| User Role | Dashboard                     | Contracts Page | Pending Page     | Scope Label    |
+| --------- | ----------------------------- | -------------- | ---------------- | -------------- |
+| Admin     | All contracts (e.g., 100)     | 100            | All pending      | System-wide    |
+| User A    | User A's contracts (e.g., 24) | 24             | User A's pending | Your contracts |
+| User B    | User B's contracts (e.g., 10) | 10             | User B's pending | Your contracts |
 
 ## Benefits
 
@@ -195,9 +216,11 @@ else {
 ## Migration Notes
 
 ### Breaking Changes
+
 None - API responses maintain backward compatibility with legacy `stats` format.
 
 ### New Fields
+
 ```json
 {
   "scope": "system-wide" | "user-specific",
@@ -220,9 +243,11 @@ None - API responses maintain backward compatibility with legacy `stats` format.
 ### GET `/api/metrics/contracts`
 
 **Query Parameters:**
+
 - `refresh` (optional): `true` to bypass cache
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -242,9 +267,11 @@ None - API responses maintain backward compatibility with legacy `stats` format.
 ### GET `/api/dashboard/stats`
 
 **Query Parameters:**
+
 - `refresh` (optional): `true` to bypass cache
 
 **Response:**
+
 ```json
 {
   "totalContracts": 100,
@@ -264,8 +291,8 @@ None - API responses maintain backward compatibility with legacy `stats` format.
 ## Support
 
 For issues or questions about metrics:
+
 1. Check console logs for "📊 Metrics:" messages
 2. Verify user role in database
 3. Check cache stats: `getCacheStats()` in server console
 4. Clear cache: `clearMetricsCache()` in server console
-

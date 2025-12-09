@@ -14,12 +14,12 @@ This document provides a comprehensive testing checklist for all implemented fix
 
 ## ✅ Implementation Status
 
-| Priority | Fix | Status | Files Modified |
-|----------|-----|--------|----------------|
-| CRITICAL | Contract Status Workflow | ✅ Complete | 3 files |
-| CRITICAL | Pending Contracts Page | ✅ Already Working | 0 files |
-| CRITICAL | Approved Contracts Page | ✅ Already Working | 0 files |
-| MEDIUM | Promoters Metrics | ✅ Complete | 2 files |
+| Priority | Fix                      | Status             | Files Modified |
+| -------- | ------------------------ | ------------------ | -------------- |
+| CRITICAL | Contract Status Workflow | ✅ Complete        | 3 files        |
+| CRITICAL | Pending Contracts Page   | ✅ Already Working | 0 files        |
+| CRITICAL | Approved Contracts Page  | ✅ Already Working | 0 files        |
+| MEDIUM   | Promoters Metrics        | ✅ Complete        | 2 files        |
 
 ---
 
@@ -28,11 +28,13 @@ This document provides a comprehensive testing checklist for all implemented fix
 ### What Was Implemented
 
 **Files Modified:**
+
 - ✅ `supabase/migrations/20250125_complete_contract_workflow.sql`
 - ✅ `app/api/contracts/route.ts`
 - ✅ `app/api/contracts/[id]/approve/route.ts` (NEW)
 
 **Status Flow:**
+
 ```
 draft → pending → approved → active → expired/completed/terminated
                      ↓
@@ -42,6 +44,7 @@ draft → pending → approved → active → expired/completed/terminated
 ### Testing Steps
 
 #### Step 1: Create New Contract
+
 ```bash
 Action: Navigate to /en/generate-contract or /en/simple-contract
 Fill in: Contract details (any valid data)
@@ -55,6 +58,7 @@ Expected:
 ```
 
 #### Step 2: View Pending Contracts
+
 ```bash
 Action: Navigate to /en/contracts/pending
 
@@ -69,6 +73,7 @@ Expected:
 ```
 
 #### Step 3: Approve Contract (Admin Only)
+
 ```bash
 Action: Click action menu (⋮) → "Approve Contract"
 Confirm: Click "Approve" in dialog
@@ -82,6 +87,7 @@ Expected:
 ```
 
 #### Step 4: View Approved Contracts
+
 ```bash
 Action: Navigate to /en/contracts/approved
 
@@ -96,6 +102,7 @@ Expected:
 ```
 
 #### Step 5: View All Contracts
+
 ```bash
 Action: Navigate to /en/contracts
 
@@ -109,6 +116,7 @@ Expected:
 ```
 
 #### Step 6: Test Rejection
+
 ```bash
 Action: Create another test contract
 Navigate: /en/contracts/pending
@@ -125,6 +133,7 @@ Expected:
 ```
 
 #### Step 7: Test Request Changes
+
 ```bash
 Action: Create another test contract
 Navigate: /en/contracts/pending
@@ -142,16 +151,16 @@ Expected:
 
 ### Status Badge Color Reference
 
-| Status | Color | Icon | Hex Color |
-|--------|-------|------|-----------|
-| draft | Gray | 🔘 | #6b7280 |
-| pending | Orange | 🟠 | #f97316 |
-| approved | Blue | 🔵 | #3b82f6 |
-| active | Green | 🟢 | #22c55e |
-| completed | Emerald | ✅ | #10b981 |
-| terminated | Red | 🔴 | #ef4444 |
-| expired | Red | ⏰ | #ef4444 |
-| rejected | Red | ❌ | #ef4444 |
+| Status     | Color   | Icon | Hex Color |
+| ---------- | ------- | ---- | --------- |
+| draft      | Gray    | 🔘   | #6b7280   |
+| pending    | Orange  | 🟠   | #f97316   |
+| approved   | Blue    | 🔵   | #3b82f6   |
+| active     | Green   | 🟢   | #22c55e   |
+| completed  | Emerald | ✅   | #10b981   |
+| terminated | Red     | 🔴   | #ef4444   |
+| expired    | Red     | ⏰   | #ef4444   |
+| rejected   | Red     | ❌   | #ef4444   |
 
 ### Database Verification
 
@@ -181,10 +190,12 @@ LIMIT 5;
 ### What Was Implemented
 
 **Files Modified:**
+
 - ✅ `components/promoters/enhanced-promoters-view-refactored.tsx`
 - ✅ `components/promoters/promoters-metrics-cards.tsx`
 
 **Fixes:**
+
 - All metrics now calculated client-side
 - Added safety checks for undefined/null/NaN
 - Proper number conversion for all values
@@ -192,6 +203,7 @@ LIMIT 5;
 ### Testing Steps
 
 #### Step 1: Navigate to Promoters Hub
+
 ```bash
 Action: Navigate to /en/promoters
 
@@ -203,6 +215,7 @@ Expected:
 ```
 
 #### Step 2: Verify Total Promoters Card
+
 ```bash
 Metric Card: "Total promoters"
 Main Value: Should show number (e.g., "25")
@@ -218,6 +231,7 @@ Expected:
 ```
 
 #### Step 3: Verify Active Workforce Card
+
 ```bash
 Metric Card: "Active workforce"
 Main Value: Should show number of active promoters
@@ -233,6 +247,7 @@ Expected:
 ```
 
 #### Step 4: Verify Document Alerts Card
+
 ```bash
 Metric Card: "Document alerts"
 Main Value: Should show number of critical documents
@@ -248,6 +263,7 @@ Expected:
 ```
 
 #### Step 5: Verify Compliance Rate Card
+
 ```bash
 Metric Card: "Compliance rate"
 Main Value: Should show "X%" (percentage)
@@ -266,6 +282,7 @@ Expected:
 #### Step 6: Test Edge Cases
 
 **Test with No Promoters:**
+
 ```bash
 Expected:
 ✅ All metrics show 0
@@ -274,6 +291,7 @@ Expected:
 ```
 
 **Test with Promoters but No Documents:**
+
 ```bash
 Expected:
 ✅ Critical: 0
@@ -283,6 +301,7 @@ Expected:
 ```
 
 **Test with All Valid Documents:**
+
 ```bash
 Expected:
 ✅ Critical: 0
@@ -292,17 +311,17 @@ Expected:
 
 ### Metrics Calculation Reference
 
-| Metric | Calculation | Example |
-|--------|-------------|---------|
-| Total | `pagination.total` or `dashboardPromoters.length` | 25 |
-| Active | Promoters with `overallStatus === 'active'` | 18 |
-| Critical | Promoters with expired ID or passport | 3 |
-| Expiring | Promoters with expiring ID or passport | 5 |
-| Unassigned | Promoters with `assignmentStatus === 'unassigned'` | 7 |
-| Companies | Unique `employer_id` values | 4 |
-| Recently Added | Created within last 7 days | 2 |
-| Compliance Rate | `(valid docs / total) * 100` | 85% |
-| Assigned Staff | `total - unassigned` | 18 |
+| Metric          | Calculation                                        | Example |
+| --------------- | -------------------------------------------------- | ------- |
+| Total           | `pagination.total` or `dashboardPromoters.length`  | 25      |
+| Active          | Promoters with `overallStatus === 'active'`        | 18      |
+| Critical        | Promoters with expired ID or passport              | 3       |
+| Expiring        | Promoters with expiring ID or passport             | 5       |
+| Unassigned      | Promoters with `assignmentStatus === 'unassigned'` | 7       |
+| Companies       | Unique `employer_id` values                        | 4       |
+| Recently Added  | Created within last 7 days                         | 2       |
+| Compliance Rate | `(valid docs / total) * 100`                       | 85%     |
+| Assigned Staff  | `total - unassigned`                               | 18      |
 
 ---
 
@@ -353,12 +372,12 @@ Expected:
 
 ### Common Issues & Solutions
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Infinite loading | Permission check stuck | Force load after 4 seconds (already implemented) |
-| No contracts showing | Wrong status filter | API now filters by `status=pending` |
-| Empty state not showing | Missing data handling | Already handles empty arrays |
-| Slow loading | Large dataset | Timeout at 10 seconds with abort controller |
+| Issue                   | Cause                  | Solution                                         |
+| ----------------------- | ---------------------- | ------------------------------------------------ |
+| Infinite loading        | Permission check stuck | Force load after 4 seconds (already implemented) |
+| No contracts showing    | Wrong status filter    | API now filters by `status=pending`              |
+| Empty state not showing | Missing data handling  | Already handles empty arrays                     |
+| Slow loading            | Large dataset          | Timeout at 10 seconds with abort controller      |
 
 ---
 
@@ -450,7 +469,7 @@ Expected:
 
 ```sql
 -- Count contracts by status
-SELECT 
+SELECT
   status,
   COUNT(*) as count,
   ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
@@ -470,7 +489,7 @@ ORDER BY count DESC;
 
 ```sql
 -- Verify approval data integrity
-SELECT 
+SELECT
   contract_number,
   status,
   submitted_for_review_at,
@@ -493,11 +512,11 @@ LIMIT 10;
 
 ```sql
 -- Verify promoter counts match dashboard
-SELECT 
+SELECT
   COUNT(*) as total,
   COUNT(CASE WHEN status = 'active' THEN 1 END) as active,
   COUNT(CASE WHEN id_card_expiry_date < NOW() OR passport_expiry_date < NOW() THEN 1 END) as critical,
-  COUNT(CASE WHEN 
+  COUNT(CASE WHEN
     (id_card_expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days') OR
     (passport_expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days')
   THEN 1 END) as expiring
@@ -558,6 +577,7 @@ Use this template to record your test results:
 ## Test Results - [Date]
 
 ### Contract Status Workflow
+
 - [ ] Create Contract → Status: pending ✅/❌
 - [ ] View Pending Page ✅/❌
 - [ ] Approve Contract ✅/❌
@@ -567,6 +587,7 @@ Use this template to record your test results:
 - [ ] Request Changes ✅/❌
 
 ### Promoters Metrics
+
 - [ ] Total Promoters ✅/❌
 - [ ] Active Workforce ✅/❌
 - [ ] Document Alerts ✅/❌
@@ -574,12 +595,14 @@ Use this template to record your test results:
 - [ ] No undefined values ✅/❌
 
 ### Pages Loading
+
 - [ ] Pending page < 5s ✅/❌
 - [ ] Approved page < 5s ✅/❌
 - [ ] All Contracts page < 5s ✅/❌
 - [ ] Error handling works ✅/❌
 
 ### Notes:
+
 [Record any issues or observations here]
 
 ### Overall Status: ✅ PASS / ❌ FAIL
@@ -593,6 +616,7 @@ Use this template to record your test results:
 
 **Cause:** Migration not applied  
 **Solution:**
+
 ```bash
 # Check if migration ran
 psql -d your_database -c "SELECT * FROM contracts WHERE status = 'pending' LIMIT 1;"
@@ -605,6 +629,7 @@ psql -d your_database -f supabase/migrations/20250125_complete_contract_workflow
 
 **Cause:** Browser cache  
 **Solution:**
+
 ```bash
 # Hard refresh browser
 Ctrl+Shift+R (Windows/Linux)
@@ -617,6 +642,7 @@ Cmd+Shift+R (Mac)
 
 **Cause:** Permission error  
 **Solution:**
+
 ```sql
 -- Check user has admin role
 SELECT id, email, role FROM users WHERE email = 'your-email@example.com';
@@ -629,6 +655,7 @@ UPDATE users SET role = 'admin' WHERE email = 'your-email@example.com';
 
 **Cause:** Missing RBAC permission  
 **Solution:**
+
 ```sql
 -- Check permissions exist
 SELECT * FROM rbac_permissions WHERE name = 'contract:read:own';
@@ -643,11 +670,13 @@ VALUES ('contract', 'read', 'own', 'contract:read:own', 'Read own contracts');
 ## 📞 Support & Resources
 
 ### Documentation
+
 - **Contract Workflow:** `CONTRACT_WORKFLOW_IMPLEMENTATION.md`
 - **Workflow Summary:** `CONTRACT_WORKFLOW_SUMMARY.md`
 - **Metrics Fix:** `PROMOTERS_METRICS_FIX_SUMMARY.md`
 
 ### API Endpoints
+
 - **Create Contract:** `POST /api/contracts`
 - **Approve Contract:** `POST /api/contracts/[id]/approve`
 - **Get Pending:** `GET /api/contracts?status=pending`
@@ -655,6 +684,7 @@ VALUES ('contract', 'read', 'own', 'contract:read:own', 'Read own contracts');
 - **Promoter Metrics:** `GET /api/dashboard/promoter-metrics`
 
 ### Key Files
+
 - Contract Creation: `app/api/contracts/route.ts`
 - Contract Approval: `app/api/contracts/[id]/approve/route.ts`
 - Pending Page: `app/[locale]/contracts/pending/page.tsx`
@@ -685,4 +715,3 @@ Before marking as complete, ensure:
 **Version:** 1.0  
 **Status:** ✅ All Critical Fixes Complete  
 **Next Step:** Production Testing & Deployment
-

@@ -7,10 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 
 /**
  * Realtime Dashboard Wrapper
- * 
+ *
  * Automatically refreshes dashboard data when changes occur
  * Wraps dashboard content with real-time subscriptions
- * 
+ *
  * @example
  * ```tsx
  * <RealtimeDashboard>
@@ -28,7 +28,7 @@ export function RealtimeDashboard({ children }: { children: React.ReactNode }) {
     queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
     queryClient.invalidateQueries({ queryKey: ['promoter-metrics'] });
     queryClient.invalidateQueries({ queryKey: ['contract-metrics'] });
-    
+
     // Optional: Show a toast notification
     toast({
       title: 'Data updated',
@@ -67,4 +67,3 @@ export function RealtimePromoters({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
-

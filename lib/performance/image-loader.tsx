@@ -1,8 +1,8 @@
 /**
  * Optimized Image Loading
- * 
+ *
  * Wrapper around Next.js Image with best practices
- * 
+ *
  * @webhint disable-next-line no-inline-styles
  * Note: Inline styles are intentionally used here for dynamic avatar sizing
  */
@@ -32,13 +32,13 @@ interface ImageStyleProps {
 
 /**
  * Optimized Image Component
- * 
+ *
  * Automatically handles:
  * - Lazy loading
  * - AVIF/WebP formats
  * - Responsive sizing
  * - Blur placeholder
- * 
+ *
  * @example
  * ```tsx
  * <OptimizedImage
@@ -68,16 +68,18 @@ export function OptimizedImage({
     const styleProps: ImageStyleProps = {};
     if (!fill && width) styleProps.width = width;
     if (!fill && height) styleProps.height = height;
-    
+
     return (
       <div
         className={cn(
           'flex items-center justify-center bg-gray-100 text-gray-400',
           className
         )}
-        {...(styleProps.width || styleProps.height ? { style: styleProps } : {})}
+        {...(styleProps.width || styleProps.height
+          ? { style: styleProps }
+          : {})}
       >
-        <span className="text-sm">Image failed to load</span>
+        <span className='text-sm'>Image failed to load</span>
       </div>
     );
   }
@@ -88,8 +90,9 @@ export function OptimizedImage({
     fill,
     priority,
     quality: 85,
-    placeholder: "blur" as const,
-    blurDataURL: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q==",
+    placeholder: 'blur' as const,
+    blurDataURL:
+      'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q==',
     onLoad: () => {
       setIsLoading(false);
       onLoadComplete?.();
@@ -111,7 +114,13 @@ export function OptimizedImage({
   }
 
   return (
-    <div className={cn('relative', isLoading && 'animate-pulse bg-gray-200', className)}>
+    <div
+      className={cn(
+        'relative',
+        isLoading && 'animate-pulse bg-gray-200',
+        className
+      )}
+    >
       <Image
         {...imageProps}
         style={{
@@ -138,20 +147,20 @@ export function AvatarImage({
 }) {
   // For dynamic sizes, we need inline styles
   // Note: Inline styles are required here for avatar sizing flexibility
-  const sizeStyle: React.CSSProperties = { 
-    width: size, 
+  const sizeStyle: React.CSSProperties = {
+    width: size,
     height: size,
     minWidth: size,
     minHeight: size,
   };
-  
+
   if (!src && fallback) {
     // Dynamic size requires inline styles for avatar fallback
     return (
       <div
-        className="flex items-center justify-center bg-gray-200 rounded-full text-gray-600 font-medium"
+        className='flex items-center justify-center bg-gray-200 rounded-full text-gray-600 font-medium'
         style={sizeStyle}
-        data-webhint-ignore="no-inline-styles"
+        data-webhint-ignore='no-inline-styles'
       >
         {fallback}
       </div>
@@ -162,9 +171,9 @@ export function AvatarImage({
     // Dynamic size requires inline styles for avatar placeholder
     return (
       <div
-        className="bg-gray-200 rounded-full"
+        className='bg-gray-200 rounded-full'
         style={sizeStyle}
-        data-webhint-ignore="no-inline-styles"
+        data-webhint-ignore='no-inline-styles'
       />
     );
   }
@@ -175,8 +184,8 @@ export function AvatarImage({
       alt={alt}
       width={size}
       height={size}
-      className="rounded-full"
-      objectFit="cover"
+      className='rounded-full'
+      objectFit='cover'
     />
   );
 }
@@ -203,11 +212,10 @@ export function ResponsiveImage({
     fill: true,
     priority,
   };
-  
+
   if (className) {
     imageProps.className = className;
   }
 
   return <OptimizedImage {...imageProps} />;
 }
-

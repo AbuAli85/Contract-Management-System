@@ -12,21 +12,25 @@
 ## 🎯 Why Implement Nonces?
 
 ### Current CSP Issue
+
 ```javascript
 script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live ...
 ```
 
-**Problem:** 
+**Problem:**
+
 - `'unsafe-inline'` allows ANY inline script (XSS risk)
 - `'unsafe-eval'` allows eval() (injection risk)
 - Grade capped at **A** instead of **A+**
 
 ### With Nonces
+
 ```javascript
 script-src 'self' 'nonce-{RANDOM}' https://vercel.live ...
 ```
 
 **Benefit:**
+
 - Only scripts with matching nonce attribute execute
 - No 'unsafe-inline' or 'unsafe-eval' needed
 - Achieves **A+ grade**
@@ -47,7 +51,7 @@ import crypto from 'crypto';
 export function middleware(request: NextRequest) {
   // Generate unique nonce for this request
   const nonce = crypto.randomBytes(16).toString('base64');
-  
+
   // Clone response headers
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
@@ -70,7 +74,7 @@ export function middleware(request: NextRequest) {
     "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",
-    "upgrade-insecure-requests",
+    'upgrade-insecure-requests',
     "form-action 'self'",
     "media-src 'self' https://*.supabase.co",
     "manifest-src 'self'",
@@ -78,7 +82,7 @@ export function middleware(request: NextRequest) {
 
   // Set CSP header with nonce
   response.headers.set('Content-Security-Policy', csp);
-  
+
   // Store nonce for use in components
   response.headers.set('x-nonce', nonce);
 
@@ -86,9 +90,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
 ```
 
@@ -103,12 +105,12 @@ import { createContext, useContext } from 'react';
 
 const NonceContext = createContext<string | undefined>(undefined);
 
-export function NonceProvider({ 
-  nonce, 
-  children 
-}: { 
-  nonce: string; 
-  children: React.ReactNode 
+export function NonceProvider({
+  nonce,
+  children
+}: {
+  nonce: string;
+  children: React.ReactNode
 }) {
   return (
     <NonceContext.Provider value={nonce}>
@@ -147,9 +149,9 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* External resources with nonce */}
-        <link 
-          rel="preconnect" 
-          href="https://fonts.googleapis.com" 
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
           nonce={nonce}
         />
         <link
@@ -218,6 +220,7 @@ export function MyComponent() {
 ### Step 6: Remove 'unsafe-eval' (Tricky)
 
 Next.js heavily relies on `eval()` for:
+
 - React Fast Refresh (development)
 - Code splitting
 - Dynamic imports
@@ -225,6 +228,7 @@ Next.js heavily relies on `eval()` for:
 **Options:**
 
 1. **Keep 'unsafe-eval' in development only:**
+
 ```typescript
 const csp = [
   `script-src 'self' 'nonce-${nonce}' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://vercel.live`,
@@ -233,6 +237,7 @@ const csp = [
 ```
 
 2. **Completely remove (may break features):**
+
 - Test extensively
 - May need webpack configuration changes
 - Some Next.js features might not work
@@ -242,14 +247,16 @@ const csp = [
 ## 🧪 Testing
 
 ### 1. Check Console for CSP Violations
+
 ```
-Refused to execute inline script because it violates the following 
+Refused to execute inline script because it violates the following
 Content Security Policy directive: "script-src 'self' 'nonce-...'".
 ```
 
 **Fix:** Add `nonce` attribute to the violating script
 
 ### 2. Test All Pages
+
 - Login page
 - Dashboard
 - Contracts
@@ -257,11 +264,13 @@ Content Security Policy directive: "script-src 'self' 'nonce-...'".
 - Forms with client-side validation
 
 ### 3. Check Third-Party Scripts
+
 - Google Analytics
 - Sentry error tracking
 - Any other external scripts
 
 ### 4. Verify Nonce Uniqueness
+
 ```bash
 # Each request should have a different nonce
 curl -I https://portal.thesmartpro.io/en/dashboard | grep -i content-security-policy
@@ -274,6 +283,7 @@ curl -I https://portal.thesmartpro.io/en/dashboard | grep -i content-security-po
 ## 📊 Expected Results
 
 ### Before (Grade A)
+
 ```
 script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live ...
 Warning: This policy contains 'unsafe-inline' which is dangerous
@@ -282,6 +292,7 @@ Grade: A
 ```
 
 ### After (Grade A+)
+
 ```
 script-src 'self' 'nonce-abc123...' https://vercel.live ...
 No warnings
@@ -293,18 +304,22 @@ Grade: A+
 ## ⚠️ Potential Issues
 
 ### 1. Next.js Framework Scripts
+
 **Problem:** Next.js injects inline scripts for hydration  
 **Solution:** May need to patch Next.js or accept 'unsafe-inline' for framework scripts
 
 ### 2. Third-Party Libraries
+
 **Problem:** Some libraries use `eval()` or inline scripts  
 **Solution:** Find alternatives or whitelist specific scripts
 
 ### 3. Development vs. Production
+
 **Problem:** Different CSP needed for development (Fast Refresh)  
 **Solution:** Environment-based CSP configuration
 
 ### 4. Server Components
+
 **Problem:** Nonce must be available server-side  
 **Solution:** Use `headers()` in server components
 
@@ -313,11 +328,13 @@ Grade: A+
 ## 🎯 Recommendation
 
 ### For Most Applications: Keep Grade A ✅
+
 - Grade A is excellent
 - 'unsafe-inline' and 'unsafe-eval' are needed for Next.js functionality
 - Focus on other security measures (authentication, rate limiting, etc.)
 
 ### For Maximum Security: Implement Nonces (A+)
+
 - High-security applications (finance, healthcare, government)
 - Willing to invest 2-4 hours of implementation time
 - Can handle potential compatibility issues
@@ -335,4 +352,3 @@ Grade: A+
 ---
 
 **Bottom Line:** Grade A is excellent for a Next.js application. Grade A+ requires significant effort and may impact functionality. Choose based on your security requirements.
-

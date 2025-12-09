@@ -81,7 +81,12 @@ function computeDocumentHealth(
   threshold: number
 ): DocumentHealth {
   // Handle empty, null, or invalid values
-  if (!value || value.trim() === '' || value === 'null' || value === 'undefined') {
+  if (
+    !value ||
+    value.trim() === '' ||
+    value === 'null' ||
+    value === 'undefined'
+  ) {
     return {
       status: 'missing',
       daysRemaining: null,
@@ -170,11 +175,13 @@ function computeOverallStatus(
 
 // Function to fetch ALL promoters for analytics (with proper pagination)
 async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
-  console.log('🔄 Fetching ALL promoters for analytics dashboard with pagination...');
+  console.log(
+    '🔄 Fetching ALL promoters for analytics dashboard with pagination...'
+  );
 
   const controller = new AbortController();
   let timeoutId: NodeJS.Timeout | null = null;
-  
+
   try {
     const allPromoters: any[] = [];
     let page = 1;
@@ -194,28 +201,29 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
       });
 
       console.log(`📞 Fetching page ${page}/${totalPages} for analytics...`);
-      
-      const response = await fetch(
-        `/api/promoters?${params.toString()}`,
-        {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-Analytics-Request': 'true',
-          },
-        }
-      );
+
+      const response = await fetch(`/api/promoters?${params.toString()}`, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-Analytics-Request': 'true',
+        },
+      });
 
       if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        throw new Error(
+          `API returned ${response.status}: ${response.statusText}`
+        );
       }
 
       const payload = await response.json();
 
       if (payload.success === false) {
-        throw new Error(payload.error || 'Failed to load promoters for analytics.');
+        throw new Error(
+          payload.error || 'Failed to load promoters for analytics.'
+        );
       }
 
       if (!Array.isArray(payload.promoters)) {
@@ -224,17 +232,20 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
 
       // Add promoters from this page
       allPromoters.push(...payload.promoters);
-      
+
       // Update pagination info from first response
       if (page === 1) {
         totalCount = payload.total || payload.pagination?.total || 0;
         totalPages = Math.ceil(totalCount / limit);
-        console.log(`📊 Total workforce: ${totalCount} members across ${totalPages} pages`);
+        console.log(
+          `📊 Total workforce: ${totalCount} members across ${totalPages} pages`
+        );
       }
 
-      console.log(`✅ Fetched page ${page}: ${payload.promoters.length} promoters (Total so far: ${allPromoters.length}/${totalCount})`);
+      console.log(
+        `✅ Fetched page ${page}: ${payload.promoters.length} promoters (Total so far: ${allPromoters.length}/${totalCount})`
+      );
       page++;
-
     } while (page <= totalPages && allPromoters.length < totalCount);
 
     if (timeoutId) {
@@ -258,9 +269,10 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
       timestamp: new Date().toISOString(),
     };
 
-    console.log(`🎉 Successfully fetched ALL ${allPromoters.length} promoters for analytics dashboard!`);
+    console.log(
+      `🎉 Successfully fetched ALL ${allPromoters.length} promoters for analytics dashboard!`
+    );
     return finalResponse;
-
   } catch (error) {
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -268,7 +280,9 @@ async function fetchAllPromotersForAnalytics(): Promise<PromotersResponse> {
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        throw new Error('Analytics request timeout: Complete workforce fetch took too long');
+        throw new Error(
+          'Analytics request timeout: Complete workforce fetch took too long'
+        );
       }
     }
     throw error;
@@ -288,13 +302,15 @@ async function fetchPromoters(
   }
 ): Promise<PromotersResponse> {
   console.log(
-    `🔄 Fetching promoters from API (page ${page}, limit ${limit}, filters:`, filters, ')...'
+    `🔄 Fetching promoters from API (page ${page}, limit ${limit}, filters:`,
+    filters,
+    ')...'
   );
 
   // Set up abort controller for timeout
   const controller = new AbortController();
   let timeoutId: NodeJS.Timeout | null = null;
-  
+
   try {
     // Build URL with filter parameters for server-side filtering
     const params = new URLSearchParams({
@@ -303,27 +319,30 @@ async function fetchPromoters(
     });
 
     if (filters?.search) params.set('search', filters.search);
-    if (filters?.status && filters.status !== 'all') params.set('status', filters.status);
-    if (filters?.documents && filters.documents !== 'all') params.set('documents', filters.documents);
-    if (filters?.assignment && filters.assignment !== 'all') params.set('assignment', filters.assignment);
+    if (filters?.status && filters.status !== 'all')
+      params.set('status', filters.status);
+    if (filters?.documents && filters.documents !== 'all')
+      params.set('documents', filters.documents);
+    if (filters?.assignment && filters.assignment !== 'all')
+      params.set('assignment', filters.assignment);
     if (filters?.sortField) params.set('sortField', filters.sortField);
     if (filters?.sortOrder) params.set('sortOrder', filters.sortOrder);
 
     timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-    
-    console.log('📞 Making API request with server-side filtering:', params.toString());
-    
-    const response = await fetch(
-      `/api/promoters?${params.toString()}`,
-      {
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      }
+
+    console.log(
+      '📞 Making API request with server-side filtering:',
+      params.toString()
     );
+
+    const response = await fetch(`/api/promoters?${params.toString()}`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
 
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -429,50 +448,92 @@ export function EnhancedPromotersViewRefactored({
   const { toast } = useToast();
 
   // Get pagination params from URL (memoized to prevent re-renders)
-  const page = useMemo(() => parseInt(searchParams?.get('page') || '1', 10), [searchParams]);
-  const limit = useMemo(() => parseInt(searchParams?.get('limit') || '20', 10), [searchParams]);
+  const page = useMemo(
+    () => parseInt(searchParams?.get('page') || '1', 10),
+    [searchParams]
+  );
+  const limit = useMemo(
+    () => parseInt(searchParams?.get('limit') || '20', 10),
+    [searchParams]
+  );
 
   // State management - Initialize from URL parameters
-  const [searchTerm, setSearchTerm] = useState(() => searchParams?.get('search') || '');
+  const [searchTerm, setSearchTerm] = useState(
+    () => searchParams?.get('search') || ''
+  );
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(() => {
-    const urlStatus = searchParams?.get('status');
-    return (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning') ? urlStatus : 'all';
-  });
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
+    () => {
+      const urlStatus = searchParams?.get('status');
+      return urlStatus === 'critical' ||
+        urlStatus === 'active' ||
+        urlStatus === 'inactive' ||
+        urlStatus === 'warning'
+        ? urlStatus
+        : 'all';
+    }
+  );
   const [documentFilter, setDocumentFilter] = useState<
     'all' | 'expired' | 'expiring' | 'missing'
   >(() => {
-    const urlDocFilter = searchParams?.get('document_filter') || searchParams?.get('documents');
-    return (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing') ? urlDocFilter : 'all';
+    const urlDocFilter =
+      searchParams?.get('document_filter') || searchParams?.get('documents');
+    return urlDocFilter === 'expired' ||
+      urlDocFilter === 'expiring' ||
+      urlDocFilter === 'missing'
+      ? urlDocFilter
+      : 'all';
   });
   const [assignmentFilter, setAssignmentFilter] = useState<
     'all' | 'assigned' | 'unassigned'
   >(() => {
-    const urlAssignment = searchParams?.get('assignment_filter') || searchParams?.get('assignment');
-    return (urlAssignment === 'assigned' || urlAssignment === 'unassigned') ? urlAssignment : 'all';
+    const urlAssignment =
+      searchParams?.get('assignment_filter') || searchParams?.get('assignment');
+    return urlAssignment === 'assigned' || urlAssignment === 'unassigned'
+      ? urlAssignment
+      : 'all';
   });
   const [sortField, setSortField] = useState<SortField>(() => {
     const urlSortField = searchParams?.get('sortField');
-    return (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents') ? urlSortField : 'name';
+    return urlSortField === 'name' ||
+      urlSortField === 'status' ||
+      urlSortField === 'created' ||
+      urlSortField === 'documents'
+      ? urlSortField
+      : 'name';
   });
   const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
     const urlSortOrder = searchParams?.get('sortOrder');
-    return (urlSortOrder === 'asc' || urlSortOrder === 'desc') ? urlSortOrder : 'asc';
+    return urlSortOrder === 'asc' || urlSortOrder === 'desc'
+      ? urlSortOrder
+      : 'asc';
   });
   const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
     new Set()
   );
-  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'cards' | 'analytics'>(() => {
+  const [viewMode, setViewMode] = useState<
+    'table' | 'grid' | 'cards' | 'analytics'
+  >(() => {
     // First check URL parameters, then localStorage
     const urlView = searchParams?.get('view');
-    if (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics') {
+    if (
+      urlView === 'table' ||
+      urlView === 'grid' ||
+      urlView === 'cards' ||
+      urlView === 'analytics'
+    ) {
       return urlView;
     }
-    
+
     // Fallback to localStorage
     if (typeof window !== 'undefined') {
       const savedView = localStorage.getItem('promoters-view-mode');
-      if (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics') {
+      if (
+        savedView === 'table' ||
+        savedView === 'grid' ||
+        savedView === 'cards' ||
+        savedView === 'analytics'
+      ) {
         return savedView;
       }
     }
@@ -480,10 +541,13 @@ export function EnhancedPromotersViewRefactored({
   });
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
-  const [activeMetricFilter, setActiveMetricFilter] = useState<'all' | 'active' | 'alerts' | 'compliance' | null>(null);
-  
+  const [activeMetricFilter, setActiveMetricFilter] = useState<
+    'all' | 'active' | 'alerts' | 'compliance' | null
+  >(null);
+
   // Separate state for analytics data (all workforce)
-  const [allPromotersData, setAllPromotersData] = useState<PromotersResponse | null>(null);
+  const [allPromotersData, setAllPromotersData] =
+    useState<PromotersResponse | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
@@ -499,34 +563,56 @@ export function EnhancedPromotersViewRefactored({
   // Sync URL parameters with state when URL changes
   useEffect(() => {
     const urlStatus = searchParams?.get('status');
-    const urlDocFilter = searchParams?.get('document_filter') || searchParams?.get('documents');
-    const urlAssignment = searchParams?.get('assignment_filter') || searchParams?.get('assignment');
+    const urlDocFilter =
+      searchParams?.get('document_filter') || searchParams?.get('documents');
+    const urlAssignment =
+      searchParams?.get('assignment_filter') || searchParams?.get('assignment');
     const urlView = searchParams?.get('view');
     const urlSearch = searchParams?.get('search');
 
     // Update status filter from URL
-    if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
+    if (
+      urlStatus &&
+      (urlStatus === 'critical' ||
+        urlStatus === 'active' ||
+        urlStatus === 'inactive' ||
+        urlStatus === 'warning')
+    ) {
       setStatusFilter(urlStatus);
     } else if (urlStatus === null) {
       setStatusFilter('all');
     }
 
     // Update document filter from URL
-    if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
+    if (
+      urlDocFilter &&
+      (urlDocFilter === 'expired' ||
+        urlDocFilter === 'expiring' ||
+        urlDocFilter === 'missing')
+    ) {
       setDocumentFilter(urlDocFilter);
     } else if (urlDocFilter === null) {
       setDocumentFilter('all');
     }
 
     // Update assignment filter from URL
-    if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
+    if (
+      urlAssignment &&
+      (urlAssignment === 'assigned' || urlAssignment === 'unassigned')
+    ) {
       setAssignmentFilter(urlAssignment);
     } else if (urlAssignment === null) {
       setAssignmentFilter('all');
     }
 
     // Update view mode from URL
-    if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
+    if (
+      urlView &&
+      (urlView === 'table' ||
+        urlView === 'grid' ||
+        urlView === 'cards' ||
+        urlView === 'analytics')
+    ) {
       setViewMode(urlView);
     }
 
@@ -564,7 +650,14 @@ export function EnhancedPromotersViewRefactored({
     if (sortOrder) result.sortOrder = sortOrder;
 
     return result;
-  }, [debouncedSearchTerm, statusFilter, documentFilter, assignmentFilter, sortField, sortOrder]);
+  }, [
+    debouncedSearchTerm,
+    statusFilter,
+    documentFilter,
+    assignmentFilter,
+    sortField,
+    sortOrder,
+  ]);
 
   const {
     data: response,
@@ -585,7 +678,8 @@ export function EnhancedPromotersViewRefactored({
   });
 
   // Separate search-specific loading state from general data fetching
-  const isSearching = searchTerm !== debouncedSearchTerm && debouncedSearchTerm !== '';
+  const isSearching =
+    searchTerm !== debouncedSearchTerm && debouncedSearchTerm !== '';
   const isDataFetching = isFetching && !isSearching;
 
   useEffect(() => {
@@ -627,7 +721,7 @@ export function EnhancedPromotersViewRefactored({
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
     console.log('🔄 Processing promoters for dashboard...');
     console.log('📊 Raw promoter data sample:', promoters.slice(0, 2));
-    
+
     return promoters.map(promoter => {
       // Debug logging for each promoter
       console.log('🔍 Processing promoter:', {
@@ -657,7 +751,7 @@ export function EnhancedPromotersViewRefactored({
       // Improved name resolution with better fallbacks and Title Case formatting
       const displayName = (() => {
         let rawName = '';
-        
+
         // Try English name first
         if (promoter.name_en?.trim()) {
           rawName = promoter.name_en.trim();
@@ -671,20 +765,25 @@ export function EnhancedPromotersViewRefactored({
           rawName = (promoter as any).name.trim();
         }
         // Try first_name + last_name combination
-        else if ((promoter as any)?.first_name || (promoter as any)?.last_name) {
+        else if (
+          (promoter as any)?.first_name ||
+          (promoter as any)?.last_name
+        ) {
           const firstName = (promoter as any)?.first_name || '';
           const lastName = (promoter as any)?.last_name || '';
           rawName = `${firstName} ${lastName}`.trim();
         }
         // Try email as last resort
         else if (promoter.email?.trim()) {
-          rawName = promoter.email.split('@')[0]?.replace(/[._]/g, ' ').trim() || 'Unknown';
+          rawName =
+            promoter.email.split('@')[0]?.replace(/[._]/g, ' ').trim() ||
+            'Unknown';
         }
         // Final fallback
         else {
           rawName = `Promoter ${promoter.id.slice(-4)}`;
         }
-        
+
         // Apply Title Case formatting to all names
         return toTitleCase(rawName) || rawName;
       })();
@@ -724,7 +823,8 @@ export function EnhancedPromotersViewRefactored({
       // Improved contact information resolution
       const contactEmail = promoter.email?.trim() || '—';
       const contactPhone = (() => {
-        if (promoter.mobile_number?.trim()) return promoter.mobile_number.trim();
+        if (promoter.mobile_number?.trim())
+          return promoter.mobile_number.trim();
         if (promoter.phone?.trim()) return promoter.phone.trim();
         return '—';
       })();
@@ -759,38 +859,55 @@ export function EnhancedPromotersViewRefactored({
   }, [promoters]);
 
   // Load ALL promoters for analytics when analytics view is accessed
-  const loadAnalyticsData = useCallback(async (forceRefresh = false) => {
-    if (allPromotersData && !isLoadingAnalytics && !forceRefresh) {
-      console.log('📊 Using cached analytics data');
-      return; // Already loaded
-    }
-    
-    setIsLoadingAnalytics(true);
-    setAnalyticsError(null);
-    
-    try {
-      console.log('🔄 Loading ALL promoters for analytics dashboard with pagination...');
-      const analyticsData = await fetchAllPromotersForAnalytics();
-      setAllPromotersData(analyticsData);
-      console.log('✅ Analytics data loaded successfully:', analyticsData.promoters.length, 'out of', analyticsData.total, 'total workforce members');
-      
-      // Verify we got all the data
-      if (analyticsData.promoters.length !== analyticsData.total) {
-        console.warn('⚠️ Potential data mismatch:', {
-          fetched: analyticsData.promoters.length,
-          total: analyticsData.total,
-          difference: analyticsData.total - analyticsData.promoters.length
-        });
-      } else {
-        console.log('✅ Data verification passed: All workforce members loaded');
+  const loadAnalyticsData = useCallback(
+    async (forceRefresh = false) => {
+      if (allPromotersData && !isLoadingAnalytics && !forceRefresh) {
+        console.log('📊 Using cached analytics data');
+        return; // Already loaded
       }
-    } catch (error) {
-      console.error('❌ Failed to load analytics data:', error);
-      setAnalyticsError(error instanceof Error ? error.message : 'Failed to load analytics data');
-    } finally {
-      setIsLoadingAnalytics(false);
-    }
-  }, [allPromotersData, isLoadingAnalytics]);
+
+      setIsLoadingAnalytics(true);
+      setAnalyticsError(null);
+
+      try {
+        console.log(
+          '🔄 Loading ALL promoters for analytics dashboard with pagination...'
+        );
+        const analyticsData = await fetchAllPromotersForAnalytics();
+        setAllPromotersData(analyticsData);
+        console.log(
+          '✅ Analytics data loaded successfully:',
+          analyticsData.promoters.length,
+          'out of',
+          analyticsData.total,
+          'total workforce members'
+        );
+
+        // Verify we got all the data
+        if (analyticsData.promoters.length !== analyticsData.total) {
+          console.warn('⚠️ Potential data mismatch:', {
+            fetched: analyticsData.promoters.length,
+            total: analyticsData.total,
+            difference: analyticsData.total - analyticsData.promoters.length,
+          });
+        } else {
+          console.log(
+            '✅ Data verification passed: All workforce members loaded'
+          );
+        }
+      } catch (error) {
+        console.error('❌ Failed to load analytics data:', error);
+        setAnalyticsError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load analytics data'
+        );
+      } finally {
+        setIsLoadingAnalytics(false);
+      }
+    },
+    [allPromotersData, isLoadingAnalytics]
+  );
 
   // Auto-load analytics data when switching to analytics view
   useEffect(() => {
@@ -804,10 +921,10 @@ export function EnhancedPromotersViewRefactored({
     if (!allPromotersData?.promoters) {
       return [];
     }
-    
+
     console.log('🔄 Processing ALL promoters for analytics dashboard...');
     console.log('📊 ALL promoters count:', allPromotersData.promoters.length);
-    
+
     return allPromotersData.promoters.map(promoter => {
       const idDocument = computeDocumentHealth(
         promoter.id_card_expiry_date ?? null,
@@ -823,11 +940,16 @@ export function EnhancedPromotersViewRefactored({
         if (promoter.name_en && promoter.name_ar) {
           return `${toTitleCase(promoter.name_en)} (${promoter.name_ar})`;
         }
-        return toTitleCase(promoter.name_en || promoter.name_ar || 'Unnamed Promoter');
+        return toTitleCase(
+          promoter.name_en || promoter.name_ar || 'Unnamed Promoter'
+        );
       })();
 
-      const assignmentStatus: 'assigned' | 'unassigned' = promoter.employer_id ? 'assigned' : 'unassigned';
-      const organisationLabel = (promoter as any).parties?.name_en || 'Unassigned';
+      const assignmentStatus: 'assigned' | 'unassigned' = promoter.employer_id
+        ? 'assigned'
+        : 'unassigned';
+      const organisationLabel =
+        (promoter as any).parties?.name_en || 'Unassigned';
 
       return {
         ...promoter,
@@ -836,7 +958,11 @@ export function EnhancedPromotersViewRefactored({
         organisationLabel,
         idDocument,
         passportDocument,
-        overallStatus: computeOverallStatus(promoter.status, idDocument, passportDocument),
+        overallStatus: computeOverallStatus(
+          promoter.status,
+          idDocument,
+          passportDocument
+        ),
         nationality: promoter.nationality || 'Unknown',
         job_title: promoter.job_title || 'General Promoter',
         created_at: promoter.created_at || new Date().toISOString(),
@@ -868,12 +994,12 @@ export function EnhancedPromotersViewRefactored({
     if (apiMetricsData?.metrics) {
       const apiMetrics = apiMetricsData.metrics;
       console.log('✅ Using system-wide metrics from API:', apiMetrics);
-      
+
       // Calculate page-specific metrics that don't exist in API
       const companies = new Set(
         dashboardPromoters.map(p => p.employer_id).filter(Boolean) as string[]
       ).size;
-      
+
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       const recentlyAdded = dashboardPromoters.filter(p => {
@@ -881,66 +1007,84 @@ export function EnhancedPromotersViewRefactored({
         return createdDate && createdDate >= sevenDaysAgo;
       }).length;
 
-      return { 
-        total: apiMetrics.total,                    // ✅ System-wide
-        active: apiMetrics.active,                  // ✅ System-wide
-        critical: apiMetrics.critical,              // ✅ System-wide
-        expiring: apiMetrics.expiring,              // ✅ System-wide
-        unassigned: apiMetrics.unassigned,          // ✅ System-wide
-        companies,                                   // Page-specific (OK for this metric)
-        recentlyAdded,                              // Page-specific (OK for this metric)
-        complianceRate: apiMetrics.complianceRate   // ✅ System-wide
+      return {
+        total: apiMetrics.total, // ✅ System-wide
+        active: apiMetrics.active, // ✅ System-wide
+        critical: apiMetrics.critical, // ✅ System-wide
+        expiring: apiMetrics.expiring, // ✅ System-wide
+        unassigned: apiMetrics.unassigned, // ✅ System-wide
+        companies, // Page-specific (OK for this metric)
+        recentlyAdded, // Page-specific (OK for this metric)
+        complianceRate: apiMetrics.complianceRate, // ✅ System-wide
       };
     }
 
     // ⚠️ FALLBACK: Calculate from current page only when API fails
-    console.warn('⚠️ API metrics not available, using page-based calculation (may be inaccurate)');
+    console.warn(
+      '⚠️ API metrics not available, using page-based calculation (may be inaccurate)'
+    );
     const total = pagination?.total || dashboardPromoters.length;
-    const active = dashboardPromoters.filter(p => p.overallStatus === 'active').length;
-    const critical = dashboardPromoters.filter(p =>
-      p.idDocument.status === 'expired' || p.passportDocument.status === 'expired'
+    const active = dashboardPromoters.filter(
+      p => p.overallStatus === 'active'
     ).length;
-    const expiring = dashboardPromoters.filter(p =>
-      p.idDocument.status === 'expiring' || p.passportDocument.status === 'expiring'
+    const critical = dashboardPromoters.filter(
+      p =>
+        p.idDocument.status === 'expired' ||
+        p.passportDocument.status === 'expired'
     ).length;
-    const unassigned = dashboardPromoters.filter(p => p.assignmentStatus === 'unassigned').length;
-    const companies = new Set(dashboardPromoters.map(p => p.employer_id).filter(Boolean) as string[]).size;
+    const expiring = dashboardPromoters.filter(
+      p =>
+        p.idDocument.status === 'expiring' ||
+        p.passportDocument.status === 'expiring'
+    ).length;
+    const unassigned = dashboardPromoters.filter(
+      p => p.assignmentStatus === 'unassigned'
+    ).length;
+    const companies = new Set(
+      dashboardPromoters.map(p => p.employer_id).filter(Boolean) as string[]
+    ).size;
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentlyAdded = dashboardPromoters.filter(p => {
       const createdDate = parseDateSafe(p.created_at);
       return createdDate && createdDate >= sevenDaysAgo;
     }).length;
-    const compliant = dashboardPromoters.filter(p =>
-      p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
+    const compliant = dashboardPromoters.filter(
+      p =>
+        p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
     ).length;
-    const complianceRate = dashboardPromoters.length > 0 
-      ? Math.round((compliant / dashboardPromoters.length) * 100) 
-      : 0;
+    const complianceRate =
+      dashboardPromoters.length > 0
+        ? Math.round((compliant / dashboardPromoters.length) * 100)
+        : 0;
 
-    return { 
-      total, 
-      active, 
-      critical, 
-      expiring, 
-      unassigned, 
-      companies, 
-      recentlyAdded, 
-      complianceRate 
+    return {
+      total,
+      active,
+      critical,
+      expiring,
+      unassigned,
+      companies,
+      recentlyAdded,
+      complianceRate,
     };
   }, [dashboardPromoters, pagination, apiMetricsData]);
 
   // ✅ PERFORMANCE: Server-side filtering implemented
   // No need for client-side filtering as the API handles all filtering
   const filteredPromoters = useMemo(() => {
-    console.log('✅ Using server-filtered promoters directly (no client-side filtering needed)');
+    console.log(
+      '✅ Using server-filtered promoters directly (no client-side filtering needed)'
+    );
     return dashboardPromoters;
   }, [dashboardPromoters]);
 
   // ✅ PERFORMANCE: Server-side sorting implemented
   // No need for client-side sorting as the API handles sorting
   const sortedPromoters = useMemo(() => {
-    console.log('✅ Using server-sorted promoters directly (no client-side sorting needed)');
+    console.log(
+      '✅ Using server-sorted promoters directly (no client-side sorting needed)'
+    );
     return filteredPromoters;
   }, [filteredPromoters]);
 
@@ -956,12 +1100,14 @@ export function EnhancedPromotersViewRefactored({
       .slice(0, 5);
   }, [sortedPromoters]);
 
-  const hasFiltersApplied = useMemo(() => 
-    statusFilter !== 'all' ||
-    documentFilter !== 'all' ||
-    assignmentFilter !== 'all' ||
-    debouncedSearchTerm.trim().length > 0, // Use debouncedSearchTerm to prevent constant recalculation
-  [statusFilter, documentFilter, assignmentFilter, debouncedSearchTerm]);
+  const hasFiltersApplied = useMemo(
+    () =>
+      statusFilter !== 'all' ||
+      documentFilter !== 'all' ||
+      assignmentFilter !== 'all' ||
+      debouncedSearchTerm.trim().length > 0, // Use debouncedSearchTerm to prevent constant recalculation
+    [statusFilter, documentFilter, assignmentFilter, debouncedSearchTerm]
+  );
 
   // Bulk selection handlers
   const handleSelectAll = useCallback(() => {
@@ -1079,20 +1225,22 @@ export function EnhancedPromotersViewRefactored({
 
           case 'assign': {
             // Show dialog to select company
-            const companies = await fetch('/api/parties?type=company').then(res => res.json());
-            
+            const companies = await fetch('/api/parties?type=company').then(
+              res => res.json()
+            );
+
             if (!companies.success || !companies.parties?.length) {
-            toast({
+              toast({
                 title: 'No Companies Available',
                 description: 'No companies found to assign promoters to.',
-                variant: 'destructive'
+                variant: 'destructive',
               });
               return;
             }
 
             // For now, auto-assign to first available company (in production, show dialog)
             const firstCompany = companies.parties[0];
-            
+
             const response = await fetch('/api/promoters/bulk', {
               method: 'POST',
               headers: {
@@ -1168,7 +1316,7 @@ export function EnhancedPromotersViewRefactored({
         setDocumentFilter('all');
         setAssignmentFilter('all');
         setActiveMetricFilter(null);
-        
+
         toast({
           title: 'Filters Cleared',
           description: 'Showing all promoters',
@@ -1210,7 +1358,9 @@ export function EnhancedPromotersViewRefactored({
 
       // Scroll to the table section after a short delay
       setTimeout(() => {
-        const tableSection = document.querySelector('[aria-labelledby="promoters-content-heading"]');
+        const tableSection = document.querySelector(
+          '[aria-labelledby="promoters-content-heading"]'
+        );
         if (tableSection) {
           tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -1287,7 +1437,8 @@ export function EnhancedPromotersViewRefactored({
       } catch (error) {
         toast({
           title: 'Update failed',
-          description: error instanceof Error ? error.message : 'Could not save changes',
+          description:
+            error instanceof Error ? error.message : 'Could not save changes',
           variant: 'destructive',
         });
         throw error; // Re-throw so the cell stays in edit mode
@@ -1303,11 +1454,11 @@ export function EnhancedPromotersViewRefactored({
         // Show success message
         toast({
           title: 'Success',
-          description: partyId 
+          description: partyId
             ? 'Party assignment updated successfully'
             : 'Promoter unassigned from party',
         });
-        
+
         // Refetch data to get updated party information
         await refetch();
       } catch (error) {
@@ -1325,7 +1476,7 @@ export function EnhancedPromotersViewRefactored({
   const handleSendReminder = useCallback(
     async (promoter: DashboardPromoter) => {
       console.log('[ACTION] Send reminder to:', promoter.displayName);
-      
+
       try {
         // Determine which document needs reminder based on expiry status
         let documentType: 'id_card' | 'passport' = 'id_card';
@@ -1333,8 +1484,10 @@ export function EnhancedPromotersViewRefactored({
         let daysBeforeExpiry = 30;
 
         // Check passport if ID card is valid or missing
-        if (promoter.idDocument.status === 'valid' && 
-            promoter.passportDocument.status !== 'valid') {
+        if (
+          promoter.idDocument.status === 'valid' &&
+          promoter.passportDocument.status !== 'valid'
+        ) {
           documentType = 'passport';
           expiryDate = promoter.passport_expiry_date;
         }
@@ -1343,12 +1496,16 @@ export function EnhancedPromotersViewRefactored({
         if (expiryDate) {
           const expiryDateObj = new Date(expiryDate);
           const today = new Date();
-          daysBeforeExpiry = Math.ceil((expiryDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          daysBeforeExpiry = Math.ceil(
+            (expiryDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+          );
         }
 
         // Import and send reminder
-        const { sendDocumentExpiryReminder } = await import('@/lib/services/promoter-notification.service');
-        
+        const { sendDocumentExpiryReminder } = await import(
+          '@/lib/services/promoter-notification.service'
+        );
+
         if (!expiryDate) {
           throw new Error('No expiry date available for reminder');
         }
@@ -1372,7 +1529,8 @@ export function EnhancedPromotersViewRefactored({
         console.error('Error sending reminder:', error);
         toast({
           title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to send reminder',
+          description:
+            error instanceof Error ? error.message : 'Failed to send reminder',
           variant: 'destructive',
         });
       }
@@ -1382,12 +1540,19 @@ export function EnhancedPromotersViewRefactored({
 
   const handleRequestDocument = useCallback(
     async (promoter: DashboardPromoter, documentType: 'ID' | 'Passport') => {
-      console.log('[ACTION] Request document:', documentType, 'from', promoter.displayName);
-      
+      console.log(
+        '[ACTION] Request document:',
+        documentType,
+        'from',
+        promoter.displayName
+      );
+
       try {
         // Import and send document request
-        const { sendDocumentRequest } = await import('@/lib/services/promoter-notification.service');
-        
+        const { sendDocumentRequest } = await import(
+          '@/lib/services/promoter-notification.service'
+        );
+
         const result = await sendDocumentRequest({
           promoterId: promoter.id,
           documentType: documentType === 'ID' ? 'id_card' : 'passport',
@@ -1407,7 +1572,10 @@ export function EnhancedPromotersViewRefactored({
         console.error('Error requesting document:', error);
         toast({
           title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to send document request',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Failed to send document request',
           variant: 'destructive',
         });
       }
@@ -1419,13 +1587,16 @@ export function EnhancedPromotersViewRefactored({
     router.push(`/${derivedLocale}/dashboard`);
   }, [router, derivedLocale]);
 
-  const handleViewModeChange = useCallback((mode: 'table' | 'grid' | 'cards' | 'analytics') => {
-    setViewMode(mode);
-    // Persist view preference to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('promoters-view-mode', mode);
-    }
-  }, []);
+  const handleViewModeChange = useCallback(
+    (mode: 'table' | 'grid' | 'cards' | 'analytics') => {
+      setViewMode(mode);
+      // Persist view preference to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('promoters-view-mode', mode);
+      }
+    },
+    []
+  );
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -1450,19 +1621,25 @@ export function EnhancedPromotersViewRefactored({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleRefresh, handleAddPromoter, selectedPromoters.size]);
 
-  const handlePageChange = useCallback((newPage: number) => {
-    const params = new URLSearchParams(searchParams?.toString() || '');
-    params.set('page', newPage.toString());
-    params.set('limit', limit.toString());
-    router.push(`${window.location.pathname}?${params.toString()}`);
-  }, [searchParams, limit, router]);
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      const params = new URLSearchParams(searchParams?.toString() || '');
+      params.set('page', newPage.toString());
+      params.set('limit', limit.toString());
+      router.push(`${window.location.pathname}?${params.toString()}`);
+    },
+    [searchParams, limit, router]
+  );
 
-  const handlePageSizeChange = useCallback((newLimit: number) => {
-    const params = new URLSearchParams(searchParams?.toString() || '');
-    params.set('page', '1'); // Reset to page 1 when changing page size
-    params.set('limit', newLimit.toString());
-    router.push(`${window.location.pathname}?${params.toString()}`);
-  }, [searchParams, router]);
+  const handlePageSizeChange = useCallback(
+    (newLimit: number) => {
+      const params = new URLSearchParams(searchParams?.toString() || '');
+      params.set('page', '1'); // Reset to page 1 when changing page size
+      params.set('limit', newLimit.toString());
+      router.push(`${window.location.pathname}?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
 
   const handleExport = useCallback(() => {
     // Export all visible promoters
@@ -1550,10 +1727,19 @@ export function EnhancedPromotersViewRefactored({
     <main className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
       {/* Loading overlay */}
       {showLoadingOverlay && (
-        <div className='absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center' role='status' aria-live='polite'>
+        <div
+          className='absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center'
+          role='status'
+          aria-live='polite'
+        >
           <div className='flex items-center gap-3 bg-card p-4 rounded-lg shadow-lg border'>
-            <RefreshCw className='h-5 w-5 animate-spin text-primary' aria-hidden='true' />
-            <span className='text-sm font-medium'>Updating promoters data...</span>
+            <RefreshCw
+              className='h-5 w-5 animate-spin text-primary'
+              aria-hidden='true'
+            />
+            <span className='text-sm font-medium'>
+              Updating promoters data...
+            </span>
           </div>
         </div>
       )}
@@ -1571,12 +1757,14 @@ export function EnhancedPromotersViewRefactored({
 
       {/* Enhanced Metrics */}
       <section aria-labelledby='metrics-heading'>
-        <h2 id='metrics-heading' className='sr-only'>Promoter Statistics</h2>
+        <h2 id='metrics-heading' className='sr-only'>
+          Promoter Statistics
+        </h2>
         {isLoading ? (
           <MetricsCardsSkeleton />
         ) : (
-          <PromotersMetricsCards 
-            metrics={metrics} 
+          <PromotersMetricsCards
+            metrics={metrics}
             onCardClick={handleMetricCardClick}
             activeFilter={activeMetricFilter}
           />
@@ -1586,21 +1774,28 @@ export function EnhancedPromotersViewRefactored({
       {/* Data Insights & Charts */}
       {!isLoading && dashboardPromoters.length > 0 && (
         <section aria-labelledby='insights-heading' className='mt-6'>
-          <h2 id='insights-heading' className='sr-only'>Data Insights and Analytics</h2>
-          <PromotersStatsCharts 
-            metrics={metrics} 
+          <h2 id='insights-heading' className='sr-only'>
+            Data Insights and Analytics
+          </h2>
+          <PromotersStatsCharts
+            metrics={metrics}
             promoters={dashboardPromoters}
             hasFiltersApplied={hasFiltersApplied}
           />
         </section>
       )}
-      
+
       {/* Refresh Indicator */}
-      <RefreshIndicator isFetching={isDataFetching && !isLoading} showFloating={true} />
+      <RefreshIndicator
+        isFetching={isDataFetching && !isLoading}
+        showFloating={true}
+      />
 
       {/* Enhanced Filters */}
       <section aria-labelledby='filters-heading'>
-        <h2 id='filters-heading' className='sr-only'>Search and Filter Options</h2>
+        <h2 id='filters-heading' className='sr-only'>
+          Search and Filter Options
+        </h2>
         <PromotersFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -1615,12 +1810,14 @@ export function EnhancedPromotersViewRefactored({
           onExport={handleExport}
           onRefresh={handleRefresh}
           isFetching={isDataFetching}
-      />
+        />
       </section>
 
       {/* Bulk Actions Bar */}
       <section aria-labelledby='bulk-actions-heading'>
-        <h2 id='bulk-actions-heading' className='sr-only'>Bulk Actions</h2>
+        <h2 id='bulk-actions-heading' className='sr-only'>
+          Bulk Actions
+        </h2>
         <PromotersBulkActions
           selectedCount={selectedPromoters.size}
           totalCount={sortedPromoters.length}
@@ -1636,7 +1833,7 @@ export function EnhancedPromotersViewRefactored({
         <h2 id='promoters-content-heading' className='sr-only'>
           {viewMode === 'analytics' ? 'Promoters Analytics' : 'Promoters List'}
         </h2>
-        
+
         {viewMode === 'analytics' ? (
           /* Analytics View */
           <div className='space-y-6'>
@@ -1661,21 +1858,25 @@ export function EnhancedPromotersViewRefactored({
                         </span>
                         {allPromotersData && (
                           <span className='block text-sm text-green-600 dark:text-green-400 mt-1'>
-                            ✅ Showing complete workforce data ({allPromotersData.total} members) • Last updated: {new Date(allPromotersData.timestamp).toLocaleTimeString()}
+                            ✅ Showing complete workforce data (
+                            {allPromotersData.total} members) • Last updated:{' '}
+                            {new Date(
+                              allPromotersData.timestamp
+                            ).toLocaleTimeString()}
                           </span>
                         )}
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* View Mode Selector - Always Visible */}
                 <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4'>
                   {/* Quick Back to List Button */}
                   <button
                     onClick={() => handleViewModeChange('table')}
                     className='inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shadow-sm'
-                    title="Return to promoter list view"
+                    title='Return to promoter list view'
                   >
                     ← Back to List
                   </button>
@@ -1711,7 +1912,7 @@ export function EnhancedPromotersViewRefactored({
                       <button
                         className='px-4 py-2 text-sm font-medium rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md cursor-default'
                         disabled
-                        title="Currently viewing Analytics"
+                        title='Currently viewing Analytics'
                       >
                         Analytics ✓
                       </button>
@@ -1739,8 +1940,8 @@ export function EnhancedPromotersViewRefactored({
                       {analyticsError}
                     </p>
                     <Button
-                      variant="outline"
-                      size="sm"
+                      variant='outline'
+                      size='sm'
                       onClick={() => loadAnalyticsData(true)}
                       className='mt-3 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800'
                     >
@@ -1753,115 +1954,122 @@ export function EnhancedPromotersViewRefactored({
             )}
 
             {/* Professional Analytics Dashboard */}
-            {!isLoadingAnalytics && !analyticsError && allDashboardPromoters.length > 0 && (
-              <div className="space-y-6">
-                {/* Analytics Toolbar */}
-                <AnalyticsToolbar
-                  totalRecords={allDashboardPromoters.length}
-                  isLoading={isLoadingAnalytics || metricsLoading}
-                  onRefresh={async () => {
-                    // Refresh both analytics data and metrics
-                    console.log('🔄 Manual refresh triggered from analytics toolbar');
-                    await Promise.all([
-                      loadAnalyticsData(true), // Force refresh
-                      refetch(), // Refetch metrics
-                    ]);
-                    toast({
-                      title: "✅ Analytics Refreshed",
-                      description: `All data updated • ${allDashboardPromoters.length} workforce members loaded`,
-                    });
-                  }}
-                  onExport={(format) => console.log(`Export ${format}`)}
-                  onPrint={() => window.print()}
-                  onFullScreen={() => document.documentElement.requestFullscreen()}
-                  lastUpdated={allPromotersData?.timestamp || undefined}
-                />
+            {!isLoadingAnalytics &&
+              !analyticsError &&
+              allDashboardPromoters.length > 0 && (
+                <div className='space-y-6'>
+                  {/* Analytics Toolbar */}
+                  <AnalyticsToolbar
+                    totalRecords={allDashboardPromoters.length}
+                    isLoading={isLoadingAnalytics || metricsLoading}
+                    onRefresh={async () => {
+                      // Refresh both analytics data and metrics
+                      console.log(
+                        '🔄 Manual refresh triggered from analytics toolbar'
+                      );
+                      await Promise.all([
+                        loadAnalyticsData(true), // Force refresh
+                        refetch(), // Refetch metrics
+                      ]);
+                      toast({
+                        title: '✅ Analytics Refreshed',
+                        description: `All data updated • ${allDashboardPromoters.length} workforce members loaded`,
+                      });
+                    }}
+                    onExport={format => console.log(`Export ${format}`)}
+                    onPrint={() => window.print()}
+                    onFullScreen={() =>
+                      document.documentElement.requestFullscreen()
+                    }
+                    lastUpdated={allPromotersData?.timestamp || undefined}
+                  />
 
-                {/* Metrics Overview Cards - System-Wide Data */}
-                <PromotersMetricsCards 
-                  metrics={metrics}
-                  onCardClick={(filterType) => {
-                    // Switch back to table view with filter applied
-                    handleViewModeChange('table');
-                    if (filterType === 'alerts') setStatusFilter('critical');
-                    else if (filterType === 'active') setStatusFilter('active');
-                    else setStatusFilter('all');
-                  }}
-                  activeFilter={null}
-                />
+                  {/* Metrics Overview Cards - System-Wide Data */}
+                  <PromotersMetricsCards
+                    metrics={metrics}
+                    onCardClick={filterType => {
+                      // Switch back to table view with filter applied
+                      handleViewModeChange('table');
+                      if (filterType === 'alerts') setStatusFilter('critical');
+                      else if (filterType === 'active')
+                        setStatusFilter('active');
+                      else setStatusFilter('all');
+                    }}
+                    activeFilter={null}
+                  />
 
-                {/* Stats Charts - Quick Insights */}
-                <PromotersStatsCharts 
-                  metrics={metrics}
-                  promoters={allDashboardPromoters}
-                  hasFiltersApplied={hasFiltersApplied}
-                />
+                  {/* Stats Charts - Quick Insights */}
+                  <PromotersStatsCharts
+                    metrics={metrics}
+                    promoters={allDashboardPromoters}
+                    hasFiltersApplied={hasFiltersApplied}
+                  />
 
-                {/* Workforce Summary */}
-                <WorkforceAnalyticsSummary
-                  promoters={allDashboardPromoters}
-                  isRealTime={true}
-                  lastUpdated={allPromotersData?.timestamp || undefined}
-                />
+                  {/* Workforce Summary */}
+                  <WorkforceAnalyticsSummary
+                    promoters={allDashboardPromoters}
+                    isRealTime={true}
+                    lastUpdated={allPromotersData?.timestamp || undefined}
+                  />
 
-                {/* Smart Insights Panel */}
-                <AnalyticsInsightsPanel 
-                  promoters={allDashboardPromoters}
-                  locale={locale || 'en'}
-                />
+                  {/* Smart Insights Panel */}
+                  <AnalyticsInsightsPanel
+                    promoters={allDashboardPromoters}
+                    locale={locale || 'en'}
+                  />
 
-                {/* Document Expiry Analysis */}
-                <PromotersDocumentExpiryChart 
-                  promoters={allDashboardPromoters}
-                  title="Document Expiry Timeline - Complete Workforce"
-                  description={`Monitor document expiration patterns across all ${allDashboardPromoters.length} workforce members`}
-                />
+                  {/* Document Expiry Analysis */}
+                  <PromotersDocumentExpiryChart
+                    promoters={allDashboardPromoters}
+                    title='Document Expiry Timeline - Complete Workforce'
+                    description={`Monitor document expiration patterns across all ${allDashboardPromoters.length} workforce members`}
+                  />
 
-                {/* Comprehensive Analytics Charts */}
-                <PromotersAnalyticsCharts 
-                  promoters={allDashboardPromoters}
-                  isRealTime={true}
-                  onRefresh={loadAnalyticsData}
-                  isFetching={isLoadingAnalytics}
-                />
-              </div>
-            )}
+                  {/* Comprehensive Analytics Charts */}
+                  <PromotersAnalyticsCharts
+                    promoters={allDashboardPromoters}
+                    isRealTime={true}
+                    onRefresh={loadAnalyticsData}
+                    isFetching={isLoadingAnalytics}
+                  />
+                </div>
+              )}
           </div>
         ) : (
           /* Table/Grid/Cards View */
           <div className='grid gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(900px,2fr)_minmax(300px,1fr)]'>
-        <PromotersTable
-          promoters={sortedPromoters}
-          selectedPromoters={selectedPromoters}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          viewMode={viewMode}
-          pagination={pagination}
+            <PromotersTable
+              promoters={sortedPromoters}
+              selectedPromoters={selectedPromoters}
+              sortField={sortField}
+              sortOrder={sortOrder}
+              viewMode={viewMode}
+              pagination={pagination}
               isFetching={isDataFetching}
-          hasFiltersApplied={hasFiltersApplied}
-          onSelectAll={handleSelectAll}
-          onSelectPromoter={handleSelectPromoter}
-          onSort={handleSort}
-          onViewModeChange={handleViewModeChange}
-          onViewPromoter={handleViewPromoter}
-          onEditPromoter={handleEditPromoter}
-          onAddPromoter={handleAddPromoter}
-          onResetFilters={handleResetFilters}
-          onPageChange={handlePageChange}
-          onPartyAssignmentUpdate={handlePartyAssignmentUpdate}
-          enableEnhancedPartyManagement={true}
-          onInlineUpdate={handleInlineUpdate}
-          enableInlineEdit={true}
-        />
+              hasFiltersApplied={hasFiltersApplied}
+              onSelectAll={handleSelectAll}
+              onSelectPromoter={handleSelectPromoter}
+              onSort={handleSort}
+              onViewModeChange={handleViewModeChange}
+              onViewPromoter={handleViewPromoter}
+              onEditPromoter={handleEditPromoter}
+              onAddPromoter={handleAddPromoter}
+              onResetFilters={handleResetFilters}
+              onPageChange={handlePageChange}
+              onPartyAssignmentUpdate={handlePartyAssignmentUpdate}
+              enableEnhancedPartyManagement={true}
+              onInlineUpdate={handleInlineUpdate}
+              enableInlineEdit={true}
+            />
 
             {/* Enhanced Alerts Panel - Only show in non-analytics view */}
-        <PromotersAlertsPanel
-          atRiskPromoters={atRiskPromoters}
-          onViewPromoter={handleViewPromoter}
-          onSendReminder={handleSendReminder}
-          onRequestDocument={handleRequestDocument}
-        />
-        </div>
+            <PromotersAlertsPanel
+              atRiskPromoters={atRiskPromoters}
+              onViewPromoter={handleViewPromoter}
+              onSendReminder={handleSendReminder}
+              onRequestDocument={handleRequestDocument}
+            />
+          </div>
         )}
       </section>
     </main>

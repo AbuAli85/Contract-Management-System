@@ -25,27 +25,27 @@ export interface PasswordStrength {
 export const PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
   {
     label: 'Minimum 8 characters',
-    test: (password) => password.length >= 8,
+    test: password => password.length >= 8,
     description: 'Password must be at least 8 characters long',
   },
   {
     label: 'At least one uppercase letter',
-    test: (password) => /[A-Z]/.test(password),
+    test: password => /[A-Z]/.test(password),
     description: 'Include at least one uppercase letter (A-Z)',
   },
   {
     label: 'At least one lowercase letter',
-    test: (password) => /[a-z]/.test(password),
+    test: password => /[a-z]/.test(password),
     description: 'Include at least one lowercase letter (a-z)',
   },
   {
     label: 'At least one number',
-    test: (password) => /[0-9]/.test(password),
+    test: password => /[0-9]/.test(password),
     description: 'Include at least one number (0-9)',
   },
   {
     label: 'At least one special character',
-    test: (password) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    test: password => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
     description: 'Include at least one special character (!@#$%^&*...)',
   },
 ];
@@ -63,7 +63,7 @@ export function validatePassword(password: string): {
   const passedRequirements: string[] = [];
   const failedRequirements: string[] = [];
 
-  PASSWORD_REQUIREMENTS.forEach((requirement) => {
+  PASSWORD_REQUIREMENTS.forEach(requirement => {
     if (requirement.test(password)) {
       passedRequirements.push(requirement.label);
     } else {
@@ -91,7 +91,7 @@ export function calculatePasswordStrength(password: string): PasswordStrength {
       color: '#ef4444',
       percentage: 0,
       passedRequirements: [],
-      failedRequirements: PASSWORD_REQUIREMENTS.map((r) => r.label),
+      failedRequirements: PASSWORD_REQUIREMENTS.map(r => r.label),
       isValid: false,
     };
   }
@@ -108,8 +108,11 @@ export function calculatePasswordStrength(password: string): PasswordStrength {
 
   // Bonus for variety
   const hasUpperAndLower = /[a-z]/.test(password) && /[A-Z]/.test(password);
-  const hasLettersAndNumbers = /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
-  const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const hasLettersAndNumbers =
+    /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
+  const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(
+    password
+  );
 
   if (hasUpperAndLower && hasLettersAndNumbers) score += 1;
   if (hasSpecialChars && password.length >= 10) score += 1;
@@ -189,7 +192,9 @@ export async function checkPasswordBreach(password: string): Promise<{
     const data = encoder.encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-1', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    const hashHex = hashArray
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
     const hash = hashHex.toUpperCase();
 
     // Use k-anonymity: only send first 5 characters
@@ -197,18 +202,22 @@ export async function checkPasswordBreach(password: string): Promise<{
     const suffix = hash.substring(5);
 
     // Call haveibeenpwned API
-    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
-      headers: {
-        'User-Agent': 'Contract-Management-System',
-      },
-    });
+    const response = await fetch(
+      `https://api.pwnedpasswords.com/range/${prefix}`,
+      {
+        headers: {
+          'User-Agent': 'Contract-Management-System',
+        },
+      }
+    );
 
     if (!response.ok) {
       console.error('Failed to check password breach:', response.status);
       return {
         isBreached: false,
         breachCount: 0,
-        error: 'Unable to verify password security. Please ensure it meets all requirements.',
+        error:
+          'Unable to verify password security. Please ensure it meets all requirements.',
       };
     }
 
@@ -237,7 +246,8 @@ export async function checkPasswordBreach(password: string): Promise<{
     return {
       isBreached: false,
       breachCount: 0,
-      error: 'Unable to verify password security. Please ensure it meets all requirements.',
+      error:
+        'Unable to verify password security. Please ensure it meets all requirements.',
     };
   }
 }
@@ -246,12 +256,14 @@ export async function checkPasswordBreach(password: string): Promise<{
  * Hash password for storage (for password history)
  * Uses SHA-256 for password comparison (not for auth - Supabase handles that)
  */
-export async function hashPasswordForHistory(password: string): Promise<string> {
+export async function hashPasswordForHistory(
+  password: string
+): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
 }
 
@@ -275,8 +287,10 @@ export async function checkPasswordHistory(
     const newPasswordHash = await hashPasswordForHistory(newPassword);
 
     // Fetch recent password hashes from database
-    const response = await fetch(`/api/auth/password-history/${userId}?limit=${limit}`);
-    
+    const response = await fetch(
+      `/api/auth/password-history/${userId}?limit=${limit}`
+    );
+
     if (!response.ok) {
       console.error('Failed to fetch password history:', response.status);
       // Don't fail password change if history check fails
@@ -340,7 +354,8 @@ export async function validatePasswordComprehensive(
   }
 
   // 4. Check breach database (optional)
-  let breachInfo: { isBreached: boolean; breachCount: number } | undefined = undefined;
+  let breachInfo: { isBreached: boolean; breachCount: number } | undefined =
+    undefined;
   if (options.checkBreach) {
     breachInfo = await checkPasswordBreach(password);
     if (breachInfo.isBreached) {
@@ -354,7 +369,8 @@ export async function validatePasswordComprehensive(
   }
 
   // 5. Check password history (optional)
-  let historyInfo: { isReused: boolean; message?: string } | undefined = undefined;
+  let historyInfo: { isReused: boolean; message?: string } | undefined =
+    undefined;
   if (options.checkHistory) {
     historyInfo = await checkPasswordHistory(userId, password);
     if (historyInfo.isReused && historyInfo.message) {
@@ -371,4 +387,3 @@ export async function validatePasswordComprehensive(
     historyInfo,
   };
 }
-

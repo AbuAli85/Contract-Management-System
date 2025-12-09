@@ -2,7 +2,7 @@
 
 /**
  * COMPREHENSIVE EMAIL CONFIGURATION DIAGNOSTIC
- * 
+ *
  * This script checks EVERYTHING related to email configuration
  */
 
@@ -21,9 +21,22 @@ const checks = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL,
 };
 
-console.log('✓ RESEND_API_KEY:', checks.resendApiKey ? '✅ SET (' + checks.resendApiKey.substring(0, 10) + '...)' : '❌ NOT SET');
-console.log('✓ RESEND_FROM_EMAIL:', checks.resendFromEmail || '❌ NOT SET (will use default: noreply@portal.thesmartpro.io)');
-console.log('✓ RESEND_FROM_NAME:', checks.resendFromName || '❌ NOT SET (will use default: SmartPro Contract Management System)');
+console.log(
+  '✓ RESEND_API_KEY:',
+  checks.resendApiKey
+    ? '✅ SET (' + checks.resendApiKey.substring(0, 10) + '...)'
+    : '❌ NOT SET'
+);
+console.log(
+  '✓ RESEND_FROM_EMAIL:',
+  checks.resendFromEmail ||
+    '❌ NOT SET (will use default: noreply@portal.thesmartpro.io)'
+);
+console.log(
+  '✓ RESEND_FROM_NAME:',
+  checks.resendFromName ||
+    '❌ NOT SET (will use default: SmartPro Contract Management System)'
+);
 console.log('✓ APP_URL:', checks.appUrl || '❌ NOT SET');
 console.log('');
 
@@ -74,7 +87,9 @@ console.log('   OR: Create Transport Rule in Exchange Admin');
 console.log('');
 console.log('❓ Issue 5: Emails in quarantine');
 console.log('   Check: https://security.microsoft.com/quarantine');
-console.log('   Release: Any blocked emails from noreply@portal.thesmartpro.io');
+console.log(
+  '   Release: Any blocked emails from noreply@portal.thesmartpro.io'
+);
 console.log('');
 
 // Check 5: Test URLs
@@ -107,9 +122,13 @@ console.log('');
 console.log('📋 STEP 7: MICROSOFT 365 LINKS');
 console.log('-'.repeat(70));
 console.log('🔗 Quarantine: https://security.microsoft.com/quarantine');
-console.log('🔗 Transport Rules: https://admin.exchange.microsoft.com/#/transportrules');
+console.log(
+  '🔗 Transport Rules: https://admin.exchange.microsoft.com/#/transportrules'
+);
 console.log('🔗 Anti-spam: https://security.microsoft.com/antispam');
-console.log('🔗 Outlook Junk Settings: https://outlook.office.com/mail/options/mail/junkEmail');
+console.log(
+  '🔗 Outlook Junk Settings: https://outlook.office.com/mail/options/mail/junkEmail'
+);
 console.log('');
 
 // Check 8: Current Status
@@ -135,10 +154,3 @@ console.log('6. Email should arrive in INBOX (not spam)');
 console.log('');
 console.log('='.repeat(70));
 console.log('');
-
-
-
-
-
-
-

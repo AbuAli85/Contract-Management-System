@@ -1,6 +1,7 @@
 # 🔄 Clear Vercel Cache - Fix CORS & Cache-Control Headers
 
 **Issue:** SecurityHeaders.com scan shows:
+
 - `access-control-allow-origin: *` (should be restricted)
 - `cache-control: public, max-age=0, must-revalidate` (should be private, no-store)
 - `x-vercel-cache: HIT` (serving cached content)
@@ -78,6 +79,7 @@ curl -I "https://portal.thesmartpro.io/en/dashboard?v=$(date +%s)"
 ## ✅ Verification After Cache Clear
 
 ### 1. Check for Fresh Response
+
 ```bash
 curl -I https://portal.thesmartpro.io/en/dashboard | grep x-vercel-cache
 # Should show: x-vercel-cache: MISS (first request)
@@ -85,6 +87,7 @@ curl -I https://portal.thesmartpro.io/en/dashboard | grep x-vercel-cache
 ```
 
 ### 2. Verify CORS Header
+
 ```bash
 curl -I https://portal.thesmartpro.io/en/dashboard | grep -i access-control
 # Should show: access-control-allow-origin: https://portal.thesmartpro.io
@@ -92,20 +95,24 @@ curl -I https://portal.thesmartpro.io/en/dashboard | grep -i access-control
 ```
 
 ### 3. Verify Cache-Control
+
 ```bash
 curl -I https://portal.thesmartpro.io/en/dashboard | grep -i cache-control
 # Should show: cache-control: private, no-store, no-cache, must-revalidate, max-age=0
 ```
 
 ### 4. Run Full Security Scan
+
 ```powershell
 .\scripts\verify-security-headers.ps1
 ```
 
 ### 5. Check SecurityHeaders.com
+
 Visit: https://securityheaders.com/?q=https://portal.thesmartpro.io/en/dashboard&hide=on&followRedirects=on
 
 **Expected:**
+
 - No CORS warning (or restricted origin shown)
 - Cache-Control should show "private, no-store"
 - Grade: Still A (due to CSP 'unsafe-inline')
@@ -115,17 +122,20 @@ Visit: https://securityheaders.com/?q=https://portal.thesmartpro.io/en/dashboard
 ## 🔍 Why Headers Weren't Updated
 
 ### Vercel Caching Behavior
+
 1. **Edge Cache:** Vercel caches responses at edge locations
 2. **Header Propagation:** New headers need cache invalidation
 3. **Build Cache:** Build output is cached between deployments
 
 ### The Scan Showed
+
 ```
 x-vercel-cache: HIT
 age: 146
 ```
 
 This means:
+
 - Response was served from cache
 - Content was cached 146 seconds ago
 - Headers from the cached response (old headers)
@@ -134,17 +144,18 @@ This means:
 
 ## 📋 Expected Timeline
 
-| Action | Time | Result |
-|--------|------|--------|
-| Force redeploy | 2-3 min | New build with new headers |
-| Cache propagation | 5-10 min | New headers at all edge locations |
-| Full propagation | Up to 1 hour | All cached responses updated |
+| Action            | Time         | Result                            |
+| ----------------- | ------------ | --------------------------------- |
+| Force redeploy    | 2-3 min      | New build with new headers        |
+| Cache propagation | 5-10 min     | New headers at all edge locations |
+| Full propagation  | Up to 1 hour | All cached responses updated      |
 
 ---
 
 ## 🎯 What Should Change
 
 ### Current (Cached)
+
 ```http
 access-control-allow-origin: *
 cache-control: public, max-age=0, must-revalidate
@@ -152,6 +163,7 @@ x-vercel-cache: HIT
 ```
 
 ### After Cache Clear
+
 ```http
 cache-control: private, no-store, no-cache, must-revalidate, max-age=0
 x-vercel-cache: MISS (first request)
@@ -223,4 +235,3 @@ git add .
 git commit -m "chore: trigger cache clear"
 git push origin main
 ```
-

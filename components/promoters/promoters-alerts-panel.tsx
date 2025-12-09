@@ -10,7 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ShieldCheck, Contact, Globe, Mail, Phone, AlertTriangle, Clock } from 'lucide-react';
+import {
+  ShieldCheck,
+  Contact,
+  Globe,
+  Mail,
+  Phone,
+  AlertTriangle,
+  Clock,
+} from 'lucide-react';
 import type {
   DocumentStatus,
   DocumentHealth,
@@ -21,7 +29,10 @@ interface PromotersAlertsPanelProps {
   atRiskPromoters: DashboardPromoter[];
   onViewPromoter: (promoter: DashboardPromoter) => void;
   onSendReminder?: (promoter: DashboardPromoter) => void;
-  onRequestDocument?: (promoter: DashboardPromoter, documentType: 'ID' | 'Passport') => void;
+  onRequestDocument?: (
+    promoter: DashboardPromoter,
+    documentType: 'ID' | 'Passport'
+  ) => void;
 }
 
 const DOCUMENT_STATUS_BADGES: Record<DocumentStatus, string> = {
@@ -40,15 +51,18 @@ const DOCUMENT_STATUS_BADGES: Record<DocumentStatus, string> = {
  * - Blue: Missing documents (ACTION NEEDED)
  * - Green: Valid (>90 days)
  */
-const getUrgencyColors = (status: DocumentStatus, daysRemaining: number | null): string => {
+const getUrgencyColors = (
+  status: DocumentStatus,
+  daysRemaining: number | null
+): string => {
   if (status === 'missing') {
     return 'bg-blue-50 text-blue-700 border-blue-200';
   }
-  
+
   if (status === 'expired' || (daysRemaining !== null && daysRemaining < 0)) {
     return 'bg-red-50 text-red-700 border-red-200 animate-pulse';
   }
-  
+
   if (daysRemaining !== null) {
     if (daysRemaining <= 7) {
       return 'bg-red-50 text-red-700 border-red-200 ring-1 ring-red-300';
@@ -60,14 +74,17 @@ const getUrgencyColors = (status: DocumentStatus, daysRemaining: number | null):
       return 'bg-yellow-50 text-yellow-700 border-yellow-200';
     }
   }
-  
+
   return 'bg-emerald-50 text-emerald-700 border-emerald-200';
 };
 
 /**
  * Get urgency icon based on document status and days remaining
  */
-const getUrgencyIcon = (status: DocumentStatus, daysRemaining: number | null) => {
+const getUrgencyIcon = (
+  status: DocumentStatus,
+  daysRemaining: number | null
+) => {
   if (status === 'missing') {
     return <AlertTriangle className='h-3 w-3' />;
   }
@@ -126,7 +143,9 @@ export function PromotersAlertsPanel({
                       {promoter.contactEmail && (
                         <div className='flex items-center gap-1 text-xs text-muted-foreground'>
                           <Mail className='h-3 w-3' />
-                          <span className='truncate max-w-[120px]'>{promoter.contactEmail}</span>
+                          <span className='truncate max-w-[120px]'>
+                            {promoter.contactEmail}
+                          </span>
                         </div>
                       )}
                       {promoter.contactPhone && (
@@ -168,10 +187,16 @@ export function PromotersAlertsPanel({
                         variant='outline'
                         className={cn(
                           'rounded-full border px-2 py-0.5 text-xs font-medium transition-all',
-                          getUrgencyColors(promoter.idDocument.status, promoter.idDocument.daysRemaining)
+                          getUrgencyColors(
+                            promoter.idDocument.status,
+                            promoter.idDocument.daysRemaining
+                          )
                         )}
                       >
-                        {getUrgencyIcon(promoter.idDocument.status, promoter.idDocument.daysRemaining)}
+                        {getUrgencyIcon(
+                          promoter.idDocument.status,
+                          promoter.idDocument.daysRemaining
+                        )}
                         <Contact className='ml-1 mr-1 h-3 w-3' />
                         ID: {promoter.idDocument.label}
                       </Badge>
@@ -183,10 +208,16 @@ export function PromotersAlertsPanel({
                         variant='outline'
                         className={cn(
                           'rounded-full border px-2 py-0.5 text-xs font-medium transition-all',
-                          getUrgencyColors(promoter.passportDocument.status, promoter.passportDocument.daysRemaining)
+                          getUrgencyColors(
+                            promoter.passportDocument.status,
+                            promoter.passportDocument.daysRemaining
+                          )
                         )}
                       >
-                        {getUrgencyIcon(promoter.passportDocument.status, promoter.passportDocument.daysRemaining)}
+                        {getUrgencyIcon(
+                          promoter.passportDocument.status,
+                          promoter.passportDocument.daysRemaining
+                        )}
                         <Globe className='ml-1 mr-1 h-3 w-3' />
                         Passport: {promoter.passportDocument.label}
                       </Badge>
@@ -194,7 +225,9 @@ export function PromotersAlertsPanel({
                   </div>
                   {onRequestDocument && (
                     <div className='flex gap-1'>
-                      {['expired', 'expiring', 'missing'].includes(promoter.idDocument.status) && (
+                      {['expired', 'expiring', 'missing'].includes(
+                        promoter.idDocument.status
+                      ) && (
                         <Button
                           variant='outline'
                           size='sm'
@@ -205,11 +238,15 @@ export function PromotersAlertsPanel({
                           Request ID
                         </Button>
                       )}
-                      {['expired', 'expiring', 'missing'].includes(promoter.passportDocument.status) && (
+                      {['expired', 'expiring', 'missing'].includes(
+                        promoter.passportDocument.status
+                      ) && (
                         <Button
                           variant='outline'
                           size='sm'
-                          onClick={() => onRequestDocument(promoter, 'Passport')}
+                          onClick={() =>
+                            onRequestDocument(promoter, 'Passport')
+                          }
                           className='h-6 px-2 text-xs'
                         >
                           <AlertTriangle className='h-3 w-3 mr-1' />

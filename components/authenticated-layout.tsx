@@ -9,14 +9,7 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { NotificationPanel } from '@/components/notifications/notification-panel';
 import { usePathname } from '@/navigation';
 import { Button } from '@/components/ui/button';
-import {
-  FilePlus,
-  UserPlus,
-  Sun,
-  Bell,
-  User,
-  LogOut,
-} from 'lucide-react';
+import { FilePlus, UserPlus, Sun, Bell, User, LogOut } from 'lucide-react';
 import GlobalSearch from '@/components/global-search';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -87,8 +80,11 @@ export function AuthenticatedLayout({
       const justLoggedIn = localStorage.getItem('just_logged_in');
       if (justLoggedIn) {
         const loginTime = parseInt(justLoggedIn);
-        if (Date.now() - loginTime < 5000) { // Increased from 2000ms to 5000ms
-          console.log('🔍 AuthenticatedLayout: Just logged in, waiting for auth state...');
+        if (Date.now() - loginTime < 5000) {
+          // Increased from 2000ms to 5000ms
+          console.log(
+            '🔍 AuthenticatedLayout: Just logged in, waiting for auth state...'
+          );
           return;
         } else {
           // Clear the flag after 5 seconds
@@ -133,9 +129,13 @@ export function AuthenticatedLayout({
 
   // For protected pages, show loading state while checking auth
   // But if we just logged in, show a shorter loading message
-  const justLoggedIn = typeof window !== 'undefined' ? localStorage.getItem('just_logged_in') : null;
-  const recentLogin = justLoggedIn && (Date.now() - parseInt(justLoggedIn)) < 5000; // Increased to 5 seconds
-  
+  const justLoggedIn =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('just_logged_in')
+      : null;
+  const recentLogin =
+    justLoggedIn && Date.now() - parseInt(justLoggedIn) < 5000; // Increased to 5 seconds
+
   if (!mounted || loading) {
     return (
       <div className='flex h-screen items-center justify-center'>
@@ -151,7 +151,9 @@ export function AuthenticatedLayout({
 
   // If we just logged in and loading is done but user isn't set yet, wait a bit more
   if (recentLogin && !user) {
-    console.log('🔍 AuthenticatedLayout: Recent login, waiting for user to load...');
+    console.log(
+      '🔍 AuthenticatedLayout: Recent login, waiting for user to load...'
+    );
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center'>

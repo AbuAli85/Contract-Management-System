@@ -40,11 +40,11 @@
 
 ### **معلومات الموظف / Employee Information**
 
-| **البيان** | **المعلومات** | **Field** | **Information** |
-|------------|---------------|-----------|-----------------|
-| **الاسم بالعربي** | {{promoter_name_ar}} | **Name in English** | {{promoter_name_en}} |
-| **رقم الهوية الوطنية** | {{id_card_number}} | **National ID Number** | {{id_card_number}} |
-| **رقم الجواز** | {{passport_number}} | **Passport Number** | {{passport_number}} |
+| **البيان**             | **المعلومات**        | **Field**              | **Information**      |
+| ---------------------- | -------------------- | ---------------------- | -------------------- |
+| **الاسم بالعربي**      | {{promoter_name_ar}} | **Name in English**    | {{promoter_name_en}} |
+| **رقم الهوية الوطنية** | {{id_card_number}}   | **National ID Number** | {{id_card_number}}   |
+| **رقم الجواز**         | {{passport_number}}  | **Passport Number**    | {{passport_number}}  |
 
 ---
 
@@ -53,8 +53,8 @@
 <center>
 
 [INSERT IMAGE: ID_CARD_IMAGE]  
-*صورة الهوية الوطنية (سيتم استبدالها بالصورة الفعلية)*  
-*National ID Card (will be replaced with actual image)*
+_صورة الهوية الوطنية (سيتم استبدالها بالصورة الفعلية)_  
+_National ID Card (will be replaced with actual image)_
 
 </center>
 
@@ -65,8 +65,8 @@
 <center>
 
 [INSERT IMAGE: PASSPORT_IMAGE]  
-*صورة الجواز (سيتم استبدالها بالصورة الفعلية)*  
-*Passport Copy (will be replaced with actual image)*
+_صورة الجواز (سيتم استبدالها بالصورة الفعلية)_  
+_Passport Copy (will be replaced with actual image)_
 
 </center>
 
@@ -74,11 +74,11 @@
 
 ### **تفاصيل العقد / Contract Details**
 
-| **البيان** | **التفاصيل** |
-|------------|--------------|
-| **تاريخ البدء / Start Date** | {{contract_start_date}} |
-| **تاريخ الانتهاء / End Date** | {{contract_end_date}} |
-| **رقم العقد / Contract Number** | {{contract_number}} |
+| **البيان**                      | **التفاصيل**            |
+| ------------------------------- | ----------------------- |
+| **تاريخ البدء / Start Date**    | {{contract_start_date}} |
+| **تاريخ الانتهاء / End Date**   | {{contract_end_date}}   |
+| **رقم العقد / Contract Number** | {{contract_number}}     |
 
 ---
 
@@ -86,41 +86,41 @@
 
 1. **الإشراف / Supervision**  
    الموظف المذكور أعلاه يعمل تحت إشرافنا المباشر ونتحمل المسؤولية الكاملة عنه.  
-   *The above-mentioned employee works under our direct supervision, and we assume full responsibility.*
+   _The above-mentioned employee works under our direct supervision, and we assume full responsibility._
 
 2. **المستحقات المالية / Financial Obligations**  
    نحن مسؤولون عن كافة المستحقات المالية والقانونية للموظف.  
-   *We are responsible for all financial and legal obligations of the employee.*
+   _We are responsible for all financial and legal obligations of the employee._
 
 3. **الالتزام بالقوانين / Legal Compliance**  
    يلتزم الموظف بكافة القوانين واللوائح المعمول بها في موقع العمل.  
-   *The employee must comply with all applicable laws and regulations at the workplace.*
+   _The employee must comply with all applicable laws and regulations at the workplace._
 
 4. **مدة العقد / Contract Duration**  
    هذا الإلحاق ساري المفعول من تاريخ {{contract_start_date}} حتى {{contract_end_date}}.  
-   *This deployment is valid from {{contract_start_date}} until {{contract_end_date}}.*
+   _This deployment is valid from {{contract_start_date}} until {{contract_end_date}}._
 
 5. **التعديل والإنهاء / Amendment and Termination**  
    يحق لنا إنهاء أو تعديل هذا الإلحاق بإشعار مسبق وفقاً لشروط العقد الأساسي.  
-   *We reserve the right to terminate or modify this deployment with prior notice as per the main contract terms.*
+   _We reserve the right to terminate or modify this deployment with prior notice as per the main contract terms._
 
 ---
 
 ### **ملاحظات إضافية / Additional Notes**
 
 • الموظف حاصل على كافة التراخيص والتصاريح اللازمة للعمل  
-*The employee holds all necessary licenses and permits for work*
+_The employee holds all necessary licenses and permits for work_
 
 • تم التأكد من صحة جميع المستندات المرفقة  
-*All attached documents have been verified*
+_All attached documents have been verified_
 
 • الموظف خاضع لأنظمة التأمينات الاجتماعية  
-*The employee is covered by social insurance*
+_The employee is covered by social insurance_
 
 ---
 
 وتفضلوا بقبول فائق الاحترام والتقدير  
-*Please accept our highest regards and appreciation*
+_Please accept our highest regards and appreciation_
 
 </div>
 
@@ -138,7 +138,7 @@
 
 **التوقيع / Authorized Signature:**
 
-_________________________________
+---
 
 **الختم / Company Stamp:**
 
@@ -148,8 +148,8 @@ _________________________________
 
 ---
 
-*هذا المستند صادر إلكترونياً ولا يحتاج إلى توقيع*  
-*This document is issued electronically and does not require a signature*
+_هذا المستند صادر إلكترونياً ولا يحتاج إلى توقيع_  
+_This document is issued electronically and does not require a signature_
 
 </center>
 
@@ -168,32 +168,38 @@ Page 1 of 1 | صفحة 1 من 1
 ## 🎨 Formatting Instructions for Google Docs
 
 ### 1. Header
+
 - Insert two images side-by-side (logos)
 - Alt text: "FIRST_PARTY_LOGO" and "SECOND_PARTY_LOGO"
 - Size: 100×50 pixels each
 
 ### 2. Title
+
 - **Font:** Arial Bold 16pt
 - **Alignment:** Center
 - **Color:** #1E40AF (blue)
 
 ### 3. Arabic Sections
+
 - **Font:** Arial 12pt
 - **Direction:** Right-to-left (RTL)
 - **Alignment:** Right
 - Use `<div dir="rtl">` wrapper
 
 ### 4. English Sections
+
 - **Font:** Arial 11pt
 - **Direction:** Left-to-right
 - **Alignment:** Left
 
 ### 5. Tables
+
 - **Border:** 1pt solid #E5E7EB
 - **Cell padding:** 8px
 - **Header background:** #F3F4F6
 
 ### 6. Image Placeholders
+
 1. Insert → Image → Upload placeholder image
 2. Resize to 400×250 pixels
 3. Right-click → Alt text → Add:
@@ -201,10 +207,12 @@ Page 1 of 1 | صفحة 1 من 1
    - Second image: `PASSPORT_IMAGE`
 
 ### 7. Sections
+
 - Use horizontal lines (Insert → Horizontal line)
 - Or triple underscores: `___`
 
 ### 8. Footer
+
 - Insert → Header & footer → Footer
 - Font: Arial 9pt
 - Alignment: Center
@@ -216,6 +224,7 @@ Page 1 of 1 | صفحة 1 من 1
 Make sure these are all present (case-sensitive):
 
 Required Placeholders:
+
 - [ ] {{first_party_name_ar}}
 - [ ] {{first_party_name_en}}
 - [ ] {{first_party_crn}}
@@ -231,6 +240,7 @@ Required Placeholders:
 - [ ] {{contract_number}}
 
 Image Placeholders (as Alt Text):
+
 - [ ] ID_CARD_IMAGE
 - [ ] PASSPORT_IMAGE
 
@@ -247,4 +257,3 @@ Image Placeholders (as Alt Text):
 ---
 
 **Template Ready!** Proceed to implementation steps.
-

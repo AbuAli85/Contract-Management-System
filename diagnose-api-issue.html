@@ -1,65 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>API Diagnostic Tool</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        .success { background-color: #d4edda; border-color: #c3e6cb; }
-        .error { background-color: #f8d7da; border-color: #f5c6cb; }
-        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
-        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
-        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .test {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      .warning {
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        cursor: pointer;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>🔍 API Diagnostic Tool</h1>
-    <p>This tool will help diagnose why the promoters API is returning empty data in the browser.</p>
-    
+    <p>
+      This tool will help diagnose why the promoters API is returning empty data
+      in the browser.
+    </p>
+
     <div class="test">
-        <h3>Test 1: Direct API Call (No Caching)</h3>
-        <button onclick="testDirectAPI()">Test Direct API</button>
-        <div id="test1-result"></div>
+      <h3>Test 1: Direct API Call (No Caching)</h3>
+      <button onclick="testDirectAPI()">Test Direct API</button>
+      <div id="test1-result"></div>
     </div>
-    
+
     <div class="test">
-        <h3>Test 2: Relative API Call (With Caching)</h3>
-        <button onclick="testRelativeAPI()">Test Relative API</button>
-        <div id="test2-result"></div>
+      <h3>Test 2: Relative API Call (With Caching)</h3>
+      <button onclick="testRelativeAPI()">Test Relative API</button>
+      <div id="test2-result"></div>
     </div>
-    
+
     <div class="test">
-        <h3>Test 3: Service Worker Check</h3>
-        <button onclick="checkServiceWorker()">Check Service Worker</button>
-        <div id="test3-result"></div>
+      <h3>Test 3: Service Worker Check</h3>
+      <button onclick="checkServiceWorker()">Check Service Worker</button>
+      <div id="test3-result"></div>
     </div>
-    
+
     <div class="test">
-        <h3>Test 4: Cache Storage Check</h3>
-        <button onclick="checkCacheStorage()">Check Cache Storage</button>
-        <div id="test4-result"></div>
+      <h3>Test 4: Cache Storage Check</h3>
+      <button onclick="checkCacheStorage()">Check Cache Storage</button>
+      <div id="test4-result"></div>
     </div>
 
     <script>
-        async function testDirectAPI() {
-            const resultDiv = document.getElementById('test1-result');
-            resultDiv.innerHTML = '<p>Testing...</p>';
-            
-            try {
-                const response = await fetch(`https://portal.thesmartpro.io/api/promoters?test=${Date.now()}`, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                resultDiv.innerHTML = `
+      async function testDirectAPI() {
+        const resultDiv = document.getElementById('test1-result');
+        resultDiv.innerHTML = '<p>Testing...</p>';
+
+        try {
+          const response = await fetch(
+            `https://portal.thesmartpro.io/api/promoters?test=${Date.now()}`,
+            {
+              method: 'GET',
+              mode: 'cors',
+              headers: {
+                Accept: 'application/json',
+                'Cache-Control': 'no-cache',
+              },
+            }
+          );
+
+          const data = await response.json();
+
+          resultDiv.innerHTML = `
                     <div class="success">
                         <h4>✅ Direct API Test Successful</h4>
                         <p><strong>Status:</strong> ${response.status}</p>
@@ -69,32 +101,32 @@
                         <p><strong>Timestamp:</strong> ${data.timestamp}</p>
                     </div>
                 `;
-            } catch (error) {
-                resultDiv.innerHTML = `
+        } catch (error) {
+          resultDiv.innerHTML = `
                     <div class="error">
                         <h4>❌ Direct API Test Failed</h4>
                         <p><strong>Error:</strong> ${error.message}</p>
                     </div>
                 `;
-            }
         }
-        
-        async function testRelativeAPI() {
-            const resultDiv = document.getElementById('test2-result');
-            resultDiv.innerHTML = '<p>Testing...</p>';
-            
-            try {
-                const response = await fetch(`/api/promoters?test=${Date.now()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                resultDiv.innerHTML = `
+      }
+
+      async function testRelativeAPI() {
+        const resultDiv = document.getElementById('test2-result');
+        resultDiv.innerHTML = '<p>Testing...</p>';
+
+        try {
+          const response = await fetch(`/api/promoters?test=${Date.now()}`, {
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+              'Cache-Control': 'no-cache',
+            },
+          });
+
+          const data = await response.json();
+
+          resultDiv.innerHTML = `
                     <div class="${data.promoters?.length > 0 ? 'success' : 'warning'}">
                         <h4>${data.promoters?.length > 0 ? '✅' : '⚠️'} Relative API Test</h4>
                         <p><strong>Status:</strong> ${response.status}</p>
@@ -105,102 +137,108 @@
                         <p><strong>Response URL:</strong> ${response.url}</p>
                     </div>
                 `;
-            } catch (error) {
-                resultDiv.innerHTML = `
+        } catch (error) {
+          resultDiv.innerHTML = `
                     <div class="error">
                         <h4>❌ Relative API Test Failed</h4>
                         <p><strong>Error:</strong> ${error.message}</p>
                     </div>
                 `;
-            }
         }
-        
-        async function checkServiceWorker() {
-            const resultDiv = document.getElementById('test3-result');
-            resultDiv.innerHTML = '<p>Checking...</p>';
-            
-            let result = '<div class="warning"><h4>🔍 Service Worker Check</h4>';
-            
-            if ('serviceWorker' in navigator) {
-                try {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    result += `<p><strong>Service Workers Found:</strong> ${registrations.length}</p>`;
-                    
-                    if (registrations.length > 0) {
-                        result += '<p><strong>⚠️ Service Workers detected - they might be caching API responses!</strong></p>';
-                        result += '<ul>';
-                        registrations.forEach((reg, index) => {
-                            result += `<li>SW ${index + 1}: ${reg.scope}</li>`;
-                        });
-                        result += '</ul>';
-                    } else {
-                        result += '<p>✅ No service workers found</p>';
-                    }
-                } catch (error) {
-                    result += `<p>❌ Error checking service workers: ${error.message}</p>`;
-                }
+      }
+
+      async function checkServiceWorker() {
+        const resultDiv = document.getElementById('test3-result');
+        resultDiv.innerHTML = '<p>Checking...</p>';
+
+        let result = '<div class="warning"><h4>🔍 Service Worker Check</h4>';
+
+        if ('serviceWorker' in navigator) {
+          try {
+            const registrations =
+              await navigator.serviceWorker.getRegistrations();
+            result += `<p><strong>Service Workers Found:</strong> ${registrations.length}</p>`;
+
+            if (registrations.length > 0) {
+              result +=
+                '<p><strong>⚠️ Service Workers detected - they might be caching API responses!</strong></p>';
+              result += '<ul>';
+              registrations.forEach((reg, index) => {
+                result += `<li>SW ${index + 1}: ${reg.scope}</li>`;
+              });
+              result += '</ul>';
             } else {
-                result += '<p>✅ Service Workers not supported</p>';
+              result += '<p>✅ No service workers found</p>';
             }
-            
-            result += '</div>';
-            resultDiv.innerHTML = result;
+          } catch (error) {
+            result += `<p>❌ Error checking service workers: ${error.message}</p>`;
+          }
+        } else {
+          result += '<p>✅ Service Workers not supported</p>';
         }
-        
-        async function checkCacheStorage() {
-            const resultDiv = document.getElementById('test4-result');
-            resultDiv.innerHTML = '<p>Checking...</p>';
-            
-            let result = '<div class="warning"><h4>🔍 Cache Storage Check</h4>';
-            
-            if ('caches' in window) {
-                try {
-                    const cacheNames = await caches.keys();
-                    result += `<p><strong>Cache Names Found:</strong> ${cacheNames.length}</p>`;
-                    
-                    if (cacheNames.length > 0) {
-                        result += '<p><strong>⚠️ Caches detected - they might be serving stale data!</strong></p>';
-                        result += '<ul>';
-                        for (const cacheName of cacheNames) {
-                            const cache = await caches.open(cacheName);
-                            const requests = await cache.keys();
-                            result += `<li>Cache "${cacheName}": ${requests.length} entries</li>`;
-                        }
-                        result += '</ul>';
-                        result += '<p><strong>💡 Try clearing caches:</strong></p>';
-                        result += '<button onclick="clearAllCaches()">Clear All Caches</button>';
-                    } else {
-                        result += '<p>✅ No caches found</p>';
-                    }
-                } catch (error) {
-                    result += `<p>❌ Error checking caches: ${error.message}</p>`;
-                }
+
+        result += '</div>';
+        resultDiv.innerHTML = result;
+      }
+
+      async function checkCacheStorage() {
+        const resultDiv = document.getElementById('test4-result');
+        resultDiv.innerHTML = '<p>Checking...</p>';
+
+        let result = '<div class="warning"><h4>🔍 Cache Storage Check</h4>';
+
+        if ('caches' in window) {
+          try {
+            const cacheNames = await caches.keys();
+            result += `<p><strong>Cache Names Found:</strong> ${cacheNames.length}</p>`;
+
+            if (cacheNames.length > 0) {
+              result +=
+                '<p><strong>⚠️ Caches detected - they might be serving stale data!</strong></p>';
+              result += '<ul>';
+              for (const cacheName of cacheNames) {
+                const cache = await caches.open(cacheName);
+                const requests = await cache.keys();
+                result += `<li>Cache "${cacheName}": ${requests.length} entries</li>`;
+              }
+              result += '</ul>';
+              result += '<p><strong>💡 Try clearing caches:</strong></p>';
+              result +=
+                '<button onclick="clearAllCaches()">Clear All Caches</button>';
             } else {
-                result += '<p>✅ Cache API not supported</p>';
+              result += '<p>✅ No caches found</p>';
             }
-            
-            result += '</div>';
-            resultDiv.innerHTML = result;
+          } catch (error) {
+            result += `<p>❌ Error checking caches: ${error.message}</p>`;
+          }
+        } else {
+          result += '<p>✅ Cache API not supported</p>';
         }
-        
-        async function clearAllCaches() {
-            try {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
-                alert(`Cleared ${cacheNames.length} caches. Please refresh the page.`);
-                location.reload();
-            } catch (error) {
-                alert(`Error clearing caches: ${error.message}`);
-            }
+
+        result += '</div>';
+        resultDiv.innerHTML = result;
+      }
+
+      async function clearAllCaches() {
+        try {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          alert(
+            `Cleared ${cacheNames.length} caches. Please refresh the page.`
+          );
+          location.reload();
+        } catch (error) {
+          alert(`Error clearing caches: ${error.message}`);
         }
-        
-        // Auto-run tests on page load
-        window.onload = function() {
-            testDirectAPI();
-            testRelativeAPI();
-            checkServiceWorker();
-            checkCacheStorage();
-        };
+      }
+
+      // Auto-run tests on page load
+      window.onload = function () {
+        testDirectAPI();
+        testRelativeAPI();
+        checkServiceWorker();
+        checkCacheStorage();
+      };
     </script>
-</body>
+  </body>
 </html>

@@ -21,9 +21,9 @@ export interface ResponsiveGridProps {
 
 /**
  * Responsive Grid Component
- * 
+ *
  * Automatically adjusts columns based on viewport size
- * 
+ *
  * @example
  * ```tsx
  * <ResponsiveGrid
@@ -72,10 +72,10 @@ export function MetricsGrid({
     <div
       className={cn(
         'grid',
-        'grid-cols-1',           // Mobile: 1 column
-        'sm:grid-cols-2',        // Small: 2 columns
-        'lg:grid-cols-3',        // Large: 3 columns
-        'xl:grid-cols-4',        // XL: 4 columns
+        'grid-cols-1', // Mobile: 1 column
+        'sm:grid-cols-2', // Small: 2 columns
+        'lg:grid-cols-3', // Large: 3 columns
+        'xl:grid-cols-4', // XL: 4 columns
         'gap-4 sm:gap-6',
         className
       )}
@@ -99,11 +99,7 @@ export function ResponsiveListGrid({
   className?: string;
 }) {
   if (view === 'list') {
-    return (
-      <div className={cn('space-y-4', className)}>
-        {children}
-      </div>
-    );
+    return <div className={cn('space-y-4', className)}>{children}</div>;
   }
 
   return (
@@ -129,7 +125,18 @@ export function ResponsiveContainer({
 }: {
   children: React.ReactNode;
   className?: string;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'full';
+  maxWidth?:
+    | 'sm'
+    | 'md'
+    | 'lg'
+    | 'xl'
+    | '2xl'
+    | '3xl'
+    | '4xl'
+    | '5xl'
+    | '6xl'
+    | '7xl'
+    | 'full';
 }) {
   return (
     <div
@@ -198,4 +205,3 @@ export function ResponsiveCardGrid({
     </div>
   );
 }
-

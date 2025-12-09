@@ -37,8 +37,8 @@ npx supabase migration up
 Run this in SQL Editor:
 
 ```sql
-SELECT indexname FROM pg_indexes 
-WHERE tablename = 'contracts' 
+SELECT indexname FROM pg_indexes
+WHERE tablename = 'contracts'
 AND indexname LIKE 'idx_contracts%'
 ORDER BY indexname;
 ```
@@ -59,18 +59,21 @@ You should see **10 indexes** starting with `idx_contracts_`.
 ## 🧪 Quick Test
 
 ### Test 1: Normal Load
+
 1. Go to `/en/contracts/pending`
 2. Should see skeleton loader
 3. Data loads in <1 second
 4. ✅ Pass if page loads
 
 ### Test 2: No Data
+
 1. If no pending contracts exist:
 2. Should see green success message
 3. "No Pending Contracts" with helpful text
 4. ✅ Pass if message shows
 
 ### Test 3: Error Recovery
+
 1. Disconnect internet
 2. Click Refresh button
 3. Should see error message with Retry button
@@ -79,6 +82,7 @@ You should see **10 indexes** starting with `idx_contracts_`.
 6. ✅ Pass if data loads after retry
 
 ### Test 4: Timeout Handling
+
 1. If query takes >3 seconds:
 2. Should see "taking longer than expected" message
 3. Cancel and Retry buttons appear
@@ -103,6 +107,7 @@ Open browser console and look for:
 **Needs Investigation:** queryTime > 1000ms
 
 If slow, check:
+
 1. Database indexes applied? (Step 1)
 2. Large number of contracts (>1000)?
 3. Slow network connection?
@@ -114,6 +119,7 @@ If slow, check:
 ### Problem: Infinite spinner still shows
 
 **Fix:**
+
 1. Open browser console (F12)
 2. Look for red errors
 3. Common causes:
@@ -122,6 +128,7 @@ If slow, check:
    - Permission error (check user role)
 
 **Quick Fix:**
+
 ```bash
 # Clear browser cache
 Ctrl+Shift+Delete → Clear cached images and files
@@ -136,11 +143,13 @@ Cmd+Shift+R (Mac)
 ### Problem: "Request timeout" error
 
 **Causes:**
+
 - Database indexes not applied → Apply Step 1
 - Slow database query → Check EXPLAIN ANALYZE (see detailed guide)
 - Network issue → Check internet connection
 
 **Fix:**
+
 1. Apply database indexes (Step 1)
 2. Click Retry button
 3. If persists, check network
@@ -150,10 +159,12 @@ Cmd+Shift+R (Mac)
 ### Problem: Permission error
 
 **Symptoms:**
+
 - "Insufficient permissions" message
 - Red alert box
 
 **Fix:**
+
 1. Check user has `contract:read:own` permission
 2. Or user is Admin
 3. Contact system administrator to assign permission
@@ -163,10 +174,12 @@ Cmd+Shift+R (Mac)
 ### Problem: Page crashes
 
 **Symptoms:**
+
 - Error boundary shows
 - "Something Went Wrong" message
 
 **Fix:**
+
 1. Click "Try Again" button
 2. If persists, check browser console
 3. Report error to development team
@@ -176,6 +189,7 @@ Cmd+Shift+R (Mac)
 ## 📁 Files Changed
 
 **New Files (7):**
+
 - `components/contracts/ContractsSkeleton.tsx` - Loading skeletons
 - `components/ui/skeleton.tsx` - Base skeleton component
 - `components/error-boundary/ContractsErrorBoundary.tsx` - Error handling
@@ -185,6 +199,7 @@ Cmd+Shift+R (Mac)
 - `scripts/apply-performance-indexes.md` - Index application guide
 
 **Modified Files (2):**
+
 - `app/api/contracts/route.ts` - API improvements
 - `app/[locale]/contracts/pending/page.tsx` - Page improvements
 
@@ -193,29 +208,34 @@ Cmd+Shift+R (Mac)
 ## 🎯 Key Features
 
 ### 1. Skeleton Loaders
+
 - Shows animated placeholders during load
 - Professional, modern UX
 - Reduces perceived wait time
 
 ### 2. Error Handling
+
 - Clear error messages
 - Retry button for quick recovery
 - Cancel button for slow requests
 - Error boundary for crash recovery
 
 ### 3. Performance Monitoring
+
 - Logs all request times
 - Tracks success/failure
 - Helps debug issues
 - Available in browser console
 
 ### 4. Database Optimization
+
 - 10 new indexes
 - 97%+ query speed improvement
 - Optimized for pending status queries
 - Handles large datasets
 
 ### 5. Timeout Management
+
 - 10-second client timeout
 - 8-second server timeout
 - Progressive feedback
@@ -225,13 +245,13 @@ Cmd+Shift+R (Mac)
 
 ## 📈 Expected Performance
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Load Time | 3-10s | <1s |
-| Query Time | 3-10s | <100ms |
-| Error Recovery | Manual page refresh | Click Retry |
-| User Feedback | Spinner only | Progressive states |
-| Crash Recovery | Page reload | Automatic retry |
+| Metric         | Before              | After              |
+| -------------- | ------------------- | ------------------ |
+| Load Time      | 3-10s               | <1s                |
+| Query Time     | 3-10s               | <100ms             |
+| Error Recovery | Manual page refresh | Click Retry        |
+| User Feedback  | Spinner only        | Progressive states |
+| Crash Recovery | Page reload         | Automatic retry    |
 
 ---
 
@@ -243,13 +263,13 @@ Open browser console (F12) and run:
 
 ```javascript
 // View all metrics
-performanceMonitor.getSummary()
+performanceMonitor.getSummary();
 
 // View pending contracts metrics
-performanceMonitor.getMetrics('fetch-pending-contracts')
+performanceMonitor.getMetrics('fetch-pending-contracts');
 
 // Get average time
-performanceMonitor.getAverageDuration('fetch-pending-contracts')
+performanceMonitor.getAverageDuration('fetch-pending-contracts');
 ```
 
 ### Check Database Query
@@ -259,9 +279,9 @@ In Supabase SQL Editor:
 ```sql
 -- Test query performance
 EXPLAIN ANALYZE
-SELECT * FROM contracts 
+SELECT * FROM contracts
 WHERE status = 'pending'
-ORDER BY created_at DESC 
+ORDER BY created_at DESC
 LIMIT 20;
 
 -- Should show "Index Scan" and time < 100ms
@@ -283,11 +303,13 @@ In browser Network tab (F12 → Network):
 ## 📞 Support
 
 ### Error Logs Location
+
 - **Browser Console:** F12 → Console tab
 - **Network Tab:** F12 → Network tab
 - **Server Logs:** Supabase Dashboard → Logs
 
 ### What to Include in Bug Report
+
 1. Error message (screenshot or text)
 2. Browser console output
 3. Network request/response
@@ -297,16 +319,19 @@ In browser Network tab (F12 → Network):
 ### Common Logs to Look For
 
 **Success:**
+
 ```
 ✅ Loaded pending contracts: {count: 3, queryTime: "87ms"}
 ```
 
 **Timeout:**
+
 ```
 ❌ Request timeout after 10 seconds
 ```
 
 **Permission Error:**
+
 ```
 ❌ Permission denied for pending contracts
 ```
@@ -349,4 +374,3 @@ In browser Network tab (F12 → Network):
 **Risk:** Low (backward compatible)
 
 **Need Help?** Check `PENDING_CONTRACTS_FIX_SUMMARY.md` for detailed troubleshooting.
-

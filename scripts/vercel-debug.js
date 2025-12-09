@@ -2,7 +2,7 @@
 
 /**
  * Vercel Deployment Debug Script
- * 
+ *
  * This script helps diagnose common Vercel deployment issues
  */
 
@@ -21,28 +21,37 @@ console.log(`   Architecture: ${process.arch}\n`);
 console.log('📦 Package.json Analysis:');
 try {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  
+
   console.log(`   Name: ${packageJson.name}`);
   console.log(`   Version: ${packageJson.version}`);
-  console.log(`   Node Engine: ${packageJson.engines?.node || 'Not specified'}`);
+  console.log(
+    `   Node Engine: ${packageJson.engines?.node || 'Not specified'}`
+  );
   console.log(`   Build Script: ${packageJson.scripts?.build || 'Not found'}`);
   console.log(`   Start Script: ${packageJson.scripts?.start || 'Not found'}`);
-  
+
   // Check for problematic dependencies
   const problematicDeps = [
-    'sharp', 'canvas', 'puppeteer', 'playwright', 
-    'sqlite3', 'better-sqlite3', 'mysql2', 'pg'
+    'sharp',
+    'canvas',
+    'puppeteer',
+    'playwright',
+    'sqlite3',
+    'better-sqlite3',
+    'mysql2',
+    'pg',
   ];
-  
+
   const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
   const foundProblematic = problematicDeps.filter(dep => deps[dep]);
-  
+
   if (foundProblematic.length > 0) {
-    console.log(`   ⚠️  Potentially problematic dependencies: ${foundProblematic.join(', ')}`);
+    console.log(
+      `   ⚠️  Potentially problematic dependencies: ${foundProblematic.join(', ')}`
+    );
   } else {
     console.log('   ✅ No problematic dependencies detected');
   }
-  
 } catch (error) {
   console.log(`   ❌ Error reading package.json: ${error.message}`);
 }
@@ -53,7 +62,7 @@ console.log('\n');
 console.log('🔧 Environment Variables Check:');
 const requiredEnvVars = [
   'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
 ];
 
 requiredEnvVars.forEach(envVar => {
@@ -74,7 +83,7 @@ const criticalFiles = [
   'next.config.js',
   'vercel.json',
   'app/layout.tsx',
-  'middleware.ts'
+  'middleware.ts',
 ];
 
 criticalFiles.forEach(file => {
@@ -89,21 +98,24 @@ console.log('\n');
 
 // Check for large files that might cause issues
 console.log('📊 File Size Analysis:');
-const checkDirectory = (dir, maxSize = 50 * 1024 * 1024) => { // 50MB
+const checkDirectory = (dir, maxSize = 50 * 1024 * 1024) => {
+  // 50MB
   try {
     const files = fs.readdirSync(dir);
     let hasLargeFiles = false;
-    
+
     files.forEach(file => {
       const filePath = path.join(dir, file);
       const stats = fs.statSync(filePath);
-      
+
       if (stats.isFile() && stats.size > maxSize) {
-        console.log(`   ⚠️  Large file: ${filePath} (${(stats.size / 1024 / 1024).toFixed(2)}MB)`);
+        console.log(
+          `   ⚠️  Large file: ${filePath} (${(stats.size / 1024 / 1024).toFixed(2)}MB)`
+        );
         hasLargeFiles = true;
       }
     });
-    
+
     if (!hasLargeFiles) {
       console.log(`   ✅ No large files in ${dir}`);
     }
@@ -156,7 +168,9 @@ console.log('\n');
 
 // Recommendations
 console.log('💡 Recommendations:');
-console.log('   1. Ensure all required environment variables are set in Vercel dashboard');
+console.log(
+  '   1. Ensure all required environment variables are set in Vercel dashboard'
+);
 console.log('   2. Check Vercel build logs for specific error messages');
 console.log('   3. Try deploying with a minimal configuration first');
 console.log('   4. Consider using Vercel CLI for local testing: npx vercel');

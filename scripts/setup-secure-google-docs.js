@@ -46,7 +46,9 @@ GOOGLE_DRIVE_OUTPUT_FOLDER_ID=your-output-folder-id-here
 const hasGoogleDocsVars = envContent.includes('GOOGLE_SERVICE_ACCOUNT_KEY');
 
 if (!hasGoogleDocsVars) {
-  console.log('📝 Adding secure Google Docs environment variables to .env.local...');
+  console.log(
+    '📝 Adding secure Google Docs environment variables to .env.local...'
+  );
   fs.appendFileSync(envPath, secureGoogleDocsEnvVars);
   console.log('✅ Secure Google Docs environment variables added\n');
 } else {
@@ -73,8 +75,12 @@ console.log('');
 
 console.log('3. 📄 Create Google Docs Template:');
 console.log('   - Go to https://docs.google.com/document/create');
-console.log('   - Add placeholders like {{contract_number}}, {{promoter_name_en}}');
-console.log('   - Share with: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com');
+console.log(
+  '   - Add placeholders like {{contract_number}}, {{promoter_name_en}}'
+);
+console.log(
+  '   - Share with: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com'
+);
 console.log('   - Set permission to Editor');
 console.log('   - Copy document ID from URL');
 console.log('');
@@ -103,4 +109,6 @@ console.log('- See PRODUCTION_GOOGLE_DOCS_SETUP.md for details');
 console.log('');
 
 console.log('🎉 Secure setup completed!');
-console.log('Update your .env.local file with the actual credentials and you\'re ready to go!');
+console.log(
+  "Update your .env.local file with the actual credentials and you're ready to go!"
+);

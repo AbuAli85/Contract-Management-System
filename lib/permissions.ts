@@ -406,7 +406,7 @@ export function canDeleteResource(
 export function getRolePermissions(
   role: EnhancedUserRole
 ): Record<Action, boolean> {
-  return PERMISSIONS[role] || {} as Record<Action, boolean>;
+  return PERMISSIONS[role] || ({} as Record<Action, boolean>);
 }
 
 // Get all actions a role can perform

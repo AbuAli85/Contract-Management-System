@@ -147,43 +147,43 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled_debug\promoters_test\route.ts
+### app\api_disabled_debug\promoters_test\route.ts
 
 - Missing RBAC guard - route may be unprotected
 
-### app\api\_disabled_debug\promoters_debug\route.ts
-
-- Missing RBAC guard - route may be unprotected
-- Using client-side Supabase client - should use server client
-
-### app\api\_disabled_debug\promoters_db_check\route.ts
-
-- Missing RBAC guard - route may be unprotected
-
-### app\api\_disabled_debug\pdf_generation_debug\route.ts
-
-- Missing RBAC guard - route may be unprotected
-
-### app\api\_disabled_debug\contract_generation_test\route.ts
+### app\api_disabled_debug\promoters_debug\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled_debug\contract_generation_debug\route.ts
+### app\api_disabled_debug\promoters_db_check\route.ts
 
 - Missing RBAC guard - route may be unprotected
 
-### app\api\_disabled\services\route.ts
+### app\api_disabled_debug\pdf_generation_debug\route.ts
+
+- Missing RBAC guard - route may be unprotected
+
+### app\api_disabled_debug\contract_generation_test\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\invoices\route.ts
+### app\api_disabled_debug\contract_generation_debug\route.ts
+
+- Missing RBAC guard - route may be unprotected
+
+### app\api_disabled\services\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\booking-resources\route.ts
+### app\api_disabled\invoices\route.ts
+
+- Missing RBAC guard - route may be unprotected
+- Using client-side Supabase client - should use server client
+
+### app\api_disabled\booking-resources\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -193,7 +193,7 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\route.ts
+### app\api_disabled\bookings\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -618,77 +618,77 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled_debug\debug\auth\route.ts
+### app\api_disabled_debug\debug\auth\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\workflow\config\route.ts
+### app\api_disabled\workflow\config\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\trackings\[id]\route.ts
+### app\api_disabled\trackings\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\reviews\pending\route.ts
+### app\api_disabled\reviews\pending\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\provider\stats\route.ts
+### app\api_disabled\provider\stats\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\provider\services\route.ts
+### app\api_disabled\provider\services\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\provider\orders\route.ts
+### app\api_disabled\provider\orders\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\leave-requests\route.ts
+### app\api_disabled\hr\leave-requests\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\employees\route.ts
+### app\api_disabled\hr\employees\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\attendance\route.ts
+### app\api_disabled\hr\attendance\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\invoices\[id]\route.ts
+### app\api_disabled\invoices\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\[id]\route.ts
+### app\api_disabled\bookings\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\webhook\route.ts
+### app\api_disabled\bookings\webhook\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\upsert\route.ts
+### app\api_disabled\bookings\upsert\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\direct-webhook\route.ts
+### app\api_disabled\bookings\direct-webhook\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -845,17 +845,17 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\employees\[id]\route.ts
+### app\api_disabled\hr\employees\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\documents\generate\route.ts
+### app\api_disabled\hr\documents\generate\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\[id]\create-invoice\route.ts
+### app\api_disabled\bookings\[id]\create-invoice\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -879,12 +879,12 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\leave-requests\[id]\approve\route.ts
+### app\api_disabled\hr\leave-requests\[id]\approve\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled_debug\captcha-bypass.tsx
+### app\api_disabled_debug\captcha-bypass.tsx
 
 - Missing RBAC guard - route may be unprotected
 
@@ -1024,43 +1024,43 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled_debug\promoters_test\route.ts
+### app\api_disabled_debug\promoters_test\route.ts
 
 - Missing RBAC guard - route may be unprotected
 
-### app\api\_disabled_debug\promoters_db_check\route.ts
+### app\api_disabled_debug\promoters_db_check\route.ts
 
 - Missing RBAC guard - route may be unprotected
 
-### app\api\_disabled_debug\pdf_generation_debug\route.ts
+### app\api_disabled_debug\pdf_generation_debug\route.ts
 
 - Missing RBAC guard - route may be unprotected
 
-### app\api\_disabled_debug\promoters_debug\route.ts
-
-- Missing RBAC guard - route may be unprotected
-- Using client-side Supabase client - should use server client
-
-### app\api\_disabled_debug\contract_generation_test\route.ts
+### app\api_disabled_debug\promoters_debug\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled_debug\contract_generation_debug\route.ts
-
-- Missing RBAC guard - route may be unprotected
-
-### app\api\_disabled\services\route.ts
+### app\api_disabled_debug\contract_generation_test\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\route.ts
+### app\api_disabled_debug\contract_generation_debug\route.ts
+
+- Missing RBAC guard - route may be unprotected
+
+### app\api_disabled\services\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\booking-resources\route.ts
+### app\api_disabled\bookings\route.ts
+
+- Missing RBAC guard - route may be unprotected
+- Using client-side Supabase client - should use server client
+
+### app\api_disabled\booking-resources\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -1079,7 +1079,7 @@ Generated: 2025-11-07T20:44:18.252Z
 
 - Missing RBAC guard - route may be unprotected
 
-### app\api\_disabled\invoices\route.ts
+### app\api_disabled\invoices\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -1500,77 +1500,77 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled_debug\debug\auth\route.ts
+### app\api_disabled_debug\debug\auth\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\trackings\[id]\route.ts
+### app\api_disabled\trackings\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\workflow\config\route.ts
+### app\api_disabled\workflow\config\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\reviews\pending\route.ts
+### app\api_disabled\reviews\pending\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\provider\stats\route.ts
+### app\api_disabled\provider\stats\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\provider\services\route.ts
+### app\api_disabled\provider\services\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\provider\orders\route.ts
+### app\api_disabled\provider\orders\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\leave-requests\route.ts
+### app\api_disabled\hr\leave-requests\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\employees\route.ts
+### app\api_disabled\hr\employees\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\attendance\route.ts
+### app\api_disabled\hr\attendance\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\[id]\route.ts
+### app\api_disabled\bookings\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\webhook\route.ts
+### app\api_disabled\bookings\webhook\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\upsert\route.ts
+### app\api_disabled\bookings\upsert\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\direct-webhook\route.ts
+### app\api_disabled\bookings\direct-webhook\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\invoices\[id]\route.ts
+### app\api_disabled\invoices\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -1737,17 +1737,17 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\employees\[id]\route.ts
+### app\api_disabled\hr\employees\[id]\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\documents\generate\route.ts
+### app\api_disabled\hr\documents\generate\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\bookings\[id]\create-invoice\route.ts
+### app\api_disabled\bookings\[id]\create-invoice\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -1771,7 +1771,7 @@ Generated: 2025-11-07T20:44:18.252Z
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
 
-### app\api\_disabled\hr\leave-requests\[id]\approve\route.ts
+### app\api_disabled\hr\leave-requests\[id]\approve\route.ts
 
 - Missing RBAC guard - route may be unprotected
 - Using client-side Supabase client - should use server client
@@ -1789,4 +1789,5 @@ No protected routes found
 Add `withRBAC('permission:name')` wrapper to protect these routes.
 
 ---
-*Report generated by RBAC Guard Lint Script*
+
+_Report generated by RBAC Guard Lint Script_

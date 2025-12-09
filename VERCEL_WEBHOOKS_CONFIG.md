@@ -5,6 +5,7 @@
 Your Contract Management System uses **three separate Make.com webhooks** for different contract types:
 
 ### 1. **eXtra Contracts** (Simple/Fast)
+
 - **Webhook URL**: `https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4`
 - **Component**: `SimpleContractGenerator.tsx`
 - **Route**: `/[locale]/generate-contract`
@@ -12,6 +13,7 @@ Your Contract Management System uses **three separate Make.com webhooks** for di
 - **Status**: ✅ Already configured in Vercel
 
 ### 2. **Sharaf DG Deployment Letters**
+
 - **Webhook URL**: `https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn`
 - **Component**: `SharafDGDeploymentForm.tsx`
 - **Route**: `/[locale]/contracts/sharaf-dg`
@@ -19,6 +21,7 @@ Your Contract Management System uses **three separate Make.com webhooks** for di
 - **Status**: ✅ Just configured
 
 ### 3. **General Contracts** (Full-Featured)
+
 - **Webhook URL**: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
 - **Component**: `GeneralContractGenerator.tsx`
 - **Route**: `/[locale]/contracts/general`
@@ -70,10 +73,11 @@ WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 Both `vercel.json` and `next.config.js` have been updated to allow all three Make.com webhook URLs:
 
 ### Updated CSP Directive:
+
 ```javascript
-connect-src 'self' 
-  https://*.supabase.co 
-  https://hook.eu2.make.com 
+connect-src 'self'
+  https://*.supabase.co
+  https://hook.eu2.make.com
   wss://*.supabase.co
 ```
 
@@ -83,17 +87,18 @@ This allows ALL Make.com webhooks under `hook.eu2.make.com/*`
 
 ## 📊 Webhook Usage by Form
 
-| Form | Component | Webhook | Environment Variable |
-|------|-----------|---------|---------------------|
-| eXtra | `SimpleContractGenerator.tsx` | `71go2x4z...` | `MAKECOM_WEBHOOK_URL_EXTRA` |
-| Sharaf DG | `SharafDGDeploymentForm.tsx` | `4g8e8c9y...` | `MAKECOM_WEBHOOK_URL_SHARAF_DG` |
-| General | `GeneralContractGenerator.tsx` | `j07svcht...` | `MAKECOM_WEBHOOK_URL_GENERAL` |
+| Form      | Component                      | Webhook       | Environment Variable            |
+| --------- | ------------------------------ | ------------- | ------------------------------- |
+| eXtra     | `SimpleContractGenerator.tsx`  | `71go2x4z...` | `MAKECOM_WEBHOOK_URL_EXTRA`     |
+| Sharaf DG | `SharafDGDeploymentForm.tsx`   | `4g8e8c9y...` | `MAKECOM_WEBHOOK_URL_SHARAF_DG` |
+| General   | `GeneralContractGenerator.tsx` | `j07svcht...` | `MAKECOM_WEBHOOK_URL_GENERAL`   |
 
 ---
 
 ## 🚀 How Each Webhook Works
 
 ### eXtra Webhook Flow:
+
 1. User fills eXtra contract form
 2. Form submits to `/api/webhook/makecom-employment`
 3. Backend sends data to eXtra webhook
@@ -101,6 +106,7 @@ This allows ALL Make.com webhooks under `hook.eu2.make.com/*`
 5. Returns PDF URL to database
 
 ### Sharaf DG Webhook Flow:
+
 1. User fills Sharaf DG form
 2. Form validates ID card & passport images
 3. Sends to Sharaf DG webhook directly from frontend
@@ -109,6 +115,7 @@ This allows ALL Make.com webhooks under `hook.eu2.make.com/*`
 6. Shows download link
 
 ### General Contracts Webhook Flow:
+
 1. User fills general contract form
 2. Form submits to `/api/contracts/general/generate`
 3. Backend sends to general contracts webhook
@@ -120,12 +127,14 @@ This allows ALL Make.com webhooks under `hook.eu2.make.com/*`
 ## ✅ Verification Checklist
 
 ### In Vercel Dashboard:
+
 - [ ] All three webhook URLs added as environment variables
 - [ ] `WEBHOOK_SECRET` configured
 - [ ] CSP headers allow `hook.eu2.make.com`
 - [ ] All environments set (Production, Preview, Development)
 
 ### In Make.com:
+
 - [ ] eXtra scenario active and tested
 - [ ] Sharaf DG scenario active and tested
 - [ ] General contracts scenario active and tested
@@ -133,6 +142,7 @@ This allows ALL Make.com webhooks under `hook.eu2.make.com/*`
 - [ ] Error handling configured
 
 ### Testing:
+
 - [ ] Create eXtra contract → PDF generated
 - [ ] Create Sharaf DG deployment → PDF with images
 - [ ] Create general contract → PDF generated
@@ -144,6 +154,7 @@ This allows ALL Make.com webhooks under `hook.eu2.make.com/*`
 ## 🧪 Testing Each Webhook
 
 ### Test eXtra Webhook:
+
 ```bash
 curl -X POST https://your-project.vercel.app/api/webhook/makecom-employment \
   -H "Content-Type: application/json" \
@@ -154,6 +165,7 @@ curl -X POST https://your-project.vercel.app/api/webhook/makecom-employment \
 ```
 
 ### Test Sharaf DG Webhook:
+
 ```bash
 curl -X POST https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn \
   -H "Content-Type: application/json" \
@@ -166,6 +178,7 @@ curl -X POST https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn \
 ```
 
 ### Test General Webhook:
+
 ```bash
 curl -X POST https://your-project.vercel.app/api/contracts/general/generate \
   -H "Content-Type: application/json" \
@@ -180,22 +193,26 @@ curl -X POST https://your-project.vercel.app/api/contracts/general/generate \
 ## 🐛 Troubleshooting
 
 ### Webhook Not Responding:
+
 1. Check Make.com scenario is active
 2. Verify webhook URL is correct
 3. Check environment variables in Vercel
 4. Review Make.com execution history
 
 ### CORS Errors:
+
 1. Ensure CSP allows `hook.eu2.make.com`
 2. Check `ALLOWED_ORIGINS` includes your Vercel URL
 3. Clear browser cache
 
 ### 400 Bad Request:
+
 1. Verify required fields are present
 2. Check data format matches Make.com expected format
 3. Review webhook payload in console
 
 ### Images Not Embedding (Sharaf DG):
+
 1. Ensure promoter has `id_card_url` and `passport_url`
 2. Verify images are publicly accessible
 3. Check Supabase storage bucket policies
@@ -248,17 +265,16 @@ UPSTASH_REDIS_REST_TOKEN=xxxxx
 
 ## 📞 Quick Reference
 
-| Need | URL |
-|------|-----|
-| Vercel Dashboard | https://vercel.com/dashboard |
-| Make.com Scenarios | https://www.make.com/en/scenarios |
-| eXtra Webhook | https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4 |
-| Sharaf DG Webhook | https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn |
-| General Webhook | https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz |
+| Need               | URL                                                        |
+| ------------------ | ---------------------------------------------------------- |
+| Vercel Dashboard   | https://vercel.com/dashboard                               |
+| Make.com Scenarios | https://www.make.com/en/scenarios                          |
+| eXtra Webhook      | https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4 |
+| Sharaf DG Webhook  | https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn |
+| General Webhook    | https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz |
 
 ---
 
 **Status**: ✅ All three webhooks configured and documented
 
 **Last Updated**: October 26, 2025
-

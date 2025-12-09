@@ -7,12 +7,14 @@ This document describes the enhanced promoter status system that provides clear 
 ## 🎯 Problem Solved
 
 **Before:**
+
 - Dashboard showed: "Active Promoters: 12"
 - Promoter Intelligence Hub showed: "Total Promoters: 113, Active Right Now: 95"
 - Confusion about what "active" meant
 - Inconsistent metrics across different views
 
 **After:**
+
 - Clear status categories with specific definitions
 - Consistent metrics across all views
 - Dashboard shows:
@@ -23,6 +25,7 @@ This document describes the enhanced promoter status system that provides clear 
 ## 📊 Status Categories
 
 ### 1. ACTIVE
+
 - **Definition:** Currently assigned to contracts
 - **Description:** Promoters actively working on contract assignments
 - **Use Case:** Track who is currently working
@@ -30,6 +33,7 @@ This document describes the enhanced promoter status system that provides clear 
 - **Color:** Green
 
 ### 2. AVAILABLE
+
 - **Definition:** Ready for assignment but not currently assigned
 - **Description:** Registered promoters ready to take on contract work
 - **Use Case:** Find promoters ready for new assignments
@@ -37,6 +41,7 @@ This document describes the enhanced promoter status system that provides clear 
 - **Color:** Blue
 
 ### 3. ON_LEAVE
+
 - **Definition:** Temporarily unavailable
 - **Description:** Promoters on vacation, sick leave, or personal leave
 - **Use Case:** Track temporary absences
@@ -44,6 +49,7 @@ This document describes the enhanced promoter status system that provides clear 
 - **Color:** Yellow
 
 ### 4. INACTIVE
+
 - **Definition:** Not available for assignments
 - **Description:** Suspended, pending approval, or otherwise unavailable
 - **Use Case:** Manage workforce availability
@@ -51,6 +57,7 @@ This document describes the enhanced promoter status system that provides clear 
 - **Color:** Gray
 
 ### 5. TERMINATED
+
 - **Definition:** No longer with company
 - **Description:** Resigned, contract ended, or terminated
 - **Use Case:** Historical tracking
@@ -60,9 +67,11 @@ This document describes the enhanced promoter status system that provides clear 
 ## 🗄️ Database Schema
 
 ### Migration File
+
 `supabase/migrations/20251023_add_promoter_status_enum.sql`
 
 ### Enum Type
+
 ```sql
 CREATE TYPE promoter_status_enum AS ENUM (
   'active',       -- Currently assigned to contracts
@@ -74,12 +83,13 @@ CREATE TYPE promoter_status_enum AS ENUM (
 ```
 
 ### Table Update
+
 ```sql
 -- Add new enum column
 ALTER TABLE promoters ADD COLUMN status_enum promoter_status_enum;
 
 -- Set default
-ALTER TABLE promoters 
+ALTER TABLE promoters
   ALTER COLUMN status_enum SET DEFAULT 'available'::promoter_status_enum;
 
 -- Add index
@@ -87,7 +97,9 @@ CREATE INDEX idx_promoters_status_enum ON promoters(status_enum);
 ```
 
 ### Status Migration Mapping
+
 The migration automatically maps old status values:
+
 - `'active'` → `active`
 - `'inactive'` → `inactive`
 - `'pending'` → `available`
@@ -99,28 +111,29 @@ The migration automatically maps old status values:
 ## 📈 Enhanced Metrics
 
 ### Metrics Structure
+
 ```typescript
 interface EnhancedPromoterMetrics {
   // Total Counts
-  totalWorkforce: number;           // All registered promoters
-  
+  totalWorkforce: number; // All registered promoters
+
   // By Status
-  activeOnContracts: number;        // Currently working
-  availableForWork: number;         // Ready but not assigned
-  onLeave: number;                  // Temporarily unavailable
-  inactive: number;                 // Not available
-  terminated: number;               // Left company
-  
+  activeOnContracts: number; // Currently working
+  availableForWork: number; // Ready but not assigned
+  onLeave: number; // Temporarily unavailable
+  inactive: number; // Not available
+  terminated: number; // Left company
+
   // Document Compliance
-  fullyCompliant: number;           // All documents valid
-  expiringDocuments: number;        // Expiring within 30 days
-  expiredDocuments: number;         // Already expired
-  complianceRate: number;           // Percentage
-  
+  fullyCompliant: number; // All documents valid
+  expiringDocuments: number; // Expiring within 30 days
+  expiredDocuments: number; // Already expired
+  complianceRate: number; // Percentage
+
   // Utilization
-  utilizationRate: number;          // % of available on contracts
+  utilizationRate: number; // % of available on contracts
   averageContractsPerPromoter: number;
-  
+
   // Details
   details: {
     byStatus: Record<PromoterStatus, number>;
@@ -135,12 +148,14 @@ interface EnhancedPromoterMetrics {
 ## 🔌 API Endpoints
 
 ### Get Enhanced Metrics
+
 ```
 GET /api/promoters/enhanced-metrics
 GET /api/promoters/enhanced-metrics?refresh=true
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -181,6 +196,7 @@ GET /api/promoters/enhanced-metrics?refresh=true
 ### TypeScript/JavaScript
 
 #### Import Types
+
 ```typescript
 import {
   PromoterStatus,
@@ -191,6 +207,7 @@ import {
 ```
 
 #### Get Metrics
+
 ```typescript
 import { getEnhancedPromoterMetrics } from '@/lib/services/promoter-metrics.service';
 
@@ -206,6 +223,7 @@ console.log(`Utilization Rate: ${metrics.utilizationRate}%`);
 ```
 
 #### Use in Components
+
 ```typescript
 'use client';
 
@@ -214,7 +232,7 @@ import type { EnhancedPromoterMetrics } from '@/types/promoter-status';
 
 export function PromoterDashboard() {
   const [metrics, setMetrics] = useState<EnhancedPromoterMetrics | null>(null);
-  
+
   useEffect(() => {
     fetch('/api/promoters/enhanced-metrics')
       .then(res => res.json())
@@ -224,9 +242,9 @@ export function PromoterDashboard() {
         }
       });
   }, []);
-  
+
   if (!metrics) return <div>Loading...</div>;
-  
+
   return (
     <div>
       <h2>Promoter Metrics</h2>
@@ -239,12 +257,13 @@ export function PromoterDashboard() {
 ```
 
 #### Status Dropdown
+
 ```typescript
 import { getStatusOptions, PROMOTER_STATUS_DEFINITIONS } from '@/types/promoter-status';
 
 export function PromoterStatusSelect() {
   const statusOptions = getStatusOptions();
-  
+
   return (
     <select>
       {statusOptions.map(option => (
@@ -260,33 +279,37 @@ export function PromoterStatusSelect() {
 ### SQL
 
 #### Query Status Distribution
+
 ```sql
 SELECT * FROM promoter_status_summary;
 ```
 
 #### Get Comprehensive Metrics
+
 ```sql
 SELECT * FROM get_promoter_metrics();
 ```
 
 #### Count Active Contracts
+
 ```sql
 SELECT count_promoters_with_active_contracts();
 ```
 
 #### Custom Queries
+
 ```sql
 -- Get promoters by status
 SELECT * FROM promoters WHERE status_enum = 'available';
 
 -- Count by status
-SELECT status_enum, COUNT(*) 
-FROM promoters 
+SELECT status_enum, COUNT(*)
+FROM promoters
 GROUP BY status_enum;
 
 -- Get available promoters with valid documents
-SELECT * 
-FROM promoters 
+SELECT *
+FROM promoters
 WHERE status_enum = 'available'
   AND id_card_expiry_date > CURRENT_DATE + INTERVAL '30 days'
   AND passport_expiry_date > CURRENT_DATE + INTERVAL '30 days';
@@ -327,6 +350,7 @@ WHERE status_enum = 'available'
 ## 🚀 Deployment Steps
 
 ### 1. Run Migration
+
 ```bash
 # Connect to your Supabase project
 psql "your-supabase-connection-string"
@@ -336,13 +360,14 @@ psql "your-supabase-connection-string"
 ```
 
 ### 2. Verify Migration
+
 ```sql
 -- Check enum exists
 SELECT * FROM pg_type WHERE typname = 'promoter_status_enum';
 
 -- Check column exists
-SELECT column_name, data_type 
-FROM information_schema.columns 
+SELECT column_name, data_type
+FROM information_schema.columns
 WHERE table_name = 'promoters' AND column_name = 'status_enum';
 
 -- Check data migration
@@ -350,9 +375,11 @@ SELECT * FROM promoter_status_summary;
 ```
 
 ### 3. Update Application Code
+
 The new API endpoint `/api/promoters/enhanced-metrics` is backward compatible. Update components to use the new endpoint gradually.
 
 ### 4. Monitor
+
 ```sql
 -- Check metrics calculation
 SELECT * FROM get_promoter_metrics();
@@ -372,7 +399,9 @@ The migration uses a **gradual approach** for safety:
 5. ⏸️ Old column drop is commented out (uncomment after verification)
 
 ### Rollback Plan
+
 If issues occur:
+
 ```sql
 -- Restore from backup
 UPDATE promoters p
@@ -387,22 +416,26 @@ ALTER TABLE promoters DROP COLUMN status_enum;
 ## 📊 Metrics Explanation
 
 ### Utilization Rate
+
 ```
 utilizationRate = (activeOnContracts / availableWorkforce) × 100
 where availableWorkforce = active + available
 ```
 
 **Example:**
+
 - 12 promoters on contracts
 - 95 total available (active + available)
 - Utilization: 12 / 95 = 13%
 
 ### Compliance Rate
+
 ```
 complianceRate = (fullyCompliant / totalWorkforce) × 100
 ```
 
 **Example:**
+
 - 95 promoters fully compliant
 - 113 total workforce
 - Compliance: 95 / 113 = 84%
@@ -410,21 +443,27 @@ complianceRate = (fullyCompliant / totalWorkforce) × 100
 ## 🔍 Troubleshooting
 
 ### Issue: Metrics showing 0
+
 **Solution:** Check if migration ran successfully
+
 ```sql
 SELECT * FROM promoters LIMIT 5;
 -- Should show status_enum column
 ```
 
 ### Issue: Status not updating
+
 **Solution:** Clear cache
+
 ```typescript
 import { clearPromoterMetricsCache } from '@/lib/services/promoter-metrics.service';
 clearPromoterMetricsCache();
 ```
 
 ### Issue: Old API still used
+
 **Solution:** Search for old endpoint usage
+
 ```bash
 grep -r "dashboard/promoter-metrics" .
 # Replace with: promoters/enhanced-metrics
@@ -447,13 +486,14 @@ grep -r "dashboard/promoter-metrics" .
 
 ## 📝 Change Log
 
-| Date | Version | Changes |
-|------|---------|---------|
-| 2025-10-23 | 1.0.0 | Initial release with status enum system |
+| Date       | Version | Changes                                 |
+| ---------- | ------- | --------------------------------------- |
+| 2025-10-23 | 1.0.0   | Initial release with status enum system |
 
 ## 👥 Support
 
 For questions or issues:
+
 1. Check this documentation
 2. Review the migration file comments
 3. Check the troubleshooting section
@@ -463,4 +503,3 @@ For questions or issues:
 
 **Last Updated:** October 23, 2025
 **Status:** Production Ready ✅
-

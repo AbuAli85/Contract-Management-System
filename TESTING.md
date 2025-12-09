@@ -83,11 +83,13 @@ Copy the token from the output.
 ### Step 2: Set Environment Variable
 
 **Windows (PowerShell):**
+
 ```powershell
 $env:SUPABASE_AUTH_TOKEN="paste-token-here"
 ```
 
 **Linux/macOS:**
+
 ```bash
 export SUPABASE_AUTH_TOKEN="paste-token-here"
 ```
@@ -127,6 +129,7 @@ TEST_USER_PASSWORD=secure-password
 **Problem**: Application not responding
 
 **Solutions**:
+
 - Ensure `npm run dev` is running
 - Check that port 3000 is not blocked
 - Verify network connectivity
@@ -136,6 +139,7 @@ TEST_USER_PASSWORD=secure-password
 **Problem**: Authentication failed or token expired
 
 **Solutions**:
+
 ```bash
 # Regenerate token
 node tests/get-auth-token.js
@@ -152,15 +156,18 @@ npm run auth:diagnose
 **Problem**: This is the critical bug the tests are designed to detect
 
 **Solutions**:
+
 1. Review the [Data Inconsistency Analysis](./docs/data-inconsistency-analysis.md)
 2. Run database optimizations:
+
    ```bash
    # Apply performance indexes
    psql -f database/optimizations/add-performance-indexes.sql
-   
+
    # Or via Supabase Studio:
    # Copy and paste the SQL from the file
    ```
+
 3. Check the API implementation in `app/api/contracts/route.ts`
 4. Verify metrics service is using same filters
 
@@ -169,6 +176,7 @@ npm run auth:diagnose
 **Problem**: Response time > 2000ms
 
 **Solutions**:
+
 - Run performance indexes SQL
 - Check Supabase dashboard for slow queries
 - Review pagination settings
@@ -212,15 +220,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Get Auth Token
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -230,7 +238,7 @@ jobs:
         run: |
           TOKEN=$(node tests/get-auth-token.js 2>/dev/null)
           echo "SUPABASE_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
-      
+
       - name: Run Validation Tests
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
@@ -258,10 +266,10 @@ Example:
 ```javascript
 async function testMyFeature() {
   console.log('\n🧪 Testing My Feature...');
-  
+
   try {
     const result = await makeRequest(`${BASE_URL}/api/my-endpoint`);
-    
+
     if (result.data.success) {
       recordTest('My Feature', 'PASS', 'Feature works');
     } else {
@@ -298,6 +306,7 @@ If tests fail and you need help:
 ## Best Practices
 
 ✅ **Do:**
+
 - Run tests before deploying
 - Use dedicated test accounts
 - Monitor test results in CI/CD
@@ -305,6 +314,7 @@ If tests fail and you need help:
 - Keep authentication tokens secure
 
 ❌ **Don't:**
+
 - Use production admin accounts for testing
 - Commit `.env.local` to git
 - Share authentication tokens
@@ -315,4 +325,3 @@ If tests fail and you need help:
 
 **Last Updated**: October 28, 2025  
 **Version**: 1.0.0
-

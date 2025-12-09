@@ -1,23 +1,23 @@
 import { Badge } from '@/components/ui/badge';
-import { 
-  Clock, 
-  CheckCircle, 
-  PlayCircle, 
-  XCircle, 
-  FileText, 
+import {
+  Clock,
+  CheckCircle,
+  PlayCircle,
+  XCircle,
+  FileText,
   AlertTriangle,
   CheckCircle2,
-  X
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type ContractStatus = 
-  | 'draft' 
-  | 'pending' 
-  | 'approved' 
-  | 'active' 
-  | 'completed' 
-  | 'terminated' 
+export type ContractStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'active'
+  | 'completed'
+  | 'terminated'
   | 'expired'
   | 'rejected';
 
@@ -79,24 +79,24 @@ const statusConfig = {
   },
 };
 
-export function ContractStatusBadge({ 
-  status, 
-  className, 
-  showIcon = true, 
-  size = 'md' 
+export function ContractStatusBadge({
+  status,
+  className,
+  showIcon = true,
+  size = 'md',
 }: ContractStatusBadgeProps) {
   const config = statusConfig[status];
-  
+
   if (!config) {
     return (
-      <Badge variant="secondary" className={className}>
+      <Badge variant='secondary' className={className}>
         {status}
       </Badge>
     );
   }
 
   const Icon = config.icon;
-  
+
   const sizeClasses = {
     sm: 'text-xs px-2 py-1',
     md: 'text-sm px-2.5 py-1.5',
@@ -110,7 +110,7 @@ export function ContractStatusBadge({
   };
 
   return (
-    <Badge 
+    <Badge
       variant={config.variant}
       className={cn(
         'inline-flex items-center gap-1.5 font-medium border',
@@ -129,7 +129,7 @@ export function ContractStatusBadge({
 export function getStatusColor(status: ContractStatus): string {
   const config = statusConfig[status];
   if (!config) return '#6b7280'; // gray fallback
-  
+
   const colorMap = {
     draft: '#6b7280', // gray
     pending: '#f97316', // orange
@@ -140,7 +140,7 @@ export function getStatusColor(status: ContractStatus): string {
     expired: '#ef4444', // red
     rejected: '#ef4444', // red
   };
-  
+
   return colorMap[status] || '#6b7280';
 }
 
@@ -156,7 +156,7 @@ export function getStatusDescription(status: ContractStatus): string {
     expired: 'Contract has reached its end date',
     rejected: 'Contract was rejected during review',
   };
-  
+
   return descriptions[status] || 'Unknown status';
 }
 

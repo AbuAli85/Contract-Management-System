@@ -10,6 +10,7 @@ promoters: promoter ? [promoter] : null,  // Wrapping in array
 ```
 
 **API Response Structure:**
+
 ```json
 {
   "contracts": [
@@ -17,7 +18,8 @@ promoters: promoter ? [promoter] : null,  // Wrapping in array
       "id": "abc-123",
       "contract_number": "PAC-2025-001",
       "promoter_id": "def-456",
-      "promoters": [  // ❌ Array with one element
+      "promoters": [
+        // ❌ Array with one element
         {
           "id": "def-456",
           "name_en": "John Doe",
@@ -38,6 +40,7 @@ promoters: promoter,  // Return as object, not array
 ```
 
 **API Response Structure:**
+
 ```json
 {
   "contracts": [
@@ -45,7 +48,8 @@ promoters: promoter,  // Return as object, not array
       "id": "abc-123",
       "contract_number": "PAC-2025-001",
       "promoter_id": "def-456",
-      "promoters": {  // ✅ Single object
+      "promoters": {
+        // ✅ Single object
         "id": "def-456",
         "name_en": "John Doe",
         "name_ar": "جون دو",
@@ -224,7 +228,8 @@ export type ContractWithRelations = {
   contract_number: string | null;
   promoter_id: string | null;
   // ...
-  promoters: {  // ✅ Object type (not array)
+  promoters: {
+    // ✅ Object type (not array)
     id: string;
     name_en: string | null;
     name_ar: string | null;
@@ -265,6 +270,7 @@ promoters: { id: "...", name_en: "..." } | null  // Object ✅
 ## Impact Summary
 
 ### Lines Changed
+
 - **File 1:** `app/api/contracts/route.ts`
   - Line 269: Changed array wrapping to direct assignment
   - Lines 229-236: Added logging for promoter fetch
@@ -274,10 +280,12 @@ promoters: { id: "...", name_en: "..." } | null  // Object ✅
   - Lines 643-646: Updated CSV export to handle object instead of array
 
 ### Contracts Affected
+
 - **All contracts in the system** that have a promoter_id
 - Estimated: All 113 promoters' contracts will now display correctly
 
 ### User-Visible Changes
+
 1. ✅ Promoter names display in contracts table
 2. ✅ Promoter names display in grid view
 3. ✅ Promoter names export correctly in CSV
@@ -291,11 +299,13 @@ promoters: { id: "...", name_en: "..." } | null  // Object ✅
 ### Browser Console Logs
 
 #### ❌ Before (No logs about promoters)
+
 ```
 ✅ Contracts API: Successfully fetched 50 contracts
 ```
 
 #### ✅ After (Detailed logging)
+
 ```
 ✅ Contracts API: Successfully fetched 50 contracts
 ✅ Contracts API: Fetched 45 promoters
@@ -305,26 +315,28 @@ promoters: { id: "...", name_en: "..." } | null  // Object ✅
 ### Network Tab Response
 
 #### ❌ Before
+
 ```json
 {
   "success": true,
   "contracts": [
     {
       "id": "...",
-      "promoters": [{ "name_en": "John" }]  // ❌ Array
+      "promoters": [{ "name_en": "John" }] // ❌ Array
     }
   ]
 }
 ```
 
 #### ✅ After
+
 ```json
 {
   "success": true,
   "contracts": [
     {
       "id": "...",
-      "promoters": { "name_en": "John" }  // ✅ Object
+      "promoters": { "name_en": "John" } // ✅ Object
     }
   ]
 }
@@ -334,4 +346,3 @@ promoters: { id: "...", name_en: "..." } | null  // Object ✅
 
 **Created:** 2025-10-22  
 **Status:** ✅ **FIXED** - Ready for deployment
-

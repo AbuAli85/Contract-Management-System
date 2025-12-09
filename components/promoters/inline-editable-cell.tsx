@@ -27,7 +27,7 @@ interface InlineEditableCellProps {
 
 /**
  * Inline Editable Cell Component
- * 
+ *
  * Allows quick editing of table cells with:
  * - Click to edit mode
  * - Save/Cancel actions
@@ -84,7 +84,11 @@ export function InlineEditableCell({
     if (validator) {
       const validationResult = validator(editValue);
       if (validationResult !== true) {
-        setError(typeof validationResult === 'string' ? validationResult : 'Invalid value');
+        setError(
+          typeof validationResult === 'string'
+            ? validationResult
+            : 'Invalid value'
+        );
         return;
       }
     }
@@ -135,7 +139,7 @@ export function InlineEditableCell({
             ref={inputRef}
             type={type}
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={e => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(
               'h-8 text-sm',
@@ -145,9 +149,7 @@ export function InlineEditableCell({
             disabled={isSaving}
             aria-label={`Edit ${fieldLabel}`}
           />
-          {error && (
-            <p className='text-xs text-red-600 mt-1'>{error}</p>
-          )}
+          {error && <p className='text-xs text-red-600 mt-1'>{error}</p>}
         </div>
         <div className='flex items-center gap-1 flex-shrink-0'>
           <TooltipProvider>
@@ -212,7 +214,9 @@ export function InlineEditableCell({
             aria-label={`Edit ${fieldLabel}: ${value || placeholder}`}
           >
             <span className='flex-1 min-w-0 truncate'>
-              {value || <span className='text-muted-foreground'>{placeholder}</span>}
+              {value || (
+                <span className='text-muted-foreground'>{placeholder}</span>
+              )}
             </span>
             <Edit2 className='h-3 w-3 text-muted-foreground opacity-0 group-hover/edit:opacity-100 transition-opacity flex-shrink-0' />
           </button>
@@ -234,24 +238,23 @@ export const validators = {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(value) || 'Invalid email format';
   },
-  
+
   phone: (value: string) => {
     if (!value) return true; // Allow empty
     const phoneRegex = /^[\d\s\-\+\(\)]+$/;
     return phoneRegex.test(value) || 'Invalid phone format';
   },
-  
+
   required: (value: string) => {
     return value.trim().length > 0 || 'This field is required';
   },
-  
+
   minLength: (min: number) => (value: string) => {
     if (!value) return true; // Allow empty
     return value.length >= min || `Minimum ${min} characters required`;
   },
-  
+
   maxLength: (max: number) => (value: string) => {
     return value.length <= max || `Maximum ${max} characters allowed`;
   },
 };
-

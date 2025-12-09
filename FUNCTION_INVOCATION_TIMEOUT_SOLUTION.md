@@ -3,6 +3,7 @@
 ## 1. **The Fix: What I've Implemented**
 
 ### **Root Cause Analysis**
+
 Your FUNCTION_INVOCATION_TIMEOUT error was caused by:
 
 1. **Insufficient Timeout Configuration**: Vercel functions had only 30-second timeouts
@@ -13,6 +14,7 @@ Your FUNCTION_INVOCATION_TIMEOUT error was caused by:
 ### **Immediate Fixes Applied**
 
 #### ✅ **Updated Vercel Configuration** (`vercel.json`)
+
 ```json
 {
   "functions": {
@@ -36,11 +38,13 @@ Your FUNCTION_INVOCATION_TIMEOUT error was caused by:
 ```
 
 #### ✅ **Added Timeout Handling to Critical Routes**
+
 - **PDF Generation**: 100-second timeout with proper error handling
 - **Contract Generation**: 80-second timeout with race conditions
 - **Created Reusable Timeout Utilities**: `lib/timeout-utils.ts`
 
 #### ✅ **Enhanced Error Reporting**
+
 - Processing time tracking
 - Timeout detection
 - Better error messages
@@ -50,12 +54,14 @@ Your FUNCTION_INVOCATION_TIMEOUT error was caused by:
 ### **What Was Happening vs. What Should Happen**
 
 **What Was Happening:**
+
 - API routes were running indefinitely on complex operations
 - No timeout boundaries meant functions could run for hours
 - Vercel's default 10-second timeout was too short for your operations
 - No graceful degradation when operations took too long
 
 **What Should Happen:**
+
 - Operations should complete within reasonable time limits
 - Timeout boundaries should prevent infinite execution
 - Graceful error handling when timeouts occur
@@ -72,6 +78,7 @@ Your FUNCTION_INVOCATION_TIMEOUT error was caused by:
 ### **The Misconception**
 
 The main misconception was that **serverless functions should handle any operation duration**. In reality:
+
 - Serverless functions have strict execution limits
 - Complex operations need timeout boundaries
 - Long-running tasks should be broken into smaller chunks
@@ -82,6 +89,7 @@ The main misconception was that **serverless functions should handle any operati
 ### **Why This Error Exists**
 
 The FUNCTION_INVOCATION_TIMEOUT error exists to:
+
 - **Prevent Resource Exhaustion**: Stop runaway processes from consuming server resources
 - **Ensure Fair Usage**: Prevent one function from blocking others
 - **Maintain Performance**: Keep the platform responsive for all users
@@ -105,6 +113,7 @@ Think of serverless functions as **stateless, short-lived workers**:
 ```
 
 **Key Principles:**
+
 1. **Stateless**: No persistent state between invocations
 2. **Short-lived**: Complete within seconds, not minutes
 3. **Bounded**: Always have timeout limits
@@ -147,34 +156,39 @@ const data = await db.query(`
 ### **Patterns to Avoid**
 
 1. **Sequential Database Operations**
+
    ```typescript
    // Instead of this:
    const user = await getUser(id);
    const profile = await getProfile(user.id);
    const settings = await getSettings(profile.id);
-   
+
    // Do this:
    const [user, profile, settings] = await Promise.all([
      getUser(id),
      getProfile(id),
-     getSettings(id)
+     getSettings(id),
    ]);
    ```
 
 2. **Unbounded Loops**
+
    ```typescript
    // Instead of this:
    for (const item of items) {
      await processItem(item); // Could take forever
    }
-   
+
    // Do this:
    const results = await Promise.all(
-     items.map(item => withTimeout(() => processItem(item), TIMEOUT_CONFIGS.STANDARD))
+     items.map(item =>
+       withTimeout(() => processItem(item), TIMEOUT_CONFIGS.STANDARD)
+     )
    );
    ```
 
 3. **Missing Error Boundaries**
+
    ```typescript
    // Instead of this:
    try {
@@ -183,7 +197,7 @@ const data = await db.query(`
    } catch (error) {
      throw error; // No timeout handling
    }
-   
+
    // Do this:
    const result = await withTimeout(
      () => longOperation(),
@@ -202,6 +216,7 @@ const data = await db.query(`
 ## 5. **Alternative Approaches and Trade-offs**
 
 ### **Approach 1: Increase Timeouts (What We Did)**
+
 ```json
 {
   "functions": {
@@ -213,16 +228,19 @@ const data = await db.query(`
 ```
 
 **Pros:**
+
 - Quick fix
 - Minimal code changes
 - Works for most cases
 
 **Cons:**
+
 - Higher costs (longer execution times)
 - Still has limits (300 seconds max on Vercel Pro)
 - Doesn't solve the root cause
 
 ### **Approach 2: Break Into Smaller Functions**
+
 ```typescript
 // Instead of one large function:
 export async function POST(request) {
@@ -249,17 +267,20 @@ export async function processPDF(jobId) {
 ```
 
 **Pros:**
+
 - Better scalability
 - More resilient
 - Easier to debug
 - Can retry individual steps
 
 **Cons:**
+
 - More complex architecture
 - Requires job queue system
 - More moving parts
 
 ### **Approach 3: Use Background Jobs**
+
 ```typescript
 // Using a job queue like Bull, Agenda, or Vercel's background functions
 export async function POST(request) {
@@ -274,17 +295,20 @@ export async function processPDFJob(job) {
 ```
 
 **Pros:**
+
 - True async processing
 - Better user experience
 - Can handle very long operations
 - Built-in retry logic
 
 **Cons:**
+
 - Requires additional infrastructure
 - More complex setup
 - Need to handle job status tracking
 
 ### **Approach 4: Optimize Database Operations**
+
 ```typescript
 // Instead of multiple queries:
 const user = await getUser(id);
@@ -292,7 +316,8 @@ const contracts = await getContracts(user.id);
 const analytics = await getAnalytics(contracts);
 
 // Use single optimized query:
-const data = await db.query(`
+const data = await db.query(
+  `
   SELECT 
     u.*,
     json_agg(c.*) as contracts,
@@ -302,15 +327,19 @@ const data = await db.query(`
   LEFT JOIN analytics a ON a.user_id = u.id
   WHERE u.id = $1
   GROUP BY u.id
-`, [id]);
+`,
+  [id]
+);
 ```
 
 **Pros:**
+
 - Faster execution
 - Fewer database round trips
 - Better performance
 
 **Cons:**
+
 - More complex SQL
 - Harder to maintain
 - May not always be possible
@@ -318,6 +347,7 @@ const data = await db.query(`
 ## 6. **Implementation Guide**
 
 ### **Step 1: Apply the Immediate Fixes**
+
 ```bash
 # The changes I made are already applied:
 # 1. Updated vercel.json with proper timeouts
@@ -326,6 +356,7 @@ const data = await db.query(`
 ```
 
 ### **Step 2: Test the Fixes**
+
 ```bash
 # Deploy to Vercel
 git add .
@@ -339,17 +370,18 @@ curl -X POST https://your-app.vercel.app/api/pdf-generation \
 ```
 
 ### **Step 3: Monitor Performance**
+
 ```typescript
 // Add monitoring to your routes:
 export async function POST(request) {
   const startTime = Date.now();
-  
+
   try {
     const result = await withTimeout(
       () => processRequest(request),
       TIMEOUT_CONFIGS.HEAVY
     );
-    
+
     logTimeoutInfo('PDF Generation', Date.now() - startTime, false);
     return result;
   } catch (error) {
@@ -360,6 +392,7 @@ export async function POST(request) {
 ```
 
 ### **Step 4: Optimize Further (Optional)**
+
 ```typescript
 // For even better performance, consider:
 // 1. Database query optimization
@@ -371,6 +404,7 @@ export async function POST(request) {
 ## 7. **Prevention Strategy**
 
 ### **Development Guidelines**
+
 1. **Always set timeouts** for operations > 5 seconds
 2. **Use Promise.all()** for parallel operations
 3. **Implement circuit breakers** for external APIs
@@ -378,6 +412,7 @@ export async function POST(request) {
 5. **Test with realistic data** volumes
 
 ### **Code Review Checklist**
+
 - [ ] Are there any operations without timeout handling?
 - [ ] Are database queries optimized?
 - [ ] Are external API calls properly handled?
@@ -385,6 +420,7 @@ export async function POST(request) {
 - [ ] Are there any unbounded loops?
 
 ### **Monitoring Setup**
+
 ```typescript
 // Add to your monitoring:
 const metrics = {
@@ -392,7 +428,7 @@ const metrics = {
   timeoutOccurred: false,
   operationType: 'pdf-generation',
   userId: user?.id,
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
 };
 
 // Send to your monitoring service

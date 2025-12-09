@@ -10,6 +10,7 @@
 ### Day 1-2: Setup Email Service
 
 #### **Step 1: Choose SendGrid (Recommended)**
+
 ```bash
 # Sign up at https://sendgrid.com
 # Free tier: 100 emails/day
@@ -19,7 +20,9 @@ npm install @sendgrid/mail
 ```
 
 #### **Step 2: Add Environment Variables**
+
 Add to `.env.local`:
+
 ```env
 SENDGRID_API_KEY=SG.xxxxxxxxxxxxx
 SENDGRID_FROM_EMAIL=noreply@yourdomain.com
@@ -27,7 +30,9 @@ SENDGRID_FROM_NAME=Contract Management System
 ```
 
 #### **Step 3: Create Email Service**
+
 Create `lib/services/email.service.ts`:
+
 ```typescript
 import sgMail from '@sendgrid/mail';
 
@@ -61,7 +66,9 @@ export async function sendEmail(options: EmailOptions) {
 ```
 
 #### **Step 4: Update Notification Service**
+
 Replace placeholders in `lib/services/promoter-notification.service.ts`:
+
 ```typescript
 // Line 108-129: Replace placeholder
 import { sendEmail } from '@/lib/services/email.service';
@@ -83,6 +90,7 @@ async function sendEmailNotification(
 ```
 
 #### **Step 5: Create Email Templates**
+
 Create `lib/email-templates/`:
 
 ```typescript
@@ -149,6 +157,7 @@ export function contractApprovalEmail(data: {
 ### Day 3-4: Setup SMS (Optional but Recommended)
 
 #### **Step 1: Setup Twilio**
+
 ```bash
 npm install twilio
 
@@ -159,6 +168,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 ```
 
 #### **Step 2: Create SMS Service**
+
 ```typescript
 // lib/services/sms.service.ts
 import twilio from 'twilio';
@@ -186,6 +196,7 @@ export async function sendSMS(to: string, message: string) {
 ### Day 5: Testing & Deployment
 
 #### **Test Checklist:**
+
 - [ ] Send test email to yourself
 - [ ] Test document expiry notification
 - [ ] Test contract approval email
@@ -196,6 +207,7 @@ export async function sendSMS(to: string, message: string) {
 - [ ] Test SMS (if implemented)
 
 #### **Deploy:**
+
 ```bash
 npm run build
 vercel --prod
@@ -210,11 +222,13 @@ vercel --prod
 ### **Option A: Native PDF (Recommended Long-term)**
 
 #### **Day 1-2: Setup jsPDF**
+
 ```bash
 npm install jspdf jspdf-autotable html2canvas
 ```
 
 #### **Day 3-4: Create PDF Service**
+
 ```typescript
 // lib/services/pdf-generation.service.ts
 import jsPDF from 'jspdf';
@@ -240,7 +254,7 @@ export class PDFGenerationService {
     // Parties
     doc.text('First Party:', 20, 70);
     doc.text(contractData.firstParty.name, 30, 80);
-    
+
     doc.text('Second Party:', 20, 100);
     doc.text(contractData.secondParty.name, 30, 110);
 
@@ -275,7 +289,9 @@ export class PDFGenerationService {
 ```
 
 #### **Day 5: Create Templates**
+
 Create reusable templates:
+
 ```typescript
 // lib/pdf-templates/employment-contract.template.ts
 export function generateEmploymentContract(data: ContractData) {
@@ -288,6 +304,7 @@ export function generateEmploymentContract(data: ContractData) {
 ### **Option B: Complete Make.com Integration (Faster)**
 
 #### **Day 1-2: Setup Make.com**
+
 1. Go to https://make.com
 2. Create account (free tier available)
 3. Import scenario from `MAKECOM_SCENARIO_BLUEPRINT.json`
@@ -295,25 +312,28 @@ export function generateEmploymentContract(data: ContractData) {
 5. Test the scenario
 
 #### **Day 3: Configure Webhook**
+
 Add to `.env.local`:
+
 ```env
 MAKECOM_WEBHOOK_URL=https://hook.make.com/xxxxxx
 MAKECOM_WEBHOOK_SECRET=your_secret_key
 ```
 
 #### **Day 4-5: Error Handling**
+
 ```typescript
 // app/api/webhook/contract-generation/route.ts
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    
+
     // Validate webhook signature
     // Process PDF generation request
     // Poll for completion
     // Update contract with PDF URL
     // Send notification
-    
+
     return Response.json({ success: true });
   } catch (error) {
     // Retry logic
@@ -330,6 +350,7 @@ export async function POST(req: Request) {
 ### Testing Checklist
 
 #### **Email Testing:**
+
 - [ ] All email templates render correctly
 - [ ] Links work in emails
 - [ ] Emails don't go to spam
@@ -337,6 +358,7 @@ export async function POST(req: Request) {
 - [ ] Unsubscribe works (if applicable)
 
 #### **PDF Testing:**
+
 - [ ] PDFs generate correctly
 - [ ] All data shows properly
 - [ ] Arabic text renders (if applicable)
@@ -344,18 +366,21 @@ export async function POST(req: Request) {
 - [ ] Storage works correctly
 
 #### **Integration Testing:**
+
 - [ ] Contract approval workflow with emails
 - [ ] Document expiry with notifications
 - [ ] PDF generation end-to-end
 - [ ] Payment (if implemented)
 
 #### **Performance Testing:**
+
 - [ ] Page load times < 3 seconds
 - [ ] API response times < 500ms
 - [ ] Bulk operations work
 - [ ] No memory leaks
 
 #### **Security Testing:**
+
 - [ ] Authentication works
 - [ ] Authorization is enforced
 - [ ] XSS protection
@@ -365,6 +390,7 @@ export async function POST(req: Request) {
 ### Polish & Deploy
 
 #### **Final Checks:**
+
 ```bash
 # Run linter
 npm run lint
@@ -383,6 +409,7 @@ npm test
 ```
 
 #### **Deploy to Production:**
+
 ```bash
 # Set production environment variables in Vercel
 vercel env add SENDGRID_API_KEY production
@@ -417,6 +444,7 @@ After completing these 3-4 weeks, you should have:
 ## 🚨 **TROUBLESHOOTING**
 
 ### **Email not sending:**
+
 1. Check SendGrid API key
 2. Verify sender email is authenticated
 3. Check SendGrid dashboard for errors
@@ -424,6 +452,7 @@ After completing these 3-4 weeks, you should have:
 5. Test with SendGrid's test email
 
 ### **PDF generation fails:**
+
 1. Check Make.com scenario status
 2. Verify Google Docs API is enabled
 3. Check webhook URL is correct
@@ -431,6 +460,7 @@ After completing these 3-4 weeks, you should have:
 5. Test with sample data
 
 ### **Performance issues:**
+
 1. Enable caching (Redis)
 2. Optimize database queries
 3. Add indexes to tables
@@ -442,13 +472,16 @@ After completing these 3-4 weeks, you should have:
 ## 💰 **BUDGET PLANNING**
 
 ### **Initial Setup Costs:**
+
 - SendGrid account: $0 (free tier) or $15/mo
 - Twilio account: $0 initial + usage
 - Make.com: $0 (free tier) or $9/mo
 - **Total:** $0-25/month to start
 
 ### **Scaling Costs:**
+
 As you grow:
+
 - SendGrid: Up to $50/mo (200k emails)
 - Twilio: ~$0.0075 per SMS
 - Vercel: $20-50/mo
@@ -462,16 +495,19 @@ As you grow:
 Create these documents for your team:
 
 ### **For Administrators:**
+
 1. **Admin Guide** - User management, system configuration
 2. **Troubleshooting Guide** - Common issues and fixes
 3. **Backup & Recovery** - Data protection procedures
 
 ### **For Regular Users:**
+
 1. **User Manual** - How to use the system
 2. **Contract Creation Guide** - Step-by-step process
 3. **Document Upload Guide** - How to submit documents
 
 ### **For Developers:**
+
 1. **API Documentation** - Endpoint reference
 2. **Deployment Guide** - Already exists ✅
 3. **Maintenance Guide** - Routine tasks
@@ -483,6 +519,7 @@ Create these documents for your team:
 Use this to track your progress:
 
 ### **Week 1: Email & SMS**
+
 - [ ] SendGrid account created
 - [ ] Email service implemented
 - [ ] Email templates created
@@ -493,6 +530,7 @@ Use this to track your progress:
 - [ ] Deployed to production
 
 ### **Week 2: PDF Generation**
+
 - [ ] Approach chosen (Native vs Make.com)
 - [ ] PDF service implemented
 - [ ] Templates created
@@ -502,6 +540,7 @@ Use this to track your progress:
 - [ ] Deployed to production
 
 ### **Week 3-4: Testing & Polish**
+
 - [ ] All features tested
 - [ ] User acceptance testing done
 - [ ] Performance optimized
@@ -518,12 +557,14 @@ Use this to track your progress:
 Once you've completed the above (2-4 weeks), consider:
 
 ### **Phase 2: Enhancement** (Optional)
+
 1. RTL/Arabic support (2-3 weeks)
 2. Accessibility compliance (2-3 weeks)
 3. Mobile optimization (1-2 weeks)
 4. Performance optimization (1-2 weeks)
 
 ### **Phase 3: Advanced Features** (Optional)
+
 1. Payment processing (2-3 weeks)
 2. Advanced analytics (3-4 weeks)
 3. API for integrations (2-3 weeks)
@@ -536,6 +577,7 @@ Once you've completed the above (2-4 weeks), consider:
 You currently have an **85% complete, production-ready system**. With 2-4 weeks of focused work on email/PDF integration, you'll have a **world-class contract management platform**.
 
 **Your system is already:**
+
 - ✅ Professionally architected
 - ✅ Secure and robust
 - ✅ Feature-rich
@@ -543,6 +585,7 @@ You currently have an **85% complete, production-ready system**. With 2-4 weeks 
 - ✅ Scalable
 
 **After this guide:**
+
 - ✅ **100% production-ready**
 - ✅ **Fully functional**
 - ✅ **Enterprise-grade**
@@ -554,4 +597,3 @@ You currently have an **85% complete, production-ready system**. With 2-4 weeks 
 **Questions?** Check the comprehensive analysis in `SYSTEM_COMPLETENESS_ANALYSIS.md`
 
 **Last Updated:** October 28, 2025
-

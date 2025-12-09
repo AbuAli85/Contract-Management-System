@@ -34,6 +34,7 @@ curl https://portal.thesmartpro.io/api/test-email
 ```
 
 **Pass Criteria:**
+
 - ✅ API returns success: true
 - ✅ Message ID is returned
 - ✅ Email arrives in inbox
@@ -66,6 +67,7 @@ curl https://portal.thesmartpro.io/api/cron/check-document-expiry
 ```
 
 **Pass Criteria:**
+
 - ✅ Alerts sent matches number of expiring documents
 - ✅ Email contains correct promoter name
 - ✅ Expiry date is accurate
@@ -94,6 +96,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/register \
 ```
 
 **Pass Criteria:**
+
 - ✅ Email arrives within 60 seconds
 - ✅ Personalized with user's name
 - ✅ Login link works
@@ -130,6 +133,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/forgot-password \
 ```
 
 **Pass Criteria:**
+
 - ✅ Email arrives quickly
 - ✅ Reset link works
 - ✅ Link expires after 1 hour
@@ -162,6 +166,7 @@ curl -X PATCH https://portal.thesmartpro.io/api/contracts/CONTRACT_ID \
 ```
 
 **Pass Criteria:**
+
 - ✅ Email sent to promoter
 - ✅ Status badges have correct colors
 - ✅ Reason is displayed
@@ -190,6 +195,7 @@ curl -X POST https://portal.thesmartpro.io/api/notifications/bulk \
 ```
 
 **Pass Criteria:**
+
 - ✅ All emails delivered
 - ✅ No rate limit errors
 - ✅ Delivery status tracked
@@ -228,6 +234,7 @@ curl -X POST https://portal.thesmartpro.io/api/pdf/generate-contract \
 ```
 
 **Pass Criteria:**
+
 - ✅ PDF generates without errors
 - ✅ File size is reasonable (< 5MB)
 - ✅ PDF opens in viewer
@@ -240,40 +247,48 @@ curl -X POST https://portal.thesmartpro.io/api/pdf/generate-contract \
 Open the generated PDF and verify:
 
 **Header:**
+
 - ✅ Professional title "EMPLOYMENT CONTRACT"
 - ✅ Contract number is correct
 - ✅ Date is current
 
 **Parties Section:**
+
 - ✅ Employer name, CRN, address
 - ✅ Employee name, ID, contact info
 - ✅ All data matches database
 
 **Job Details:**
+
 - ✅ Job title, department, location
 - ✅ Working hours (if specified)
 
 **Contract Terms:**
+
 - ✅ Start date and end date
 - ✅ Formatted correctly (DD Month YYYY)
 - ✅ Probation period (if applicable)
 
 **Compensation:**
+
 - ✅ Basic salary with correct currency
 - ✅ Allowances shown
 - ✅ Total calculated correctly
 - ✅ Numbers formatted with commas
 
 **Special Terms:**
+
 - ✅ Special terms appear
 - ✅ Text wrapping works
 - ✅ No text cutoff
 
 **Signatures:**
+
 - ✅ Signature boxes present
 - ✅ Names in correct positions
 
 **Footer:**
+
 - ✅ Contract number
 - ✅ Generation date
 - ✅ Page numbers
@@ -300,6 +315,7 @@ curl -X POST https://portal.thesmartpro.io/api/pdf/generate-contract \
 ```
 
 **Pass Criteria:**
+
 - ✅ Returns error (not 500)
 - ✅ Lists missing fields
 - ✅ Helpful error message
@@ -330,6 +346,7 @@ file contract.pdf
 ```
 
 **Pass Criteria:**
+
 - ✅ PDF downloads as attachment
 - ✅ Filename is correct format
 - ✅ File is valid PDF
@@ -353,6 +370,7 @@ curl -X POST https://portal.thesmartpro.io/api/pdf/generate-contract \
 ```
 
 **Visual Checks:**
+
 - ✅ Header has blue gradient background
 - ✅ Section headers are styled
 - ✅ Salary box has background color
@@ -383,6 +401,7 @@ curl -X POST https://portal.thesmartpro.io/api/pdf/generate-contract \
 ```
 
 **Pass Criteria:**
+
 - ✅ PDF generated
 - ✅ Email sent
 - ✅ PDF URL in email works
@@ -417,6 +436,7 @@ curl -X POST https://portal.thesmartpro.io/api/pdf/generate-contract \
    - ✅ Alerts sent as documents near expiry
 
 **All emails should:**
+
 - ✅ Have consistent branding
 - ✅ Be professional
 - ✅ Work on desktop and mobile
@@ -443,6 +463,7 @@ wait
 ```
 
 **Pass Criteria:**
+
 - ✅ All PDFs generate successfully
 - ✅ No timeout errors
 - ✅ Generation time < 3 seconds per PDF
@@ -475,6 +496,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/forgot-password \
 ```
 
 **Pass Criteria:**
+
 - ✅ All errors return proper HTTP codes
 - ✅ Error messages are helpful
 - ✅ No stack traces exposed
@@ -485,6 +507,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/forgot-password \
 ## ✅ Final Checklist
 
 ### Email System
+
 - [ ] Test endpoint returns success
 - [ ] Document expiry alerts work
 - [ ] Welcome emails sent on registration
@@ -496,6 +519,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/forgot-password \
 - [ ] Spam filters don't block emails
 
 ### PDF Generation
+
 - [ ] Native jsPDF generates PDFs
 - [ ] All contract data appears
 - [ ] PDF formatting is correct
@@ -506,6 +530,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/forgot-password \
 - [ ] PDFs open in all viewers
 
 ### Integration
+
 - [ ] Email + PDF works together
 - [ ] Complete user journey succeeds
 - [ ] Performance is acceptable
@@ -544,18 +569,21 @@ To consider features **production-ready**:
 ### Production Monitoring
 
 **Email Metrics (Resend Dashboard):**
+
 - Delivery rate
 - Bounce rate
 - Open rate
 - Spam rate
 
 **PDF Metrics (Server Logs):**
+
 - Generation time
 - Success/failure rate
 - Storage usage
 - Download count
 
 **Alerts to Set Up:**
+
 - Email delivery rate < 90%
 - PDF generation time > 5 seconds
 - Storage usage > 80%
@@ -566,4 +594,3 @@ To consider features **production-ready**:
 **Testing Time:** 2-3 hours  
 **Recommended:** Test in staging environment first  
 **Status:** 🎉 **Ready for comprehensive testing!**
-

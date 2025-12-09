@@ -4,4 +4,3 @@ export interface BaseErrorProps {
   onCancel?: () => void;
   showRetry?: boolean;
 }
-

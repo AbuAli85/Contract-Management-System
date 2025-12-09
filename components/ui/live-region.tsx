@@ -1,6 +1,6 @@
 /**
  * Live Region Component
- * 
+ *
  * ARIA live region for announcing dynamic content changes to screen readers.
  * Useful for announcing bulk action results, loading states, etc.
  */
@@ -81,7 +81,7 @@ export function useLiveAnnouncer() {
   const announce = React.useCallback((message: string) => {
     // Clear first to ensure the change is detected
     setAnnouncement('');
-    
+
     // Use setTimeout to ensure the DOM updates
     setTimeout(() => {
       setAnnouncement(message);
@@ -89,11 +89,7 @@ export function useLiveAnnouncer() {
   }, []);
 
   const LiveAnnouncerComponent = React.useMemo(
-    () => (
-      <LiveRegion>
-        {announcement}
-      </LiveRegion>
-    ),
+    () => <LiveRegion>{announcement}</LiveRegion>,
     [announcement]
   );
 
@@ -102,4 +98,3 @@ export function useLiveAnnouncer() {
     LiveAnnouncer: LiveAnnouncerComponent,
   };
 }
-

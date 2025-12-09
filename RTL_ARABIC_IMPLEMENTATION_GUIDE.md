@@ -24,6 +24,7 @@ The SmartPro Promoters Portal has basic Arabic (ar) locale support configured bu
 ### 1. RTL Layout Implementation
 
 #### Current Issues:
+
 - No automatic direction switching based on locale
 - Layouts don't flip for RTL languages
 - Icons and UI elements maintain LTR positions
@@ -32,6 +33,7 @@ The SmartPro Promoters Portal has basic Arabic (ar) locale support configured bu
 #### Implementation:
 
 **Add Direction to HTML Tag:**
+
 ```tsx
 // app/[locale]/layout.tsx
 import { NextIntlClientProvider } from 'next-intl';
@@ -39,7 +41,7 @@ import { getMessages, getLocale } from 'next-intl/server';
 
 export default async function LocaleLayout({
   children,
-  params: { locale }
+  params: { locale },
 }: {
   children: React.ReactNode;
   params: { locale: string };
@@ -50,9 +52,11 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'}>
       <head />
-      <body className={cn(
-        isRTL && 'font-arabic', // Use Arabic font
-      )}>
+      <body
+        className={cn(
+          isRTL && 'font-arabic' // Use Arabic font
+        )}
+      >
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
@@ -63,6 +67,7 @@ export default async function LocaleLayout({
 ```
 
 **Add RTL-Aware Tailwind Classes:**
+
 ```tsx
 // Use logical properties that automatically flip
 <div className="ms-4 me-auto"> {/* margin-inline-start, margin-inline-end */}
@@ -78,6 +83,7 @@ export default async function LocaleLayout({
 ```
 
 **Configure Tailwind for RTL:**
+
 ```js
 // tailwind.config.js
 module.exports = {
@@ -96,11 +102,12 @@ module.exports = {
 ```
 
 **Load Arabic Fonts:**
+
 ```tsx
 // app/[locale]/layout.tsx
 import { Cairo } from 'next/font/google';
 
-const cairo = Cairo({ 
+const cairo = Cairo({
   subsets: ['arabic', 'latin'],
   display: 'swap',
   variable: '--font-arabic',
@@ -108,8 +115,8 @@ const cairo = Cairo({
 
 export default function RootLayout({ children, params }: Props) {
   return (
-    <html 
-      lang={params.locale} 
+    <html
+      lang={params.locale}
       dir={params.locale === 'ar' ? 'rtl' : 'ltr'}
       className={cairo.variable}
     >
@@ -124,6 +131,7 @@ export default function RootLayout({ children, params }: Props) {
 ### 2. Component-Level RTL Support
 
 **Navigation & Sidebar:**
+
 ```tsx
 // components/sidebar.tsx
 import { useLocale } from 'next-intl';
@@ -133,10 +141,12 @@ export function Sidebar() {
   const isRTL = locale === 'ar';
 
   return (
-    <aside className={cn(
-      "fixed top-0 h-screen w-64 border-gray-200 bg-white",
-      isRTL ? "right-0 border-l" : "left-0 border-r"
-    )}>
+    <aside
+      className={cn(
+        'fixed top-0 h-screen w-64 border-gray-200 bg-white',
+        isRTL ? 'right-0 border-l' : 'left-0 border-r'
+      )}
+    >
       {/* Sidebar content */}
     </aside>
   );
@@ -144,22 +154,23 @@ export function Sidebar() {
 ```
 
 **Icons That Should Flip:**
+
 ```tsx
 // components/ui/icon-wrapper.tsx
-export function IconWrapper({ 
-  icon: Icon, 
+export function IconWrapper({
+  icon: Icon,
   flipRTL = false,
-  className 
+  className
 }: IconWrapperProps) {
   const locale = useLocale();
   const isRTL = locale === 'ar';
 
   return (
-    <Icon 
+    <Icon
       className={cn(
         className,
         flipRTL && isRTL && 'scale-x-[-1]' // Flip horizontally
-      )} 
+      )}
     />
   );
 }
@@ -171,23 +182,28 @@ export function IconWrapper({
 ```
 
 **Breadcrumbs:**
+
 ```tsx
 // components/breadcrumbs.tsx
-const Separator = ({ isRTL }: { isRTL: boolean }) => (
-  isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
-);
+const Separator = ({ isRTL }: { isRTL: boolean }) =>
+  isRTL ? (
+    <ChevronLeft className='h-4 w-4' />
+  ) : (
+    <ChevronRight className='h-4 w-4' />
+  );
 
-<nav className="flex" aria-label="Breadcrumb">
+<nav className='flex' aria-label='Breadcrumb'>
   {items.map((item, index) => (
     <React.Fragment key={item.href}>
       <Link href={item.href}>{item.label}</Link>
       {index < items.length - 1 && <Separator isRTL={isRTL} />}
     </React.Fragment>
   ))}
-</nav>
+</nav>;
 ```
 
 **Forms:**
+
 ```tsx
 // Ensure labels align correctly
 <div className="space-y-2">
@@ -212,6 +228,7 @@ const Separator = ({ isRTL }: { isRTL: boolean }) => (
 #### Translation Checklist:
 
 **Core UI Elements:**
+
 ```json
 // i18n/messages/ar.json
 {
@@ -281,6 +298,7 @@ const Separator = ({ isRTL }: { isRTL: boolean }) => (
 ```
 
 **Use Translations in Components:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -291,14 +309,11 @@ export function DashboardPage() {
   return (
     <div>
       <h1>{t('dashboard')}</h1>
-      <div className="grid grid-cols-4 gap-4">
-        <MetricCard 
-          label={tMetrics('totalContracts')} 
-          value={metrics.total} 
-        />
-        <MetricCard 
-          label={tMetrics('activeContracts')} 
-          value={metrics.active} 
+      <div className='grid grid-cols-4 gap-4'>
+        <MetricCard label={tMetrics('totalContracts')} value={metrics.total} />
+        <MetricCard
+          label={tMetrics('activeContracts')}
+          value={metrics.active}
         />
       </div>
     </div>
@@ -307,6 +322,7 @@ export function DashboardPage() {
 ```
 
 **Pluralization:**
+
 ```json
 // en.json
 {
@@ -326,10 +342,11 @@ export function DashboardPage() {
 ```tsx
 // Usage:
 const t = useTranslations('items');
-<p>{t('promoter', { count: promoters.length })}</p>
+<p>{t('promoter', { count: promoters.length })}</p>;
 ```
 
 **Date/Number Formatting:**
+
 ```tsx
 import { useFormatter, useLocale } from 'next-intl';
 
@@ -340,17 +357,21 @@ export function FormattedData() {
   return (
     <div>
       {/* Date formatting */}
-      <p>{format.dateTime(new Date(), {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })}</p>
+      <p>
+        {format.dateTime(new Date(), {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })}
+      </p>
 
       {/* Number formatting */}
-      <p>{format.number(1234567.89, {
-        style: 'currency',
-        currency: locale === 'ar' ? 'SAR' : 'USD'
-      })}</p>
+      <p>
+        {format.number(1234567.89, {
+          style: 'currency',
+          currency: locale === 'ar' ? 'SAR' : 'USD',
+        })}
+      </p>
 
       {/* Relative time */}
       <p>{format.relativeTime(new Date('2024-01-01'))}</p>
@@ -364,6 +385,7 @@ export function FormattedData() {
 ### 4. Language Switcher
 
 **Add Language Switcher Component:**
+
 ```tsx
 // components/language-switcher.tsx
 'use client';
@@ -394,21 +416,21 @@ export function LanguageSwitcher() {
     const segments = pathname.split('/');
     segments[1] = newLocale; // Replace locale segment
     const newPath = segments.join('/');
-    
+
     router.push(newPath);
     router.refresh();
   };
 
   return (
     <Select value={locale} onValueChange={handleLocaleChange}>
-      <SelectTrigger className="w-[140px]">
-        <Languages className="h-4 w-4 me-2" />
+      <SelectTrigger className='w-[140px]'>
+        <Languages className='h-4 w-4 me-2' />
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {languages.map((lang) => (
+        {languages.map(lang => (
           <SelectItem key={lang.code} value={lang.code}>
-            <span className="flex items-center gap-2">
+            <span className='flex items-center gap-2'>
               <span>{lang.flag}</span>
               <span>{lang.nativeName}</span>
             </span>
@@ -425,6 +447,7 @@ export function LanguageSwitcher() {
 ### 5. Testing RTL Layout
 
 **Visual Testing Checklist:**
+
 ```markdown
 - [ ] Header: Logo and menu items flip correctly
 - [ ] Sidebar: Appears on right side in RTL, icons flip appropriately
@@ -439,6 +462,7 @@ export function LanguageSwitcher() {
 ```
 
 **Automated RTL Testing:**
+
 ```tsx
 // __tests__/rtl.test.tsx
 import { render } from '@testing-library/react';
@@ -447,11 +471,11 @@ import { NextIntlClientProvider } from 'next-intl';
 describe('RTL Support', () => {
   it('should set dir="rtl" for Arabic locale', () => {
     const { container } = render(
-      <NextIntlClientProvider locale="ar" messages={{}}>
-        <div data-testid="content">Content</div>
+      <NextIntlClientProvider locale='ar' messages={{}}>
+        <div data-testid='content'>Content</div>
       </NextIntlClientProvider>
     );
-    
+
     expect(document.documentElement).toHaveAttribute('dir', 'rtl');
   });
 
@@ -468,6 +492,7 @@ describe('RTL Support', () => {
 ## 📋 Implementation Checklist
 
 ### Phase 1: Core RTL Support (Week 1)
+
 - [x] Configure next-intl with ar locale ✅ Already done
 - [ ] Add `dir` attribute to HTML based on locale
 - [ ] Load Arabic fonts (Cairo or Tajawal)
@@ -475,6 +500,7 @@ describe('RTL Support', () => {
 - [ ] Add language switcher to header
 
 ### Phase 2: Component RTL Adaptation (Week 2)
+
 - [ ] Update Sidebar to position correctly for RTL
 - [ ] Flip directional icons (arrows, chevrons)
 - [ ] Fix breadcrumb separators
@@ -482,6 +508,7 @@ describe('RTL Support', () => {
 - [ ] Test tables in RTL mode
 
 ### Phase 3: Complete Translation (Week 2-3)
+
 - [ ] Translate all common UI strings
 - [ ] Translate navigation labels
 - [ ] Translate form labels and validation messages
@@ -490,6 +517,7 @@ describe('RTL Support', () => {
 - [ ] Translate error/success messages
 
 ### Phase 4: Testing & Polish (Week 3)
+
 - [ ] Visual testing on all major pages
 - [ ] Test language switching functionality
 - [ ] Verify date/number formatting
@@ -531,4 +559,3 @@ describe('RTL Support', () => {
 6. **Test forms thoroughly** - validation messages must be translated
 7. **Check z-index stacking** - RTL can affect layering
 8. **Verify currency formatting** - Different currencies in different locales
-

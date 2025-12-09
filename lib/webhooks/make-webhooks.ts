@@ -54,7 +54,7 @@ export class MakeWebhookManager {
     for (let attempt = 0; attempt <= retries; attempt++) {
       const controller = new AbortController();
       let timeoutId: NodeJS.Timeout | null = null;
-      
+
       try {
         console.log(
           `🔗 Sending ${webhookType} webhook (attempt ${attempt + 1}):`,
@@ -97,7 +97,7 @@ export class MakeWebhookManager {
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
-        
+
         console.error(
           `❌ ${webhookType} webhook failed (attempt ${attempt + 1}):`,
           error

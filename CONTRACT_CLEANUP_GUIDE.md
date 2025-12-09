@@ -9,8 +9,9 @@ Clean up mock, test, and incorrect contracts from your database while preserving
 ## ✅ Current Status
 
 **Total Verified Real Contracts**: 424+ across top 5 parties
+
 - United Electronics: 205 contracts
-- Falcon Eye: 116 contracts  
+- Falcon Eye: 116 contracts
 - Amjad Al Maerifa: 75 contracts
 - AL AMRI INVESTMENT: 16 contracts
 - Vision Electronics: 12 contracts
@@ -24,6 +25,7 @@ Run this query first to see what might be mock data:
 **File**: `identify-mock-contracts.sql`
 
 This will show:
+
 - ✅ Contracts with "test", "mock", "sample" in title/number
 - ✅ Contracts with placeholder parties
 - ✅ Contracts without ANY parties assigned
@@ -32,14 +34,14 @@ This will show:
 
 ### Patterns to Look For
 
-| Pattern | Example | Likely Mock? |
-|---------|---------|--------------|
-| Keywords | "Test Contract", "Mock Data" | ✅ YES |
-| Contract Number | "CNT-TEST-001", "MOCK-123" | ✅ YES |
-| No Parties | All party fields NULL | ⚠️ MAYBE |
-| Seed Pattern | "CNT-2024-001", "CNT-2024-002" | ⚠️ MAYBE |
-| Generic Title | "Sales Promoter - Contract 1" repeated 50x | ⚠️ REVIEW |
-| Missing Data | No title, no dates, no promoter | ⚠️ MAYBE |
+| Pattern         | Example                                    | Likely Mock? |
+| --------------- | ------------------------------------------ | ------------ |
+| Keywords        | "Test Contract", "Mock Data"               | ✅ YES       |
+| Contract Number | "CNT-TEST-001", "MOCK-123"                 | ✅ YES       |
+| No Parties      | All party fields NULL                      | ⚠️ MAYBE     |
+| Seed Pattern    | "CNT-2024-001", "CNT-2024-002"             | ⚠️ MAYBE     |
+| Generic Title   | "Sales Promoter - Contract 1" repeated 50x | ⚠️ REVIEW    |
+| Missing Data    | No title, no dates, no promoter            | ⚠️ MAYBE     |
 
 ---
 
@@ -50,6 +52,7 @@ Run the comprehensive review:
 **File**: `review-and-cleanup-mock-contracts.sql`
 
 This provides:
+
 1. **5 identification categories**
    - Test/mock keywords
    - Old year patterns
@@ -74,6 +77,7 @@ This provides:
 ### Important Rules
 
 ⚠️ **NEVER delete contracts that:**
+
 - Have real party assignments
 - Have real promoter assignments
 - Are marked as "active" or "approved"
@@ -81,6 +85,7 @@ This provides:
 - Are recent (last 30 days) unless confirmed as test
 
 ✅ **SAFE to delete contracts that:**
+
 - Contain "test", "mock", "sample" keywords
 - Have NO parties AND NO promoter
 - Were created by seed-data endpoint
@@ -95,17 +100,17 @@ The review script includes commented DELETE sections:
 
 -- Option 1: Delete test/mock contracts
 DELETE FROM contracts
-WHERE 
+WHERE
   LOWER(title) LIKE '%test%'
   OR LOWER(title) LIKE '%mock%'
   ...;
 
 -- Option 2: Delete contracts without parties
 DELETE FROM contracts
-WHERE 
-  employer_id IS NULL 
-  AND client_id IS NULL 
-  AND first_party_id IS NULL 
+WHERE
+  employer_id IS NULL
+  AND client_id IS NULL
+  AND first_party_id IS NULL
   AND second_party_id IS NULL;
 
 */
@@ -129,13 +134,13 @@ Then test your DELETE query as a SELECT first:
 
 ```sql
 -- Test query - shows what WOULD be deleted
-SELECT 
+SELECT
   id, contract_number, title, status, created_at
 FROM contracts
-WHERE 
+WHERE
   LOWER(title) LIKE '%test%'
   OR LOWER(title) LIKE '%mock%';
-  
+
 -- If results look correct, uncomment the DELETE
 ```
 
@@ -148,19 +153,19 @@ After deletion, verify the cleanup:
 ```sql
 -- Run the top parties query again
 WITH party_counts AS (
-  SELECT 
+  SELECT
     p.name_en,
     COUNT(DISTINCT c.id) as total_contracts
   FROM parties p
   LEFT JOIN contracts c ON (
-    c.employer_id = p.id OR 
-    c.client_id = p.id OR 
-    c.first_party_id = p.id OR 
+    c.employer_id = p.id OR
+    c.client_id = p.id OR
+    c.first_party_id = p.id OR
     c.second_party_id = p.id
   )
   GROUP BY p.id, p.name_en
 )
-SELECT 
+SELECT
   name_en,
   total_contracts
 FROM party_counts
@@ -180,10 +185,11 @@ LIMIT 10;
 Run these in order:
 
 1. **Delete obvious test/mock contracts**
+
    ```sql
    -- Contracts with test keywords in title/number
    DELETE FROM contracts
-   WHERE 
+   WHERE
      LOWER(title) LIKE '%test%'
      OR LOWER(title) LIKE '%mock%'
      OR contract_number LIKE '%TEST%';
@@ -225,7 +231,7 @@ Run these in order:
 -- Shows: 5 contracts with "test" in title
 
 -- 2. Confirm
-SELECT id, contract_number, title FROM contracts 
+SELECT id, contract_number, title FROM contracts
 WHERE LOWER(title) LIKE '%test%';
 -- Verify these are test data
 
@@ -277,34 +283,39 @@ SELECT COUNT(*) FROM contracts;
 
 ## 📁 Files Available
 
-| File | Purpose |
-|------|---------|
-| `identify-mock-contracts.sql` | Quick identification query |
-| `cleanup-mock-contracts.sql` | Safe deletion with preview |
+| File                                    | Purpose                             |
+| --------------------------------------- | ----------------------------------- |
+| `identify-mock-contracts.sql`           | Quick identification query          |
+| `cleanup-mock-contracts.sql`            | Safe deletion with preview          |
 | `review-and-cleanup-mock-contracts.sql` | **Comprehensive review (USE THIS)** |
-| `cleanup-placeholders-complete.sql` | Placeholder parties cleanup |
+| `cleanup-placeholders-complete.sql`     | Placeholder parties cleanup         |
 
 ---
 
 ## 🎯 Recommended Next Steps
 
 ### 1. Run Comprehensive Review
+
 ```sql
 \i review-and-cleanup-mock-contracts.sql
 ```
 
 ### 2. Analyze Results
+
 Look at the counts and examples for each category
 
 ### 3. Make Decision
+
 - How many contracts have test keywords?
 - How many without parties?
 - Are any clearly mock data?
 
 ### 4. Selective Cleanup
+
 Uncomment ONLY the sections you're confident about
 
 ### 5. Verify
+
 Check party contract counts remain accurate after cleanup
 
 ---
@@ -312,6 +323,7 @@ Check party contract counts remain accurate after cleanup
 ## 📞 Need Help Deciding?
 
 Share the results from `review-and-cleanup-mock-contracts.sql` and I can help you:
+
 - Identify which contracts are safe to delete
 - Determine if contracts are real vs mock
 - Create a custom cleanup query for your specific data
@@ -321,6 +333,7 @@ Share the results from `review-and-cleanup-mock-contracts.sql` and I can help yo
 ## ✅ Success Criteria
 
 After cleanup, you should have:
+
 - ✅ No contracts with "test", "mock", "sample" in title
 - ✅ No contracts with placeholder parties
 - ✅ All real business contracts preserved (424+)
@@ -333,4 +346,3 @@ After cleanup, you should have:
 **Safety**: 🔒 All DELETE sections commented out  
 **Next**: Run review, analyze, then decide on cleanup  
 **Date**: October 23, 2025
-

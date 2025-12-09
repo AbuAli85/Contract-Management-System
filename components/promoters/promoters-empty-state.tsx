@@ -16,8 +16,8 @@ export function PromotersEmptyState({
     <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
       <EmptyState
         icon={Users}
-        title="No promoters yet"
-        description="Start building your team by adding your first promoter. Track their documents, performance, and assignments all in one place."
+        title='No promoters yet'
+        description='Start building your team by adding your first promoter. Track their documents, performance, and assignments all in one place.'
         action={{
           label: 'Add Your First Promoter',
           onClick: onAddPromoter,
@@ -26,7 +26,7 @@ export function PromotersEmptyState({
           label: 'Refresh Data',
           onClick: onRefresh,
         }}
-        iconClassName="text-blue-500"
+        iconClassName='text-blue-500'
       />
     </div>
   );

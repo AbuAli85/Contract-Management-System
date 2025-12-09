@@ -9,9 +9,11 @@ This guide explains the complete implementation for preventing contracts without
 ## 📦 What's Included
 
 ### 1. **Database Migration**
+
 `supabase/migrations/20251023_add_promoter_validation.sql`
 
 **Features:**
+
 - ✅ Helper tables for suggestions and audit
 - ✅ Functions for finding contracts without promoters
 - ✅ AI-powered promoter suggestion engine
@@ -21,17 +23,21 @@ This guide explains the complete implementation for preventing contracts without
 - ✅ Future-ready constraint (commented out)
 
 ### 2. **API Endpoints**
+
 `app/api/admin/contracts-without-promoters/route.ts`
 
 **Endpoints:**
+
 - `GET` - List contracts without promoters (with filters)
 - `POST` - Generate AI suggestions for a contract
 - `PUT` - Bulk assign promoters to contracts
 
 ### 3. **Admin Interface**
+
 `app/[locale]/admin/contracts-without-promoters/page.tsx`
 
 **Features:**
+
 - ✅ Dashboard with statistics
 - ✅ Filterable contract list
 - ✅ AI-powered suggestions
@@ -41,9 +47,11 @@ This guide explains the complete implementation for preventing contracts without
 - ✅ Real-time validation
 
 ### 4. **Validation Library**
+
 `lib/validations/contract-promoter-validation.ts`
 
 **Functions:**
+
 - Client-side validation for forms
 - Server-side API validation
 - Contract type exemption rules
@@ -67,6 +75,7 @@ supabase migration up
 ```
 
 **What it does:**
+
 - Creates helper tables
 - Adds database functions
 - Generates initial suggestions for existing contracts
@@ -116,17 +125,20 @@ psql -d your_database -c "SELECT * FROM get_promoter_assignment_stats();"
 ### Dashboard Features
 
 #### **Statistics Cards**
+
 - Total contracts
 - Contracts with promoters (percentage)
 - Contracts without promoters
 - High priority contracts (active/pending without promoters)
 
 #### **Filters**
+
 - By status (draft, pending, active)
 - By priority (high, medium, low)
 - Real-time results
 
 #### **Bulk Actions**
+
 1. Select contracts using checkboxes
 2. Click "Auto-assign Top Suggestions" for AI-powered assignments
 3. Or manually select promoters from dropdowns
@@ -134,11 +146,11 @@ psql -d your_database -c "SELECT * FROM get_promoter_assignment_stats();"
 
 ### Priority Levels
 
-| Priority | Criteria | Urgency |
-|----------|----------|---------|
-| **High** | Active or Pending contracts | ⚠️ Immediate action |
+| Priority   | Criteria                     | Urgency               |
+| ---------- | ---------------------------- | --------------------- |
+| **High**   | Active or Pending contracts  | ⚠️ Immediate action   |
 | **Medium** | Draft contracts > 7 days old | ⏰ Action needed soon |
-| **Low** | Draft contracts < 7 days old | ℹ️ Can wait |
+| **Low**    | Draft contracts < 7 days old | ℹ️ Can wait           |
 
 ---
 
@@ -164,10 +176,12 @@ The system suggests promoters based on:
 ### Generate Suggestions
 
 **Via UI:**
+
 - Click "Generate" button next to contract
 - System analyzes and provides 5 suggestions
 
 **Via API:**
+
 ```javascript
 POST /api/admin/contracts-without-promoters
 {
@@ -181,6 +195,7 @@ POST /api/admin/contracts-without-promoters
 ## 🔒 Future Validation (Making Promoter Required)
 
 ### Current State
+
 - Promoter is **optional** (allows NULL)
 - Validation is **soft** (warnings only)
 - Existing contracts not affected
@@ -188,27 +203,30 @@ POST /api/admin/contracts-without-promoters
 ### Making It Required
 
 **Step 1: Fix All Existing Contracts**
+
 1. Use admin interface to assign promoters to all contracts
 2. Verify: `SELECT COUNT(*) FROM contracts WHERE promoter_id IS NULL;` returns 0
 
 **Step 2: Enable Database Constraint**
 
 Uncomment in migration file:
+
 ```sql
 -- Make promoter_id required for most contract types
 ALTER TABLE contracts
-ADD CONSTRAINT check_promoter_required 
+ADD CONSTRAINT check_promoter_required
 CHECK (
-    promoter_id IS NOT NULL 
+    promoter_id IS NOT NULL
     OR contract_type IN ('partnership', 'consultancy')
     OR status = 'draft'
 );
 ```
 
 Or for strict requirement:
+
 ```sql
 -- Make promoter_id required for ALL contracts
-ALTER TABLE contracts 
+ALTER TABLE contracts
 ALTER COLUMN promoter_id SET NOT NULL;
 ```
 
@@ -242,6 +260,7 @@ if (!validation.valid) {
 ## 📊 Database Functions Reference
 
 ### `get_contracts_without_promoters(status, limit, offset)`
+
 Returns contracts missing promoters with filters.
 
 ```sql
@@ -249,6 +268,7 @@ SELECT * FROM get_contracts_without_promoters('active', 50, 0);
 ```
 
 ### `suggest_promoters_for_contract(contract_id, max_suggestions)`
+
 AI-powered promoter suggestions for a contract.
 
 ```sql
@@ -259,6 +279,7 @@ SELECT * FROM suggest_promoters_for_contract(
 ```
 
 ### `bulk_assign_promoters(assignments, assigned_by)`
+
 Bulk assign promoters to multiple contracts.
 
 ```sql
@@ -272,6 +293,7 @@ SELECT * FROM bulk_assign_promoters(
 ```
 
 ### `get_promoter_assignment_stats()`
+
 Statistics about promoter assignments.
 
 ```sql
@@ -313,7 +335,7 @@ const exemptContractTypes = [
 In migration, modify `contracts_needing_promoters` view:
 
 ```sql
-CASE 
+CASE
   WHEN c.status IN ('active', 'pending') THEN 'high'
   WHEN c.status = 'draft' AND ... THEN 'medium'
   -- Add your logic
@@ -326,6 +348,7 @@ END as priority
 ## 🧪 Testing the Implementation
 
 ### Test 1: Admin Interface Access
+
 ```bash
 # Visit the admin page
 curl http://localhost:3000/en/admin/contracts-without-promoters
@@ -333,6 +356,7 @@ curl http://localhost:3000/en/admin/contracts-without-promoters
 ```
 
 ### Test 2: API Endpoints
+
 ```bash
 # Get contracts without promoters
 curl -X GET http://localhost:3000/api/admin/contracts-without-promoters
@@ -349,6 +373,7 @@ curl -X PUT http://localhost:3000/api/admin/contracts-without-promoters \
 ```
 
 ### Test 3: Database Functions
+
 ```sql
 -- Test stats
 SELECT * FROM get_promoter_assignment_stats();
@@ -371,6 +396,7 @@ SELECT * FROM bulk_assign_promoters(
 ## 📈 Monitoring & Maintenance
 
 ### Daily Checks
+
 ```sql
 -- Check how many contracts still need promoters
 SELECT COUNT(*) FROM contracts WHERE promoter_id IS NULL;
@@ -380,9 +406,10 @@ SELECT * FROM contracts_needing_promoters WHERE priority = 'high';
 ```
 
 ### Weekly Reports
+
 ```sql
 -- Generate weekly report
-SELECT 
+SELECT
   date_trunc('week', created_at) as week,
   COUNT(*) as total_created,
   COUNT(promoter_id) as with_promoter,
@@ -394,9 +421,10 @@ ORDER BY week DESC;
 ```
 
 ### Audit Trail
+
 ```sql
 -- Review recent promoter changes
-SELECT * 
+SELECT *
 FROM contract_promoter_audit
 WHERE changed_at > NOW() - INTERVAL '7 days'
 ORDER BY changed_at DESC;
@@ -407,19 +435,25 @@ ORDER BY changed_at DESC;
 ## 🔧 Troubleshooting
 
 ### "Permission Denied" Error
+
 **Solution:** Ensure user has admin role:
+
 ```sql
 UPDATE users SET role = 'admin' WHERE email = 'your-email@example.com';
 ```
 
 ### Suggestions Not Generating
+
 **Solution:** Check promoters table has active promoters:
+
 ```sql
 SELECT COUNT(*) FROM promoters WHERE status = 'active';
 ```
 
 ### Bulk Assignment Fails
+
 **Solution:** Check audit logs:
+
 ```sql
 SELECT * FROM contract_promoter_audit ORDER BY changed_at DESC LIMIT 10;
 ```
@@ -441,4 +475,3 @@ SELECT * FROM contract_promoter_audit ORDER BY changed_at DESC LIMIT 10;
 **Created:** 2025-10-23  
 **Status:** ✅ **Ready for Deployment**  
 **Estimated Setup Time:** 15 minutes
-

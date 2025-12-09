@@ -19,10 +19,14 @@ console.log('📋 Checking next.config.js...');
 try {
   const nextConfigPath = path.join(process.cwd(), 'next.config.js');
   const nextConfigContent = fs.readFileSync(nextConfigPath, 'utf8');
-  
-  if (nextConfigContent.includes('output: \'standalone\'')) {
-    issues.push('❌ Found standalone output in next.config.js (causes Vercel issues)');
-    fixes.push('✅ Comment out or remove output: "standalone" from next.config.js');
+
+  if (nextConfigContent.includes("output: 'standalone'")) {
+    issues.push(
+      '❌ Found standalone output in next.config.js (causes Vercel issues)'
+    );
+    fixes.push(
+      '✅ Comment out or remove output: "standalone" from next.config.js'
+    );
   } else {
     console.log('✅ next.config.js output configuration looks good');
   }
@@ -35,11 +39,15 @@ console.log('\n📋 Checking for Turbopack usage...');
 try {
   const packageJsonPath = path.join(process.cwd(), 'package.json');
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  
+
   if (packageJson.scripts && packageJson.scripts.build) {
     if (packageJson.scripts.build.includes('--turbo')) {
-      issues.push('❌ Found --turbo flag in build script (can cause Vercel issues)');
-      fixes.push('✅ Remove --turbo flag from build script or add --no-turbo to vercel.json');
+      issues.push(
+        '❌ Found --turbo flag in build script (can cause Vercel issues)'
+      );
+      fixes.push(
+        '✅ Remove --turbo flag from build script or add --no-turbo to vercel.json'
+      );
     } else {
       console.log('✅ Build script looks good');
     }
@@ -50,30 +58,39 @@ try {
 
 // 3. Check for large files that might cause memory issues
 console.log('\n📋 Checking for large files...');
-const checkLargeFiles = (dir, maxSize = 10 * 1024 * 1024) => { // 10MB
+const checkLargeFiles = (dir, maxSize = 10 * 1024 * 1024) => {
+  // 10MB
   const files = fs.readdirSync(dir);
   const largeFiles = [];
-  
+
   files.forEach(file => {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
-    
-    if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
+
+    if (
+      stat.isDirectory() &&
+      !file.startsWith('.') &&
+      file !== 'node_modules'
+    ) {
       largeFiles.push(...checkLargeFiles(filePath, maxSize));
     } else if (stat.isFile() && stat.size > maxSize) {
       largeFiles.push({ path: filePath, size: stat.size });
     }
   });
-  
+
   return largeFiles;
 };
 
 try {
   const largeFiles = checkLargeFiles(process.cwd());
   if (largeFiles.length > 0) {
-    issues.push(`❌ Found ${largeFiles.length} large files (>10MB) that might cause memory issues`);
+    issues.push(
+      `❌ Found ${largeFiles.length} large files (>10MB) that might cause memory issues`
+    );
     largeFiles.forEach(file => {
-      console.log(`   - ${file.path} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+      console.log(
+        `   - ${file.path} (${(file.size / 1024 / 1024).toFixed(2)}MB)`
+      );
     });
     fixes.push('✅ Consider optimizing or removing large files');
   } else {
@@ -88,7 +105,7 @@ console.log('\n📋 Checking environment variables...');
 const requiredEnvVars = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY'
+  'SUPABASE_SERVICE_ROLE_KEY',
 ];
 
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
@@ -104,18 +121,20 @@ console.log('\n📋 Checking for problematic dependencies...');
 try {
   const packageJsonPath = path.join(process.cwd(), 'package.json');
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  
+
   const problematicDeps = [
     '@libsql/hrana-client', // Known to cause Turbopack issues
     'sharp', // Can cause memory issues
   ];
-  
-  const foundProblematic = problematicDeps.filter(dep => 
-    packageJson.dependencies?.[dep] || packageJson.devDependencies?.[dep]
+
+  const foundProblematic = problematicDeps.filter(
+    dep => packageJson.dependencies?.[dep] || packageJson.devDependencies?.[dep]
   );
-  
+
   if (foundProblematic.length > 0) {
-    issues.push(`❌ Found potentially problematic dependencies: ${foundProblematic.join(', ')}`);
+    issues.push(
+      `❌ Found potentially problematic dependencies: ${foundProblematic.join(', ')}`
+    );
     fixes.push('✅ Consider updating or replacing these dependencies');
   } else {
     console.log('✅ No problematic dependencies found');
@@ -141,7 +160,7 @@ if (issues.length === 0) {
   issues.forEach((issue, index) => {
     console.log(`${index + 1}. ${issue}`);
   });
-  
+
   console.log('\n🔧 RECOMMENDED FIXES:\n');
   fixes.forEach((fix, index) => {
     console.log(`${index + 1}. ${fix}`);

@@ -21,6 +21,7 @@ scripts/fix-manage-promoters-permissions.sql
 ```
 
 **Expected Output:**
+
 - ✅ Permissions granted
 - List of users with promoter permissions
 - No warnings about missing permissions
@@ -47,11 +48,13 @@ yarn dev
 **Scenario:** User has `promoter:read:own` permission
 
 **Steps:**
+
 1. Log in as a user with permissions
 2. Navigate to `/en/manage-promoters`
 3. Wait for page to load
 
 **Expected Result:**
+
 - ✅ Loading spinner appears briefly
 - ✅ Promoters list displays successfully
 - ✅ No errors in console
@@ -63,9 +66,10 @@ yarn dev
   - Employer (if assigned)
 
 **Verification SQL:**
+
 ```sql
 -- Verify user has permission
-SELECT 
+SELECT
   p.email,
   perm.name as permission
 FROM profiles p
@@ -84,11 +88,13 @@ WHERE p.id = auth.uid()
 **Scenario:** User lacks `promoter:read:own` permission
 
 **Steps:**
+
 1. Create a test user without permissions
 2. Log in as that user
 3. Navigate to `/en/manage-promoters`
 
 **Expected Result:**
+
 - ✅ Error message displays with amber/yellow styling
 - ✅ Shows "Permission Denied" heading
 - ✅ Displays required permission: `promoter:read:own`
@@ -98,9 +104,10 @@ WHERE p.id = auth.uid()
 - ✅ API call returns 403 Forbidden
 
 **Create Test User Without Permissions:**
+
 ```sql
 -- Remove promoter permissions from a test user
-DELETE FROM rbac_user_role_assignments 
+DELETE FROM rbac_user_role_assignments
 WHERE user_id = 'TEST_USER_ID';
 ```
 
@@ -111,11 +118,13 @@ WHERE user_id = 'TEST_USER_ID';
 **Scenario:** User is not authenticated
 
 **Steps:**
+
 1. Log out of the application
 2. Navigate to `/en/manage-promoters` (may redirect to login)
 3. OR: Clear auth cookies while on the page
 
 **Expected Result:**
+
 - ✅ "Authentication Required" error message
 - ✅ Amber/yellow styling
 - ✅ Shows troubleshooting steps:
@@ -131,12 +140,14 @@ WHERE user_id = 'TEST_USER_ID';
 **Scenario:** Verify both pages work consistently
 
 **Steps:**
+
 1. Navigate to `/en/promoters` (All Promoters)
 2. Verify it loads successfully
 3. Navigate to `/en/manage-promoters` (Manage Promoters)
 4. Verify it also loads successfully
 
 **Expected Result:**
+
 - ✅ Both pages load without errors
 - ✅ Both show promoter data
 - ✅ Both make successful API calls to `/api/promoters`
@@ -149,12 +160,14 @@ WHERE user_id = 'TEST_USER_ID';
 **Scenario:** Verify detailed logging
 
 **Steps:**
+
 1. Open Browser DevTools → Console tab
 2. Navigate to `/en/manage-promoters`
 
 **Expected Console Output:**
 
 **Success Case:**
+
 ```
 🚀 PromoterManagement component mounted
 🔄 useEffect triggered
@@ -165,6 +178,7 @@ WHERE user_id = 'TEST_USER_ID';
 ```
 
 **Permission Error Case:**
+
 ```
 🚀 PromoterManagement component mounted
 🔄 useEffect triggered
@@ -185,6 +199,7 @@ WHERE user_id = 'TEST_USER_ID';
 **Scenario:** Verify API request details
 
 **Steps:**
+
 1. Open Browser DevTools → Network tab
 2. Filter by "promoters"
 3. Navigate to `/en/manage-promoters`
@@ -193,12 +208,14 @@ WHERE user_id = 'TEST_USER_ID';
 **Expected Result:**
 
 **Request Headers:**
+
 ```
 Content-Type: application/json
 Cookie: sb-access-token=... (auth token present)
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -211,6 +228,7 @@ Cookie: sb-access-token=... (auth token present)
 ```
 
 **Permission Error Response (403):**
+
 ```json
 {
   "error": "Insufficient permissions",
@@ -230,7 +248,7 @@ Run diagnostic SQL:
 
 ```sql
 -- Check RLS policies on promoters table
-SELECT 
+SELECT
   schemaname,
   tablename,
   policyname,
@@ -247,6 +265,7 @@ FROM promoters;
 ```
 
 **Expected Result:**
+
 - ✅ RLS policies exist and are enabled
 - ✅ User can access promoters via direct query
 - ✅ Count matches what appears in the UI
@@ -258,10 +277,12 @@ FROM promoters;
 **Scenario:** Verify rate limiting doesn't cause issues
 
 **Steps:**
+
 1. Rapidly refresh `/en/manage-promoters` page 10 times
 2. Check for rate limit errors
 
 **Expected Result:**
+
 - ✅ First 5-10 requests succeed
 - ✅ After limit, shows 429 error with clear message
 - ✅ Includes "Retry-After" information
@@ -274,15 +295,17 @@ FROM promoters;
 **Scenario:** Test various user roles
 
 **Test Users:**
+
 1. **Admin** - Should have all permissions
 2. **Manager** - Should have promoter access
 3. **Regular User** - Should have promoter access after fix
 4. **Guest/No Role** - Should get permission denied
 
 **Verification:**
+
 ```sql
 -- Check permissions for different roles
-SELECT 
+SELECT
   r.name as role_name,
   perm.name as permission
 FROM rbac_roles r
@@ -312,11 +335,13 @@ ORDER BY r.name, perm.name;
 ### Load Time Benchmarks
 
 **Acceptable Performance:**
+
 - Initial page load: < 2 seconds
 - API response time: < 1 second
 - Data rendering: < 500ms
 
 **Measure with:**
+
 ```javascript
 // In browser console
 performance.measure('page-load', 'navigationStart', 'loadEventEnd');
@@ -329,25 +354,29 @@ performance.measure('page-load', 'navigationStart', 'loadEventEnd');
 ### If Tests Fail
 
 **1. Check user permissions:**
+
 ```sql
 -- See what the current user has
-SELECT * FROM rbac_user_role_assignments 
+SELECT * FROM rbac_user_role_assignments
 WHERE user_id = auth.uid() AND is_active = TRUE;
 ```
 
 **2. Check permission cache:**
+
 ```sql
 -- Clear permission cache if needed
 -- (Implementation depends on your cache strategy)
 ```
 
 **3. Check API logs:**
+
 ```bash
 # In terminal/server logs, look for:
 🔐 RBAC: BLOCKED - promoter:read:own for /api/promoters
 ```
 
 **4. Test API directly:**
+
 ```bash
 curl -X GET http://localhost:3000/api/promoters \
   -H "Cookie: sb-access-token=YOUR_TOKEN" \
@@ -383,6 +412,7 @@ After running all tests, verify:
 **Environment:** Development / Staging / Production
 
 ### Test Results Summary
+
 - Total Tests: 9
 - Passed: X
 - Failed: Y
@@ -391,6 +421,7 @@ After running all tests, verify:
 ### Detailed Results
 
 #### Test Case 1: User WITH Permissions
+
 - Status: ✅ PASS / ❌ FAIL
 - Notes: [Any observations]
 - Screenshot: [If applicable]
@@ -398,6 +429,7 @@ After running all tests, verify:
 [Repeat for all test cases]
 
 ### Issues Found
+
 1. [Issue description]
    - Severity: High / Medium / Low
    - Steps to reproduce: ...
@@ -405,9 +437,11 @@ After running all tests, verify:
    - Actual: ...
 
 ### Recommendations
+
 - [Any suggestions for improvement]
 
 ### Sign-off
+
 - [ ] All critical tests passed
 - [ ] No blocking issues
 - [ ] Ready for deployment
@@ -447,4 +481,3 @@ If issues persist after testing:
 - `scripts/fix-manage-promoters-permissions.sql` - Quick fix script
 - `scripts/check-user-permissions.sql` - Diagnostic queries
 - `README_RBAC.md` - RBAC system documentation
-

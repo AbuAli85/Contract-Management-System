@@ -9,6 +9,7 @@ The Customizable Dashboard System allows users to create personalized dashboards
 ## 📋 Features
 
 ### ✅ Core Features
+
 - **Drag-and-Drop Widgets** - Reposition widgets with mouse/touch
 - **Resize Widgets** - Adjust widget dimensions
 - **Add/Remove Widgets** - Manage widgets from library
@@ -55,8 +56,8 @@ npx supabase migration up
 ### Step 3: Verify Database Tables
 
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
+SELECT table_name
+FROM information_schema.tables
 WHERE table_schema = 'public'
 AND table_name LIKE 'dashboard%' OR table_name LIKE '%layout%'
 ORDER BY table_name;
@@ -102,18 +103,18 @@ export default function DashboardPage() {
   async function fetchDashboardLayout() {
     const response = await fetch('/api/dashboard/layout');
     const data = await response.json();
-    
+
     if (data.success) {
       setLayout(data.layout);
     }
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className='container mx-auto py-6'>
       <CustomizableDashboard
         initialLayout={layout}
         userRole={userRole}
-        onLayoutSave={(layout) => {
+        onLayoutSave={layout => {
           console.log('Layout saved:', layout);
           setLayout(layout);
         }}
@@ -131,7 +132,7 @@ import { Custom izableDashboard } from '@/components/dashboard/CustomizableDashb
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
@@ -149,7 +150,7 @@ export default async function DashboardPage() {
       cookie: request.headers.get('cookie') || '',
     },
   });
-  
+
   const { layout } = await response.json();
 
   return (
@@ -207,9 +208,9 @@ export function YourNewWidget(props: WidgetProps) {
   return (
     <BaseWidget
       {...props}
-      title="Your New Widget"
-      description="Widget description"
-      icon={<YourIcon className="h-4 w-4" />}
+      title='Your New Widget'
+      description='Widget description'
+      icon={<YourIcon className='h-4 w-4' />}
     >
       {/* Your widget content */}
       <div>Your widget content here</div>
@@ -249,15 +250,10 @@ export { YourNewWidget } from './YourNewWidget';
 // Custom widget with config
 export function YourWidget(props: WidgetProps) {
   const theme = props.config.displayOptions?.theme || 'default';
-  
+
   return (
-    <BaseWidget
-      {...props}
-      title="Your Widget"
-    >
-      <div className={`widget-${theme}`}>
-        {/* Themed content */}
-      </div>
+    <BaseWidget {...props} title='Your Widget'>
+      <div className={`widget-${theme}`}>{/* Themed content */}</div>
     </BaseWidget>
   );
 }
@@ -286,6 +282,7 @@ WHERE role = 'admin';
 Get user's default dashboard layout.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -308,6 +305,7 @@ Get user's default dashboard layout.
 Save new dashboard layout.
 
 **Request Body:**
+
 ```json
 {
   "name": "My Custom Dashboard",
@@ -317,8 +315,8 @@ Save new dashboard layout.
     {
       "id": "contract_metrics_1",
       "type": "contract_metrics",
-      "position": {"i": "contract_metrics_1", "x": 0, "y": 0, "w": 4, "h": 2},
-      "config": {"refreshInterval": 60},
+      "position": { "i": "contract_metrics_1", "x": 0, "y": 0, "w": 4, "h": 2 },
+      "config": { "refreshInterval": 60 },
       "isVisible": true
     }
   ],
@@ -327,6 +325,7 @@ Save new dashboard layout.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -346,6 +345,7 @@ Update existing dashboard layout.
 Get default layout for specific role.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -361,6 +361,7 @@ Get default layout for specific role.
 Get recent activity for widgets.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -383,6 +384,7 @@ Get recent activity for widgets.
 Get contracts expiring soon.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -408,11 +410,11 @@ Get contracts expiring soon.
 // lib/types/dashboard.ts
 
 export const GRID_COLS = {
-  lg: 12,  // Large screens
-  md: 10,  // Medium screens
-  sm: 6,   // Small screens
-  xs: 4,   // Extra small screens
-  xxs: 2,  // Tiny screens
+  lg: 12, // Large screens
+  md: 10, // Medium screens
+  sm: 6, // Small screens
+  xs: 4, // Extra small screens
+  xxs: 2, // Tiny screens
 };
 
 export const GRID_BREAKPOINTS = {
@@ -431,16 +433,16 @@ export const GRID_MARGIN = [16, 16]; // [horizontal, vertical]
 
 ```typescript
 interface WidgetPosition {
-  i: string;      // unique widget id
-  x: number;      // column position (0-based)
-  y: number;      // row position (0-based)
-  w: number;      // width in columns
-  h: number;      // height in rows
-  minW?: number;  // minimum width
-  minH?: number;  // minimum height
-  maxW?: number;  // maximum width
-  maxH?: number;  // maximum height
-  static?: boolean;      // cannot be moved/resized
+  i: string; // unique widget id
+  x: number; // column position (0-based)
+  y: number; // row position (0-based)
+  w: number; // width in columns
+  h: number; // height in rows
+  minW?: number; // minimum width
+  minH?: number; // minimum height
+  maxW?: number; // maximum width
+  maxH?: number; // maximum height
+  static?: boolean; // cannot be moved/resized
   isDraggable?: boolean; // can be dragged
   isResizable?: boolean; // can be resized
 }
@@ -530,16 +532,16 @@ describe('CustomizableDashboard', () => {
     };
 
     render(<CustomizableDashboard initialLayout={layout} userRole="user" />);
-    
+
     expect(screen.getByText('Test Dashboard')).toBeInTheDocument();
   });
 
   it('allows editing layout', () => {
     render(<CustomizableDashboard userRole="user" />);
-    
+
     const editButton = screen.getByText('Edit Layout');
     fireEvent.click(editButton);
-    
+
     expect(screen.getByText('Edit Mode')).toBeInTheDocument();
   });
 });
@@ -616,6 +618,7 @@ SELECT role FROM users WHERE id = auth.uid();
 **Problem:** Layout changes don't persist after refresh.
 
 **Solution:**
+
 1. Check API response in Network tab
 2. Verify database connection
 3. Check RLS policies allow INSERT
@@ -626,6 +629,7 @@ SELECT role FROM users WHERE id = auth.uid();
 **Problem:** Cannot move widgets.
 
 **Solution:**
+
 1. Ensure Edit Mode is enabled
 2. Check `react-grid-layout` CSS is loaded
 3. Verify `isDraggable` is true
@@ -636,6 +640,7 @@ SELECT role FROM users WHERE id = auth.uid();
 **Problem:** Widgets show loading spinner forever.
 
 **Solution:**
+
 1. Check widget API endpoints
 2. Verify network connectivity
 3. Check browser console for errors
@@ -646,6 +651,7 @@ SELECT role FROM users WHERE id = auth.uid();
 **Problem:** Dashboard is slow or laggy.
 
 **Solution:**
+
 1. Reduce refresh intervals
 2. Limit number of widgets
 3. Optimize widget queries
@@ -667,6 +673,7 @@ SELECT role FROM users WHERE id = auth.uid();
 **Status:** ✅ Fully Implemented
 
 **Features Delivered:**
+
 - ✅ Drag-and-drop grid system
 - ✅ Resize widgets
 - ✅ Add/remove widgets
@@ -690,4 +697,3 @@ SELECT role FROM users WHERE id = auth.uid();
 **Implementation Date:** October 22, 2025  
 **Version:** 1.0.0  
 **License:** MIT
-

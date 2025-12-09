@@ -10,18 +10,22 @@
 ### For Users (Adding/Editing Promoters):
 
 **Before:**
+
 ```
 Phone Number: [____________]
 ```
+
 - Could enter "00968" ✓ (accepted incomplete!)
 - No guidance or examples
 - No formatting
 
 **After:**
+
 ```
 Phone Number: [+968 9123 4567___]
               Include country code (e.g., +968 9123 4567)
 ```
+
 - Cannot enter "00968" ❌ (rejected with helpful error)
 - Clear example in placeholder
 - Auto-formats when you leave the field
@@ -29,12 +33,14 @@ Phone Number: [+968 9123 4567___]
 ### Validation Rules:
 
 ✅ **Valid** - All these work:
+
 - `+968 9123 4567` (formatted)
 - `96891234567` (will auto-format)
 - `00968 9123 4567` (converts to +)
 - Empty (phone is optional)
 
 ❌ **Invalid** - All these rejected:
+
 - `00968` (just country code)
 - `968` (incomplete)
 - `968 912` (too short - < 10 digits)
@@ -66,20 +72,23 @@ WHERE LENGTH(REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9]', '', 'g')) <= 4
 ## 🎨 Examples
 
 ### Oman Numbers:
+
 ```
 Type:   "96891234567"
 Get:    "+968 9123 4567" ✨
 ```
 
 ### UAE Numbers:
+
 ```
 Type:   "971501234567"
 Get:    "+971 50 123 4567" ✨
 ```
 
 ### Saudi Numbers:
+
 ```
-Type:   "966501234567"  
+Type:   "966501234567"
 Get:    "+966 50 123 4567" ✨
 ```
 
@@ -88,21 +97,26 @@ Get:    "+966 50 123 4567" ✨
 Users will see clear, helpful errors:
 
 **Too short:**
+
 > Phone number must have at least 10 digits (including country code). Example: +968 9123 4567
 
 **Just country code:**
+
 > Phone number appears incomplete. Please include the full number after the country code.
 
 **Invalid characters:**
+
 > Phone number can only contain digits, spaces, hyphens, and parentheses
 
 ## 📝 Files Created/Modified
 
 **New Files:**
+
 - ✅ `lib/validation/phone-validator.ts` - Validation utility
 - ✅ `scripts/check-incomplete-phone-numbers.sql` - Diagnostic queries
 
 **Modified:**
+
 - ✅ `components/promoter-form-professional.tsx` - Form validation
 - ✅ `app/api/promoters/route.ts` - API validation
 
@@ -117,12 +131,12 @@ Users will see clear, helpful errors:
 
 ## 🎯 Impact
 
-| Before | After |
-|--------|-------|
-| ❌ "00968" accepted | ✅ "00968" rejected |
-| ❌ No formatting | ✅ Auto-formats to +968 9123 4567 |
-| ❌ No examples | ✅ Clear placeholder examples |
-| ❌ No validation | ✅ Frontend + backend validation |
+| Before              | After                             |
+| ------------------- | --------------------------------- |
+| ❌ "00968" accepted | ✅ "00968" rejected               |
+| ❌ No formatting    | ✅ Auto-formats to +968 9123 4567 |
+| ❌ No examples      | ✅ Clear placeholder examples     |
+| ❌ No validation    | ✅ Frontend + backend validation  |
 
 ## 🚀 Status
 
@@ -134,4 +148,3 @@ Users will see clear, helpful errors:
 ---
 
 **Can now collect valid phone numbers!** 📱✨
-

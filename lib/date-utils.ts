@@ -158,18 +158,21 @@ export const getDaysUntilExpiry = (dateString: string): number => {
  * Simple format date helper - converts any date to DD/MM/YYYY
  * Use this instead of toLocaleDateString('en-US') throughout the app
  */
-export const formatDateDDMMYYYY = (dateString: string | Date | null | undefined): string => {
+export const formatDateDDMMYYYY = (
+  dateString: string | Date | null | undefined
+): string => {
   if (!dateString) return '';
-  
+
   try {
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    
+    const date =
+      typeof dateString === 'string' ? new Date(dateString) : dateString;
+
     if (isNaN(date.getTime())) return '';
-    
+
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    
+
     return `${day}/${month}/${year}`;
   } catch {
     return '';

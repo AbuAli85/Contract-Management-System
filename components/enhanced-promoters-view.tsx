@@ -587,7 +587,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
         promoter.name_ar?.trim() ||
         fallbackName ||
         'Unnamed Promoter';
-      
+
       const displayName = toTitleCase(rawName);
 
       const assignmentStatus = promoter.employer_id ? 'assigned' : 'unassigned';
@@ -643,7 +643,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     // Use API metrics if available, otherwise calculate from current page as fallback
     if (apiMetricsData?.metrics) {
       const apiMetrics = apiMetricsData.metrics;
-      
+
       // Calculate page-specific metrics for companies and recently added
       const companies = new Set(
         dashboardPromoters
@@ -672,14 +672,22 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
 
     // Fallback: Calculate from current page (old behavior)
     const total = pagination?.total || dashboardPromoters.length;
-    const active = dashboardPromoters.filter(p => p.overallStatus === 'active').length;
-    const critical = dashboardPromoters.filter(p =>
-      p.idDocument.status === 'expired' || p.passportDocument.status === 'expired'
+    const active = dashboardPromoters.filter(
+      p => p.overallStatus === 'active'
     ).length;
-    const expiring = dashboardPromoters.filter(p =>
-      p.idDocument.status === 'expiring' || p.passportDocument.status === 'expiring'
+    const critical = dashboardPromoters.filter(
+      p =>
+        p.idDocument.status === 'expired' ||
+        p.passportDocument.status === 'expired'
     ).length;
-    const unassigned = dashboardPromoters.filter(p => p.assignmentStatus === 'unassigned').length;
+    const expiring = dashboardPromoters.filter(
+      p =>
+        p.idDocument.status === 'expiring' ||
+        p.passportDocument.status === 'expiring'
+    ).length;
+    const unassigned = dashboardPromoters.filter(
+      p => p.assignmentStatus === 'unassigned'
+    ).length;
     const companies = new Set(
       dashboardPromoters.map(p => p.employer_id).filter(Boolean) as string[]
     ).size;
@@ -689,14 +697,25 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
       const createdDate = parseDateSafe(p.created_at);
       return createdDate && createdDate >= sevenDaysAgo;
     }).length;
-    const compliant = dashboardPromoters.filter(p =>
-      p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
+    const compliant = dashboardPromoters.filter(
+      p =>
+        p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
     ).length;
-    const complianceRate = dashboardPromoters.length > 0 
-      ? Math.round((compliant / dashboardPromoters.length) * 100) 
-      : 0;
+    const complianceRate =
+      dashboardPromoters.length > 0
+        ? Math.round((compliant / dashboardPromoters.length) * 100)
+        : 0;
 
-    return { total, active, critical, expiring, unassigned, companies, recentlyAdded, complianceRate };
+    return {
+      total,
+      active,
+      critical,
+      expiring,
+      unassigned,
+      companies,
+      recentlyAdded,
+      complianceRate,
+    };
   }, [dashboardPromoters, pagination, apiMetricsData]);
 
   const filteredPromoters = useMemo(() => {
@@ -1190,7 +1209,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                     </TooltipTrigger>
                     <TooltipContent className='max-w-xs'>
                       <p className='text-xs'>
-                        Data automatically refreshes when you return to this tab or reconnect to the internet. Use the Refresh button for immediate updates.
+                        Data automatically refreshes when you return to this tab
+                        or reconnect to the internet. Use the Refresh button for
+                        immediate updates.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -1237,7 +1258,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className='text-xs'>Get the latest data immediately (Cmd+R)</p>
+                    <p className='text-xs'>
+                      Get the latest data immediately (Cmd+R)
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -1311,7 +1334,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
             </div>
             <div className='grid gap-4 sm:grid-cols-3'>
               <div className='space-y-2'>
-                <Label className='text-sm font-medium whitespace-nowrap'>Lifecycle</Label>
+                <Label className='text-sm font-medium whitespace-nowrap'>
+                  Lifecycle
+                </Label>
                 <Select
                   value={statusFilter}
                   onValueChange={value =>
@@ -1331,7 +1356,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label className='text-sm font-medium whitespace-nowrap'>Document health</Label>
+                <Label className='text-sm font-medium whitespace-nowrap'>
+                  Document health
+                </Label>
                 <Select
                   value={documentFilter}
                   onValueChange={value =>
@@ -1352,7 +1379,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label className='text-sm font-medium whitespace-nowrap'>Assignment</Label>
+                <Label className='text-sm font-medium whitespace-nowrap'>
+                  Assignment
+                </Label>
                 <Select
                   value={assignmentFilter}
                   onValueChange={value =>

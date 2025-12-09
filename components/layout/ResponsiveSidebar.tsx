@@ -19,10 +19,10 @@ export interface ResponsiveSidebarProps {
 
 /**
  * Responsive Sidebar Component
- * 
+ *
  * - Mobile: Hidden by default, opens as overlay sheet
  * - Tablet/Desktop: Always visible, docked to side
- * 
+ *
  * @example
  * ```tsx
  * <ResponsiveSidebar title="Navigation">
@@ -41,41 +41,41 @@ export function ResponsiveSidebar({
     <>
       {/* Mobile Menu Button */}
       <Button
-        variant="ghost"
-        size="icon"
+        variant='ghost'
+        size='icon'
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 start-4 z-50 bg-white shadow-md hover:bg-gray-50"
-        aria-label="Toggle menu"
+        className='lg:hidden fixed top-4 start-4 z-50 bg-white shadow-md hover:bg-gray-50'
+        aria-label='Toggle menu'
         aria-expanded={isOpen}
-        aria-controls="mobile-sidebar"
+        aria-controls='mobile-sidebar'
       >
         {isOpen ? (
-          <X className="h-5 w-5" aria-hidden="true" />
+          <X className='h-5 w-5' aria-hidden='true' />
         ) : (
-          <Menu className="h-5 w-5" aria-hidden="true" />
+          <Menu className='h-5 w-5' aria-hidden='true' />
         )}
       </Button>
 
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"
+          className='lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity'
           onClick={() => setIsOpen(false)}
-          aria-hidden="true"
+          aria-hidden='true'
         />
       )}
 
       {/* Sidebar - Mobile (Sheet) */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent
-          side="left"
-          className="lg:hidden w-64 p-0"
-          id="mobile-sidebar"
+          side='left'
+          className='lg:hidden w-64 p-0'
+          id='mobile-sidebar'
         >
-          <SheetTitle className="sr-only">{title}</SheetTitle>
+          <SheetTitle className='sr-only'>{title}</SheetTitle>
           <nav
-            className="h-full overflow-y-auto bg-white"
-            aria-label="Main navigation"
+            className='h-full overflow-y-auto bg-white'
+            aria-label='Main navigation'
           >
             {children}
           </nav>
@@ -92,13 +92,16 @@ export function ResponsiveSidebar({
           'z-30',
           className
         )}
-        aria-label="Main navigation"
+        aria-label='Main navigation'
       >
         {children}
       </aside>
 
       {/* Spacer for desktop layout */}
-      <div className="hidden lg:block lg:w-64 flex-shrink-0" aria-hidden="true" />
+      <div
+        className='hidden lg:block lg:w-64 flex-shrink-0'
+        aria-hidden='true'
+      />
     </>
   );
 }
@@ -129,19 +132,19 @@ export function CollapsibleSidebar({
     <>
       {/* Mobile Menu Button */}
       <Button
-        variant="ghost"
-        size="icon"
+        variant='ghost'
+        size='icon'
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 start-4 z-50 bg-white shadow-md"
-        aria-label="Toggle menu"
+        className='lg:hidden fixed top-4 start-4 z-50 bg-white shadow-md'
+        aria-label='Toggle menu'
       >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {isOpen ? <X className='h-5 w-5' /> : <Menu className='h-5 w-5' />}
       </Button>
 
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className='lg:hidden fixed inset-0 bg-black/50 z-40'
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -170,16 +173,16 @@ export function CollapsibleSidebar({
         )}
       >
         <Button
-          variant="ghost"
-          size="icon"
+          variant='ghost'
+          size='icon'
           onClick={handleToggleCollapsed}
-          className="absolute top-4 end-4"
+          className='absolute top-4 end-4'
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? (
-            <Menu className="h-4 w-4" />
+            <Menu className='h-4 w-4' />
           ) : (
-            <X className="h-4 w-4" />
+            <X className='h-4 w-4' />
           )}
         </Button>
         <div className={cn('overflow-y-auto', isCollapsed && 'px-2')}>
@@ -198,4 +201,3 @@ export function CollapsibleSidebar({
     </>
   );
 }
-

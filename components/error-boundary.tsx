@@ -1,9 +1,22 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw, Home, Bug, Wifi, WifiOff } from 'lucide-react';
+import {
+  AlertTriangle,
+  RefreshCw,
+  Home,
+  Bug,
+  Wifi,
+  WifiOff,
+} from 'lucide-react';
 import Link from 'next/link';
 
 interface ErrorBoundaryState {
@@ -20,29 +33,32 @@ interface ErrorBoundaryProps {
   maxRetries?: number;
 }
 
-export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class PartiesErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private retryTimeoutId: NodeJS.Timeout | null = null;
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { 
-      hasError: false, 
-      retryCount: 0 
+    this.state = {
+      hasError: false,
+      retryCount: 0,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    return { 
-      hasError: true, 
-      error 
+    return {
+      hasError: true,
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Parties Error Boundary caught an error:', error, errorInfo);
-    
+
     this.setState({ error, errorInfo });
-    
+
     // Call custom error handler if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -51,11 +67,14 @@ export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, Er
     // Log to external service in production
     if (process.env.NODE_ENV === 'production') {
       // Example: Sentry.captureException(error, { extra: errorInfo });
-      console.error('Production error - consider logging to external service:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-      });
+      console.error(
+        'Production error - consider logging to external service:',
+        {
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+        }
+      );
     }
   }
 
@@ -70,9 +89,9 @@ export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, Er
     const { retryCount } = this.state;
 
     if (retryCount < maxRetries) {
-      this.setState(prevState => ({ 
-        hasError: false, 
-        retryCount: prevState.retryCount + 1 
+      this.setState(prevState => ({
+        hasError: false,
+        retryCount: prevState.retryCount + 1,
       }));
     } else {
       // Reset retry count after max retries reached
@@ -84,26 +103,30 @@ export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, Er
     window.location.reload();
   };
 
-  getErrorMessage = (error: Error): { title: string; message: string; canRetry: boolean } => {
+  getErrorMessage = (
+    error: Error
+  ): { title: string; message: string; canRetry: boolean } => {
     const errorMessage = error.message.toLowerCase();
-    
+
     // Network/connection errors
     if (errorMessage.includes('timeout') || errorMessage.includes('abort')) {
       return {
         title: 'Request Timeout',
-        message: 'The server took too long to respond. This might be due to network issues or server load.',
+        message:
+          'The server took too long to respond. This might be due to network issues or server load.',
         canRetry: true,
       };
     }
-    
+
     if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
       return {
         title: 'Network Error',
-        message: 'Unable to connect to the server. Please check your internet connection.',
+        message:
+          'Unable to connect to the server. Please check your internet connection.',
         canRetry: true,
       };
     }
-    
+
     // Authentication errors
     if (errorMessage.includes('unauthorized') || errorMessage.includes('401')) {
       return {
@@ -112,34 +135,43 @@ export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, Er
         canRetry: false,
       };
     }
-    
+
     // Server errors
-    if (errorMessage.includes('500') || errorMessage.includes('internal server error')) {
+    if (
+      errorMessage.includes('500') ||
+      errorMessage.includes('internal server error')
+    ) {
       return {
         title: 'Server Error',
-        message: 'The server encountered an error while processing your request. Please try again later.',
+        message:
+          'The server encountered an error while processing your request. Please try again later.',
         canRetry: true,
       };
     }
-    
+
     // Database errors
-    if (errorMessage.includes('database') || errorMessage.includes('failed to fetch parties')) {
+    if (
+      errorMessage.includes('database') ||
+      errorMessage.includes('failed to fetch parties')
+    ) {
       return {
         title: 'Database Error',
-        message: 'Unable to retrieve parties data from the database. Please try again.',
+        message:
+          'Unable to retrieve parties data from the database. Please try again.',
         canRetry: true,
       };
     }
-    
+
     // React/Component errors
     if (errorMessage.includes('component') || errorMessage.includes('render')) {
       return {
         title: 'Component Error',
-        message: 'There was an error rendering the parties page. Please refresh the page.',
+        message:
+          'There was an error rendering the parties page. Please refresh the page.',
         canRetry: true,
       };
     }
-    
+
     // Default error
     return {
       title: 'Application Error',
@@ -229,12 +261,12 @@ export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, Er
                     Try Again ({maxRetries - retryCount} left)
                   </Button>
                 )}
-                
+
                 <Button variant='outline' onClick={this.handleReload}>
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Reload Page
                 </Button>
-                
+
                 <Button variant='outline' asChild>
                   <Link href='/en/dashboard'>
                     <Home className='mr-2 h-4 w-4' />
@@ -260,7 +292,8 @@ export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, Er
 
               {/* Help text */}
               <div className='text-xs text-gray-500 dark:text-gray-400'>
-                If this problem persists, please contact support with the error details above.
+                If this problem persists, please contact support with the error
+                details above.
               </div>
             </CardContent>
           </Card>
@@ -277,30 +310,37 @@ interface GenericErrorBoundaryProps extends ErrorBoundaryProps {
   componentName?: string;
 }
 
-export class ErrorBoundary extends React.Component<GenericErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<
+  GenericErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private retryTimeoutId: NodeJS.Timeout | null = null;
 
   constructor(props: GenericErrorBoundaryProps) {
     super(props);
-    this.state = { 
-      hasError: false, 
-      retryCount: 0 
+    this.state = {
+      hasError: false,
+      retryCount: 0,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    return { 
-      hasError: true, 
-      error 
+    return {
+      hasError: true,
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     const { componentName } = this.props;
-    console.error(`${componentName || 'Component'} Error Boundary caught an error:`, error, errorInfo);
-    
+    console.error(
+      `${componentName || 'Component'} Error Boundary caught an error:`,
+      error,
+      errorInfo
+    );
+
     this.setState({ error, errorInfo });
-    
+
     // Call custom error handler if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -308,12 +348,15 @@ export class ErrorBoundary extends React.Component<GenericErrorBoundaryProps, Er
 
     // Log to external service in production
     if (process.env.NODE_ENV === 'production') {
-      console.error('Production error - consider logging to external service:', {
-        component: componentName || 'Unknown',
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-      });
+      console.error(
+        'Production error - consider logging to external service:',
+        {
+          component: componentName || 'Unknown',
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+        }
+      );
     }
   }
 
@@ -328,9 +371,9 @@ export class ErrorBoundary extends React.Component<GenericErrorBoundaryProps, Er
     const { retryCount } = this.state;
 
     if (retryCount < maxRetries) {
-      this.setState(prevState => ({ 
-        hasError: false, 
-        retryCount: prevState.retryCount + 1 
+      this.setState(prevState => ({
+        hasError: false,
+        retryCount: prevState.retryCount + 1,
       }));
     } else {
       // Reset retry count after max retries reached
@@ -428,12 +471,12 @@ export class ErrorBoundary extends React.Component<GenericErrorBoundaryProps, Er
                     Try Again ({maxRetries - retryCount} left)
                   </Button>
                 )}
-                
+
                 <Button variant='outline' onClick={this.handleReload}>
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Reload Page
                 </Button>
-                
+
                 <Button variant='outline' asChild>
                   <Link href='/en/dashboard'>
                     <Home className='mr-2 h-4 w-4' />

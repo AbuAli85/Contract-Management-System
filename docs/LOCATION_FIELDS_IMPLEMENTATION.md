@@ -11,7 +11,9 @@ This document describes the implementation of bilingual location fields (English
 **File:** `docs/MAKECOM_SIMPLE_CONTRACT_FLOW_WITH_LOCATIONS.json`
 
 #### Module 1: Webhook Interface
+
 Added location field interfaces:
+
 ```json
 {
   "name": "work_location",
@@ -31,7 +33,9 @@ Added location field interfaces:
 ```
 
 #### Module 55: Variable Storage
+
 Added location variable storage with fallback logic:
+
 ```json
 {
   "name": "stored_location_en",
@@ -44,12 +48,15 @@ Added location variable storage with fallback logic:
 ```
 
 **Fallback Logic:**
+
 - If `location_en` is provided, use it; otherwise fall back to `work_location`
 - If `location_ar` is provided, use it; otherwise fall back to `work_location`
 - This ensures backward compatibility with existing contracts that only use `work_location`
 
 #### Module 56: Google Docs Template
+
 Added location fields to template replacement:
+
 ```json
 "requests": {
   "ref_number": "{{1.contract_number}}",
@@ -74,13 +81,17 @@ Added location fields to template replacement:
 **File:** `app/api/contracts/makecom/generate/route.ts`
 
 #### Added Location Field Processing (Lines 173-175)
+
 ```typescript
 // Set location fields - use bilingual fields if available, otherwise fallback to work_location
-const location_en = contractData.location_en || contractData.work_location || '';
-const location_ar = contractData.location_ar || contractData.work_location || '';
+const location_en =
+  contractData.location_en || contractData.work_location || '';
+const location_ar =
+  contractData.location_ar || contractData.work_location || '';
 ```
 
 #### Added to Enriched Contract Data (Lines 304-309)
+
 ```typescript
 // Add location fields to enriched data
 enrichedContractData = {
@@ -91,6 +102,7 @@ enrichedContractData = {
 ```
 
 #### Enhanced Webhook Logging (Lines 590-598)
+
 ```typescript
 contractDetails: {
   job_title: enhancedPayload.job_title,
@@ -106,6 +118,7 @@ contractDetails: {
 ### 3. Database Schema
 
 The `contracts` table already supports location fields:
+
 - `location_en` (TEXT) - Location in English
 - `location_ar` (TEXT) - Location in Arabic
 - `work_location` (TEXT) - Legacy work location field (kept for backward compatibility)
@@ -113,15 +126,18 @@ The `contracts` table already supports location fields:
 ### 4. Frontend Components
 
 **Files:**
+
 - `components/SimpleContractGenerator.tsx`
 - `components/SimpleContractGeneratorWithValidation.tsx`
 
 These components already include the `work_location` field. To add bilingual location support:
 
 #### Option 1: Keep Current Approach
+
 Use `work_location` as the primary field, and the API will automatically populate both `location_en` and `location_ar` with the same value.
 
 #### Option 2: Add Separate Fields (Recommended for Bilingual Support)
+
 Add separate fields for English and Arabic locations:
 
 ```tsx
@@ -206,6 +222,7 @@ When creating a contract through the API, include location fields:
 ### Fallback Behavior
 
 If you only provide `work_location`:
+
 ```json
 {
   "work_location": "Muscat, Oman"
@@ -214,6 +231,7 @@ If you only provide `work_location`:
 ```
 
 If you provide bilingual locations:
+
 ```json
 {
   "work_location": "Muscat, Oman",
@@ -259,6 +277,7 @@ The implementation maintains full backward compatibility:
 ### Issue: Location fields are empty in generated document
 
 **Solution:**
+
 1. Check webhook payload includes `work_location`, `location_en`, and `location_ar`
 2. Verify module 55 variable storage is working
 3. Check template has correct placeholders: `{{location_en}}` and `{{location_ar}}`
@@ -266,6 +285,7 @@ The implementation maintains full backward compatibility:
 ### Issue: Arabic location shows incorrect text
 
 **Solution:**
+
 1. Ensure `location_ar` is properly encoded in UTF-8
 2. Check Google Docs template has RTL text direction enabled for Arabic sections
 3. Verify webhook payload is not corrupting Arabic characters
@@ -273,6 +293,7 @@ The implementation maintains full backward compatibility:
 ### Issue: Fallback not working
 
 **Solution:**
+
 1. Check the fallback logic in module 55: `{{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}`
 2. Ensure `work_location` is included in the webhook payload as a fallback
 3. Verify the Make.com scenario is using the updated configuration
@@ -295,8 +316,8 @@ The implementation maintains full backward compatibility:
 ## Support
 
 For issues or questions about location field implementation, please:
+
 1. Check this documentation first
 2. Review the Make.com scenario logs
 3. Check API logs for webhook payload content
 4. Contact the development team with specific error messages
-

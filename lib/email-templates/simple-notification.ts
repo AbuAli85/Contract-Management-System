@@ -59,7 +59,7 @@ export function simpleNotificationEmail(props: SimpleNotificationEmailProps) {
   <div style="background: #f9f9f9; padding: 15px; margin: 20px 0; border-radius: 4px;">
     ${additionalInfo
       .map(
-        (info) => `
+        info => `
     <p style="margin: 5px 0;">
       <strong>${info.label}:</strong> ${info.value}
     </p>
@@ -105,7 +105,7 @@ Hello ${recipientName},
 
 ${message}
 
-${additionalInfo.map((info) => `${info.label}: ${info.value}`).join('\n')}
+${additionalInfo.map(info => `${info.label}: ${info.value}`).join('\n')}
 
 ${actionUrl ? `${actionLabel}: ${actionUrl}` : ''}
 
@@ -134,9 +134,11 @@ export function simpleDocumentExpiryEmail(props: {
   daysRemaining: number;
   viewUrl?: string;
 }) {
-  const { recipientName, documentType, expiryDate, daysRemaining, viewUrl } = props;
+  const { recipientName, documentType, expiryDate, daysRemaining, viewUrl } =
+    props;
 
-  const priority = daysRemaining <= 7 ? 'urgent' : daysRemaining <= 30 ? 'high' : 'medium';
+  const priority =
+    daysRemaining <= 7 ? 'urgent' : daysRemaining <= 30 ? 'high' : 'medium';
 
   const message =
     daysRemaining <= 0
@@ -155,7 +157,12 @@ export function simpleDocumentExpiryEmail(props: {
       { label: 'Days Remaining', value: daysRemaining.toString() },
       {
         label: 'Status',
-        value: daysRemaining <= 0 ? 'Expired' : daysRemaining <= 7 ? 'Critical' : 'Expiring Soon',
+        value:
+          daysRemaining <= 0
+            ? 'Expired'
+            : daysRemaining <= 7
+              ? 'Critical'
+              : 'Expiring Soon',
       },
     ],
   });
@@ -171,7 +178,13 @@ export function simpleContractApprovalEmail(props: {
   actionRequired: string;
   viewUrl?: string;
 }) {
-  const { recipientName, contractNumber, contractTitle, actionRequired, viewUrl } = props;
+  const {
+    recipientName,
+    contractNumber,
+    contractTitle,
+    actionRequired,
+    viewUrl,
+  } = props;
 
   return simpleNotificationEmail({
     recipientName,
@@ -186,4 +199,3 @@ export function simpleContractApprovalEmail(props: {
     ],
   });
 }
-

@@ -17,6 +17,7 @@ Thank you for the updated review! I've identified and **immediately fixed** the 
 ### 1. Workforce Calculation Discrepancy ✅ FIXED
 
 **Problem:**
+
 ```
 Dashboard showed: 0 + 78 + 0 + 3 = 81
 Actual total: 181
@@ -27,12 +28,14 @@ Missing: 100 promoters
 The dashboard "Workforce Overview" card was displaying only 4 of 5 status categories. The "Terminated" status (100 promoters) was calculated in the backend but not displayed in the UI.
 
 **Solution Implemented:**
+
 - ✅ Added "Terminated" status to dashboard display
 - ✅ Added "Total workforce: X promoters" to card header
 - ✅ Added tooltips to all workforce metrics for clarity
 - ✅ Improved visual organization (Active Workforce vs Other Status)
 
 **Verification:**
+
 ```
 Total Workforce: 181 promoters ✅
 ├─ Active on Contracts: 0
@@ -53,14 +56,14 @@ TOTAL: 181 ✅ (Now matches!)
 **Enhancement:**
 Added tooltips to all metrics explaining exactly what they measure:
 
-| Metric | Tooltip |
-|:-------|:--------|
-| Active on Contracts | "Promoters currently working on active contracts" |
-| Available for Work | "Promoters ready and available for new assignments" |
-| On Leave | "Promoters temporarily on leave" |
-| Inactive | "Promoters marked as inactive" |
-| Terminated | "Former promoters who left the company" |
-| Compliance | "Percentage of promoters with all documents valid" |
+| Metric              | Tooltip                                             |
+| :------------------ | :-------------------------------------------------- |
+| Active on Contracts | "Promoters currently working on active contracts"   |
+| Available for Work  | "Promoters ready and available for new assignments" |
+| On Leave            | "Promoters temporarily on leave"                    |
+| Inactive            | "Promoters marked as inactive"                      |
+| Terminated          | "Former promoters who left the company"             |
+| Compliance          | "Percentage of promoters with all documents valid"  |
 
 ---
 
@@ -69,6 +72,7 @@ Added tooltips to all metrics explaining exactly what they measure:
 ### Issue #2: Document vs Promoter Counting
 
 **Your Observation:**
+
 ```
 Dashboard: 210 total (119+61+30) - Documents?
 Promoters: 181 total (143+11+27) - Promoters?
@@ -78,12 +82,14 @@ Promoters: 181 total (143+11+27) - Promoters?
 This is actually **correct behavior** by design:
 
 **Dashboard "Document Compliance":**
+
 - Counts individual **documents** (ID cards + Passports + Visas + Work Permits)
 - Each promoter has 2-4 documents
 - Total: ~210 documents across 181 promoters
 - Metric: "What percentage of documents are compliant?"
 
 **Promoters Page "Promoter Compliance":**
+
 - Counts **promoters** with all required documents valid
 - Total: 181 promoters
 - Metric: "What percentage of promoters are fully compliant?"
@@ -105,6 +111,7 @@ This is actually **correct behavior** by design:
 ### Issue #3: Assignment Status Terminology
 
 **Your Observation:**
+
 ```
 Available: 78
 Awaiting Assignment: 171
@@ -115,11 +122,13 @@ Difference: 93
 These are two **different but valid** metrics with different business logic:
 
 **"Available" (78):**
+
 - Definition: Promoters with `status = 'available'`
 - Business Rule: Promoters specifically marked as ready for work
 - Excludes: On leave, inactive, terminated
 
 **"Awaiting Assignment" (171):**
+
 - Definition: Promoters without active contracts
 - Business Rule: All promoters not currently working
 - Includes: Available (78) + Some on leave/inactive who could work if reactivated
@@ -141,6 +150,7 @@ These are two **different but valid** metrics with different business logic:
 ### Issue #4: 0% Utilization Rate
 
 **Your Observation:**
+
 ```
 0 active contracts but showing 0% utilization
 Looks confusing
@@ -151,15 +161,13 @@ When there are no active contracts, show a more meaningful message:
 
 ```tsx
 // Instead of "Utilization: 0%"
-{stats.active === 0 ? (
-  <Badge variant="outline">
-    No active contracts yet
-  </Badge>
-) : (
-  <Badge>
-    Utilization: {metrics.utilizationRate}%
-  </Badge>
-)}
+{
+  stats.active === 0 ? (
+    <Badge variant='outline'>No active contracts yet</Badge>
+  ) : (
+    <Badge>Utilization: {metrics.utilizationRate}%</Badge>
+  );
+}
 ```
 
 ---
@@ -168,21 +176,21 @@ When there are no active contracts, show a more meaningful message:
 
 ### Critical Issues Status
 
-| # | Issue | Initial State | Current State | Status |
-|:--|:------|:--------------|:--------------|:-------|
-| 1 | Compliance rate consistency | 0% vs 66% | **66% both pages** | ✅ Fixed |
-| 2 | Workforce calculation | 81 vs 181 | **181 correct** | ✅ Fixed |
-| 3 | Missing terminated status | Not displayed | **Now displayed** | ✅ Fixed |
-| 4 | Document alerts visibility | 0 shown | **27 critical, 11 expiring** | ✅ Fixed |
-| 5 | Tooltips for clarity | Missing | **All metrics have tooltips** | ✅ Added |
+| #   | Issue                       | Initial State | Current State                 | Status   |
+| :-- | :-------------------------- | :------------ | :---------------------------- | :------- |
+| 1   | Compliance rate consistency | 0% vs 66%     | **66% both pages**            | ✅ Fixed |
+| 2   | Workforce calculation       | 81 vs 181     | **181 correct**               | ✅ Fixed |
+| 3   | Missing terminated status   | Not displayed | **Now displayed**             | ✅ Fixed |
+| 4   | Document alerts visibility  | 0 shown       | **27 critical, 11 expiring**  | ✅ Fixed |
+| 5   | Tooltips for clarity        | Missing       | **All metrics have tooltips** | ✅ Added |
 
 ### Issues Clarified (Not Bugs)
 
-| # | Issue | Explanation | Recommendation |
-|:--|:------|:------------|:---------------|
-| 6 | Document vs Promoter counts | Different valid metrics | Add clearer labels |
-| 7 | Available vs Awaiting | Different business logic | Add explanatory tooltips |
-| 8 | 0% utilization display | Technically correct | Show "No contracts" message |
+| #   | Issue                       | Explanation              | Recommendation              |
+| :-- | :-------------------------- | :----------------------- | :-------------------------- |
+| 6   | Document vs Promoter counts | Different valid metrics  | Add clearer labels          |
+| 7   | Available vs Awaiting       | Different business logic | Add explanatory tooltips    |
+| 8   | 0% utilization display      | Technically correct      | Show "No contracts" message |
 
 ---
 
@@ -201,12 +209,14 @@ When there are no active contracts, show a more meaningful message:
 ### Issues Resolved: Session 2
 
 **Time Since Last Review:** < 1 hour  
-**Critical Issues Fixed:** 3  
+**Critical Issues Fixed:** 3
+
 - Workforce calculation
-- Missing status display  
+- Missing status display
 - Metric clarity
 
 **Enhancements Added:** 5
+
 - Total workforce display
 - Tooltips on all metrics
 - Visual organization improvement
@@ -214,6 +224,7 @@ When there are no active contracts, show a more meaningful message:
 - Documentation
 
 **Overall Progress:**
+
 ```
 Initial Review: 16 issues identified
 Session 1: 3 issues resolved (19% complete)
@@ -230,6 +241,7 @@ Net Progress: 6 issues resolved ✅
 **Problem:** Backend calculated all 5 statuses, but UI only displayed 4
 
 **Why it happened:**
+
 ```tsx
 // Backend returned:
 { activeOnContracts, availableForWork, onLeave, inactive, terminated }
@@ -251,11 +263,13 @@ Net Progress: 6 issues resolved ✅
 **Problem:** Users couldn't tell if metrics counted documents or promoters
 
 **Why it happened:**
+
 - Dashboard: "Compliance" (ambiguous)
 - No indication of what's being counted
 - No tooltips explaining methodology
 
 **Lesson:** Every metric needs:
+
 1. Clear label (what)
 2. Tooltip (how it's calculated)
 3. Context (documents vs promoters)
@@ -267,6 +281,7 @@ Net Progress: 6 issues resolved ✅
 **Problem:** Multiple valid ways to define "available"
 
 **Why it happened:**
+
 - Status field: 'available' (78)
 - Logical calculation: not on contracts (171)
 - Both are valid but different
@@ -280,6 +295,7 @@ Net Progress: 6 issues resolved ✅
 ### Week 1: Polish Current Fixes
 
 **Day 1-2: Label Clarity**
+
 ```tsx
 // Add to dashboard
 <CardTitle>Document Compliance Tracking</CardTitle>
@@ -295,19 +311,23 @@ Net Progress: 6 issues resolved ✅
 ```
 
 **Day 3-4: Utilization Display**
+
 ```tsx
-{activeContracts === 0 ? (
-  <div className="text-center text-muted-foreground">
-    <Info className="h-4 w-4 mb-1" />
-    <p>No active contracts</p>
-    <p className="text-xs">Utilization tracked when contracts are active</p>
-  </div>
-) : (
-  <div>Utilization: {utilizationRate}%</div>
-)}
+{
+  activeContracts === 0 ? (
+    <div className='text-center text-muted-foreground'>
+      <Info className='h-4 w-4 mb-1' />
+      <p>No active contracts</p>
+      <p className='text-xs'>Utilization tracked when contracts are active</p>
+    </div>
+  ) : (
+    <div>Utilization: {utilizationRate}%</div>
+  );
+}
 ```
 
 **Day 5: Testing & Validation**
+
 - Cross-page consistency checks
 - User testing with tooltips
 - Verify all totals add up
@@ -342,18 +362,21 @@ Net Progress: 6 issues resolved ✅
 ## 🎯 Success Criteria Met
 
 ### Data Integrity ✅
+
 - [x] Workforce totals now add up (181 = 0+78+0+3+100)
 - [x] All status categories displayed
 - [x] Compliance rate consistent (66% everywhere)
 - [x] Total workforce prominently shown
 
 ### User Experience ✅
+
 - [x] Tooltips added to all metrics
 - [x] Clear visual organization
 - [x] Better labeling (Active vs Other Status)
 - [x] Contextual help available
 
 ### Code Quality ✅
+
 - [x] No breaking changes
 - [x] No API modifications needed
 - [x] Backward compatible
@@ -366,6 +389,7 @@ Net Progress: 6 issues resolved ✅
 ### Next Review Checkpoint: November 3, 2025
 
 **Expected Status:**
+
 - ✅ All workforce metrics displaying correctly (DONE)
 - ✅ Labels clarified (IN PROGRESS)
 - ⏳ RTL/Arabic support (PLANNED)
@@ -373,6 +397,7 @@ Net Progress: 6 issues resolved ✅
 - ⏳ Mobile responsiveness (PLANNED)
 
 **Success Indicators:**
+
 1. No new critical data integrity issues
 2. User confusion about metrics reduced
 3. All tooltips tested and validated
@@ -409,11 +434,13 @@ Net Progress: 6 issues resolved ✅
 ## 📞 Support
 
 **Questions about this fix?**
+
 - Review: `CRITICAL_WORKFORCE_CALCULATION_FIX.md`
 - Implementation: `app/[locale]/dashboard/page.tsx` (lines 424-552)
 - Validation: Check dashboard now shows "Total workforce: 181 promoters"
 
 **Need further clarification?**
+
 - Document vs Promoter counting: Both are correct, just different metrics
 - Available vs Awaiting: Different business logic definitions
 - 0% Utilization: Consider showing "No contracts" message instead
@@ -428,4 +455,3 @@ Net Progress: 6 issues resolved ✅
 **Prepared By:** Manus AI  
 **Date:** October 27, 2025  
 **Review Round:** 2 of N
-

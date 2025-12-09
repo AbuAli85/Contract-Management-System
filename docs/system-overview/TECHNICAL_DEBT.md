@@ -11,6 +11,7 @@ This document tracks known technical debt items that need to be addressed for a 
 **Impact**: Type safety is not enforced at build time
 
 **Required Actions**:
+
 1. Fix type errors in `app/api/admin/roles/route.ts` - permissions mapping
 2. Fix type errors in `app/api/admin/bulk-import/route.ts` - array index access
 3. Fix type errors in files using `api_keys` table - table not in generated types
@@ -18,6 +19,7 @@ This document tracks known technical debt items that need to be addressed for a 
 5. Run `npx supabase gen types typescript` to regenerate database types
 
 **Files with Type Errors**:
+
 - `app/api/admin/roles/route.ts`
 - `app/api/admin/bulk-import/route.ts`
 - `app/api/admin/api-keys/**/*` (entire folder)
@@ -30,11 +32,13 @@ This document tracks known technical debt items that need to be addressed for a 
 **Impact**: Code quality issues not blocking deployment
 
 **Changed Rules**:
+
 - `@typescript-eslint/no-unused-vars`: error → warn
 - `object-shorthand`: error → warn
 - `prefer-template`: error → warn
 
 **Required Actions**:
+
 1. Fix unused variable warnings
 2. Apply object shorthand syntax
 3. Use template literals consistently
@@ -43,11 +47,13 @@ This document tracks known technical debt items that need to be addressed for a 
 ### 3. Disabled API Routes
 
 **Status**: Several API routes are disabled but still in codebase
-**Location**: 
+**Location**:
+
 - `app/api/_disabled/`
 - `app/api/_disabled_debug/`
 
 **Required Actions**:
+
 1. Review each disabled route for relevance
 2. Delete obsolete routes
 3. Fix and re-enable needed routes
@@ -61,11 +67,13 @@ This document tracks known technical debt items that need to be addressed for a 
 **Impact**: Confusion, maintenance overhead
 
 **Examples**:
+
 - Multiple auth login routes
 - Multiple contract generation routes
 - Duplicate health check endpoints
 
 **Required Actions**:
+
 1. Audit all API routes
 2. Consolidate to standard patterns
 3. Add deprecation warnings to legacy routes
@@ -77,6 +85,7 @@ This document tracks known technical debt items that need to be addressed for a 
 **Impact**: Inconsistent logging, potential info leakage
 
 **Required Actions**:
+
 1. Replace console.log with logger from `lib/utils/logger.ts`
 2. Add appropriate log levels
 3. Ensure no sensitive data in logs
@@ -88,6 +97,7 @@ This document tracks known technical debt items that need to be addressed for a 
 **Usage**: `components/excel-import-modal.tsx`
 
 **Required Actions**:
+
 1. Consider replacing with `exceljs` library
 2. Add additional input validation for uploaded files
 3. Restrict file upload access to admin users only
@@ -101,6 +111,7 @@ This document tracks known technical debt items that need to be addressed for a 
 **Impact**: Security in development mode
 
 **Required Actions**:
+
 1. Move demo credentials to environment variables
 2. Disable demo mode in production
 3. Add warning banner in demo mode
@@ -111,29 +122,30 @@ This document tracks known technical debt items that need to be addressed for a 
 **Location**: See `docs/system-overview/TODO_TRACKER.md`
 
 **Required Actions**:
+
 1. Convert TODOs to GitHub issues
 2. Prioritize by impact
 3. Address systematically
 
 ## Tracking
 
-| Item | Priority | Status | Target Date |
-|------|----------|--------|-------------|
-| TypeScript checking | High | Open | - |
-| ESLint rules | High | Open | - |
-| Disabled routes cleanup | Medium | Open | - |
-| API route consolidation | Medium | Open | - |
-| Console.log cleanup | Medium | Open | - |
-| xlsx replacement | Medium | Open | - |
-| Demo credentials | Low | Open | - |
-| TODO cleanup | Low | Open | - |
+| Item                    | Priority | Status | Target Date |
+| ----------------------- | -------- | ------ | ----------- |
+| TypeScript checking     | High     | Open   | -           |
+| ESLint rules            | High     | Open   | -           |
+| Disabled routes cleanup | Medium   | Open   | -           |
+| API route consolidation | Medium   | Open   | -           |
+| Console.log cleanup     | Medium   | Open   | -           |
+| xlsx replacement        | Medium   | Open   | -           |
+| Demo credentials        | Low      | Open   | -           |
+| TODO cleanup            | Low      | Open   | -           |
 
 ## Definition of Done
 
 Each item is considered done when:
+
 1. Code changes are implemented
 2. Tests are passing
 3. Build succeeds with strict checks
 4. Code review completed
 5. Documentation updated
-

@@ -28,7 +28,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Users, Plus, RefreshCw, SortAsc, SortDesc, MoreHorizontal, ArrowRight } from 'lucide-react';
+import {
+  Users,
+  Plus,
+  RefreshCw,
+  SortAsc,
+  SortDesc,
+  MoreHorizontal,
+  ArrowRight,
+} from 'lucide-react';
 import { PromotersTableRow } from './promoters-table-row';
 import { PromotersGridView } from './promoters-grid-view';
 import { PromotersCardsView } from './promoters-cards-view';
@@ -36,7 +44,11 @@ import { DocumentStatusLegend } from './document-status-legend';
 import { EnhancedPromotersCardsViewWithPartyEdit } from './enhanced-promoter-card-with-party-edit';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { ColumnCustomization, useColumnCustomization, type ColumnConfig } from './column-customization';
+import {
+  ColumnCustomization,
+  useColumnCustomization,
+  type ColumnConfig,
+} from './column-customization';
 import type {
   DocumentStatus,
   OverallStatus,
@@ -51,9 +63,27 @@ import type {
 const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'checkbox', label: 'Select', visible: true, order: 0, required: true },
   { id: 'name', label: 'Team Member', visible: true, order: 1, required: true },
-  { id: 'documents', label: 'Documentation', visible: true, order: 2, required: false },
-  { id: 'assignment', label: 'Assignment', visible: true, order: 3, required: false },
-  { id: 'contact', label: 'Contact Info', visible: true, order: 4, required: false },
+  {
+    id: 'documents',
+    label: 'Documentation',
+    visible: true,
+    order: 2,
+    required: false,
+  },
+  {
+    id: 'assignment',
+    label: 'Assignment',
+    visible: true,
+    order: 3,
+    required: false,
+  },
+  {
+    id: 'contact',
+    label: 'Contact Info',
+    visible: true,
+    order: 4,
+    required: false,
+  },
   { id: 'created', label: 'Joined', visible: true, order: 5, required: false },
   { id: 'status', label: 'Status', visible: true, order: 6, required: false },
   { id: 'actions', label: 'Actions', visible: true, order: 7, required: true },
@@ -77,9 +107,16 @@ interface PromotersTableProps {
   onAddPromoter: () => void;
   onResetFilters: () => void;
   onPageChange: (page: number) => void;
-  onPartyAssignmentUpdate?: (promoterId: string, partyId: string | null) => void;
+  onPartyAssignmentUpdate?: (
+    promoterId: string,
+    partyId: string | null
+  ) => void;
   enableEnhancedPartyManagement?: boolean;
-  onInlineUpdate?: (promoterId: string, field: string, value: string) => Promise<void>;
+  onInlineUpdate?: (
+    promoterId: string,
+    field: string,
+    value: string
+  ) => Promise<void>;
   enableInlineEdit?: boolean;
 }
 
@@ -107,9 +144,10 @@ export function PromotersTable({
   enableInlineEdit = false,
 }: PromotersTableProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  
+
   // Column customization
-  const { columns, visibleColumns, setColumns, resetColumns, isColumnVisible } = useColumnCustomization(DEFAULT_COLUMNS);
+  const { columns, visibleColumns, setColumns, resetColumns, isColumnVisible } =
+    useColumnCustomization(DEFAULT_COLUMNS);
 
   return (
     <Card className='shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
@@ -163,7 +201,9 @@ export function PromotersTable({
           <Tabs
             value={viewMode}
             onValueChange={value =>
-              onViewModeChange(value as 'table' | 'grid' | 'cards' | 'analytics')
+              onViewModeChange(
+                value as 'table' | 'grid' | 'cards' | 'analytics'
+              )
             }
             className='w-full sm:w-auto'
           >
@@ -189,13 +229,13 @@ export function PromotersTable({
               <TabsTrigger
                 value='analytics'
                 className='data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3'
-                aria-label="Analytics view with charts and insights"
+                aria-label='Analytics view with charts and insights'
               >
                 Analytics
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          
+
           {/* Column Customization - Only show in table view */}
           {viewMode === 'table' && (
             <ColumnCustomization
@@ -210,14 +250,14 @@ export function PromotersTable({
         {promoters.length === 0 ? (
           hasFiltersApplied ? (
             <EmptySearchState
-              searchTerm="your filters"
+              searchTerm='your filters'
               onClearSearch={onResetFilters}
             />
           ) : (
             <EmptyState
               icon={Users}
-              title="No promoters yet"
-              description="Start building your team by adding your first promoter. Track their documents, performance, and assignments all in one place."
+              title='No promoters yet'
+              description='Start building your team by adding your first promoter. Track their documents, performance, and assignments all in one place.'
               action={{
                 label: 'Add Your First Promoter',
                 onClick: onAddPromoter,
@@ -231,9 +271,9 @@ export function PromotersTable({
                 'Import multiple promoters from a CSV file',
                 'Track document expiry dates and compliance',
                 'Assign promoters to companies and contracts',
-                'Monitor workforce availability and status'
+                'Monitor workforce availability and status',
               ]}
-              iconClassName="text-blue-500"
+              iconClassName='text-blue-500'
               showSuggestions={true}
             />
           )
@@ -246,196 +286,206 @@ export function PromotersTable({
                 <div className='px-6 pt-4 pb-2'>
                   <DocumentStatusLegend compact />
                 </div>
-                <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300 touch-pan-x' ref={parentRef} data-view-mode="table">
+                <ScrollArea
+                  className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300 touch-pan-x'
+                  ref={parentRef}
+                  data-view-mode='table'
+                >
                   <div className='min-w-[1100px] lg:min-w-[1200px] xl:min-w-[1300px]'>
-                  <Table>
-                    <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
-                    <TableRow className='hover:bg-transparent border-0'>
-                      {isColumnVisible('checkbox') && (
-                        <TableHead className='w-[50px] text-center py-4'>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Checkbox
-                                  checked={
-                                    selectedPromoters.size === promoters.length
-                                  }
-                                  onCheckedChange={onSelectAll}
-                                  className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
-                                />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className='text-xs font-medium'>
-                                  Select all visible promoters
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableHead>
-                      )}
-                      {isColumnVisible('name') && (
-                        <TableHead
-                        className='min-w-[200px] w-[220px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
-                        onClick={() => onSort('name')}
-                      >
-                        <div className='flex items-center gap-2 group/header px-2'>
-                          <Users className='h-4 w-4 text-indigo-500' />
-                          <span className='text-sm'>Team Member</span>
-                          {sortField === 'name' ? (
-                            sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            ) : (
-                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            )
-                          ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
-                              <SortAsc className='h-4 w-4 text-slate-400' />
-                            </div>
+                    <Table>
+                      <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
+                        <TableRow className='hover:bg-transparent border-0'>
+                          {isColumnVisible('checkbox') && (
+                            <TableHead className='w-[50px] text-center py-4'>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Checkbox
+                                      checked={
+                                        selectedPromoters.size ===
+                                        promoters.length
+                                      }
+                                      onCheckedChange={onSelectAll}
+                                      className='border-slate-300 dark:border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600'
+                                    />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className='text-xs font-medium'>
+                                      Select all visible promoters
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableHead>
                           )}
-                        </div>
-                        </TableHead>
-                      )}
-                      {isColumnVisible('documents') && (
-                        <TableHead
-                          className='min-w-[180px] w-[200px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
-                          onClick={() => onSort('documents')}
-                        >
-                        <div className='flex items-center gap-2 group/header px-2'>
-                          <Badge className='bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 p-0.5'>
-                            <Plus className='h-3 w-3' />
-                          </Badge>
-                          <span className='text-sm'>Documentation</span>
-                          {sortField === 'documents' ? (
-                            sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            ) : (
-                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            )
-                          ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
-                              <SortAsc className='h-4 w-4 text-slate-400' />
-                            </div>
+                          {isColumnVisible('name') && (
+                            <TableHead
+                              className='min-w-[200px] w-[220px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              onClick={() => onSort('name')}
+                            >
+                              <div className='flex items-center gap-2 group/header px-2'>
+                                <Users className='h-4 w-4 text-indigo-500' />
+                                <span className='text-sm'>Team Member</span>
+                                {sortField === 'name' ? (
+                                  sortOrder === 'asc' ? (
+                                    <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  ) : (
+                                    <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  )
+                                ) : (
+                                  <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                                    <SortAsc className='h-4 w-4 text-slate-400' />
+                                  </div>
+                                )}
+                              </div>
+                            </TableHead>
                           )}
-                        </div>
-                        </TableHead>
-                      )}
-                      {isColumnVisible('assignment') && (
-                        <TableHead className='min-w-[140px] w-[160px] font-bold text-slate-700 dark:text-slate-200 py-4'>
-                        <div className='flex items-center gap-2 px-2'>
-                          <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5'>
-                            <Plus className='h-3 w-3' />
-                          </Badge>
-                          <span className='text-sm'>Assignment</span>
-                          <span className='ml-1 text-xs text-muted-foreground'>(filterable)</span>
-                        </div>
-                        </TableHead>
-                      )}
-                      {isColumnVisible('contact') && (
-                        <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>
-                        <div className='flex items-center gap-2 px-2'>
-                          <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5'>
-                            <Plus className='h-3 w-3' />
-                          </Badge>
-                          <span className='text-sm'>Contact Info</span>
-                        </div>
-                        </TableHead>
-                      )}
-                      {isColumnVisible('created') && (
-                        <TableHead
-                          className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
-                          onClick={() => onSort('created')}
-                        >
-                        <div className='flex items-center gap-2 group/header px-2'>
-                          <Badge className='bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 p-0.5'>
-                            <Plus className='h-3 w-3' />
-                          </Badge>
-                          <span className='text-sm'>Joined</span>
-                          {sortField === 'created' ? (
-                            sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            ) : (
-                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            )
-                          ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
-                              <SortAsc className='h-4 w-4 text-slate-400' />
-                            </div>
+                          {isColumnVisible('documents') && (
+                            <TableHead
+                              className='min-w-[180px] w-[200px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              onClick={() => onSort('documents')}
+                            >
+                              <div className='flex items-center gap-2 group/header px-2'>
+                                <Badge className='bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 p-0.5'>
+                                  <Plus className='h-3 w-3' />
+                                </Badge>
+                                <span className='text-sm'>Documentation</span>
+                                {sortField === 'documents' ? (
+                                  sortOrder === 'asc' ? (
+                                    <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  ) : (
+                                    <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  )
+                                ) : (
+                                  <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                                    <SortAsc className='h-4 w-4 text-slate-400' />
+                                  </div>
+                                )}
+                              </div>
+                            </TableHead>
                           )}
-                        </div>
-                        </TableHead>
-                      )}
-                      {isColumnVisible('status') && (
-                        <TableHead
-                          className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
-                          onClick={() => onSort('status')}
-                        >
-                        <div className='flex items-center gap-2 group/header px-2'>
-                          <Badge className='bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 p-0.5'>
-                            <Plus className='h-3 w-3' />
-                          </Badge>
-                          <span className='text-sm'>Status</span>
-                          {sortField === 'status' ? (
-                            sortOrder === 'asc' ? (
-                              <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            ) : (
-                              <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
-                            )
-                          ) : (
-                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
-                              <SortAsc className='h-4 w-4 text-slate-400' />
-                            </div>
+                          {isColumnVisible('assignment') && (
+                            <TableHead className='min-w-[140px] w-[160px] font-bold text-slate-700 dark:text-slate-200 py-4'>
+                              <div className='flex items-center gap-2 px-2'>
+                                <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5'>
+                                  <Plus className='h-3 w-3' />
+                                </Badge>
+                                <span className='text-sm'>Assignment</span>
+                                <span className='ml-1 text-xs text-muted-foreground'>
+                                  (filterable)
+                                </span>
+                              </div>
+                            </TableHead>
                           )}
-                        </div>
-                        </TableHead>
-                      )}
-                      {isColumnVisible('actions') && (
-                        <TableHead className='min-w-[100px] w-[120px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
-                          <div className='flex items-center justify-end gap-2 px-2'>
-                            <span className='text-sm'>Actions</span>
-                            <MoreHorizontal className='h-4 w-4 text-slate-400' />
-                          </div>
-                        </TableHead>
-                      )}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {promoters.map(promoter => (
-                      <PromotersTableRow
-                        key={promoter.id}
-                        promoter={promoter}
-                        isSelected={selectedPromoters.has(promoter.id)}
-                        onSelect={() => onSelectPromoter(promoter.id)}
-                        onView={() => onViewPromoter(promoter)}
-                        onEdit={() => onEditPromoter(promoter)}
-                        isColumnVisible={isColumnVisible}
-                        onInlineUpdate={onInlineUpdate}
-                        enableInlineEdit={enableInlineEdit}
-                      />
-                    ))}
-                    {isFetching && promoters.length > 0 && (
-                      <TableRow>
-                        <TableCell colSpan={visibleColumns.length} className='text-center py-8'>
-                          <div className='flex items-center justify-center gap-2 text-muted-foreground'>
-                            <RefreshCw className='h-4 w-4 animate-spin' />
-                            <span>Updating data...</span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-                </div>
-                <ScrollBar orientation="horizontal" />
-                {/* Horizontal Scroll Hint - Only show when content overflows */}
-                {promoters.length > 0 && (
-                  <div className='pointer-events-none absolute bottom-3 right-3 z-20 opacity-70 transition-opacity duration-500 hover:opacity-90'>
-                    <div className='flex items-center gap-1 rounded-full bg-gradient-to-r from-slate-800/95 to-slate-700/95 px-3 py-1.5 text-xs font-medium text-white shadow-xl backdrop-blur-sm dark:from-slate-200/95 dark:to-slate-300/95 dark:text-slate-900'>
-                      <ArrowRight className='h-3 w-3' />
-                      <span>Scroll horizontally</span>
-                    </div>
+                          {isColumnVisible('contact') && (
+                            <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>
+                              <div className='flex items-center gap-2 px-2'>
+                                <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5'>
+                                  <Plus className='h-3 w-3' />
+                                </Badge>
+                                <span className='text-sm'>Contact Info</span>
+                              </div>
+                            </TableHead>
+                          )}
+                          {isColumnVisible('created') && (
+                            <TableHead
+                              className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              onClick={() => onSort('created')}
+                            >
+                              <div className='flex items-center gap-2 group/header px-2'>
+                                <Badge className='bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 p-0.5'>
+                                  <Plus className='h-3 w-3' />
+                                </Badge>
+                                <span className='text-sm'>Joined</span>
+                                {sortField === 'created' ? (
+                                  sortOrder === 'asc' ? (
+                                    <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  ) : (
+                                    <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  )
+                                ) : (
+                                  <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                                    <SortAsc className='h-4 w-4 text-slate-400' />
+                                  </div>
+                                )}
+                              </div>
+                            </TableHead>
+                          )}
+                          {isColumnVisible('status') && (
+                            <TableHead
+                              className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              onClick={() => onSort('status')}
+                            >
+                              <div className='flex items-center gap-2 group/header px-2'>
+                                <Badge className='bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 p-0.5'>
+                                  <Plus className='h-3 w-3' />
+                                </Badge>
+                                <span className='text-sm'>Status</span>
+                                {sortField === 'status' ? (
+                                  sortOrder === 'asc' ? (
+                                    <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  ) : (
+                                    <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                  )
+                                ) : (
+                                  <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                                    <SortAsc className='h-4 w-4 text-slate-400' />
+                                  </div>
+                                )}
+                              </div>
+                            </TableHead>
+                          )}
+                          {isColumnVisible('actions') && (
+                            <TableHead className='min-w-[100px] w-[120px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
+                              <div className='flex items-center justify-end gap-2 px-2'>
+                                <span className='text-sm'>Actions</span>
+                                <MoreHorizontal className='h-4 w-4 text-slate-400' />
+                              </div>
+                            </TableHead>
+                          )}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {promoters.map(promoter => (
+                          <PromotersTableRow
+                            key={promoter.id}
+                            promoter={promoter}
+                            isSelected={selectedPromoters.has(promoter.id)}
+                            onSelect={() => onSelectPromoter(promoter.id)}
+                            onView={() => onViewPromoter(promoter)}
+                            onEdit={() => onEditPromoter(promoter)}
+                            isColumnVisible={isColumnVisible}
+                            onInlineUpdate={onInlineUpdate}
+                            enableInlineEdit={enableInlineEdit}
+                          />
+                        ))}
+                        {isFetching && promoters.length > 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={visibleColumns.length}
+                              className='text-center py-8'
+                            >
+                              <div className='flex items-center justify-center gap-2 text-muted-foreground'>
+                                <RefreshCw className='h-4 w-4 animate-spin' />
+                                <span>Updating data...</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
-                )}
-              </ScrollArea>
+                  <ScrollBar orientation='horizontal' />
+                  {/* Horizontal Scroll Hint - Only show when content overflows */}
+                  {promoters.length > 0 && (
+                    <div className='pointer-events-none absolute bottom-3 right-3 z-20 opacity-70 transition-opacity duration-500 hover:opacity-90'>
+                      <div className='flex items-center gap-1 rounded-full bg-gradient-to-r from-slate-800/95 to-slate-700/95 px-3 py-1.5 text-xs font-medium text-white shadow-xl backdrop-blur-sm dark:from-slate-200/95 dark:to-slate-300/95 dark:text-slate-900'>
+                        <ArrowRight className='h-3 w-3' />
+                        <span>Scroll horizontally</span>
+                      </div>
+                    </div>
+                  )}
+                </ScrollArea>
               </>
             )}
 
@@ -446,21 +496,21 @@ export function PromotersTable({
                 <div className='px-6 pt-4 pb-2'>
                   <DocumentStatusLegend compact />
                 </div>
-              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
-                <PromotersGridView
-                  promoters={promoters}
-                  selectedPromoters={selectedPromoters}
-                  onSelectPromoter={onSelectPromoter}
-                  onViewPromoter={onViewPromoter}
-                  onEditPromoter={onEditPromoter}
-                />
-                {isFetching && promoters.length > 0 && (
-                  <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
-                    <RefreshCw className='h-4 w-4 animate-spin' />
-                    <span className='text-sm'>Updating data...</span>
-                  </div>
-                )}
-              </ScrollArea>
+                <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
+                  <PromotersGridView
+                    promoters={promoters}
+                    selectedPromoters={selectedPromoters}
+                    onSelectPromoter={onSelectPromoter}
+                    onViewPromoter={onViewPromoter}
+                    onEditPromoter={onEditPromoter}
+                  />
+                  {isFetching && promoters.length > 0 && (
+                    <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
+                      <RefreshCw className='h-4 w-4 animate-spin' />
+                      <span className='text-sm'>Updating data...</span>
+                    </div>
+                  )}
+                </ScrollArea>
               </>
             )}
 
@@ -471,32 +521,34 @@ export function PromotersTable({
                 <div className='px-6 pt-4 pb-2'>
                   <DocumentStatusLegend compact />
                 </div>
-              <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
-                {enableEnhancedPartyManagement ? (
-                  <EnhancedPromotersCardsViewWithPartyEdit
-                    promoters={promoters}
-                    selectedPromoters={selectedPromoters}
-                    onSelectPromoter={onSelectPromoter}
-                    onViewPromoter={onViewPromoter}
-                    onEditPromoter={onEditPromoter}
-                    {...(onPartyAssignmentUpdate && { onPartyAssignmentUpdate })}
-                  />
-                ) : (
-                  <PromotersCardsView
-                    promoters={promoters}
-                    selectedPromoters={selectedPromoters}
-                    onSelectPromoter={onSelectPromoter}
-                    onViewPromoter={onViewPromoter}
-                    onEditPromoter={onEditPromoter}
-                  />
-                )}
-                {isFetching && promoters.length > 0 && (
-                  <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
-                    <RefreshCw className='h-4 w-4 animate-spin' />
-                    <span className='text-sm'>Updating data...</span>
-                  </div>
-                )}
-              </ScrollArea>
+                <ScrollArea className='h-[calc(100vh-380px)] min-h-[400px] max-h-[800px] animate-in fade-in duration-300'>
+                  {enableEnhancedPartyManagement ? (
+                    <EnhancedPromotersCardsViewWithPartyEdit
+                      promoters={promoters}
+                      selectedPromoters={selectedPromoters}
+                      onSelectPromoter={onSelectPromoter}
+                      onViewPromoter={onViewPromoter}
+                      onEditPromoter={onEditPromoter}
+                      {...(onPartyAssignmentUpdate && {
+                        onPartyAssignmentUpdate,
+                      })}
+                    />
+                  ) : (
+                    <PromotersCardsView
+                      promoters={promoters}
+                      selectedPromoters={selectedPromoters}
+                      onSelectPromoter={onSelectPromoter}
+                      onViewPromoter={onViewPromoter}
+                      onEditPromoter={onEditPromoter}
+                    />
+                  )}
+                  {isFetching && promoters.length > 0 && (
+                    <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
+                      <RefreshCw className='h-4 w-4 animate-spin' />
+                      <span className='text-sm'>Updating data...</span>
+                    </div>
+                  )}
+                </ScrollArea>
               </>
             )}
           </div>

@@ -37,8 +37,10 @@ export async function sendEmail(options: EmailOptions): Promise<{
       };
     }
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io';
-    const fromName = process.env.RESEND_FROM_NAME || 'SmartPro Contract Management System';
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io';
+    const fromName =
+      process.env.RESEND_FROM_NAME || 'SmartPro Contract Management System';
 
     const { data, error } = await getResendClient().emails.send({
       from: `${fromName} <${fromEmail}>`,
@@ -76,9 +78,7 @@ export async function sendEmail(options: EmailOptions): Promise<{
 /**
  * Send bulk emails (with rate limiting consideration)
  */
-export async function sendBulkEmails(
-  emails: EmailOptions[]
-): Promise<{
+export async function sendBulkEmails(emails: EmailOptions[]): Promise<{
   success: boolean;
   sent: number;
   failed: number;
@@ -161,4 +161,3 @@ function stripHtml(html: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
-

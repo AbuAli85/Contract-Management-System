@@ -14,25 +14,30 @@ Your Contract Management System now has **THREE specialized contract forms**, ea
 ## 🔷 Form 1: eXtra Contracts (Simple/Fast)
 
 ### Component
+
 **File:** `components/SimpleContractGenerator.tsx`  
 **Route:** `/[locale]/generate-contract`
 
 ### Purpose
+
 Quick contract generation for eXtra supermarket promoter assignments.
 
 ### Key Features
+
 - ✅ Streamlined form (essential fields only)
 - ✅ Fast data entry
 - ✅ Basic employment contracts
 - ✅ Standard terms and conditions
 
 ### Use Cases
+
 - Daily promoter assignments
 - Standard employment contracts
 - Quick contract creation
 - eXtra-specific deployments
 
 ### Fields Collected
+
 ```typescript
 - Promoter selection
 - First party (employer)
@@ -49,6 +54,7 @@ Quick contract generation for eXtra supermarket promoter assignments.
 ```
 
 ### Target Users
+
 - HR administrators
 - Operations managers
 - Daily operations staff
@@ -58,13 +64,16 @@ Quick contract generation for eXtra supermarket promoter assignments.
 ## 🔶 Form 2: General Contracts (Full-Featured)
 
 ### Component
+
 **File:** `components/GeneralContractGenerator.tsx`  
 **Route:** `/[locale]/contracts/general`
 
 ### Purpose
+
 Comprehensive contract generation with extensive customization for various contract types.
 
 ### Key Features
+
 - ✅ Full contract customization
 - ✅ Bilingual fields (EN/AR)
 - ✅ Product/service contracts
@@ -73,6 +82,7 @@ Comprehensive contract generation with extensive customization for various contr
 - ✅ Make.com integration
 
 ### Use Cases
+
 - Service agreements
 - Consulting contracts
 - Partnership agreements
@@ -80,6 +90,7 @@ Comprehensive contract generation with extensive customization for various contr
 - Multi-party contracts
 
 ### Fields Collected
+
 ```typescript
 All fields from eXtra form, PLUS:
 - Product/service details (bilingual)
@@ -96,6 +107,7 @@ All fields from eXtra form, PLUS:
 ```
 
 ### Target Users
+
 - Legal department
 - Business development
 - Senior management
@@ -106,13 +118,16 @@ All fields from eXtra form, PLUS:
 ## 🔵 Form 3: Sharaf DG Deployment Letters (NEW) ⭐
 
 ### Component
+
 **File:** `components/SharafDGDeploymentForm.tsx` (NEW)  
 **Route:** `/[locale]/contracts/sharaf-dg` (NEW)
 
 ### Purpose
+
 Specialized deployment letter generation for Sharaf DG client with automated PDF creation.
 
 ### Key Features
+
 - ✅ Sharaf DG-specific workflow
 - ✅ Bilingual PDF generation
 - ✅ Automatic image embedding (ID card & passport)
@@ -121,12 +136,14 @@ Specialized deployment letter generation for Sharaf DG client with automated PDF
 - ✅ Download & Google Drive links
 
 ### Use Cases
+
 - Sharaf DG promoter deployments
 - Formal deployment documentation
 - Client-ready official letters
 - Archive-quality documents
 
 ### Fields Collected
+
 ```typescript
 Essential fields:
 - Promoter (with ID card & passport images REQUIRED)
@@ -142,6 +159,7 @@ Essential fields:
 ```
 
 ### Special Requirements
+
 ```
 ✅ Promoter MUST have:
    - ID card image uploaded
@@ -157,6 +175,7 @@ Essential fields:
 ```
 
 ### Target Users
+
 - Operations managers
 - Client account managers
 - HR administrators
@@ -166,17 +185,17 @@ Essential fields:
 
 ## 📊 Comparison Table
 
-| Feature | eXtra Contracts | General Contracts | Sharaf DG Deployment |
-|---------|----------------|-------------------|---------------------|
-| **Complexity** | ⭐ Simple | ⭐⭐⭐ Complex | ⭐⭐ Medium |
-| **Fields** | ~15 | ~30 | ~12 |
-| **Bilingual** | Partial | Full | Full |
-| **PDF Generation** | No | Via Make.com | ✅ Automated |
-| **Image Embedding** | No | No | ✅ Yes |
-| **Real-time Status** | No | No | ✅ Yes |
-| **Target Client** | eXtra | Any | Sharaf DG |
-| **Use Frequency** | Daily | Weekly | As needed |
-| **Time to Complete** | 2-3 min | 10-15 min | 3-5 min |
+| Feature              | eXtra Contracts | General Contracts | Sharaf DG Deployment |
+| -------------------- | --------------- | ----------------- | -------------------- |
+| **Complexity**       | ⭐ Simple       | ⭐⭐⭐ Complex    | ⭐⭐ Medium          |
+| **Fields**           | ~15             | ~30               | ~12                  |
+| **Bilingual**        | Partial         | Full              | Full                 |
+| **PDF Generation**   | No              | Via Make.com      | ✅ Automated         |
+| **Image Embedding**  | No              | No                | ✅ Yes               |
+| **Real-time Status** | No              | No                | ✅ Yes               |
+| **Target Client**    | eXtra           | Any               | Sharaf DG            |
+| **Use Frequency**    | Daily           | Weekly            | As needed            |
+| **Time to Complete** | 2-3 min         | 10-15 min         | 3-5 min              |
 
 ---
 
@@ -208,6 +227,7 @@ Sharaf DG: Home > Contracts > Sharaf DG Deployment ⭐ NEW
 ## 🔀 Decision Matrix: Which Form to Use?
 
 ### Use eXtra Form When:
+
 - ✅ Daily promoter assignments
 - ✅ Standard eXtra contracts
 - ✅ Need quick turnaround
@@ -215,6 +235,7 @@ Sharaf DG: Home > Contracts > Sharaf DG Deployment ⭐ NEW
 - ✅ No special requirements
 
 ### Use General Form When:
+
 - ✅ Non-standard contracts
 - ✅ Service/consulting agreements
 - ✅ Complex terms required
@@ -222,6 +243,7 @@ Sharaf DG: Home > Contracts > Sharaf DG Deployment ⭐ NEW
 - ✅ Custom contract types
 
 ### Use Sharaf DG Form When:
+
 - ✅ Sharaf DG client specifically
 - ✅ Need official deployment letter
 - ✅ Require PDF with images
@@ -256,9 +278,9 @@ const contractMenuItems = [
   },
   {
     title: 'Sharaf DG Deployment', // NEW
-    href: '/contracts/sharaf-dg',  // NEW
-    icon: Building,                 // NEW
-    badge: 'PDF',                   // NEW
+    href: '/contracts/sharaf-dg', // NEW
+    icon: Building, // NEW
+    badge: 'PDF', // NEW
   },
   // ... other items
 ];
@@ -331,16 +353,16 @@ const contractMenuItems = [
 
 ```typescript
 interface CommonFields {
-  promoter_id: string;           // ✅ All forms
-  first_party_id: string;        // ✅ All forms
-  second_party_id: string;       // ✅ All forms
-  contract_type: string;         // ✅ All forms
-  job_title: string;             // ✅ All forms
-  department: string;            // ✅ All forms
-  work_location: string;         // ✅ All forms
-  basic_salary: number;          // ✅ All forms
-  contract_start_date: string;   // ✅ All forms
-  contract_end_date: string;     // ✅ All forms
+  promoter_id: string; // ✅ All forms
+  first_party_id: string; // ✅ All forms
+  second_party_id: string; // ✅ All forms
+  contract_type: string; // ✅ All forms
+  job_title: string; // ✅ All forms
+  department: string; // ✅ All forms
+  work_location: string; // ✅ All forms
+  basic_salary: number; // ✅ All forms
+  contract_start_date: string; // ✅ All forms
+  contract_end_date: string; // ✅ All forms
 }
 ```
 
@@ -360,9 +382,9 @@ interface ExtraSpecificFields {
 
 ```typescript
 interface GeneralSpecificFields {
-  products_en: string;           // Bilingual
+  products_en: string; // Bilingual
   products_ar: string;
-  location_en: string;           // Bilingual
+  location_en: string; // Bilingual
   location_ar: string;
   product_id: string;
   location_id: string;
@@ -382,9 +404,9 @@ interface GeneralSpecificFields {
 
 ```typescript
 interface SharafDGSpecificFields {
-  contract_number: string;       // Required format: SDG-YYYY-XXX
-  pdf_url: string;               // Auto-generated
-  google_drive_url: string;      // Auto-generated
+  contract_number: string; // Required format: SDG-YYYY-XXX
+  pdf_url: string; // Auto-generated
+  google_drive_url: string; // Auto-generated
   pdf_status: 'pending' | 'generating' | 'generated' | 'error';
   pdf_generated_at: timestamp;
 }
@@ -397,8 +419,8 @@ interface SharafDGSpecificFields {
 ### Scenario 1: Daily eXtra Assignment
 
 ```
-User needs to → Quick contract for eXtra → 
-Opens "Quick Contract (eXtra)" → 
+User needs to → Quick contract for eXtra →
+Opens "Quick Contract (eXtra)" →
 Fills basic fields (2 min) →
 Submits → Done ✅
 ```
@@ -434,12 +456,14 @@ Shares with Sharaf DG ✅
 ### When to Create New Forms
 
 Create a new specialized form when:
+
 - ✅ Specific client requires unique format
 - ✅ Process is repeated frequently (>10/month)
 - ✅ Special workflow needed (like PDF generation)
 - ✅ Unique validation requirements
 
 Don't create new form when:
+
 - ❌ One-off contract
 - ❌ Can be handled by general form
 - ❌ Only cosmetic differences
@@ -460,12 +484,14 @@ Examples:
 ## 🔧 Maintenance
 
 ### Update All Three Forms When:
+
 - Database schema changes
 - New required fields
 - Security updates
 - UI library updates
 
 ### Update Individual Form When:
+
 - Client-specific requirements change
 - Form-specific validation needed
 - Template updates
@@ -478,7 +504,7 @@ Examples:
 
 ```sql
 -- Contracts by form type
-SELECT 
+SELECT
   contract_type,
   COUNT(*) as count,
   COUNT(*) FILTER (WHERE pdf_status = 'generated') as with_pdf
@@ -490,11 +516,11 @@ ORDER BY count DESC;
 
 ### Performance Metrics
 
-| Form | Avg Completion Time | Success Rate | PDF Generation |
-|------|---------------------|--------------|----------------|
-| eXtra | 2-3 minutes | 98% | N/A |
-| General | 10-15 minutes | 95% | Via Make.com |
-| Sharaf DG | 3-5 minutes | 97% | ✅ Automated |
+| Form      | Avg Completion Time | Success Rate | PDF Generation |
+| --------- | ------------------- | ------------ | -------------- |
+| eXtra     | 2-3 minutes         | 98%          | N/A            |
+| General   | 10-15 minutes       | 95%          | Via Make.com   |
+| Sharaf DG | 3-5 minutes         | 97%          | ✅ Automated   |
 
 ---
 
@@ -503,12 +529,14 @@ ORDER BY count DESC;
 ### For Sharaf DG Form (NEW):
 
 - [ ] **Database migration applied**
+
   ```bash
   supabase db push
   # Applies: 20251026_add_contract_pdf_fields.sql
   ```
 
 - [ ] **Environment variables set**
+
   ```bash
   MAKE_CONTRACT_PDF_WEBHOOK_URL=https://hook.eu2.make.com/...
   PDF_WEBHOOK_SECRET=your-secret-here
@@ -553,6 +581,7 @@ ORDER BY count DESC;
 ### Shared Design Elements
 
 All three forms share:
+
 - Card-based layout
 - Step-by-step sections
 - Icon usage (lucide-react)
@@ -565,13 +594,13 @@ All three forms share:
 
 ```typescript
 // eXtra - Green theme
-className="border-green-200 bg-green-50"
+className = 'border-green-200 bg-green-50';
 
 // General - Blue theme
-className="border-blue-200 bg-blue-50"
+className = 'border-blue-200 bg-blue-50';
 
 // Sharaf DG - Purple/Professional theme
-className="border-purple-200 bg-purple-50"
+className = 'border-purple-200 bg-purple-50';
 ```
 
 ---
@@ -581,6 +610,7 @@ className="border-purple-200 bg-purple-50"
 ### User Documentation
 
 Create user guides for each:
+
 1. **eXtra Quick Start Guide** - 1 page
 2. **General Contracts Manual** - 5 pages
 3. **Sharaf DG Deployment Guide** - 2 pages
@@ -617,11 +647,11 @@ Create user guides for each:
 
 You now have a **three-tier contract generation system**:
 
-| Tier | Form | Best For | Time |
-|------|------|----------|------|
-| **Fast** | eXtra | Daily operations | 2 min |
-| **Full** | General | Complex contracts | 10 min |
-| **Specialized** | Sharaf DG | Client-specific | 3 min + PDF |
+| Tier            | Form      | Best For          | Time        |
+| --------------- | --------- | ----------------- | ----------- |
+| **Fast**        | eXtra     | Daily operations  | 2 min       |
+| **Full**        | General   | Complex contracts | 10 min      |
+| **Specialized** | Sharaf DG | Client-specific   | 3 min + PDF |
 
 **Total Forms:** 3  
 **Total Routes:** 3  
@@ -631,4 +661,3 @@ You now have a **three-tier contract generation system**:
 ---
 
 **Next:** Follow implementation checklist above to deploy Sharaf DG form!
-

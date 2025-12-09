@@ -16,18 +16,21 @@ The diagnostic query has revealed **two distinct business models** in your contr
 **7 contracts** show employer mismatches across **3 promoters**:
 
 #### Case 1: Abdul Basit
+
 - **Profile Employer**: Falcon Eye Modern Investments SPC
 - **Contract Employer**: Amjad Al Maerifa LLC
 - **Interpretation**: Employed by Falcon Eye, but contracted to work at Amjad Al Maerifa
 
 #### Case 2: Abdelrhman Ahmed Hassan
+
 - **Profile Employer**: Falcon Eye Business and Promotion
 - **Contract Employer**: Amjad Al Maerifa LLC
 - **Interpretation**: Employed by Falcon Eye, but contracted to work at Amjad Al Maerifa
 
 #### Case 3: Shahmeer Abdul Sattar (5 contracts)
+
 - **Profile Employer**: Amjad Al Maerifa LLC
-- **Contract Employers**: 
+- **Contract Employers**:
   - Blue Oasis Quality Services (3 contracts)
   - AL AMRI INVESTMENT AND SERVICES LLC (2 contracts)
 - **Interpretation**: Employed by Amjad Al Maerifa, but outsourced to multiple clients
@@ -37,17 +40,21 @@ The diagnostic query has revealed **two distinct business models** in your contr
 ## Business Model Analysis
 
 ### Model A: Direct Employment ✅
+
 ```
 Promoter → Employer (same as promoter.employer_id)
 ```
+
 - Promoter works directly for their employer
 - Simple, straightforward relationship
 - `promoter.employer_id` === `contract.employer_id`
 
 ### Model B: Outsourcing/Secondment ⚠️
+
 ```
 Promoter → Employer (promoter.employer_id) → Client (contract.employer_id)
 ```
+
 - Promoter is on Company A's payroll
 - But works at Company B's location
 - Common in staffing/recruitment agencies
@@ -58,12 +65,14 @@ Promoter → Employer (promoter.employer_id) → Client (contract.employer_id)
 ## Is This a Problem?
 
 ### ✅ **NOT a problem if:**
+
 - Your business model includes outsourcing/secondment
 - Amjad Al Maerifa LLC is a staffing agency providing promoters to clients
 - Falcon Eye companies are recruitment firms
 - This is intentional business logic
 
 ### ❌ **IS a problem if:**
+
 - Data entry errors (wrong employer selected)
 - Contracts created with incorrect employer_id
 - Historical data migration issues
@@ -81,7 +90,7 @@ If outsourcing is intentional, **enhance the schema** to make it explicit:
 
 ```sql
 -- Add a client_company_id field to distinguish from employer
-ALTER TABLE contracts 
+ALTER TABLE contracts
 ADD COLUMN IF NOT EXISTS client_company_id UUID REFERENCES parties(id);
 
 -- For clarity:
@@ -98,6 +107,7 @@ WHERE c.promoter_id::uuid = p.id
 ```
 
 #### Update UI to Show Both
+
 ```tsx
 // In Professional Tab
 <div>
@@ -147,10 +157,10 @@ BEGIN
       AND p.employer_id != NEW.employer_id
   ) THEN
     -- Log warning but allow it
-    RAISE WARNING 'Contract % has different employer than promoter employer', 
+    RAISE WARNING 'Contract % has different employer than promoter employer',
       NEW.contract_number;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -165,13 +175,13 @@ CREATE TRIGGER check_contract_employer
 
 ## Statistics Summary
 
-| Metric | Count | Notes |
-|--------|-------|-------|
-| **Total Contracts Analyzed** | 7 | From Step 4 results |
-| **Promoters Affected** | 3 | Abdul Basit, Abdelrhman, Shahmeer |
-| **Unique Employers (Profile)** | 3 | Falcon Eye (2), Amjad Al Maerifa (1) |
-| **Unique Employers (Contract)** | 3 | Amjad, Blue Oasis, AL AMRI |
-| **Outsourcing Pattern** | Yes | Staffing agency model detected |
+| Metric                          | Count | Notes                                |
+| ------------------------------- | ----- | ------------------------------------ |
+| **Total Contracts Analyzed**    | 7     | From Step 4 results                  |
+| **Promoters Affected**          | 3     | Abdul Basit, Abdelrhman, Shahmeer    |
+| **Unique Employers (Profile)**  | 3     | Falcon Eye (2), Amjad Al Maerifa (1) |
+| **Unique Employers (Contract)** | 3     | Amjad, Blue Oasis, AL AMRI           |
+| **Outsourcing Pattern**         | Yes   | Staffing agency model detected       |
 
 ---
 
@@ -220,27 +230,23 @@ Before choosing a fix option, clarify:
 ## Next Steps
 
 **Immediate:**
+
 1. Review the 7 contracts listed in the diagnostic results
 2. Confirm with business stakeholders which model is correct
 3. Choose Option 1, 2, or 3 based on business requirements
 
-**Short-term:**
-4. Implement chosen solution
-5. Update documentation
-6. Test with sample data
+**Short-term:** 4. Implement chosen solution 5. Update documentation 6. Test with sample data
 
-**Long-term:**
-7. Monitor for new mismatches
-8. Add reporting to track outsourcing arrangements
-9. Consider adding contract types (direct vs outsourced)
+**Long-term:** 7. Monitor for new mismatches 8. Add reporting to track outsourcing arrangements 9. Consider adding contract types (direct vs outsourced)
 
 ---
 
 ## SQL to Run Next
 
 ### To Review All Mismatches in Detail:
+
 ```sql
-SELECT 
+SELECT
     p.name_en,
     p.employer_id as promoter_employer,
     pe.name_en as promoter_employer_name,
@@ -267,13 +273,13 @@ ORDER BY p.name_en, c.start_date;
 
 ## Conclusion
 
-**The mismatches are likely INTENTIONAL** representing an outsourcing business model, not data errors. 
+**The mismatches are likely INTENTIONAL** representing an outsourcing business model, not data errors.
 
 **Recommendation:** Implement **Option 1** (Accept as Business Model) with schema enhancements to make the outsourcing relationship explicit and clear in the UI.
 
 This will:
+
 - ✅ Preserve accurate business relationships
 - ✅ Make data model clearer
 - ✅ Improve user understanding
 - ✅ Enable proper reporting on outsourcing arrangements
-

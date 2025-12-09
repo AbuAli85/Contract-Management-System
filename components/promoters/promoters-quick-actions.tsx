@@ -108,24 +108,24 @@ export function PromoterQuickActions({
   };
 
   return (
-    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+    <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
       <TooltipProvider delayDuration={300}>
         {/* View */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+              size='icon'
+              variant='ghost'
+              className='h-8 w-8 hover:bg-blue-100 hover:text-blue-600'
               onClick={handleView}
             >
-              <Eye className="h-4 w-4" />
-              <span className="sr-only">View promoter profile</span>
+              <Eye className='h-4 w-4' />
+              <span className='sr-only'>View promoter profile</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">View Profile</p>
-            <p className="text-[10px] text-muted-foreground">Cmd+Click</p>
+            <p className='text-xs'>View Profile</p>
+            <p className='text-[10px] text-muted-foreground'>Cmd+Click</p>
           </TooltipContent>
         </Tooltip>
 
@@ -133,17 +133,17 @@ export function PromoterQuickActions({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 hover:bg-purple-100 hover:text-purple-600"
+              size='icon'
+              variant='ghost'
+              className='h-8 w-8 hover:bg-purple-100 hover:text-purple-600'
               onClick={handleEdit}
             >
-              <Edit className="h-4 w-4" />
-              <span className="sr-only">Edit promoter</span>
+              <Edit className='h-4 w-4' />
+              <span className='sr-only'>Edit promoter</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Edit Details</p>
+            <p className='text-xs'>Edit Details</p>
           </TooltipContent>
         </Tooltip>
 
@@ -152,17 +152,17 @@ export function PromoterQuickActions({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 hover:bg-green-100 hover:text-green-600"
+                size='icon'
+                variant='ghost'
+                className='h-8 w-8 hover:bg-green-100 hover:text-green-600'
                 onClick={handleEmail}
               >
-                <Mail className="h-4 w-4" />
-                <span className="sr-only">Send email</span>
+                <Mail className='h-4 w-4' />
+                <span className='sr-only'>Send email</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Email: {promoter.contactEmail}</p>
+              <p className='text-xs'>Email: {promoter.contactEmail}</p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -172,17 +172,17 @@ export function PromoterQuickActions({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 hover:bg-yellow-100 hover:text-yellow-600"
+                size='icon'
+                variant='ghost'
+                className='h-8 w-8 hover:bg-yellow-100 hover:text-yellow-600'
                 onClick={handleCall}
               >
-                <Phone className="h-4 w-4" />
-                <span className="sr-only">Call promoter</span>
+                <Phone className='h-4 w-4' />
+                <span className='sr-only'>Call promoter</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Call: {promoter.contactPhone}</p>
+              <p className='text-xs'>Call: {promoter.contactPhone}</p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -191,32 +191,34 @@ export function PromoterQuickActions({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 hover:bg-gray-100"
+              size='icon'
+              variant='ghost'
+              className='h-8 w-8 hover:bg-gray-100'
             >
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">More actions</span>
+              <MoreHorizontal className='h-4 w-4' />
+              <span className='sr-only'>More actions</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align='end'>
             <DropdownMenuItem onClick={handleViewDocuments}>
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className='mr-2 h-4 w-4' />
               View Documents
             </DropdownMenuItem>
             {promoter.assignmentStatus === 'unassigned' && (
               <DropdownMenuItem onClick={handleAssign}>
-                <UserCheck className="mr-2 h-4 w-4" />
+                <UserCheck className='mr-2 h-4 w-4' />
                 Assign to Company
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={handleSendReminder}
               disabled={isLoading === 'reminder'}
             >
-              <AlertCircle className="mr-2 h-4 w-4" />
-              {isLoading === 'reminder' ? 'Sending...' : 'Send Document Reminder'}
+              <AlertCircle className='mr-2 h-4 w-4' />
+              {isLoading === 'reminder'
+                ? 'Sending...'
+                : 'Send Document Reminder'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -224,4 +226,3 @@ export function PromoterQuickActions({
     </div>
   );
 }
-

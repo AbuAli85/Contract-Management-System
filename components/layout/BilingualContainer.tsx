@@ -13,7 +13,7 @@ export interface BilingualContainerProps {
 
 /**
  * Container component that automatically handles RTL/LTR layout
- * 
+ *
  * @example
  * ```tsx
  * <BilingualContainer locale="ar">
@@ -31,10 +31,7 @@ export function BilingualContainer({
   const fontFamily = getFontFamily(locale);
 
   return (
-    <Component
-      dir={direction}
-      className={cn(fontFamily, className)}
-    >
+    <Component dir={direction} className={cn(fontFamily, className)}>
       {children}
     </Component>
   );
@@ -68,19 +65,23 @@ export function BilingualCard({
         className
       )}
     >
-      <div className="p-6 space-y-4">
+      <div className='p-6 space-y-4'>
         <div>
-          <h3 className={cn(
-            'text-lg font-bold mb-2',
-            direction === 'rtl' ? 'text-right' : 'text-left'
-          )}>
+          <h3
+            className={cn(
+              'text-lg font-bold mb-2',
+              direction === 'rtl' ? 'text-right' : 'text-left'
+            )}
+          >
             {title}
           </h3>
           {subtitle && (
-            <p className={cn(
-              'text-sm text-muted-foreground',
-              direction === 'rtl' ? 'text-right' : 'text-left'
-            )}>
+            <p
+              className={cn(
+                'text-sm text-muted-foreground',
+                direction === 'rtl' ? 'text-right' : 'text-left'
+              )}
+            >
               {subtitle}
             </p>
           )}
@@ -107,10 +108,7 @@ export function BilingualText({
   const alignment = direction === 'rtl' ? 'text-right' : 'text-left';
 
   return (
-    <Component
-      dir={direction}
-      className={cn(fontFamily, alignment, className)}
-    >
+    <Component dir={direction} className={cn(fontFamily, alignment, className)}>
       {children}
     </Component>
   );
@@ -127,7 +125,8 @@ export function BilingualFlex({
 }: BilingualContainerProps & { reverse?: boolean }) {
   const direction = getDirection(locale);
   const fontFamily = getFontFamily(locale);
-  const flexDirection = reverse && direction === 'rtl' ? 'flex-row-reverse' : 'flex-row';
+  const flexDirection =
+    reverse && direction === 'rtl' ? 'flex-row-reverse' : 'flex-row';
 
   return (
     <div
@@ -154,15 +153,9 @@ export function BilingualGrid({
   return (
     <div
       dir={direction}
-      className={cn(
-        'grid gap-4',
-        `grid-cols-${cols}`,
-        fontFamily,
-        className
-      )}
+      className={cn('grid gap-4', `grid-cols-${cols}`, fontFamily, className)}
     >
       {children}
     </div>
   );
 }
-

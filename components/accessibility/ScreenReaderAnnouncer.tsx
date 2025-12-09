@@ -11,16 +11,16 @@ export interface AnnouncerProps {
 
 /**
  * Screen Reader Live Region Announcer
- * 
+ *
  * Announces dynamic content changes to screen reader users
- * 
+ *
  * @example
  * ```tsx
  * const [announcement, setAnnouncement] = useState('');
- * 
+ *
  * // When something happens
  * setAnnouncement('Contract saved successfully');
- * 
+ *
  * <ScreenReaderAnnouncer message={announcement} />
  * ```
  */
@@ -39,7 +39,7 @@ export function ScreenReaderAnnouncer({
   useEffect(() => {
     if (message) {
       setDisplayMessage(message);
-      
+
       if (clearAfter > 0) {
         const timer = setTimeout(() => {
           setDisplayMessage('');
@@ -54,10 +54,10 @@ export function ScreenReaderAnnouncer({
 
   return createPortal(
     <div
-      role="status"
+      role='status'
       aria-live={priority}
-      aria-atomic="true"
-      className="sr-only"
+      aria-atomic='true'
+      className='sr-only'
     >
       {displayMessage}
     </div>,
@@ -80,4 +80,3 @@ export function useScreenReaderAnnouncement() {
     Announcer: () => <ScreenReaderAnnouncer message={announcement} />,
   };
 }
-

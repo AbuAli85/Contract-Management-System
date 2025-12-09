@@ -1,6 +1,6 @@
 /**
  * RTL (Right-to-Left) Support Configuration
- * 
+ *
  * Utilities for handling bilingual RTL/LTR layouts
  */
 
@@ -34,7 +34,7 @@ export function getFontFamily(locale: string): string {
 export function getLocaleClasses(locale: string): string {
   const direction = getDirection(locale);
   const font = getFontFamily(locale);
-  
+
   return `${direction} ${font}`;
 }
 
@@ -45,23 +45,23 @@ export function getLocaleClasses(locale: string): string {
 export const directionClasses = {
   // Margins
   marginStart: 'ms-', // replaces ml-
-  marginEnd: 'me-',   // replaces mr-
-  
+  marginEnd: 'me-', // replaces mr-
+
   // Padding
   paddingStart: 'ps-', // replaces pl-
-  paddingEnd: 'pe-',   // replaces pr-
-  
+  paddingEnd: 'pe-', // replaces pr-
+
   // Text alignment
-  textStart: 'text-start',  // replaces text-left
-  textEnd: 'text-end',      // replaces text-right
-  
+  textStart: 'text-start', // replaces text-left
+  textEnd: 'text-end', // replaces text-right
+
   // Borders
   borderStart: 'border-s-', // replaces border-l-
-  borderEnd: 'border-e-',   // replaces border-r-
-  
+  borderEnd: 'border-e-', // replaces border-r-
+
   // Rounded corners
   roundedStart: 'rounded-s-', // replaces rounded-l-
-  roundedEnd: 'rounded-e-',   // replaces rounded-r-
+  roundedEnd: 'rounded-e-', // replaces rounded-r-
 } as const;
 
 /**
@@ -80,4 +80,3 @@ export function makeDirectionAgnostic(className: string): string {
     .replace(/\brounded-l-/g, 'rounded-s-')
     .replace(/\brounded-r-/g, 'rounded-e-');
 }
-

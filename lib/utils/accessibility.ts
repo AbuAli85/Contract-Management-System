@@ -54,7 +54,10 @@ export function useFocusTrap(isActive: boolean = true) {
 /**
  * Announce to screen readers
  */
-export function announceToScreenReader(message: string, priority: 'polite' | 'assertive' = 'polite') {
+export function announceToScreenReader(
+  message: string,
+  priority: 'polite' | 'assertive' = 'polite'
+) {
   const announcement = document.createElement('div');
   announcement.setAttribute('role', 'status');
   announcement.setAttribute('aria-live', priority);
@@ -162,14 +165,17 @@ export function createSkipNavigationLinkProps({
 /**
  * Check color contrast ratio
  */
-export function getContrastRatio(foreground: string, background: string): number {
+export function getContrastRatio(
+  foreground: string,
+  background: string
+): number {
   const getLuminance = (hexColor: string): number => {
     const rgb = parseInt(hexColor.slice(1), 16);
     const r = (rgb >> 16) & 0xff;
     const g = (rgb >> 8) & 0xff;
     const b = (rgb >> 0) & 0xff;
 
-    const components = [r, g, b].map((c) => {
+    const components = [r, g, b].map(c => {
       const s = c / 255;
       return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
     });
@@ -275,7 +281,10 @@ export function createFocusVisibleHandlers(
 /**
  * ARIA live region hook
  */
-export function useAriaLiveRegion(message: string, priority: 'polite' | 'assertive' = 'polite') {
+export function useAriaLiveRegion(
+  message: string,
+  priority: 'polite' | 'assertive' = 'polite'
+) {
   useEffect(() => {
     if (!message) return;
 
@@ -370,4 +379,3 @@ export function createAccessibleTableProps(options: {
     'aria-colcount': options.columnCount,
   };
 }
-

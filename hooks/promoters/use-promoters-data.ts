@@ -1,6 +1,6 @@
 /**
  * Custom hook for managing promoters data fetching and caching
- * 
+ *
  * Centralizes data fetching logic, error handling, and state management
  * for the promoters list view.
  */
@@ -82,7 +82,7 @@ export function usePromotersData(
     refetchInterval,
     enabled,
     retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 }
 
@@ -135,4 +135,3 @@ export function getPromotersQueryKey(filters?: {
 
   return ['promoters', filters];
 }
-

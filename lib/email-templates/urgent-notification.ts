@@ -20,10 +20,14 @@ interface UrgentNotificationData {
 }
 
 export function urgentNotificationEmail(data: UrgentNotificationData) {
-  const hasExpiringDocs = data.details.expiringDocuments && data.details.expiringDocuments.length > 0;
-  const hasPendingContracts = data.details.pendingContracts && data.details.pendingContracts.length > 0;
-  const hasMissingDocs = data.details.missingDocuments && data.details.missingDocuments.length > 0;
-  const hasActionItems = data.details.actionItems && data.details.actionItems.length > 0;
+  const hasExpiringDocs =
+    data.details.expiringDocuments && data.details.expiringDocuments.length > 0;
+  const hasPendingContracts =
+    data.details.pendingContracts && data.details.pendingContracts.length > 0;
+  const hasMissingDocs =
+    data.details.missingDocuments && data.details.missingDocuments.length > 0;
+  const hasActionItems =
+    data.details.actionItems && data.details.actionItems.length > 0;
 
   return {
     subject: `🚨 URGENT: ${data.reason}`,
@@ -65,7 +69,9 @@ export function urgentNotificationEmail(data: UrgentNotificationData) {
                       </p>
                     </div>
 
-                    ${hasExpiringDocs ? `
+                    ${
+                      hasExpiringDocs
+                        ? `
                       <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 4px; margin: 25px 0;">
                         <h3 style="margin: 0 0 15px 0; color: #92400e; font-size: 16px;">
                           ⚠️ Documents Expiring Soon
@@ -76,7 +82,9 @@ export function urgentNotificationEmail(data: UrgentNotificationData) {
                             <th style="text-align: center; padding: 10px; font-size: 13px;">Expiry Date</th>
                             <th style="text-align: center; padding: 10px; font-size: 13px;">Days Left</th>
                           </tr>
-                          ${data.details.expiringDocuments!.map(doc => `
+                          ${data.details
+                            .expiringDocuments!.map(
+                              doc => `
                             <tr style="border-bottom: 1px solid #fef3c7;">
                               <td style="padding: 12px; font-weight: 600;">${doc.type}</td>
                               <td style="padding: 12px; text-align: center;">${doc.expiryDate}</td>
@@ -84,12 +92,18 @@ export function urgentNotificationEmail(data: UrgentNotificationData) {
                                 ${doc.daysRemaining} days
                               </td>
                             </tr>
-                          `).join('')}
+                          `
+                            )
+                            .join('')}
                         </table>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${hasPendingContracts ? `
+                    ${
+                      hasPendingContracts
+                        ? `
                       <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 4px; margin: 25px 0;">
                         <h3 style="margin: 0 0 15px 0; color: #1e40af; font-size: 16px;">
                           📋 Pending Contracts
@@ -100,7 +114,9 @@ export function urgentNotificationEmail(data: UrgentNotificationData) {
                             <th style="text-align: left; padding: 10px; font-size: 13px;">Employer</th>
                             <th style="text-align: center; padding: 10px; font-size: 13px;">Status</th>
                           </tr>
-                          ${data.details.pendingContracts!.map(contract => `
+                          ${data.details
+                            .pendingContracts!.map(
+                              contract => `
                             <tr style="border-bottom: 1px solid #dbeafe;">
                               <td style="padding: 12px; font-weight: 600;">${contract.type}</td>
                               <td style="padding: 12px;">${contract.employer}</td>
@@ -110,36 +126,56 @@ export function urgentNotificationEmail(data: UrgentNotificationData) {
                                 </span>
                               </td>
                             </tr>
-                          `).join('')}
+                          `
+                            )
+                            .join('')}
                         </table>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${hasMissingDocs ? `
+                    ${
+                      hasMissingDocs
+                        ? `
                       <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 20px; border-radius: 4px; margin: 25px 0;">
                         <h3 style="margin: 0 0 15px 0; color: #991b1b; font-size: 16px;">
                           ❌ Missing Required Documents
                         </h3>
                         <ul style="margin: 0; padding-left: 20px; color: #7f1d1d;">
-                          ${data.details.missingDocuments!.map(doc => `
+                          ${data.details
+                            .missingDocuments!.map(
+                              doc => `
                             <li style="margin: 8px 0; font-weight: 600;">${doc}</li>
-                          `).join('')}
+                          `
+                            )
+                            .join('')}
                         </ul>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${hasActionItems ? `
+                    ${
+                      hasActionItems
+                        ? `
                       <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; border-radius: 4px; margin: 25px 0;">
                         <h3 style="margin: 0 0 15px 0; color: #065f46; font-size: 16px;">
                           ✅ Required Actions
                         </h3>
                         <ol style="margin: 0; padding-left: 25px; color: #064e3b; line-height: 1.8;">
-                          ${data.details.actionItems!.map(action => `
+                          ${data.details
+                            .actionItems!.map(
+                              action => `
                             <li style="margin: 8px 0;"><strong>${action}</strong></li>
-                          `).join('')}
+                          `
+                            )
+                            .join('')}
                         </ol>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
                     <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 30px 0;">
                       <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #1f2937;">
@@ -192,25 +228,41 @@ Dear ${data.promoterName},
 
 ${data.reason}
 
-${hasExpiringDocs ? `
+${
+  hasExpiringDocs
+    ? `
 DOCUMENTS EXPIRING SOON:
 ${data.details.expiringDocuments!.map(doc => `- ${doc.type}: Expires ${doc.expiryDate} (${doc.daysRemaining} days remaining)`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
-${hasPendingContracts ? `
+${
+  hasPendingContracts
+    ? `
 PENDING CONTRACTS:
 ${data.details.pendingContracts!.map(c => `- ${c.type} with ${c.employer} (Status: ${c.status})`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
-${hasMissingDocs ? `
+${
+  hasMissingDocs
+    ? `
 MISSING REQUIRED DOCUMENTS:
 ${data.details.missingDocuments!.map(doc => `- ${doc}`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
-${hasActionItems ? `
+${
+  hasActionItems
+    ? `
 REQUIRED ACTIONS:
 ${data.details.actionItems!.map((action, i) => `${i + 1}. ${action}`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
 TIMELINE: Please take action within 24-48 hours.
 
@@ -224,4 +276,3 @@ Powered by Falcon Eye Group
     `,
   };
 }
-

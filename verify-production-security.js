@@ -2,7 +2,7 @@
 
 /**
  * 🔒 Production Security Verification Script
- * 
+ *
  * This script verifies that test account buttons are properly hidden in production.
  * Run this before deploying to production.
  */
@@ -27,7 +27,7 @@ console.log('✓ Checking login components for proper environment guards...\n');
 
 filesToCheck.forEach(file => {
   const filePath = path.join(__dirname, file);
-  
+
   if (!fs.existsSync(filePath)) {
     console.log(`⚠️  Warning: ${file} not found`);
     hasWarnings = true;
@@ -37,25 +37,32 @@ filesToCheck.forEach(file => {
   const content = fs.readFileSync(filePath, 'utf-8');
 
   // Check for test account buttons
-  const hasTestButtons = content.includes('Test Provider') || 
-                         content.includes('Test Client') || 
-                         content.includes('Test Admin');
+  const hasTestButtons =
+    content.includes('Test Provider') ||
+    content.includes('Test Client') ||
+    content.includes('Test Admin');
 
   if (hasTestButtons) {
     // Check for proper environment guards
-    const hasDualCheck = content.includes("process.env.NODE_ENV === 'development'") &&
-                        content.includes("process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true'");
+    const hasDualCheck =
+      content.includes("process.env.NODE_ENV === 'development'") &&
+      content.includes(
+        "process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true'"
+      );
 
     if (hasDualCheck) {
-      console.log(`✅ ${file}: Test buttons properly guarded with dual environment check`);
+      console.log(
+        `✅ ${file}: Test buttons properly guarded with dual environment check`
+      );
     } else {
       console.log(`❌ ${file}: Test buttons found but NOT properly guarded!`);
       hasErrors = true;
     }
 
     // Check for security comments
-    const hasSecurityComments = content.includes('Test accounts are only available in development') &&
-                               content.includes('They are hidden in production for security reasons');
+    const hasSecurityComments =
+      content.includes('Test accounts are only available in development') &&
+      content.includes('They are hidden in production for security reasons');
 
     if (hasSecurityComments) {
       console.log(`   ✅ Security comments present`);
@@ -78,7 +85,7 @@ const envFiles = [
 
 envFiles.forEach(({ file, expectedValue, env }) => {
   const filePath = path.join(__dirname, file);
-  
+
   if (!fs.existsSync(filePath)) {
     console.log(`⚠️  Warning: ${file} not found`);
     hasWarnings = true;
@@ -92,18 +99,23 @@ envFiles.forEach(({ file, expectedValue, env }) => {
     if (match) {
       const actualValue = match[1];
       if (actualValue === expectedValue) {
-        console.log(`✅ ${file}: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=${actualValue} (correct for ${env})`);
+        console.log(
+          `✅ ${file}: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=${actualValue} (correct for ${env})`
+        );
       } else {
-        console.log(`❌ ${file}: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=${actualValue} (should be ${expectedValue} for ${env})`);
+        console.log(
+          `❌ ${file}: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=${actualValue} (should be ${expectedValue} for ${env})`
+        );
         hasErrors = true;
       }
     }
 
     // Check for security warnings
-    const hasSecurityWarning = content.includes('SECURITY') || 
-                              content.includes('security risk') ||
-                              content.includes('NEVER');
-    
+    const hasSecurityWarning =
+      content.includes('SECURITY') ||
+      content.includes('security risk') ||
+      content.includes('NEVER');
+
     if (hasSecurityWarning) {
       console.log(`   ✅ Security warnings present`);
     } else {
@@ -111,7 +123,9 @@ envFiles.forEach(({ file, expectedValue, env }) => {
       hasWarnings = true;
     }
   } else {
-    console.log(`❌ ${file}: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS variable not found`);
+    console.log(
+      `❌ ${file}: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS variable not found`
+    );
     hasErrors = true;
   }
 });
@@ -122,7 +136,7 @@ console.log('\n✓ Checking current environment configuration...\n');
 const localEnvPath = path.join(__dirname, '.env.local');
 if (fs.existsSync(localEnvPath)) {
   const content = fs.readFileSync(localEnvPath, 'utf-8');
-  
+
   if (content.includes('NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS')) {
     const match = content.match(/NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS\s*=\s*(\w+)/);
     if (match) {
@@ -134,7 +148,9 @@ if (fs.existsSync(localEnvPath)) {
       }
     }
   } else {
-    console.log(`✅ .env.local: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS not set (test accounts disabled)`);
+    console.log(
+      `✅ .env.local: NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS not set (test accounts disabled)`
+    );
   }
 } else {
   console.log(`ℹ️  .env.local not found (this is normal)`);
@@ -145,7 +161,9 @@ console.log('\n✓ Production deployment checklist...\n');
 
 console.log('📋 Before deploying to production, ensure:');
 console.log('   1. Set NODE_ENV=production in Vercel');
-console.log('   2. Set NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=false in Vercel (or delete it)');
+console.log(
+  '   2. Set NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=false in Vercel (or delete it)'
+);
 console.log('   3. Clear browser cache after deployment');
 console.log('   4. Verify test buttons are NOT visible on login page\n');
 
@@ -166,4 +184,3 @@ if (hasErrors) {
   console.log('✅ Test account buttons are properly secured\n');
   process.exit(0);
 }
-

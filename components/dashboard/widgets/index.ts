@@ -10,4 +10,3 @@ export { UpcomingExpiriesWidget } from './UpcomingExpiriesWidget';
 export { PromoterMetricsWidget } from './PromoterMetricsWidget';
 export { ComplianceRateWidget } from './ComplianceRateWidget';
 export { RevenueChartWidget } from './RevenueChartWidget';
-

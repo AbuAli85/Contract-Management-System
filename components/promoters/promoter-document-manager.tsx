@@ -49,9 +49,12 @@ export function PromoterDocumentManager({
   documents: initialDocuments,
   onDocumentsChange,
 }: PromoterDocumentManagerProps) {
-  const [documents, setDocuments] = useState<PromoterDocument[]>(initialDocuments);
-  const [editingDocument, setEditingDocument] = useState<PromoterDocument | null>(null);
-  const [deletingDocument, setDeletingDocument] = useState<PromoterDocument | null>(null);
+  const [documents, setDocuments] =
+    useState<PromoterDocument[]>(initialDocuments);
+  const [editingDocument, setEditingDocument] =
+    useState<PromoterDocument | null>(null);
+  const [deletingDocument, setDeletingDocument] =
+    useState<PromoterDocument | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [editFormData, setEditFormData] = useState({
     document_type: '',
@@ -85,8 +88,8 @@ export function PromoterDocumentManager({
       );
 
       // Update local state
-      setDocuments((prev) =>
-        prev.map((doc) => (doc.id === updatedDocument.id ? updatedDocument : doc))
+      setDocuments(prev =>
+        prev.map(doc => (doc.id === updatedDocument.id ? updatedDocument : doc))
       );
 
       toast({
@@ -99,7 +102,8 @@ export function PromoterDocumentManager({
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update document',
+        description:
+          error instanceof Error ? error.message : 'Failed to update document',
         variant: 'destructive',
       });
     } finally {
@@ -118,10 +122,13 @@ export function PromoterDocumentManager({
 
     setIsLoading(true);
     try {
-      await PromoterDocumentsService.deleteDocument(promoterId, deletingDocument.id);
+      await PromoterDocumentsService.deleteDocument(
+        promoterId,
+        deletingDocument.id
+      );
 
       // Update local state
-      setDocuments((prev) => prev.filter((doc) => doc.id !== deletingDocument.id));
+      setDocuments(prev => prev.filter(doc => doc.id !== deletingDocument.id));
 
       toast({
         title: 'Success',
@@ -133,7 +140,8 @@ export function PromoterDocumentManager({
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to delete document',
+        description:
+          error instanceof Error ? error.message : 'Failed to delete document',
         variant: 'destructive',
       });
     } finally {
@@ -169,9 +177,9 @@ export function PromoterDocumentManager({
   if (documents.length === 0) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No documents uploaded yet</p>
+        <CardContent className='flex flex-col items-center justify-center py-12'>
+          <FileText className='h-12 w-12 text-muted-foreground mb-4' />
+          <p className='text-muted-foreground'>No documents uploaded yet</p>
         </CardContent>
       </Card>
     );
@@ -179,65 +187,65 @@ export function PromoterDocumentManager({
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {documents.map((document) => (
-          <Card key={document.id} className="hover:shadow-lg transition-shadow">
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+        {documents.map(document => (
+          <Card key={document.id} className='hover:shadow-lg transition-shadow'>
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className='flex items-start justify-between'>
                 <div>
-                  <CardTitle className="text-base">
+                  <CardTitle className='text-base'>
                     {getDocumentTypeLabel(document.document_type)}
                   </CardTitle>
-                  <CardDescription className="text-xs mt-1">
+                  <CardDescription className='text-xs mt-1'>
                     {document.file_name}
                   </CardDescription>
                 </div>
-                <FileText className="h-5 w-5 text-muted-foreground" />
+                <FileText className='h-5 w-5 text-muted-foreground' />
               </div>
             </CardHeader>
             <CardContent>
               {document.notes && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                <p className='text-sm text-muted-foreground mb-4 line-clamp-2'>
                   {document.notes}
                 </p>
               )}
-              <div className="text-xs text-muted-foreground mb-4">
+              <div className='text-xs text-muted-foreground mb-4'>
                 Uploaded{' '}
                 {formatDistanceToNow(new Date(document.created_at), {
                   addSuffix: true,
                 })}
               </div>
-              <div className="flex gap-2 flex-wrap">
+              <div className='flex gap-2 flex-wrap'>
                 <Button
-                  size="sm"
-                  variant="outline"
+                  size='sm'
+                  variant='outline'
                   onClick={() => handleView(document)}
                 >
-                  <Eye className="h-3 w-3 mr-1" />
+                  <Eye className='h-3 w-3 mr-1' />
                   View
                 </Button>
                 <Button
-                  size="sm"
-                  variant="outline"
+                  size='sm'
+                  variant='outline'
                   onClick={() => handleDownload(document)}
                 >
-                  <Download className="h-3 w-3 mr-1" />
+                  <Download className='h-3 w-3 mr-1' />
                   Download
                 </Button>
                 <Button
-                  size="sm"
-                  variant="outline"
+                  size='sm'
+                  variant='outline'
                   onClick={() => handleEditClick(document)}
                 >
-                  <Edit className="h-3 w-3 mr-1" />
+                  <Edit className='h-3 w-3 mr-1' />
                   Edit
                 </Button>
                 <Button
-                  size="sm"
-                  variant="destructive"
+                  size='sm'
+                  variant='destructive'
                   onClick={() => handleDeleteClick(document)}
                 >
-                  <Trash2 className="h-3 w-3 mr-1" />
+                  <Trash2 className='h-3 w-3 mr-1' />
                   Delete
                 </Button>
               </div>
@@ -247,48 +255,49 @@ export function PromoterDocumentManager({
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingDocument} onOpenChange={() => setEditingDocument(null)}>
+      <Dialog
+        open={!!editingDocument}
+        onOpenChange={() => setEditingDocument(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Document</DialogTitle>
-            <DialogDescription>
-              Update document information
-            </DialogDescription>
+            <DialogDescription>Update document information</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="document_type">Document Type</Label>
+          <div className='grid gap-4 py-4'>
+            <div className='grid gap-2'>
+              <Label htmlFor='document_type'>Document Type</Label>
               <Input
-                id="document_type"
+                id='document_type'
                 value={editFormData.document_type}
-                onChange={(e) =>
-                  setEditFormData((prev) => ({
+                onChange={e =>
+                  setEditFormData(prev => ({
                     ...prev,
                     document_type: e.target.value,
                   }))
                 }
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="file_name">File Name</Label>
+            <div className='grid gap-2'>
+              <Label htmlFor='file_name'>File Name</Label>
               <Input
-                id="file_name"
+                id='file_name'
                 value={editFormData.file_name}
-                onChange={(e) =>
-                  setEditFormData((prev) => ({
+                onChange={e =>
+                  setEditFormData(prev => ({
                     ...prev,
                     file_name: e.target.value,
                   }))
                 }
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="notes">Notes</Label>
+            <div className='grid gap-2'>
+              <Label htmlFor='notes'>Notes</Label>
               <Textarea
-                id="notes"
+                id='notes'
                 value={editFormData.notes}
-                onChange={(e) =>
-                  setEditFormData((prev) => ({
+                onChange={e =>
+                  setEditFormData(prev => ({
                     ...prev,
                     notes: e.target.value,
                   }))
@@ -299,7 +308,7 @@ export function PromoterDocumentManager({
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setEditingDocument(null)}
               disabled={isLoading}
             >
@@ -330,7 +339,7 @@ export function PromoterDocumentManager({
             <AlertDialogAction
               onClick={handleDeleteDocument}
               disabled={isLoading}
-              className="bg-destructive hover:bg-destructive/90"
+              className='bg-destructive hover:bg-destructive/90'
             >
               {isLoading ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
@@ -340,4 +349,3 @@ export function PromoterDocumentManager({
     </>
   );
 }
-

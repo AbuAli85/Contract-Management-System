@@ -9,14 +9,18 @@ This document describes the fixes for promoter-employer assignment mismatches an
 ## 🔧 Problem 1: Promoter-Employer Assignment Mismatches
 
 ### Issue Description
+
 Promoters were showing as assigned to employers (`employer_id` field populated) but had **zero contracts** in the database. This created a data integrity issue where:
+
 - The UI showed promoters as employed
 - No actual contract evidence existed
 - Reports and analytics were incorrect
 - Compliance issues could arise
 
 ### Root Cause
+
 The `promoters.employer_id` field can be set independently of creating a contract record. This led to "orphaned" assignments where:
+
 1. A promoter is assigned to an employer
 2. No contract record is created
 3. Data becomes inconsistent
@@ -24,29 +28,35 @@ The `promoters.employer_id` field can be set independently of creating a contrac
 ### Solution Implemented
 
 #### 1. **Database Diagnostic Script**
+
 **File:** `scripts/fix-orphaned-promoters-detailed.sql`
 
 This comprehensive SQL script provides:
 
 **Diagnostic Features:**
+
 - Counts total orphaned promoters
 - Lists all orphaned promoters with details
 - Shows employer distribution
 - Categorizes by age (new/recent/old)
 
 **Fix Options:**
+
 - **Option A**: Create placeholder contracts for all orphaned promoters
 - **Option B**: Remove employer assignments (mark as errors)
 - **Option C**: Hybrid approach (create contracts for recent, remove old)
 
 **Prevention Trigger:**
+
 - Automatically warns when promoters are assigned without contracts
 - Helps prevent future orphaned assignments
 
 #### 2. **UI Warning System**
+
 **File:** `app/[locale]/manage-promoters/[id]/page.tsx`
 
 Added a prominent warning alert in the Professional tab that:
+
 - Detects orphaned promoter assignments
 - Shows a clear error message
 - Provides two action buttons:
@@ -54,6 +64,7 @@ Added a prominent warning alert in the Professional tab that:
   - **Remove Assignment**: Clears the invalid employer assignment
 
 **Example Warning:**
+
 ```tsx
 ⚠️ Data Integrity Issue: No Contract Found
 
@@ -68,7 +79,9 @@ This is a data integrity issue that should be resolved.
 ## 📥 Problem 2: Bulk Data Import
 
 ### Issue Description
+
 No way to bulk import data for:
+
 - Promoters
 - Parties (Employers/Clients/Vendors)
 - Locations
@@ -85,9 +98,11 @@ Created a comprehensive CSV import system with validation, error handling, and u
 ## 🎯 CSV Import System Architecture
 
 ### Core Parser Library
+
 **File:** `lib/utils/csv-parser.ts`
 
 Features:
+
 - **CSV Parsing**: Handles quoted values, special characters
 - **Validation**: Field-level validation with custom rules
 - **Transformation**: Data type conversion and normalization
@@ -95,6 +110,7 @@ Features:
 - **Template Generation**: Creates downloadable CSV templates
 
 **Built-in Validators:**
+
 - Email format
 - Phone numbers
 - Dates (YYYY-MM-DD)
@@ -104,6 +120,7 @@ Features:
 - Min/max length
 
 **Built-in Transformers:**
+
 - Trim whitespace
 - Convert to lowercase/uppercase
 - Parse dates to ISO format
@@ -113,9 +130,11 @@ Features:
 ### Import Components
 
 #### 1. **Promoters CSV Import**
+
 **File:** `components/csv-import/promoters-csv-import.tsx`
 
 **Supported Fields:**
+
 - name_en, name_ar (required)
 - id_card_number (required)
 - email, phone, mobile_number
@@ -126,6 +145,7 @@ Features:
 - passport_number, passport_expiry_date
 
 **Smart Features:**
+
 - Auto-matches employer by name (English or Arabic)
 - Validates email and phone formats
 - Converts dates to proper format
@@ -133,9 +153,11 @@ Features:
 - Prevents duplicates based on ID card number
 
 #### 2. **Parties CSV Import**
+
 **File:** `components/csv-import/parties-csv-import.tsx`
 
 **Supported Fields:**
+
 - name_en, name_ar (required)
 - type (required): Employer, Client, Vendor, Partner
 - contact_email, contact_phone
@@ -144,14 +166,17 @@ Features:
 - tax_id, registration_number
 
 **Features:**
+
 - Type validation (Employer/Client/Vendor/Partner)
 - Contact information validation
 - Auto-capitalizes party type
 
 #### 3. **Locations CSV Import**
+
 **File:** `components/csv-import/locations-csv-import.tsx`
 
 **Supported Fields:**
+
 - name_en (required), name_ar
 - type (Store, Office, Warehouse, etc.)
 - address, city, state, country, postal_code
@@ -160,14 +185,17 @@ Features:
 - notes
 
 **Features:**
+
 - GPS coordinates validation
 - Flexible location types
 - Geographic data support
 
 #### 4. **Products CSV Import**
+
 **File:** `components/csv-import/products-csv-import.tsx`
 
 **Supported Fields:**
+
 - name_en (required), name_ar
 - sku, category, brand
 - price (numeric validation)
@@ -177,14 +205,17 @@ Features:
 - status (active/inactive/discontinued)
 
 **Features:**
+
 - Auto-matches supplier from vendor parties
 - Price and quantity validation
 - Stock management fields
 
 ### Unified Import Page
+
 **File:** `app/[locale]/csv-import/page.tsx`
 
 **Features:**
+
 - Tabbed interface for all import types
 - Download templates for each entity
 - Important guidelines and tips
@@ -210,6 +241,7 @@ Features:
 6. Verify with the verification query at the end
 
 **Example Workflow:**
+
 ```sql
 -- Step 1: Run diagnostic (automatic - shows statistics)
 -- Step 2: Review the detailed list of orphaned promoters
@@ -239,6 +271,7 @@ Features:
 5. Fill in your data following the examples
 
 **Important Rules:**
+
 - Keep the exact column headers
 - Use YYYY-MM-DD format for dates
 - For employer/supplier references, use exact names
@@ -283,24 +316,28 @@ Follow this sequence to avoid reference errors:
 ## 📋 CSV Templates
 
 ### Promoters Template
+
 ```csv
 Name (English),Name (Arabic),ID Card Number,Email,Phone,Mobile Number,Nationality,Date of Birth,Gender,Job Title,Employer Name,Status,ID Card Expiry Date,Passport Number,Passport Expiry Date
 John Doe,جون دو,123456789,john.doe@example.com,+971501234567,+971501234567,UAE,1990-01-15,male,Sales Promoter,Falcon Eye Business and Promotion,active,2025-12-31,AB1234567,2028-12-31
 ```
 
 ### Parties Template
+
 ```csv
 Name (English),Name (Arabic),Type,Contact Email,Contact Phone,Contact Person,Address,City,Country,Tax ID,Registration Number
 Falcon Eye Business and Promotion,فالكون آي للأعمال والترويج,Employer,info@falconeye.ae,+971501234567,Ahmed Mohammed,Sheikh Zayed Road\, Dubai,Dubai,UAE,123456789012345,REG-2024-001
 ```
 
 ### Locations Template
+
 ```csv
 Name (English),Name (Arabic),Type,Address,City,State/Emirate,Country,Postal Code,Latitude,Longitude,Contact Person,Contact Phone,Notes
 Dubai Mall Store,متجر دبي مول,Store,Dubai Mall\, Financial Centre Road,Dubai,Dubai,UAE,00000,25.198185,55.274254,Ahmed Mohammed,+971501234567,Ground floor\, next to main entrance
 ```
 
 ### Products Template
+
 ```csv
 Name (English),Name (Arabic),SKU,Category,Brand,Price,Description,Supplier Name,Stock Quantity,Unit,Status
 Samsung Galaxy S24,سامسونج جالاكسي اس ٢٤,SMSG-S24-128-BLK,Electronics,Samsung,3499.00,Latest flagship smartphone with AI features,Samsung Electronics,50,pcs,active
@@ -321,18 +358,22 @@ Samsung Galaxy S24,سامسونج جالاكسي اس ٢٤,SMSG-S24-128-BLK,Elec
 ### Validation Rules
 
 **Email:**
+
 - Must be valid email format
 - Example: user@example.com
 
 **Phone:**
+
 - International format supported
 - Example: +971501234567
 
 **Date:**
+
 - Must be YYYY-MM-DD format
 - Example: 2024-12-31
 
 **Status Fields:**
+
 - Promoters: active, inactive, pending
 - Products: active, inactive, discontinued
 - Parties: Must be Employer, Client, Vendor, or Partner
@@ -340,12 +381,14 @@ Samsung Galaxy S24,سامسونج جالاكسي اس ٢٤,SMSG-S24-128-BLK,Elec
 ### Error Handling
 
 **During Import:**
+
 - Validation errors prevent import
 - Individual row failures don't block other rows
 - Detailed error messages for each failure
 - Can fix and re-import without duplicates
 
 **During Assignment:**
+
 - Null checks prevent database errors
 - User-friendly error messages
 - Rollback on failure
@@ -357,32 +400,39 @@ Samsung Galaxy S24,سامسونج جالاكسي اس ٢٤,SMSG-S24-128-BLK,Elec
 ### Common CSV Import Issues
 
 **Issue: "Employer not found"**
+
 - **Cause**: Employer doesn't exist in parties table
 - **Fix**: Import parties (employers) first, then promoters
 
 **Issue: "Invalid date format"**
+
 - **Cause**: Date not in YYYY-MM-DD format
 - **Fix**: Convert dates to 2024-12-31 format (not 12/31/2024)
 
 **Issue: "Required field missing"**
+
 - **Cause**: Required columns left empty
 - **Fix**: Fill in name_en, name_ar, id_card_number (for promoters)
 
 **Issue: "Duplicate ID card number"**
+
 - **Cause**: Promoter with same ID already exists
 - **Fix**: Update existing promoter instead of importing duplicate
 
 **Issue: "Too many errors"**
+
 - **Cause**: File structure doesn't match template
 - **Fix**: Download fresh template and start over
 
 ### Common Orphaned Promoter Issues
 
 **Issue: "Cannot remove assignment"**
+
 - **Cause**: Database permissions or connection issue
 - **Fix**: Check user role (must be admin) and database connection
 
 **Issue: "Promoter still shows as orphaned after fix"**
+
 - **Cause**: Page cache not refreshed
 - **Fix**: Hard refresh the page (Ctrl+Shift+R)
 
@@ -413,6 +463,7 @@ FROM (
 ### Import Statistics
 
 After each import session, check:
+
 - Total rows processed
 - Success rate
 - Common error patterns
@@ -444,24 +495,29 @@ After each import session, check:
 ## 🔗 Related Files
 
 ### Scripts
+
 - `scripts/fix-orphaned-promoters-detailed.sql` - Diagnostic and fix script
 - `scripts/fix-promoter-employer-mapping.sql` - Original mapping fix
 - `scripts/assign-unassigned-promoters.sql` - Bulk assignment helper
 
 ### Components
+
 - `components/csv-import/promoters-csv-import.tsx`
 - `components/csv-import/parties-csv-import.tsx`
 - `components/csv-import/locations-csv-import.tsx`
 - `components/csv-import/products-csv-import.tsx`
 
 ### Pages
+
 - `app/[locale]/csv-import/page.tsx` - Main import interface
 - `app/[locale]/manage-promoters/[id]/page.tsx` - Promoter detail with warnings
 
 ### Utilities
+
 - `lib/utils/csv-parser.ts` - Core CSV parsing library
 
 ### Documentation
+
 - `ISSUE_#2_PROMOTER_CONTRACT_ORPHANS.md` - Original issue documentation
 
 ---
@@ -469,6 +525,7 @@ After each import session, check:
 ## 📝 Future Improvements
 
 ### Planned Features
+
 - [ ] Export functionality (download current data as CSV)
 - [ ] Import history tracking
 - [ ] Scheduled import jobs
@@ -481,6 +538,7 @@ After each import session, check:
 - [ ] Multi-language CSV templates
 
 ### Data Quality
+
 - [ ] Automated orphan detection dashboard
 - [ ] Weekly data integrity reports
 - [ ] Duplicate prevention rules
@@ -508,4 +566,3 @@ Part of the Contract Management System
 **Created**: October 2024
 **Last Updated**: October 2024
 **Version**: 1.0.0
-

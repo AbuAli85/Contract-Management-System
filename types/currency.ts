@@ -144,4 +144,3 @@ export function getSupportedCurrencies(): CurrencyCode[] {
 export function getCurrencyMetadata(code: CurrencyCode): CurrencyMetadata {
   return CURRENCY_CONFIG[code];
 }
-

@@ -23,9 +23,15 @@ try {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   console.log(`Package Name: ${packageJson.name}`);
   console.log(`Package Version: ${packageJson.version}`);
-  console.log(`Next.js Version: ${packageJson.dependencies?.next || 'Not found'}`);
-  console.log(`TypeScript Version: ${packageJson.devDependencies?.typescript || 'Not found'}`);
-  console.log(`Zustand Version: ${packageJson.dependencies?.zustand || 'Not found'}\n`);
+  console.log(
+    `Next.js Version: ${packageJson.dependencies?.next || 'Not found'}`
+  );
+  console.log(
+    `TypeScript Version: ${packageJson.devDependencies?.typescript || 'Not found'}`
+  );
+  console.log(
+    `Zustand Version: ${packageJson.dependencies?.zustand || 'Not found'}\n`
+  );
 } catch (error) {
   console.error('❌ Error reading package.json:', error.message);
 }
@@ -39,7 +45,7 @@ const criticalFiles = [
   'tsconfig.json',
   'lib/stores/contracts-store.ts',
   'components/promoters/enhanced-promoters-view-refactored.tsx',
-  'app/[locale]/promoters/page.tsx'
+  'app/[locale]/promoters/page.tsx',
 ];
 
 criticalFiles.forEach(file => {
@@ -57,17 +63,32 @@ criticalFiles.forEach(file => {
 
 // Check for binary files that might cause issues
 console.log('\n🔍 Binary Files Check:');
-const binaryExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.woff2', '.ttf', '.eot'];
+const binaryExtensions = [
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.ico',
+  '.svg',
+  '.woff',
+  '.woff2',
+  '.ttf',
+  '.eot',
+];
 const checkForBinaryFiles = (dir, depth = 0) => {
   if (depth > 3) return; // Limit depth to avoid infinite recursion
-  
+
   try {
     const files = fs.readdirSync(dir);
     files.forEach(file => {
       const filePath = path.join(dir, file);
       const stat = fs.statSync(filePath);
-      
-      if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
+
+      if (
+        stat.isDirectory() &&
+        !file.startsWith('.') &&
+        file !== 'node_modules'
+      ) {
         checkForBinaryFiles(filePath, depth + 1);
       } else if (stat.isFile()) {
         const ext = path.extname(file).toLowerCase();
@@ -100,7 +121,7 @@ console.log('\n🌍 Environment Variables Check:');
 const requiredEnvVars = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY'
+  'SUPABASE_SERVICE_ROLE_KEY',
 ];
 
 requiredEnvVars.forEach(envVar => {
@@ -115,17 +136,23 @@ requiredEnvVars.forEach(envVar => {
 console.log('\n📊 Large Files Check (>1MB):');
 const checkLargeFiles = (dir, depth = 0) => {
   if (depth > 3) return;
-  
+
   try {
     const files = fs.readdirSync(dir);
     files.forEach(file => {
       const filePath = path.join(dir, file);
       const stat = fs.statSync(filePath);
-      
-      if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
+
+      if (
+        stat.isDirectory() &&
+        !file.startsWith('.') &&
+        file !== 'node_modules'
+      ) {
         checkLargeFiles(filePath, depth + 1);
       } else if (stat.isFile() && stat.size > 1024 * 1024) {
-        console.log(`📦 ${filePath} (${(stat.size / 1024 / 1024).toFixed(2)} MB)`);
+        console.log(
+          `📦 ${filePath} (${(stat.size / 1024 / 1024).toFixed(2)} MB)`
+        );
       }
     });
   } catch (error) {

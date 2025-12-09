@@ -15,7 +15,7 @@ This document details the comprehensive password security system that protects u
 ✅ **Breach Checking** - haveibeenpwned API integration  
 ✅ **Password History** - Prevent reusing last 5 passwords  
 ✅ **Change Notifications** - Email alerts with device info  
-✅ **"Wasn't Me" Protection** - Quick account securing  
+✅ **"Wasn't Me" Protection** - Quick account securing
 
 ---
 
@@ -26,14 +26,16 @@ This document details the comprehensive password security system that protects u
 Visual password strength meter with two variants:
 
 #### **Full Indicator (Registration/Change Password Forms)**
+
 ```typescript
-<PasswordStrengthIndicator 
+<PasswordStrengthIndicator
   password={password}
   showRequirements={true}
 />
 ```
 
 **Displays:**
+
 ```
 Password Strength: [🛡️ Strong]              80%
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░
@@ -49,11 +51,13 @@ Password Requirements:
 ```
 
 #### **Compact Meter (Inline Display)**
+
 ```typescript
 <PasswordStrengthMeter password={password} />
 ```
 
 **Displays:**
+
 ```
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░
 Strength: Strong
@@ -61,13 +65,13 @@ Strength: Strong
 
 ### Strength Levels
 
-| Score | Label | Color | Percentage | Requirements |
-|-------|-------|-------|------------|--------------|
-| 0 | Very Weak | Red | 20% | 0-1 requirements |
-| 1 | Weak | Orange | 40% | 2 requirements |
-| 2 | Medium | Yellow | 60% | 3-4 requirements |
-| 3 | Strong | Green | 80% | All + bonuses |
-| 4 | Very Strong | Dark Green | 100% | All + multiple bonuses |
+| Score | Label       | Color      | Percentage | Requirements           |
+| ----- | ----------- | ---------- | ---------- | ---------------------- |
+| 0     | Very Weak   | Red        | 20%        | 0-1 requirements       |
+| 1     | Weak        | Orange     | 40%        | 2 requirements         |
+| 2     | Medium      | Yellow     | 60%        | 3-4 requirements       |
+| 3     | Strong      | Green      | 80%        | All + bonuses          |
+| 4     | Very Strong | Dark Green | 100%       | All + multiple bonuses |
 
 ### Bonus Points
 
@@ -87,7 +91,7 @@ All passwords MUST meet these requirements:
 2. ✅ **At least one uppercase letter** (A-Z)
 3. ✅ **At least one lowercase letter** (a-z)
 4. ✅ **At least one number** (0-9)
-5. ✅ **At least one special character** (!@#$%^&*...)
+5. ✅ **At least one special character** (!@#$%^&\*...)
 
 ### Validation Function
 
@@ -111,8 +115,8 @@ console.log(result);
 import { validatePasswordComprehensive } from '@/lib/security/password-validation';
 
 const result = await validatePasswordComprehensive(password, userId, {
-  checkBreach: true,          // Check haveibeenpwned
-  checkHistory: true,         // Check password reuse
+  checkBreach: true, // Check haveibeenpwned
+  checkHistory: true, // Check password reuse
   requireMinimumStrength: true, // Require score >= 2
 });
 
@@ -132,12 +136,14 @@ if (!result.isValid) {
 Uses the haveibeenpwned API with **k-anonymity** for privacy:
 
 **How it works:**
+
 1. Hash password with SHA-1
 2. Send only first 5 characters to API
 3. Check if hash appears in breach database
 4. Never sends actual password to external service
 
 **Privacy Protected:**
+
 ```
 Password: MyP@ssw0rd
 SHA-1 Hash: 21BD12DC183F740EE76F27B78EB39C8AD972A757
@@ -163,14 +169,16 @@ console.log(result);
 ### User Experience
 
 **Breached Password:**
+
 ```
 ❌ Password Validation Failed
 
-This password has been found in 9,545,824 data breaches. 
+This password has been found in 9,545,824 data breaches.
 Please choose a more secure password.
 ```
 
 **Safe Password:**
+
 ```
 ✓ Password not found in known data breaches
 ```
@@ -193,6 +201,7 @@ CREATE TABLE password_history (
 ```
 
 **Features:**
+
 - Stores last 10 passwords (automatically cleaned up)
 - Uses SHA-256 hash (separate from Supabase auth)
 - RLS policies for security
@@ -205,7 +214,7 @@ CREATE TABLE password_history (
 const result = await checkPasswordHistory(userId, newPassword, 5);
 
 if (result.isReused) {
-  // Error: "This password was recently used. 
+  // Error: "This password was recently used.
   //         You cannot reuse your last 5 passwords."
 }
 ```
@@ -236,6 +245,7 @@ Response:
 Sent automatically when password is changed:
 
 **Email Content:**
+
 ```
 Subject: 🔐 Password Changed - Security Alert
 
@@ -250,7 +260,7 @@ Device: Mozilla/5.0 (Windows NT 10.0...)
 
 ⚠️ Wasn't you?
 
-If you didn't make this change, your account may be 
+If you didn't make this change, your account may be
 compromised.
 
 [Secure My Account] ← Button with link
@@ -261,6 +271,7 @@ If you made this change, you can safely ignore this email.
 ### Secure Account Link
 
 When user clicks "Wasn't Me":
+
 ```
 GET /secure-account?userId=abc&timestamp=1234567890
 
@@ -369,6 +380,7 @@ Success!
 **Input:** `password`
 
 **Result:**
+
 ```
 Strength: Very Weak (0%) ❌
 
@@ -387,6 +399,7 @@ Additional Issues:
 **Input:** `Password123`
 
 **Result:**
+
 ```
 Strength: Medium (60%) ⚠️
 
@@ -407,6 +420,7 @@ Failed Requirements:
 **Input:** `MyS3cure!P@ssw0rd`
 
 **Result:**
+
 ```
 Strength: Very Strong (100%) ✓
 
@@ -478,7 +492,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit}>
       {/* Other fields... */}
-      
+
       <div>
         <label>Password</label>
         <Input
@@ -486,14 +500,14 @@ export function RegisterForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        
+
         {/* Real-time strength indicator */}
-        <PasswordStrengthIndicator 
+        <PasswordStrengthIndicator
           password={password}
           showRequirements={true}
         />
       </div>
-      
+
       <Button type="submit" disabled={isSubmitting}>
         Register
       </Button>
@@ -544,19 +558,19 @@ export function ChangePasswordForm() {
         onChange={(e) => setCurrentPassword(e.target.value)}
         placeholder="Current Password"
       />
-      
+
       <Input
         type="password"
         value={newPassword}
         onChange={(e) => setNewPassword(e.target.value)}
         placeholder="New Password"
       />
-      
-      <PasswordStrengthIndicator 
+
+      <PasswordStrengthIndicator
         password={newPassword}
         showRequirements={true}
       />
-      
+
       <Button type="submit">Change Password</Button>
     </form>
   );
@@ -572,7 +586,7 @@ export function ChangePasswordForm() {
 ```
 Base Score (0-5 points):
   + 1 point for each requirement passed
-  
+
 Bonuses:
   + 1 if length >= 12 characters
   + 1 if length >= 16 characters
@@ -590,13 +604,13 @@ Final Score: 0-4 (normalized)
 
 ### Examples
 
-| Password | Score | Label | Reasoning |
-|----------|-------|-------|-----------|
-| `password` | 0 | Very Weak | Only lowercase, common word |
-| `Password1` | 1 | Weak | Missing special char |
-| `Password1!` | 2 | Medium | All basic requirements |
-| `MyP@ssw0rd2024` | 3 | Strong | All requirements + 14 chars |
-| `Tr0ng!P@$$w0rd#2024` | 4 | Very Strong | All requirements + 20 chars + variety |
+| Password              | Score | Label       | Reasoning                             |
+| --------------------- | ----- | ----------- | ------------------------------------- |
+| `password`            | 0     | Very Weak   | Only lowercase, common word           |
+| `Password1`           | 1     | Weak        | Missing special char                  |
+| `Password1!`          | 2     | Medium      | All basic requirements                |
+| `MyP@ssw0rd2024`      | 3     | Strong      | All requirements + 14 chars           |
+| `Tr0ng!P@$$w0rd#2024` | 4     | Very Strong | All requirements + 20 chars + variety |
 
 ---
 
@@ -607,11 +621,13 @@ Final Score: 0-4 (normalized)
 **Privacy-First Implementation:**
 
 1. **Never sends actual password**
+
    ```
    Password → SHA-1 Hash → First 5 chars only
    ```
 
 2. **K-Anonymity Model**
+
    ```
    API returns all hashes matching first 5 chars
    Client searches locally for full hash match
@@ -637,6 +653,7 @@ if (breach.isBreached) {
 ### Common Breached Passwords
 
 These passwords will be **rejected**:
+
 - `password` - 9.5M+ breaches
 - `123456` - 37M+ breaches
 - `qwerty` - 3.9M+ breaches
@@ -659,6 +676,7 @@ CREATE TABLE password_history (
 ```
 
 **Security Features:**
+
 - SHA-256 hashing (NOT for authentication)
 - Separate from Supabase auth system
 - RLS policies restrict access
@@ -668,6 +686,7 @@ CREATE TABLE password_history (
 ### Automatic Cleanup
 
 Trigger automatically removes old passwords:
+
 ```sql
 -- Keeps only last 10 passwords
 -- Deletes older entries automatically
@@ -682,7 +701,7 @@ System checks last 5 passwords
     ↓
 Hash matches found
     ↓
-Error: "This password was recently used. 
+Error: "This password was recently used.
         You cannot reuse your last 5 passwords."
 ```
 
@@ -705,6 +724,7 @@ const isReused = await checkPasswordHistory(userId, newPassword, 5);
 **Subject:** `🔐 Password Changed - Security Alert`
 
 **Content Includes:**
+
 - Friendly greeting
 - Change confirmation
 - Timestamp (with timezone)
@@ -831,30 +851,35 @@ If user clicks "Secure My Account":
 ### Strength Meter States
 
 **Very Weak (0-20%):**
+
 ```
 ▓▓▓▓░░░░░░░░░░░░░░░░ Very Weak
 [Red progress bar]
 ```
 
 **Weak (21-40%):**
+
 ```
 ▓▓▓▓▓▓▓▓░░░░░░░░░░░░ Weak
 [Orange progress bar]
 ```
 
 **Medium (41-60%):**
+
 ```
 ▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░ Medium
 [Yellow progress bar]
 ```
 
 **Strong (61-80%):**
+
 ```
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░ Strong
 [Green progress bar]
 ```
 
 **Very Strong (81-100%):**
+
 ```
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ Very Strong
 [Dark green progress bar]
@@ -946,11 +971,11 @@ await changePassword(userId, 'FirstP@ss123');
    - Client-side rate limit utilities
    - Toast notifications
 
-**Modified:**
-7. **`app/api/auth/register/route.ts`**
-   - Added comprehensive validation
-   - Added breach checking
-   - Added password history
+**Modified:** 7. **`app/api/auth/register/route.ts`**
+
+- Added comprehensive validation
+- Added breach checking
+- Added password history
 
 ---
 
@@ -962,8 +987,8 @@ await changePassword(userId, 'FirstP@ss123');
 // In password change/registration:
 
 await validatePasswordComprehensive(password, userId, {
-  checkBreach: true,           // Toggle breach checking
-  checkHistory: true,          // Toggle history checking
+  checkBreach: true, // Toggle breach checking
+  checkHistory: true, // Toggle history checking
   requireMinimumStrength: true, // Toggle strength requirement
 });
 ```
@@ -1004,13 +1029,13 @@ Edit `lib/security/password-validation.ts`:
 
 ### Validation Speed
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Requirements check | <1ms | Regex patterns |
-| Strength calculation | <1ms | Algorithm |
-| Breach check | 100-300ms | API call |
-| History check | 10-50ms | Database query |
-| **Total** | **100-400ms** | Still fast! |
+| Operation            | Time          | Notes          |
+| -------------------- | ------------- | -------------- |
+| Requirements check   | <1ms          | Regex patterns |
+| Strength calculation | <1ms          | Algorithm      |
+| Breach check         | 100-300ms     | API call       |
+| History check        | 10-50ms       | Database query |
+| **Total**            | **100-400ms** | Still fast!    |
 
 ### Optimization
 
@@ -1029,7 +1054,7 @@ Edit `lib/security/password-validation.ts`:
 ✅ **Clear feedback** - Real-time strength meter  
 ✅ **Breach protection** - Warned about compromised passwords  
 ✅ **Peace of mind** - Email notifications for changes  
-✅ **Quick recovery** - "Wasn't me" protection  
+✅ **Quick recovery** - "Wasn't me" protection
 
 ### For System
 
@@ -1037,14 +1062,14 @@ Edit `lib/security/password-validation.ts`:
 ✅ **Better compliance** - Meets security standards  
 ✅ **Audit trail** - Password history logged  
 ✅ **Account protection** - Change notifications  
-✅ **Reduced risk** - Multiple security layers  
+✅ **Reduced risk** - Multiple security layers
 
 ### For Admins
 
 ✅ **Monitoring** - Password history available  
 ✅ **Security alerts** - Change notifications  
 ✅ **Compliance** - Meets regulations (GDPR, etc.)  
-✅ **Control** - Adjustable requirements  
+✅ **Control** - Adjustable requirements
 
 ---
 
@@ -1080,7 +1105,7 @@ The password security system now provides:
 ✅ **Email notifications** with device info  
 ✅ **"Wasn't me" protection** for quick response  
 ✅ **Zero linter errors** - Production ready  
-✅ **Enterprise-grade security** - Industry standards  
+✅ **Enterprise-grade security** - Industry standards
 
 Combined with the rate limiting implementation, your authentication system is now **bank-grade secure**! 🏦🔒
 
@@ -1100,6 +1125,7 @@ Combined with the rate limiting implementation, your authentication system is no
 ### Integration TODO
 
 1. **Run database migration**
+
    ```bash
    # Apply the password_history migration
    supabase db push
@@ -1130,4 +1156,3 @@ Combined with the rate limiting implementation, your authentication system is no
 **Implementation Date**: October 21, 2025  
 **Status**: ✅ Complete - Production Ready  
 **Security Level**: Enterprise Grade 🏆
-

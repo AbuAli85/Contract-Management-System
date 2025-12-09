@@ -19,16 +19,16 @@ export interface KeyboardShortcutsProps {
 
 /**
  * Keyboard Shortcuts Handler
- * 
+ *
  * Enables keyboard navigation and shortcuts throughout the application
- * 
+ *
  * @example
  * ```tsx
  * const shortcuts = [
  *   { key: 's', ctrl: true, action: handleSave, description: 'Save form' },
  *   { key: 'k', ctrl: true, action: openSearch, description: 'Open search' }
  * ];
- * 
+ *
  * <KeyboardShortcuts shortcuts={shortcuts} />
  * ```
  */
@@ -42,7 +42,7 @@ export function KeyboardShortcuts({
 
       // Find matching shortcut
       const matchingShortcut = shortcuts.find(
-        (shortcut) =>
+        shortcut =>
           event.key.toLowerCase() === shortcut.key.toLowerCase() &&
           !!event.ctrlKey === !!shortcut.ctrl &&
           !!event.altKey === !!shortcut.alt &&
@@ -148,29 +148,29 @@ export function KeyboardShortcutsHelp({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="shortcuts-title"
+      role='dialog'
+      aria-modal='true'
+      aria-labelledby='shortcuts-title'
       data-shortcuts-modal
     >
       <div
-        className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4"
-        onClick={(e) => e.stopPropagation()}
+        className='bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4'
+        onClick={e => e.stopPropagation()}
       >
-        <h2 id="shortcuts-title" className="text-2xl font-bold mb-4">
+        <h2 id='shortcuts-title' className='text-2xl font-bold mb-4'>
           Keyboard Shortcuts
         </h2>
-        
-        <div className="space-y-2">
+
+        <div className='space-y-2'>
           {shortcuts.map((shortcut, index) => (
             <div
               key={index}
-              className="flex items-center justify-between py-2 border-b"
+              className='flex items-center justify-between py-2 border-b'
             >
-              <span className="text-gray-700">{shortcut.description}</span>
-              <kbd className="px-3 py-1.5 text-sm font-mono bg-gray-100 border border-gray-300 rounded">
+              <span className='text-gray-700'>{shortcut.description}</span>
+              <kbd className='px-3 py-1.5 text-sm font-mono bg-gray-100 border border-gray-300 rounded'>
                 {shortcut.ctrl && '⌘ + '}
                 {shortcut.alt && 'Alt + '}
                 {shortcut.shift && 'Shift + '}
@@ -180,10 +180,10 @@ export function KeyboardShortcutsHelp({
           ))}
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className='mt-6 flex justify-end'>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
           >
             Close
           </button>
@@ -192,4 +192,3 @@ export function KeyboardShortcutsHelp({
     </div>
   );
 }
-

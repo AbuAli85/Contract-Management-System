@@ -23,14 +23,16 @@ Your user/role/profile system has **MAJOR architectural problems** that need imm
 ### 1. Table Structure Conflicts
 
 #### Problem: Multiple `profiles` Tables
+
 Multiple migrations try to create `profiles` with different structures:
 
-| Migration | Primary Key | Foreign Key | Columns |
-|-----------|-------------|-------------|---------|
-| `00_init.sql` | `id` (UUID, independent) | `user_id` → `auth.users(id)` | id, user_id, email, full_name, avatar_url, phone, address, preferences |
-| `20240101_fix_auth_schema.sql` | `id` (UUID) | **REFERENCES** `auth.users(id)` | id, email, first_name, last_name, role, status, avatar_url, bio, phone, company |
+| Migration                      | Primary Key              | Foreign Key                     | Columns                                                                         |
+| ------------------------------ | ------------------------ | ------------------------------- | ------------------------------------------------------------------------------- |
+| `00_init.sql`                  | `id` (UUID, independent) | `user_id` → `auth.users(id)`    | id, user_id, email, full_name, avatar_url, phone, address, preferences          |
+| `20240101_fix_auth_schema.sql` | `id` (UUID)              | **REFERENCES** `auth.users(id)` | id, email, first_name, last_name, role, status, avatar_url, bio, phone, company |
 
-**Issue:** These are **incompatible**! 
+**Issue:** These are **incompatible**!
+
 - One uses separate `id` + `user_id`
 - Other uses `id` = `auth.users.id` directly
 
@@ -44,8 +46,8 @@ CREATE POLICY "Admins can view all profiles" ON profiles
     FOR SELECT
     USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE users.id = auth.uid() 
+            SELECT 1 FROM users
+            WHERE users.id = auth.uid()
             AND users.role IN ('admin', 'super_admin')
         )
     );
@@ -57,13 +59,13 @@ CREATE POLICY "Admins can view all profiles" ON profiles
 
 Roles are stored in **FIVE DIFFERENT PLACES**:
 
-| Location | Format | Example |
-|----------|--------|---------|
-| `auth.users.raw_user_meta_data->>'role'` | JSONB string | `"admin"` |
-| `profiles.role` | TEXT with CHECK constraint | `"user"`, `"admin"`, `"manager"`, `"promoter"` |
-| `users.role` | TEXT with CHECK constraint | `"admin"`, `"manager"`, `"user"`, `"viewer"` |
-| `user_roles` table | Enum + JSONB permissions | From `00_init.sql` |
-| `rbac_user_role_assignments` | UUID foreign keys | Full RBAC system |
+| Location                                 | Format                     | Example                                        |
+| ---------------------------------------- | -------------------------- | ---------------------------------------------- |
+| `auth.users.raw_user_meta_data->>'role'` | JSONB string               | `"admin"`                                      |
+| `profiles.role`                          | TEXT with CHECK constraint | `"user"`, `"admin"`, `"manager"`, `"promoter"` |
+| `users.role`                             | TEXT with CHECK constraint | `"admin"`, `"manager"`, `"user"`, `"viewer"`   |
+| `user_roles` table                       | Enum + JSONB permissions   | From `00_init.sql`                             |
+| `rbac_user_role_assignments`             | UUID foreign keys          | Full RBAC system                               |
 
 **Issue:** Which is the source of truth? They can easily get out of sync!
 
@@ -77,9 +79,9 @@ CREATE TABLE user_roles (
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
 );
 
--- From 20251021_fix_permission_cache.sql  
+-- From 20251021_fix_permission_cache.sql
 CREATE VIEW rbac_user_role_assignments AS
-SELECT 
+SELECT
   ur.user_id,  -- This comes from user_roles
   r.id as role_id
 FROM user_roles ur
@@ -106,12 +108,12 @@ User updates name → auth.users.raw_user_meta_data
 
 ### 5. Multiple RBAC Implementations
 
-| System | Tables | Status |
-|--------|--------|--------|
-| **Simple Role** | `profiles.role` (TEXT) | ✅ Active but limited |
-| **User Roles** | `user_roles`, `roles` | ⚠️ Partially implemented |
-| **RBAC Fixed** | `rbac_roles`, `rbac_permissions`, `rbac_role_permissions`, `rbac_user_role_assignments` | ❓ Unknown if active |
-| **Permissions** | `permissions` table | ⚠️ Orphaned? |
+| System          | Tables                                                                                  | Status                   |
+| --------------- | --------------------------------------------------------------------------------------- | ------------------------ |
+| **Simple Role** | `profiles.role` (TEXT)                                                                  | ✅ Active but limited    |
+| **User Roles**  | `user_roles`, `roles`                                                                   | ⚠️ Partially implemented |
+| **RBAC Fixed**  | `rbac_roles`, `rbac_permissions`, `rbac_role_permissions`, `rbac_user_role_assignments` | ❓ Unknown if active     |
+| **Permissions** | `permissions` table                                                                     | ⚠️ Orphaned?             |
 
 **Issue:** Four different permission systems! Which one is actually used?
 
@@ -125,7 +127,7 @@ CREATE POLICY "Admins can view all profiles" ON profiles
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM users  -- ❌ Does 'users' table exist?
-            WHERE users.id = auth.uid() 
+            WHERE users.id = auth.uid()
             AND users.role = 'admin'
         )
     );
@@ -239,6 +241,7 @@ CREATE POLICY "Admins can view all profiles" ON profiles
    - Consolidate RBAC tables (use `rbac_*` prefix)
 
 2. **Standardize profiles table**
+
    ```sql
    CREATE TABLE profiles (
      id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -255,7 +258,7 @@ CREATE POLICY "Admins can view all profiles" ON profiles
    );
    ```
 
-3. **Use rbac_* tables for permissions**
+3. **Use rbac\_\* tables for permissions**
    - `rbac_roles`
    - `rbac_permissions`
    - `rbac_role_permissions`
@@ -264,6 +267,7 @@ CREATE POLICY "Admins can view all profiles" ON profiles
 ### Phase 2: Synchronization (Priority: HIGH)
 
 1. **Auto-sync trigger**
+
    ```sql
    CREATE OR REPLACE FUNCTION sync_auth_to_profile()
    RETURNS TRIGGER AS $$
@@ -312,18 +316,20 @@ CREATE POLICY "Admins can view all profiles" ON profiles
 ### 🔥 Critical (Do Now)
 
 1. ✅ **Audit current database**
+
    ```sql
    -- Run this to see what actually exists
-   SELECT table_name FROM information_schema.tables 
-   WHERE table_schema = 'public' 
+   SELECT table_name FROM information_schema.tables
+   WHERE table_schema = 'public'
    AND (table_name LIKE '%user%' OR table_name LIKE '%profile%' OR table_name LIKE '%role%')
    ORDER BY table_name;
    ```
 
 2. ✅ **Identify data conflicts**
+
    ```sql
    -- Check for data mismatches
-   SELECT 
+   SELECT
      au.id,
      au.email,
      au.raw_user_meta_data->>'full_name' as auth_name,
@@ -332,7 +338,7 @@ CREATE POLICY "Admins can view all profiles" ON profiles
      p.role as profile_role
    FROM auth.users au
    LEFT JOIN profiles p ON au.id = p.id
-   WHERE 
+   WHERE
      au.raw_user_meta_data->>'full_name' != p.full_name
      OR au.raw_user_meta_data->>'role' != p.role;
    ```
@@ -370,7 +376,7 @@ After fixes, the system should have:
 ✅ **Proper RLS policies** (no circular dependencies)  
 ✅ **All functions use SECURITY INVOKER** or have fixed search_path  
 ✅ **Clean permission system** (one RBAC implementation)  
-✅ **Comprehensive documentation**  
+✅ **Comprehensive documentation**
 
 ---
 
@@ -386,35 +392,36 @@ After fixes, the system should have:
 
 ## ⚠️ Risks
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Data loss during migration | 🔴 HIGH | Full backup + rollback plan |
-| Application downtime | 🟡 MEDIUM | Staged migration with views |
-| Permission conflicts | 🟡 MEDIUM | Audit before + test thoroughly |
-| Foreign key violations | 🟡 MEDIUM | Data validation + cleanup scripts |
+| Risk                       | Impact    | Mitigation                        |
+| -------------------------- | --------- | --------------------------------- |
+| Data loss during migration | 🔴 HIGH   | Full backup + rollback plan       |
+| Application downtime       | 🟡 MEDIUM | Staged migration with views       |
+| Permission conflicts       | 🟡 MEDIUM | Audit before + test thoroughly    |
+| Foreign key violations     | 🟡 MEDIUM | Data validation + cleanup scripts |
 
 ---
 
 ## 💡 Recommendations
 
 ### DO:
+
 ✅ Create comprehensive backup before any changes  
 ✅ Test migration on copy of production data  
 ✅ Use transactions for all data migrations  
 ✅ Create deprecation path for old structures  
 ✅ Update all application code simultaneously  
-✅ Monitor for errors after deployment  
+✅ Monitor for errors after deployment
 
 ### DON'T:
+
 ❌ Drop tables without data migration  
 ❌ Change both structure and data in one migration  
 ❌ Skip testing on production-like data  
 ❌ Ignore foreign key constraints  
-❌ Deploy during peak hours  
+❌ Deploy during peak hours
 
 ---
 
 **Next Step:** Review this analysis, then I'll create the consolidation migration.
 
 Would you like me to proceed with creating the fix migration?
-

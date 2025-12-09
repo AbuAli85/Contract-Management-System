@@ -38,10 +38,10 @@ const typeConfig = {
 
 /**
  * Global Search Component
- * 
+ *
  * Searches across contracts, promoters, and parties
  * with debouncing and keyboard navigation
- * 
+ *
  * @example
  * ```tsx
  * <GlobalSearch placeholder="Search contracts, promoters, parties..." />
@@ -78,7 +78,7 @@ export function GlobalSearch({
       const response = await fetch(
         `/api/search?q=${encodeURIComponent(searchQuery)}`
       );
-      
+
       if (!response.ok) {
         throw new Error('Search failed');
       }
@@ -106,13 +106,11 @@ export function GlobalSearch({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < results.length - 1 ? prev + 1 : prev
-        );
+        setSelectedIndex(prev => (prev < results.length - 1 ? prev + 1 : prev));
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
         break;
       case 'Enter':
         e.preventDefault();
@@ -167,17 +165,17 @@ export function GlobalSearch({
       data-search-container
     >
       {/* Search Input */}
-      <div className="relative">
+      <div className='relative'>
         <Search
-          className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          className='absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400'
           size={20}
-          aria-hidden="true"
+          aria-hidden='true'
         />
         <input
           ref={inputRef}
-          type="text"
+          type='text'
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={e => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
@@ -188,27 +186,27 @@ export function GlobalSearch({
             'text-sm',
             'transition-all'
           )}
-          role="combobox"
-          aria-label="Global search"
-          aria-expanded={isOpen ? "true" : "false"}
-          aria-autocomplete="list"
-          aria-controls="search-results"
+          role='combobox'
+          aria-label='Global search'
+          aria-expanded={isOpen ? 'true' : 'false'}
+          aria-autocomplete='list'
+          aria-controls='search-results'
           data-search-input
         />
 
         {/* Clear/Loading Button */}
-        <div className="absolute end-3 top-1/2 transform -translate-y-1/2">
+        <div className='absolute end-3 top-1/2 transform -translate-y-1/2'>
           {isLoading ? (
             <Loader2
-              className="text-gray-400 animate-spin"
+              className='text-gray-400 animate-spin'
               size={18}
-              aria-label="Loading"
+              aria-label='Loading'
             />
           ) : query ? (
             <button
               onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Clear search"
+              className='text-gray-400 hover:text-gray-600 transition-colors'
+              aria-label='Clear search'
             >
               <X size={18} />
             </button>
@@ -219,8 +217,8 @@ export function GlobalSearch({
       {/* Search Results Dropdown */}
       {isOpen && results.length > 0 && (
         <div
-          id="search-results"
-          role="listbox"
+          id='search-results'
+          role='listbox'
           className={cn(
             'absolute top-full mt-2 w-full',
             'bg-white border border-gray-200 rounded-lg shadow-lg',
@@ -229,12 +227,12 @@ export function GlobalSearch({
           )}
         >
           {/* Results Count */}
-          <div className="px-3 py-2 text-xs text-gray-500 border-b">
+          <div className='px-3 py-2 text-xs text-gray-500 border-b'>
             {results.length} result{results.length !== 1 ? 's' : ''} found
           </div>
 
           {/* Results List */}
-          <div className="py-1">
+          <div className='py-1'>
             {results.map((result, index) => {
               const config = typeConfig[result.type];
               const Icon = config.icon;
@@ -242,8 +240,8 @@ export function GlobalSearch({
               return (
                 <button
                   key={`${result.type}-${result.id}`}
-                  role="option"
-                  aria-selected={index === selectedIndex ? "true" : "false"}
+                  role='option'
+                  aria-selected={index === selectedIndex ? 'true' : 'false'}
                   onClick={() => handleResultClick(result)}
                   className={cn(
                     'w-full px-3 py-3 text-start',
@@ -253,7 +251,7 @@ export function GlobalSearch({
                     index === selectedIndex && 'bg-gray-50'
                   )}
                 >
-                  <div className="flex items-start space-x-3">
+                  <div className='flex items-start space-x-3'>
                     {/* Icon */}
                     <div
                       className={cn(
@@ -264,19 +262,19 @@ export function GlobalSearch({
                       <Icon
                         className={config.color}
                         size={18}
-                        aria-hidden="true"
+                        aria-hidden='true'
                       />
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 truncate">
+                    <div className='flex-1 min-w-0'>
+                      <div className='font-medium text-gray-900 truncate'>
                         {result.title}
                       </div>
-                      <div className="text-sm text-gray-600 truncate">
+                      <div className='text-sm text-gray-600 truncate'>
                         {result.subtitle}
                       </div>
-                      <div className="mt-1">
+                      <div className='mt-1'>
                         <span
                           className={cn(
                             'inline-block px-2 py-0.5 text-xs rounded-full',
@@ -295,7 +293,7 @@ export function GlobalSearch({
           </div>
 
           {/* Keyboard Hints */}
-          <div className="px-3 py-2 border-t bg-gray-50 text-xs text-gray-500 flex items-center justify-between">
+          <div className='px-3 py-2 border-t bg-gray-50 text-xs text-gray-500 flex items-center justify-between'>
             <span>Navigate with ↑↓, select with ↵</span>
             <span>ESC to close</span>
           </div>
@@ -312,11 +310,9 @@ export function GlobalSearch({
             'z-50'
           )}
         >
-          <Search className="mx-auto mb-2 text-gray-400" size={24} />
+          <Search className='mx-auto mb-2 text-gray-400' size={24} />
           <p>No results found for "{query}"</p>
-          <p className="text-xs mt-1">
-            Try searching with different keywords
-          </p>
+          <p className='text-xs mt-1'>Try searching with different keywords</p>
         </div>
       )}
     </div>
@@ -334,15 +330,15 @@ export function CompactSearch({ className }: { className?: string }) {
       {!isExpanded ? (
         <button
           onClick={() => setIsExpanded(true)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Open search"
+          className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+          aria-label='Open search'
         >
           <Search size={20} />
         </button>
       ) : (
-        <div className="absolute end-0 top-0 w-64 sm:w-96">
+        <div className='absolute end-0 top-0 w-64 sm:w-96'>
           <GlobalSearch
-            placeholder="Quick search..."
+            placeholder='Quick search...'
             onResultSelect={() => setIsExpanded(false)}
           />
         </div>
@@ -350,4 +346,3 @@ export function CompactSearch({ className }: { className?: string }) {
     </div>
   );
 }
-

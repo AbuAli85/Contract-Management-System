@@ -25,6 +25,7 @@ As an **ADMIN**, this account has extensive privileges:
 #### ✅ **FULL ACCESS** to:
 
 ##### **Promoter Management**
+
 - ✓ Create promoters
 - ✓ Read all promoter data
 - ✓ Update promoter information
@@ -34,6 +35,7 @@ As an **ADMIN**, this account has extensive privileges:
 - ✓ Archive promoter records
 
 ##### **Party (Company/Employer) Management**
+
 - ✓ Create parties
 - ✓ Read all party data
 - ✓ Update party information
@@ -43,6 +45,7 @@ As an **ADMIN**, this account has extensive privileges:
 - ✓ Archive party records
 
 ##### **Contract Management**
+
 - ✓ Create contracts
 - ✓ Read all contracts
 - ✓ Update contract information
@@ -54,6 +57,7 @@ As an **ADMIN**, this account has extensive privileges:
 - ✓ **Reject contracts**
 
 ##### **User Management**
+
 - ✓ Create new users
 - ✓ Read user information
 - ✓ Update user profiles
@@ -61,27 +65,30 @@ As an **ADMIN**, this account has extensive privileges:
 - ✓ **Assign user roles**
 
 ##### **System Operations**
+
 - ✓ View analytics & insights
 - ✓ Manage system settings
 - ✓ View audit logs
 - ✓ Send system notifications
 
 #### ❌ **RESTRICTED** from:
+
 - ✗ System backup/restore (Super Admin only)
 
 ---
 
 ## 2️⃣ ALL ADMIN ACCOUNTS IN SYSTEM
 
-| # | Email | Name | Created | Last Sign In | Status |
-|---|-------|------|---------|--------------|--------|
-| 1 | **luxsess2001@gmail.com** | Fahad alamri | Aug 1, 2025 | Oct 27, 2025 | ✅ Active |
-| 2 | **operations@falconeyegroup.net** | Waqas Ahmad | Aug 2, 2025 | **Oct 28, 2025** | ✅ Active |
-| 3 | admin@test.com | Test Admin | Aug 9, 2025 | Never | ⚠️ Inactive |
-| 4 | admin@contractmanagement.com | System Administrator | Aug 13, 2025 | Aug 13, 2025 | ⚠️ Inactive |
-| 5 | admin@businesshub.com | System Administrator | Sep 1, 2025 | Sep 1, 2025 | ⚠️ Inactive |
+| #   | Email                             | Name                 | Created      | Last Sign In     | Status      |
+| --- | --------------------------------- | -------------------- | ------------ | ---------------- | ----------- |
+| 1   | **luxsess2001@gmail.com**         | Fahad alamri         | Aug 1, 2025  | Oct 27, 2025     | ✅ Active   |
+| 2   | **operations@falconeyegroup.net** | Waqas Ahmad          | Aug 2, 2025  | **Oct 28, 2025** | ✅ Active   |
+| 3   | admin@test.com                    | Test Admin           | Aug 9, 2025  | Never            | ⚠️ Inactive |
+| 4   | admin@contractmanagement.com      | System Administrator | Aug 13, 2025 | Aug 13, 2025     | ⚠️ Inactive |
+| 5   | admin@businesshub.com             | System Administrator | Sep 1, 2025  | Sep 1, 2025      | ⚠️ Inactive |
 
 ### 📈 Admin Activity Summary:
+
 - **Total Admin Accounts:** 5
 - **Active Admins:** 2 (40%)
 - **Last Sign In:** operations@falconeyegroup.net (Today - Oct 28, 2025)
@@ -94,12 +101,14 @@ As an **ADMIN**, this account has extensive privileges:
 ### Activity Status: ✅ **NO SUSPICIOUS ACTIVITY**
 
 **Findings:**
+
 - ✅ No activity logs recorded for this user (audit logging may not be fully enabled)
 - ✅ No failed login attempts detected
 - ✅ No security incidents reported
 - ✅ Account in good standing
 
 **Last Successful Login:**
+
 - 📅 **Date:** October 28, 2025, 06:19:32 AM UTC
 - 🌐 **Status:** Successful
 - 🔒 **Session:** Active
@@ -110,19 +119,20 @@ As an **ADMIN**, this account has extensive privileges:
 
 ### Authentication Configuration
 
-| Setting | Status | Details |
-|---------|--------|---------|
-| **Email Verified** | ✅ Yes | Confirmed on Aug 2, 2025 |
-| **Password Set** | ✅ Yes | Encrypted password exists |
-| **Phone Number** | ❌ Not Set | No phone registered |
-| **Phone Verified** | ❌ N/A | No phone to verify |
-| **MFA/2FA** | ⚠️ Unknown | Not explicitly configured |
-| **SSO Enabled** | ❌ No | Using password authentication |
-| **Account Locked** | ✅ No | Account is active |
+| Setting            | Status     | Details                       |
+| ------------------ | ---------- | ----------------------------- |
+| **Email Verified** | ✅ Yes     | Confirmed on Aug 2, 2025      |
+| **Password Set**   | ✅ Yes     | Encrypted password exists     |
+| **Phone Number**   | ❌ Not Set | No phone registered           |
+| **Phone Verified** | ❌ N/A     | No phone to verify            |
+| **MFA/2FA**        | ⚠️ Unknown | Not explicitly configured     |
+| **SSO Enabled**    | ❌ No      | Using password authentication |
+| **Account Locked** | ✅ No      | Account is active             |
 
 ### Security Recommendations:
 
 #### 🔴 **HIGH PRIORITY:**
+
 1. **Enable Multi-Factor Authentication (MFA/2FA)**
    - Current Status: Not enabled
    - Risk: High (admin account without MFA)
@@ -134,6 +144,7 @@ As an **ADMIN**, this account has extensive privileges:
    - Action: Add verified phone number for account recovery
 
 #### 🟡 **MEDIUM PRIORITY:**
+
 3. **Regular Password Rotation**
    - Recommendation: Change password every 90 days
    - Last Update: Unknown
@@ -148,14 +159,15 @@ As an **ADMIN**, this account has extensive privileges:
 
 ## 5️⃣ SYSTEM-WIDE USER STATISTICS
 
-| Role | Total Users | Approved | Pending | % of Total |
-|------|-------------|----------|---------|------------|
-| **Client** | 10 | 4 | 6 | 43.5% |
-| **Provider** | 8 | 6 | 2 | 34.8% |
-| **Admin** | 5 | 5 | 0 | 21.7% |
-| **TOTAL** | **23** | **15** | **8** | **100%** |
+| Role         | Total Users | Approved | Pending | % of Total |
+| ------------ | ----------- | -------- | ------- | ---------- |
+| **Client**   | 10          | 4        | 6       | 43.5%      |
+| **Provider** | 8           | 6        | 2       | 34.8%      |
+| **Admin**    | 5           | 5        | 0       | 21.7%      |
+| **TOTAL**    | **23**      | **15**   | **8**   | **100%**   |
 
 ### Key Insights:
+
 - ✅ All admin accounts are approved (no pending admin approvals)
 - ⚠️ 6 client accounts pending approval (60% pending rate)
 - ⚠️ 2 provider accounts pending approval (25% pending rate)
@@ -168,16 +180,19 @@ As an **ADMIN**, this account has extensive privileges:
 ## 6️⃣ COMPLIANCE & AUDIT
 
 ### Failed Login Attempts
+
 - ✅ **Zero** failed login attempts recorded
 - ✅ Account has never been locked
 - ✅ No brute force attempts detected
 
 ### Audit Trail Status
+
 - ⚠️ Limited audit logging available
 - ⚠️ User activity logs are empty (may need configuration)
 - ✅ Security audit log exists but no incidents
 
 ### Data Protection
+
 - ✅ Email confirmed and verified
 - ✅ Password securely encrypted
 - ✅ Account follows data retention policies
@@ -188,12 +203,12 @@ As an **ADMIN**, this account has extensive privileges:
 
 ### Current Risk Factors:
 
-| Risk Factor | Severity | Details |
-|------------|----------|---------|
-| No MFA Enabled | 🔴 HIGH | Admin account without 2FA is vulnerable |
-| No Phone Number | 🟡 MEDIUM | No backup recovery method |
-| High Admin Count | 🟡 MEDIUM | 5 admins may be excessive |
-| No IP Restrictions | 🟢 LOW | Open access from any location |
+| Risk Factor        | Severity  | Details                                 |
+| ------------------ | --------- | --------------------------------------- |
+| No MFA Enabled     | 🔴 HIGH   | Admin account without 2FA is vulnerable |
+| No Phone Number    | 🟡 MEDIUM | No backup recovery method               |
+| High Admin Count   | 🟡 MEDIUM | 5 admins may be excessive               |
+| No IP Restrictions | 🟢 LOW    | Open access from any location           |
 
 ### Overall Risk Score: **🟢 LOW** (95/100)
 
@@ -205,21 +220,22 @@ As an **ADMIN**, this account has extensive privileges:
 
 ### Permission Comparison:
 
-| Feature | Admin | Manager | Provider | Client |
-|---------|-------|---------|----------|--------|
-| Create/Edit/Delete Resources | ✅ Full | ⚠️ Limited | ❌ Own Only | ❌ None |
-| Bulk Operations | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| User Management | ✅ Full | ❌ View Only | ❌ None | ❌ None |
-| Contract Approval | ✅ Yes | ✅ Yes | ❌ No | ❌ No |
-| System Settings | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| Analytics Access | ✅ Full | ✅ Full | ⚠️ Own Data | ⚠️ Own Data |
-| Backup/Restore | ❌ No | ❌ No | ❌ No | ❌ No |
+| Feature                      | Admin   | Manager      | Provider    | Client      |
+| ---------------------------- | ------- | ------------ | ----------- | ----------- |
+| Create/Edit/Delete Resources | ✅ Full | ⚠️ Limited   | ❌ Own Only | ❌ None     |
+| Bulk Operations              | ✅ Yes  | ❌ No        | ❌ No       | ❌ No       |
+| User Management              | ✅ Full | ❌ View Only | ❌ None     | ❌ None     |
+| Contract Approval            | ✅ Yes  | ✅ Yes       | ❌ No       | ❌ No       |
+| System Settings              | ✅ Yes  | ❌ No        | ❌ No       | ❌ No       |
+| Analytics Access             | ✅ Full | ✅ Full      | ⚠️ Own Data | ⚠️ Own Data |
+| Backup/Restore               | ❌ No   | ❌ No        | ❌ No       | ❌ No       |
 
 ---
 
 ## 9️⃣ ACTION ITEMS & RECOMMENDATIONS
 
 ### 🚨 IMMEDIATE ACTIONS (Within 7 Days):
+
 1. **Enable MFA** for operations@falconeyegroup.net
 2. **Add phone number** for account recovery
 3. **Review and deactivate** 3 inactive admin accounts:
@@ -228,12 +244,14 @@ As an **ADMIN**, this account has extensive privileges:
    - admin@businesshub.com
 
 ### 📅 SHORT-TERM ACTIONS (Within 30 Days):
+
 4. **Implement IP whitelisting** for all admin accounts
 5. **Enable comprehensive audit logging** for admin actions
 6. **Set up password rotation policy** (90-day expiry)
 7. **Review admin privileges** and consider downgrading unnecessary admins
 
 ### 📊 LONG-TERM IMPROVEMENTS:
+
 8. Implement role-based session timeouts (admins: 30min, users: 4hr)
 9. Set up automated security alerts for admin activity
 10. Regular security audits (quarterly)
@@ -244,9 +262,11 @@ As an **ADMIN**, this account has extensive privileges:
 ## 🔟 CONCLUSION
 
 ### Summary:
+
 **operations@falconeyegroup.net** is a **legitimate, active admin account** belonging to **Waqas Ahmad** from **Falcon Eye Group**. The account demonstrates:
 
 ✅ **Strengths:**
+
 - No security incidents
 - Active and engaged user
 - Proper email verification
@@ -254,6 +274,7 @@ As an **ADMIN**, this account has extensive privileges:
 - Appropriate role assignment
 
 ⚠️ **Areas for Improvement:**
+
 - Missing MFA (critical for admin accounts)
 - No phone number registered
 - Limited audit trail data
@@ -279,5 +300,4 @@ This account poses **minimal security risk** and is operating within proper guid
 
 ---
 
-*This report contains sensitive security information. Distribution should be limited to authorized personnel only.*
-
+_This report contains sensitive security information. Distribution should be limited to authorized personnel only._

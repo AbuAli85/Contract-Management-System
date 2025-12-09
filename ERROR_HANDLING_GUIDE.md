@@ -11,6 +11,7 @@ This guide covers the comprehensive error handling system implemented for the Co
 React Error Boundary that catches errors in child components and displays a fallback UI.
 
 **Features:**
+
 - ✅ Catches React component errors
 - ✅ Prevents entire app from crashing
 - ✅ Logs errors to monitoring services
@@ -30,7 +31,7 @@ import { ErrorBoundary } from '@/components/errors';
 </ErrorBoundary>
 
 // With custom fallback
-<ErrorBoundary 
+<ErrorBoundary
   section="Dashboard"
   fallback={<CustomErrorUI />}
   onError={(error, errorInfo) => {
@@ -51,6 +52,7 @@ const SafeComponent = withErrorBoundary(MyComponent, {
 Beautiful, user-friendly error display with actionable guidance.
 
 **Features:**
+
 - ✅ Context-aware error guidance
 - ✅ Actionable next steps
 - ✅ Copy error details
@@ -60,6 +62,7 @@ Beautiful, user-friendly error display with actionable guidance.
 - ✅ Multiple error types detection
 
 **Error Types Detected:**
+
 - Network errors
 - Permission errors
 - Not found errors
@@ -72,6 +75,7 @@ Beautiful, user-friendly error display with actionable guidance.
 Pre-built error components for common scenarios.
 
 **Available Components:**
+
 - `<NetworkError />` - Connection issues
 - `<PermissionError />` - 403 Forbidden
 - `<NotFoundError />` - 404 Not Found
@@ -88,29 +92,26 @@ Pre-built error components for common scenarios.
 import { NetworkError, PermissionError, AutoError } from '@/components/errors';
 
 // Specific error type
-{isNetworkError && (
-  <NetworkError 
-    message="Could not connect to server"
-    onRetry={handleRetry}
-  />
-)}
+{
+  isNetworkError && (
+    <NetworkError message='Could not connect to server' onRetry={handleRetry} />
+  );
+}
 
 // Auto-detect error type
-{error && (
-  <AutoError 
-    error={error}
-    onRetry={handleRetry}
-    showRetry={true}
-  />
-)}
+{
+  error && <AutoError error={error} onRetry={handleRetry} showRetry={true} />;
+}
 
 // Permission error
-{!hasAccess && (
-  <PermissionError 
-    message="You need admin privileges"
-    onRetry={checkPermissionsAgain}
-  />
-)}
+{
+  !hasAccess && (
+    <PermissionError
+      message='You need admin privileges'
+      onRetry={checkPermissionsAgain}
+    />
+  );
+}
 ```
 
 ### 4. Retry Utilities (`lib/utils/retry.ts`)
@@ -118,6 +119,7 @@ import { NetworkError, PermissionError, AutoError } from '@/components/errors';
 Intelligent retry mechanisms with exponential backoff.
 
 **Features:**
+
 - ✅ Exponential backoff
 - ✅ Configurable attempts
 - ✅ Error filtering
@@ -132,46 +134,35 @@ Intelligent retry mechanisms with exponential backoff.
 import { retryAsync, RetryStrategies, CircuitBreaker } from '@/lib/utils/retry';
 
 // Basic retry
-const data = await retryAsync(
-  () => fetch('/api/data').then(r => r.json()),
-  {
-    maxAttempts: 3,
-    initialDelay: 1000,
-  }
-);
+const data = await retryAsync(() => fetch('/api/data').then(r => r.json()), {
+  maxAttempts: 3,
+  initialDelay: 1000,
+});
 
 // With predefined strategy
-const data = await retryAsync(
-  () => fetchData(),
-  RetryStrategies.networkOnly
-);
+const data = await retryAsync(() => fetchData(), RetryStrategies.networkOnly);
 
 // Custom retry logic
-const data = await retryAsync(
-  () => apiCall(),
-  {
-    maxAttempts: 5,
-    initialDelay: 500,
-    maxDelay: 5000,
-    shouldRetry: (error, attempt) => {
-      // Only retry on specific errors
-      return error.status === 500 && attempt < 3;
-    },
-    onRetry: (error, attempt, delay) => {
-      console.log(`Retrying in ${delay}ms...`);
-    },
-  }
-);
+const data = await retryAsync(() => apiCall(), {
+  maxAttempts: 5,
+  initialDelay: 500,
+  maxDelay: 5000,
+  shouldRetry: (error, attempt) => {
+    // Only retry on specific errors
+    return error.status === 500 && attempt < 3;
+  },
+  onRetry: (error, attempt, delay) => {
+    console.log(`Retrying in ${delay}ms...`);
+  },
+});
 
 // Circuit breaker
 const breaker = new CircuitBreaker(5, 60000);
-const data = await breaker.execute(
-  () => apiCall(),
-  { maxAttempts: 3 }
-);
+const data = await breaker.execute(() => apiCall(), { maxAttempts: 3 });
 ```
 
 **Predefined Strategies:**
+
 - `RetryStrategies.networkOnly` - Retry network errors only
 - `RetryStrategies.serverErrors` - Retry 5xx errors
 - `RetryStrategies.timeouts` - Retry timeouts
@@ -184,6 +175,7 @@ const data = await breaker.execute(
 Easy-to-use React hooks for retry logic.
 
 **Available Hooks:**
+
 - `useRetry` - Generic retry hook
 - `useFetchWithRetry` - Fetch with retry
 - `useMutationWithRetry` - Mutations with retry
@@ -191,17 +183,22 @@ Easy-to-use React hooks for retry logic.
 **Usage:**
 
 ```tsx
-import { useRetry, useFetchWithRetry, useMutationWithRetry } from '@/hooks/use-retry';
+import {
+  useRetry,
+  useFetchWithRetry,
+  useMutationWithRetry,
+} from '@/hooks/use-retry';
 
 // Generic retry hook
 function MyComponent() {
-  const { data, error, isLoading, isRetrying, retryAttempt, execute } = useRetry(
-    async (id: string) => {
-      const res = await fetch(`/api/contracts/${id}`);
-      return res.json();
-    },
-    { maxAttempts: 3, initialDelay: 1000 }
-  );
+  const { data, error, isLoading, isRetrying, retryAttempt, execute } =
+    useRetry(
+      async (id: string) => {
+        const res = await fetch(`/api/contracts/${id}`);
+        return res.json();
+      },
+      { maxAttempts: 3, initialDelay: 1000 }
+    );
 
   useEffect(() => {
     execute('contract-123');
@@ -216,7 +213,12 @@ function MyComponent() {
 
 // Fetch with retry
 function ContractsList() {
-  const { data, error, isLoading, execute: refetch } = useFetchWithRetry(
+  const {
+    data,
+    error,
+    isLoading,
+    execute: refetch,
+  } = useFetchWithRetry(
     '/api/contracts',
     { method: 'GET' },
     { maxAttempts: 3 }
@@ -232,7 +234,7 @@ function ContractsList() {
 // Mutation with retry
 function CreateContract() {
   const { mutate, isLoading, error } = useMutationWithRetry(
-    async (data) => {
+    async data => {
       const res = await fetch('/api/contracts', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -241,10 +243,10 @@ function CreateContract() {
     },
     {
       maxAttempts: 2,
-      onSuccess: (data) => {
+      onSuccess: data => {
         toast({ title: 'Contract created!' });
       },
-      onError: (error) => {
+      onError: error => {
         toast({ title: 'Failed to create contract', variant: 'destructive' });
       },
     }
@@ -268,7 +270,7 @@ import { ErrorBoundary } from '@/components/errors';
 
 export default function ContractsPage() {
   return (
-    <ErrorBoundary section="Contracts">
+    <ErrorBoundary section='Contracts'>
       <ContractsContent />
     </ErrorBoundary>
   );
@@ -282,17 +284,14 @@ export default function ContractsPage() {
 import { ErrorBoundary } from '@/components/errors';
 
 export default function DashboardLayout({ children }) {
-  return (
-    <ErrorBoundary section="Dashboard">
-      {children}
-    </ErrorBoundary>
-  );
+  return <ErrorBoundary section='Dashboard'>{children}</ErrorBoundary>;
 }
 ```
 
 ### Step 3: Replace Generic Error Messages
 
 **Before:**
+
 ```tsx
 if (error) {
   return <div>Oops! Something went wrong.</div>;
@@ -300,6 +299,7 @@ if (error) {
 ```
 
 **After:**
+
 ```tsx
 import { AutoError } from '@/components/errors';
 
@@ -311,6 +311,7 @@ if (error) {
 ### Step 4: Add Retry Logic to API Calls
 
 **Before:**
+
 ```tsx
 const fetchContracts = async () => {
   const res = await fetch('/api/contracts');
@@ -319,18 +320,16 @@ const fetchContracts = async () => {
 ```
 
 **After:**
+
 ```tsx
 import { retryAsync, RetryStrategies } from '@/lib/utils/retry';
 
 const fetchContracts = async () => {
-  return retryAsync(
-    async () => {
-      const res = await fetch('/api/contracts');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    },
-    RetryStrategies.networkOnly
-  );
+  return retryAsync(async () => {
+    const res = await fetch('/api/contracts');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }, RetryStrategies.networkOnly);
 };
 ```
 
@@ -343,10 +342,11 @@ import { retryAsync, RetryStrategies } from '@/lib/utils/retry';
 export function useContracts() {
   return useQuery({
     queryKey: ['contracts'],
-    queryFn: () => retryAsync(
-      () => fetch('/api/contracts').then(r => r.json()),
-      RetryStrategies.networkOnly
-    ),
+    queryFn: () =>
+      retryAsync(
+        () => fetch('/api/contracts').then(r => r.json()),
+        RetryStrategies.networkOnly
+      ),
     // React Query's built-in retry is also good, but our retry provides more control
     retry: false, // Disable React Query retry, use our own
   });
@@ -407,11 +407,7 @@ NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 import { ErrorBoundary } from '@/components/errors';
 
 export function Providers({ children }) {
-  return (
-    <ErrorBoundary section="Application">
-      {children}
-    </ErrorBoundary>
-  );
+  return <ErrorBoundary section='Application'>{children}</ErrorBoundary>;
 }
 ```
 
@@ -526,4 +522,3 @@ describe('ErrorBoundary', () => {
 **Status**: ✅ Complete  
 **Last Updated**: October 21, 2025  
 **Version**: 1.0.0
-

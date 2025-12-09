@@ -255,7 +255,9 @@ export class PromoterDocumentsService {
           const supabase = createClient();
 
           if (!supabase) {
-            console.warn('Failed to create Supabase client for storage deletion');
+            console.warn(
+              'Failed to create Supabase client for storage deletion'
+            );
             return;
           }
 
@@ -286,4 +288,3 @@ export const createPromoterDocument = PromoterDocumentsService.createDocument;
 export const updatePromoterDocument = PromoterDocumentsService.updateDocument;
 export const deletePromoterDocument = PromoterDocumentsService.deleteDocument;
 export const uploadPromoterDocument = PromoterDocumentsService.uploadDocument;
-

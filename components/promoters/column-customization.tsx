@@ -42,7 +42,7 @@ const STORAGE_KEY = 'promoters-table-columns';
 
 /**
  * Column Customization Component
- * 
+ *
  * Allows users to:
  * - Show/hide columns
  * - Reorder columns with drag and drop
@@ -130,71 +130,72 @@ export function ColumnCustomization({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          aria-label="Customize columns"
+          variant='outline'
+          size='sm'
+          className='gap-2'
+          aria-label='Customize columns'
         >
-          <Settings className="h-4 w-4" />
-          <span className="hidden sm:inline">Columns</span>
+          <Settings className='h-4 w-4' />
+          <span className='hidden sm:inline'>Columns</span>
           {hiddenCount > 0 && (
-            <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+            <Badge variant='secondary' className='ml-1 px-1.5 py-0 text-xs'>
               {hiddenCount} hidden
             </Badge>
           )}
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-md">
+      <DialogContent className='max-w-md'>
         <DialogHeader>
           <DialogTitle>Customize Table Columns</DialogTitle>
           <DialogDescription>
-            Show, hide, or reorder columns. Drag to reorder. Changes are saved automatically.
+            Show, hide, or reorder columns. Drag to reorder. Changes are saved
+            automatically.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {/* Quick Actions */}
-          <div className="flex items-center justify-between gap-2 pb-2 border-b">
-            <div className="flex items-center gap-2">
+          <div className='flex items-center justify-between gap-2 pb-2 border-b'>
+            <div className='flex items-center gap-2'>
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
+                size='sm'
                 onClick={handleShowAll}
-                className="h-8 text-xs"
+                className='h-8 text-xs'
               >
-                <Eye className="h-3 w-3 mr-1" />
+                <Eye className='h-3 w-3 mr-1' />
                 Show All
               </Button>
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
+                size='sm'
                 onClick={handleHideAll}
-                className="h-8 text-xs"
+                className='h-8 text-xs'
               >
-                <EyeOff className="h-3 w-3 mr-1" />
+                <EyeOff className='h-3 w-3 mr-1' />
                 Hide All
               </Button>
             </div>
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={handleReset}
-              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+              className='h-8 text-xs text-muted-foreground hover:text-foreground'
             >
-              <RotateCcw className="h-3 w-3 mr-1" />
+              <RotateCcw className='h-3 w-3 mr-1' />
               Reset
             </Button>
           </div>
 
           {/* Column List */}
-          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+          <div className='space-y-1 max-h-[400px] overflow-y-auto'>
             {localColumns.map((column, index) => (
               <div
                 key={column.id}
                 draggable={!column.required}
                 onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
+                onDragOver={e => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
                 className={cn(
                   'flex items-center gap-3 p-3 rounded-lg border bg-card transition-all',
@@ -205,9 +206,9 @@ export function ColumnCustomization({
               >
                 {/* Drag Handle */}
                 {!column.required ? (
-                  <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <GripVertical className='h-4 w-4 text-muted-foreground flex-shrink-0' />
                 ) : (
-                  <div className="w-4" /> // Spacer for required columns
+                  <div className='w-4' /> // Spacer for required columns
                 )}
 
                 {/* Checkbox */}
@@ -215,20 +216,22 @@ export function ColumnCustomization({
                   checked={column.visible}
                   onCheckedChange={() => handleToggleColumn(column.id)}
                   disabled={column.required}
-                  className="flex-shrink-0"
+                  className='flex-shrink-0'
                 />
 
                 {/* Column Label */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={cn(
-                      'text-sm font-medium truncate',
-                      !column.visible && 'text-muted-foreground line-through'
-                    )}>
+                <div className='flex-1 min-w-0'>
+                  <div className='flex items-center gap-2'>
+                    <span
+                      className={cn(
+                        'text-sm font-medium truncate',
+                        !column.visible && 'text-muted-foreground line-through'
+                      )}
+                    >
                       {column.label}
                     </span>
                     {column.required && (
-                      <Badge variant="outline" className="text-xs px-1.5 py-0">
+                      <Badge variant='outline' className='text-xs px-1.5 py-0'>
                         Required
                       </Badge>
                     )}
@@ -237,32 +240,27 @@ export function ColumnCustomization({
 
                 {/* Visibility Icon */}
                 {column.visible ? (
-                  <Eye className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <Eye className='h-4 w-4 text-green-600 flex-shrink-0' />
                 ) : (
-                  <EyeOff className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <EyeOff className='h-4 w-4 text-muted-foreground flex-shrink-0' />
                 )}
               </div>
             ))}
           </div>
 
           {/* Summary */}
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className='pt-2 border-t'>
+            <div className='flex items-center justify-between text-sm text-muted-foreground'>
               <span>
                 {visibleCount} of {localColumns.length} columns visible
               </span>
-              <span className="text-xs">
-                Drag to reorder
-              </span>
+              <span className='text-xs'>Drag to reorder</span>
             </div>
           </div>
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setIsOpen(false)}
-          >
+          <Button variant='outline' onClick={() => setIsOpen(false)}>
             Close
           </Button>
         </DialogFooter>
@@ -330,4 +328,3 @@ export function useColumnCustomization(defaultColumns: ColumnConfig[]) {
     isColumnVisible,
   };
 }
-

@@ -4,14 +4,14 @@ This document tracks TODO/FIXME items found in the codebase that need to be addr
 
 ## Summary
 
-| Category | Count | Priority |
-|----------|-------|----------|
-| Authentication/MFA | 21 | High |
-| Security Features | 14 | High |
-| Notifications | 6 | Medium |
-| Analytics/Reporting | 4 | Medium |
-| UI/UX | 5 | Low |
-| Misc | 12 | Low |
+| Category            | Count | Priority |
+| ------------------- | ----- | -------- |
+| Authentication/MFA  | 21    | High     |
+| Security Features   | 14    | High     |
+| Notifications       | 6     | Medium   |
+| Analytics/Reporting | 4     | Medium   |
+| UI/UX               | 5     | Low      |
+| Misc                | 12    | Low      |
 
 ## High Priority - Authentication & MFA
 
@@ -163,4 +163,3 @@ File: `lib/advanced/tracking-service.ts`
 - TODOs in `_disabled` folders are for deprecated/unused features and can be ignored
 - Many TODOs in auth files are for advanced security features not critical for MVP
 - The MFA implementation is a significant undertaking and could be a separate epic
-

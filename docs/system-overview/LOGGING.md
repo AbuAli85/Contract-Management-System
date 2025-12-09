@@ -52,7 +52,7 @@ logger.apiRequestStart(requestId, '/api/contracts', 'POST');
 
 try {
   // ... process request ...
-  
+
   // Success
   logger.apiRequestComplete(requestId, 200, Date.now() - startTime);
 } catch (error) {
@@ -65,9 +65,7 @@ try {
 ```typescript
 const start = Date.now();
 
-const { data, error } = await supabase
-  .from('contracts')
-  .select('*');
+const { data, error } = await supabase.from('contracts').select('*');
 
 if (error) {
   logger.dbError('contracts', 'select', error);
@@ -111,19 +109,20 @@ requestLogger.info('Contract saved');
 
 ## Log Levels
 
-| Level | Usage |
-|-------|-------|
+| Level   | Usage                                     |
+| ------- | ----------------------------------------- |
 | `debug` | Development only, detailed debugging info |
-| `info` | Normal operations, audit trail |
-| `warn` | Potential issues, degraded performance |
-| `error` | Errors that were handled |
-| `fatal` | Critical failures, system unavailable |
+| `info`  | Normal operations, audit trail            |
+| `warn`  | Potential issues, degraded performance    |
+| `error` | Errors that were handled                  |
+| `fatal` | Critical failures, system unavailable     |
 
 ## Best Practices
 
 ### DO
 
 ✅ Use structured context instead of string interpolation:
+
 ```typescript
 // Good
 logger.info('Contract created', { contractId: id, userId });
@@ -133,25 +132,32 @@ console.log(`Contract ${id} created by ${userId}`);
 ```
 
 ✅ Include relevant context for debugging:
+
 ```typescript
-logger.error('Payment failed', {
-  userId: user.id,
-  amount: payment.amount,
-  currency: payment.currency,
-}, error);
+logger.error(
+  'Payment failed',
+  {
+    userId: user.id,
+    amount: payment.amount,
+    currency: payment.currency,
+  },
+  error
+);
 ```
 
 ✅ Use appropriate log levels:
+
 ```typescript
 logger.debug('Entering function'); // Development debugging
-logger.info('User signed up');     // Business events
+logger.info('User signed up'); // Business events
 logger.warn('Retry attempt 2/3'); // Potential issues
-logger.error('Payment failed');   // Errors
+logger.error('Payment failed'); // Errors
 ```
 
 ### DON'T
 
 ❌ Don't log sensitive data:
+
 ```typescript
 // Bad - logs password
 logger.info('Login attempt', { email, password });
@@ -161,6 +167,7 @@ logger.info('Login attempt', { email });
 ```
 
 ❌ Don't use console.log in production code:
+
 ```typescript
 // Bad
 console.log('User created:', user);
@@ -170,6 +177,7 @@ logger.info('User created', { userId: user.id });
 ```
 
 ❌ Don't log in tight loops:
+
 ```typescript
 // Bad - logs thousands of times
 for (const item of items) {
@@ -183,11 +191,13 @@ logger.info('Processing batch', { count: items.length });
 ## Environment-Specific Behavior
 
 ### Development
+
 - Debug logs are shown
 - Formatted with emojis and colors
 - Full error stacks displayed
 
 ### Production
+
 - Debug logs are suppressed
 - JSON format for log aggregation
 - Errors sent to external monitoring (TODO)
@@ -215,4 +225,3 @@ logger.error('Failed to fetch contracts', { userId }, error);
 - [ ] Request tracing across services
 - [ ] Performance metrics logging
 - [ ] Audit log persistence to database
-

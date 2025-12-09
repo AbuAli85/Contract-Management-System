@@ -13,14 +13,14 @@ Run this in your browser console on the production site:
 // Test the metrics API endpoint
 async function testMetricsAPI() {
   console.log('🧪 Testing Metrics API...');
-  
+
   try {
     const response = await fetch('/api/dashboard/promoter-metrics');
     const data = await response.json();
-    
+
     console.log('✅ API Response Status:', response.status);
     console.log('📊 Metrics Data:', data);
-    
+
     if (data.success) {
       console.log('');
       console.log('📈 Metric Values:');
@@ -30,14 +30,14 @@ async function testMetricsAPI() {
       console.log('  Expiring:', data.metrics.expiring);
       console.log('  Unassigned:', data.metrics.unassigned);
       console.log('  Compliance Rate:', data.metrics.complianceRate + '%');
-      
+
       // Validate data consistency
       if (data.metrics.total >= data.metrics.active) {
         console.log('✅ Data consistent: Total >= Active');
       } else {
         console.error('❌ DATA INCONSISTENCY: Active count exceeds total!');
       }
-      
+
       if (data.metrics.complianceRate <= 100) {
         console.log('✅ Compliance rate valid (<=100%)');
       } else {
@@ -56,6 +56,7 @@ testMetricsAPI();
 ```
 
 **Expected Output:**
+
 ```
 ✅ API Response Status: 200
 📊 Metrics Data: { success: true, metrics: {...}, timestamp: "..." }
@@ -71,6 +72,7 @@ testMetricsAPI();
 ```
 
 **If API fails:**
+
 - Check if user is logged in
 - Check if `/api/dashboard/promoter-metrics` returns 401/403
 - Check browser Network tab for error details
@@ -85,33 +87,43 @@ Run this in browser console:
 // Test view mode state management
 function testViewModeSwitching() {
   console.log('🧪 Testing View Mode Switching...');
-  
+
   // Check current view mode from localStorage
   const savedView = localStorage.getItem('promoters-view-mode');
   console.log('📦 Saved view mode in localStorage:', savedView);
-  
+
   // Check if view mode buttons exist
-  const viewModeButtons = document.querySelectorAll('[value="grid"], [value="cards"]');
+  const viewModeButtons = document.querySelectorAll(
+    '[value="grid"], [value="cards"]'
+  );
   console.log('🔘 View mode buttons found:', viewModeButtons.length);
-  
+
   if (viewModeButtons.length > 0) {
     console.log('✅ View mode buttons exist');
-    
+
     // Check if they're clickable
     viewModeButtons.forEach((btn, index) => {
-      console.log(`  Button ${index + 1}: value="${btn.getAttribute('value')}", role="${btn.getAttribute('role')}"`);
+      console.log(
+        `  Button ${index + 1}: value="${btn.getAttribute('value')}", role="${btn.getAttribute('role')}"`
+      );
     });
   } else {
     console.error('❌ View mode buttons not found in DOM');
   }
-  
+
   // Check if Grid/Cards components are loaded
   const hasGridView = window.PromotersGridView !== undefined;
   const hasCardsView = window.PromotersCardsView !== undefined;
-  
-  console.log('📦 Grid View Component:', hasGridView ? '✅ Loaded' : '❌ Not found');
-  console.log('📦 Cards View Component:', hasCardsView ? '✅ Loaded' : '❌ Not found');
-  
+
+  console.log(
+    '📦 Grid View Component:',
+    hasGridView ? '✅ Loaded' : '❌ Not found'
+  );
+  console.log(
+    '📦 Cards View Component:',
+    hasCardsView ? '✅ Loaded' : '❌ Not found'
+  );
+
   // Test switching to grid view
   console.log('');
   console.log('🔄 Testing view mode switch to Grid...');
@@ -125,6 +137,7 @@ testViewModeSwitching();
 ```
 
 **Expected Output:**
+
 ```
 📦 Saved view mode in localStorage: table
 🔘 View mode buttons found: 4
@@ -138,6 +151,7 @@ testViewModeSwitching();
 ```
 
 **If view doesn't change after refresh:**
+
 1. Check browser console for React errors
 2. Check if `promoters` array is empty when view switches
 3. Check React DevTools for `viewMode` state value
@@ -152,40 +166,43 @@ Run this in browser console:
 // Test filter dropdown rendering
 function testFilterDropdowns() {
   console.log('🧪 Testing Filter Dropdowns...');
-  
+
   // Find filter dropdown triggers
   const filterTriggers = document.querySelectorAll('[role="combobox"]');
   console.log('🔍 Found', filterTriggers.length, 'dropdown triggers');
-  
+
   filterTriggers.forEach((trigger, index) => {
     const ariaLabel = trigger.getAttribute('aria-label');
     const value = trigger.textContent?.trim();
-    console.log(`  Filter ${index + 1}: "${ariaLabel || 'Unknown'}" = "${value}"`);
+    console.log(
+      `  Filter ${index + 1}: "${ariaLabel || 'Unknown'}" = "${value}"`
+    );
   });
-  
+
   // Check z-index stacking
   console.log('');
   console.log('📐 Checking z-index stacking...');
-  
+
   const highZIndexElements = [];
   document.querySelectorAll('*').forEach(el => {
     const zIndex = window.getComputedStyle(el).zIndex;
     if (zIndex !== 'auto' && parseInt(zIndex) > 1000) {
       highZIndexElements.push({
-        element: el.tagName + (el.className ? '.' + el.className.split(' ')[0] : ''),
-        zIndex: parseInt(zIndex)
+        element:
+          el.tagName + (el.className ? '.' + el.className.split(' ')[0] : ''),
+        zIndex: parseInt(zIndex),
       });
     }
   });
-  
+
   // Sort by z-index
   highZIndexElements.sort((a, b) => b.zIndex - a.zIndex);
-  
+
   console.log('🔝 Top 10 highest z-index elements:');
   highZIndexElements.slice(0, 10).forEach((item, index) => {
     console.log(`  ${index + 1}. ${item.element}: z-index ${item.zIndex}`);
   });
-  
+
   // Test clicking a filter dropdown
   console.log('');
   console.log('🖱️ Click a filter dropdown and run this next:');
@@ -195,28 +212,32 @@ function testFilterDropdowns() {
 // Test if dropdown content appears
 function testDropdownContent() {
   console.log('🧪 Testing Dropdown Content...');
-  
+
   // Look for Radix UI portal content
   const portals = document.querySelectorAll('[data-radix-portal]');
   console.log('🚪 Found', portals.length, 'Radix portals');
-  
+
   // Look for SelectContent
   const selectContent = document.querySelectorAll('[role="listbox"]');
-  console.log('📋 Found', selectContent.length, 'listbox elements (SelectContent)');
-  
+  console.log(
+    '📋 Found',
+    selectContent.length,
+    'listbox elements (SelectContent)'
+  );
+
   if (selectContent.length > 0) {
     selectContent.forEach((content, index) => {
       const items = content.querySelectorAll('[role="option"]');
       const display = window.getComputedStyle(content).display;
       const visibility = window.getComputedStyle(content).visibility;
       const zIndex = window.getComputedStyle(content).zIndex;
-      
+
       console.log(`  Listbox ${index + 1}:`);
       console.log(`    Items: ${items.length}`);
       console.log(`    Display: ${display}`);
       console.log(`    Visibility: ${visibility}`);
       console.log(`    Z-index: ${zIndex}`);
-      
+
       if (items.length > 0) {
         console.log('    ✅ Options are present');
       } else {
@@ -233,6 +254,7 @@ testFilterDropdowns();
 ```
 
 **Expected Output:**
+
 ```
 🔍 Found 3 dropdown triggers
   Filter 1: "Lifecycle filter" = "All statuses"
@@ -248,6 +270,7 @@ testFilterDropdowns();
 ```
 
 **If filter options don't show:**
+
 1. Check if SelectContent has `display: none`
 2. Check if z-index is too low (should be > 1000)
 3. Check browser console for Radix UI errors
@@ -262,33 +285,35 @@ Run this in browser console:
 // Test search input and event handling
 function testSearchFunctionality() {
   console.log('🧪 Testing Search Functionality...');
-  
+
   // Find search input
   const searchInput = document.getElementById('promoter-search');
-  
+
   if (!searchInput) {
     console.error('❌ Search input not found!');
     return;
   }
-  
+
   console.log('✅ Search input found');
   console.log('  Current value:', searchInput.value);
   console.log('  Placeholder:', searchInput.placeholder);
-  
+
   // Check for notifications panel
   const notificationPanel = document.querySelector('[class*="notification"]');
-  const notificationButton = document.querySelector('button[aria-label*="notification" i]');
-  
+  const notificationButton = document.querySelector(
+    'button[aria-label*="notification" i]'
+  );
+
   console.log('');
   console.log('🔔 Notification elements:');
   console.log('  Panel:', notificationPanel ? '✅ Found' : '❌ Not found');
   console.log('  Button:', notificationButton ? '✅ Found' : '❌ Not found');
-  
+
   if (notificationPanel) {
     const panelZIndex = window.getComputedStyle(notificationPanel).zIndex;
     console.log('  Panel z-index:', panelZIndex);
   }
-  
+
   // Check search input z-index and position
   const searchContainer = searchInput.closest('.relative');
   if (searchContainer) {
@@ -296,25 +321,30 @@ function testSearchFunctionality() {
     console.log('');
     console.log('🔍 Search container:');
     console.log('  Z-index:', containerZIndex);
-    console.log('  Position:', window.getComputedStyle(searchContainer).position);
+    console.log(
+      '  Position:',
+      window.getComputedStyle(searchContainer).position
+    );
   }
-  
+
   // Test search input typing
   console.log('');
   console.log('⌨️ Simulating search input...');
-  
+
   // Store original value
   const originalValue = searchInput.value;
-  
+
   // Simulate typing
   searchInput.value = 'test search';
   searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-  
+
   setTimeout(() => {
     console.log('✅ Search value changed to:', searchInput.value);
-    
+
     // Check if notification panel opened unexpectedly
-    const panelAfter = document.querySelector('[class*="notification"][style*="display"]');
+    const panelAfter = document.querySelector(
+      '[class*="notification"][style*="display"]'
+    );
     if (panelAfter) {
       const display = window.getComputedStyle(panelAfter).display;
       if (display !== 'none') {
@@ -325,7 +355,7 @@ function testSearchFunctionality() {
     } else {
       console.log('✅ No notification panel interference');
     }
-    
+
     // Restore original value
     searchInput.value = originalValue;
     searchInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -337,9 +367,10 @@ testSearchFunctionality();
 ```
 
 **Expected Output:**
+
 ```
 ✅ Search input found
-  Current value: 
+  Current value:
   Placeholder: Search by name, contact, ID...
 
 🔔 Notification elements:
@@ -357,6 +388,7 @@ testSearchFunctionality();
 ```
 
 **If notification panel opens:**
+
 - There's a JavaScript event handler conflict
 - Check for keyboard shortcut conflicts (Ctrl+K, etc.)
 - Check if notification panel has a global click listener
@@ -371,15 +403,15 @@ testSearchFunctionality();
 // Clear all localStorage and caches
 function clearAllCaches() {
   console.log('🧹 Clearing all caches...');
-  
+
   // Clear localStorage
   localStorage.clear();
   console.log('✅ localStorage cleared');
-  
+
   // Clear sessionStorage
   sessionStorage.clear();
   console.log('✅ sessionStorage cleared');
-  
+
   // Clear service workers
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -389,7 +421,7 @@ function clearAllCaches() {
       console.log('✅ Service workers cleared');
     });
   }
-  
+
   console.log('');
   console.log('✅ All caches cleared!');
   console.log('🔄 Please refresh the page (Ctrl+Shift+R or Cmd+Shift+R)');
@@ -420,7 +452,7 @@ Run this SQL query in your Supabase dashboard to verify data:
 
 ```sql
 -- Get promoter counts directly from database
-SELECT 
+SELECT
   COUNT(*) as total_promoters,
   COUNT(*) FILTER (WHERE status = 'active') as active_promoters,
   COUNT(*) FILTER (WHERE id_card_expiry_date < NOW()) as expired_ids,
@@ -441,24 +473,28 @@ Compare these numbers with what the UI shows.
 After running all diagnostic scripts, answer these questions:
 
 ### Metrics Issue:
+
 - [ ] Does `/api/dashboard/promoter-metrics` return data?
 - [ ] Are the numbers from the API correct?
 - [ ] Do the API numbers match the SQL query results?
 - [ ] Is the frontend using the API data or calculating locally?
 
 ### View Mode Issue:
+
 - [ ] Do the Grid/Cards buttons exist in the DOM?
 - [ ] Does clicking them update localStorage?
 - [ ] Does refreshing the page respect the localStorage value?
 - [ ] Are there any React errors in the console when switching views?
 
 ### Filter Dropdowns Issue:
+
 - [ ] Do the dropdown triggers exist?
 - [ ] Does clicking them show the SelectContent?
 - [ ] Are there options inside the SelectContent?
 - [ ] Is the z-index high enough (>1000)?
 
 ### Search Issue:
+
 - [ ] Does the search input exist?
 - [ ] Does typing in it trigger any unexpected events?
 - [ ] Does the notification panel open when typing?
@@ -480,5 +516,3 @@ This will help identify the exact root cause of each issue!
 **Created by:** AI Diagnostic System  
 **Date:** October 29, 2025  
 **Version:** 1.0
-
-

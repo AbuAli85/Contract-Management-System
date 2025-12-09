@@ -80,7 +80,9 @@ interface SimpleContractGeneratorProps {
   pageTitle?: string;
 }
 
-export default function SimpleContractGenerator({ pageTitle = "Quick Contract Generator" }: SimpleContractGeneratorProps) {
+export default function SimpleContractGenerator({
+  pageTitle = 'Quick Contract Generator',
+}: SimpleContractGeneratorProps) {
   const [promoters, setPromoters] = useState<Promoter[]>([]);
   const [allParties, setAllParties] = useState<Party[]>([]);
   const [clients, setClients] = useState<Party[]>([]);
@@ -386,7 +388,7 @@ export default function SimpleContractGenerator({ pageTitle = "Quick Contract Ge
       if (result.success) {
         // Enhanced success message with Make.com status
         let successMessage = `Contract generated successfully using ${generationMethod} method`;
-        
+
         if (generationMethod === 'makecom' && result.data?.makecom) {
           const makecom = result.data.makecom;
           if (makecom.success) {
@@ -769,13 +771,16 @@ export default function SimpleContractGenerator({ pageTitle = "Quick Contract Ge
                 <Input
                   id='contract_name'
                   value={formData.contract_name}
-                  onChange={e => handleInputChange('contract_name', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('contract_name', e.target.value)
+                  }
                   placeholder='e.g., "eXtra Muscat - Sales Promoter Contract" or "United Electronics - Marketing Specialist"'
                   disabled={generating}
                   className='font-medium text-base'
                 />
                 <p className='text-xs text-muted-foreground'>
-                  This name will appear in contract lists, reports, and on the Manage Parties page
+                  This name will appear in contract lists, reports, and on the
+                  Manage Parties page
                 </p>
               </div>
 
@@ -1058,7 +1063,8 @@ export default function SimpleContractGenerator({ pageTitle = "Quick Contract Ge
                     Generating contract...
                   </p>
                   <p className='text-sm text-blue-700 dark:text-blue-300'>
-                    Please wait while we process your request. This may take a few moments.
+                    Please wait while we process your request. This may take a
+                    few moments.
                   </p>
                 </div>
               </div>

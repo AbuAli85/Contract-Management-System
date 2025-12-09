@@ -1,10 +1,12 @@
 # Badge Overload Investigation
 
 ## Issue Report
+
 **Severity**: High  
 **Status**: 🔍 Investigating
 
 Numbered badges (3, 162, etc.) appearing on virtually every UI element:
+
 - Navigation menu items
 - Action buttons
 - Filter controls
@@ -27,6 +29,7 @@ After comprehensive search, the codebase is **NOT** adding arbitrary numbered ba
 5. **Metric cards**: Show legitimate statistics (total promoters, active count, etc.)
 
 ### Files Checked
+
 - ✅ `components/sidebar.tsx` - Only "New"/"Active" text badges
 - ✅ `components/permission-aware-sidebar.tsx` - Badge: "NEW" on General Contracts
 - ✅ `app/[locale]/promoters/page.tsx` - Debug component dev-only
@@ -42,12 +45,14 @@ After comprehensive search, the codebase is **NOT** adding arbitrary numbered ba
 ### 1. Browser Extension (Most Likely ⭐)
 
 **Candidates**:
+
 - **React DevTools** - Can show render counts
 - **Accessibility Testing Tools** - Add numbered overlays
 - **SEO/Performance Extensions** - Add analytics badges
 - **Testing/QA Extensions** - Show element counts
 
 **How to Test**:
+
 ```bash
 # Test in Incognito Mode (disables most extensions)
 # Open Chrome/Edge Incognito
@@ -60,10 +65,11 @@ After comprehensive search, the codebase is **NOT** adding arbitrary numbered ba
 **Possible Issue**: Cached service worker from development build
 
 **How to Fix**:
+
 ```javascript
 // In browser DevTools console
-navigator.serviceWorker.getRegistrations().then(function(registrations) {
-  for(let registration of registrations) {
+navigator.serviceWorker.getRegistrations().then(function (registrations) {
+  for (let registration of registrations) {
     registration.unregister();
     console.log('Service worker unregistered:', registration);
   }
@@ -78,6 +84,7 @@ location.reload(true);
 **Check**: Vercel dashboard → Project → Analytics → Speed Insights
 
 **Disable**:
+
 ```tsx
 // In app/layout.tsx or app/providers.tsx
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -89,6 +96,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 ### 4. CSS Z-Index Debug Mode
 
 **Check global CSS** for debugging styles:
+
 ```css
 /* Sometimes left in from development */
 * {
@@ -106,6 +114,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 ## Diagnostic Steps
 
 ### Step 1: Browser Extension Test
+
 1. Open **Incognito/Private window**
 2. Navigate to https://portal.thesmartpro.io
 3. **Result**:
@@ -113,6 +122,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
    - Badges still there → Continue to Step 2
 
 ### Step 2: Service Worker Check
+
 1. Open browser DevTools (F12)
 2. Go to **Application** tab
 3. Check **Service Workers** section
@@ -123,6 +133,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
    - Badges still there → Continue to Step 3
 
 ### Step 3: Network Request Inspection
+
 1. Open DevTools → **Network** tab
 2. Hard refresh (Ctrl+Shift+R)
 3. Check for any injected scripts:
@@ -133,6 +144,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
    - No third-party scripts → Continue to Step 4
 
 ### Step 4: Element Inspection
+
 1. **Right-click** on a numbered badge
 2. Select **Inspect Element**
 3. Check the HTML structure:
@@ -197,22 +209,22 @@ return (
 
 ### Legitimate Badges
 
-| Location | Badge | Purpose | Acceptable |
-|----------|-------|---------|------------|
-| Notifications icon | Unread count | Show pending items | ✅ YES |
-| "General Contracts" nav | "New" text | Feature announcement | ✅ YES |
-| "View Contracts" nav | "Active" text | Status indicator | ✅ YES (temporary) |
-| Metric cards | Statistics | Show system metrics | ✅ YES |
-| Status badges | Active/Expired/etc | Document status | ✅ YES |
+| Location                | Badge              | Purpose              | Acceptable         |
+| ----------------------- | ------------------ | -------------------- | ------------------ |
+| Notifications icon      | Unread count       | Show pending items   | ✅ YES             |
+| "General Contracts" nav | "New" text         | Feature announcement | ✅ YES             |
+| "View Contracts" nav    | "Active" text      | Status indicator     | ✅ YES (temporary) |
+| Metric cards            | Statistics         | Show system metrics  | ✅ YES             |
+| Status badges           | Active/Expired/etc | Document status      | ✅ YES             |
 
 ### Remove These (If Found)
 
-| Location | Badge | Reason | Action |
-|----------|-------|--------|--------|
-| Every button | 3, 42, 162, etc. | Debug/test artifact | ❌ REMOVE |
-| Pagination links | Page numbers as badges | Redundant | ❌ REMOVE |
-| Filter options | Counts | Visual clutter | ❌ REMOVE |
-| Tab navigation | Numeric IDs | Debug artifact | ❌ REMOVE |
+| Location         | Badge                  | Reason              | Action    |
+| ---------------- | ---------------------- | ------------------- | --------- |
+| Every button     | 3, 42, 162, etc.       | Debug/test artifact | ❌ REMOVE |
+| Pagination links | Page numbers as badges | Redundant           | ❌ REMOVE |
+| Filter options   | Counts                 | Visual clutter      | ❌ REMOVE |
+| Tab navigation   | Numeric IDs            | Debug artifact      | ❌ REMOVE |
 
 ---
 
@@ -238,6 +250,7 @@ return (
 ## Recommended Actions
 
 ### Immediate (User Can Do)
+
 1. **Test in Incognito mode** to rule out extensions
 2. **Check installed browser extensions**:
    - React DevTools
@@ -247,16 +260,19 @@ return (
 4. **Try different browser** (Edge, Firefox, Chrome)
 
 ### If Extension-Based
+
 - Disable extensions one by one
 - Identify the culprit
 - Configure or remove
 
 ### If Code-Based (Unlikely)
+
 - Run diagnostic queries above
 - Remove found debug badges
 - Deploy hotfix
 
 ### If Service Worker
+
 - Unregister workers
 - Clear cache
 - Hard refresh
@@ -266,11 +282,13 @@ return (
 ## Next Steps
 
 **User Action Required**:
+
 1. Take screenshot showing the numbered badges
 2. Open Incognito window and check if badges persist
 3. Report back with findings
 
 **Then we can**:
+
 - Identify exact cause
 - Provide specific fix
 - Implement preventive measures
@@ -316,15 +334,16 @@ export function DevBadge({ children, ...props }: BadgeProps) {
 ## Support
 
 If badges persist after:
+
 - Testing in Incognito
 - Clearing cache
 - Trying different browser
 
 Then provide:
+
 - Screenshot of numbered badge
 - Browser and version
 - Inspect Element HTML of badge
 - Browser extensions list
 
 This will help pinpoint the exact cause.
-

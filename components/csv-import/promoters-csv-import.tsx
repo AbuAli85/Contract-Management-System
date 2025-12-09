@@ -1,16 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Download, AlertTriangle, CheckCircle, FileText, Loader2 } from 'lucide-react';
-import { 
-  parseCSV, 
-  validateAndTransformCSV, 
-  downloadCSVTemplate, 
+import {
+  Upload,
+  Download,
+  AlertTriangle,
+  CheckCircle,
+  FileText,
+  Loader2,
+} from 'lucide-react';
+import {
+  parseCSV,
+  validateAndTransformCSV,
+  downloadCSVTemplate,
   validators,
   transformers,
   type CSVColumn,
@@ -76,7 +89,7 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'email',
     label: 'Email',
     required: false,
-    validator: (value) => value ? validators.email(value) : null,
+    validator: value => (value ? validators.email(value) : null),
     transformer: transformers.nullIfEmpty,
     example: 'john.doe@example.com',
   },
@@ -84,7 +97,7 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'phone',
     label: 'Phone',
     required: false,
-    validator: (value) => value ? validators.phone(value) : null,
+    validator: value => (value ? validators.phone(value) : null),
     transformer: transformers.nullIfEmpty,
     example: '+971501234567',
   },
@@ -92,7 +105,7 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'mobile_number',
     label: 'Mobile Number',
     required: false,
-    validator: (value) => value ? validators.phone(value) : null,
+    validator: value => (value ? validators.phone(value) : null),
     transformer: transformers.nullIfEmpty,
     example: '+971501234567',
   },
@@ -107,20 +120,22 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'date_of_birth',
     label: 'Date of Birth',
     required: false,
-    validator: (value) => value ? validators.date(value) : null,
-    transformer: (value) => value ? transformers.date(value) : null,
+    validator: value => (value ? validators.date(value) : null),
+    transformer: value => (value ? transformers.date(value) : null),
     example: '1990-01-15',
   },
   {
     key: 'gender',
     label: 'Gender',
     required: false,
-    validator: (value) => {
+    validator: value => {
       if (!value) return null;
       const valid = ['male', 'female', 'other'];
-      return valid.includes(value.toLowerCase()) ? null : 'Must be: male, female, or other';
+      return valid.includes(value.toLowerCase())
+        ? null
+        : 'Must be: male, female, or other';
     },
-    transformer: (value) => value ? value.toLowerCase() : null,
+    transformer: value => (value ? value.toLowerCase() : null),
     example: 'male',
   },
   {
@@ -141,10 +156,11 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'employer_id',
     label: 'Employer ID',
     required: false,
-    validator: (value) => {
+    validator: value => {
       if (!value) return null;
       // UUID validation
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       return uuidRegex.test(value) ? null : 'Must be a valid UUID';
     },
     transformer: transformers.nullIfEmpty,
@@ -154,10 +170,11 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'company_id',
     label: 'Company ID',
     required: false,
-    validator: (value) => {
+    validator: value => {
       if (!value) return null;
       // UUID validation
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       return uuidRegex.test(value) ? null : 'Must be a valid UUID';
     },
     transformer: transformers.nullIfEmpty,
@@ -167,20 +184,22 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'status',
     label: 'Status',
     required: false,
-    validator: (value) => {
+    validator: value => {
       if (!value) return null;
       const valid = ['active', 'inactive', 'pending'];
-      return valid.includes(value.toLowerCase()) ? null : 'Must be: active, inactive, or pending';
+      return valid.includes(value.toLowerCase())
+        ? null
+        : 'Must be: active, inactive, or pending';
     },
-    transformer: (value) => value ? value.toLowerCase() : 'active',
+    transformer: value => (value ? value.toLowerCase() : 'active'),
     example: 'active',
   },
   {
     key: 'id_card_expiry_date',
     label: 'ID Card Expiry Date',
     required: false,
-    validator: (value) => value ? validators.date(value) : null,
-    transformer: (value) => value ? transformers.date(value) : null,
+    validator: value => (value ? validators.date(value) : null),
+    transformer: value => (value ? transformers.date(value) : null),
     example: '2025-12-31',
   },
   {
@@ -194,15 +213,16 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     key: 'passport_expiry_date',
     label: 'Passport Expiry Date',
     required: false,
-    validator: (value) => value ? validators.date(value) : null,
-    transformer: (value) => value ? transformers.date(value) : null,
+    validator: value => (value ? validators.date(value) : null),
+    transformer: value => (value ? transformers.date(value) : null),
     example: '2028-12-31',
   },
 ];
 
 export function PromotersCSVImport() {
   const [file, setFile] = useState<File | null>(null);
-  const [parseResult, setParseResult] = useState<CSVParseResult<PromoterCSVRow> | null>(null);
+  const [parseResult, setParseResult] =
+    useState<CSVParseResult<PromoterCSVRow> | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [updateOnConflict, setUpdateOnConflict] = useState(false);
@@ -223,17 +243,23 @@ export function PromotersCSVImport() {
 
     try {
       const { content } = await parseCSV(selectedFile);
-      const result = validateAndTransformCSV<PromoterCSVRow>(content, PROMOTER_COLUMNS);
+      const result = validateAndTransformCSV<PromoterCSVRow>(
+        content,
+        PROMOTER_COLUMNS
+      );
       setParseResult(result);
     } catch (error) {
       console.error('Error parsing CSV:', error);
       setParseResult({
         data: [],
-        errors: [{
-          row: 0,
-          message: error instanceof Error ? error.message : 'Failed to parse CSV',
-          severity: 'critical',
-        }],
+        errors: [
+          {
+            row: 0,
+            message:
+              error instanceof Error ? error.message : 'Failed to parse CSV',
+            severity: 'critical',
+          },
+        ],
         warnings: [],
         stats: {
           totalRows: 0,
@@ -282,7 +308,7 @@ export function PromotersCSVImport() {
       try {
         // Find employer ID - support both direct UUID and name matching
         let employer_id = null;
-        
+
         // Priority 1: Direct UUID in "Employer ID" or "Company ID" column
         if (row.employer_id) {
           employer_id = row.employer_id;
@@ -294,7 +320,9 @@ export function PromotersCSVImport() {
           const empName = row.employer_name.toLowerCase();
           employer_id = employerMap.get(empName) || null;
           if (!employer_id) {
-            errors.push(`Row ${i + 2}: Employer "${row.employer_name}" not found`);
+            errors.push(
+              `Row ${i + 2}: Employer "${row.employer_name}" not found`
+            );
           }
         }
 
@@ -348,21 +376,19 @@ export function PromotersCSVImport() {
               .eq('id', existingPromoter.id);
           } else {
             // Insert new record
-            result = await supabase
-              .from('promoters')
-              .insert(promoterData);
+            result = await supabase.from('promoters').insert(promoterData);
           }
         } else {
           // Regular insert (will fail on duplicate)
-          result = await supabase
-            .from('promoters')
-            .insert(promoterData);
+          result = await supabase.from('promoters').insert(promoterData);
         }
 
         if (result.error) {
           if (result.error.code === '23505' && !updateOnConflict) {
             // Duplicate key error - this is expected when updateOnConflict is false
-            errors.push(`Row ${i + 2}: Duplicate ID card number (${row.id_card_number}) - already exists`);
+            errors.push(
+              `Row ${i + 2}: Duplicate ID card number (${row.id_card_number}) - already exists`
+            );
           } else {
             errors.push(`Row ${i + 2}: ${result.error.message}`);
           }
@@ -371,18 +397,20 @@ export function PromotersCSVImport() {
           successCount++;
         }
       } catch (error) {
-        errors.push(`Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         failedCount++;
       }
 
       setImportProgress(Math.round(((i + 1) / parseResult.data.length) * 100));
     }
 
-    setImportResult({ 
-      success: successCount, 
-      failed: failedCount, 
-      errors, 
-      updated: updateOnConflict 
+    setImportResult({
+      success: successCount,
+      failed: failedCount,
+      errors,
+      updated: updateOnConflict,
     });
     setIsImporting(false);
   };
@@ -394,33 +422,34 @@ export function PromotersCSVImport() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+        <CardTitle className='flex items-center gap-2'>
+          <FileText className='h-5 w-5' />
           Import Promoters from CSV
         </CardTitle>
         <CardDescription>
-          Upload a CSV file to bulk import promoters. Download the template to see the required format.
+          Upload a CSV file to bulk import promoters. Download the template to
+          see the required format.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className='space-y-6'>
         {/* Download Template */}
-        <div className="flex items-center gap-4">
+        <div className='flex items-center gap-4'>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={handleDownloadTemplate}
-            className="flex items-center gap-2"
+            className='flex items-center gap-2'
           >
-            <Download className="h-4 w-4" />
+            <Download className='h-4 w-4' />
             Download CSV Template
           </Button>
         </div>
 
         {/* File Upload */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Upload CSV File</label>
+        <div className='space-y-2'>
+          <label className='text-sm font-medium'>Upload CSV File</label>
           <Input
-            type="file"
-            accept=".csv"
+            type='file'
+            accept='.csv'
             onChange={handleFileChange}
             disabled={isImporting}
           />
@@ -428,49 +457,53 @@ export function PromotersCSVImport() {
 
         {/* Parse Results */}
         {parseResult && (
-          <div className="space-y-4">
+          <div className='space-y-4'>
             {/* Statistics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-2xl font-bold text-blue-900">
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+              <div className='p-4 bg-blue-50 rounded-lg border border-blue-200'>
+                <div className='text-2xl font-bold text-blue-900'>
                   {parseResult.stats.totalRows}
                 </div>
-                <div className="text-sm text-blue-700">Total Rows</div>
+                <div className='text-sm text-blue-700'>Total Rows</div>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-2xl font-bold text-green-900">
+              <div className='p-4 bg-green-50 rounded-lg border border-green-200'>
+                <div className='text-2xl font-bold text-green-900'>
                   {parseResult.stats.validRows}
                 </div>
-                <div className="text-sm text-green-700">Valid Rows</div>
+                <div className='text-sm text-green-700'>Valid Rows</div>
               </div>
-              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="text-2xl font-bold text-red-900">
+              <div className='p-4 bg-red-50 rounded-lg border border-red-200'>
+                <div className='text-2xl font-bold text-red-900'>
                   {parseResult.stats.invalidRows}
                 </div>
-                <div className="text-sm text-red-700">Invalid Rows</div>
+                <div className='text-sm text-red-700'>Invalid Rows</div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-2xl font-bold text-gray-900">
+              <div className='p-4 bg-gray-50 rounded-lg border border-gray-200'>
+                <div className='text-2xl font-bold text-gray-900'>
                   {parseResult.stats.emptyRows}
                 </div>
-                <div className="text-sm text-gray-700">Empty Rows</div>
+                <div className='text-sm text-gray-700'>Empty Rows</div>
               </div>
             </div>
 
             {/* Errors */}
             {parseResult.errors.length > 0 && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Found {parseResult.errors.length} Error(s)</AlertTitle>
+              <Alert variant='destructive'>
+                <AlertTriangle className='h-4 w-4' />
+                <AlertTitle>
+                  Found {parseResult.errors.length} Error(s)
+                </AlertTitle>
                 <AlertDescription>
-                  <div className="mt-2 max-h-60 overflow-y-auto space-y-1">
+                  <div className='mt-2 max-h-60 overflow-y-auto space-y-1'>
                     {parseResult.errors.slice(0, 10).map((error, idx) => (
-                      <div key={idx} className="text-sm">
-                        Row {error.row}{error.column ? ` - ${error.column}` : ''}: {error.message}
+                      <div key={idx} className='text-sm'>
+                        Row {error.row}
+                        {error.column ? ` - ${error.column}` : ''}:{' '}
+                        {error.message}
                       </div>
                     ))}
                     {parseResult.errors.length > 10 && (
-                      <div className="text-sm font-medium">
+                      <div className='text-sm font-medium'>
                         ...and {parseResult.errors.length - 10} more errors
                       </div>
                     )}
@@ -481,46 +514,48 @@ export function PromotersCSVImport() {
 
             {/* Import Options */}
             {parseResult.data.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
+              <div className='space-y-4'>
+                <div className='flex items-center space-x-2'>
                   <input
-                    type="checkbox"
-                    id="updateOnConflict"
+                    type='checkbox'
+                    id='updateOnConflict'
                     checked={updateOnConflict}
-                    onChange={(e) => setUpdateOnConflict(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    onChange={e => setUpdateOnConflict(e.target.checked)}
+                    className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
                   />
-                  <label htmlFor="updateOnConflict" className="text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor='updateOnConflict'
+                    className='text-sm font-medium text-gray-700'
+                  >
                     Update existing promoters if ID card number already exists
                   </label>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {updateOnConflict 
-                    ? "Existing promoters will be updated with new data from CSV"
-                    : "Import will fail if any promoter with the same ID card number already exists"
-                  }
+                <div className='text-xs text-gray-500'>
+                  {updateOnConflict
+                    ? 'Existing promoters will be updated with new data from CSV'
+                    : 'Import will fail if any promoter with the same ID card number already exists'}
                 </div>
 
                 <Button
                   onClick={handleImport}
                   disabled={isImporting || parseResult.errors.length > 0}
-                  className="w-full"
+                  className='w-full'
                 >
                   {isImporting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                       Importing... {importProgress}%
                     </>
                   ) : (
                     <>
-                      <Upload className="mr-2 h-4 w-4" />
+                      <Upload className='mr-2 h-4 w-4' />
                       Import {parseResult.data.length} Promoter(s)
                     </>
                   )}
                 </Button>
 
                 {isImporting && (
-                  <Progress value={importProgress} className="w-full" />
+                  <Progress value={importProgress} className='w-full' />
                 )}
               </div>
             )}
@@ -529,25 +564,26 @@ export function PromotersCSVImport() {
 
         {/* Import Results */}
         {importResult && (
-          <Alert variant={importResult.failed > 0 ? "default" : "default"}>
-            <CheckCircle className="h-4 w-4" />
+          <Alert variant={importResult.failed > 0 ? 'default' : 'default'}>
+            <CheckCircle className='h-4 w-4' />
             <AlertTitle>Import Complete</AlertTitle>
             <AlertDescription>
-              <div className="space-y-2">
-                <div className="flex gap-4">
-                  <Badge variant="default" className="bg-green-600">
-                    {importResult.success} {importResult.updated ? 'Updated' : 'Imported'}
+              <div className='space-y-2'>
+                <div className='flex gap-4'>
+                  <Badge variant='default' className='bg-green-600'>
+                    {importResult.success}{' '}
+                    {importResult.updated ? 'Updated' : 'Imported'}
                   </Badge>
                   {importResult.failed > 0 && (
-                    <Badge variant="destructive">
+                    <Badge variant='destructive'>
                       {importResult.failed} Failed
                     </Badge>
                   )}
                 </div>
                 {importResult.errors.length > 0 && (
-                  <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
+                  <div className='mt-2 max-h-40 overflow-y-auto space-y-1'>
                     {importResult.errors.map((error, idx) => (
-                      <div key={idx} className="text-sm text-red-600">
+                      <div key={idx} className='text-sm text-red-600'>
                         {error}
                       </div>
                     ))}
@@ -561,8 +597,8 @@ export function PromotersCSVImport() {
         {/* Preview Table */}
         {parseResult && parseResult.data.length > 0 && !importResult && (
           <div>
-            <h4 className="text-sm font-medium mb-2">Preview (First 5 Rows)</h4>
-            <div className="border rounded-lg overflow-auto max-h-96">
+            <h4 className='text-sm font-medium mb-2'>Preview (First 5 Rows)</h4>
+            <div className='border rounded-lg overflow-auto max-h-96'>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -580,20 +616,32 @@ export function PromotersCSVImport() {
                   {parseResult.data.slice(0, 5).map((row, idx) => (
                     <TableRow key={idx}>
                       <TableCell>{row?.name_en || '-'}</TableCell>
-                      <TableCell className="font-arabic">{row?.name_ar || '-'}</TableCell>
+                      <TableCell className='font-arabic'>
+                        {row?.name_ar || '-'}
+                      </TableCell>
                       <TableCell>{row?.id_card_number || '-'}</TableCell>
                       <TableCell>{row?.mobile_number || '-'}</TableCell>
                       <TableCell>{row?.email || '-'}</TableCell>
                       <TableCell>{row?.nationality || '-'}</TableCell>
                       <TableCell>
-                        {row?.employer_name || (row?.employer_id ? (
-                          <span className="text-xs text-muted-foreground" title={row.employer_id}>
-                            Set via ID
-                          </span>
-                        ) : '-')}
+                        {row?.employer_name ||
+                          (row?.employer_id ? (
+                            <span
+                              className='text-xs text-muted-foreground'
+                              title={row.employer_id}
+                            >
+                              Set via ID
+                            </span>
+                          ) : (
+                            '-'
+                          ))}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={row?.status === 'active' ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            row?.status === 'active' ? 'default' : 'secondary'
+                          }
+                        >
                           {row?.status || 'active'}
                         </Badge>
                       </TableCell>
@@ -608,4 +656,3 @@ export function PromotersCSVImport() {
     </Card>
   );
 }
-

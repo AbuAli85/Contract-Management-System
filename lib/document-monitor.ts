@@ -19,16 +19,20 @@ export class DocumentMonitor {
    */
   async checkExpirations(): Promise<ComplianceReport> {
     const supabase = await createClient();
-    
+
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysFromNow = new Date(
+      now.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
 
     try {
       // Fetch all promoters with document info
       const { data: promoters, error } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, email, id_card_expiry_date, passport_expiry_date, status');
+        .select(
+          'id, name_en, name_ar, email, id_card_expiry_date, passport_expiry_date, status'
+        );
 
       if (error) throw error;
 
@@ -93,8 +97,10 @@ export class DocumentMonitor {
 
           if (alert) {
             // Only add to main counts if ID wasn't already counted
-            const alreadyCounted = promoter.id_card_expiry_date && 
-              new Date(promoter.id_card_expiry_date) <= new Date(promoter.passport_expiry_date);
+            const alreadyCounted =
+              promoter.id_card_expiry_date &&
+              new Date(promoter.id_card_expiry_date) <=
+                new Date(promoter.passport_expiry_date);
 
             if (alert.severity === 'critical') {
               alerts.critical.push(alert);
@@ -117,7 +123,8 @@ export class DocumentMonitor {
 
       const total = promoters?.length || 0;
       const compliant = total - expiredCount - expiring30daysCount;
-      const complianceRate = total > 0 ? Math.round((compliant / total) * 100) : 0;
+      const complianceRate =
+        total > 0 ? Math.round((compliant / total) * 100) : 0;
 
       return {
         timestamp: new Date().toISOString(),
@@ -236,7 +243,9 @@ export class DocumentMonitor {
     }
 
     // Log warning alerts (expiring within 30 days) but don't spam
-    console.log(`📋 ${report.alerts.warning.length} documents expiring within 30 days`);
+    console.log(
+      `📋 ${report.alerts.warning.length} documents expiring within 30 days`
+    );
 
     return { emailsSent, notificationsCreated };
   }
@@ -246,7 +255,7 @@ export class DocumentMonitor {
    */
   private async sendAlert(alert: DocumentAlert): Promise<void> {
     const docName = alert.documentType === 'id_card' ? 'ID Card' : 'Passport';
-    
+
     console.log(`🚨 ${alert.severity.toUpperCase()} Alert:`, {
       promoter: alert.promoterName,
       document: docName,
@@ -263,7 +272,9 @@ export class DocumentMonitor {
 
       // Import email service and template
       const { sendEmail } = await import('@/lib/services/email.service');
-      const { documentExpiryEmail } = await import('@/lib/email-templates/document-expiry');
+      const { documentExpiryEmail } = await import(
+        '@/lib/email-templates/document-expiry'
+      );
 
       // Generate email content
       const emailContent = documentExpiryEmail({
@@ -318,19 +329,27 @@ export class DocumentMonitor {
   }> {
     const supabase = await createClient();
     const now = new Date();
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysFromNow = new Date(
+      now.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
 
     const { data: expired } = await supabase
       .from('promoters')
-      .select('id, name_en, name_ar, email, id_card_expiry_date, passport_expiry_date')
-      .or(`id_card_expiry_date.lt.${now.toISOString()},passport_expiry_date.lt.${now.toISOString()}`);
+      .select(
+        'id, name_en, name_ar, email, id_card_expiry_date, passport_expiry_date'
+      )
+      .or(
+        `id_card_expiry_date.lt.${now.toISOString()},passport_expiry_date.lt.${now.toISOString()}`
+      );
 
     const { data: expiringSoon } = await supabase
       .from('promoters')
-      .select('id, name_en, name_ar, email, id_card_expiry_date, passport_expiry_date')
+      .select(
+        'id, name_en, name_ar, email, id_card_expiry_date, passport_expiry_date'
+      )
       .or(
         `and(id_card_expiry_date.gte.${now.toISOString()},id_card_expiry_date.lte.${thirtyDaysFromNow.toISOString()}),` +
-        `and(passport_expiry_date.gte.${now.toISOString()},passport_expiry_date.lte.${thirtyDaysFromNow.toISOString()})`
+          `and(passport_expiry_date.gte.${now.toISOString()},passport_expiry_date.lte.${thirtyDaysFromNow.toISOString()})`
       );
 
     return {
@@ -346,10 +365,10 @@ export class DocumentMonitor {
  */
 export async function scheduledDocumentCheck(): Promise<ComplianceReport> {
   console.log('🔍 Starting scheduled document compliance check...');
-  
+
   const monitor = new DocumentMonitor();
   const report = await monitor.checkExpirations();
-  
+
   console.log('📊 Document monitoring completed:', {
     timestamp: report.timestamp,
     total: report.summary.total,
@@ -370,4 +389,3 @@ export async function scheduledDocumentCheck(): Promise<ComplianceReport> {
 
 // Re-export utility functions for backward compatibility
 export { formatDocumentType, getSeverityColor } from './document-monitor-types';
-

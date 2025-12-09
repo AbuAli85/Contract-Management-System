@@ -1,6 +1,6 @@
 /**
  * Comprehensive Tests for Metrics Service
- * 
+ *
  * Tests all metrics calculations, validation, and consistency checks
  */
 
@@ -536,4 +536,3 @@ describe('Metrics Service', () => {
     });
   });
 });
-

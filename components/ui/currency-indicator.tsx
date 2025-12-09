@@ -24,9 +24,13 @@ export function CurrencyIndicator({
     <div
       className={`inline-flex items-center gap-2 rounded-md bg-blue-50 px-3 py-1.5 text-sm text-blue-700 border border-blue-200 ${className}`}
     >
-      {showIcon && <Info className="h-4 w-4" />}
+      {showIcon && <Info className='h-4 w-4' />}
       <span>
-        All amounts in <strong>{getCurrencySymbol(currency)} {currency}</strong> ({getCurrencyName(currency)})
+        All amounts in{' '}
+        <strong>
+          {getCurrencySymbol(currency)} {currency}
+        </strong>{' '}
+        ({getCurrencyName(currency)})
       </span>
     </div>
   );
@@ -40,7 +44,10 @@ interface CurrencyBadgeProps {
 /**
  * Small badge to show currency code
  */
-export function CurrencyBadge({ currency, className = '' }: CurrencyBadgeProps) {
+export function CurrencyBadge({
+  currency,
+  className = '',
+}: CurrencyBadgeProps) {
   return (
     <span
       className={`inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 ${className}`}
@@ -49,4 +56,3 @@ export function CurrencyBadge({ currency, className = '' }: CurrencyBadgeProps) 
     </span>
   );
 }
-

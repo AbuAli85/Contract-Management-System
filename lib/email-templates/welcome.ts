@@ -131,4 +131,3 @@ Powered by Falcon Eye Group
     `,
   };
 }
-

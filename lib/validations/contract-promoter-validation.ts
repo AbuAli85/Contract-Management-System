@@ -41,7 +41,7 @@ export function validatePromoterRequirement(
   // Check if this contract type requires a promoter
   const contractType = contract.contract_type?.toLowerCase() || '';
   const status = contract.status?.toLowerCase() || 'draft';
-  const isExemptType = exemptContractTypes.some(type => 
+  const isExemptType = exemptContractTypes.some(type =>
     contractType.includes(type)
   );
   const isExemptStatus = exemptStatuses.includes(status);
@@ -164,17 +164,17 @@ export const PROMOTER_VALIDATION_RULES = {
  */
 export function doesContractTypeRequirePromoter(contractType: string): boolean {
   const type = contractType.toLowerCase();
-  
+
   // Check if it's in the not-required list
   if (PROMOTER_VALIDATION_RULES.NOT_REQUIRED_FOR.some(t => type.includes(t))) {
     return false;
   }
-  
+
   // Check if it's in the required list
   if (PROMOTER_VALIDATION_RULES.REQUIRED_FOR.some(t => type.includes(t))) {
     return true;
   }
-  
+
   // Default: require promoter (safer)
   return true;
 }
@@ -183,6 +183,7 @@ export function doesContractTypeRequirePromoter(contractType: string): boolean {
  * Helper: Check if a status allows missing promoter
  */
 export function doesStatusAllowMissingPromoter(status: string): boolean {
-  return PROMOTER_VALIDATION_RULES.EXEMPT_STATUSES.includes(status.toLowerCase());
+  return PROMOTER_VALIDATION_RULES.EXEMPT_STATUSES.includes(
+    status.toLowerCase()
+  );
 }
-

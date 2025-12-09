@@ -19,11 +19,13 @@ I've updated **all 3 sidebar components** to include the Sharaf DG link:
 ### Method 1: Via Sidebar (Easiest) ⭐
 
 1. **Start your dev server:**
+
    ```bash
    npm run dev
    ```
 
 2. **Open your app:**
+
    ```
    http://localhost:3000
    ```
@@ -33,6 +35,7 @@ I've updated **all 3 sidebar components** to include the Sharaf DG link:
 4. **Look at the sidebar** (left side of screen)
 
 5. **Find "Contract Management" section:**
+
    ```
    📋 Contract Management
       ├─ eXtra Contracts
@@ -47,11 +50,13 @@ I've updated **all 3 sidebar components** to include the Sharaf DG link:
 ### Method 2: Direct URL
 
 Just navigate to:
+
 ```
 http://localhost:3000/en/contracts/sharaf-dg
 ```
 
 Or with other locales:
+
 ```
 http://localhost:3000/ar/contracts/sharaf-dg  (Arabic)
 http://localhost:3000/contracts/sharaf-dg     (Default)
@@ -70,6 +75,7 @@ http://localhost:3000/contracts/sharaf-dg     (Default)
 ### What You Should See
 
 #### Sidebar Menu:
+
 ```
 ┌─────────────────────────────────────┐
 │  📊 Dashboard                       │
@@ -89,6 +95,7 @@ http://localhost:3000/contracts/sharaf-dg     (Default)
 ```
 
 #### When You Click It:
+
 ```
 ┌─────────────────────────────────────────────────┐
 │  🏢 Sharaf DG Deployment Letter Generator       │
@@ -123,6 +130,7 @@ http://localhost:3000/contracts/sharaf-dg     (Default)
 Run these checks:
 
 ### Check 1: Files Exist
+
 ```bash
 # In your project root
 ls components/SharafDGDeploymentForm.tsx
@@ -132,6 +140,7 @@ ls app/[locale]/contracts/sharaf-dg/page.tsx
 ```
 
 ### Check 2: Sidebar Updated
+
 ```bash
 # Check sidebar has the entry
 grep -i "sharaf" components/sidebar.tsx
@@ -142,6 +151,7 @@ grep -i "sharaf" components/permission-aware-sidebar.tsx
 ```
 
 ### Check 3: Server Running
+
 ```bash
 # Should see:
 # ✓ Ready in Xs
@@ -150,6 +160,7 @@ grep -i "sharaf" components/permission-aware-sidebar.tsx
 ```
 
 ### Check 4: No TypeScript Errors
+
 ```bash
 npm run build
 
@@ -184,11 +195,13 @@ open http://localhost:3000/en/contracts/sharaf-dg
 ### "Can't find the link in sidebar"
 
 **Possible causes:**
+
 1. **Wrong sidebar component in use**
    - Check `app/[locale]/layout.tsx` to see which sidebar is imported
    - I updated all 3, but you might be using a different one
 
 2. **Cache issue**
+
    ```bash
    rm -rf .next
    npm run dev
@@ -201,6 +214,7 @@ open http://localhost:3000/en/contracts/sharaf-dg
 ### "Page shows 404"
 
 **Solutions:**
+
 ```bash
 # 1. Restart dev server
 npm run dev
@@ -215,6 +229,7 @@ npm run build
 ### "Sidebar shows but nothing happens when I click"
 
 **Check:**
+
 1. Browser console for errors (F12)
 2. Network tab for failed requests
 3. Next.js terminal for errors
@@ -235,6 +250,7 @@ On mobile devices:
 ## 🎨 What the Badge Looks Like
 
 The sidebar entry shows:
+
 ```
 🏢 Sharaf DG Deployment [PDF]
    └─ Badge color: Blue/Secondary
@@ -288,6 +304,7 @@ fetch('/api/contracts/test/generate-pdf')
 ### Option 1: Search in App
 
 If your app has a search feature:
+
 1. Press Ctrl+K or Cmd+K
 2. Type "Sharaf"
 3. Should show "Sharaf DG Deployment"
@@ -323,11 +340,10 @@ If you're using a custom sidebar I haven't updated, add this:
 **Sidebar:** Updated in all 3 sidebar components  
 **Location:** Under "Contract Management" section  
 **Badge:** "PDF" (blue/secondary)  
-**Icon:** Building2 (🏢)  
+**Icon:** Building2 (🏢)
 
 **Just start your dev server and look for it in the sidebar!** 🚀
 
 ---
 
 **Need more help?** Run through `SHARAF_DG_TESTING_GUIDE.md` for complete testing!
-

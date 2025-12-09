@@ -25,12 +25,12 @@ export function RecentActivityWidget(props: WidgetProps) {
   const fetchActivities = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const limit = props.config.filters?.limit || 10;
       const response = await fetch(`/api/dashboard/activity?limit=${limit}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setActivities(data.activities || []);
       } else {
@@ -46,23 +46,23 @@ export function RecentActivityWidget(props: WidgetProps) {
 
   useEffect(() => {
     fetchActivities();
-    
+
     const interval = props.config.refreshInterval || 30;
     const timer = setInterval(fetchActivities, interval * 1000);
-    
+
     return () => clearInterval(timer);
   }, [props.config.refreshInterval, props.config.filters?.limit]);
 
   const getIcon = (type: string) => {
     switch (type) {
       case 'contract':
-        return <FileText className="h-4 w-4" />;
+        return <FileText className='h-4 w-4' />;
       case 'promoter':
-        return <Users className="h-4 w-4" />;
+        return <Users className='h-4 w-4' />;
       case 'party':
-        return <Building className="h-4 w-4" />;
+        return <Building className='h-4 w-4' />;
       default:
-        return <Activity className="h-4 w-4" />;
+        return <Activity className='h-4 w-4' />;
     }
   };
 
@@ -82,50 +82,56 @@ export function RecentActivityWidget(props: WidgetProps) {
   return (
     <BaseWidget
       {...props}
-      title="Recent Activity"
-      description="Latest changes and updates"
-      icon={<Activity className="h-4 w-4" />}
+      title='Recent Activity'
+      description='Latest changes and updates'
+      icon={<Activity className='h-4 w-4' />}
       isLoading={isLoading}
       error={error}
       onRefresh={fetchActivities}
     >
       {activities.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center p-4">
-          <Activity className="h-12 w-12 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground">No recent activity</p>
+        <div className='flex flex-col items-center justify-center h-full text-center p-4'>
+          <Activity className='h-12 w-12 text-muted-foreground mb-2' />
+          <p className='text-sm text-muted-foreground'>No recent activity</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {activities.map((activity) => (
+        <div className='space-y-2'>
+          {activities.map(activity => (
             <div
               key={activity.id}
-              className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              className='p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors'
             >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">
+              <div className='flex items-start gap-3'>
+                <div className='flex-shrink-0 mt-0.5'>
                   {getIcon(activity.type)}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className='flex-1 min-w-0'>
+                  <div className='flex items-center gap-2 mb-1'>
                     {activity.link ? (
                       <Link
                         href={activity.link}
-                        className="text-sm font-medium hover:underline truncate"
+                        className='text-sm font-medium hover:underline truncate'
                       >
                         {activity.title}
                       </Link>
                     ) : (
-                      <p className="text-sm font-medium truncate">{activity.title}</p>
+                      <p className='text-sm font-medium truncate'>
+                        {activity.title}
+                      </p>
                     )}
-                    <span className={`text-xs font-medium ${getActionColor(activity.action)}`}>
+                    <span
+                      className={`text-xs font-medium ${getActionColor(activity.action)}`}
+                    >
                       {activity.action}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className='text-xs text-muted-foreground truncate'>
                     {activity.description}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                  <p className='text-xs text-muted-foreground mt-1'>
+                    {formatDistanceToNow(new Date(activity.timestamp), {
+                      addSuffix: true,
+                    })}
                   </p>
                 </div>
               </div>
@@ -136,4 +142,3 @@ export function RecentActivityWidget(props: WidgetProps) {
     </BaseWidget>
   );
 }
-

@@ -8,6 +8,7 @@
 ## 🎯 Testing Overview
 
 We'll test:
+
 1. ✅ Route accessibility
 2. ✅ Sidebar navigation
 3. ✅ Form loading
@@ -24,12 +25,14 @@ We'll test:
 Before testing, ensure:
 
 - [ ] **Database migration applied**
+
   ```bash
   supabase db push
   # Check for: 20251026_add_contract_pdf_fields.sql
   ```
 
 - [ ] **Environment variables set** (in `.env.local`)
+
   ```bash
   MAKE_CONTRACT_PDF_WEBHOOK_URL=https://hook.eu2.make.com/...
   PDF_WEBHOOK_SECRET=your-secret-here
@@ -38,6 +41,7 @@ Before testing, ensure:
   ```
 
 - [ ] **Development server running**
+
   ```bash
   npm run dev
   # Should be on http://localhost:3000
@@ -52,6 +56,7 @@ Before testing, ensure:
 ### Steps:
 
 1. **Direct URL access:**
+
    ```
    Navigate to: http://localhost:3000/en/contracts/sharaf-dg
    ```
@@ -71,6 +76,7 @@ Before testing, ensure:
 ### ❌ If page doesn't load:
 
 **Check:**
+
 - File exists: `app/[locale]/contracts/sharaf-dg/page.tsx`
 - File exists: `components/SharafDGDeploymentForm.tsx`
 - No TypeScript errors: `npm run build`
@@ -87,6 +93,7 @@ Before testing, ensure:
 2. **Look for "Sharaf DG Deployment" link** under "Contract Management" section
 
 3. **Expected appearance:**
+
    ```
    📋 Contract Management
       ├─ eXtra Contracts
@@ -104,17 +111,20 @@ Before testing, ensure:
 ### ❌ If link doesn't appear:
 
 **Check which sidebar you're using:**
+
 ```bash
 # Search for which sidebar is imported in your layout
 grep -r "from.*sidebar" app/[locale]/layout.tsx
 ```
 
 **Sidebars updated:**
+
 - ✅ `components/sidebar.tsx`
 - ✅ `components/simple-sidebar.tsx`
 - ✅ `components/permission-aware-sidebar.tsx`
 
 **If using different sidebar:** Add this entry:
+
 ```typescript
 {
   title: 'Sharaf DG Deployment',
@@ -168,6 +178,7 @@ grep -r "from.*sidebar" app/[locale]/layout.tsx
 ### ❌ If dropdowns are empty:
 
 **Check database has data:**
+
 ```sql
 -- Check promoters
 SELECT COUNT(*) FROM promoters WHERE status_enum IN ('available', 'active');
@@ -178,10 +189,11 @@ SELECT COUNT(*) FROM parties WHERE status = 'Active' AND type = 'Client';
 ```
 
 **If no data:**
+
 ```sql
 -- Create test data
 INSERT INTO parties (name_en, name_ar, type, crn, status)
-VALUES 
+VALUES
   ('Falcon Eye Group', 'مجموعة عين الصقر', 'Employer', '1234567890', 'Active'),
   ('Sharaf DG', 'شرف دي جي', 'Client', '9876543210', 'Active');
 ```
@@ -220,6 +232,7 @@ VALUES
 ### ❌ If validation doesn't work:
 
 **Check console for errors:**
+
 - Open browser DevTools (F12)
 - Look for JavaScript errors
 - Check Network tab for API errors
@@ -231,6 +244,7 @@ VALUES
 ### Steps:
 
 1. **Fill complete valid form:**
+
    ```
    Promoter: [Select one with ID card & passport images]
    Employer: Falcon Eye Group
@@ -253,7 +267,7 @@ VALUES
 
 3. **Verify in database:**
    ```sql
-   SELECT 
+   SELECT
      id,
      contract_number,
      pdf_status,
@@ -263,12 +277,14 @@ VALUES
    ORDER BY created_at DESC
    LIMIT 1;
    ```
+
    - [ ] Record exists
    - [ ] `pdf_status` = 'pending' or NULL
 
 ### ❌ If contract doesn't create:
 
 **Check API logs:**
+
 ```bash
 # In browser DevTools → Network tab
 # Look for POST to /api/contracts/...
@@ -276,6 +292,7 @@ VALUES
 ```
 
 **Common issues:**
+
 - Missing required fields in database
 - Foreign key violations (promoter/party IDs invalid)
 - Permissions issue (user can't create contracts)
@@ -308,7 +325,7 @@ VALUES
 
 4. **Verify in database:**
    ```sql
-   SELECT 
+   SELECT
      contract_number,
      pdf_status,
      pdf_url,
@@ -317,6 +334,7 @@ VALUES
    FROM contracts
    WHERE contract_number = 'TEST-SDG-2025-001';
    ```
+
    - [ ] `pdf_status` = 'generated'
    - [ ] `pdf_url` has value
    - [ ] `pdf_generated_at` is set
@@ -324,22 +342,25 @@ VALUES
 ### ❌ If PDF generation fails:
 
 **Check Make.com execution:**
+
 1. Go to Make.com dashboard
 2. Click "History"
 3. Find your scenario execution
 4. Check each module for errors
 
 **Check webhook logs:**
+
 ```sql
 SELECT * FROM webhook_logs
 WHERE contract_id = (
-  SELECT id FROM contracts 
+  SELECT id FROM contracts
   WHERE contract_number = 'TEST-SDG-2025-001'
 )
 ORDER BY received_at DESC;
 ```
 
 **Common issues:**
+
 - Make.com webhook URL wrong
 - Template ID incorrect
 - Images not accessible (check URLs are public)
@@ -376,16 +397,19 @@ ORDER BY received_at DESC;
 ### ❌ If PDF has issues:
 
 **Missing placeholders:**
+
 - Template has typo in placeholder name
 - Make.com mapping incorrect
 - Data not sent in webhook payload
 
 **Images not showing:**
+
 - URLs not publicly accessible
 - Alt text in template incorrect (must be exactly `ID_CARD_IMAGE` and `PASSPORT_IMAGE`)
 - Image format not supported
 
 **Arabic not RTL:**
+
 - Template formatting issue
 - Need to set text direction in Google Doc
 
@@ -406,13 +430,14 @@ ORDER BY received_at DESC;
 
 3. **Verify overwrite:**
    ```sql
-   SELECT 
+   SELECT
      pdf_url,
      pdf_generated_at,
      pdf_status
    FROM contracts
    WHERE contract_number = 'TEST-SDG-2025-001';
    ```
+
    - [ ] `pdf_generated_at` is newer timestamp
    - [ ] `pdf_url` might be same or different
 
@@ -563,7 +588,7 @@ Tester Signature: _______________  Date: ________
 ### Check Contract Was Created
 
 ```sql
-SELECT 
+SELECT
   id,
   contract_number,
   contract_type,
@@ -581,7 +606,7 @@ LIMIT 5;
 ### Check PDF Generation Status
 
 ```sql
-SELECT 
+SELECT
   contract_number,
   pdf_status,
   pdf_generated_at,
@@ -596,7 +621,7 @@ LIMIT 5;
 ### Check Webhook Logs
 
 ```sql
-SELECT 
+SELECT
   event_type,
   status,
   make_request_id,
@@ -615,6 +640,7 @@ LIMIT 5;
 All checkboxes should be ✅:
 
 ### Must Have:
+
 - [x] Route accessible
 - [x] Appears in sidebar
 - [x] Form loads
@@ -625,6 +651,7 @@ All checkboxes should be ✅:
 - [x] Download works
 
 ### Should Have:
+
 - [ ] Google Drive link works
 - [ ] Regeneration works
 - [ ] Error handling graceful
@@ -632,6 +659,7 @@ All checkboxes should be ✅:
 - [ ] Fast loading (<2s)
 
 ### Nice to Have:
+
 - [ ] Tooltips helpful
 - [ ] Animations smooth
 - [ ] Keyboard navigation
@@ -644,6 +672,7 @@ All checkboxes should be ✅:
 ### Issue 1: "Page Not Found"
 
 **Solution:**
+
 ```bash
 # Restart dev server
 npm run dev
@@ -656,6 +685,7 @@ npm run dev
 ### Issue 2: Dropdowns Empty
 
 **Solution:**
+
 ```sql
 -- Check data exists
 SELECT COUNT(*) FROM promoters WHERE status_enum IN ('available', 'active');
@@ -668,6 +698,7 @@ SELECT COUNT(*) FROM parties WHERE status = 'Active';
 ### Issue 3: PDF Generation Timeout
 
 **Solution:**
+
 1. Check Make.com is running
 2. Verify webhook URL is correct
 3. Check Make.com execution logs
@@ -676,6 +707,7 @@ SELECT COUNT(*) FROM parties WHERE status = 'Active';
 ### Issue 4: Images Not Embedding
 
 **Solution:**
+
 1. Check image URLs are publicly accessible:
    ```bash
    curl -I https://your-storage-url/image.jpg
@@ -688,12 +720,12 @@ SELECT COUNT(*) FROM parties WHERE status = 'Active';
 
 ## 📊 Performance Benchmarks
 
-| Metric | Target | Acceptable | Poor |
-|--------|--------|------------|------|
-| Page Load | < 1s | < 2s | > 3s |
-| Form Submit | < 500ms | < 1s | > 2s |
-| PDF Generation | < 35s | < 50s | > 60s |
-| Download Speed | Instant | < 2s | > 5s |
+| Metric         | Target  | Acceptable | Poor  |
+| -------------- | ------- | ---------- | ----- |
+| Page Load      | < 1s    | < 2s       | > 3s  |
+| Form Submit    | < 500ms | < 1s       | > 2s  |
+| PDF Generation | < 35s   | < 50s      | > 60s |
+| Download Speed | Instant | < 2s       | > 5s  |
 
 ---
 
@@ -804,4 +836,3 @@ psql $DATABASE_URL -c "SELECT column_name FROM information_schema.columns WHERE 
 **Start testing now!** Follow the steps above and check off each item. 🚀
 
 **If you encounter any issues, share the test results template and I'll help debug!**
-

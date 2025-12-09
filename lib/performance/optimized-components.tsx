@@ -1,6 +1,6 @@
 /**
  * Performance Optimized Components
- * 
+ *
  * Memoized versions of common components to prevent unnecessary re-renders
  */
 
@@ -37,12 +37,12 @@ export const MetricCard = React.memo(function MetricCard({
 
   return (
     <div className={cn('bg-white rounded-lg shadow p-6 space-y-2', className)}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
-        {Icon && <Icon className="h-5 w-5 text-gray-400" />}
+      <div className='flex items-center justify-between'>
+        <h3 className='text-sm font-medium text-gray-600'>{title}</h3>
+        {Icon && <Icon className='h-5 w-5 text-gray-400' />}
       </div>
-      <div className="space-y-1">
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <div className='space-y-1'>
+        <p className='text-2xl font-bold text-gray-900'>{value}</p>
         {change && (
           <p className={cn('text-sm font-medium', trendColors[trend])}>
             {change}
@@ -57,38 +57,46 @@ export const MetricCard = React.memo(function MetricCard({
  * Optimized Data Table Row
  * Only re-renders when its own data changes
  */
-export const DataTableRow = React.memo(function DataTableRow({
-  data,
-  columns,
-  onAction,
-}: {
-  data: Record<string, any>;
-  columns: Array<{ key: string; render?: (value: any, row: any) => React.ReactNode }>;
-  onAction?: (row: Record<string, any>) => void;
-}) {
-  return (
-    <tr className="hover:bg-gray-50 transition-colors">
-      {columns.map((column) => (
-        <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm">
-          {column.render ? column.render(data[column.key], data) : data[column.key]}
-        </td>
-      ))}
-      {onAction && (
-        <td className="px-6 py-4 whitespace-nowrap text-sm">
-          <button
-            onClick={() => onAction(data)}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            Action
-          </button>
-        </td>
-      )}
-    </tr>
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison function
-  return JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data);
-});
+export const DataTableRow = React.memo(
+  function DataTableRow({
+    data,
+    columns,
+    onAction,
+  }: {
+    data: Record<string, any>;
+    columns: Array<{
+      key: string;
+      render?: (value: any, row: any) => React.ReactNode;
+    }>;
+    onAction?: (row: Record<string, any>) => void;
+  }) {
+    return (
+      <tr className='hover:bg-gray-50 transition-colors'>
+        {columns.map(column => (
+          <td key={column.key} className='px-6 py-4 whitespace-nowrap text-sm'>
+            {column.render
+              ? column.render(data[column.key], data)
+              : data[column.key]}
+          </td>
+        ))}
+        {onAction && (
+          <td className='px-6 py-4 whitespace-nowrap text-sm'>
+            <button
+              onClick={() => onAction(data)}
+              className='text-blue-600 hover:text-blue-800'
+            >
+              Action
+            </button>
+          </td>
+        )}
+      </tr>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function
+    return JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data);
+  }
+);
 
 /**
  * Optimized List Item
@@ -117,11 +125,11 @@ export const ListItem = React.memo(function ListItem({
         isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
       )}
     >
-      {Icon && <Icon className="h-5 w-5 text-gray-400" />}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">{title}</p>
+      {Icon && <Icon className='h-5 w-5 text-gray-400' />}
+      <div className='flex-1 min-w-0'>
+        <p className='text-sm font-medium text-gray-900 truncate'>{title}</p>
         {subtitle && (
-          <p className="text-xs text-gray-500 truncate">{subtitle}</p>
+          <p className='text-xs text-gray-500 truncate'>{subtitle}</p>
         )}
       </div>
     </div>
@@ -132,27 +140,32 @@ export const ListItem = React.memo(function ListItem({
  * Optimized Chart Component
  * Heavy charts should be wrapped with React.memo
  */
-export const OptimizedChart = React.memo(function OptimizedChart({
-  data,
-  type,
-  options,
-}: {
-  data: any;
-  type: string;
-  options?: any;
-}) {
-  // Chart implementation would go here
-  return (
-    <div className="p-4 bg-white rounded-lg shadow">
-      <p className="text-sm text-gray-500">
-        Chart: {type} ({data?.length || 0} data points)
-      </p>
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  // Only re-render if data actually changed
-  return prevProps.data === nextProps.data && prevProps.type === nextProps.type;
-});
+export const OptimizedChart = React.memo(
+  function OptimizedChart({
+    data,
+    type,
+    options,
+  }: {
+    data: any;
+    type: string;
+    options?: any;
+  }) {
+    // Chart implementation would go here
+    return (
+      <div className='p-4 bg-white rounded-lg shadow'>
+        <p className='text-sm text-gray-500'>
+          Chart: {type} ({data?.length || 0} data points)
+        </p>
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if data actually changed
+    return (
+      prevProps.data === nextProps.data && prevProps.type === nextProps.type
+    );
+  }
+);
 
 /**
  * Virtualized Long List
@@ -186,7 +199,7 @@ export function VirtualizedList<T>({
     <div
       className={cn('overflow-y-auto', className)}
       style={{ height: containerHeight }}
-      onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+      onScroll={e => setScrollTop(e.currentTarget.scrollTop)}
     >
       <div style={{ height: items.length * itemHeight, position: 'relative' }}>
         <div style={{ transform: `translateY(${offsetY}px)` }}>
@@ -198,4 +211,3 @@ export function VirtualizedList<T>({
     </div>
   );
 }
-

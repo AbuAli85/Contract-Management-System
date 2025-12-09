@@ -9,7 +9,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { CurrencyCode } from '@/types/currency';
-import { getSupportedCurrencies, getCurrencyName, getCurrencySymbol } from '@/types/currency';
+import {
+  getSupportedCurrencies,
+  getCurrencyName,
+  getCurrencySymbol,
+} from '@/types/currency';
 
 interface CurrencySelectorProps {
   value: CurrencyCode;
@@ -34,23 +38,25 @@ export function CurrencySelector({
   return (
     <Select
       value={value}
-      onValueChange={(val) => onChange(val as CurrencyCode)}
+      onValueChange={val => onChange(val as CurrencyCode)}
       disabled={disabled}
     >
       <SelectTrigger className={className}>
-        <SelectValue placeholder="Select currency" />
+        <SelectValue placeholder='Select currency' />
       </SelectTrigger>
       <SelectContent>
-        {currencies.map((currency) => (
+        {currencies.map(currency => (
           <SelectItem key={currency} value={currency}>
-            <div className="flex items-center gap-2">
+            <div className='flex items-center gap-2'>
               {showSymbol && (
-                <span className="font-semibold text-gray-700">
+                <span className='font-semibold text-gray-700'>
                   {getCurrencySymbol(currency)}
                 </span>
               )}
-              <span className="font-medium">{currency}</span>
-              <span className="text-gray-500">- {getCurrencyName(currency)}</span>
+              <span className='font-medium'>{currency}</span>
+              <span className='text-gray-500'>
+                - {getCurrencyName(currency)}
+              </span>
             </div>
           </SelectItem>
         ))}
@@ -58,4 +64,3 @@ export function CurrencySelector({
     </Select>
   );
 }
-

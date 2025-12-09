@@ -5,6 +5,7 @@
 **Sharaf DG is already configured in the sidebar!**
 
 It's located in the **"Contract Management"** section with:
+
 - **Label**: Sharaf DG Deployment
 - **Arabic**: إلحاق شرف DG
 - **Icon**: Building icon
@@ -16,24 +17,30 @@ It's located in the **"Contract Management"** section with:
 ## 🔍 Why You Might Not See It
 
 ### 1. **Permission Required**
+
 You need the **`contract:create`** permission to see this menu item.
 
 **Check your permissions:**
+
 1. Log in to your application
 2. Go to your profile or dashboard
 3. Check if you have "Contract Create" permission
 
 ### 2. **Sidebar Collapsed**
+
 The sidebar might be collapsed (hidden).
 
 **Solution:**
+
 - Look for a hamburger menu icon (☰) or collapse button
 - Click it to expand the sidebar
 
 ### 3. **Wrong Sidebar Component**
+
 You might be using a different sidebar component.
 
 **Which sidebar are you using?**
+
 - `permission-aware-sidebar.tsx` ✅ Has Sharaf DG
 - `simple-sidebar.tsx` ✅ Has Sharaf DG
 - `sidebar.tsx` ❌ Might not have it
@@ -69,10 +76,12 @@ You might be using a different sidebar component.
 **Even if you don't see it in the sidebar**, you can access it directly:
 
 ### URLs:
+
 - **English**: `/en/contracts/sharaf-dg`
 - **Arabic**: `/ar/contracts/sharaf-dg`
 
 ### Full URLs (example):
+
 - Local: `http://localhost:3000/en/contracts/sharaf-dg`
 - Production: `https://your-domain.com/en/contracts/sharaf-dg`
 
@@ -83,6 +92,7 @@ You might be using a different sidebar component.
 If you're an admin and need to grant yourself the permission:
 
 ### Option 1: Via Database
+
 ```sql
 -- Find your user ID
 SELECT id, email FROM auth.users WHERE email = 'your-email@example.com';
@@ -94,15 +104,17 @@ ON CONFLICT DO NOTHING;
 ```
 
 ### Option 2: Via Admin Panel
+
 1. Go to `/en/dashboard/roles` (if you're admin)
 2. Find your role
 3. Enable "Contract Create" permission
 4. Save changes
 
 ### Option 3: Update Your Role
+
 ```sql
 -- Make yourself an admin (has all permissions)
-UPDATE profiles 
+UPDATE profiles
 SET role = 'admin'
 WHERE id = 'your-user-id';
 ```
@@ -158,6 +170,7 @@ The **[PDF]** badge indicates automated PDF generation.
    - If not found, search for "simple-sidebar"
 
 2. **Check permissions in console:**
+
 ```javascript
 // In browser console
 console.log(localStorage.getItem('userRole'));
@@ -169,6 +182,7 @@ console.log(localStorage.getItem('userPermissions'));
    - Or grant yourself all permissions
 
 4. **Check if locale is set:**
+
 ```javascript
 // In browser console
 console.log(window.location.pathname);
@@ -216,6 +230,7 @@ export default function SharafDGContractsPage() {
 **If you just want to access it now:**
 
 ### Navigate directly to:
+
 ```
 /en/contracts/sharaf-dg
 ```
@@ -250,4 +265,3 @@ If the sidebar still doesn't show it:
 **Created**: October 26, 2025
 **Status**: ✅ Already Configured
 **Action Needed**: Grant permission or use direct URL
-

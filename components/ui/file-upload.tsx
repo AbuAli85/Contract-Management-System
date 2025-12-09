@@ -5,15 +5,15 @@ import type { DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Upload, 
-  File, 
-  X, 
+import {
+  Upload,
+  File,
+  X,
   CheckCircle,
   AlertCircle,
   FileText,
   Image as ImageIcon,
-  FileType
+  FileType,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,7 +31,7 @@ interface FileUploadProps {
 
 /**
  * File Upload Component with Drag-and-Drop
- * 
+ *
  * Features:
  * - Drag and drop file upload
  * - Click to browse
@@ -71,9 +71,10 @@ export function FileUpload({
 
     // Check file type
     const acceptedTypes = accept.split(',').map(t => t.trim());
-    const isImage = acceptedTypes.includes('image/*') && file.type.startsWith('image/');
+    const isImage =
+      acceptedTypes.includes('image/*') && file.type.startsWith('image/');
     const isAccepted = acceptedTypes.includes(file.type) || isImage;
-    
+
     if (!isAccepted) {
       return 'Invalid file type. Please upload a valid file.';
     }
@@ -96,7 +97,7 @@ export function FileUpload({
       try {
         // Simulate progress
         const progressInterval = setInterval(() => {
-          setProgress((prev) => Math.min(prev + 10, 90));
+          setProgress(prev => Math.min(prev + 10, 90));
         }, 200);
 
         await onFileSelect(file);
@@ -160,10 +161,10 @@ export function FileUpload({
   };
 
   const getFileIcon = (type?: string) => {
-    if (!type) return <FileText className="h-8 w-8" />;
-    if (type.startsWith('image/')) return <ImageIcon className="h-8 w-8" />;
-    if (type === 'application/pdf') return <FileType className="h-8 w-8" />;
-    return <FileText className="h-8 w-8" />;
+    if (!type) return <FileText className='h-8 w-8' />;
+    if (type.startsWith('image/')) return <ImageIcon className='h-8 w-8' />;
+    if (type === 'application/pdf') return <FileType className='h-8 w-8' />;
+    return <FileText className='h-8 w-8' />;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -171,7 +172,7 @@ export function FileUpload({
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   const hasCurrentFile = currentFileUrl || uploadedFile;
@@ -181,10 +182,10 @@ export function FileUpload({
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
-        type="file"
+        type='file'
         accept={accept}
         onChange={handleFileChange}
-        className="hidden"
+        className='hidden'
         disabled={disabled || uploading}
       />
 
@@ -197,12 +198,13 @@ export function FileUpload({
         className={cn(
           'border-2 border-dashed rounded-lg p-6 transition-all cursor-pointer',
           isDragActive && 'border-primary bg-primary/5',
-          !isDragActive && !disabled && 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50',
+          !isDragActive &&
+            !disabled &&
+            'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50',
           disabled && 'cursor-not-allowed opacity-50 bg-muted',
           error && 'border-destructive bg-destructive/5'
         )}
       >
-        
         <div className='flex flex-col items-center justify-center space-y-3 text-center'>
           {uploading ? (
             <>
@@ -217,7 +219,9 @@ export function FileUpload({
             <>
               <CheckCircle className='h-10 w-10 text-green-600' />
               <div className='space-y-1'>
-                <p className='text-sm font-medium text-green-700'>File uploaded successfully</p>
+                <p className='text-sm font-medium text-green-700'>
+                  File uploaded successfully
+                </p>
                 <p className='text-xs text-muted-foreground'>
                   {uploadedFile?.name || currentFileName || 'Current file'}
                 </p>
@@ -239,9 +243,7 @@ export function FileUpload({
                 <p className='text-sm font-medium'>
                   {isDragActive ? 'Drop file here' : label}
                 </p>
-                <p className='text-xs text-muted-foreground'>
-                  {description}
-                </p>
+                <p className='text-xs text-muted-foreground'>{description}</p>
                 <p className='text-xs text-muted-foreground'>
                   Max size: {(maxSize / 1024 / 1024).toFixed(1)}MB
                 </p>
@@ -281,7 +283,7 @@ export function FileUpload({
                     variant='link'
                     size='sm'
                     className='h-auto p-0 text-xs'
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       window.open(currentFileUrl, '_blank');
                     }}
@@ -296,7 +298,7 @@ export function FileUpload({
             variant='ghost'
             size='icon'
             className='h-8 w-8 flex-shrink-0'
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               setUploadedFile(null);
               setError(null);
@@ -310,4 +312,3 @@ export function FileUpload({
     </div>
   );
 }
-

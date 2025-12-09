@@ -65,22 +65,25 @@ export async function withTimeout<T>(
 export const TIMEOUT_CONFIGS = {
   // Quick operations (authentication, simple queries)
   QUICK: { timeoutMs: 10000, errorMessage: 'Quick operation timeout' },
-  
+
   // Standard operations (CRUD operations, moderate queries)
   STANDARD: { timeoutMs: 30000, errorMessage: 'Standard operation timeout' },
-  
+
   // Heavy operations (complex queries, file processing)
   HEAVY: { timeoutMs: 60000, errorMessage: 'Heavy operation timeout' },
-  
+
   // PDF generation (file creation, external API calls)
   PDF_GENERATION: { timeoutMs: 120000, errorMessage: 'PDF generation timeout' },
-  
+
   // Contract generation (multiple API calls, webhooks)
-  CONTRACT_GENERATION: { timeoutMs: 90000, errorMessage: 'Contract generation timeout' },
-  
+  CONTRACT_GENERATION: {
+    timeoutMs: 90000,
+    errorMessage: 'Contract generation timeout',
+  },
+
   // Webhook processing (external integrations)
   WEBHOOK: { timeoutMs: 60000, errorMessage: 'Webhook processing timeout' },
-  
+
   // Analytics (complex aggregations)
   ANALYTICS: { timeoutMs: 45000, errorMessage: 'Analytics processing timeout' },
 } as const;
@@ -97,7 +100,7 @@ export function createTimeoutHandler<T extends any[], R>(
 ) {
   return async (...args: T): Promise<R> => {
     const result = await withTimeout(() => handler(...args), config);
-    
+
     if (!result.success) {
       if (result.timedOut) {
         throw new Error(`Operation timed out after ${result.processingTime}ms`);
@@ -105,7 +108,7 @@ export function createTimeoutHandler<T extends any[], R>(
         throw new Error(result.error || 'Operation failed');
       }
     }
-    
+
     return result.data!;
   };
 }
@@ -123,9 +126,9 @@ export function logTimeoutInfo(
 ) {
   const level = timedOut ? 'error' : processingTime > 30000 ? 'warn' : 'info';
   const message = `${operation} ${timedOut ? 'timed out' : 'completed'} in ${processingTime}ms`;
-  
+
   console[level](message);
-  
+
   // In production, you might want to send this to a monitoring service
   if (timedOut || processingTime > 30000) {
     // Example: Send to monitoring service

@@ -7,6 +7,7 @@
 ## 📋 **What Resend Webhooks Track**
 
 Resend can send webhooks for these events:
+
 - ✅ `email.sent` - Email successfully sent
 - ✅ `email.delivered` - Email delivered to recipient
 - ✅ `email.opened` - Recipient opened the email
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
 
 async function handleEmailSent(payload: ResendWebhookPayload) {
   console.log('✅ Email sent:', payload.data.email_id);
-  
+
   // Optional: Update database
   // const supabase = await createClient();
   // await supabase.from('email_logs').insert({
@@ -142,7 +143,7 @@ async function handleEmailSent(payload: ResendWebhookPayload) {
 
 async function handleEmailDelivered(payload: ResendWebhookPayload) {
   console.log('📬 Email delivered:', payload.data.email_id);
-  
+
   // Optional: Update delivery status
   // const supabase = await createClient();
   // await supabase.from('email_logs')
@@ -152,12 +153,12 @@ async function handleEmailDelivered(payload: ResendWebhookPayload) {
 
 async function handleEmailOpened(payload: ResendWebhookPayload) {
   console.log('👁️ Email opened:', payload.data.email_id);
-  
+
   // Track email opens
   // const supabase = await createClient();
   // await supabase.from('email_logs')
-  //   .update({ 
-  //     opened: true, 
+  //   .update({
+  //     opened: true,
   //     opened_at: payload.data.opened_at,
   //     open_count: supabase.raw('open_count + 1')
   //   })
@@ -166,10 +167,10 @@ async function handleEmailOpened(payload: ResendWebhookPayload) {
 
 async function handleEmailClicked(payload: ResendWebhookPayload) {
   console.log('🖱️ Email link clicked:', payload.data.email_id);
-  
+
   if (payload.data.click) {
     console.log('  Link:', payload.data.click.link);
-    
+
     // Track link clicks
     // const supabase = await createClient();
     // await supabase.from('email_clicks').insert({
@@ -182,22 +183,22 @@ async function handleEmailClicked(payload: ResendWebhookPayload) {
 
 async function handleEmailBounced(payload: ResendWebhookPayload) {
   console.error('❌ Email bounced:', payload.data.email_id);
-  
+
   if (payload.data.bounce) {
     console.error('  Type:', payload.data.bounce.type);
     console.error('  Message:', payload.data.bounce.message);
-    
+
     // Handle bounces (especially hard bounces - invalid email)
     // const supabase = await createClient();
     // await supabase.from('email_logs')
-    //   .update({ 
+    //   .update({
     //     status: 'bounced',
     //     bounce_type: payload.data.bounce.type,
     //     bounce_message: payload.data.bounce.message,
     //     bounced_at: payload.data.bounced_at,
     //   })
     //   .eq('email_id', payload.data.email_id);
-    
+
     // If hard bounce, mark email as invalid
     // if (payload.data.bounce.type === 'hard') {
     //   await supabase.from('promoters')
@@ -209,13 +210,13 @@ async function handleEmailBounced(payload: ResendWebhookPayload) {
 
 async function handleEmailComplained(payload: ResendWebhookPayload) {
   console.warn('⚠️ Email marked as spam:', payload.data.email_id);
-  
+
   // Handle spam complaints - important to prevent being blacklisted
   // const supabase = await createClient();
   // await supabase.from('email_logs')
   //   .update({ status: 'complained' })
   //   .eq('email_id', payload.data.email_id);
-  
+
   // Optionally unsubscribe user from emails
   // await supabase.from('promoters')
   //   .update({ email_notifications: false })
@@ -224,7 +225,7 @@ async function handleEmailComplained(payload: ResendWebhookPayload) {
 
 async function handleEmailDelayed(payload: ResendWebhookPayload) {
   console.warn('⏳ Email delivery delayed:', payload.data.email_id);
-  
+
   // Usually temporary, will retry automatically
   // Just log for monitoring
 }
@@ -242,6 +243,7 @@ export const dynamic = 'force-dynamic';
    - Click "Add Endpoint"
 
 2. **Add Your Webhook URL**
+
    ```
    Production: https://portal.thesmartpro.io/api/webhooks/resend
    Development: Use ngrok (see below)
@@ -423,7 +425,7 @@ export async function POST(req: NextRequest) {
 
     // Parse payload
     const data = JSON.parse(payload);
-    
+
     // ... rest of handler ...
   }
 }
@@ -434,16 +436,20 @@ export async function POST(req: NextRequest) {
 ## 📊 **MONITORING WEBHOOKS**
 
 ### **View Webhook Deliveries**
+
 https://resend.com/webhooks
 
 You'll see:
+
 - ✅ Successful deliveries
 - ❌ Failed deliveries
 - 🔄 Retry attempts
 - 📊 Response codes
 
 ### **Test Webhooks**
+
 Resend provides test mode:
+
 - Click "Send Test Event"
 - Choose event type
 - Verify your endpoint receives it
@@ -457,7 +463,7 @@ Resend provides test mode:
 ```typescript
 async function handleEmailOpened(payload: ResendWebhookPayload) {
   const supabase = await createClient();
-  
+
   // Find which promoter this email was for
   const { data: emailLog } = await supabase
     .from('email_logs')
@@ -468,7 +474,7 @@ async function handleEmailOpened(payload: ResendWebhookPayload) {
   if (emailLog?.subject.includes('Document Expiry')) {
     // Promoter read the expiry notice
     console.log('✅ Promoter read document expiry email:', emailLog.to_email);
-    
+
     // Maybe reduce notification urgency
     await supabase
       .from('promoters')
@@ -484,20 +490,20 @@ async function handleEmailOpened(payload: ResendWebhookPayload) {
 async function handleEmailBounced(payload: ResendWebhookPayload) {
   if (payload.data.bounce?.type === 'hard') {
     const supabase = await createClient();
-    
+
     // Mark email as invalid
     await supabase
       .from('promoters')
-      .update({ 
+      .update({
         email_valid: false,
         email_bounced: true,
-        email_bounce_reason: payload.data.bounce.message
+        email_bounce_reason: payload.data.bounce.message,
       })
       .eq('email', payload.data.to[0]);
-    
+
     // Alert admin
     console.error(`🚨 Invalid email detected: ${payload.data.to[0]}`);
-    
+
     // TODO: Send notification to admin to update promoter's email
   }
 }
@@ -509,10 +515,10 @@ async function handleEmailBounced(payload: ResendWebhookPayload) {
 async function handleEmailClicked(payload: ResendWebhookPayload) {
   if (payload.data.click?.link.includes('/contracts/')) {
     console.log('🎯 Contract approval link clicked!');
-    
+
     // Extract contract ID from link
     const contractId = payload.data.click.link.split('/contracts/')[1];
-    
+
     // Log that approver is viewing the contract
     const supabase = await createClient();
     await supabase.from('contract_audit_log').insert({
@@ -563,6 +569,7 @@ RESEND_WEBHOOK_SECRET=whsec_your_secret_here
 ## 🎯 **BENEFITS**
 
 With webhooks configured:
+
 - ✅ **Track delivery** - Know if emails were delivered
 - ✅ **Handle bounces** - Detect invalid email addresses
 - ✅ **Monitor opens** - See if recipients read emails
@@ -581,4 +588,3 @@ With webhooks configured:
 ---
 
 **Ready to set up?** Start with Step 1! 🚀
-

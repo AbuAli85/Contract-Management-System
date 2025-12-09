@@ -1,6 +1,6 @@
 /**
  * Phone Number Validation Utility
- * 
+ *
  * Validates phone numbers to prevent incomplete entries like "00968"
  * Supports international formats with proper minimum length requirements
  */
@@ -13,13 +13,13 @@ export interface PhoneValidationResult {
 
 /**
  * Validates a phone number
- * 
+ *
  * Rules:
  * - Must contain only digits, spaces, hyphens, parentheses, and optional leading +
  * - Minimum 10 digits (country code + subscriber number)
  * - Maximum 15 digits (ITU-T E.164 standard)
  * - Cannot be just a country code (e.g., "00968" or "+968")
- * 
+ *
  * @param phone - Phone number to validate
  * @param options - Validation options
  * @returns Validation result with error message if invalid
@@ -55,7 +55,8 @@ export function validatePhoneNumber(
   if (!/^[\+]?[0-9\s\-\(\)]+$/.test(trimmed)) {
     return {
       isValid: false,
-      error: 'Phone number can only contain digits, spaces, hyphens, and parentheses',
+      error:
+        'Phone number can only contain digits, spaces, hyphens, and parentheses',
     };
   }
 
@@ -83,7 +84,8 @@ export function validatePhoneNumber(
   if (digitsOnly.length <= 4) {
     return {
       isValid: false,
-      error: 'Phone number appears incomplete. Please include the full number after the country code.',
+      error:
+        'Phone number appears incomplete. Please include the full number after the country code.',
     };
   }
 
@@ -98,7 +100,8 @@ export function validatePhoneNumber(
     if (pattern.test(digitsOnly)) {
       return {
         isValid: false,
-        error: 'Phone number appears invalid. Please check and enter a valid number.',
+        error:
+          'Phone number appears invalid. Please check and enter a valid number.',
       };
     }
   }
@@ -111,12 +114,12 @@ export function validatePhoneNumber(
 
 /**
  * Formats a phone number for display
- * 
+ *
  * Examples:
  * - "96891234567" → "+968 9123 4567"
  * - "00968 9123 4567" → "+968 9123 4567"
  * - "+1 (555) 123-4567" → "+1 555 123 4567"
- * 
+ *
  * @param phone - Phone number to format
  * @returns Formatted phone number
  */
@@ -156,10 +159,10 @@ export function formatPhoneNumber(phone: string): string {
     // Generic international format: +XXX XXXX...
     const countryCode = finalDigits.substring(0, 3);
     const rest = finalDigits.substring(3);
-    
+
     // Split rest into groups of 4
     const groups = rest.match(/.{1,4}/g) || [];
-    
+
     return `+${countryCode} ${groups.join(' ')}`;
   }
 }
@@ -183,7 +186,9 @@ export function validateMobileNumber(
  * Checks if a phone number appears to be incomplete
  * Used for identifying existing invalid data
  */
-export function isIncompletePhoneNumber(phone: string | null | undefined): boolean {
+export function isIncompletePhoneNumber(
+  phone: string | null | undefined
+): boolean {
   if (!phone || phone.trim() === '') return false;
 
   const digitsOnly = phone.replace(/\D/g, '');
@@ -220,4 +225,3 @@ export function getPhoneNumberExample(countryCode: string = '968'): string {
 
   return examples[countryCode] || '+XXX XXXX XXXX';
 }
-

@@ -3,15 +3,18 @@
 ## 📊 Current Status (Confirmed)
 
 ✅ **Diagnosis Complete:**
+
 - **112 promoters** in system
 - **0 have email addresses** (0%)
 - **112 need emails** (100%)
 
 ✅ **Issues Found:**
+
 - Inconsistent status values: "?", "Cancel", "IT", "Office", "office", "V", "v"
 - Should be: `active`, `inactive`, `terminated`, `on_leave`, `suspended`
 
 ✅ **Prevention Fixed:**
+
 - ✅ Form now requires email for NEW promoters
 - ✅ Existing promoters still show "—" until updated
 
@@ -22,7 +25,7 @@
 Run this query in Supabase SQL Editor:
 
 ```sql
-SELECT 
+SELECT
   id,
   COALESCE(name_en, name_ar, 'Unnamed') as name,
   id_card_number,
@@ -34,8 +37,8 @@ SELECT
   ) as company
 FROM promoters
 WHERE email IS NULL OR TRIM(email) = ''
-ORDER BY 
-  CASE 
+ORDER BY
+  CASE
     WHEN status = 'active' THEN 1
     WHEN status = '?' THEN 2
     WHEN status = 'Cancel' THEN 3
@@ -49,6 +52,7 @@ ORDER BY
 ### Step 2: Add Email Column to Excel (1 minute)
 
 Your Excel should look like:
+
 ```
 | ID (UUID) | Name | ID Card | Phone | Status | Company | EMAIL (New Column) |
 |-----------|------|---------|-------|--------|---------|-------------------|
@@ -58,6 +62,7 @@ Your Excel should look like:
 ### Step 3: Collect Emails (Choose ONE method)
 
 #### Method A: Call Promoters 📞 (RECOMMENDED)
+
 ```
 For each promoter:
 1. Call the phone number
@@ -70,6 +75,7 @@ Timeline: 4-5 days to complete all 112
 ```
 
 #### Method B: Check Existing Records 📁
+
 ```
 Look for emails in:
 - HR database/files
@@ -81,6 +87,7 @@ Match by ID card number or name
 ```
 
 #### Method C: Contact HR/Admin 👥
+
 ```
 Ask HR department:
 "Can you provide email addresses for these 112 promoters?"
@@ -118,8 +125,8 @@ WHERE id_card_number = '87654321' AND name_en = 'Jane Smith';
 -- Add more UPDATE statements...
 
 -- Preview what you updated:
-SELECT id, name_en, email, updated_at 
-FROM promoters 
+SELECT id, name_en, email, updated_at
+FROM promoters
 WHERE updated_at > NOW() - INTERVAL '1 minute'
 ORDER BY updated_at DESC;
 
@@ -140,11 +147,11 @@ This standardizes the weird status values ("?", "Cancel", etc.)
 
 ```sql
 -- PREVIEW first - See what will change:
-SELECT 
+SELECT
   id,
   name_en,
   status as current_status,
-  CASE 
+  CASE
     WHEN status IN ('active', 'Active') THEN 'active'
     WHEN status IN ('inactive', 'Inactive') THEN 'inactive'
     WHEN status IN ('Cancel', 'Cancelled', 'terminated') THEN 'terminated'
@@ -160,8 +167,8 @@ WHERE status NOT IN ('active', 'inactive', 'terminated', 'on_leave', 'suspended'
 BEGIN;
 
 UPDATE promoters
-SET 
-  status = CASE 
+SET
+  status = CASE
     WHEN status IN ('active', 'Active') THEN 'active'
     WHEN status IN ('inactive', 'Inactive') THEN 'inactive'
     WHEN status IN ('Cancel', 'Cancelled', 'terminated') THEN 'terminated'
@@ -194,7 +201,7 @@ Run this query to check progress:
 
 ```sql
 -- How many emails collected so far?
-SELECT 
+SELECT
   COUNT(*) FILTER (WHERE email IS NOT NULL AND TRIM(email) != '') as emails_added,
   COUNT(*) FILTER (WHERE email IS NULL OR TRIM(email) = '') as still_missing,
   COUNT(*) as total,
@@ -208,6 +215,7 @@ FROM promoters;
 ## 📅 Suggested Timeline
 
 ### Week 1 - Goal: 50% Complete (56 emails)
+
 - **Day 1**: Export list, start calling (target: 15 emails)
 - **Day 2**: Continue calling (target: 15 emails)
 - **Day 3**: Continue calling (target: 15 emails)
@@ -215,6 +223,7 @@ FROM promoters;
 - **Day 5**: Import first batch to database
 
 ### Week 2 - Goal: 100% Complete (112 emails)
+
 - **Day 6-9**: Collect remaining 56 emails
 - **Day 10**: Import final batch, verify all, fix status values
 
@@ -231,12 +240,13 @@ Focus on these promoters FIRST:
 ### When Calling Promoters:
 
 **Script:**
+
 ```
 "Hello [Name], this is [Your Name] from [Company].
 
 We're updating our system and noticed we don't have your email address on file.
 
-Could you please provide your email address so we can send you important 
+Could you please provide your email address so we can send you important
 notifications about your documents and work schedule?
 
 [Record email]
@@ -247,6 +257,7 @@ Thank you! Have a great day."
 ```
 
 ### Email Validation Checklist:
+
 - ✅ Contains @ symbol
 - ✅ Has domain (.com, .net, etc.)
 - ✅ No spaces
@@ -254,6 +265,7 @@ Thank you! Have a great day."
 - ✅ Test format: user@domain.com
 
 ### Common Issues:
+
 - **"I don't have email"** → Offer to create one, or use company email
 - **"Why do you need it?"** → "For document expiry notifications"
 - **Wrong number** → Update phone number too while you're at it
@@ -283,6 +295,7 @@ Create a simple tracker in your Excel:
    - Then do more
 
 3. **Use transactions**
+
    ```sql
    BEGIN;
    -- your updates here
@@ -298,15 +311,18 @@ Create a simple tracker in your Excel:
 ## 🆘 Need Help?
 
 **If stuck on SQL:**
+
 - See: `scripts/bulk-update-promoter-emails.sql` for examples
 - See: `URGENT_EMAIL_DATA_MIGRATION_PLAN.md` for detailed guide
 
 **If can't reach promoters:**
+
 - Ask their manager/supervisor
 - Check HR records
 - Mark as "pending collection" in notes
 
 **If emails are bouncing:**
+
 - Re-contact promoter
 - Ask for alternate email
 - Update in database
@@ -346,12 +362,12 @@ Once all emails are collected:
 ## 🚀 Ready to Start?
 
 ### Next 3 Actions:
+
 1. [ ] Run Step 1 query above → Export to Excel
 2. [ ] Add "EMAIL" column to Excel
 3. [ ] Start calling first 10 promoters
 
-**Start Time:** ____________
-**Target Completion:** ____________
+**Start Time:** ****\_\_\_\_****
+**Target Completion:** ****\_\_\_\_****
 
 Good luck! 💪 You've got this!
-

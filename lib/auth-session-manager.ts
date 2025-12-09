@@ -36,7 +36,7 @@ export class AuthSessionManager {
     // Listen for auth state changes
     this.supabase?.auth.onAuthStateChange((event, session) => {
       console.log('🔐 Auth state changed:', event, session?.user?.id);
-      
+
       if (event === 'SIGNED_IN' && session) {
         this.storeSession(session);
         this.updateLastActivity();
@@ -49,8 +49,11 @@ export class AuthSessionManager {
   public async getCurrentSession(): Promise<UserSession | null> {
     try {
       if (!this.supabase) return null;
-      const { data: { session }, error } = await this.supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error,
+      } = await this.supabase.auth.getSession();
+
       if (error) {
         console.error('🔐 Session retrieval error:', error);
         return null;
@@ -69,7 +72,7 @@ export class AuthSessionManager {
 
       // Get user profile
       const profile = await this.getUserProfile(session.user.id);
-      
+
       return {
         user: session.user,
         session: session,
@@ -82,19 +85,27 @@ export class AuthSessionManager {
     }
   }
 
-  public async signIn(email: string, password: string): Promise<{ success: boolean; error?: string; session?: UserSession; debug?: any }> {
+  public async signIn(
+    email: string,
+    password: string
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    session?: UserSession;
+    debug?: any;
+  }> {
     try {
       if (!this.supabase) {
         console.error('🔐 Supabase client not initialized');
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: 'Supabase client not initialized',
-          debug: { step: 'client_check', hasSupabase: false }
+          debug: { step: 'client_check', hasSupabase: false },
         };
       }
 
       console.log('🔐 Attempting sign in for:', email);
-      
+
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -105,31 +116,31 @@ export class AuthSessionManager {
           message: error.message,
           status: error.status,
           code: error.code,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: error.message,
           debug: {
             step: 'sign_in',
             errorCode: error.code,
             errorStatus: error.status,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         };
       }
 
       if (!data.session) {
         console.error('🔐 No session created after successful sign in');
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: 'No session created',
           debug: {
             step: 'session_check',
             hasData: !!data,
             hasUser: !!data?.user,
-            hasSession: !!data?.session
-          }
+            hasSession: !!data?.session,
+          },
         };
       }
 
@@ -155,16 +166,16 @@ export class AuthSessionManager {
       console.error('🔐 Sign in exception:', {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         debug: {
           step: 'exception',
           errorType: typeof error,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
     }
   }
@@ -190,11 +201,14 @@ export class AuthSessionManager {
 
   private storeSession(session: any): void {
     try {
-      localStorage.setItem('userSession', JSON.stringify({
-        user: session.user,
-        session: session,
-        lastActivity: Date.now(),
-      }));
+      localStorage.setItem(
+        'userSession',
+        JSON.stringify({
+          user: session.user,
+          session: session,
+          lastActivity: Date.now(),
+        })
+      );
     } catch (error) {
       console.error('🔐 Session storage error:', error);
     }
@@ -211,18 +225,20 @@ export class AuthSessionManager {
 
   private isSessionExpired(session: any): boolean {
     if (!session?.expires_at) return true;
-    
+
     const expiresAt = new Date(session.expires_at * 1000);
     const now = new Date();
-    
+
     return now >= expiresAt;
   }
 
   private async checkSessionValidity(): Promise<void> {
     try {
       if (!this.supabase) return;
-      const { data: { session } } = await this.supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await this.supabase.auth.getSession();
+
       if (session && this.isSessionExpired(session)) {
         console.log('🔐 Session expired during check, signing out');
         await this.signOut();

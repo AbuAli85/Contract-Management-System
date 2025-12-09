@@ -1,6 +1,6 @@
 /**
  * Utility functions for promoters data processing
- * 
+ *
  * Contains helper functions for date parsing, document health checks,
  * status calculations, and data transformations.
  */
@@ -14,7 +14,11 @@ export interface DocumentHealth {
   label: string;
 }
 
-export type OverallStatus = 'active' | 'needs_attention' | 'critical' | 'inactive';
+export type OverallStatus =
+  | 'active'
+  | 'needs_attention'
+  | 'critical'
+  | 'inactive';
 export type DocumentStatus = 'valid' | 'expiring' | 'expired' | 'missing';
 
 /**
@@ -22,7 +26,7 @@ export type DocumentStatus = 'valid' | 'expiring' | 'expired' | 'missing';
  */
 export function parseDateSafe(value?: string | null): Date | null {
   if (!value) return null;
-  
+
   try {
     const parsed = parseISO(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
@@ -37,7 +41,7 @@ export function parseDateSafe(value?: string | null): Date | null {
 export function formatDisplayDate(value?: string | null): string {
   const parsed = parseDateSafe(value);
   if (!parsed) return '—';
-  
+
   try {
     return format(parsed, 'dd MMM yyyy');
   } catch {
@@ -53,7 +57,12 @@ export function computeDocumentHealth(
   threshold: number
 ): DocumentHealth {
   // Handle empty, null, or invalid values
-  if (!value || value.trim() === '' || value === 'null' || value === 'undefined') {
+  if (
+    !value ||
+    value.trim() === '' ||
+    value === 'null' ||
+    value === 'undefined'
+  ) {
     return {
       status: 'missing',
       daysRemaining: null,
@@ -111,7 +120,9 @@ export function computeOverallStatus(
   // Check if promoter is inactive based on status
   if (
     !status ||
-    ['inactive', 'terminated', 'resigned', 'on_leave', 'suspended'].includes(status)
+    ['inactive', 'terminated', 'resigned', 'on_leave', 'suspended'].includes(
+      status
+    )
   ) {
     return 'inactive';
   }
@@ -170,7 +181,9 @@ export function getDocumentStatusVariant(
 /**
  * Calculate days until expiry
  */
-export function daysUntilExpiry(dateString: string | null | undefined): number | null {
+export function daysUntilExpiry(
+  dateString: string | null | undefined
+): number | null {
   const date = parseDateSafe(dateString);
   if (!date) return null;
 
@@ -236,16 +249,18 @@ export function exportToCSV(
   const csvContent = [
     headers.join(','), // Header row
     ...data.map(row =>
-      headers.map(header => {
-        const value = row[header];
-        // Escape commas and quotes
-        if (value === null || value === undefined) return '';
-        const stringValue = String(value);
-        if (stringValue.includes(',') || stringValue.includes('"')) {
-          return `"${stringValue.replace(/"/g, '""')}"`;
-        }
-        return stringValue;
-      }).join(',')
+      headers
+        .map(header => {
+          const value = row[header];
+          // Escape commas and quotes
+          if (value === null || value === undefined) return '';
+          const stringValue = String(value);
+          if (stringValue.includes(',') || stringValue.includes('"')) {
+            return `"${stringValue.replace(/"/g, '""')}"`;
+          }
+          return stringValue;
+        })
+        .join(',')
     ),
   ].join('\n');
 
@@ -258,4 +273,3 @@ export function exportToCSV(
   link.click();
   URL.revokeObjectURL(url);
 }
-

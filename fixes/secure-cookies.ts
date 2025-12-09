@@ -1,9 +1,9 @@
 /**
  * Secure Cookie Configuration for Supabase Client
- * 
+ *
  * This file provides enhanced cookie security for the Supabase authentication system.
  * Implements Secure, HttpOnly, and SameSite flags to prevent XSS and CSRF attacks.
- * 
+ *
  * Usage: Replace the existing createClient function in lib/supabase/server.ts
  */
 
@@ -57,4 +57,3 @@ export async function createClient() {
     }
   );
 }
-

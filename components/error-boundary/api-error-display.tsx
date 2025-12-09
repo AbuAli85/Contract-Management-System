@@ -49,7 +49,7 @@ export interface ApiErrorDisplayProps {
 
 /**
  * Comprehensive API Error Display Component
- * 
+ *
  * Displays user-friendly error messages with contextual icons and actions
  */
 export function ApiErrorDisplay({
@@ -66,7 +66,9 @@ export function ApiErrorDisplay({
   const errorInfo = analyzeError(error);
 
   return (
-    <div className={`flex min-h-[400px] items-center justify-center px-4 ${className}`}>
+    <div
+      className={`flex min-h-[400px] items-center justify-center px-4 ${className}`}
+    >
       <Card className='w-full max-w-2xl border-red-200 dark:border-red-800'>
         <CardHeader>
           <div className='flex items-center gap-3'>
@@ -97,7 +99,8 @@ export function ApiErrorDisplay({
             <div className='rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20'>
               <p className='text-sm text-yellow-800 dark:text-yellow-200'>
                 <Clock className='mr-2 inline h-4 w-4' />
-                {retryCount} automatic {retryCount === 1 ? 'retry' : 'retries'} attempted
+                {retryCount} automatic {retryCount === 1 ? 'retry' : 'retries'}{' '}
+                attempted
               </p>
             </div>
           )}
@@ -214,12 +217,17 @@ function analyzeError(error: any): {
   const errorStatus = error?.status;
 
   // Network/Timeout Errors
-  if (error?.isTimeout || errorMessage.includes('timeout') || errorMessage.includes('AbortError')) {
+  if (
+    error?.isTimeout ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('AbortError')
+  ) {
     return {
       icon: <Clock className='h-6 w-6 text-red-600 dark:text-red-300' />,
       title: 'Request Timeout',
       description: 'The server took too long to respond',
-      userMessage: 'The request timed out. This might be due to network issues or server load.',
+      userMessage:
+        'The request timed out. This might be due to network issues or server load.',
       recommendations: [
         'Check your internet connection',
         'Try again in a few moments',
@@ -230,15 +238,20 @@ function analyzeError(error: any): {
   }
 
   // Network Errors
-  if (error?.isNetworkError || errorMessage.includes('fetch') || errorMessage.includes('network')) {
+  if (
+    error?.isNetworkError ||
+    errorMessage.includes('fetch') ||
+    errorMessage.includes('network')
+  ) {
     return {
       icon: <WifiOff className='h-6 w-6 text-red-600 dark:text-red-300' />,
       title: 'Network Error',
       description: 'Unable to connect to the server',
-      userMessage: 'Could not connect to the server. Please check your internet connection.',
+      userMessage:
+        'Could not connect to the server. Please check your internet connection.',
       recommendations: [
         'Check your internet connection',
-        'Make sure you\'re not using a VPN that might be blocking the connection',
+        "Make sure you're not using a VPN that might be blocking the connection",
         'Try refreshing the page',
       ],
       canRetry: true,
@@ -246,7 +259,12 @@ function analyzeError(error: any): {
   }
 
   // Authentication Errors
-  if (error?.isAuthError || errorStatus === 401 || errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
+  if (
+    error?.isAuthError ||
+    errorStatus === 401 ||
+    errorMessage.includes('Unauthorized') ||
+    errorMessage.includes('401')
+  ) {
     return {
       icon: <Shield className='h-6 w-6 text-red-600 dark:text-red-300' />,
       title: 'Authentication Required',
@@ -262,15 +280,21 @@ function analyzeError(error: any): {
   }
 
   // Permission Errors
-  if (error?.isPermissionError || errorStatus === 403 || errorMessage.includes('Forbidden') || errorMessage.includes('permission')) {
+  if (
+    error?.isPermissionError ||
+    errorStatus === 403 ||
+    errorMessage.includes('Forbidden') ||
+    errorMessage.includes('permission')
+  ) {
     return {
       icon: <Shield className='h-6 w-6 text-red-600 dark:text-red-300' />,
       title: 'Access Denied',
-      description: 'You don\'t have permission to access this resource',
-      userMessage: 'You don\'t have the necessary permissions to access this resource.',
+      description: "You don't have permission to access this resource",
+      userMessage:
+        "You don't have the necessary permissions to access this resource.",
       recommendations: [
         'Contact your administrator to request access',
-        'Make sure you\'re logged in with the correct account',
+        "Make sure you're logged in with the correct account",
         'Check if your account has the required permissions',
       ],
       canRetry: false,
@@ -278,12 +302,18 @@ function analyzeError(error: any): {
   }
 
   // Database Errors
-  if (error?.isDatabaseError || errorMessage.includes('database') || errorMessage.includes('relation') || errorMessage.includes('table')) {
+  if (
+    error?.isDatabaseError ||
+    errorMessage.includes('database') ||
+    errorMessage.includes('relation') ||
+    errorMessage.includes('table')
+  ) {
     return {
       icon: <Database className='h-6 w-6 text-red-600 dark:text-red-300' />,
       title: 'Database Error',
       description: 'Unable to access the database',
-      userMessage: 'There was a problem accessing the database. This may be a temporary issue.',
+      userMessage:
+        'There was a problem accessing the database. This may be a temporary issue.',
       recommendations: [
         'Try again in a few moments',
         'Contact support if the issue persists',
@@ -294,12 +324,18 @@ function analyzeError(error: any): {
   }
 
   // Server Errors
-  if (error?.isServerError || errorStatus === 500 || errorMessage.includes('500') || errorMessage.includes('Internal server error')) {
+  if (
+    error?.isServerError ||
+    errorStatus === 500 ||
+    errorMessage.includes('500') ||
+    errorMessage.includes('Internal server error')
+  ) {
     return {
       icon: <Server className='h-6 w-6 text-red-600 dark:text-red-300' />,
       title: 'Server Error',
       description: 'The server encountered an error',
-      userMessage: 'The server encountered an error while processing your request. Please try again later.',
+      userMessage:
+        'The server encountered an error while processing your request. Please try again later.',
       recommendations: [
         'Wait a few moments and try again',
         'Check the status page for any ongoing issues',
@@ -323,4 +359,3 @@ function analyzeError(error: any): {
     canRetry: true,
   };
 }
-

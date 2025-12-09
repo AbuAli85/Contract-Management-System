@@ -9,6 +9,7 @@ This guide documents the comprehensive currency handling system implemented in t
 ### 1. Database Layer
 
 #### Exchange Rates Table
+
 ```sql
 CREATE TABLE exchange_rates (
     id UUID PRIMARY KEY,
@@ -24,18 +25,21 @@ CREATE TABLE exchange_rates (
 ```
 
 #### Currency Enum
+
 Supported currencies: `USD`, `OMR`, `SAR`, `AED`, `EUR`, `GBP`
 
 #### User Preferences
+
 ```sql
-ALTER TABLE profiles 
+ALTER TABLE profiles
 ADD COLUMN preferred_currency currency_code DEFAULT 'USD';
 ```
 
 #### Contracts Table
+
 ```sql
 ALTER TABLE contracts
-ADD CONSTRAINT contracts_currency_check 
+ADD CONSTRAINT contracts_currency_check
 CHECK (currency IN ('USD', 'OMR', 'SAR', 'AED', 'EUR', 'GBP'));
 ```
 
@@ -44,6 +48,7 @@ CHECK (currency IN ('USD', 'OMR', 'SAR', 'AED', 'EUR', 'GBP'));
 Location: `types/currency.ts`
 
 **Key Types:**
+
 - `CurrencyCode`: Union type of supported currencies
 - `ExchangeRate`: Database record type
 - `CurrencyMetadata`: Display configuration
@@ -51,6 +56,7 @@ Location: `types/currency.ts`
 - `ConversionResult`: Conversion details with metadata
 
 **Currency Configuration:**
+
 ```typescript
 export const CURRENCY_CONFIG: Record<CurrencyCode, CurrencyMetadata> = {
   USD: {
@@ -84,17 +90,19 @@ Location: `lib/services/currency.service.ts`
 **Main Methods:**
 
 #### format(amount, currency, options)
+
 Formats a currency amount with proper localization.
 
 ```typescript
-currencyService.format(1234.56, 'USD')
+currencyService.format(1234.56, 'USD');
 // Output: "$ 1,234.56"
 
-currencyService.format(1234.567, 'OMR')
+currencyService.format(1234.567, 'OMR');
 // Output: "ر.ع. 1,234.567"
 ```
 
 #### convert(amount, fromCurrency, toCurrency)
+
 Converts an amount between currencies using the latest exchange rate.
 
 ```typescript
@@ -103,6 +111,7 @@ const converted = await currencyService.convert(100, 'USD', 'OMR');
 ```
 
 #### getExchangeRate(fromCurrency, toCurrency)
+
 Fetches the exchange rate between two currencies.
 
 ```typescript
@@ -111,6 +120,7 @@ const rate = await currencyService.getExchangeRate('USD', 'OMR');
 ```
 
 #### formatWithConversion(amount, originalCurrency, displayCurrency)
+
 Formats with conversion and provides tooltip text for original amount.
 
 ```typescript
@@ -123,6 +133,7 @@ const result = await currencyService.formatWithConversion(100, 'USD', 'OMR');
 ```
 
 **Features:**
+
 - In-memory caching (1-hour duration)
 - Automatic rounding to appropriate decimal places
 - Fallback handling when conversion fails
@@ -131,6 +142,7 @@ const result = await currencyService.formatWithConversion(100, 'USD', 'OMR');
 ### 4. React Components
 
 #### CurrencyDisplay
+
 Location: `components/ui/currency-display.tsx`
 
 Displays currency amounts with automatic conversion and tooltips.
@@ -138,7 +150,7 @@ Displays currency amounts with automatic conversion and tooltips.
 ```tsx
 <CurrencyDisplay
   amount={21000}
-  currency="USD"
+  currency='USD'
   displayCurrency={preferredCurrency}
   showTooltip={true}
   compact={false}
@@ -147,6 +159,7 @@ Displays currency amounts with automatic conversion and tooltips.
 ```
 
 **Props:**
+
 - `amount`: The monetary amount
 - `currency`: Original currency of the amount
 - `displayCurrency`: Currency to display in (optional, uses original if not provided)
@@ -155,6 +168,7 @@ Displays currency amounts with automatic conversion and tooltips.
 - `showCode`: Show currency code alongside symbol
 
 #### CurrencySelector
+
 Location: `components/ui/currency-selector.tsx`
 
 Dropdown for selecting a currency.
@@ -168,6 +182,7 @@ Dropdown for selecting a currency.
 ```
 
 #### CurrencyIndicator
+
 Location: `components/ui/currency-indicator.tsx`
 
 Banner to show which currency is being displayed.
@@ -178,15 +193,17 @@ Banner to show which currency is being displayed.
 ```
 
 #### CurrencyBadge
+
 Small badge to show currency code.
 
 ```tsx
-<CurrencyBadge currency="OMR" />
+<CurrencyBadge currency='OMR' />
 ```
 
 ### 5. React Hooks
 
 #### useCurrencyPreference
+
 Location: `hooks/use-currency-preference.ts`
 
 Hook to manage user's preferred currency.
@@ -194,13 +211,13 @@ Hook to manage user's preferred currency.
 ```tsx
 function MyComponent() {
   const {
-    preferredCurrency,      // Current preference
-    setPreferredCurrency,   // Update function
-    loading,                // Loading state
-    error                   // Error state
+    preferredCurrency, // Current preference
+    setPreferredCurrency, // Update function
+    loading, // Loading state
+    error, // Error state
   } = useCurrencyPreference();
 
-  const handleChange = async (newCurrency) => {
+  const handleChange = async newCurrency => {
     const success = await setPreferredCurrency(newCurrency);
     if (success) {
       // Currency updated
@@ -212,6 +229,7 @@ function MyComponent() {
 ### 6. Settings Component
 
 #### CurrencyPreferenceSettings
+
 Location: `components/settings/currency-preference-settings.tsx`
 
 Full settings card for managing currency preferences.
@@ -220,7 +238,7 @@ Full settings card for managing currency preferences.
 import { CurrencyPreferenceSettings } from '@/components/settings/currency-preference-settings';
 
 // In your settings page:
-<CurrencyPreferenceSettings />
+<CurrencyPreferenceSettings />;
 ```
 
 ## Usage Examples
@@ -238,7 +256,8 @@ function ContractCard({ contract }) {
     <div>
       <h3>{contract.title}</h3>
       <p>
-        Value: <CurrencyDisplay
+        Value:{' '}
+        <CurrencyDisplay
           amount={contract.value}
           currency={contract.currency || 'USD'}
           displayCurrency={preferredCurrency}
@@ -285,6 +304,7 @@ const success = await currencyService.updateExchangeRate(
 ## Database Functions
 
 ### get_exchange_rate(from_currency, to_currency, date)
+
 Fetches the most recent exchange rate for a currency pair.
 
 ```sql
@@ -293,6 +313,7 @@ SELECT get_exchange_rate('USD'::currency_code, 'OMR'::currency_code);
 ```
 
 ### convert_currency(amount, from_currency, to_currency, date)
+
 Converts an amount between currencies.
 
 ```sql
@@ -301,10 +322,11 @@ SELECT convert_currency(100, 'USD'::currency_code, 'OMR'::currency_code);
 ```
 
 ### contracts_with_converted_values (View)
+
 Provides contract values in multiple currencies.
 
 ```sql
-SELECT 
+SELECT
   id,
   original_value,
   original_currency,
@@ -318,74 +340,86 @@ FROM contracts_with_converted_values;
 ## Migration Steps
 
 ### Step 1: Run Database Migration
+
 ```bash
 # The migration file: supabase/migrations/20251023_add_currency_support.sql
 psql -d your_database < supabase/migrations/20251023_add_currency_support.sql
 ```
 
 ### Step 2: Update Existing Contracts
+
 ```sql
 -- Set default currency for existing contracts if null
-UPDATE contracts 
-SET currency = 'USD' 
+UPDATE contracts
+SET currency = 'USD'
 WHERE currency IS NULL;
 ```
 
 ### Step 3: Initialize User Preferences
+
 ```sql
 -- Set default currency preference for existing users
-UPDATE profiles 
-SET preferred_currency = 'USD' 
+UPDATE profiles
+SET preferred_currency = 'USD'
 WHERE preferred_currency IS NULL;
 ```
 
 ## Best Practices
 
 ### 1. Always Store Currency with Amount
+
 Never store monetary amounts without the associated currency code.
 
 ✅ **Good:**
+
 ```typescript
 const contract = {
   value: 21000,
-  currency: 'OMR'
+  currency: 'OMR',
 };
 ```
 
 ❌ **Bad:**
+
 ```typescript
 const contract = {
-  value: 21000  // What currency is this?
+  value: 21000, // What currency is this?
 };
 ```
 
 ### 2. Use CurrencyDisplay Component
+
 For consistency, always use the `CurrencyDisplay` component in React.
 
 ✅ **Good:**
+
 ```tsx
 <CurrencyDisplay amount={contract.value} currency={contract.currency} />
 ```
 
 ❌ **Bad:**
+
 ```tsx
 <span>${contract.value}</span>
 ```
 
 ### 3. Show Original Currency
+
 When converting, always provide a way to see the original currency.
 
 ✅ **Good:**
+
 ```tsx
-<CurrencyDisplay 
+<CurrencyDisplay
   amount={1000}
-  currency="USD"
-  displayCurrency="OMR"
-  showTooltip={true}  // Shows original in tooltip
+  currency='USD'
+  displayCurrency='OMR'
+  showTooltip={true} // Shows original in tooltip
 />
 ```
 
 ### 4. Handle Missing Exchange Rates
+
 Always handle cases where conversion fails.
 
 ```typescript
@@ -397,6 +431,7 @@ if (converted === null) {
 ```
 
 ### 5. Update Exchange Rates Regularly
+
 Set up a cron job or scheduled task to update exchange rates daily.
 
 ```sql
@@ -416,7 +451,7 @@ DO UPDATE SET rate = EXCLUDED.rate, updated_at = NOW();
 async function updateExchangeRatesFromAPI() {
   const response = await fetch('https://api.exchangerate.com/latest/USD');
   const data = await response.json();
-  
+
   for (const [currency, rate] of Object.entries(data.rates)) {
     if (['OMR', 'SAR', 'AED', 'EUR', 'GBP'].includes(currency)) {
       await currencyService.updateExchangeRate(
@@ -458,15 +493,19 @@ describe('CurrencyService', () => {
 ## Troubleshooting
 
 ### Issue: Exchange rate not found
+
 **Solution:** Ensure the exchange_rates table has the required currency pair. Insert missing rates.
 
 ### Issue: Currency not displaying correctly
+
 **Solution:** Check that the `CURRENCY_CONFIG` in `types/currency.ts` has the correct locale and formatting settings.
 
 ### Issue: Conversion returns null
+
 **Solution:** Verify that exchange rates exist for the date range and currency pair.
 
 ### Issue: User preference not updating
+
 **Solution:** Check that the user is authenticated and has a profile in the profiles table.
 
 ## Future Enhancements
@@ -481,6 +520,7 @@ describe('CurrencyService', () => {
 ## Summary
 
 The currency system provides:
+
 - ✅ Consistent formatting across the application
 - ✅ Automatic currency conversion based on user preferences
 - ✅ Proper handling of different decimal places (OMR: 3, others: 2)
@@ -491,4 +531,3 @@ The currency system provides:
 - ✅ Comprehensive documentation
 
 All monetary values are now displayed consistently with proper currency symbols and the ability to convert to the user's preferred currency.
-

@@ -10,10 +10,7 @@ import type {
   ExchangeRate,
   ConversionResult,
 } from '@/types/currency';
-import {
-  CURRENCY_CONFIG,
-  getCurrencyMetadata,
-} from '@/types/currency';
+import { CURRENCY_CONFIG, getCurrencyMetadata } from '@/types/currency';
 
 class CurrencyService {
   private exchangeRatesCache: Map<string, ExchangeRate> = new Map();
@@ -33,7 +30,7 @@ class CurrencyService {
     options: CurrencyDisplayOptions = {}
   ): string {
     const metadata = getCurrencyMetadata(currency);
-    
+
     const {
       showSymbol = true,
       showCode = false,
@@ -51,17 +48,17 @@ class CurrencyService {
 
     // Build the final string
     let result = '';
-    
+
     if (showSymbol && metadata.symbolPosition === 'before') {
       result += metadata.symbol + ' ';
     }
-    
+
     result += formattedNumber;
-    
+
     if (showSymbol && metadata.symbolPosition === 'after') {
       result += ' ' + metadata.symbol;
     }
-    
+
     if (showCode) {
       result += ' ' + currency;
     }
@@ -117,7 +114,7 @@ class CurrencyService {
     // Check cache first
     const cacheKey = `${fromCurrency}_${toCurrency}_${date || 'current'}`;
     const now = Date.now();
-    
+
     if (this.cacheExpiry > now && this.exchangeRatesCache.has(cacheKey)) {
       const cached = this.exchangeRatesCache.get(cacheKey);
       return cached?.rate ?? null;
@@ -129,7 +126,7 @@ class CurrencyService {
         console.error('Supabase client not available');
         return null;
       }
-      
+
       let query = supabase
         .from('exchange_rates')
         .select('*')
@@ -181,7 +178,7 @@ class CurrencyService {
     }
 
     const rate = await this.getExchangeRate(fromCurrency, toCurrency, date);
-    
+
     if (rate === null) {
       return null;
     }
@@ -207,19 +204,26 @@ class CurrencyService {
     date?: string
   ): Promise<ConversionResult | null> {
     const rate = await this.getExchangeRate(fromCurrency, toCurrency, date);
-    
+
     if (rate === null) {
       return null;
     }
 
-    const convertedAmount = await this.convert(amount, fromCurrency, toCurrency, date);
-    
+    const convertedAmount = await this.convert(
+      amount,
+      fromCurrency,
+      toCurrency,
+      date
+    );
+
     if (convertedAmount === null) {
       return null;
     }
 
-    const effectiveDate: string = date ? date : new Date().toISOString().split('T')[0] || '';
-    
+    const effectiveDate: string = date
+      ? date
+      : new Date().toISOString().split('T')[0] || '';
+
     return {
       originalAmount: amount,
       originalCurrency: fromCurrency,
@@ -239,10 +243,17 @@ class CurrencyService {
     baseCurrency: CurrencyCode
   ): Promise<Map<CurrencyCode, number>> {
     const rates = new Map<CurrencyCode, number>();
-    const currencies: CurrencyCode[] = ['USD', 'OMR', 'SAR', 'AED', 'EUR', 'GBP'];
+    const currencies: CurrencyCode[] = [
+      'USD',
+      'OMR',
+      'SAR',
+      'AED',
+      'EUR',
+      'GBP',
+    ];
 
     await Promise.all(
-      currencies.map(async (currency) => {
+      currencies.map(async currency => {
         if (currency !== baseCurrency) {
           const rate = await this.getExchangeRate(baseCurrency, currency);
           if (rate !== null) {
@@ -277,21 +288,19 @@ class CurrencyService {
       }
       const today = new Date().toISOString().split('T')[0];
 
-      const { error } = await supabase
-        .from('exchange_rates')
-        .upsert(
-          {
-            from_currency: fromCurrency,
-            to_currency: toCurrency,
-            rate,
-            effective_date: today,
-            source,
-            is_active: true,
-          },
-          {
-            onConflict: 'from_currency,to_currency,effective_date',
-          }
-        );
+      const { error } = await supabase.from('exchange_rates').upsert(
+        {
+          from_currency: fromCurrency,
+          to_currency: toCurrency,
+          rate,
+          effective_date: today,
+          source,
+          is_active: true,
+        },
+        {
+          onConflict: 'from_currency,to_currency,effective_date',
+        }
+      );
 
       if (error) {
         console.error('Error updating exchange rate:', error);
@@ -370,18 +379,18 @@ class CurrencyService {
   parse(currencyString: string, currency: CurrencyCode = 'USD'): number | null {
     try {
       const metadata = getCurrencyMetadata(currency);
-      
+
       // Remove currency symbol and code
       let cleaned = currencyString
         .replace(metadata.symbol, '')
         .replace(currency, '')
         .trim();
-      
+
       // Remove thousand separators and replace decimal separator
       cleaned = cleaned
         .replace(new RegExp(`\\${metadata.thousandsSeparator}`, 'g'), '')
         .replace(metadata.decimalSeparator, '.');
-      
+
       const parsed = parseFloat(cleaned);
       return isNaN(parsed) ? null : parsed;
     } catch (error) {
@@ -396,4 +405,3 @@ export const currencyService = new CurrencyService();
 
 // Export class for testing
 export default CurrencyService;
-

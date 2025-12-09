@@ -1,9 +1,11 @@
 # Fix: Duplicate Page Title on Promoters Page
 
 ## Issue
+
 The Promoters page title shows "Promoters | Contract Management System | Contract Management System" with a duplicate site name.
 
 ## Root Cause
+
 The metadata is likely being merged with a default site title in the layout, causing duplication.
 
 ## Solution

@@ -56,7 +56,7 @@ export function PaginationControls({
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
-    
+
     if (onPageChange) {
       onPageChange(page);
     } else {
@@ -66,7 +66,7 @@ export function PaginationControls({
 
   const handlePageSizeChange = (newPageSize: string) => {
     const limit = parseInt(newPageSize);
-    
+
     if (onPageSizeChange) {
       onPageSizeChange(limit);
     } else {
@@ -77,7 +77,7 @@ export function PaginationControls({
   const getVisiblePages = () => {
     const delta = 2;
     const range: (number | string)[] = [];
-    
+
     for (
       let i = Math.max(2, currentPage - delta);
       i <= Math.min(totalPages - 1, currentPage + delta);
@@ -109,45 +109,45 @@ export function PaginationControls({
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-t border-slate-200 dark:border-slate-700 pt-4 mt-4 bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-800/30 px-3 py-3.5 rounded-lg">
+    <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-t border-slate-200 dark:border-slate-700 pt-4 mt-4 bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-800/30 px-3 py-3.5 rounded-lg'>
       {/* Left section: Info and controls - All elements on same baseline */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
         {/* Results info - Exact h-9 for perfect alignment */}
-        <div className="flex items-center h-9 text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+        <div className='flex items-center h-9 text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap'>
           Showing{' '}
-          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+          <span className='font-bold text-indigo-600 dark:text-indigo-400'>
             {startIndex.toLocaleString()}
-          </span>
-          {' '}to{' '}
-          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+          </span>{' '}
+          to{' '}
+          <span className='font-bold text-indigo-600 dark:text-indigo-400'>
             {endIndex.toLocaleString()}
-          </span>
-          {' '}of{' '}
-          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+          </span>{' '}
+          of{' '}
+          <span className='font-bold text-indigo-600 dark:text-indigo-400'>
             {totalItems.toLocaleString()}
-          </span>
-          {' '}members
+          </span>{' '}
+          members
         </div>
-        
+
         {/* Visual separator */}
-        <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600"></div>
-        
+        <div className='hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600'></div>
+
         {/* Page size selector - Exact h-9 */}
         {showPageSizeSelector && (
           <>
-            <div className="flex items-center gap-2 h-9">
-              <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+            <div className='flex items-center gap-2 h-9'>
+              <label className='text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap'>
                 Per page:
               </label>
               <Select
                 value={pageSize.toString()}
                 onValueChange={handlePageSizeChange}
               >
-                <SelectTrigger className="h-9 w-[75px] border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400">
+                <SelectTrigger className='h-9 w-[75px] border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {pageSizeOptions.map((size) => (
+                  {pageSizeOptions.map(size => (
                     <SelectItem key={size} value={size.toString()}>
                       {size}
                     </SelectItem>
@@ -155,39 +155,42 @@ export function PaginationControls({
                 </SelectContent>
               </Select>
             </div>
-            
+
             {/* Separator after Per page */}
-            <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600"></div>
+            <div className='hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-600'></div>
           </>
         )}
-        
+
         {/* Page indicator badge - Using box-border to include border in height */}
-        <div className="flex items-center justify-center h-9 box-border text-sm text-slate-600 dark:text-slate-400 bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-800 dark:via-slate-750 dark:to-slate-700 px-3.5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm whitespace-nowrap">
+        <div className='flex items-center justify-center h-9 box-border text-sm text-slate-600 dark:text-slate-400 bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-800 dark:via-slate-750 dark:to-slate-700 px-3.5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm whitespace-nowrap'>
           Page{' '}
-          <span className="font-bold text-slate-800 dark:text-slate-200 mx-1">
+          <span className='font-bold text-slate-800 dark:text-slate-200 mx-1'>
             {currentPage}
-          </span>
-          {' '}of{' '}
-          <span className="font-bold text-slate-800 dark:text-slate-200 ml-1">
+          </span>{' '}
+          of{' '}
+          <span className='font-bold text-slate-800 dark:text-slate-200 ml-1'>
             {totalPages}
           </span>
         </div>
-        
+
         {/* Jump to page input - Exact h-9 with box-border */}
         {totalPages > 5 && (
-          <div className="flex items-center gap-2 h-9">
-            <label htmlFor="page-jump" className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+          <div className='flex items-center gap-2 h-9'>
+            <label
+              htmlFor='page-jump'
+              className='text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap'
+            >
               Go to:
             </label>
             <input
-              id="page-jump"
-              type="number"
-              min="1"
+              id='page-jump'
+              type='number'
+              min='1'
               max={totalPages}
-              placeholder="#"
-              aria-label="Jump to page number"
-              className="w-[70px] h-9 box-border px-2.5 text-sm text-center border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all hover:border-indigo-400 dark:hover:border-indigo-500"
-              onKeyDown={(e) => {
+              placeholder='#'
+              aria-label='Jump to page number'
+              className='w-[70px] h-9 box-border px-2.5 text-sm text-center border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all hover:border-indigo-400 dark:hover:border-indigo-500'
+              onKeyDown={e => {
                 if (e.key === 'Enter') {
                   const page = parseInt((e.target as HTMLInputElement).value);
                   if (page >= 1 && page <= totalPages) {
@@ -202,9 +205,9 @@ export function PaginationControls({
       </div>
 
       {/* Right section: Page navigation */}
-      <div className="flex justify-center sm:justify-start lg:justify-end mt-2 lg:mt-0">
-        <Pagination className="mx-0">
-          <PaginationContent className="gap-1.5">
+      <div className='flex justify-center sm:justify-start lg:justify-end mt-2 lg:mt-0'>
+        <Pagination className='mx-0'>
+          <PaginationContent className='gap-1.5'>
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => handlePageChange(currentPage - 1)}
@@ -220,7 +223,7 @@ export function PaginationControls({
             {getVisiblePages().map((page, index) => (
               <PaginationItem key={`${page}-${index}`}>
                 {page === '...' ? (
-                  <PaginationEllipsis className="text-slate-400 dark:text-slate-500" />
+                  <PaginationEllipsis className='text-slate-400 dark:text-slate-500' />
                 ) : (
                   <PaginationLink
                     onClick={() => handlePageChange(page as number)}
@@ -255,4 +258,3 @@ export function PaginationControls({
     </div>
   );
 }
-

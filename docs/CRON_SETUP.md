@@ -7,6 +7,7 @@ This guide explains how to set up automated document compliance monitoring for y
 ## How It Works
 
 The document monitoring system:
+
 1. **Checks all promoter documents** (ID cards, passports) daily
 2. **Categorizes by urgency**:
    - 🚨 **Critical**: Expired documents
@@ -58,7 +59,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, report });
   } catch (error) {
     console.error('Cron job failed:', error);
-    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: String(error) },
+      { status: 500 }
+    );
   }
 }
 ```
@@ -129,7 +133,7 @@ import { scheduledDocumentCheck } from '@/lib/document-monitor';
 
 export async function GET(request: Request) {
   const apiKey = request.headers.get('x-api-key');
-  
+
   if (apiKey !== process.env.CRON_API_KEY) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -145,6 +149,7 @@ export async function GET(request: Request) {
 - **cron-job.org**: https://cron-job.org/
 
 Configure to call:
+
 ```
 GET https://yourdomain.com/api/cron/document-check
 Headers: x-api-key: your-secret-key
@@ -208,7 +213,7 @@ private async sendAlert(alert: DocumentAlert): Promise<void> {
       <p>Please renew it as soon as possible.</p>
     `
   };
-  
+
   await sgMail.send(msg);
 }
 ```
@@ -228,7 +233,7 @@ if (alert.severity === 'critical') {
   await client.messages.create({
     body: `URGENT: Your ${alert.documentType} has expired. Please renew immediately.`,
     from: process.env.TWILIO_PHONE_NUMBER,
-    to: promoter.phoneNumber
+    to: promoter.phoneNumber,
   });
 }
 ```
@@ -245,7 +250,7 @@ await supabase.from('notifications').insert({
   severity: alert.severity,
   action_url: `/en/promoters/${alert.promoterId}/documents`,
   read: false,
-  created_at: new Date().toISOString()
+  created_at: new Date().toISOString(),
 });
 ```
 
@@ -293,12 +298,12 @@ Create a monitoring endpoint:
 export async function GET() {
   const lastRun = await getLastCronRun(); // Implement this
   const nextRun = calculateNextRun();
-  
+
   return Response.json({
     status: 'healthy',
     lastRun,
     nextRun,
-    isOverdue: isOverdue(lastRun)
+    isOverdue: isOverdue(lastRun),
   });
 }
 ```
@@ -323,7 +328,7 @@ async function test() {
   const monitor = new DocumentMonitor();
   const report = await monitor.checkExpirations();
   console.log('Report:', report);
-  
+
   if (report.alerts.critical.length > 0) {
     await monitor.sendAlerts(report);
   }
@@ -366,12 +371,12 @@ test();
 
 ## Cost Estimates
 
-| Service | Free Tier | Cost |
-|---------|-----------|------|
-| **Vercel Cron** | Included | Free with plan |
-| **SendGrid Email** | 100/day | $0 - $20/month |
-| **Twilio SMS** | Trial only | $0.0075/SMS |
-| **Node-cron** | N/A | Free (self-hosted) |
+| Service            | Free Tier  | Cost               |
+| ------------------ | ---------- | ------------------ |
+| **Vercel Cron**    | Included   | Free with plan     |
+| **SendGrid Email** | 100/day    | $0 - $20/month     |
+| **Twilio SMS**     | Trial only | $0.0075/SMS        |
+| **Node-cron**      | N/A        | Free (self-hosted) |
 
 ## Next Steps
 
@@ -386,4 +391,3 @@ test();
 ---
 
 **Questions?** Check the [main documentation](./PROMOTER_METRICS_FIX.md) or [compliance guide](./DOCUMENT_COMPLIANCE.md).
-

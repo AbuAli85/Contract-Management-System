@@ -1,6 +1,7 @@
 # Location Fields Data Flow Diagram
 
 ## Overview
+
 This document illustrates how location data flows from the frontend through the API to Make.com and finally into the generated PDF contract.
 
 ---
@@ -270,6 +271,7 @@ This document illustrates how location data flows from the frontend through the 
 ## Fallback Logic Visualization
 
 ### Scenario 1: All Location Fields Provided ✅
+
 ```
 Input:
 ├─ work_location: "Muscat, Oman"
@@ -286,6 +288,7 @@ Document Output:
 ```
 
 ### Scenario 2: Only work_location Provided (Backward Compatible) ✅
+
 ```
 Input:
 └─ work_location: "Muscat, Oman"
@@ -300,6 +303,7 @@ Document Output:
 ```
 
 ### Scenario 3: Partial Location Fields ✅
+
 ```
 Input:
 ├─ work_location: "Default Location"
@@ -315,6 +319,7 @@ Document Output:
 ```
 
 ### Scenario 4: Empty Location Fields (Edge Case) ⚠️
+
 ```
 Input:
 ├─ work_location: ""
@@ -335,14 +340,20 @@ Document Output:
 ## Key Data Transformation Points
 
 ### 🔵 Point 1: API Route (Lines 173-175)
+
 **Purpose:** Set fallback values
+
 ```typescript
-const location_en = contractData.location_en || contractData.work_location || '';
-const location_ar = contractData.location_ar || contractData.work_location || '';
+const location_en =
+  contractData.location_en || contractData.work_location || '';
+const location_ar =
+  contractData.location_ar || contractData.work_location || '';
 ```
 
 ### 🔵 Point 2: API Route (Lines 304-309)
+
 **Purpose:** Add to enriched payload
+
 ```typescript
 enrichedContractData = {
   ...enrichedContractData,
@@ -352,13 +363,17 @@ enrichedContractData = {
 ```
 
 ### 🔵 Point 3: Make.com Module 55
+
 **Purpose:** Store with fallback logic
+
 ```javascript
 {{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}
 ```
 
 ### 🔵 Point 4: Make.com Module 56
+
 **Purpose:** Replace in template
+
 ```json
 "location_en": "{{55.stored_location_en}}",
 "location_ar": "{{55.stored_location_ar}}"
@@ -387,19 +402,19 @@ The location data flows through 4 main stages:
                          location_en: "Muscat",
                          location_ar: "مسقط"
                        }
-                       
+
 2. Check logs → API route shows enriched data
                 ✅ location_en: "Muscat"
                 ✅ location_ar: "مسقط"
-                
+
 3. Check Make.com → Module 55 shows stored variables
                     ✅ stored_location_en: "Muscat"
                     ✅ stored_location_ar: "مسقط"
-                    
+
 4. Check template → Module 56 replaces placeholders
                     {{location_en}} → "Muscat"
                     {{location_ar}} → "مسقط"
-                    
+
 5. Check PDF → Download and verify
                ✅ English section shows "Muscat"
                ✅ Arabic section shows "مسقط"
@@ -408,7 +423,7 @@ The location data flows through 4 main stages:
 ---
 
 ## Related Documents
+
 - `MAKECOM_LOCATION_UPDATE_STEPS.md` - Step-by-step update guide
 - `LOCATION_FIELDS_IMPLEMENTATION.md` - Detailed technical implementation
 - `MAKECOM_SIMPLE_CONTRACT_FLOW_WITH_LOCATIONS.json` - Complete Make.com flow
-

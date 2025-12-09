@@ -8,7 +8,9 @@ const path = require('path');
 
 console.log('\n🔧 Google Service Account Setup Helper\n');
 
-console.log('📋 This script will help you set up your Google Service Account credentials securely.\n');
+console.log(
+  '📋 This script will help you set up your Google Service Account credentials securely.\n'
+);
 
 console.log('🚨 IMPORTANT SECURITY NOTES:');
 console.log('   - Never commit actual credentials to git');
@@ -38,11 +40,15 @@ console.log('   You have two options:\n');
 
 console.log('   Option A: Direct JSON (for local development)');
 console.log('   Add to your .env.local:');
-console.log('   GOOGLE_SERVICE_ACCOUNT_KEY=\'{"type":"service_account",...}\'\n');
+console.log(
+  '   GOOGLE_SERVICE_ACCOUNT_KEY=\'{"type":"service_account",...}\'\n'
+);
 
 console.log('   Option B: Base64 Encoded (for production)');
 console.log('   Add to your production environment:');
-console.log('   GOOGLE_SERVICE_ACCOUNT_KEY_BASE64=eyJ0eXBlIjoic2VydmljZV9hY2NvdW50Ii4uLn0=\n');
+console.log(
+  '   GOOGLE_SERVICE_ACCOUNT_KEY_BASE64=eyJ0eXBlIjoic2VydmljZV9hY2NvdW50Ii4uLn0=\n'
+);
 
 console.log('📋 Step 4: Share Google Docs Template');
 console.log('   1. Open your Google Docs template');
@@ -69,9 +75,11 @@ const envPath = path.join(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) {
   console.log('⚠️  Found .env.local file');
   console.log('   Make sure it contains your service account key');
-  console.log('   And that it\'s in your .gitignore file\n');
+  console.log("   And that it's in your .gitignore file\n");
 } else {
-  console.log('💡 Tip: Create a .env.local file with your service account key\n');
+  console.log(
+    '💡 Tip: Create a .env.local file with your service account key\n'
+  );
 }
 
 console.log('🚀 Ready to generate contracts!');

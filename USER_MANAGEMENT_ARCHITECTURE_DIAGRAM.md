@@ -414,9 +414,8 @@ Request
 ```
 
 This architecture ensures:
+
 - ✅ Fast permission checks (cache first)
 - ✅ Reliable fallback (materialized view → direct query)
 - ✅ Minimal database load
 - ✅ Sub-second response times
-
-

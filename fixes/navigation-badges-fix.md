@@ -1,9 +1,11 @@
 # Fix: Remove Misleading Navigation Badges
 
 ## Issue
+
 All navigation items display sequential badge numbers (3-16), which users may confuse with notification counts.
 
 ## Root Cause
+
 These badges appear to be development artifacts or debugging elements that were not removed.
 
 ## Solution
@@ -11,6 +13,7 @@ These badges appear to be development artifacts or debugging elements that were 
 ### Step 1: Locate Navigation Component
 
 The navigation is likely in one of these files:
+
 - `components/authenticated-layout.tsx`
 - `components/sidebar.tsx`
 - `components/navigation.tsx`
@@ -46,6 +49,7 @@ Replace static numbers with actual notification counts:
 ## Example Fix
 
 **Before:**
+
 ```typescript
 <NavItem href="/promoters" icon={Users}>
   Promoters
@@ -54,6 +58,7 @@ Replace static numbers with actual notification counts:
 ```
 
 **After:**
+
 ```typescript
 <NavItem href="/promoters" icon={Users}>
   Promoters

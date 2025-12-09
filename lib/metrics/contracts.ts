@@ -108,7 +108,7 @@ export async function getContractMetrics(
     contracts.forEach(contract => {
       // Count by status
       const status = contract.status?.toLowerCase() || 'unknown';
-      
+
       switch (status) {
         case 'active':
           metrics.active++;
@@ -144,7 +144,7 @@ export async function getContractMetrics(
         const endDate = new Date(contract.end_date);
         const durationMs = endDate.getTime() - startDate.getTime();
         const durationDays = Math.floor(durationMs / (1000 * 60 * 60 * 24));
-        
+
         if (durationDays > 0) {
           totalDurationDays += durationDays;
           contractsWithDuration++;
@@ -155,7 +155,7 @@ export async function getContractMetrics(
           const daysUntilExpiry = Math.floor(
             (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
           );
-          
+
           if (daysUntilExpiry > 0 && daysUntilExpiry <= expiryDaysThreshold) {
             metrics.expiringSoon++;
           }
@@ -197,4 +197,3 @@ export function formatMetrics(metrics: ContractMetrics) {
     averageDuration: `${metrics.averageDuration} days`,
   };
 }
-

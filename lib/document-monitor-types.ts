@@ -26,8 +26,8 @@ export interface ComplianceReport {
   };
   alerts: {
     critical: DocumentAlert[]; // Expired
-    urgent: DocumentAlert[];   // Expiring within 7 days
-    warning: DocumentAlert[];  // Expiring within 30 days
+    urgent: DocumentAlert[]; // Expiring within 7 days
+    warning: DocumentAlert[]; // Expiring within 30 days
   };
   byDocumentType: {
     idCards: {
@@ -53,7 +53,9 @@ export function formatDocumentType(type: 'id_card' | 'passport'): string {
 /**
  * Get severity color for UI
  */
-export function getSeverityColor(severity: 'critical' | 'urgent' | 'warning'): string {
+export function getSeverityColor(
+  severity: 'critical' | 'urgent' | 'warning'
+): string {
   switch (severity) {
     case 'critical':
       return 'text-red-600 bg-red-50 border-red-200';
@@ -63,4 +65,3 @@ export function getSeverityColor(severity: 'critical' | 'urgent' | 'warning'): s
       return 'text-yellow-600 bg-yellow-50 border-yellow-200';
   }
 }
-

@@ -48,16 +48,12 @@ export function SelectFieldWithValidation({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <Label htmlFor={name} className="flex items-center gap-1">
+      <Label htmlFor={name} className='flex items-center gap-1'>
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className='text-red-500'>*</span>}
       </Label>
-      <div className="relative">
-        <Select
-          value={value}
-          onValueChange={onChange}
-          disabled={disabled}
-        >
+      <div className='relative'>
+        <Select value={value} onValueChange={onChange} disabled={disabled}>
           <SelectTrigger
             id={name}
             className={cn(
@@ -71,7 +67,7 @@ export function SelectFieldWithValidation({
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
-            {options.map((option) => (
+            {options.map(option => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -79,23 +75,28 @@ export function SelectFieldWithValidation({
           </SelectContent>
         </Select>
         {/* Validation icon */}
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
+        <div className='absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none'>
           {error && (
-            <AlertCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
+            <AlertCircle className='h-4 w-4 text-red-500' aria-hidden='true' />
           )}
           {showSuccess && (
-            <CheckCircle2 className="h-4 w-4 text-green-500" aria-hidden="true" />
+            <CheckCircle2
+              className='h-4 w-4 text-green-500'
+              aria-hidden='true'
+            />
           )}
         </div>
       </div>
       {/* Error message */}
       {error && (
-        <p id={`${name}-error`} className="text-sm text-red-500 flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" aria-hidden="true" />
+        <p
+          id={`${name}-error`}
+          className='text-sm text-red-500 flex items-center gap-1'
+        >
+          <AlertCircle className='h-3 w-3' aria-hidden='true' />
           {error.message}
         </p>
       )}
     </div>
   );
 }
-

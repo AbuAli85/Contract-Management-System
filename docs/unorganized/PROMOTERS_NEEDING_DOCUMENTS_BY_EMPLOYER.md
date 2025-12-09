@@ -17,6 +17,7 @@ Documents Needed:
 ## 🏢 **Breakdown by Employer**
 
 ### 1. **Falcon Eye Business and Promotion** (18 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 Most affected employer - 18 promoters need documents:
@@ -46,6 +47,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 2. **Falcon Eye Modern Investments SPC** (12 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. abdelrahman youssef abdelsalam ali el fakharany - ID: 122597321, Pass: a27651601
@@ -64,6 +66,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 3. **Vision Electronics LLC** (8 promoters)
+
 **Contact**: No email listed
 
 1. abdulhakkeem parakkapeedikayil - ID: 137092211, Pass: t96925739
@@ -81,6 +84,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 4. **FALCON ELECTRONIC** (7 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. ahmed tarek salaheldin aboseada - ID: 128118754, Pass: a30151700
@@ -95,6 +99,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 5. **Falcon Eye Orbit** (7 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. manan ahmed baig - ID: 100037738, Pass: ax3922923
@@ -108,6 +113,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 6. **Amjad Al Maerifa LLC** (6 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. hamayoun ahmad - ID: 137201029, Pass: cy1186311
@@ -120,6 +126,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 7. **Blue Oasis Quality Services** (7 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. akash thattayil sooraj - ID: 125809482, Pass: u5211375
@@ -133,6 +140,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 8. **AL AMRI INVESTMENT AND SERVICES LLC** (3 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. dilip raj - ID: 71433163, Pass: w6237379
@@ -142,6 +150,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 9. **Falcon Eye Investment SPC** (4 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. arslan ali - ID: 113370721, Pass: el1815442
@@ -152,6 +161,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 10. **Falcon Eye Promotion and Investment** (7 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. ayyappan mookkiah - ID: 120706443, Pass: t9910694
@@ -166,6 +176,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 11. **Falcon Eye Management and Investment** (2 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. ahmad ali - ID: 125273712, Pass: rq1815832
@@ -174,6 +185,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 12. **Quality Project Management** (4 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. ali akbar - ID: 133183008, Pass: yn1343801
@@ -184,6 +196,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 13. **Tawreed International** (2 promoters)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. abdul salam chulliparambil ammu - ID: 126742926, Pass: aa1176362
@@ -192,6 +205,7 @@ Most affected employer - 18 promoters need documents:
 ---
 
 ### 14. **Falcon Eye Projects Management** (1 promoter)
+
 **Contact**: chairman@falconeyegroup.net | +96895153930
 
 1. mohamed gamal khalaf ahmed - ID: 122526005, Pass: a26548401
@@ -256,7 +270,7 @@ Thank you!
 ### **HIGH PRIORITY** - Contact These Employers First:
 
 1. **Falcon Eye Business and Promotion** - 18 missing (42% of total)
-2. **Falcon Eye Modern Investments SPC** - 12 missing  
+2. **Falcon Eye Modern Investments SPC** - 12 missing
 3. **Vision Electronics LLC** - 8 missing (no email contact!)
 
 These 3 employers account for **38 out of 42** missing documents (90%)!
@@ -287,12 +301,12 @@ These 3 employers account for **38 out of 42** missing documents (90%)!
 
 ## 📈 **Realistic Goals**
 
-| Timeframe | Goal | Action |
-|-----------|------|--------|
-| **Week 1** | 10 uploads | Initial email + reminders |
-| **Week 2** | 20 total uploads | Follow-up calls |
-| **Month 1** | 30 total uploads | Escalation for non-compliance |
-| **Month 3** | All 42 complete | Make documents mandatory for new contracts |
+| Timeframe   | Goal             | Action                                     |
+| ----------- | ---------------- | ------------------------------------------ |
+| **Week 1**  | 10 uploads       | Initial email + reminders                  |
+| **Week 2**  | 20 total uploads | Follow-up calls                            |
+| **Month 1** | 30 total uploads | Escalation for non-compliance              |
+| **Month 3** | All 42 complete  | Make documents mandatory for new contracts |
 
 ---
 
@@ -301,11 +315,13 @@ These 3 employers account for **38 out of 42** missing documents (90%)!
 Focus on these employers for fastest results:
 
 ### **Easiest (Same Contact Person):**
+
 - All Falcon Eye companies → chairman@falconeyegroup.net
   - Total: 38 promoters
   - **One email covers 90% of missing documents!**
 
 ### **Needs Setup:**
+
 - Vision Electronics LLC → Find contact (8 promoters)
 
 ---
@@ -315,6 +331,7 @@ Focus on these employers for fastest results:
 **76.8% Complete** = **EXCELLENT!**
 
 Industry benchmarks:
+
 - Below Average: < 50%
 - Average: 50-70%
 - **Good: 70-85%** ← **You're here!**
@@ -330,20 +347,25 @@ Industry benchmarks:
 Use your analytics tools:
 
 ### **Daily Monitoring:**
+
 ```
 /analytics/promoter-documents-report
 ```
+
 - Filter by "Missing" to see remaining count
 - Watch number decrease as uploads come in
 
 ### **Weekly Review:**
+
 ```
 /analytics/employer-promoters
 ```
+
 - Check each employer's completion rate
 - See newly uploaded images
 
 ### **Export for Reports:**
+
 - Click "Export CSV" button
 - Track in Excel/Google Sheets
 - Share with management
@@ -364,7 +386,7 @@ Dear Chairman,
 We need 38 promoters across your Falcon Eye companies to upload documents:
 
 • Falcon Eye Business and Promotion: 18 promoters
-• Falcon Eye Modern Investments SPC: 12 promoters  
+• Falcon Eye Modern Investments SPC: 12 promoters
 • Falcon Eye Orbit: 7 promoters
 • Falcon Eye Investment SPC: 4 promoters
 • Others: 6 promoters
@@ -391,15 +413,18 @@ Thank you!
 ## 📞 **Contact Summary**
 
 **Primary Contact** (covers 38/42 promoters):
+
 - Email: chairman@falconeyegroup.net
 - Phone: +96895153930
 - Companies: All Falcon Eye entities
 
 **Operations Contact** (promoter level):
-- Email: oprations@falconeyegroup.net  
+
+- Email: oprations@falconeyegroup.net
 - Phone: 94884663
 
 **Action Needed**:
+
 - Find contact for Vision Electronics LLC (8 promoters)
 
 ---

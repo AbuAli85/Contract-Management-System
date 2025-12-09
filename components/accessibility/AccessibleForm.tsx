@@ -17,9 +17,9 @@ export interface AccessibleFormFieldProps {
 
 /**
  * Accessible Form Field
- * 
+ *
  * Wraps form inputs with proper labels, error messages, and ARIA attributes
- * 
+ *
  * @example
  * ```tsx
  * <AccessibleFormField
@@ -50,28 +50,23 @@ export function AccessibleFormField({
       <Label htmlFor={id} className={cn(error && 'text-red-600')}>
         {label}
         {required && (
-          <span className="text-red-600 ms-1" aria-label="required">
+          <span className='text-red-600 ms-1' aria-label='required'>
             *
           </span>
         )}
       </Label>
 
       {hint && !error && (
-        <p id={hintId} className="text-sm text-gray-500">
+        <p id={hintId} className='text-sm text-gray-500'>
           {hint}
         </p>
       )}
 
-      <div
-        aria-describedby={cn(
-          error && errorId,
-          hint && !error && hintId
-        )}
-      >
+      <div aria-describedby={cn(error && errorId, hint && !error && hintId)}>
         {React.cloneElement(children as React.ReactElement, {
           id,
-          'aria-invalid': error ? "true" : "false",
-          'aria-required': required ? "true" : "false",
+          'aria-invalid': error ? 'true' : 'false',
+          'aria-required': required ? 'true' : 'false',
           'aria-describedby': error ? errorId : hint ? hintId : undefined,
         })}
       </div>
@@ -79,9 +74,9 @@ export function AccessibleFormField({
       {error && (
         <p
           id={errorId}
-          className="text-sm text-red-600"
-          role="alert"
-          aria-live="polite"
+          className='text-sm text-red-600'
+          role='alert'
+          aria-live='polite'
         >
           {error}
         </p>
@@ -111,18 +106,18 @@ export function AccessibleRadioGroup({
       <legend className={cn('text-sm font-medium', error && 'text-red-600')}>
         {legend}
         {required && (
-          <span className="text-red-600 ms-1" aria-label="required">
+          <span className='text-red-600 ms-1' aria-label='required'>
             *
           </span>
         )}
       </legend>
 
-      <div role="radiogroup" className="space-y-2">
+      <div role='radiogroup' className='space-y-2'>
         {children}
       </div>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert" aria-live="polite">
+        <p className='text-sm text-red-600' role='alert' aria-live='polite'>
           {error}
         </p>
       )}
@@ -151,12 +146,12 @@ export function AccessibleCheckbox({
   return (
     <div className={cn('flex items-center space-x-2', className)}>
       <input
-        type="checkbox"
+        type='checkbox'
         id={id}
         checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        onChange={e => onChange(e.target.checked)}
         disabled={disabled}
-        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
         aria-label={label}
       />
       <Label
@@ -168,4 +163,3 @@ export function AccessibleCheckbox({
     </div>
   );
 }
-

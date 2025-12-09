@@ -55,7 +55,10 @@ export async function checkPermission(
 
     if (!user) {
       // Try to get session for more debugging info
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
       console.warn('🔐 RBAC: No user found', {
         hasSession: !!session,
         sessionError: sessionError?.message,
@@ -66,7 +69,9 @@ export async function checkPermission(
     if (authError || !user) {
       return {
         allowed: false,
-        reason: authError ? `Auth error: ${authError.message}` : 'User not authenticated',
+        reason: authError
+          ? `Auth error: ${authError.message}`
+          : 'User not authenticated',
         required_permission: requiredPermission,
         user_permissions: [],
         user_roles: [],
@@ -256,13 +261,13 @@ export function withRBAC<T extends any[]>(
       getRateLimitConfigForEndpoint,
       getRateLimitHeaders,
     } = await import('@/lib/security/upstash-rate-limiter');
-    
+
     const pathname = request.nextUrl.pathname;
     const method = request.method;
     const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
-    
+
     const rateLimitResult = await applyRateLimit(request, rateLimitConfig);
-    
+
     if (!rateLimitResult.success) {
       // Log rate limit violation
       console.warn('⚠️ Rate limit exceeded:', {
@@ -271,9 +276,9 @@ export function withRBAC<T extends any[]>(
         limitType: rateLimitConfig.type,
         retryAfter: rateLimitResult.retryAfter,
       });
-      
+
       const headers = getRateLimitHeaders(rateLimitResult);
-      
+
       return NextResponse.json(
         {
           success: false,
@@ -308,7 +313,7 @@ export function withRBAC<T extends any[]>(
     Object.entries(headers).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
-    
+
     return response;
   };
 }
@@ -328,13 +333,13 @@ export function withAnyRBAC<T extends any[]>(
       getRateLimitConfigForEndpoint,
       getRateLimitHeaders,
     } = await import('@/lib/security/upstash-rate-limiter');
-    
+
     const pathname = request.nextUrl.pathname;
     const method = request.method;
     const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
-    
+
     const rateLimitResult = await applyRateLimit(request, rateLimitConfig);
-    
+
     if (!rateLimitResult.success) {
       // Log rate limit violation
       console.warn('⚠️ Rate limit exceeded:', {
@@ -343,9 +348,9 @@ export function withAnyRBAC<T extends any[]>(
         limitType: rateLimitConfig.type,
         retryAfter: rateLimitResult.retryAfter,
       });
-      
+
       const headers = getRateLimitHeaders(rateLimitResult);
-      
+
       return NextResponse.json(
         {
           success: false,
@@ -380,7 +385,7 @@ export function withAnyRBAC<T extends any[]>(
     Object.entries(headers).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
-    
+
     return response;
   };
 }

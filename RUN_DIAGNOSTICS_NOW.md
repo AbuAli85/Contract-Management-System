@@ -54,10 +54,11 @@ Look for section: `=== FOREIGN KEY CONSTRAINTS ===`
 Look for section: `=== SAMPLE AUTH.USERS vs PROFILES ===`
 
 Count how many show:
-- ✅ OK: _____ 
-- ❌ Email mismatch: _____
-- ⚠️ Name mismatch: _____
-- ⚠️ Role mismatch: _____
+
+- ✅ OK: **\_**
+- ❌ Email mismatch: **\_**
+- ⚠️ Name mismatch: **\_**
+- ⚠️ Role mismatch: **\_**
 
 **If more than 10% mismatches:** ⚠️ You need consolidation migration
 
@@ -65,8 +66,8 @@ Count how many show:
 
 Look for section: `=== ORPHANED RECORDS CHECK ===`
 
-- Profiles without auth.users: _____ (should be 0)
-- auth.users without profiles: _____ (should be 0)
+- Profiles without auth.users: **\_** (should be 0)
+- auth.users without profiles: **\_** (should be 0)
 
 **If any orphans exist:** ⚠️ You need consolidation migration
 
@@ -75,9 +76,10 @@ Look for section: `=== ORPHANED RECORDS CHECK ===`
 Look for section: `=== RLS POLICIES ===`
 
 Count policies:
-- `profiles`: _____ (should be 5+)
-- `user_role_assignments`: _____ (should be 3+)
-- `roles`: _____ (should be 2+)
+
+- `profiles`: **\_** (should be 5+)
+- `user_role_assignments`: **\_** (should be 3+)
+- `roles`: **\_** (should be 2+)
 
 **If missing policies:** ⚠️ You need consolidation migration
 
@@ -85,7 +87,7 @@ Count policies:
 
 Look for section: `=== SECURITY DEFINER FUNCTIONS ===`
 
-Count functions with `⚠️ SECURITY DEFINER`: _____
+Count functions with `⚠️ SECURITY DEFINER`: **\_**
 
 **If count is 26:** ⚠️ You need function fixes migration
 
@@ -109,11 +111,11 @@ Do you have ANY of these issues?
 
 **Most Common Scenarios:**
 
-| Scenario | Migrations Needed |
-|----------|-------------------|
+| Scenario                                 | Migrations Needed                             |
+| ---------------------------------------- | --------------------------------------------- |
 | **Clean system, just function warnings** | Just `20251026_fix_function_search_paths.sql` |
-| **Messy system with conflicts** | BOTH migrations |
-| **Already consolidated, just warnings** | Just `20251026_fix_function_search_paths.sql` |
+| **Messy system with conflicts**          | BOTH migrations                               |
+| **Already consolidated, just warnings**  | Just `20251026_fix_function_search_paths.sql` |
 
 ---
 
@@ -145,7 +147,7 @@ DIAGNOSTIC RESULTS:
 4. RLS Policies:
    - profiles: _____ policies
    - user_role_assignments: _____ policies
-   
+
 5. Security Warnings:
    - SECURITY DEFINER functions: _____
 
@@ -240,6 +242,7 @@ VERDICT: Apply BOTH migrations!
 ## ⚡ Quick Commands
 
 ### Run diagnostics:
+
 ```bash
 # Dashboard: Copy scripts/diagnose-user-system.sql and run
 # OR
@@ -247,17 +250,20 @@ supabase db execute --file scripts/diagnose-user-system.sql
 ```
 
 ### Save results:
+
 ```bash
 supabase db execute --file scripts/diagnose-user-system.sql > diagnostic-results.txt
 ```
 
 ### Apply fixes:
+
 ```bash
 # This will apply both migrations automatically
 supabase db push
 ```
 
 ### Verify:
+
 ```bash
 supabase db lint
 # Should show 0 errors
@@ -284,6 +290,7 @@ After running diagnostics, you should be able to answer:
 Can't interpret results? Share them and I'll help analyze!
 
 Include:
+
 1. Section 1 output (tables)
 2. Section 8 output (data sync)
 3. Section 9 output (orphaned records)
@@ -298,4 +305,3 @@ Include:
 **Benefit:** Know exactly what needs fixing
 
 🚀 **Go run it now!**
-

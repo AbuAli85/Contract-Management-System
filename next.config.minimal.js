@@ -5,7 +5,7 @@ const withNextIntl = require('next-intl/plugin')('./next-intl.config.ts');
 const nextConfig = {
   // Basic Next.js configuration
   reactStrictMode: true,
-  
+
   // Disable problematic features temporarily
   eslint: {
     ignoreDuringBuilds: true,
@@ -13,7 +13,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // Minimal webpack configuration
   webpack: (config, { isServer }) => {
     // Basic fallbacks
@@ -23,15 +23,15 @@ const nextConfig = {
       net: false,
       tls: false,
     };
-    
+
     return config;
   },
-  
+
   // Basic image configuration
   images: {
     domains: ['reootcngcptfogfozlmz.supabase.co'],
   },
-  
+
   // Security headers
   async headers() {
     return [

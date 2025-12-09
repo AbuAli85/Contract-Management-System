@@ -15,7 +15,7 @@ I've updated the Sharaf DG form to **match your eXtra Contracts form** with thes
 ✅ **Search promoters** (like eXtra)  
 ✅ **All employment terms** (probation, notice, working hours, allowances)  
 ✅ **Clear form button**  
-✅ **Better validation and preview**  
+✅ **Better validation and preview**
 
 ---
 
@@ -106,16 +106,19 @@ I've updated the Sharaf DG form to **match your eXtra Contracts form** with thes
 ### 1. **Supplier/Brand Field** ⭐ NEW
 
 **What it is:**
+
 - Third party selection (in addition to Employer and Client)
 - Pulls from same parties database
 - Shows **only English and Arabic names** (not CRN, logos, etc.)
 
 **Why it's needed:**
+
 - Some contracts need to specify the brand/supplier separately
 - Example: Falcon Eye (Employer) supplies staff to Sharaf DG (Client) under brand "Falcon Eye Services"
 - Can be same as employer or different
 
 **How to use:**
+
 1. Select employer (e.g., "Falcon Eye Group")
 2. Select client (e.g., "Sharaf DG")
 3. Select supplier/brand (e.g., "Falcon Eye Group" or "Falcon Eye Services")
@@ -123,6 +126,7 @@ I've updated the Sharaf DG form to **match your eXtra Contracts form** with thes
    - If different brand, select different party
 
 **In template:**
+
 ```
 Supplier/Brand: {{supplier_brand_name_en}}
 المورد/العلامة التجارية: {{supplier_brand_name_ar}}
@@ -131,13 +135,15 @@ Supplier/Brand: {{supplier_brand_name_en}}
 ### 2. **Three Party Previews**
 
 After selection, you'll see 3 preview cards:
+
 - 🏢 **Employer** (First Party)
-- 🏢 **Client** (Second Party)  
+- 🏢 **Client** (Second Party)
 - 📦 **Supplier** (Brand/Service Provider) ⭐ NEW
 
 ### 3. **All Employment Fields** (Like eXtra)
 
 Now includes everything from eXtra form:
+
 - Probation period (0, 1, 3, 6 months)
 - Notice period (0, 30, 60, 90 days)
 - Working hours (20, 30, 40 hours, flexible)
@@ -160,13 +166,13 @@ When PDF is generated, these are sent to Make.com:
   first_party_name_ar: "مجموعة عين الصقر",
   first_party_crn: "1234567890",
   first_party_logo: "https://...",
-  
+
   // Second Party (Client)
   second_party_name_en: "Sharaf DG",
   second_party_name_ar: "شرف دي جي",
   second_party_crn: "9876543210",
   second_party_logo: "https://...",
-  
+
   // Supplier/Brand (NEW - Names Only)
   supplier_brand_name_en: "Falcon Eye Group",
   supplier_brand_name_ar: "مجموعة عين الصقر"
@@ -176,6 +182,7 @@ When PDF is generated, these are sent to Make.com:
 ### Complete Payload
 
 All fields sent to Make.com webhook:
+
 - ✅ All promoter data (name, ID, passport, images)
 - ✅ All 3 party selections (employer, client, supplier)
 - ✅ Contract details (number, dates, job, location)
@@ -190,11 +197,13 @@ All fields sent to Make.com webhook:
 ### Step 1: Access Form
 
 **Via Sidebar:**
+
 ```
 Dashboard → Contracts → Sharaf DG Deployment [PDF]
 ```
 
 **Or direct URL:**
+
 ```
 http://localhost:3000/en/contracts/sharaf-dg
 ```
@@ -303,6 +312,7 @@ with focus on premium product brands.
 Your generated PDF will include:
 
 ### Header:
+
 ```
 [Falcon Eye Logo]              [Sharaf DG Logo]
 
@@ -311,6 +321,7 @@ Your generated PDF will include:
 ```
 
 ### Body (Bilingual):
+
 ```
 التاريخ: 01-11-2025
 رقم المرجع: SDG-2025-TEST-001
@@ -342,15 +353,15 @@ Supplier/Brand: Falcon Eye Group
 
 ## 🎨 Differences from Old Version
 
-| Feature | Old Version | New Version |
-|---------|-------------|-------------|
-| **Supplier/Brand** | ❌ Not included | ✅ Added (3rd party) |
-| **Employment Terms** | ❌ Only basic | ✅ Full (probation, notice, hours) |
-| **Allowances** | ❌ Only salary | ✅ Housing + Transport |
-| **Auto-save** | ❌ No | ✅ Yes (every 2 seconds) |
-| **Search** | ❌ No | ✅ Yes (promoters) |
-| **Preview Cards** | 2 cards | 3 cards (employer, client, supplier) |
-| **Matching eXtra** | ❌ Different | ✅ Same style |
+| Feature              | Old Version     | New Version                          |
+| -------------------- | --------------- | ------------------------------------ |
+| **Supplier/Brand**   | ❌ Not included | ✅ Added (3rd party)                 |
+| **Employment Terms** | ❌ Only basic   | ✅ Full (probation, notice, hours)   |
+| **Allowances**       | ❌ Only salary  | ✅ Housing + Transport               |
+| **Auto-save**        | ❌ No           | ✅ Yes (every 2 seconds)             |
+| **Search**           | ❌ No           | ✅ Yes (promoters)                   |
+| **Preview Cards**    | 2 cards         | 3 cards (employer, client, supplier) |
+| **Matching eXtra**   | ❌ Different    | ✅ Same style                        |
 
 ---
 
@@ -359,6 +370,7 @@ Supplier/Brand: Falcon Eye Group
 ### Common Scenarios:
 
 #### Scenario 1: Same as Employer (Most Common)
+
 ```
 Employer: Falcon Eye Group
 Client: Sharaf DG
@@ -368,15 +380,17 @@ Use when: The employer is also the supplier
 ```
 
 #### Scenario 2: Different Brand
+
 ```
 Employer: Falcon Eye Group
-Client: Sharaf DG  
+Client: Sharaf DG
 Supplier: Falcon Eye Services ← Different entity/brand
 
 Use when: Operating under different brand name
 ```
 
 #### Scenario 3: Third-Party Supplier
+
 ```
 Employer: Falcon Eye Group
 Client: Sharaf DG
@@ -458,17 +472,20 @@ Run through this to verify everything works:
 ## 🚀 Access Methods
 
 ### Method 1: Sidebar (Primary)
+
 ```
 Login → Sidebar → Contract Management → Sharaf DG Deployment [PDF]
 ```
 
 ### Method 2: Direct URL
+
 ```
 http://localhost:3000/en/contracts/sharaf-dg
 http://localhost:3000/ar/contracts/sharaf-dg (Arabic)
 ```
 
 ### Method 3: Dashboard Card (if added)
+
 ```
 Dashboard → Contract Cards → Sharaf DG Deployment
 ```
@@ -478,11 +495,13 @@ Dashboard → Contract Cards → Sharaf DG Deployment
 ## 🎨 Visual Comparison
 
 ### Your eXtra Form:
+
 ```
 Promoter → Employer → Client → Details → Submit
 ```
 
 ### New Sharaf DG Form:
+
 ```
 Promoter → Employer → Client → Supplier → Details → Submit → PDF
             └─────────┬─────────┬────────┘
@@ -505,6 +524,7 @@ Promoter → Employer → Client → Supplier → Details → Submit → PDF
 ## ✅ Summary
 
 **What changed:**
+
 - ✅ Added Supplier/Brand field (3rd party selection)
 - ✅ Matches eXtra Contracts form style
 - ✅ All employment terms included
@@ -520,4 +540,3 @@ Promoter → Employer → Client → Supplier → Details → Submit → PDF
 ---
 
 **Try it now!** Go to your app and look for the link in the sidebar! 🚀
-

@@ -1,10 +1,12 @@
 # Issue #3: Inconsistent Dashboard Metrics
 
 ## Problem Summary
+
 **Severity**: High  
 **Status**: 🔍 Diagnosed - Critical Bug Found
 
 Dashboard displays contradictory metrics:
+
 - ✅ **Compliance rate**: 55% with "112 assigned staff"
 - ❌ **Active workforce**: 15 with "0 awaiting assignment"
 - ❌ **Document alerts**: 4 with "1 expiring soon"
@@ -60,8 +62,8 @@ const metrics = useMemo<DashboardMetrics>(() => {
   ).length; // = ~27 (from 50 visible promoters)
 
   const complianceRate =
-    dashboardPromoters.length > 0 
-      ? Math.round((compliant / dashboardPromoters.length) * 100) 
+    dashboardPromoters.length > 0
+      ? Math.round((compliant / dashboardPromoters.length) * 100)
       : 0; // = 55% (27/50)
 
   return {
@@ -123,25 +125,27 @@ But "total" and "assigned staff" show database-wide count (112)
 
 ### The Confusion
 
-| Metric | Actual Meaning | What User Thinks |
-|--------|---------------|------------------|
-| Active workforce: **15** | 15 active on current page (out of 50) | 15 active in entire system |
-| Awaiting assignment: **0** | 0 unassigned on current page | 0 unassigned in entire system |
-| Assigned staff: **112** | Total in database | Doesn't match "15 active" |
-| Compliance: **55%** | 27/50 on current page | System-wide compliance |
-| Document alerts: **4** | 4 critical on current page | Total critical in system |
+| Metric                     | Actual Meaning                        | What User Thinks              |
+| -------------------------- | ------------------------------------- | ----------------------------- |
+| Active workforce: **15**   | 15 active on current page (out of 50) | 15 active in entire system    |
+| Awaiting assignment: **0** | 0 unassigned on current page          | 0 unassigned in entire system |
+| Assigned staff: **112**    | Total in database                     | Doesn't match "15 active"     |
+| Compliance: **55%**        | 27/50 on current page                 | System-wide compliance        |
+| Document alerts: **4**     | 4 critical on current page            | Total critical in system      |
 
 ---
 
 ## Impact Assessment
 
 ### User Experience
+
 - ❌ **Misleading metrics**: Users think they see system-wide stats but get page-specific data
 - ❌ **Inconsistent numbers**: "15 active" vs "112 assigned" causes confusion
 - ❌ **Poor decision-making**: Can't trust dashboard for business decisions
 - ❌ **Loss of confidence**: System appears buggy and unreliable
 
 ### Business Impact
+
 - ❌ **Incorrect reporting**: Management sees wrong compliance rate
 - ❌ **Missed alerts**: Critical documents might be on page 2, not visible
 - ❌ **Resource misallocation**: Thinking only 15 staff are active when reality differs
@@ -174,9 +178,7 @@ export const GET = withRBAC('promoter:read:own', async () => {
     compliantResult,
   ] = await Promise.all([
     // Total promoters
-    supabase
-      .from('promoters')
-      .select('*', { count: 'exact', head: true }),
+    supabase.from('promoters').select('*', { count: 'exact', head: true }),
 
     // Active promoters
     supabase
@@ -201,14 +203,22 @@ export const GET = withRBAC('promoter:read:own', async () => {
     supabase
       .from('promoters')
       .select('*', { count: 'exact', head: true })
-      .or(`id_card_expiry_date.lt.${new Date(Date.now() + 30*24*60*60*1000).toISOString()},passport_expiry_date.lt.${new Date(Date.now() + 30*24*60*60*1000).toISOString()}`),
+      .or(
+        `id_card_expiry_date.lt.${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()},passport_expiry_date.lt.${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()}`
+      ),
 
     // Compliant (both docs valid - expires more than 30 days from now)
     supabase
       .from('promoters')
       .select('*', { count: 'exact', head: true })
-      .gt('id_card_expiry_date', new Date(Date.now() + 30*24*60*60*1000).toISOString())
-      .gt('passport_expiry_date', new Date(Date.now() + 30*24*60*60*1000).toISOString()),
+      .gt(
+        'id_card_expiry_date',
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      )
+      .gt(
+        'passport_expiry_date',
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      ),
   ]);
 
   const total = totalResult.count || 0;
@@ -275,24 +285,24 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
 -- File: supabase/migrations/20251022_create_promoter_metrics_view.sql
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS promoter_metrics_summary AS
-SELECT 
+SELECT
   COUNT(*) as total_promoters,
   COUNT(*) FILTER (WHERE status = 'active') as active_promoters,
   COUNT(*) FILTER (WHERE status = 'active' AND employer_id IS NULL) as unassigned_promoters,
-  COUNT(*) FILTER (WHERE 
-    id_card_expiry_date < CURRENT_DATE OR 
+  COUNT(*) FILTER (WHERE
+    id_card_expiry_date < CURRENT_DATE OR
     passport_expiry_date < CURRENT_DATE
   ) as critical_documents,
-  COUNT(*) FILTER (WHERE 
+  COUNT(*) FILTER (WHERE
     id_card_expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' OR
     passport_expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'
   ) as expiring_documents,
-  COUNT(*) FILTER (WHERE 
+  COUNT(*) FILTER (WHERE
     id_card_expiry_date > CURRENT_DATE + INTERVAL '30 days' AND
     passport_expiry_date > CURRENT_DATE + INTERVAL '30 days'
   ) as compliant_promoters,
   ROUND(
-    100.0 * COUNT(*) FILTER (WHERE 
+    100.0 * COUNT(*) FILTER (WHERE
       id_card_expiry_date > CURRENT_DATE + INTERVAL '30 days' AND
       passport_expiry_date > CURRENT_DATE + INTERVAL '30 days'
     ) / NULLIF(COUNT(*), 0)
@@ -350,6 +360,7 @@ const metrics = useMemo(() => {
 **Implement Option 1: Server-Side Aggregation**
 
 ### Why?
+
 - ✅ **Accurate**: Metrics from database, not filtered data
 - ✅ **Performant**: Database counts are fast, even with millions of records
 - ✅ **Scalable**: Works with any dataset size
@@ -389,14 +400,14 @@ Compliance Rate: 67% ✅ (system-wide)
 
 ### Tooltip Definitions
 
-| Metric | Definition | Calculation |
-|--------|-----------|-------------|
-| **Total Promoters** | All promoters in system | `COUNT(*)` |
-| **Active Workforce** | Promoters with active status | `COUNT(*) WHERE status='active'` |
-| **Assigned** | Active promoters with employer | `COUNT(*) WHERE employer_id IS NOT NULL` |
-| **Awaiting Assignment** | Active but no employer | `COUNT(*) WHERE employer_id IS NULL AND status='active'` |
-| **Document Alerts** | Expired + expiring documents | `COUNT(*) WHERE expiry < now() + 30 days` |
-| **Compliance Rate** | % with valid documents (>30 days) | `(valid_docs / total) * 100` |
+| Metric                  | Definition                        | Calculation                                              |
+| ----------------------- | --------------------------------- | -------------------------------------------------------- |
+| **Total Promoters**     | All promoters in system           | `COUNT(*)`                                               |
+| **Active Workforce**    | Promoters with active status      | `COUNT(*) WHERE status='active'`                         |
+| **Assigned**            | Active promoters with employer    | `COUNT(*) WHERE employer_id IS NOT NULL`                 |
+| **Awaiting Assignment** | Active but no employer            | `COUNT(*) WHERE employer_id IS NULL AND status='active'` |
+| **Document Alerts**     | Expired + expiring documents      | `COUNT(*) WHERE expiry < now() + 30 days`                |
+| **Compliance Rate**     | % with valid documents (>30 days) | `(valid_docs / total) * 100`                             |
 
 ---
 
@@ -416,16 +427,20 @@ Compliance Rate: 67% ✅ (system-wide)
 ## Files to Modify
 
 ### 1. Create API Endpoint
+
 - **New**: `app/api/dashboard/promoter-metrics/route.ts`
 
 ### 2. Update Frontend
+
 - **Modify**: `components/enhanced-promoters-view.tsx` (lines 625-685)
 - **Modify**: `components/promoters/enhanced-promoters-view-refactored.tsx` (lines 514-574)
 
 ### 3. Add Types
+
 - **Modify**: `lib/dashboard-types.ts`
 
 ### 4. Add Documentation
+
 - **New**: `docs/METRICS_DEFINITIONS.md`
 
 ---
@@ -455,12 +470,8 @@ Compliance Rate: 67% ✅ (system-wide)
 ### 1. Add Metric Refresh Button
 
 ```tsx
-<Button 
-  size="sm" 
-  variant="outline"
-  onClick={() => refetchMetrics()}
->
-  <RefreshCw className="h-4 w-4 mr-2" />
+<Button size='sm' variant='outline' onClick={() => refetchMetrics()}>
+  <RefreshCw className='h-4 w-4 mr-2' />
   Refresh Metrics
 </Button>
 ```
@@ -468,7 +479,7 @@ Compliance Rate: 67% ✅ (system-wide)
 ### 2. Show Last Updated Time
 
 ```tsx
-<p className="text-xs text-muted-foreground">
+<p className='text-xs text-muted-foreground'>
   Last updated: {formatDistanceToNow(metricsUpdatedAt)} ago
 </p>
 ```
@@ -492,4 +503,3 @@ The inconsistent metrics are caused by **mixing database-wide totals with curren
 **Effort**: **Medium** - Requires API endpoint creation and frontend updates.
 
 **Impact**: **HIGH** - Provides accurate, trustworthy metrics for decision-making.
-

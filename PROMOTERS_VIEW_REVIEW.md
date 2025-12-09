@@ -253,6 +253,7 @@ console.log('📊 Component state:', {
    - ✅ Well optimized with useMemo
 
 3. **Sort Performance:**
+
    ```typescript
    const sortedPromoters = useMemo(() => {
      return [...filteredPromoters].sort(/* sorting logic */);
@@ -328,6 +329,7 @@ console.log('📊 Component state:', {
    - ✅ Troubleshooting info
 
 3. **Empty State:**
+
    ```typescript
    if (!promoters || promoters.length === 0) {
      return (

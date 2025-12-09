@@ -254,14 +254,14 @@ body {
 /* Fix for Radix UI Tabs rendering issue - View mode toggle buttons */
 @layer components {
   /* Ensure TabsList renders as flex container */
-  [role="tablist"] {
+  [role='tablist'] {
     display: flex !important;
     flex-direction: row !important;
     gap: 0.25rem;
   }
 
   /* Ensure TabsTrigger buttons are visible and clickable */
-  [role="tab"] {
+  [role='tab'] {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
@@ -273,8 +273,8 @@ body {
   }
 
   /* Fix for Select dropdowns not showing options */
-  [role="listbox"],
-  [role="menu"],
+  [role='listbox'],
+  [role='menu'],
   [data-radix-select-content] {
     display: block !important;
     position: absolute;
@@ -285,11 +285,13 @@ body {
     border: 1px solid hsl(var(--border));
     background-color: hsl(var(--popover));
     color: hsl(var(--popover-foreground));
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 
-  [role="option"],
-  [role="menuitem"],
+  [role='option'],
+  [role='menuitem'],
   [data-radix-select-item] {
     display: flex !important;
     align-items: center;
@@ -298,8 +300,8 @@ body {
     transition: background-color 0.15s ease;
   }
 
-  [role="option"]:hover,
-  [role="menuitem"]:hover,
+  [role='option']:hover,
+  [role='menuitem']:hover,
   [data-radix-select-item]:hover {
     background-color: hsl(var(--accent));
   }
@@ -337,17 +339,17 @@ body {
   }
 
   /* Fix for Grid and Cards view rendering */
-  [data-view-mode="grid"],
-  [data-view-mode="cards"] {
+  [data-view-mode='grid'],
+  [data-view-mode='cards'] {
     display: grid !important;
     gap: 1rem;
   }
 
-  [data-view-mode="grid"] {
+  [data-view-mode='grid'] {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 
-  [data-view-mode="cards"] {
+  [data-view-mode='cards'] {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 }
@@ -376,16 +378,18 @@ body {
 @layer base {
   /* Ensure view mode transitions are smooth */
   [data-view-transition] {
-    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transition:
+      opacity 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
   }
 
-  [data-view-transition][data-state="hidden"] {
+  [data-view-transition][data-state='hidden'] {
     opacity: 0;
     transform: scale(0.95);
     pointer-events: none;
   }
 
-  [data-view-transition][data-state="visible"] {
+  [data-view-transition][data-state='visible'] {
     opacity: 1;
     transform: scale(1);
     pointer-events: auto;
@@ -394,7 +398,7 @@ body {
 
 /* Print-friendly styles */
 @media print {
-  [role="tablist"],
+  [role='tablist'],
   .no-print,
   [data-no-print] {
     display: none !important;
@@ -403,11 +407,11 @@ body {
 
 /* Mobile responsiveness fixes */
 @media (max-width: 640px) {
-  [role="tablist"] {
+  [role='tablist'] {
     width: 100%;
   }
 
-  [role="tab"] {
+  [role='tab'] {
     flex: 1;
     min-width: auto;
     font-size: 0.75rem;

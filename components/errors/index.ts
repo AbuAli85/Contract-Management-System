@@ -1,6 +1,6 @@
 /**
  * Error Components Library
- * 
+ *
  * Centralized export for all error-related components and utilities
  */
 
@@ -25,4 +25,3 @@ export {
 
 // Type exports
 export type { BaseErrorProps } from './error-types';
-

@@ -24,30 +24,26 @@ export function useFilterPersistence(
   initialState: FilterState,
   options: UseFilterPersistenceOptions
 ) {
-  const {
-    key,
-    syncWithUrl = true,
-    debounceMs = 500,
-  } = options;
-  
+  const { key, syncWithUrl = true, debounceMs = 500 } = options;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<FilterState>(() => {
     // Priority: URL params > localStorage > initial state
     if (typeof window === 'undefined') return initialState;
-    
+
     // First, try to get from URL params
     if (syncWithUrl && searchParams) {
       const urlFilters: FilterState = {};
       searchParams.forEach((value, key) => {
         urlFilters[key] = value;
       });
-      
+
       if (Object.keys(urlFilters).length > 0) {
         return { ...initialState, ...urlFilters };
       }
     }
-    
+
     // Fallback to localStorage
     try {
       const stored = localStorage.getItem(key);
@@ -58,7 +54,7 @@ export function useFilterPersistence(
     } catch (error) {
       console.error('Failed to parse stored filters:', error);
     }
-    
+
     return initialState;
   });
 
@@ -88,7 +84,7 @@ export function useFilterPersistence(
 
     const queryString = params.toString();
     const newUrl = queryString ? `?${queryString}` : window.location.pathname;
-    
+
     // Only update if different to avoid unnecessary history entries
     if (window.location.search !== `?${queryString}` && queryString !== '') {
       router.replace(newUrl, { scroll: false });
@@ -96,7 +92,7 @@ export function useFilterPersistence(
   }, [filters, syncWithUrl, router]);
 
   const updateFilters = useCallback((updates: Partial<FilterState>) => {
-    setFilters((prev) => ({ ...prev, ...updates }));
+    setFilters(prev => ({ ...prev, ...updates }));
   }, []);
 
   const resetFilters = useCallback(() => {
@@ -110,15 +106,18 @@ export function useFilterPersistence(
     return JSON.stringify(filters, null, 2);
   }, [filters]);
 
-  const importFilters = useCallback((jsonString: string) => {
-    try {
-      const imported = JSON.parse(jsonString);
-      setFilters({ ...initialState, ...imported });
-    } catch (error) {
-      console.error('Failed to import filters:', error);
-      throw new Error('Invalid filter configuration');
-    }
-  }, [initialState]);
+  const importFilters = useCallback(
+    (jsonString: string) => {
+      try {
+        const imported = JSON.parse(jsonString);
+        setFilters({ ...initialState, ...imported });
+      } catch (error) {
+        console.error('Failed to import filters:', error);
+        throw new Error('Invalid filter configuration');
+      }
+    },
+    [initialState]
+  );
 
   const shareableUrl = useCallback(() => {
     const params = new URLSearchParams();
@@ -127,7 +126,7 @@ export function useFilterPersistence(
         params.set(key, String(value));
       }
     });
-    
+
     return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
   }, [filters]);
 
@@ -140,4 +139,3 @@ export function useFilterPersistence(
     shareableUrl,
   };
 }
-

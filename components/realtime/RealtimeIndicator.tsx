@@ -7,9 +7,9 @@ import { createClient } from '@/lib/supabase/client';
 
 /**
  * Real-time Connection Indicator
- * 
+ *
  * Shows connection status to Supabase Realtime
- * 
+ *
  * @example
  * ```tsx
  * <RealtimeIndicator className="fixed bottom-4 right-4" />
@@ -24,7 +24,7 @@ export function RealtimeIndicator({ className }: { className?: string }) {
     const channel = supabase.channel('connection-status');
 
     channel
-      .on('system', {}, (payload) => {
+      .on('system', {}, payload => {
         if (payload.status === 'SUBSCRIBED') {
           setIsConnected(true);
           setShowIndicator(true);
@@ -49,17 +49,15 @@ export function RealtimeIndicator({ className }: { className?: string }) {
       className={cn(
         'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm',
         'transition-all duration-300',
-        isConnected
-          ? 'bg-green-100 text-green-700'
-          : 'bg-red-100 text-red-700',
+        isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
         className
       )}
-      role="status"
-      aria-live="polite"
+      role='status'
+      aria-live='polite'
     >
       {isConnected ? (
         <>
-          <Wifi size={16} className="animate-pulse" />
+          <Wifi size={16} className='animate-pulse' />
           <span>Real-time connected</span>
         </>
       ) : (
@@ -84,7 +82,7 @@ export function RealtimeStatusBadge() {
     const channel = supabase.channel('status-badge');
 
     channel
-      .on('system', {}, (payload) => {
+      .on('system', {}, payload => {
         setIsConnected(payload.status === 'SUBSCRIBED');
       })
       .subscribe();
@@ -96,7 +94,7 @@ export function RealtimeStatusBadge() {
 
   return (
     <div
-      className="flex items-center space-x-1 text-xs"
+      className='flex items-center space-x-1 text-xs'
       title={isConnected ? 'Real-time connected' : 'Connecting...'}
     >
       <div
@@ -105,8 +103,7 @@ export function RealtimeStatusBadge() {
           isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
         )}
       />
-      <span className="text-gray-600">Live</span>
+      <span className='text-gray-600'>Live</span>
     </div>
   );
 }
-

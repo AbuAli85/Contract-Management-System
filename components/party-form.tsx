@@ -110,9 +110,10 @@ export default function PartyForm({
         designation_id: party.designation_id || '',
         signatory_name_en: party.signatory_name_en || '',
         signatory_name_ar: party.signatory_name_ar || '',
-        cr_expiry_date: party.cr_expiry || party.cr_expiry_date
-          ? parseISO(party.cr_expiry || party.cr_expiry_date)
-          : undefined,
+        cr_expiry_date:
+          party.cr_expiry || party.cr_expiry_date
+            ? parseISO(party.cr_expiry || party.cr_expiry_date)
+            : undefined,
         contact_person: party.contact_person || '',
         contact_email: party.contact_email || '',
         contact_phone: party.contact_phone || '',
@@ -124,8 +125,7 @@ export default function PartyForm({
           ? parseISO(party.license_expiry)
           : undefined,
         status:
-          (party.status as 'Active' | 'Inactive' | 'Suspended') ||
-          'Active',
+          (party.status as 'Active' | 'Inactive' | 'Suspended') || 'Active',
         notes: party.notes || '',
       });
     } else {
@@ -162,7 +162,10 @@ export default function PartyForm({
         crn: values.crn || '',
         type: values.type as 'Employer' | 'Client',
         role: values.role || null,
-        designation_id: values.designation_id && values.designation_id.trim() !== '' ? values.designation_id : null,
+        designation_id:
+          values.designation_id && values.designation_id.trim() !== ''
+            ? values.designation_id
+            : null,
         signatory_name_en: values.signatory_name_en || null,
         signatory_name_ar: values.signatory_name_ar || null,
         cr_expiry: values.cr_expiry_date
@@ -233,13 +236,21 @@ export default function PartyForm({
                   name='name_en'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name (English) <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Name (English) <span className='text-red-500'>*</span>
+                      </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder='Party Name (EN)' 
-                          {...field} 
+                        <Input
+                          placeholder='Party Name (EN)'
+                          {...field}
                           disabled={isSubmitting}
-                          className={form.formState.errors.name_en ? 'border-red-500' : field.value && !form.formState.errors.name_en ? 'border-green-500' : ''}
+                          className={
+                            form.formState.errors.name_en
+                              ? 'border-red-500'
+                              : field.value && !form.formState.errors.name_en
+                                ? 'border-green-500'
+                                : ''
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -273,14 +284,24 @@ export default function PartyForm({
                   name='type'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Type <span className='text-red-500'>*</span>
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                         disabled={isSubmitting}
                       >
                         <FormControl>
-                          <SelectTrigger className={form.formState.errors.type ? 'border-red-500' : field.value ? 'border-green-500' : ''}>
+                          <SelectTrigger
+                            className={
+                              form.formState.errors.type
+                                ? 'border-red-500'
+                                : field.value
+                                  ? 'border-green-500'
+                                  : ''
+                            }
+                          >
                             <SelectValue placeholder='Select type' />
                           </SelectTrigger>
                         </FormControl>
@@ -304,7 +325,13 @@ export default function PartyForm({
                           placeholder='e.g., CEO, Manager, Director'
                           {...field}
                           disabled={isSubmitting}
-                          className={form.formState.errors.role ? 'border-red-500' : field.value && !form.formState.errors.role ? 'border-green-500' : ''}
+                          className={
+                            form.formState.errors.role
+                              ? 'border-red-500'
+                              : field.value && !form.formState.errors.role
+                                ? 'border-green-500'
+                                : ''
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -316,14 +343,24 @@ export default function PartyForm({
                   name='status'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Status <span className='text-red-500'>*</span>
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                         disabled={isSubmitting}
                       >
                         <FormControl>
-                          <SelectTrigger className={form.formState.errors.status ? 'border-red-500' : field.value ? 'border-green-500' : ''}>
+                          <SelectTrigger
+                            className={
+                              form.formState.errors.status
+                                ? 'border-red-500'
+                                : field.value
+                                  ? 'border-green-500'
+                                  : ''
+                            }
+                          >
                             <SelectValue placeholder='Select status' />
                           </SelectTrigger>
                         </FormControl>
@@ -352,15 +389,35 @@ export default function PartyForm({
                         disabled={isSubmitting || isLoadingDesignations}
                       >
                         <FormControl>
-                          <SelectTrigger className={form.formState.errors.designation_id ? 'border-red-500' : field.value && !form.formState.errors.designation_id ? 'border-green-500' : ''}>
-                            <SelectValue placeholder={isLoadingDesignations ? 'Loading...' : 'Select designation'} />
+                          <SelectTrigger
+                            className={
+                              form.formState.errors.designation_id
+                                ? 'border-red-500'
+                                : field.value &&
+                                    !form.formState.errors.designation_id
+                                  ? 'border-green-500'
+                                  : ''
+                            }
+                          >
+                            <SelectValue
+                              placeholder={
+                                isLoadingDesignations
+                                  ? 'Loading...'
+                                  : 'Select designation'
+                              }
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value=''>None</SelectItem>
-                          {designations.map((designation) => (
-                            <SelectItem key={designation.id} value={designation.id}>
-                              {designation.name_en} {designation.name_ar && `(${designation.name_ar})`}
+                          {designations.map(designation => (
+                            <SelectItem
+                              key={designation.id}
+                              value={designation.id}
+                            >
+                              {designation.name_en}{' '}
+                              {designation.name_ar &&
+                                `(${designation.name_ar})`}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -380,7 +437,14 @@ export default function PartyForm({
                           placeholder='Signatory name in English'
                           {...field}
                           disabled={isSubmitting}
-                          className={form.formState.errors.signatory_name_en ? 'border-red-500' : field.value && !form.formState.errors.signatory_name_en ? 'border-green-500' : ''}
+                          className={
+                            form.formState.errors.signatory_name_en
+                              ? 'border-red-500'
+                              : field.value &&
+                                  !form.formState.errors.signatory_name_en
+                                ? 'border-green-500'
+                                : ''
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -429,11 +493,17 @@ export default function PartyForm({
                         Commercial Registration Number (CRN)
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder='1010XXXXXX' 
-                          {...field} 
+                        <Input
+                          placeholder='1010XXXXXX'
+                          {...field}
                           disabled={isSubmitting}
-                          className={form.formState.errors.crn ? 'border-red-500' : field.value && !form.formState.errors.crn ? 'border-green-500' : ''}
+                          className={
+                            form.formState.errors.crn
+                              ? 'border-red-500'
+                              : field.value && !form.formState.errors.crn
+                                ? 'border-green-500'
+                                : ''
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -636,9 +706,9 @@ export default function PartyForm({
             </CardContent>
           </Card>
 
-          <Button 
-            type='submit' 
-            className='w-full' 
+          <Button
+            type='submit'
+            className='w-full'
             disabled={isSubmitting || !form.formState.isValid}
           >
             {isSubmitting ? (
@@ -646,8 +716,10 @@ export default function PartyForm({
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 {partyToEdit ? 'Updating...' : 'Adding...'}
               </>
+            ) : partyToEdit ? (
+              'Update Party'
             ) : (
-              partyToEdit ? 'Update Party' : 'Add Party'
+              'Add Party'
             )}
           </Button>
         </form>

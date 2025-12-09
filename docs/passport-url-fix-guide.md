@@ -11,6 +11,7 @@ Based on the analysis of passport URLs in your database:
 ## Current Status
 
 From the data provided:
+
 - ✅ **~30 promoters** have real passport images (with passport numbers in filename)
 - ⚠️ **~50+ promoters** have NO_PASSPORT placeholders (will be filtered out automatically)
 - ❌ **Some mismatched** passport URLs (wrong files assigned)
@@ -18,8 +19,9 @@ From the data provided:
 ## Automatic Filtering
 
 The code now automatically:
+
 1. ✅ Filters out `NO_PASSPORT` placeholders
-2. ✅ Filters out `NO_ID_CARD` placeholders  
+2. ✅ Filters out `NO_ID_CARD` placeholders
 3. ✅ Validates URL format
 4. ✅ Normalizes partial URLs to full Supabase URLs
 
@@ -30,6 +32,7 @@ The code now automatically:
 **Why**: Setting them to NULL makes it clearer that no passport image exists, rather than having a placeholder URL.
 
 **SQL Fix**:
+
 ```sql
 UPDATE promoters
 SET passport_url = NULL
@@ -47,6 +50,7 @@ WHERE passport_url LIKE '%NO_PASSPORT%';
    - Need to find the correct file for this promoter
 
 **SQL Fix**:
+
 ```sql
 -- Fix vishnu dathan binu
 UPDATE promoters
@@ -115,15 +119,15 @@ Run the SQL script `scripts/fix-passport-urls-analysis.sql` to see current statu
 Run this query periodically to check for issues:
 
 ```sql
-SELECT 
+SELECT
   name_en,
   passport_number,
   passport_url,
-  CASE 
+  CASE
     WHEN passport_url LIKE '%NO_PASSPORT%' THEN 'Placeholder'
     WHEN passport_url IS NULL THEN 'Missing'
-    WHEN passport_url LIKE '%' || LOWER(REPLACE(name_en, ' ', '_')) || '%' 
-         AND passport_url LIKE '%' || passport_number || '%' 
+    WHEN passport_url LIKE '%' || LOWER(REPLACE(name_en, ' ', '_')) || '%'
+         AND passport_url LIKE '%' || passport_number || '%'
     THEN 'Valid'
     ELSE 'Mismatch'
   END as status
@@ -144,4 +148,3 @@ ORDER BY status, name_en;
 - `app/api/contracts/makecom/generate/route.ts` - Contract generation with URL validation
 - `scripts/fix-passport-urls-analysis.sql` - Analysis and fix SQL script
 - `docs/passport-image-fix.md` - Technical documentation
-

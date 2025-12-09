@@ -155,7 +155,7 @@ export default function PromoterProfileForm({
       if (id_card_image instanceof File) {
         const { uploadIdCard } = await import('@/lib/promoter-file-upload');
         const uploadResult = await uploadIdCard(id_card_image, tempPromoterId);
-        
+
         if (uploadResult.success && uploadResult.url) {
           uploadedIdCardUrl = uploadResult.url;
         } else {
@@ -172,14 +172,18 @@ export default function PromoterProfileForm({
       // Upload new passport if provided
       if (passport_image instanceof File) {
         const { uploadPassport } = await import('@/lib/promoter-file-upload');
-        const uploadResult = await uploadPassport(passport_image, tempPromoterId);
-        
+        const uploadResult = await uploadPassport(
+          passport_image,
+          tempPromoterId
+        );
+
         if (uploadResult.success && uploadResult.url) {
           uploadedPassportUrl = uploadResult.url;
         } else {
           toast({
             title: 'Upload Error',
-            description: uploadResult.error || 'Failed to upload passport image',
+            description:
+              uploadResult.error || 'Failed to upload passport image',
             variant: 'destructive',
           });
           setIsSubmitting(false);
@@ -223,7 +227,10 @@ export default function PromoterProfileForm({
       console.error('Form submission error:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to submit promoter profile.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to submit promoter profile.',
         variant: 'destructive',
       });
     } finally {

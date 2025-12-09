@@ -406,38 +406,44 @@ export default function UnifiedLoginForm() {
 
           {/* Test accounts are only available in development for testing purposes */}
           {/* They are hidden in production for security reasons */}
-          {process.env.NODE_ENV === 'development' && 
-           process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true' && (
-            <div className='mt-6 pt-4 border-t'>
-              <p className='text-sm text-gray-600 mb-3'>Quick test accounts:</p>
-              <div className='grid grid-cols-1 gap-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
-                  disabled={loading}
-                >
-                  Test Provider Account
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => quickLogin('client@test.com', 'TestPass123!')}
-                  disabled={loading}
-                >
-                  Test Client Account
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
-                  disabled={loading}
-                >
-                  Test Admin Account
-                </Button>
+          {process.env.NODE_ENV === 'development' &&
+            process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true' && (
+              <div className='mt-6 pt-4 border-t'>
+                <p className='text-sm text-gray-600 mb-3'>
+                  Quick test accounts:
+                </p>
+                <div className='grid grid-cols-1 gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      quickLogin('provider@test.com', 'TestPass123!')
+                    }
+                    disabled={loading}
+                  >
+                    Test Provider Account
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      quickLogin('client@test.com', 'TestPass123!')
+                    }
+                    disabled={loading}
+                  >
+                    Test Client Account
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
+                    disabled={loading}
+                  >
+                    Test Admin Account
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Navigation */}
           <div className='mt-6 pt-4 border-t space-y-2'>

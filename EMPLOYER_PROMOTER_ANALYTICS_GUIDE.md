@@ -15,6 +15,7 @@ The Employer-Promoter Analytics feature provides comprehensive insights into pro
 ### 📊 Summary Statistics
 
 The dashboard displays key metrics at a glance:
+
 - **Total Employers**: Count of all employer organizations
 - **Total Promoters**: Total number of promoters in the system
 - **Average Promoters/Employer**: Average distribution ratio
@@ -22,6 +23,7 @@ The dashboard displays key metrics at a glance:
 ### 🏢 Employer Details
 
 For each employer, you can view:
+
 - Company name (English and Arabic)
 - Commercial Registration Number (CRN)
 - Contact information (email, phone)
@@ -33,6 +35,7 @@ For each employer, you can view:
 Each promoter card displays:
 
 #### Personal Details
+
 - Full name (English and Arabic)
 - Email address
 - Phone/mobile number
@@ -40,12 +43,14 @@ Each promoter card displays:
 - Current status
 
 #### Document Information
+
 - ID card number and expiry date
 - Passport number and expiry date
 - **ID Card Image** (clickable to view full size)
 - **Passport Image** (clickable to view full size)
 
 #### Professional Details
+
 - Job title
 - Work location (if applicable)
 - Assigned employer
@@ -67,11 +72,13 @@ The system determines employer-promoter relationships through:
 ## Document Images
 
 ### Viewing Documents
+
 - Click on any ID card or passport image to view it in full size in a new tab
 - Images are hosted on Supabase Storage for secure, fast access
 - Missing documents are clearly indicated with placeholder graphics
 
 ### Document Security
+
 - All document images are served through secure URLs
 - Access is controlled through Row Level Security (RLS) policies
 - Images can only be accessed by authorized users
@@ -85,6 +92,7 @@ GET /api/analytics/employer-promoters
 ```
 
 **Response Format:**
+
 ```json
 {
   "success": true,
@@ -179,6 +187,7 @@ Potential improvements for future versions:
 ### No Data Showing
 
 **Solution**: Check that:
+
 1. Employers exist in the parties table with `type='Employer'`
 2. Promoters have valid `employer_id` references or contract associations
 3. Database RLS policies allow reading promoters and parties
@@ -186,6 +195,7 @@ Potential improvements for future versions:
 ### Images Not Loading
 
 **Solution**: Verify that:
+
 1. Image URLs are valid and accessible
 2. Supabase Storage bucket has correct permissions
 3. Images were uploaded to the correct storage path
@@ -194,6 +204,7 @@ Potential improvements for future versions:
 ### Slow Loading
 
 **Solution**:
+
 1. Check database indexes on `promoters.employer_id` and `contracts` foreign keys
 2. Verify API endpoint is responding quickly
 3. Consider implementing pagination for large datasets
@@ -208,6 +219,7 @@ Potential improvements for future versions:
 ## Support
 
 For issues or questions, please:
+
 1. Check the console for error messages
 2. Verify database connectivity
 3. Review RLS policies for promoters and parties tables
@@ -218,4 +230,3 @@ For issues or questions, please:
 **Version**: 1.0.0  
 **Last Updated**: October 26, 2025  
 **Author**: Contract Management System Team
-

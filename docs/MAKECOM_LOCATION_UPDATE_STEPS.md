@@ -16,6 +16,7 @@ You need to update **2 modules** in your Make.com scenario:
 ## Module 55: SetVariables - Add Location Storage
 
 ### Current Configuration
+
 Module 55 currently stores 24 variables.
 
 ### Required Changes
@@ -34,6 +35,7 @@ Add these **2 new variables** to the `variables` array:
 ```
 
 ### Where to Add
+
 Insert these variables **after** `stored_work_location` in the variables array.
 
 ### Complete Variables List (26 variables total)
@@ -93,6 +95,7 @@ Insert these variables **after** `stored_work_location` in the variables array.
 ```
 
 This formula means:
+
 - **If** `location_en` is empty or doesn't exist
   - **Then** use `work_location` as fallback
   - **Else** use `location_en`
@@ -104,7 +107,9 @@ The `ifempty()` function is Make.com's built-in function that checks if a value 
 ## Module 56: Google Docs Template - Add Location Replacements
 
 ### Current Configuration
+
 Module 56 currently has these request replacements in the `requests` collection:
+
 - ref_number
 - first_party_name_ar
 - first_party_crn
@@ -159,11 +164,13 @@ Add these **2 new fields** to the `requests` collection:
 In your Google Docs template (ID: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`), add these placeholders where you want locations to appear:
 
 #### English Section
+
 ```
 Work Location: {{location_en}}
 ```
 
 #### Arabic Section
+
 ```
 موقع العمل: {{location_ar}}
 ```
@@ -223,6 +230,7 @@ End Date: {{contract_end_date}}
 After making the changes, test with these scenarios:
 
 ### Test 1: With Bilingual Locations
+
 ```json
 {
   "work_location": "Muscat, Oman",
@@ -230,27 +238,35 @@ After making the changes, test with these scenarios:
   "location_ar": "مسقط، سلطنة عُمان"
 }
 ```
+
 **Expected Result:**
+
 - ✅ English section shows: "Muscat, Oman"
 - ✅ Arabic section shows: "مسقط، سلطنة عُمان"
 
 ### Test 2: With work_location Only (Backward Compatibility)
+
 ```json
 {
   "work_location": "Muscat, Oman"
 }
 ```
+
 **Expected Result:**
+
 - ✅ Both English and Arabic sections show: "Muscat, Oman"
 
 ### Test 3: With location_en Only
+
 ```json
 {
   "location_en": "Muscat, Oman",
   "work_location": "Old Location"
 }
 ```
+
 **Expected Result:**
+
 - ✅ English section shows: "Muscat, Oman"
 - ✅ Arabic section shows: "Old Location" (fallback)
 
@@ -289,6 +305,7 @@ After making the changes, test with these scenarios:
 ### Problem: Location fields are empty in generated document
 
 **Check:**
+
 1. ✅ Module 55 has the new variables with correct formulas
 2. ✅ Module 56 has the new request fields pointing to `{{55.stored_location_en}}` and `{{55.stored_location_ar}}`
 3. ✅ Template has `{{location_en}}` and `{{location_ar}}` placeholders
@@ -297,6 +314,7 @@ After making the changes, test with these scenarios:
 ### Problem: Arabic text shows as ???
 
 **Solution:**
+
 1. Ensure UTF-8 encoding in webhook payload
 2. Check Google Docs template has RTL text direction for Arabic sections
 3. Verify Arabic text is properly saved in the template
@@ -304,6 +322,7 @@ After making the changes, test with these scenarios:
 ### Problem: Fallback not working
 
 **Check:**
+
 1. Module 55 formula syntax: `{{ifempty(1.location_en; 1.work_location)}}`
 2. Webhook payload includes `work_location` field
 3. Variables are saved correctly in module 55
@@ -313,6 +332,7 @@ After making the changes, test with these scenarios:
 ## Quick Copy-Paste Snippets
 
 ### For Module 55 (Add to Variables Array)
+
 ```json
 {
   "name": "stored_location_en",
@@ -325,12 +345,14 @@ After making the changes, test with these scenarios:
 ```
 
 ### For Module 56 (Add to Requests)
+
 ```json
 "location_ar": "{{55.stored_location_ar}}",
 "location_en": "{{55.stored_location_en}}"
 ```
 
 ### For Google Docs Template
+
 ```
 English: {{location_en}}
 Arabic: {{location_ar}}
@@ -341,13 +363,14 @@ Arabic: {{location_ar}}
 ## Support
 
 If you encounter issues:
+
 1. Check Make.com scenario execution history for errors
 2. Review webhook payload to ensure location fields are included
 3. Verify template placeholders match exactly (case-sensitive)
 4. Refer to `docs/LOCATION_FIELDS_IMPLEMENTATION.md` for detailed documentation
 
 ## Related Documents
+
 - `docs/MAKECOM_SIMPLE_CONTRACT_FLOW_WITH_LOCATIONS.json` - Complete updated flow
 - `docs/LOCATION_FIELDS_IMPLEMENTATION.md` - Detailed implementation guide
 - `app/api/contracts/makecom/generate/route.ts` - API route handling locations
-

@@ -5,9 +5,11 @@ Get email notifications and PDF generation working in just **10 minutes**!
 ---
 
 ## 🎯 Goal
+
 Enable professional email notifications and PDF contract generation
 
 ## ⏱️ Time Required
+
 **10-15 minutes** (5 min email + 5 min PDF + testing)
 
 ---
@@ -24,6 +26,7 @@ Enable professional email notifications and PDF contract generation
 ### 1.2 Add to Environment
 
 **Local Development** (`.env.local`):
+
 ```env
 RESEND_API_KEY=re_your_api_key_here
 RESEND_FROM_EMAIL=noreply@resend.dev
@@ -31,6 +34,7 @@ RESEND_FROM_NAME=SmartPro CMS
 ```
 
 **Vercel Production:**
+
 1. Go to Vercel Dashboard → Settings → Environment Variables
 2. Add `RESEND_API_KEY`
 3. Click **Save**
@@ -97,6 +101,7 @@ curl -X POST https://portal.thesmartpro.io/api/auth/forgot-password \
 ### Test 2: Contract PDF
 
 In your app:
+
 1. Navigate to a contract
 2. Click **Generate PDF**
 3. Wait 3 seconds
@@ -128,6 +133,7 @@ RESEND_FROM_NAME=Your Company Name
 ### Customize Email Templates
 
 Edit files in `lib/email-templates/`:
+
 - `password-reset.ts`
 - `document-expiry.ts`
 - `contract-status-change.ts`
@@ -136,6 +142,7 @@ Edit files in `lib/email-templates/`:
 ### Customize PDF Template
 
 Edit `lib/pdf-templates/professional-contract.ts`:
+
 - Change colors
 - Add logo
 - Modify layout
@@ -148,12 +155,14 @@ Edit `lib/pdf-templates/professional-contract.ts`:
 ### Emails Not Arriving
 
 **Check:**
+
 1. ✅ `RESEND_API_KEY` is set in environment
 2. ✅ Email is not in spam folder
 3. ✅ Check Resend dashboard: [resend.com/emails](https://resend.com/emails)
 4. ✅ Verify domain if using custom email
 
 **Fix:**
+
 ```bash
 # Test if API key works
 curl https://portal.thesmartpro.io/api/test-email
@@ -162,12 +171,14 @@ curl https://portal.thesmartpro.io/api/test-email
 ### PDF Generation Fails
 
 **Check:**
+
 1. ✅ Contract has all required fields
 2. ✅ Supabase storage bucket exists
 3. ✅ Bucket is set to **public**
 4. ✅ User has permission to generate PDF
 
 **Fix:**
+
 ```bash
 # Check server logs for error details
 # Look for "Missing required fields" message
@@ -176,6 +187,7 @@ curl https://portal.thesmartpro.io/api/test-email
 ### "RESEND_API_KEY not configured"
 
 **Fix:**
+
 1. Add to `.env.local` for development
 2. Add to Vercel environment variables for production
 3. **Restart dev server** or **redeploy**
@@ -200,6 +212,7 @@ curl https://portal.thesmartpro.io/api/test-email
 ## 📊 What's Next?
 
 ### Production Deployment
+
 1. Verify domain in Resend (for custom email)
 2. Add DNS records (SPF, DKIM, DMARC)
 3. Test all email types
@@ -207,6 +220,7 @@ curl https://portal.thesmartpro.io/api/test-email
 5. Monitor Resend dashboard
 
 ### Advanced Features
+
 1. Customize email templates
 2. Add company logo to PDFs
 3. Create custom PDF layouts
@@ -218,18 +232,21 @@ curl https://portal.thesmartpro.io/api/test-email
 ## 💡 Pro Tips
 
 ### Email
+
 - Use `onboarding@` for welcome emails
 - Use `alerts@` for document expiry
 - Use `contracts@` for contract notifications
 - Keep "From" name consistent
 
 ### PDF
+
 - Generate PDFs in background for large batches
 - Store PDFs for 90 days, then archive
 - Email PDF links instead of attachments
 - Use professional template for client-facing docs
 
 ### Monitoring
+
 - Check Resend dashboard daily first week
 - Monitor delivery rates (target: >95%)
 - Track bounce rates (target: <2%)
@@ -242,9 +259,10 @@ curl https://portal.thesmartpro.io/api/test-email
 **Email System:** ✅ Working  
 **PDF Generation:** ✅ Working  
 **Time Spent:** 10-15 minutes  
-**System Completion:** 85% → 95%  
+**System Completion:** 85% → 95%
 
 Now you have:
+
 - ✅ Professional email notifications
 - ✅ Beautiful PDF contracts
 - ✅ Automated document alerts
@@ -265,4 +283,3 @@ Now you have:
 ---
 
 **Next:** Test with real users and enjoy your professional contract management system! 🚀
-

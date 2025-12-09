@@ -40,14 +40,14 @@ export function validateEnvironmentVariables(): EnvCheckResult {
   // Check required variables
   for (const varName of REQUIRED_ENV_VARS) {
     const value = process.env[varName];
-    
+
     if (!value) {
       result.missing.push(varName);
       result.isValid = false;
       result.details[varName] = false;
     } else {
       result.details[varName] = true;
-      
+
       // Validate format for specific variables
       if (varName === 'NEXT_PUBLIC_SUPABASE_URL') {
         if (!value.startsWith('http')) {
@@ -55,10 +55,12 @@ export function validateEnvironmentVariables(): EnvCheckResult {
           result.isValid = false;
         }
       }
-      
+
       if (varName === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
         if (value.length < 100) {
-          result.invalid.push(`${varName} (seems too short, might be incorrect)`);
+          result.invalid.push(
+            `${varName} (seems too short, might be incorrect)`
+          );
           result.isValid = false;
         }
       }
@@ -68,9 +70,11 @@ export function validateEnvironmentVariables(): EnvCheckResult {
   // Check recommended variables (warnings only)
   for (const varName of RECOMMENDED_ENV_VARS) {
     const value = process.env[varName];
-    
+
     if (!value) {
-      result.warnings.push(`${varName} is not set (recommended for full functionality)`);
+      result.warnings.push(
+        `${varName} is not set (recommended for full functionality)`
+      );
       result.details[varName] = 'not set';
     } else {
       result.details[varName] = varName === 'RBAC_ENFORCEMENT' ? value : true;
@@ -110,9 +114,7 @@ export function getEnvErrorMessage(checkResult: EnvCheckResult): string {
   }
 
   if (checkResult.warnings.length > 0) {
-    messages.push(
-      `Warnings: ${checkResult.warnings.join('; ')}`
-    );
+    messages.push(`Warnings: ${checkResult.warnings.join('; ')}`);
   }
 
   messages.push(
@@ -173,10 +175,10 @@ export function assertRequiredEnvVars(): void {
  */
 export function getRBACMode(): 'enforce' | 'dry-run' | 'disabled' {
   const mode = process.env.RBAC_ENFORCEMENT?.toLowerCase();
-  
+
   if (mode === 'enforce' || mode === 'true') return 'enforce';
   if (mode === 'disabled' || mode === 'false') return 'disabled';
-  
+
   return 'dry-run'; // default
 }
 
@@ -189,4 +191,3 @@ export function isRBACBypassed(): boolean {
     process.env.RBAC_ENFORCEMENT === 'disabled'
   );
 }
-

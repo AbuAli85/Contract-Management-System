@@ -21,10 +21,10 @@ interface State {
 
 /**
  * Error Boundary Component
- * 
+ *
  * Catches React errors in child components and displays a fallback UI
  * instead of crashing the entire application.
- * 
+ *
  * Usage:
  * ```tsx
  * <ErrorBoundary section="Contracts">
@@ -76,7 +76,9 @@ export class ErrorBoundary extends Component<Props, State> {
     if (
       this.props.resetKeys &&
       prevProps.resetKeys &&
-      this.props.resetKeys.some((key, index) => key !== prevProps.resetKeys?.[index])
+      this.props.resetKeys.some(
+        (key, index) => key !== prevProps.resetKeys?.[index]
+      )
     ) {
       this.reset();
     }
@@ -168,4 +170,3 @@ export function withErrorBoundary<P extends object>(
 
   return WrappedComponent;
 }
-

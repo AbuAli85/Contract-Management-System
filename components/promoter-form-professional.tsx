@@ -82,7 +82,7 @@ const DateInput = ({
 }) => {
   // Convert string value to Date or undefined
   const dateValue = value ? new Date(value) : undefined;
-  
+
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
       // Format as YYYY-MM-DD for database storage
@@ -231,7 +231,8 @@ export default function PromoterFormProfessional(
     passport_url: '',
 
     // Notification settings
-    notify_days_before_id_expiry: PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY as number,
+    notify_days_before_id_expiry:
+      PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY as number,
     notify_days_before_passport_expiry:
       PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY as number,
 
@@ -279,34 +280,179 @@ export default function PromoterFormProfessional(
     if (promoterToEdit) {
       // Check if nationality is custom (not in predefined list)
       const predefinedNationalities = [
-        'afghan', 'albanian', 'algerian', 'american', 'andorran', 'angolan', 'argentinian', 'armenian',
-        'australian', 'austrian', 'azerbaijani', 'bahamian', 'bahraini', 'bangladeshi', 'barbadian',
-        'belarusian', 'belgian', 'belizean', 'beninese', 'bhutanese', 'bolivian', 'bosnian', 'botswanan',
-        'brazilian', 'british', 'bruneian', 'bulgarian', 'burkinabe', 'burmese', 'burundian', 'cambodian',
-        'cameroonian', 'canadian', 'cape_verdean', 'central_african', 'chadian', 'chilean', 'chinese',
-        'colombian', 'comoran', 'congolese', 'costa_rican', 'croatian', 'cuban', 'cypriot', 'czech',
-        'danish', 'djiboutian', 'dominican', 'dutch', 'ecuadorian', 'egyptian', 'emirati', 'equatorial_guinean',
-        'eritrean', 'estonian', 'ethiopian', 'fijian', 'filipino', 'finnish', 'french', 'gabonese',
-        'gambian', 'georgian', 'german', 'ghanaian', 'greek', 'grenadian', 'guatemalan', 'guinean',
-        'guyanese', 'haitian', 'honduran', 'hungarian', 'icelandic', 'indian', 'indonesian', 'iranian',
-        'iraqi', 'irish', 'israeli', 'italian', 'ivorian', 'jamaican', 'japanese', 'jordanian', 'kazakh',
-        'kenyan', 'kuwaiti', 'kyrgyz', 'laotian', 'latvian', 'lebanese', 'liberian', 'libyan',
-        'lithuanian', 'luxembourgish', 'macedonian', 'malagasy', 'malawian', 'malaysian', 'maldivian',
-        'malian', 'maltese', 'mauritarian', 'mauritian', 'mexican', 'moldovan', 'monacan', 'mongolian',
-        'moroccan', 'mozambican', 'namibian', 'nepalese', 'new_zealander', 'nicaraguan', 'nigerian',
-        'nigerien', 'north_korean', 'norwegian', 'omani', 'pakistani', 'palestinian', 'panamanian',
-        'papua_new_guinean', 'paraguayan', 'peruvian', 'polish', 'portuguese', 'qatari', 'romanian',
-        'russian', 'rwandan', 'saudi', 'senegalese', 'serbian', 'singaporean', 'slovak', 'slovenian',
-        'somali', 'south_african', 'south_korean', 'spanish', 'sri_lankan', 'sudanese', 'swedish',
-        'swiss', 'syrian', 'taiwanese', 'tajik', 'tanzanian', 'thai', 'togolese', 'tunisian', 'turkish',
-        'turkmen', 'ugandan', 'ukrainian', 'uruguayan', 'uzbek', 'venezuelan', 'vietnamese', 'yemeni',
-        'zambian', 'zimbabwean', 'other'
+        'afghan',
+        'albanian',
+        'algerian',
+        'american',
+        'andorran',
+        'angolan',
+        'argentinian',
+        'armenian',
+        'australian',
+        'austrian',
+        'azerbaijani',
+        'bahamian',
+        'bahraini',
+        'bangladeshi',
+        'barbadian',
+        'belarusian',
+        'belgian',
+        'belizean',
+        'beninese',
+        'bhutanese',
+        'bolivian',
+        'bosnian',
+        'botswanan',
+        'brazilian',
+        'british',
+        'bruneian',
+        'bulgarian',
+        'burkinabe',
+        'burmese',
+        'burundian',
+        'cambodian',
+        'cameroonian',
+        'canadian',
+        'cape_verdean',
+        'central_african',
+        'chadian',
+        'chilean',
+        'chinese',
+        'colombian',
+        'comoran',
+        'congolese',
+        'costa_rican',
+        'croatian',
+        'cuban',
+        'cypriot',
+        'czech',
+        'danish',
+        'djiboutian',
+        'dominican',
+        'dutch',
+        'ecuadorian',
+        'egyptian',
+        'emirati',
+        'equatorial_guinean',
+        'eritrean',
+        'estonian',
+        'ethiopian',
+        'fijian',
+        'filipino',
+        'finnish',
+        'french',
+        'gabonese',
+        'gambian',
+        'georgian',
+        'german',
+        'ghanaian',
+        'greek',
+        'grenadian',
+        'guatemalan',
+        'guinean',
+        'guyanese',
+        'haitian',
+        'honduran',
+        'hungarian',
+        'icelandic',
+        'indian',
+        'indonesian',
+        'iranian',
+        'iraqi',
+        'irish',
+        'israeli',
+        'italian',
+        'ivorian',
+        'jamaican',
+        'japanese',
+        'jordanian',
+        'kazakh',
+        'kenyan',
+        'kuwaiti',
+        'kyrgyz',
+        'laotian',
+        'latvian',
+        'lebanese',
+        'liberian',
+        'libyan',
+        'lithuanian',
+        'luxembourgish',
+        'macedonian',
+        'malagasy',
+        'malawian',
+        'malaysian',
+        'maldivian',
+        'malian',
+        'maltese',
+        'mauritarian',
+        'mauritian',
+        'mexican',
+        'moldovan',
+        'monacan',
+        'mongolian',
+        'moroccan',
+        'mozambican',
+        'namibian',
+        'nepalese',
+        'new_zealander',
+        'nicaraguan',
+        'nigerian',
+        'nigerien',
+        'north_korean',
+        'norwegian',
+        'omani',
+        'pakistani',
+        'palestinian',
+        'panamanian',
+        'papua_new_guinean',
+        'paraguayan',
+        'peruvian',
+        'polish',
+        'portuguese',
+        'qatari',
+        'romanian',
+        'russian',
+        'rwandan',
+        'saudi',
+        'senegalese',
+        'serbian',
+        'singaporean',
+        'slovak',
+        'slovenian',
+        'somali',
+        'south_african',
+        'south_korean',
+        'spanish',
+        'sri_lankan',
+        'sudanese',
+        'swedish',
+        'swiss',
+        'syrian',
+        'taiwanese',
+        'tajik',
+        'tanzanian',
+        'thai',
+        'togolese',
+        'tunisian',
+        'turkish',
+        'turkmen',
+        'ugandan',
+        'ukrainian',
+        'uruguayan',
+        'uzbek',
+        'venezuelan',
+        'vietnamese',
+        'yemeni',
+        'zambian',
+        'zimbabwean',
+        'other',
       ];
-      
+
       const existingNationality = safeGetValue(promoterToEdit, 'nationality');
-      const isCustomNationality = existingNationality && 
+      const isCustomNationality =
+        existingNationality &&
         !predefinedNationalities.includes(existingNationality.toLowerCase());
-      
+
       if (isCustomNationality) {
         setShowCustomNationality(true);
         setCustomNationality(existingNationality);
@@ -427,11 +573,16 @@ export default function PromoterFormProfessional(
 
     // Phone validation - NOW REQUIRED for better communication
     if (!formData.mobile_number || !formData.mobile_number.trim()) {
-      errors.mobile_number = 'Mobile number is required for document alerts and notifications';
+      errors.mobile_number =
+        'Mobile number is required for document alerts and notifications';
     } else {
-      const mobileValidation = validateMobileNumber(formData.mobile_number, true);
+      const mobileValidation = validateMobileNumber(
+        formData.mobile_number,
+        true
+      );
       if (!mobileValidation.isValid) {
-        errors.mobile_number = mobileValidation.error || 'Please enter a valid mobile number';
+        errors.mobile_number =
+          mobileValidation.error || 'Please enter a valid mobile number';
       }
     }
 
@@ -441,7 +592,8 @@ export default function PromoterFormProfessional(
       minDigits: 10,
     });
     if (!phoneValidation.isValid && formData.phone) {
-      errors.phone = phoneValidation.error || 'Please enter a valid phone number';
+      errors.phone =
+        phoneValidation.error || 'Please enter a valid phone number';
     }
 
     // ID Card Image validation - REQUIRED for contract generation
@@ -453,18 +605,22 @@ export default function PromoterFormProfessional(
     if (!formData.passport_number || !formData.passport_number.trim()) {
       // Add warning instead of error to allow submission but encourage passport
       if (!errors.passport_number) {
-        console.warn('⚠️ Promoter submitted without passport number - compliance risk!');
+        console.warn(
+          '⚠️ Promoter submitted without passport number - compliance risk!'
+        );
       }
     }
 
     // Passport Image validation - REQUIRED for contract generation
     if (!formData.passport_url || !formData.passport_url.trim()) {
-      errors.passport_url = 'Passport image is required for contract generation';
+      errors.passport_url =
+        'Passport image is required for contract generation';
     }
 
     // Passport expiry validation - ENCOURAGE with warning
     if (formData.passport_number && !formData.passport_expiry_date) {
-      errors.passport_expiry_date = 'Passport expiry date is required when passport number is provided';
+      errors.passport_expiry_date =
+        'Passport expiry date is required when passport number is provided';
     }
 
     // Date validation
@@ -572,7 +728,10 @@ export default function PromoterFormProfessional(
 
         // Professional Information
         job_title: formData.job_title?.trim() || null,
-        employer_id: formData.employer_id && formData.employer_id.trim() !== '' ? formData.employer_id : null,
+        employer_id:
+          formData.employer_id && formData.employer_id.trim() !== ''
+            ? formData.employer_id
+            : null,
         company: formData.company?.trim() || null,
         department: formData.department?.trim() || null,
         specialization: formData.specialization?.trim() || null,
@@ -846,7 +1005,9 @@ export default function PromoterFormProfessional(
                   <div className='space-y-2'>
                     <Label htmlFor='nationality'>Nationality</Label>
                     <Select
-                      value={showCustomNationality ? 'custom' : formData.nationality}
+                      value={
+                        showCustomNationality ? 'custom' : formData.nationality
+                      }
                       onValueChange={value => {
                         if (value === 'custom') {
                           setShowCustomNationality(true);
@@ -860,8 +1021,11 @@ export default function PromoterFormProfessional(
                       <SelectTrigger>
                         <SelectValue placeholder='Select nationality' />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[300px] overflow-y-auto">
-                        <SelectItem value='custom' className="font-semibold text-blue-600">
+                      <SelectContent className='max-h-[300px] overflow-y-auto'>
+                        <SelectItem
+                          value='custom'
+                          className='font-semibold text-blue-600'
+                        >
                           ➕ Add Custom Nationality
                         </SelectItem>
                         <SelectItem value='afghan'>Afghan</SelectItem>
@@ -897,8 +1061,12 @@ export default function PromoterFormProfessional(
                         <SelectItem value='cambodian'>Cambodian</SelectItem>
                         <SelectItem value='cameroonian'>Cameroonian</SelectItem>
                         <SelectItem value='canadian'>Canadian</SelectItem>
-                        <SelectItem value='cape_verdean'>Cape Verdean</SelectItem>
-                        <SelectItem value='central_african'>Central African</SelectItem>
+                        <SelectItem value='cape_verdean'>
+                          Cape Verdean
+                        </SelectItem>
+                        <SelectItem value='central_african'>
+                          Central African
+                        </SelectItem>
                         <SelectItem value='chadian'>Chadian</SelectItem>
                         <SelectItem value='chilean'>Chilean</SelectItem>
                         <SelectItem value='chinese'>Chinese</SelectItem>
@@ -917,7 +1085,9 @@ export default function PromoterFormProfessional(
                         <SelectItem value='ecuadorian'>Ecuadorian</SelectItem>
                         <SelectItem value='egyptian'>Egyptian</SelectItem>
                         <SelectItem value='emirati'>Emirati (UAE)</SelectItem>
-                        <SelectItem value='equatorial_guinean'>Equatorial Guinean</SelectItem>
+                        <SelectItem value='equatorial_guinean'>
+                          Equatorial Guinean
+                        </SelectItem>
                         <SelectItem value='eritrean'>Eritrean</SelectItem>
                         <SelectItem value='estonian'>Estonian</SelectItem>
                         <SelectItem value='ethiopian'>Ethiopian</SelectItem>
@@ -960,7 +1130,9 @@ export default function PromoterFormProfessional(
                         <SelectItem value='liberian'>Liberian</SelectItem>
                         <SelectItem value='libyan'>Libyan</SelectItem>
                         <SelectItem value='lithuanian'>Lithuanian</SelectItem>
-                        <SelectItem value='luxembourgish'>Luxembourgish</SelectItem>
+                        <SelectItem value='luxembourgish'>
+                          Luxembourgish
+                        </SelectItem>
                         <SelectItem value='macedonian'>Macedonian</SelectItem>
                         <SelectItem value='malagasy'>Malagasy</SelectItem>
                         <SelectItem value='malawian'>Malawian</SelectItem>
@@ -978,17 +1150,23 @@ export default function PromoterFormProfessional(
                         <SelectItem value='mozambican'>Mozambican</SelectItem>
                         <SelectItem value='namibian'>Namibian</SelectItem>
                         <SelectItem value='nepalese'>Nepalese</SelectItem>
-                        <SelectItem value='new_zealander'>New Zealander</SelectItem>
+                        <SelectItem value='new_zealander'>
+                          New Zealander
+                        </SelectItem>
                         <SelectItem value='nicaraguan'>Nicaraguan</SelectItem>
                         <SelectItem value='nigerian'>Nigerian</SelectItem>
                         <SelectItem value='nigerien'>Nigerien</SelectItem>
-                        <SelectItem value='north_korean'>North Korean</SelectItem>
+                        <SelectItem value='north_korean'>
+                          North Korean
+                        </SelectItem>
                         <SelectItem value='norwegian'>Norwegian</SelectItem>
                         <SelectItem value='omani'>Omani</SelectItem>
                         <SelectItem value='pakistani'>Pakistani</SelectItem>
                         <SelectItem value='palestinian'>Palestinian</SelectItem>
                         <SelectItem value='panamanian'>Panamanian</SelectItem>
-                        <SelectItem value='papua_new_guinean'>Papua New Guinean</SelectItem>
+                        <SelectItem value='papua_new_guinean'>
+                          Papua New Guinean
+                        </SelectItem>
                         <SelectItem value='paraguayan'>Paraguayan</SelectItem>
                         <SelectItem value='peruvian'>Peruvian</SelectItem>
                         <SelectItem value='polish'>Polish</SelectItem>
@@ -1004,8 +1182,12 @@ export default function PromoterFormProfessional(
                         <SelectItem value='slovak'>Slovak</SelectItem>
                         <SelectItem value='slovenian'>Slovenian</SelectItem>
                         <SelectItem value='somali'>Somali</SelectItem>
-                        <SelectItem value='south_african'>South African</SelectItem>
-                        <SelectItem value='south_korean'>South Korean</SelectItem>
+                        <SelectItem value='south_african'>
+                          South African
+                        </SelectItem>
+                        <SelectItem value='south_korean'>
+                          South Korean
+                        </SelectItem>
                         <SelectItem value='spanish'>Spanish</SelectItem>
                         <SelectItem value='sri_lankan'>Sri Lankan</SelectItem>
                         <SelectItem value='sudanese'>Sudanese</SelectItem>
@@ -1032,11 +1214,14 @@ export default function PromoterFormProfessional(
                         <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
-                    
+
                     {/* Custom Nationality Input */}
                     {showCustomNationality && (
                       <div className='space-y-2 mt-2 p-3 border border-blue-200 rounded-lg bg-blue-50'>
-                        <Label htmlFor='custom_nationality' className='text-blue-900'>
+                        <Label
+                          htmlFor='custom_nationality'
+                          className='text-blue-900'
+                        >
                           Custom Nationality
                         </Label>
                         <div className='flex gap-2'>
@@ -1053,7 +1238,10 @@ export default function PromoterFormProfessional(
                             size='sm'
                             onClick={() => {
                               if (customNationality.trim()) {
-                                handleInputChange('nationality', customNationality.trim());
+                                handleInputChange(
+                                  'nationality',
+                                  customNationality.trim()
+                                );
                                 setShowCustomNationality(false);
                                 setCustomNationality('');
                                 toast({
@@ -1079,7 +1267,8 @@ export default function PromoterFormProfessional(
                           </Button>
                         </div>
                         <p className='text-xs text-blue-700'>
-                          💡 Tip: Enter the nationality name and click Save to add it
+                          💡 Tip: Enter the nationality name and click Save to
+                          add it
                         </p>
                       </div>
                     )}
@@ -1139,9 +1328,12 @@ export default function PromoterFormProfessional(
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='passport_number' className="flex items-center gap-2">
+                    <Label
+                      htmlFor='passport_number'
+                      className='flex items-center gap-2'
+                    >
                       Passport Number
-                      <Badge variant="outline" className="text-xs font-normal">
+                      <Badge variant='outline' className='text-xs font-normal'>
                         Highly Recommended
                       </Badge>
                     </Label>
@@ -1155,8 +1347,9 @@ export default function PromoterFormProfessional(
                     />
                     {!formData.passport_number && (
                       <p className='text-xs text-amber-600 flex items-center gap-1'>
-                        <AlertTriangle className="h-3 w-3" />
-                        Passport required for international assignments and compliance tracking
+                        <AlertTriangle className='h-3 w-3' />
+                        Passport required for international assignments and
+                        compliance tracking
                       </p>
                     )}
                   </div>
@@ -1434,9 +1627,15 @@ export default function PromoterFormProfessional(
                   </div>
 
                   <div className='space-y-2'>
-                    <Label htmlFor='mobile_number' className="flex items-center gap-2">
+                    <Label
+                      htmlFor='mobile_number'
+                      className='flex items-center gap-2'
+                    >
                       Mobile Number
-                      <Badge variant="destructive" className="text-xs font-normal">
+                      <Badge
+                        variant='destructive'
+                        className='text-xs font-normal'
+                      >
                         Required
                       </Badge>
                     </Label>
@@ -1680,7 +1879,10 @@ export default function PromoterFormProfessional(
                     <Select
                       value={formData.employer_id || ''}
                       onValueChange={value =>
-                        handleInputChange('employer_id', value === 'clear' ? '' : value)
+                        handleInputChange(
+                          'employer_id',
+                          value === 'clear' ? '' : value
+                        )
                       }
                     >
                       <SelectTrigger>
@@ -1694,23 +1896,26 @@ export default function PromoterFormProfessional(
                       </SelectTrigger>
                       <SelectContent>
                         {formData.employer_id && (
-                          <SelectItem value="clear" className="text-red-600">
+                          <SelectItem value='clear' className='text-red-600'>
                             Clear Selection
                           </SelectItem>
                         )}
                         {employers.length === 0 && !employersLoading ? (
-                          <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                            No employers found - Add employers in Parties section
+                          <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
+                            No employers found - Add employers in Parties
+                            section
                           </div>
                         ) : (
                           <>
                             {employers.map(employer => (
                               <SelectItem key={employer.id} value={employer.id}>
-                                <div className="flex items-center gap-2">
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{employer.name_en}</span>
+                                <div className='flex items-center gap-2'>
+                                  <div className='flex flex-col'>
+                                    <span className='font-medium'>
+                                      {employer.name_en}
+                                    </span>
                                     {employer.name_ar && (
-                                      <span className="text-xs text-muted-foreground">
+                                      <span className='text-xs text-muted-foreground'>
                                         {employer.name_ar}
                                       </span>
                                     )}
@@ -1723,7 +1928,8 @@ export default function PromoterFormProfessional(
                       </SelectContent>
                     </Select>
                     <p className='text-xs text-muted-foreground'>
-                      Select the employer (company) this promoter works for. This prevents assignment mismatches.
+                      Select the employer (company) this promoter works for.
+                      This prevents assignment mismatches.
                     </p>
                     {validationErrors.employer_id && (
                       <p className='text-sm text-red-500'>

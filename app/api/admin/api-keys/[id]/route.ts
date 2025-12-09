@@ -81,12 +81,12 @@ export const PUT = withRBAC(
 
       // Update API key using admin client (bypasses RLS)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: updatedKey, error } = await (adminClient as any)
+      const { data: updatedKey, error } = (await (adminClient as any)
         .from('api_keys')
         .update(updates)
         .eq('id', id)
         .select()
-        .single() as { data: ApiKey | null; error: Error | null };
+        .single()) as { data: ApiKey | null; error: Error | null };
 
       if (error) {
         console.error('Error updating API key:', error);

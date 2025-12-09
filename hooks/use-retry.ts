@@ -1,6 +1,6 @@
 /**
  * React Hooks for Retry Logic
- * 
+ *
  * Provides easy-to-use hooks for handling retries in React components
  */
 
@@ -27,7 +27,7 @@ interface UseRetryResult<T> {
 
 /**
  * Hook for operations with automatic retry logic
- * 
+ *
  * @example
  * ```tsx
  * const { data, error, isLoading, execute } = useRetry(
@@ -37,7 +37,7 @@ interface UseRetryResult<T> {
  *   },
  *   { maxAttempts: 3, initialDelay: 1000 }
  * );
- * 
+ *
  * useEffect(() => {
  *   execute('contract-id');
  * }, []);
@@ -118,7 +118,7 @@ export function useRetry<T, TArgs extends any[]>(
 
 /**
  * Hook for API fetch operations with automatic retry
- * 
+ *
  * @example
  * ```tsx
  * const { data, error, isLoading, refetch } = useFetchWithRetry(
@@ -136,7 +136,9 @@ export function useFetchWithRetry<T>(
     const response = await fetch(url, fetchOptions);
 
     if (!response.ok) {
-      const error: any = new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const error: any = new Error(
+        `HTTP ${response.status}: ${response.statusText}`
+      );
       error.status = response.status;
       error.response = response;
       throw error;
@@ -153,7 +155,7 @@ export function useFetchWithRetry<T>(
 
 /**
  * Hook for mutations with retry logic
- * 
+ *
  * @example
  * ```tsx
  * const { mutate, isLoading, error } = useMutationWithRetry(
@@ -165,7 +167,7 @@ export function useFetchWithRetry<T>(
  *     return res.json();
  *   }
  * );
- * 
+ *
  * <Button onClick={() => mutate({ name: 'New Contract' })}>
  *   Create
  * </Button>
@@ -204,7 +206,7 @@ export function useMutationWithRetry<T, TVariables = void>(
 
 /**
  * Hook for operations with exponential backoff and toast notifications
- * 
+ *
  * @example
  * ```tsx
  * const { execute, isLoading } = useRetryWithToast(
@@ -237,4 +239,3 @@ export function useRetryWithToast<T, TArgs extends any[]>(
     },
   });
 }
-

@@ -7,6 +7,7 @@ Your diagnostic results prove you have a **staffing agency/outsourcing business 
 ### Real-World Example from Your Data
 
 **Shahmeer Abdul Sattar**:
+
 - **Employed by**: Amjad Al Maerifa LLC (payroll, benefits, HR)
 - **Works at**: Blue Oasis Quality Services (client site)
 - **5 Active Contracts**: Total value 10,800 OMR
@@ -14,6 +15,7 @@ Your diagnostic results prove you have a **staffing agency/outsourcing business 
   - AL AMRI: 2 contracts (4,200 OMR)
 
 This is **common in recruitment/staffing agencies** where:
+
 1. Agency employs the worker (employer of record)
 2. Worker is placed at client company
 3. Client pays agency, agency pays worker
@@ -46,7 +48,7 @@ contracts table:
 -- Migration: 20251022_add_client_company_to_contracts.sql
 
 -- Step 1: Add new column for clarity
-ALTER TABLE contracts 
+ALTER TABLE contracts
 ADD COLUMN IF NOT EXISTS client_company_id UUID REFERENCES parties(id);
 
 -- Step 2: Migrate existing data
@@ -73,11 +75,11 @@ CREATE INDEX IF NOT EXISTS idx_contracts_client_company ON contracts(client_comp
 
 After migration, your data becomes:
 
-| Promoter | Employer (Payroll) | Client (Work Location) | Clarity |
-|----------|-------------------|------------------------|---------|
-| Shahmeer | Amjad Al Maerifa LLC | Blue Oasis Quality Services | ✅ Clear |
-| Abdul Basit | Falcon Eye Modern Investments | Amjad Al Maerifa LLC | ✅ Clear |
-| Abdelrhman | Falcon Eye Business | Amjad Al Maerifa LLC | ✅ Clear |
+| Promoter    | Employer (Payroll)            | Client (Work Location)      | Clarity  |
+| ----------- | ----------------------------- | --------------------------- | -------- |
+| Shahmeer    | Amjad Al Maerifa LLC          | Blue Oasis Quality Services | ✅ Clear |
+| Abdul Basit | Falcon Eye Modern Investments | Amjad Al Maerifa LLC        | ✅ Clear |
+| Abdelrhman  | Falcon Eye Business           | Amjad Al Maerifa LLC        | ✅ Clear |
 
 ---
 
@@ -86,11 +88,13 @@ After migration, your data becomes:
 ### 1. Contract Display - Show Both Companies
 
 **Before** (Confusing):
+
 ```
 Employer: Blue Oasis Quality Services
 ```
 
 **After** (Clear):
+
 ```
 Employer (Payroll): Amjad Al Maerifa LLC
 Client (Work Location): Blue Oasis Quality Services
@@ -107,22 +111,25 @@ Type: Outsourced
     <CardTitle>Contract Summary</CardTitle>
   </CardHeader>
   <CardContent>
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Primary Employer */}
       <div>
-        <h4 className="font-semibold">Primary Employer</h4>
+        <h4 className='font-semibold'>Primary Employer</h4>
         <p>{promoterDetails.parties?.name_en}</p>
         <Badge>Employer of Record</Badge>
       </div>
 
       {/* Client Assignments */}
       <div>
-        <h4 className="font-semibold">Client Assignments</h4>
+        <h4 className='font-semibold'>Client Assignments</h4>
         {clientCompanies.map(client => (
-          <div key={client.id} className="flex items-center justify-between p-2 border rounded">
+          <div
+            key={client.id}
+            className='flex items-center justify-between p-2 border rounded'
+          >
             <div>
-              <p className="font-medium">{client.name}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className='font-medium'>{client.name}</p>
+              <p className='text-sm text-muted-foreground'>
                 {client.activeContracts} active contract(s)
               </p>
             </div>
@@ -181,23 +188,29 @@ export interface Contract {
   id: string;
   contract_number: string;
   promoter_id: string;
-  
+
   // Employment relationship
   employer_id?: string; // Company that employs (payroll)
   employer?: Party; // Populated employer data
-  
+
   // Work location (for outsourcing)
   client_company_id?: string | null; // Where promoter works (if different)
   client_company?: Party | null; // Populated client data
-  
+
   // Contract details
   title: string;
   contract_type: 'employment' | 'service' | 'consultancy' | 'partnership';
-  status: 'draft' | 'pending' | 'active' | 'completed' | 'terminated' | 'expired';
+  status:
+    | 'draft'
+    | 'pending'
+    | 'active'
+    | 'completed'
+    | 'terminated'
+    | 'expired';
   start_date: string;
   end_date?: string;
   value?: number;
-  
+
   // Metadata
   is_outsourced?: boolean; // Computed: employer_id !== client_company_id
   created_at: string;
@@ -222,19 +235,19 @@ export interface EnhancedContract extends Contract {
     <CardTitle>Employment Model Breakdown</CardTitle>
   </CardHeader>
   <CardContent>
-    <div className="space-y-2">
-      <div className="flex justify-between">
+    <div className='space-y-2'>
+      <div className='flex justify-between'>
         <span>Direct Employment</span>
         <Badge>{directEmploymentCount}</Badge>
       </div>
-      <div className="flex justify-between">
+      <div className='flex justify-between'>
         <span>Outsourced to Clients</span>
-        <Badge variant="secondary">{outsourcedCount}</Badge>
+        <Badge variant='secondary'>{outsourcedCount}</Badge>
       </div>
       <Separator />
-      <div className="flex justify-between font-semibold">
+      <div className='flex justify-between font-semibold'>
         <span>Total Active</span>
-        <Badge variant="outline">{totalActive}</Badge>
+        <Badge variant='outline'>{totalActive}</Badge>
       </div>
     </div>
   </CardContent>
@@ -245,7 +258,7 @@ export interface EnhancedContract extends Contract {
 
 ```sql
 -- Revenue by client company (for outsourced contracts)
-SELECT 
+SELECT
     client.name_en as client_name,
     COUNT(DISTINCT c.promoter_id) as promoters_assigned,
     COUNT(c.id) as active_contracts,
@@ -265,6 +278,7 @@ ORDER BY total_contract_value DESC;
 ## Implementation Checklist
 
 ### Phase 1: Schema Migration (30 min)
+
 - [ ] Create migration file: `20251022_add_client_company_to_contracts.sql`
 - [ ] Add `client_company_id` column
 - [ ] Migrate existing data (mismatched employer IDs)
@@ -273,12 +287,14 @@ ORDER BY total_contract_value DESC;
 - [ ] Apply to production
 
 ### Phase 2: Type Updates (15 min)
+
 - [ ] Update `Contract` interface in `lib/types.ts`
 - [ ] Add `is_outsourced` computed property
 - [ ] Update TypeScript types generation
 - [ ] Test type safety
 
 ### Phase 3: UI Updates (1-2 hours)
+
 - [ ] Update contract form to show both fields
 - [ ] Add clarity labels ("Payroll" vs "Work Location")
 - [ ] Update Professional tab to show breakdown
@@ -286,12 +302,14 @@ ORDER BY total_contract_value DESC;
 - [ ] Update contract detail page
 
 ### Phase 4: API Updates (30 min)
+
 - [ ] Update `/api/contracts` to include `client_company`
 - [ ] Add `is_outsourced` to response
 - [ ] Update contract creation endpoint
 - [ ] Test API responses
 
 ### Phase 5: Reports & Analytics (1 hour)
+
 - [ ] Add outsourcing breakdown widget
 - [ ] Client revenue report
 - [ ] Staffing agency performance metrics
@@ -316,16 +334,16 @@ BEGIN
   WHERE id = NEW.promoter_id::uuid;
 
   -- If contract employer doesn't match promoter employer
-  IF promoter_employer_id IS NOT NULL 
-     AND NEW.employer_id IS NOT NULL 
+  IF promoter_employer_id IS NOT NULL
+     AND NEW.employer_id IS NOT NULL
      AND promoter_employer_id != NEW.employer_id THEN
-    
+
     -- If client_company_id is not set, automatically set it
     IF NEW.client_company_id IS NULL THEN
       NEW.client_company_id := NEW.employer_id;
       NEW.employer_id := promoter_employer_id;
-      
-      RAISE NOTICE 'Auto-corrected outsourcing: employer=%, client=%', 
+
+      RAISE NOTICE 'Auto-corrected outsourcing: employer=%, client=%',
         promoter_employer_id, NEW.client_company_id;
     END IF;
   END IF;
@@ -345,21 +363,25 @@ CREATE TRIGGER validate_contract_outsourcing_trigger
 ## Benefits of This Approach
 
 ### Clarity ✅
+
 - No more confusion about "employer"
 - Explicit distinction between payroll and work location
 - Self-documenting schema
 
 ### Accuracy ✅
+
 - Proper representation of staffing agency model
 - Correct financial reporting (agency vs client revenue)
 - Better analytics on client relationships
 
 ### User Experience ✅
+
 - Clear labels in UI
 - Helpful tooltips
 - Intuitive contract creation
 
 ### Business Intelligence ✅
+
 - Track which clients use which agencies
 - Analyze outsourcing profitability
 - Monitor client diversification
@@ -374,13 +396,13 @@ CREATE TRIGGER validate_contract_outsourcing_trigger
 BEGIN;
 
 -- Add client_company_id column
-ALTER TABLE contracts 
+ALTER TABLE contracts
 ADD COLUMN IF NOT EXISTS client_company_id UUID REFERENCES parties(id);
 
 -- Migrate existing outsourced contracts
 -- Contracts where employer != promoter's employer are outsourced
 UPDATE contracts c
-SET 
+SET
   client_company_id = c.employer_id,  -- Current employer is actually client
   employer_id = p.employer_id,        -- Use promoter's employer
   updated_at = NOW()
@@ -392,17 +414,17 @@ WHERE c.promoter_id::uuid = p.id
   AND c.status IN ('active', 'pending');
 
 -- Add comments for clarity
-COMMENT ON COLUMN contracts.employer_id IS 
+COMMENT ON COLUMN contracts.employer_id IS
   'Company that employs the promoter (employer of record, handles payroll and benefits)';
-COMMENT ON COLUMN contracts.client_company_id IS 
+COMMENT ON COLUMN contracts.client_company_id IS
   'Client company where promoter works (for outsourced/secondment arrangements). NULL for direct employment.';
 
 -- Create index
 CREATE INDEX IF NOT EXISTS idx_contracts_client_company ON contracts(client_company_id);
 
 -- Add computed column for easy querying
-ALTER TABLE contracts 
-ADD COLUMN IF NOT EXISTS is_outsourced BOOLEAN 
+ALTER TABLE contracts
+ADD COLUMN IF NOT EXISTS is_outsourced BOOLEAN
 GENERATED ALWAYS AS (
   client_company_id IS NOT NULL AND client_company_id != employer_id
 ) STORED;
@@ -417,14 +439,14 @@ BEGIN
   FROM promoters
   WHERE id = NEW.promoter_id::uuid;
 
-  IF promoter_employer_id IS NOT NULL 
-     AND NEW.employer_id IS NOT NULL 
-     AND promoter_employer_id != NEW.employer_id 
+  IF promoter_employer_id IS NOT NULL
+     AND NEW.employer_id IS NOT NULL
+     AND promoter_employer_id != NEW.employer_id
      AND NEW.client_company_id IS NULL THEN
-    
+
     NEW.client_company_id := NEW.employer_id;
     NEW.employer_id := promoter_employer_id;
-    
+
     RAISE NOTICE 'Auto-corrected outsourcing for contract %', NEW.contract_number;
   END IF;
 
@@ -440,18 +462,18 @@ CREATE TRIGGER validate_contract_outsourcing_trigger
 COMMIT;
 
 -- Verification query
-SELECT 
+SELECT
   'Total Contracts' as metric,
   COUNT(*) as count
 FROM contracts
 UNION ALL
-SELECT 
+SELECT
   'Direct Employment' as metric,
   COUNT(*) as count
 FROM contracts
 WHERE client_company_id IS NULL OR client_company_id = employer_id
 UNION ALL
-SELECT 
+SELECT
   'Outsourced to Client' as metric,
   COUNT(*) as count
 FROM contracts
@@ -463,6 +485,7 @@ WHERE is_outsourced = true;
 ## Quick Implementation (30 Minutes)
 
 ### Step 1: Run Migration (5 min)
+
 ```sql
 -- Copy the migration SQL above
 -- Run in Supabase SQL Editor
@@ -496,31 +519,35 @@ const transformedContract = {
 ```tsx
 // File: app/[locale]/contracts/page.tsx or similar
 
-{contract.is_outsourced ? (
-  <div className="space-y-2">
-    <div className="flex items-center gap-2">
-      <Building2 className="h-4 w-4 text-blue-600" />
-      <div>
-        <p className="text-xs text-muted-foreground">Employer (Payroll)</p>
-        <p className="font-medium">{contract.employer?.name_en}</p>
+{
+  contract.is_outsourced ? (
+    <div className='space-y-2'>
+      <div className='flex items-center gap-2'>
+        <Building2 className='h-4 w-4 text-blue-600' />
+        <div>
+          <p className='text-xs text-muted-foreground'>Employer (Payroll)</p>
+          <p className='font-medium'>{contract.employer?.name_en}</p>
+        </div>
       </div>
-    </div>
-    <div className="flex items-center gap-2">
-      <MapPin className="h-4 w-4 text-green-600" />
-      <div>
-        <p className="text-xs text-muted-foreground">Client (Work Location)</p>
-        <p className="font-medium">{contract.client?.name_en}</p>
+      <div className='flex items-center gap-2'>
+        <MapPin className='h-4 w-4 text-green-600' />
+        <div>
+          <p className='text-xs text-muted-foreground'>
+            Client (Work Location)
+          </p>
+          <p className='font-medium'>{contract.client?.name_en}</p>
+        </div>
       </div>
+      <Badge variant='secondary'>Outsourced</Badge>
     </div>
-    <Badge variant="secondary">Outsourced</Badge>
-  </div>
-) : (
-  <div>
-    <p className="text-xs text-muted-foreground">Employer</p>
-    <p className="font-medium">{contract.employer?.name_en}</p>
-    <Badge>Direct Employment</Badge>
-  </div>
-)}
+  ) : (
+    <div>
+      <p className='text-xs text-muted-foreground'>Employer</p>
+      <p className='font-medium'>{contract.employer?.name_en}</p>
+      <Badge>Direct Employment</Badge>
+    </div>
+  );
+}
 ```
 
 ---
@@ -530,7 +557,7 @@ const transformedContract = {
 ### Outsourcing Revenue by Client
 
 ```sql
-SELECT 
+SELECT
     client.name_en as client_name,
     COUNT(DISTINCT c.promoter_id) as promoters_assigned,
     COUNT(c.id) as contracts_count,
@@ -549,7 +576,7 @@ ORDER BY total_monthly_value DESC;
 ### Staffing Agency Performance
 
 ```sql
-SELECT 
+SELECT
     employer.name_en as agency_name,
     COUNT(DISTINCT c.promoter_id) as total_promoters_employed,
     COUNT(DISTINCT c.client_company_id) as clients_served,
@@ -568,18 +595,21 @@ ORDER BY total_promoters_employed DESC;
 ## Benefits Summary
 
 ### Business Intelligence
+
 - ✅ Track revenue by client company
 - ✅ Analyze staffing agency performance
 - ✅ Monitor client diversification
 - ✅ Identify most profitable outsourcing arrangements
 
 ### Operational Clarity
+
 - ✅ HR knows who handles payroll
 - ✅ Operations know where promoters work
 - ✅ Finance can track client billing
 - ✅ Compliance understands employment relationships
 
 ### User Experience
+
 - ✅ No more confusion about "employer"
 - ✅ Clear distinction in UI
 - ✅ Accurate reports
@@ -602,31 +632,34 @@ ORDER BY total_promoters_employed DESC;
 
 ## Timeline
 
-| Phase | Duration | Status |
-|-------|----------|--------|
-| Analysis & Diagnosis | 30 min | ✅ COMPLETE |
-| Schema Design | 15 min | ✅ COMPLETE |
-| Migration SQL | 15 min | ✅ READY |
-| Type Updates | 15 min | ⏳ PENDING |
-| UI Updates | 2 hours | ⏳ PENDING |
-| Testing | 30 min | ⏳ PENDING |
-| **Total** | **~3.5 hours** | **20% COMPLETE** |
+| Phase                | Duration       | Status           |
+| -------------------- | -------------- | ---------------- |
+| Analysis & Diagnosis | 30 min         | ✅ COMPLETE      |
+| Schema Design        | 15 min         | ✅ COMPLETE      |
+| Migration SQL        | 15 min         | ✅ READY         |
+| Type Updates         | 15 min         | ⏳ PENDING       |
+| UI Updates           | 2 hours        | ⏳ PENDING       |
+| Testing              | 30 min         | ⏳ PENDING       |
+| **Total**            | **~3.5 hours** | **20% COMPLETE** |
 
 ---
 
 ## Next Steps
 
 ### Immediate (Do Now)
+
 1. **Review this document** with stakeholders
 2. **Confirm** outsourcing model is correct
 3. **Run migration** in production
 
 ### Short-term (This Week)
+
 4. **Update types** and API responses
 5. **Enhance UI** to show employer vs client
 6. **Test thoroughly** with real data
 
 ### Long-term (This Month)
+
 7. **Create reports** for outsourcing analytics
 8. **Train users** on new terminology
 9. **Monitor** for data quality
@@ -640,4 +673,3 @@ ORDER BY total_promoters_employed DESC;
 **Recommended Action**: Implement the schema enhancement to make outsourcing explicit and clear for all users.
 
 This will transform confusing data into clear business intelligence. 🎯
-

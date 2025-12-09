@@ -55,7 +55,8 @@ function validateMigrations() {
   }
 
   // Read all migration files
-  const files = fs.readdirSync(MIGRATIONS_DIR)
+  const files = fs
+    .readdirSync(MIGRATIONS_DIR)
     .filter(file => file.endsWith('.sql'))
     .sort();
 
@@ -85,7 +86,9 @@ function validateMigrations() {
     const match = file.match(MIGRATION_NAME_PATTERN);
     if (!match) {
       errors.push(`Invalid migration name format: ${file}`);
-      errors.push(`  Expected format: YYYYMMDDHHMMSS_description.sql or YYYYMMDD_description.sql`);
+      errors.push(
+        `  Expected format: YYYYMMDDHHMMSS_description.sql or YYYYMMDD_description.sql`
+      );
       continue;
     }
 
@@ -95,8 +98,12 @@ function validateMigrations() {
     // Check for duplicate timestamps (warning only, not error)
     if (timestamps.includes(timestampNum)) {
       warnings.push(`Duplicate timestamp found: ${file}`);
-      warnings.push(`  Timestamp ${timestamp} is already used by another migration`);
-      warnings.push(`  Consider using full timestamp (YYYYMMDDHHMMSS) for better ordering`);
+      warnings.push(
+        `  Timestamp ${timestamp} is already used by another migration`
+      );
+      warnings.push(
+        `  Consider using full timestamp (YYYYMMDDHHMMSS) for better ordering`
+      );
     } else {
       timestamps.push(timestampNum);
     }
@@ -132,7 +139,9 @@ function validateMigrations() {
   const sortedTimestamps = [...timestamps].sort((a, b) => a - b);
   if (JSON.stringify(timestamps) !== JSON.stringify(sortedTimestamps)) {
     warnings.push('Migrations are not in chronological order');
-    warnings.push('  This is okay if migrations were created out of order, but may cause issues');
+    warnings.push(
+      '  This is okay if migrations were created out of order, but may cause issues'
+    );
   }
 
   // Report results
@@ -156,17 +165,26 @@ function validateMigrations() {
 
   // Count critical errors (excluding duplicate timestamp warnings)
   const criticalErrors = errors.filter(e => !e.includes('Duplicate timestamp'));
-  
+
   if (criticalErrors.length > 0) {
-    log(`\n❌ Found ${criticalErrors.length} critical error(s) that must be fixed`, 'red');
+    log(
+      `\n❌ Found ${criticalErrors.length} critical error(s) that must be fixed`,
+      'red'
+    );
     return false;
   }
 
   if (warnings.length > 0) {
-    log(`\n⚠️  Found ${warnings.length} warning(s) - review recommended`, 'yellow');
-    log(`  Note: Duplicate timestamps are allowed but may cause ordering issues`, 'yellow');
+    log(
+      `\n⚠️  Found ${warnings.length} warning(s) - review recommended`,
+      'yellow'
+    );
+    log(
+      `  Note: Duplicate timestamps are allowed but may cause ordering issues`,
+      'yellow'
+    );
   }
-  
+
   return true;
 }
 
@@ -179,4 +197,3 @@ try {
   console.error(err);
   process.exit(1);
 }
-

@@ -21,10 +21,12 @@ Use this checklist to verify all fixes are working correctly:
 ### ✅ Test 1: Normal Load (Happy Path)
 
 **Steps:**
+
 1. Navigate to `/en/contracts/pending`
 2. Wait for page to load
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Page loads within 1-2 seconds
@@ -35,6 +37,7 @@ Use this checklist to verify all fixes are working correctly:
 ```
 
 **Console Output:**
+
 ```
 📋 Pending Contracts - Permission Check: { hasPermission: true, ... }
 🔍 Pending Contracts Debug: { endpoint: '/api/contracts?status=pending', ... }
@@ -47,12 +50,14 @@ Use this checklist to verify all fixes are working correctly:
 ### ⏱️ Test 2: Slow Load (3-10 seconds)
 
 **Steps:**
+
 1. Open DevTools → Network tab
 2. Set throttling to "Slow 3G"
 3. Navigate to `/en/contracts/pending`
 4. Wait 3+ seconds
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Shows initial loading spinner
@@ -63,6 +68,7 @@ Use this checklist to verify all fixes are working correctly:
 ```
 
 **UI Should Show:**
+
 ```
 [Spinner]
 Loading pending contracts...
@@ -80,12 +86,14 @@ Loading pending contracts...
 ### 🚫 Test 3: Timeout (> 10 seconds)
 
 **Steps:**
+
 1. Open DevTools → Network tab
 2. Set throttling to "Offline" or extremely slow
 3. Navigate to `/en/contracts/pending`
 4. Wait 10+ seconds
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Request aborts after 10 seconds
@@ -97,10 +105,11 @@ Loading pending contracts...
 ```
 
 **Error Message:**
+
 ```
 ❌ Failed to Load Pending Contracts
 
-Request timeout - the server took too long to respond. 
+Request timeout - the server took too long to respond.
 Please try again.
 
 Possible causes:
@@ -117,10 +126,12 @@ Possible causes:
 ### ✅ Test 4: Empty State (0 Pending Contracts)
 
 **Steps:**
+
 1. Ensure database has 0 pending contracts
 2. Navigate to `/en/contracts/pending`
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Page loads successfully (no error)
@@ -132,6 +143,7 @@ Possible causes:
 ```
 
 **UI Should Show:**
+
 ```
 🕐 Pending Contracts [Badge: 0]
 0 contracts awaiting approval
@@ -140,9 +152,9 @@ Possible causes:
 
 ───────────────────────────────
        [Green Clock Icon]
-       
+
    No Pending Contracts
-   
+
 There are currently no contracts
 awaiting approval. All contracts
 have been reviewed and approved.
@@ -158,6 +170,7 @@ Great work!
 ```
 
 **❌ FAIL if:**
+
 - Shows error message
 - Shows infinite loading spinner
 - Message says "Failed to load"
@@ -168,6 +181,7 @@ Great work!
 ### 🔄 Test 5: Retry Functionality
 
 **Steps:**
+
 1. Disconnect network (DevTools → Network → Offline)
 2. Navigate to `/en/contracts/pending`
 3. Wait for error to appear
@@ -175,6 +189,7 @@ Great work!
 5. Click "Retry Now" button
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Error message appears (network error)
@@ -193,12 +208,14 @@ Great work!
 **Setup:** Have 3+ pending contracts
 
 **Steps:**
+
 1. Navigate to `/en/contracts/pending`
 2. Wait for contracts to load
 3. Type a contract number in search box
 4. Type a non-existent search term
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 
@@ -219,10 +236,12 @@ NON-MATCHING SEARCH:
 ### 🔐 Test 7: Permission Handling
 
 **Steps:**
+
 1. Login as user WITHOUT `contract:read:own` permission
 2. Navigate to `/en/contracts/pending`
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Shows permission error (not infinite loading)
@@ -233,6 +252,7 @@ NON-MATCHING SEARCH:
 ```
 
 **Permission Error UI:**
+
 ```
 🕐 Pending Contracts
 
@@ -253,12 +273,14 @@ pending contracts. This page requires:
 ### 🌐 Test 8: Network Error Handling
 
 **Steps:**
+
 1. Use DevTools to block the API endpoint:
    - Network tab → Right-click `/api/contracts` → Block request URL
 2. Navigate to `/en/contracts/pending`
 3. Wait for error
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Shows network error message
@@ -272,11 +294,13 @@ pending contracts. This page requires:
 ### 🔄 Test 9: Refresh Button
 
 **Steps:**
+
 1. Navigate to `/en/contracts/pending`
 2. Wait for page to load
 3. Click the "Refresh" button in the header
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Button shows spinning icon during refresh
@@ -291,11 +315,13 @@ pending contracts. This page requires:
 ### 🧪 Test 10: Memory Leak Prevention
 
 **Steps:**
+
 1. Navigate to `/en/contracts/pending`
 2. While loading, immediately navigate to another page
 3. Check browser console for errors
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - No console errors about updating unmounted components
@@ -308,11 +334,13 @@ pending contracts. This page requires:
 ### 🧪 Test 11: Multiple Simultaneous Requests
 
 **Steps:**
+
 1. Navigate to `/en/contracts/pending`
 2. Immediately click "Refresh" multiple times rapidly
 3. Check Network tab in DevTools
 
 **Expected Result:**
+
 ```
 ✅ PASS if:
 - Only ONE request is made at a time
@@ -326,6 +354,7 @@ pending contracts. This page requires:
 ## Browser Console Testing
 
 ### Expected Console Logs (Success)
+
 ```
 📋 Pending Contracts - Permission Check: {
   hasPermission: true,
@@ -354,6 +383,7 @@ pending contracts. This page requires:
 ```
 
 ### Expected Console Logs (Empty State)
+
 ```
 ... (permission and debug logs) ...
 
@@ -371,6 +401,7 @@ pending contracts. This page requires:
 ```
 
 ### Expected Console Logs (Error)
+
 ```
 ... (permission and debug logs) ...
 
@@ -384,13 +415,13 @@ pending contracts. This page requires:
 
 ## Performance Benchmarks
 
-| Scenario | Expected Time | Max Time | Status |
-|----------|---------------|----------|--------|
-| Fast load | < 1 second | 2 seconds | ✅ |
-| Slow warning | 3 seconds | 4 seconds | ✅ |
-| Request timeout | 10 seconds | 11 seconds | ✅ |
-| Permission timeout | 5 seconds | 6 seconds | ✅ |
-| Retry attempt | < 1 second | 2 seconds | ✅ |
+| Scenario           | Expected Time | Max Time   | Status |
+| ------------------ | ------------- | ---------- | ------ |
+| Fast load          | < 1 second    | 2 seconds  | ✅     |
+| Slow warning       | 3 seconds     | 4 seconds  | ✅     |
+| Request timeout    | 10 seconds    | 11 seconds | ✅     |
+| Permission timeout | 5 seconds     | 6 seconds  | ✅     |
+| Retry attempt      | < 1 second    | 2 seconds  | ✅     |
 
 ---
 
@@ -406,6 +437,7 @@ curl -X GET "http://localhost:3000/api/contracts?status=pending" \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -435,28 +467,34 @@ curl -X GET "http://localhost:3000/api/contracts?status=pending" \
 ## Common Issues & Solutions
 
 ### Issue 1: Infinite Loading
+
 **Symptoms:** Page stuck on loading spinner forever
 
 **Checks:**
+
 - [ ] Check console for permission timeout warning
 - [ ] Check Network tab for failed/pending requests
 - [ ] Verify user has `contract:read:own` permission
 
 **Expected Fix:**
+
 - Should timeout after 10 seconds
 - Should show error or permission message
 
 ---
 
 ### Issue 2: Shows Error for 0 Results
+
 **Symptoms:** Error message when there are no pending contracts
 
 **Checks:**
+
 - [ ] Check console log: should say "ℹ️ No pending contracts found - this is normal"
 - [ ] API should return `{ success: true, contracts: [] }`
 - [ ] UI should show green success state, not red error
 
 **Expected Behavior:**
+
 - Green clock icon
 - Success message
 - No error styling
@@ -464,27 +502,33 @@ curl -X GET "http://localhost:3000/api/contracts?status=pending" \
 ---
 
 ### Issue 3: Multiple API Calls
+
 **Symptoms:** Network tab shows duplicate requests
 
 **Checks:**
+
 - [ ] Check console for "⏸️ Fetch already in progress"
 - [ ] Verify `fetchAttemptedRef` is working
 
 **Expected Behavior:**
+
 - Only one request at a time
 - Subsequent clicks should be ignored until first completes
 
 ---
 
 ### Issue 4: Memory Leak Warnings
+
 **Symptoms:** Console warnings about updating unmounted components
 
 **Checks:**
+
 - [ ] Navigate away during loading
 - [ ] Check for proper cleanup in useEffect
 - [ ] Verify `mountedRef` checks
 
 **Expected Behavior:**
+
 - No warnings in console
 - Clean navigation
 
@@ -493,13 +537,14 @@ curl -X GET "http://localhost:3000/api/contracts?status=pending" \
 ## Automated Testing (Optional)
 
 ### Jest Test Example
+
 ```typescript
 describe('Pending Contracts Page', () => {
   it('should show loading state initially', () => {
     render(<PendingContractsPage />);
     expect(screen.getByText(/loading pending contracts/i)).toBeInTheDocument();
   });
-  
+
   it('should show success state with 0 contracts', async () => {
     mockAPI({ contracts: [], success: true });
     render(<PendingContractsPage />);
@@ -508,7 +553,7 @@ describe('Pending Contracts Page', () => {
       expect(screen.getByText(/all contracts are up to date/i)).toBeInTheDocument();
     });
   });
-  
+
   it('should handle timeout error', async () => {
     mockAPI({ delay: 11000 }); // Delay longer than timeout
     render(<PendingContractsPage />);
@@ -544,4 +589,3 @@ Before deploying to production:
 ✅ **PASS**: All tests pass, no infinite loading, clear user feedback in all states
 
 ❌ **FAIL**: Any infinite loading, confusing error messages, or state update warnings
-

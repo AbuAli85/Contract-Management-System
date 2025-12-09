@@ -15,6 +15,7 @@ Implemented comprehensive security headers to protect against XSS, clickjacking,
 ## 🎯 Quick Deployment (5 Steps)
 
 ### Step 1: Review Changes (1 min)
+
 ```bash
 git status
 git diff next.config.js
@@ -22,12 +23,14 @@ git diff vercel.json
 ```
 
 **Changes:**
+
 - ✅ Added Content-Security-Policy (CSP)
 - ✅ Added HSTS with 2-year enforcement
 - ✅ Added cross-origin isolation headers
 - ✅ Enhanced Permissions-Policy
 
 ### Step 2: Commit & Push (1 min)
+
 ```bash
 git add next.config.js vercel.json *.md scripts/
 git commit -m "security: Implement comprehensive security headers (CSP, HSTS, CORS)"
@@ -35,6 +38,7 @@ git push origin main
 ```
 
 ### Step 3: Wait for Deployment (2-3 min)
+
 - Vercel will auto-deploy
 - Monitor at: https://vercel.com/dashboard
 - Wait for "Ready" status
@@ -42,11 +46,13 @@ git push origin main
 ### Step 4: Verify Headers (1 min)
 
 **Windows:**
+
 ```powershell
 .\scripts\verify-security-headers.ps1
 ```
 
 **Linux/macOS:**
+
 ```bash
 chmod +x scripts/verify-security-headers.sh
 ./scripts/verify-security-headers.sh
@@ -55,6 +61,7 @@ chmod +x scripts/verify-security-headers.sh
 **Expected:** ✅ All checks pass
 
 ### Step 5: Run Online Scan (1 min)
+
 Visit: https://securityheaders.com/?q=https://portal.thesmartpro.io
 
 **Expected Grade:** A or A+
@@ -78,12 +85,14 @@ Visit: https://securityheaders.com/?q=https://portal.thesmartpro.io
 **Symptom:** Resources blocked by CSP
 
 **Quick Fix:**
+
 1. Open browser DevTools (F12)
 2. Note the blocked domain
 3. Add domain to CSP in `next.config.js`
 4. Redeploy
 
 **Example:**
+
 ```javascript
 // If blocking https://new-cdn.example.com
 "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://new-cdn.example.com",
@@ -101,6 +110,7 @@ Verify COEP is set to `credentialless` (not `require-corp`) in both config files
 **Symptom:** API requests fail from frontend
 
 **Quick Fix:**
+
 ```bash
 # Check environment variable in Vercel
 # Settings > Environment Variables
@@ -112,6 +122,7 @@ Verify COEP is set to `credentialless` (not `require-corp`) in both config files
 ## 📋 Post-Deployment Checklist
 
 ### Immediate (Today)
+
 - [ ] Deploy to production
 - [ ] Run verification script
 - [ ] Check SecurityHeaders.com grade
@@ -119,12 +130,14 @@ Verify COEP is set to `credentialless` (not `require-corp`) in both config files
 - [ ] Check browser console for errors
 
 ### This Week
+
 - [ ] Verify Supabase cookie security
 - [ ] Enable MFA for admin accounts
 - [ ] Run SSL Labs test
 - [ ] Document any CSP adjustments needed
 
 ### Optional
+
 - [ ] Run OWASP ZAP scan
 - [ ] Set up security monitoring
 - [ ] Create security awareness training
@@ -146,11 +159,13 @@ For detailed information, see:
 ## 📞 Quick Reference
 
 ### Security Score Targets
+
 - SecurityHeaders.com: **A+**
 - SSL Labs: **A+**
 - Mozilla Observatory: **90+**
 
 ### Key Headers Implemented
+
 ```
 ✓ Strict-Transport-Security: max-age=63072000
 ✓ Content-Security-Policy: default-src 'self'; ...
@@ -164,6 +179,7 @@ For detailed information, see:
 ```
 
 ### Quick Tests
+
 ```bash
 # Check headers
 curl -I https://portal.thesmartpro.io/en/dashboard
@@ -179,20 +195,21 @@ curl -I https://portal.thesmartpro.io/en/dashboard
 
 ## 🎯 Expected Timeline
 
-| Task | Time | Status |
-|------|------|--------|
-| Review changes | 1 min | ⬜ |
-| Commit & push | 1 min | ⬜ |
-| Vercel deployment | 2-3 min | ⬜ |
-| Verify headers | 1 min | ⬜ |
-| Online scan | 1 min | ⬜ |
-| **Total** | **~7 min** | ⬜ |
+| Task              | Time       | Status |
+| ----------------- | ---------- | ------ |
+| Review changes    | 1 min      | ⬜     |
+| Commit & push     | 1 min      | ⬜     |
+| Vercel deployment | 2-3 min    | ⬜     |
+| Verify headers    | 1 min      | ⬜     |
+| Online scan       | 1 min      | ⬜     |
+| **Total**         | **~7 min** | ⬜     |
 
 ---
 
 ## ✨ What You'll Achieve
 
 ### Security Improvements
+
 - 🛡️ **XSS Protection** via Content-Security-Policy
 - 🔒 **HTTPS Enforcement** via HSTS
 - 🚫 **Clickjacking Prevention** via X-Frame-Options
@@ -201,6 +218,7 @@ curl -I https://portal.thesmartpro.io/en/dashboard
 - 🌐 **CORS Restrictions** to trusted domains only
 
 ### Business Benefits
+
 - ✅ Industry-standard security compliance
 - ✅ Protection against common web attacks
 - ✅ Improved user trust and confidence
@@ -216,4 +234,3 @@ curl -I https://portal.thesmartpro.io/en/dashboard
 ---
 
 **Last Updated:** October 24, 2025
-

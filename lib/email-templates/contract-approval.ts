@@ -55,18 +55,26 @@ export function contractApprovalEmail(data: {
                           <td style="color: #6b7280; font-size: 14px;">Party:</td>
                           <td style="text-align: right; font-weight: 600;">${data.partyName}</td>
                         </tr>
-                        ${data.amount ? `
+                        ${
+                          data.amount
+                            ? `
                           <tr>
                             <td style="color: #6b7280; font-size: 14px;">Amount:</td>
                             <td style="text-align: right; font-weight: 600; color: #059669; font-size: 16px;">${data.amount}</td>
                           </tr>
-                        ` : ''}
-                        ${data.startDate ? `
+                        `
+                            : ''
+                        }
+                        ${
+                          data.startDate
+                            ? `
                           <tr>
                             <td style="color: #6b7280; font-size: 14px;">Start Date:</td>
                             <td style="text-align: right; font-weight: 600;">${data.startDate}</td>
                           </tr>
-                        ` : ''}
+                        `
+                            : ''
+                        }
                       </table>
                     </div>
 
@@ -116,4 +124,3 @@ SmartPro Contract Management System
     `,
   };
 }
-

@@ -105,13 +105,13 @@ export default function BulkPromoterAssignment() {
         });
       } else {
         setContracts(contractsData || []);
-        
+
         // Calculate stats
         const total = contractsData?.length || 0;
         const withoutPromoter =
           contractsData?.filter(c => !c.promoter_id).length || 0;
         const withPromoter = total - withoutPromoter;
-        
+
         setStats({ total, withoutPromoter, withPromoter });
       }
 
@@ -397,7 +397,9 @@ export default function BulkPromoterAssignment() {
                           </TableCell>
                           <TableCell>
                             {contract.start_date
-                              ? new Date(contract.start_date).toLocaleDateString()
+                              ? new Date(
+                                  contract.start_date
+                                ).toLocaleDateString()
                               : 'N/A'}
                           </TableCell>
                         </TableRow>
@@ -443,4 +445,3 @@ export default function BulkPromoterAssignment() {
     </div>
   );
 }
-

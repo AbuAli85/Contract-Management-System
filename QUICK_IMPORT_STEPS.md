@@ -3,11 +3,13 @@
 ## 🎯 Two Ways to Import Your Data
 
 ### Method 1: From Promoters Page (NEW!)
+
 1. Go to **Promoters page** in your system
 2. Click the **"Import"** button (next to "Add Promoter")
 3. You'll be redirected to the import page
 
 ### Method 2: Direct Access
+
 1. Navigate to: `http://localhost:3000/en/csv-import`
 2. Click on **"Promoters"** tab
 
@@ -21,7 +23,6 @@
    - ❌ Current: `9.67E+11` (scientific notation)
    - ✅ Fix: `966xxxxxxxxx` (full number)
    - Click the cell → widen column → see full number
-   
 2. **ID Expiry Date Column**
    - ❌ Current: `########` (overflow)
    - ✅ Fix: Widen column to see date
@@ -29,7 +30,7 @@
 
 3. **Headers**
    - Change your column headers to match these exactly:
-   
+
    ```
    name_en | name_ar | id_card_number | passport_number | mobile_number | email | nationality | id_card_expiry_date | passport_expiry_date | status | employer_id | notes
    ```
@@ -39,7 +40,7 @@
 ## 💾 Save As CSV
 
 1. In Excel: **File → Save As**
-2. Choose: **CSV UTF-8 (Comma delimited) (*.csv)**
+2. Choose: **CSV UTF-8 (Comma delimited) (\*.csv)**
 3. Save the file
 
 ---
@@ -66,4 +67,3 @@
 
 See the full guide: `IMPORT_GUIDE.md`
 Use the template: `promoters_import_template.csv`
-

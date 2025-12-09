@@ -4,80 +4,83 @@ import { NextRequest } from 'next/server';
 
 // Initialize Redis client only if credentials are available
 // Falls back to allowing requests if Redis is not configured
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
 
 // Rate limiter configurations for different endpoint types
 // Only create rate limiters if Redis is configured
-export const rateLimiters = redis ? {
-  // Login endpoint: 5 requests per minute per IP
-  login: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(5, '1 m'),
-    analytics: true,
-    prefix: 'ratelimit:login',
-  }),
+export const rateLimiters = redis
+  ? {
+      // Login endpoint: 5 requests per minute per IP
+      login: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, '1 m'),
+        analytics: true,
+        prefix: 'ratelimit:login',
+      }),
 
-  // Registration endpoint: 3 requests per hour per IP
-  registration: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(3, '1 h'),
-    analytics: true,
-    prefix: 'ratelimit:registration',
-  }),
+      // Registration endpoint: 3 requests per hour per IP
+      registration: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(3, '1 h'),
+        analytics: true,
+        prefix: 'ratelimit:registration',
+      }),
 
-  // API read operations: 100 requests per minute per user
-  apiRead: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(100, '1 m'),
-    analytics: true,
-    prefix: 'ratelimit:api:read',
-  }),
+      // API read operations: 100 requests per minute per user
+      apiRead: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(100, '1 m'),
+        analytics: true,
+        prefix: 'ratelimit:api:read',
+      }),
 
-  // API write operations: 30 requests per minute per user
-  apiWrite: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(30, '1 m'),
-    analytics: true,
-    prefix: 'ratelimit:api:write',
-  }),
+      // API write operations: 30 requests per minute per user
+      apiWrite: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(30, '1 m'),
+        analytics: true,
+        prefix: 'ratelimit:api:write',
+      }),
 
-  // Legacy auth endpoint (for backward compatibility)
-  auth: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(5, '1 m'),
-    analytics: true,
-    prefix: 'ratelimit:auth',
-  }),
+      // Legacy auth endpoint (for backward compatibility)
+      auth: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, '1 m'),
+        analytics: true,
+        prefix: 'ratelimit:auth',
+      }),
 
-  // Password reset: 3 requests per hour
-  passwordReset: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(3, '1 h'),
-    analytics: true,
-    prefix: 'ratelimit:password-reset',
-  }),
+      // Password reset: 3 requests per hour
+      passwordReset: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(3, '1 h'),
+        analytics: true,
+        prefix: 'ratelimit:password-reset',
+      }),
 
-  // File uploads: 10 requests per 10 minutes
-  upload: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(10, '10 m'),
-    analytics: true,
-    prefix: 'ratelimit:upload',
-  }),
+      // File uploads: 10 requests per 10 minutes
+      upload: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(10, '10 m'),
+        analytics: true,
+        prefix: 'ratelimit:upload',
+      }),
 
-  // Dashboard/UI: 60 requests per minute
-  dashboard: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(60, '1 m'),
-    analytics: true,
-    prefix: 'ratelimit:dashboard',
-  }),
-} : {} as any; // Empty object when Redis is not configured
+      // Dashboard/UI: 60 requests per minute
+      dashboard: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(60, '1 m'),
+        analytics: true,
+        prefix: 'ratelimit:dashboard',
+      }),
+    }
+  : ({} as any); // Empty object when Redis is not configured
 
 export interface RateLimitResult {
   success: boolean;
@@ -92,7 +95,16 @@ export interface RateLimitConfig {
   identifier?: string;
   customLimit?: {
     requests: number;
-    window: '1 s' | '10 s' | '30 s' | '1 m' | '5 m' | '10 m' | '15 m' | '1 h' | '1 d';
+    window:
+      | '1 s'
+      | '10 s'
+      | '30 s'
+      | '1 m'
+      | '5 m'
+      | '10 m'
+      | '15 m'
+      | '1 h'
+      | '1 d';
   };
 }
 
@@ -106,7 +118,9 @@ export async function applyRateLimit(
   // If Redis is not configured, allow all requests (development mode)
   if (!redis) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('⚠️  Rate limiting disabled: Upstash Redis not configured (development mode)');
+      console.log(
+        '⚠️  Rate limiting disabled: Upstash Redis not configured (development mode)'
+      );
     }
     return {
       success: true,
@@ -212,7 +226,7 @@ export function withRateLimit(
   return async (request: NextRequest): Promise<Response> => {
     const startTime = Date.now();
     const identifier = config.identifier || getClientIdentifier(request);
-    
+
     // Apply rate limiting
     const rateLimitResult = await applyRateLimit(request, config);
 
@@ -228,9 +242,9 @@ export function withRateLimit(
         retryAfter: rateLimitResult.retryAfter,
         userAgent: request.headers.get('user-agent')?.substring(0, 100),
       };
-      
+
       console.warn('⚠️ Rate limit violation:', JSON.stringify(violation));
-      
+
       // Create user-friendly error message based on limit type
       let userMessage = 'Too many requests. Please try again later.';
       if (config.type === 'login') {
@@ -238,9 +252,11 @@ export function withRateLimit(
       } else if (config.type === 'registration') {
         userMessage = `Too many registration attempts. Please try again in ${Math.ceil((rateLimitResult.retryAfter || 0) / 60)} minutes.`;
       } else if (config.type === 'apiWrite') {
-        userMessage = 'You are making too many changes. Please slow down and try again in a moment.';
+        userMessage =
+          'You are making too many changes. Please slow down and try again in a moment.';
       } else if (config.type === 'apiRead') {
-        userMessage = 'You are requesting data too quickly. Please wait a moment before continuing.';
+        userMessage =
+          'You are requesting data too quickly. Please wait a moment before continuing.';
       }
 
       // Return rate limit exceeded response with helpful message
@@ -279,7 +295,9 @@ export function withRateLimit(
       // Log successful request (only for monitoring, can be disabled in production)
       if (process.env.NODE_ENV === 'development') {
         const duration = Date.now() - startTime;
-        console.log(`✅ ${request.method} ${request.nextUrl.pathname} - ${duration}ms - Remaining: ${rateLimitResult.remaining}/${rateLimitResult.limit}`);
+        console.log(
+          `✅ ${request.method} ${request.nextUrl.pathname} - ${duration}ms - Remaining: ${rateLimitResult.remaining}/${rateLimitResult.limit}`
+        );
       }
 
       // Return response with rate limit headers
@@ -338,7 +356,12 @@ export function isReadOperation(method: string): boolean {
 }
 
 export function isWriteOperation(method: string): boolean {
-  return method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE';
+  return (
+    method === 'POST' ||
+    method === 'PUT' ||
+    method === 'PATCH' ||
+    method === 'DELETE'
+  );
 }
 
 /**

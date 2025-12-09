@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useToastHelpers } from '@/components/toast-notifications';
 import {
   Shield,
   Users,
@@ -67,38 +68,8 @@ interface Permission {
 export default function RolesAndPermissionsPage() {
   const { canManageUsers } = usePermissions();
 
-  // Safe toast usage with error handling
-  const [toastHelpers, setToastHelpers] = useState<any>(null);
-
-  useEffect(() => {
-    try {
-      const { useToastHelpers } = require('@/components/toast-notifications');
-      setToastHelpers(useToastHelpers());
-    } catch (error) {
-      console.warn('Toast context not available:', error);
-      setToastHelpers({
-        success: (title: string, message?: string) =>
-          console.log('Success:', title, message),
-        error: (title: string, message?: string) =>
-          console.error('Error:', title, message),
-        warning: (title: string, message?: string) =>
-          console.warn('Warning:', title, message),
-        info: (title: string, message?: string) =>
-          console.log('Info:', title, message),
-      });
-    }
-  }, []);
-
-  const { success, error, warning } = toastHelpers || {
-    success: (title: string, message?: string) =>
-      console.log('Success:', title, message),
-    error: (title: string, message?: string) =>
-      console.error('Error:', title, message),
-    warning: (title: string, message?: string) =>
-      console.warn('Warning:', title, message),
-    info: (title: string, message?: string) =>
-      console.log('Info:', title, message),
-  };
+  // Use toast helpers at the top level (React Hooks rule)
+  const { success, error, warning } = useToastHelpers();
 
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);

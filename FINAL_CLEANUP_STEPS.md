@@ -15,12 +15,13 @@ Run this query to preview:
 **File**: `DELETE-MOCK-CONTRACTS-FINAL.sql` (STEP 1 section only)
 
 This shows:
+
 - ✅ Exact list of contracts to be deleted
 - ✅ Reason for deletion (test keyword, mock keyword, etc.)
 - ✅ Total count
 - ✅ Created dates
 
-**ExpectedMenuContracts with "test", "mock", "sample" in title/number
+\*\*ExpectedMenuContracts with "test", "mock", "sample" in title/number
 
 ---
 
@@ -34,6 +35,7 @@ After reviewing the list from Step 1:
 4. **Run the script**
 
 This will:
+
 - Drop triggers temporarily
 - Delete test/mock contracts
 - Recreate triggers
@@ -44,12 +46,14 @@ This will:
 ### Step 3: Verify Cleanup
 
 The script automatically shows:
+
 - ✅ Total contracts remaining
 - ✅ Contracts by status
 - ✅ Top 5 parties with counts
 - ✅ Confirmation that mock data is gone
 
 **Expected Results**:
+
 ```
 Total Contracts: ~424 (or slightly less if mock data removed)
 Top 5 Parties: Same as before (205, 116, 75, 16, 12)
@@ -61,6 +65,7 @@ Test/Mock Contracts: 0 ✅
 ## 🔍 What the Script Does
 
 ### STEP 1: Preview (Always Runs)
+
 ```sql
 -- Shows contracts to be deleted
 SELECT contract_number, title, status, created_at
@@ -69,6 +74,7 @@ WHERE LOWER(title) LIKE '%test%' OR LOWER(title) LIKE '%mock%' ...
 ```
 
 ### STEP 2: Delete (Commented - You uncomment)
+
 ```sql
 /* UNCOMMENT THIS SECTION
 
@@ -86,6 +92,7 @@ CREATE OR REPLACE FUNCTION sync_contract_party_ids() ...
 ```
 
 ### STEP 3: Verify (Always Runs)
+
 ```sql
 -- Shows current state after deletion
 SELECT COUNT(*) FROM contracts;
@@ -109,6 +116,7 @@ The script includes multiple safety checks:
 ## 📊 What to Expect
 
 ### Before Cleanup
+
 ```
 Total: 219 contracts (example)
 ├─ Real contracts: ~215
@@ -116,6 +124,7 @@ Total: 219 contracts (example)
 ```
 
 ### After Cleanup
+
 ```
 Total: 215 contracts ✅
 ├─ Real contracts: ~215 ✅
@@ -132,6 +141,7 @@ Party counts remain accurate:
 ## 🎯 Quick Start
 
 ### Option 1: Full Review (Recommended)
+
 ```bash
 1. Run: show-mock-contract-summary.sql
 2. Review the results
@@ -141,6 +151,7 @@ Party counts remain accurate:
 ```
 
 ### Option 2: Quick Delete (If confident)
+
 ```bash
 1. Open: DELETE-MOCK-CONTRACTS-FINAL.sql
 2. Scroll to STEP 2
@@ -166,11 +177,13 @@ After running the cleanup:
 ## 🚀 After Cleanup
 
 ### Navigate to Manage Parties
+
 ```
 http://localhost:3000/en/manage-parties
 ```
 
 You should see:
+
 - ✅ Clean, real contract counts
 - ✅ No placeholder data
 - ✅ Accurate statistics
@@ -180,12 +193,12 @@ You should see:
 
 ## 📝 Summary
 
-| Task | Status |
-|------|--------|
-| Contract Counting Fix | ✅ COMPLETE |
-| Type Mismatch Fix | ✅ COMPLETE |
-| Placeholder Cleanup | ✅ COMPLETE |
-| Mock Contract Review | ✅ COMPLETE |
+| Task                   | Status          |
+| ---------------------- | --------------- |
+| Contract Counting Fix  | ✅ COMPLETE     |
+| Type Mismatch Fix      | ✅ COMPLETE     |
+| Placeholder Cleanup    | ✅ COMPLETE     |
+| Mock Contract Review   | ✅ COMPLETE     |
 | Mock Contract Deletion | 🔄 READY TO RUN |
 
 **Next**: Run `DELETE-MOCK-CONTRACTS-FINAL.sql` (uncomment STEP 2) to clean up! 🧹
@@ -193,11 +206,11 @@ You should see:
 ---
 
 **Files Created**:
+
 - ✅ DELETE-MOCK-CONTRACTS-FINAL.sql - Safe deletion script
 - ✅ show-mock-contract-summary.sql - Quick summary
 - ✅ CONTRACT_CLEANUP_GUIDE.md - Full documentation
 
 **Status**: 🟢 Ready to clean up mock contracts
 **SafetyMenu 🔒 Preview before delete, commented by default
-**Recommendation**: 🔴 You have test/mock contracts - SAFE TO DELETE
-
+**Recommendation\*\*: 🔴 You have test/mock contracts - SAFE TO DELETE

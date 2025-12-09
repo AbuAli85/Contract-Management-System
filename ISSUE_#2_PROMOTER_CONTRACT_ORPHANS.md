@@ -1,6 +1,7 @@
 # Issue #2: Active Promoters with Zero Contracts
 
 ## Problem Summary
+
 **Severity**: High  
 **Status**: 🔍 Diagnosed - Fix Available
 
@@ -11,12 +12,13 @@ Active promoters showing as assigned to a company (e.g., "Falcon Eye Business an
 ## Root Cause Analysis
 
 ### Database Schema
+
 ```
 promoters table:
   - id (UUID)
   - employer_id (UUID, references parties)  ← Shows assignment
   - status (TEXT)
-  
+
 contracts table:
   - id (UUID)
   - promoter_id (UUID, references promoters)  ← Actual contracts
@@ -24,21 +26,23 @@ contracts table:
 ```
 
 ### The Disconnect
+
 1. **Promoter Assignment**: `promoters.employer_id` indicates a promoter is assigned to a company
 2. **Contract Records**: `contracts.promoter_id` represents actual employment contracts
 3. **The Gap**: A promoter can have `employer_id` set WITHOUT any contract records
 
 ### Code Path
+
 ```typescript
 // In Professional Tab (app/[locale]/manage-promoters/[id]/page.tsx:385-398)
 const { data: contractsData } = await supabase
   .from('contracts')
   .select('*')
-  .eq('promoter_id', promoterId);  // ← Returns empty array
+  .eq('promoter_id', promoterId); // ← Returns empty array
 
 setPromoterDetails({
   ...promoterData,
-  contracts: contractsData || [],  // ← Shows zero contracts
+  contracts: contractsData || [], // ← Shows zero contracts
 });
 ```
 
@@ -47,12 +51,14 @@ setPromoterDetails({
 ## Impact Assessment
 
 ### Data Integrity Issues
+
 - ❌ **Inconsistent State**: Promoters shown as assigned but with no contract evidence
 - ❌ **Broken Business Logic**: Assignment without formal agreement
 - ❌ **Reporting Errors**: Statistics and analytics incorrect
 - ❌ **Compliance Risk**: Employment without documented contracts
 
 ### User Experience
+
 - Confusing UI showing "assigned" but zero contracts
 - Undermines trust in system accuracy
 - Difficult to track actual employment relationships
@@ -67,7 +73,7 @@ Run this in Supabase SQL Editor:
 
 ```sql
 -- Find all orphaned promoters
-SELECT 
+SELECT
     p.id,
     p.name_en,
     p.name_ar,
@@ -104,20 +110,24 @@ npm run fix-promoter-orphans
 ### Option 1: Create Placeholder Contracts (Quick Fix)
 
 **Pros:**
+
 - Immediate data consistency
 - Maintains historical assignment record
 - No data loss
 
 **Cons:**
+
 - Not real contracts
 - May need cleanup later
 
 **Command:**
+
 ```bash
 npm run fix-promoter-orphans -- --create-contracts
 ```
 
 **What it does:**
+
 - Creates a contract record for each orphaned promoter
 - Contract number: `PLACEHOLDER-{timestamp}-{id}`
 - Status: `active`
@@ -127,12 +137,14 @@ npm run fix-promoter-orphans -- --create-contracts
 ### Option 2: Manual Contract Creation (Recommended)
 
 **Process:**
+
 1. Export list of orphaned promoters
 2. HR team reviews each case
 3. Create proper contracts for legitimate assignments
 4. Remove `employer_id` for invalid assignments
 
 **Command:**
+
 ```bash
 # Export list
 npm run fix-promoter-orphans -- --dry-run > orphaned_promoters.txt
@@ -143,7 +155,7 @@ npm run fix-promoter-orphans -- --dry-run > orphaned_promoters.txt
 For promoters no longer employed:
 
 ```sql
-UPDATE promoters 
+UPDATE promoters
 SET employer_id = NULL,
     status = 'inactive'
 WHERE id IN (
@@ -167,14 +179,14 @@ BEGIN
   IF NEW.employer_id IS NOT NULL AND NEW.status = 'active' THEN
     -- Check if promoter has at least one contract
     IF NOT EXISTS (
-      SELECT 1 FROM contracts 
-      WHERE promoter_id = NEW.id 
+      SELECT 1 FROM contracts
+      WHERE promoter_id = NEW.id
       AND status IN ('active', 'pending')
     ) THEN
       RAISE WARNING 'Promoter % assigned to employer but has no active contracts', NEW.id;
     END IF;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -192,7 +204,10 @@ In contract creation form:
 
 ```typescript
 // When creating a promoter assignment
-async function assignPromoterToEmployer(promoterId: string, employerId: string) {
+async function assignPromoterToEmployer(
+  promoterId: string,
+  employerId: string
+) {
   // 1. Update promoter.employer_id
   await supabase
     .from('promoters')
@@ -200,17 +215,15 @@ async function assignPromoterToEmployer(promoterId: string, employerId: string) 
     .eq('id', promoterId);
 
   // 2. IMMEDIATELY create a contract
-  await supabase
-    .from('contracts')
-    .insert({
-      promoter_id: promoterId,
-      employer_id: employerId,
-      contract_number: generateContractNumber(),
-      title: 'Employment Contract',
-      contract_type: 'employment',
-      status: 'pending', // Pending until details filled
-      start_date: new Date().toISOString(),
-    });
+  await supabase.from('contracts').insert({
+    promoter_id: promoterId,
+    employer_id: employerId,
+    contract_number: generateContractNumber(),
+    title: 'Employment Contract',
+    contract_type: 'employment',
+    status: 'pending', // Pending until details filled
+    start_date: new Date().toISOString(),
+  });
 }
 ```
 
@@ -219,18 +232,24 @@ async function assignPromoterToEmployer(promoterId: string, employerId: string) 
 Add warning in Professional tab when no contracts exist:
 
 ```tsx
-{promoterDetails.employer_id && promoterDetails.contracts.length === 0 && (
-  <Alert variant="warning">
-    <AlertTriangle className="h-4 w-4" />
-    <AlertTitle>No Contract Found</AlertTitle>
-    <AlertDescription>
-      This promoter is assigned to {employerName} but has no contract on file.
-      <Button onClick={() => router.push(`/generate-contract?promoter=${promoterId}`)}>
-        Create Contract Now
-      </Button>
-    </AlertDescription>
-  </Alert>
-)}
+{
+  promoterDetails.employer_id && promoterDetails.contracts.length === 0 && (
+    <Alert variant='warning'>
+      <AlertTriangle className='h-4 w-4' />
+      <AlertTitle>No Contract Found</AlertTitle>
+      <AlertDescription>
+        This promoter is assigned to {employerName} but has no contract on file.
+        <Button
+          onClick={() =>
+            router.push(`/generate-contract?promoter=${promoterId}`)
+          }
+        >
+          Create Contract Now
+        </Button>
+      </AlertDescription>
+    </Alert>
+  );
+}
 ```
 
 ---
@@ -254,6 +273,7 @@ Add warning in Professional tab when no contracts exist:
 File: `supabase/migrations/20251021_diagnose_promoter_contract_orphans.sql`
 
 Contains:
+
 - Diagnostic queries
 - Statistics views
 - Integrity check functions
@@ -280,11 +300,13 @@ Contains:
 ## Next Steps
 
 1. **Immediate**: Run diagnostic to quantify the issue
+
    ```bash
    npm run fix-promoter-orphans -- --dry-run
    ```
 
 2. **Short-term**: Create placeholder contracts or manual cleanup
+
    ```bash
    npm run fix-promoter-orphans -- --create-contracts
    ```
@@ -298,7 +320,7 @@ Contains:
 ## Support
 
 For questions or assistance:
+
 - Review diagnostic output
 - Check audit logs for contract deletion history
 - Consult HR team for employment verification
-

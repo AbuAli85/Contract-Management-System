@@ -11,24 +11,28 @@ The metric cards on the Promoters Intelligence Hub are now fully interactive and
 Each of the four metric cards is now clickable:
 
 #### Card 1: Total Promoters 👥
+
 - **Click action**: Show all promoters
 - **Filter applied**: Clear all filters
 - **Visual**: Primary blue styling with trend indicator
 
 #### Card 2: Active Workforce 💼
+
 - **Click action**: Show assigned active promoters
-- **Filter applied**: 
+- **Filter applied**:
   - Status: `active`
   - Assignment: `assigned`
 - **Visual**: Neutral gray styling
 
 #### Card 3: Document Alerts ⚠️
+
 - **Click action**: Show promoters with document issues
 - **Filter applied**:
   - Documents: `expired`
 - **Visual**: Red (danger) or amber (warning) styling based on critical count
 
 #### Card 4: Compliance Rate ✅
+
 - **Click action**: Show compliant assigned promoters
 - **Filter applied**:
   - Status: `active`
@@ -38,12 +42,14 @@ Each of the four metric cards is now clickable:
 ### 2. **Interactive Features**
 
 #### Click Behavior:
+
 - **First click**: Applies the filter
 - **Second click** (same card): Clears all filters (toggle behavior)
 - **Click different card**: Switches to that filter
 
 #### Visual Feedback:
-- ✅ **Hover effects**: 
+
+- ✅ **Hover effects**:
   - Shadow increases (`hover:shadow-xl`)
   - Card lifts up (`hover:-translate-y-1`)
   - Scales slightly (`hover:scale-[1.03]`)
@@ -55,6 +61,7 @@ Each of the four metric cards is now clickable:
 - ✅ **Cursor**: Changes to pointer on hover
 
 #### Accessibility:
+
 - ✅ **Keyboard navigation**: Tab to focus cards
 - ✅ **Keyboard activation**: Press Enter or Space to click
 - ✅ **ARIA labels**: Descriptive labels for screen readers
@@ -74,7 +81,7 @@ handleMetricCardClick(filterType) {
 
   // Apply card-specific filters
   switch (filterType) {
-    case 'all': 
+    case 'all':
       // Clear all filters
       break;
     case 'active':
@@ -99,6 +106,7 @@ handleMetricCardClick(filterType) {
 ### 4. **Auto-Scroll Feature**
 
 When you click a metric card:
+
 1. Filter is applied instantly
 2. Page smoothly scrolls to the promoters list (100ms delay)
 3. Toast notification confirms the filter
@@ -106,12 +114,14 @@ When you click a metric card:
 ### 5. **Visual Indicators**
 
 #### Active Card Shows:
+
 - 🔵 **Primary ring** around the card
 - 🟣 **Pulsing blue dot** in top-right corner
 - 📐 **Elevated shadow** (more prominent)
 - 📊 **ARIA pressed state** for accessibility
 
 #### Hover State Shows:
+
 - 🔼 **Card lifts up** (-1px translateY)
 - 🔍 **Shadow intensifies**
 - 📏 **Slight scale increase** (1.03x)
@@ -120,6 +130,7 @@ When you click a metric card:
 ## 🎨 Visual Examples
 
 ### Before (Static Cards):
+
 ```
 ┌─────────────────┐  ┌─────────────────┐
 │ Total Promoters │  │ Active Workforce│
@@ -130,6 +141,7 @@ When you click a metric card:
 ```
 
 ### After (Interactive Cards):
+
 ```
 ┌─────────────────┐  ┌─────────────────┐
 │ Total Promoters │  │ Active Workforce│ 🔵
@@ -144,16 +156,17 @@ When you click a metric card:
 
 ### Card Click → Filter State
 
-| Card | Status Filter | Document Filter | Assignment Filter | Active? |
-|------|---------------|-----------------|-------------------|---------|
-| **Total Promoters** | `all` | `all` | `all` | ✓ |
-| **Active Workforce** | `active` | `all` | `assigned` | ✓ |
-| **Document Alerts** | `all` | `expired` | `all` | ✓ |
-| **Compliance Rate** | `active` | `all` | `assigned` | ✓ |
+| Card                 | Status Filter | Document Filter | Assignment Filter | Active? |
+| -------------------- | ------------- | --------------- | ----------------- | ------- |
+| **Total Promoters**  | `all`         | `all`           | `all`             | ✓       |
+| **Active Workforce** | `active`      | `all`           | `assigned`        | ✓       |
+| **Document Alerts**  | `all`         | `expired`       | `all`             | ✓       |
+| **Compliance Rate**  | `active`      | `all`           | `assigned`        | ✓       |
 
 ## 🎯 User Experience Flow
 
 ### Scenario 1: Check Document Alerts
+
 ```
 1. User sees "Document Alerts: 15"
 2. User clicks the card
@@ -164,6 +177,7 @@ When you click a metric card:
 ```
 
 ### Scenario 2: Switch Filters
+
 ```
 1. User has "Active Workforce" filter active
 2. User clicks "Document Alerts"
@@ -174,6 +188,7 @@ When you click a metric card:
 ```
 
 ### Scenario 3: Clear Filter
+
 ```
 1. User has "Active Workforce" filter active
 2. User clicks "Active Workforce" again
@@ -185,6 +200,7 @@ When you click a metric card:
 ## 🎨 CSS Classes Applied
 
 ### Clickable State:
+
 ```typescript
 className={cn(
   'cursor-pointer',
@@ -196,6 +212,7 @@ className={cn(
 ```
 
 ### Active State:
+
 ```typescript
 className={cn(
   'ring-2',
@@ -206,12 +223,15 @@ className={cn(
 ```
 
 ### Pulsing Indicator:
+
 ```jsx
-{isActive && (
-  <div className="absolute top-2 right-2">
-    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-  </div>
-)}
+{
+  isActive && (
+    <div className='absolute top-2 right-2'>
+      <div className='h-2 w-2 rounded-full bg-primary animate-pulse' />
+    </div>
+  );
+}
 ```
 
 ## 🔧 Technical Implementation
@@ -219,7 +239,9 @@ className={cn(
 ### Files Modified:
 
 #### 1. `components/promoters/promoters-metrics-cards.tsx`
+
 **Changes:**
+
 - Added `onCardClick` prop to PromotersMetricsCards
 - Added `activeFilter` prop to track active card
 - Added `onClick` and `isActive` props to EnhancedStatCard
@@ -229,7 +251,9 @@ className={cn(
 - Made cards focusable with `tabIndex`
 
 #### 2. `components/promoters/enhanced-promoters-view-refactored.tsx`
+
 **Changes:**
+
 - Added `activeMetricFilter` state to track which card is active
 - Created `handleMetricCardClick` callback for filter logic
 - Added toggle behavior (click same card to clear)
@@ -244,7 +268,9 @@ className={cn(
 // PromotersMetricsCards props
 interface PromotersMetricsCardsProps {
   metrics: DashboardMetrics;
-  onCardClick?: (filterType: 'all' | 'active' | 'alerts' | 'compliance') => void;
+  onCardClick?: (
+    filterType: 'all' | 'active' | 'alerts' | 'compliance'
+  ) => void;
   activeFilter?: 'all' | 'active' | 'alerts' | 'compliance' | null;
 }
 
@@ -262,6 +288,7 @@ interface EnhancedStatCardProps {
 ### Manual Testing:
 
 1. **Test Total Promoters Card:**
+
    ```
    - Click "Total Promoters" card
    - ✓ Should show ring & pulsing dot
@@ -271,6 +298,7 @@ interface EnhancedStatCardProps {
    ```
 
 2. **Test Active Workforce Card:**
+
    ```
    - Click "Active Workforce" card
    - ✓ Should apply assigned + active filters
@@ -279,6 +307,7 @@ interface EnhancedStatCardProps {
    ```
 
 3. **Test Document Alerts Card:**
+
    ```
    - Click "Document Alerts" card
    - ✓ Should filter by expired documents
@@ -287,6 +316,7 @@ interface EnhancedStatCardProps {
    ```
 
 4. **Test Compliance Rate Card:**
+
    ```
    - Click "Compliance Rate" card
    - ✓ Should show compliant promoters
@@ -295,6 +325,7 @@ interface EnhancedStatCardProps {
    ```
 
 5. **Test Toggle Behavior:**
+
    ```
    - Click "Active Workforce" (applies filter)
    - Click "Active Workforce" again (clears filter)
@@ -304,6 +335,7 @@ interface EnhancedStatCardProps {
    ```
 
 6. **Test Card Switching:**
+
    ```
    - Click "Active Workforce"
    - Click "Document Alerts"
@@ -313,6 +345,7 @@ interface EnhancedStatCardProps {
    ```
 
 7. **Test Keyboard Navigation:**
+
    ```
    - Tab to a metric card
    - ✓ Card should get focus ring
@@ -333,6 +366,7 @@ interface EnhancedStatCardProps {
 ## 📱 Responsive Behavior
 
 ### Desktop (XL):
+
 ```
 ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
 │ Total│ │Active│ │Alerts│ │Compli│
@@ -341,6 +375,7 @@ interface EnhancedStatCardProps {
 ```
 
 ### Tablet (MD):
+
 ```
 ┌──────┐ ┌──────┐
 │ Total│ │Active│
@@ -352,6 +387,7 @@ interface EnhancedStatCardProps {
 ```
 
 ### Mobile:
+
 ```
 ┌──────┐
 │ Total│
@@ -395,28 +431,36 @@ Card Click Event
 ## 💡 Smart Features
 
 ### 1. **Toggle Behavior**
+
 Click the same card twice:
+
 - First click: Applies filter
 - Second click: Clears filter (back to all)
 
 ### 2. **Smooth Scroll**
+
 Auto-scrolls to filtered list so you don't have to hunt for it
 
 ### 3. **Toast Feedback**
+
 Clear confirmation of what filter was applied:
+
 - "Filtered by assigned active promoters"
 - "Filtered by promoters with document issues"
 - "Showing all promoters"
 
 ### 4. **Visual Persistence**
+
 Active filter stays highlighted even if you scroll away
 
 ### 5. **Keyboard Support**
+
 Full keyboard navigation for accessibility compliance
 
 ## 🎯 Real-World Usage
 
 ### Use Case 1: Check Critical Documents
+
 ```
 Manager sees: "Document Alerts: 15"
 Manager thinks: "I need to see which promoters have issues"
@@ -425,6 +469,7 @@ Result: ✓ Instantly see 15 promoters with expired/expiring docs
 ```
 
 ### Use Case 2: Review Active Team
+
 ```
 HR sees: "Active Workforce: 94"
 HR thinks: "Let me review who's currently assigned"
@@ -433,6 +478,7 @@ Result: ✓ See only 94 assigned active promoters
 ```
 
 ### Use Case 3: Check Compliance
+
 ```
 Admin sees: "Compliance Rate: 85%"
 Admin thinks: "Who is compliant?"
@@ -441,6 +487,7 @@ Result: ✓ See promoters with valid documents
 ```
 
 ### Use Case 4: Go Back to All
+
 ```
 User has filter active
 User clicks: The active card again
@@ -450,6 +497,7 @@ Result: ✓ Filters cleared, back to full list
 ## 📊 Filter Logic Details
 
 ### Total Promoters Card:
+
 ```javascript
 // Clears all filters
 setStatusFilter('all');
@@ -459,6 +507,7 @@ setAssignmentFilter('all');
 ```
 
 ### Active Workforce Card:
+
 ```javascript
 // Shows assigned active promoters
 setStatusFilter('active');
@@ -469,6 +518,7 @@ setAssignmentFilter('assigned');
 ```
 
 ### Document Alerts Card:
+
 ```javascript
 // Shows promoters with document issues
 setDocumentFilter('expired');
@@ -478,6 +528,7 @@ setDocumentFilter('expired');
 ```
 
 ### Compliance Rate Card:
+
 ```javascript
 // Shows compliant assigned promoters
 setStatusFilter('active');
@@ -491,6 +542,7 @@ setAssignmentFilter('assigned');
 ## 🔄 State Management
 
 ### State Added:
+
 ```typescript
 const [activeMetricFilter, setActiveMetricFilter] = useState<
   'all' | 'active' | 'alerts' | 'compliance' | null
@@ -498,6 +550,7 @@ const [activeMetricFilter, setActiveMetricFilter] = useState<
 ```
 
 ### State Flow:
+
 ```
 Card Click
     ↓
@@ -515,6 +568,7 @@ Visual feedback shown to user
 ## ✨ Code Quality
 
 ### Clean Implementation:
+
 - ✅ Reusable callback with `useCallback`
 - ✅ Proper TypeScript typing
 - ✅ Accessibility compliant
@@ -523,6 +577,7 @@ Visual feedback shown to user
 - ✅ Documented with comments
 
 ### Performance:
+
 - ✅ Memoized callbacks prevent unnecessary re-renders
 - ✅ Efficient filter updates
 - ✅ Smooth 60fps animations
@@ -574,6 +629,7 @@ Visual feedback shown to user
 ### For Developers:
 
 The cards are now:
+
 - ✅ Fully interactive
 - ✅ Keyboard accessible
 - ✅ Screen reader friendly
@@ -583,6 +639,7 @@ The cards are now:
 ## 🎉 Benefits
 
 ### For Users:
+
 1. **Faster Navigation**: Click card → instant filter
 2. **Clear Feedback**: Visual indicators show what's active
 3. **Smart Behavior**: Toggle on/off with same card
@@ -590,6 +647,7 @@ The cards are now:
 5. **Accessible**: Works with keyboard and screen readers
 
 ### For Business:
+
 1. **Better Insights**: Quick access to critical data
 2. **Time Saved**: One click instead of multiple filter selections
 3. **Error Reduction**: Clear visual state prevents confusion
@@ -598,6 +656,7 @@ The cards are now:
 ## 🔮 Future Enhancements
 
 Possible improvements:
+
 1. Add URL query params to persist filter state
 2. Add "Clear Filters" button when any card is active
 3. Add animation when filtered count changes
@@ -610,4 +669,3 @@ Possible improvements:
 **Status**: ✅ **COMPLETE and PRODUCTION READY**
 **Impact**: 🟢 **Positive** - Enhanced UX, better data access
 **Accessibility**: ♿ **WCAG 2.1 Compliant**
-

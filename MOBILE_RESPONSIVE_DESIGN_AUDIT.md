@@ -28,6 +28,7 @@ xl: 1280px  /* Extra large devices */
 ### 1. Navigation & Header
 
 #### Issues:
+
 - **Sidebar** doesn't collapse on mobile
 - **Header** items overflow on small screens
 - **Menu** not optimized for touch targets
@@ -35,47 +36,49 @@ xl: 1280px  /* Extra large devices */
 #### Fixes:
 
 **Mobile Sidebar:**
+
 ```tsx
 // components/sidebar.tsx
 const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-  <SheetTrigger asChild className="lg:hidden">
-    <Button variant="ghost" size="icon">
-      <Menu className="h-6 w-6" />
+  <SheetTrigger asChild className='lg:hidden'>
+    <Button variant='ghost' size='icon'>
+      <Menu className='h-6 w-6' />
     </Button>
   </SheetTrigger>
-  <SheetContent side="left" className="w-64 p-0">
-    <nav className="flex flex-col h-full">
-      {/* Navigation items */}
-    </nav>
+  <SheetContent side='left' className='w-64 p-0'>
+    <nav className='flex flex-col h-full'>{/* Navigation items */}</nav>
   </SheetContent>
-</Sheet>
+</Sheet>;
 
-{/* Desktop sidebar */}
-<aside className="hidden lg:block w-64 border-r">
+{
+  /* Desktop sidebar */
+}
+<aside className='hidden lg:block w-64 border-r'>
   {/* Sidebar content */}
-</aside>
+</aside>;
 ```
 
 **Responsive Header:**
+
 ```tsx
 // Responsive header with hamburger menu
-<header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-  <div className="container flex h-16 items-center justify-between">
+<header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur'>
+  <div className='container flex h-16 items-center justify-between'>
     {/* Mobile: Hamburger + Logo + User */}
-    <div className="flex items-center gap-2 lg:hidden">
-      <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-        <Menu className="h-6 w-6" />
+    <div className='flex items-center gap-2 lg:hidden'>
+      <Button variant='ghost' size='icon' onClick={toggleMobileMenu}>
+        <Menu className='h-6 w-6' />
       </Button>
-      <Logo className="h-8" />
+      <Logo className='h-8' />
     </div>
-    
+
     {/* Desktop: Full navigation */}
-    <div className="hidden lg:flex lg:items-center lg:gap-6">
+    <div className='hidden lg:flex lg:items-center lg:gap-6'>
       {/* Nav items */}
     </div>
-    
+
     {/* User menu (always visible) */}
     <UserMenu />
   </div>
@@ -87,6 +90,7 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 ### 2. Dashboard & Metrics Cards
 
 #### Issues:
+
 - **Cards** don't stack properly on mobile
 - **Metrics** overflow horizontally
 - **Charts** not responsive
@@ -95,6 +99,7 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 #### Fixes:
 
 **Responsive Card Grid:**
+
 ```tsx
 // Before: Fixed 4-column grid
 <div className="grid grid-cols-4 gap-4">
@@ -110,33 +115,32 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 ```
 
 **Responsive Charts:**
+
 ```tsx
 // Use recharts with ResponsiveContainer
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 
-<ResponsiveContainer width="100%" height={300}>
+<ResponsiveContainer width='100%' height={300}>
   <LineChart data={data}>
-    <XAxis 
-      dataKey="month" 
+    <XAxis
+      dataKey='month'
       tick={{ fontSize: 12 }}
-      interval="preserveStartEnd"
+      interval='preserveStartEnd'
       angle={-45}
-      textAnchor="end"
+      textAnchor='end'
       height={60}
     />
     <YAxis tick={{ fontSize: 12 }} />
-    <Line type="monotone" dataKey="value" stroke="#3b82f6" />
+    <Line type='monotone' dataKey='value' stroke='#3b82f6' />
   </LineChart>
-</ResponsiveContainer>
+</ResponsiveContainer>;
 ```
 
 **Touch-Friendly Buttons:**
+
 ```tsx
 // Minimum touch target: 44x44px (Apple) or 48x48px (Material Design)
-<Button 
-  className="min-h-[44px] min-w-[44px] touch-manipulation"
-  size="lg"
->
+<Button className='min-h-[44px] min-w-[44px] touch-manipulation' size='lg'>
   Action
 </Button>
 ```
@@ -146,6 +150,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ### 3. Tables & Data Grids
 
 #### Issues:
+
 - **Tables** overflow horizontally on mobile
 - **Action buttons** too small
 - **No mobile-optimized view** (cards instead of tables)
@@ -153,11 +158,12 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 #### Fixes:
 
 **Responsive Table with Horizontal Scroll:**
+
 ```tsx
-<div className="overflow-x-auto -mx-4 sm:mx-0">
-  <div className="inline-block min-w-full align-middle">
-    <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-      <table className="min-w-full divide-y divide-gray-300">
+<div className='overflow-x-auto -mx-4 sm:mx-0'>
+  <div className='inline-block min-w-full align-middle'>
+    <div className='overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg'>
+      <table className='min-w-full divide-y divide-gray-300'>
         {/* Table content */}
       </table>
     </div>
@@ -166,6 +172,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ```
 
 **Mobile Card View:**
+
 ```tsx
 // Desktop: Table view
 <div className="hidden md:block">
@@ -208,6 +215,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ### 4. Forms
 
 #### Issues:
+
 - **Input fields** too narrow on mobile
 - **Multi-step forms** hard to navigate on small screens
 - **Date pickers** not touch-friendly
@@ -216,18 +224,19 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 #### Fixes:
 
 **Full-Width Form Fields:**
+
 ```tsx
-<form className="space-y-4 w-full max-w-full sm:max-w-xl">
+<form className='space-y-4 w-full max-w-full sm:max-w-xl'>
   <FormField
     control={form.control}
-    name="name"
+    name='name'
     render={({ field }) => (
       <FormItem>
         <FormLabel>Full Name</FormLabel>
         <FormControl>
-          <Input 
-            {...field} 
-            className="w-full text-base" // text-base prevents zoom on iOS
+          <Input
+            {...field}
+            className='w-full text-base' // text-base prevents zoom on iOS
           />
         </FormControl>
       </FormItem>
@@ -237,22 +246,24 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ```
 
 **Mobile-Friendly Stepper:**
+
 ```tsx
 // Horizontal scrollable stepper for mobile
-<div className="overflow-x-auto pb-2">
-  <div className="flex gap-2 min-w-max px-4 sm:px-0">
+<div className='overflow-x-auto pb-2'>
+  <div className='flex gap-2 min-w-max px-4 sm:px-0'>
     {steps.map((step, index) => (
-      <div
-        key={step.id}
-        className="flex items-center gap-2 whitespace-nowrap"
-      >
-        <div className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
-          index === currentStep ? "bg-primary text-primary-foreground" : "bg-muted"
-        )}>
+      <div key={step.id} className='flex items-center gap-2 whitespace-nowrap'>
+        <div
+          className={cn(
+            'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold',
+            index === currentStep
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted'
+          )}
+        >
           {index + 1}
         </div>
-        <span className="hidden sm:inline">{step.title}</span>
+        <span className='hidden sm:inline'>{step.title}</span>
       </div>
     ))}
   </div>
@@ -260,6 +271,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ```
 
 **Native Mobile Inputs:**
+
 ```tsx
 // Use appropriate input types for better mobile keyboard
 <Input type="tel" inputMode="tel" pattern="[0-9]*" /> // Numeric keyboard
@@ -273,6 +285,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ### 5. Modals & Dialogs
 
 #### Issues:
+
 - **Modals** too large for mobile screens
 - **Content** overflows without scrolling
 - **Close button** hard to reach
@@ -280,30 +293,33 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 #### Fixes:
 
 **Full-Screen Mobile Modal:**
+
 ```tsx
 <Dialog>
-  <DialogContent className="
+  <DialogContent
+    className='
     max-w-full h-full sm:max-w-lg sm:h-auto
     sm:rounded-lg rounded-none
     p-0
-  ">
+  '
+  >
     {/* Fixed header */}
-    <div className="sticky top-0 bg-background border-b p-4 flex items-center justify-between">
+    <div className='sticky top-0 bg-background border-b p-4 flex items-center justify-between'>
       <DialogTitle>Title</DialogTitle>
-      <DialogClose className="h-10 w-10">
-        <X className="h-4 w-4" />
+      <DialogClose className='h-10 w-10'>
+        <X className='h-4 w-4' />
       </DialogClose>
     </div>
-    
+
     {/* Scrollable content */}
-    <div className="overflow-y-auto p-4 pb-20">
-      {content}
-    </div>
-    
+    <div className='overflow-y-auto p-4 pb-20'>{content}</div>
+
     {/* Fixed footer */}
-    <div className="sticky bottom-0 bg-background border-t p-4 flex gap-2">
-      <Button variant="outline" className="flex-1">Cancel</Button>
-      <Button className="flex-1">Save</Button>
+    <div className='sticky bottom-0 bg-background border-t p-4 flex gap-2'>
+      <Button variant='outline' className='flex-1'>
+        Cancel
+      </Button>
+      <Button className='flex-1'>Save</Button>
     </div>
   </DialogContent>
 </Dialog>
@@ -314,6 +330,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ### 6. Typography & Spacing
 
 #### Issues:
+
 - **Font sizes** too small on mobile
 - **Line heights** cramped
 - **Touch targets** too close together
@@ -322,6 +339,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 #### Fixes:
 
 **Responsive Typography:**
+
 ```tsx
 // Use responsive text sizes
 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
@@ -334,6 +352,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ```
 
 **Responsive Spacing:**
+
 ```tsx
 // Add responsive padding and margins
 <div className="p-4 sm:p-6 lg:p-8">
@@ -353,6 +372,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ## 📋 Implementation Checklist
 
 ### Phase 1: Critical (Week 1)
+
 - [ ] Implement mobile navigation (hamburger menu)
 - [ ] Make all tables horizontally scrollable
 - [ ] Ensure all touch targets are minimum 44x44px
@@ -360,6 +380,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 - [ ] Implement mobile card view for data
 
 ### Phase 2: Important (Week 2)
+
 - [ ] Make charts responsive
 - [ ] Optimize modals for mobile
 - [ ] Implement responsive typography
@@ -367,6 +388,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 - [ ] Fix overflow issues on all pages
 
 ### Phase 3: Polish (Week 3)
+
 - [ ] Add pull-to-refresh functionality
 - [ ] Optimize images for mobile
 - [ ] Implement progressive loading
@@ -378,12 +400,14 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ## 🧪 Testing
 
 ### Devices to Test
+
 - iPhone SE (375px width) - Small phone
 - iPhone 14 Pro (393px width) - Standard phone
 - iPad Mini (768px width) - Small tablet
 - iPad Pro (1024px width) - Large tablet
 
 ### Testing Tools
+
 ```bash
 # Chrome DevTools Device Mode
 # - Toggle device toolbar (Cmd+Shift+M / Ctrl+Shift+M)
@@ -396,6 +420,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 ```
 
 ### Performance Targets
+
 - First Contentful Paint: < 1.8s
 - Time to Interactive: < 3.8s
 - Largest Contentful Paint: < 2.5s
@@ -421,4 +446,3 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from 'recharts';
 - [Material Design Touch Targets](https://m3.material.io/foundations/interaction/touch-targets)
 - [iOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/layout)
 - [Chrome DevTools Device Mode](https://developer.chrome.com/docs/devtools/device-mode/)
-

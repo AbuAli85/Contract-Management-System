@@ -65,11 +65,13 @@ async function fetchContracts(
     success: data.success,
     totalContracts: data.totalContracts,
     contractsCount: data.contracts?.length || 0,
-    sampleContract: data.contracts?.[0] ? {
-      id: data.contracts[0].id,
-      promoter_id: data.contracts[0].promoter_id,
-      promoters: data.contracts[0].promoters
-    } : null
+    sampleContract: data.contracts?.[0]
+      ? {
+          id: data.contracts[0].id,
+          promoter_id: data.contracts[0].promoter_id,
+          promoters: data.contracts[0].promoters,
+        }
+      : null,
   });
 
   return data;
@@ -183,7 +185,7 @@ export function useCreateContractMutation() {
 
   return useMutation({
     mutationFn: createContract,
-    onMutate: async (newContract) => {
+    onMutate: async newContract => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: contractsKeys.lists() });
 
@@ -195,9 +197,9 @@ export function useCreateContractMutation() {
       // Optimistically update all list queries
       queryClient.setQueriesData<ContractsResponse>(
         { queryKey: contractsKeys.lists() },
-        (old) => {
+        old => {
           if (!old) return old;
-          
+
           // Create optimistic contract with temporary ID
           const optimisticContract = {
             ...newContract,
@@ -238,7 +240,7 @@ export function useUpdateContractMutation() {
 
   return useMutation({
     mutationFn: updateContract,
-    onMutate: async (updatedContract) => {
+    onMutate: async updatedContract => {
       const { id } = updatedContract;
 
       // Cancel any outgoing refetches
@@ -259,12 +261,12 @@ export function useUpdateContractMutation() {
       // Optimistically update all list queries
       queryClient.setQueriesData<ContractsResponse>(
         { queryKey: contractsKeys.lists() },
-        (old) => {
+        old => {
           if (!old) return old;
 
           return {
             ...old,
-            contracts: old.contracts.map((contract) =>
+            contracts: old.contracts.map(contract =>
               contract.id === id
                 ? { ...contract, ...updatedContract }
                 : contract
@@ -305,7 +307,7 @@ export function useDeleteContractMutation() {
 
   return useMutation({
     mutationFn: deleteContract,
-    onMutate: async (id) => {
+    onMutate: async id => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: contractsKeys.lists() });
 
@@ -317,12 +319,12 @@ export function useDeleteContractMutation() {
       // Optimistically remove from all list queries
       queryClient.setQueriesData<ContractsResponse>(
         { queryKey: contractsKeys.lists() },
-        (old) => {
+        old => {
           if (!old) return old;
 
           return {
             ...old,
-            contracts: old.contracts.filter((contract) => contract.id !== id),
+            contracts: old.contracts.filter(contract => contract.id !== id),
             count: old.count - 1,
             total: old.total - 1,
           };
@@ -345,4 +347,3 @@ export function useDeleteContractMutation() {
     },
   });
 }
-

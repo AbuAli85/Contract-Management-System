@@ -1,7 +1,7 @@
 /**
  * Enhanced Promoter Metrics Service
  * Single source of truth for promoter workforce metrics
- * 
+ *
  * Features:
  * - Clear status categories (ACTIVE, AVAILABLE, ON_LEAVE, INACTIVE, TERMINATED)
  * - Document compliance tracking
@@ -64,7 +64,7 @@ const metricsCache = new PromoterMetricsCache();
 function getDateThresholds() {
   const now = new Date();
   const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-  
+
   return {
     now: now.toISOString(),
     thirtyDaysFromNow: thirtyDaysFromNow.toISOString(),
@@ -103,14 +103,10 @@ export async function getEnhancedPromoterMetrics(
       documentComplianceResult,
     ] = await Promise.all([
       // Total promoters count
-      supabase
-        .from('promoters')
-        .select('*', { count: 'exact', head: true }),
+      supabase.from('promoters').select('*', { count: 'exact', head: true }),
 
       // Count by status (using status_enum if available, fallback to status)
-      supabase
-        .from('promoters')
-        .select('status, status_enum'),
+      supabase.from('promoters').select('status, status_enum'),
 
       // Count promoters with active contracts
       supabase
@@ -122,7 +118,9 @@ export async function getEnhancedPromoterMetrics(
       // Document compliance data
       supabase
         .from('promoters')
-        .select('id_card_expiry_date, passport_expiry_date, status, status_enum'),
+        .select(
+          'id_card_expiry_date, passport_expiry_date, status, status_enum'
+        ),
     ]);
 
     // Handle errors
@@ -146,8 +144,10 @@ export async function getEnhancedPromoterMetrics(
     statusCountsResult.data?.forEach((promoter: any) => {
       // Use status_enum if available, fallback to status text column
       const statusValue = promoter.status_enum || promoter.status;
-      const status = statusValue ? String(statusValue).toLowerCase() : 'available';
-      
+      const status = statusValue
+        ? String(statusValue).toLowerCase()
+        : 'available';
+
       // Map status to enum with comprehensive fallback logic
       // NOTE: 'active' means employed/active employee, NOT on contracts
       // We'll determine "Active on Contracts" separately using actual contract data
@@ -175,7 +175,9 @@ export async function getEnhancedPromoterMetrics(
         default:
           // Any unknown status defaults to available
           statusCounts[PromoterStatus.AVAILABLE]++;
-          console.warn(`Unknown promoter status: "${statusValue}", defaulting to AVAILABLE`);
+          console.warn(
+            `Unknown promoter status: "${statusValue}", defaulting to AVAILABLE`
+          );
       }
     });
 
@@ -194,13 +196,13 @@ export async function getEnhancedPromoterMetrics(
     let expiringPassports = 0;
 
     documentComplianceResult.data?.forEach((promoter: any) => {
-      const idExpiry = promoter.id_card_expiry_date 
-        ? new Date(promoter.id_card_expiry_date) 
+      const idExpiry = promoter.id_card_expiry_date
+        ? new Date(promoter.id_card_expiry_date)
         : null;
-      const passportExpiry = promoter.passport_expiry_date 
-        ? new Date(promoter.passport_expiry_date) 
+      const passportExpiry = promoter.passport_expiry_date
+        ? new Date(promoter.passport_expiry_date)
         : null;
-      
+
       const nowDate = new Date(now);
       const thirtyDaysDate = new Date(thirtyDaysFromNow);
 
@@ -223,13 +225,19 @@ export async function getEnhancedPromoterMetrics(
       }
 
       // Overall document status
-      const hasExpired = (idExpiry && idExpiry < nowDate) || 
-                        (passportExpiry && passportExpiry < nowDate);
-      const hasExpiring = (idExpiry && idExpiry >= nowDate && idExpiry <= thirtyDaysDate) ||
-                         (passportExpiry && passportExpiry >= nowDate && passportExpiry <= thirtyDaysDate);
-      const isCompliant = idExpiry && passportExpiry && 
-                         idExpiry > thirtyDaysDate && 
-                         passportExpiry > thirtyDaysDate;
+      const hasExpired =
+        (idExpiry && idExpiry < nowDate) ||
+        (passportExpiry && passportExpiry < nowDate);
+      const hasExpiring =
+        (idExpiry && idExpiry >= nowDate && idExpiry <= thirtyDaysDate) ||
+        (passportExpiry &&
+          passportExpiry >= nowDate &&
+          passportExpiry <= thirtyDaysDate);
+      const isCompliant =
+        idExpiry &&
+        passportExpiry &&
+        idExpiry > thirtyDaysDate &&
+        passportExpiry > thirtyDaysDate;
 
       if (hasExpired) {
         expiredDocuments++;
@@ -241,27 +249,34 @@ export async function getEnhancedPromoterMetrics(
     });
 
     // Calculate derived metrics
-    const availableWorkforce = statusCounts[PromoterStatus.ACTIVE] + 
-                               statusCounts[PromoterStatus.AVAILABLE];
-    
-    const utilizationRate = availableWorkforce > 0 
-      ? Math.round((activeOnContracts / availableWorkforce) * 100) 
-      : 0;
+    const availableWorkforce =
+      statusCounts[PromoterStatus.ACTIVE] +
+      statusCounts[PromoterStatus.AVAILABLE];
 
-    const complianceRate = totalWorkforce > 0 
-      ? Math.round((fullyCompliant / totalWorkforce) * 100) 
-      : 0;
+    const utilizationRate =
+      availableWorkforce > 0
+        ? Math.round((activeOnContracts / availableWorkforce) * 100)
+        : 0;
 
-    const averageContractsPerPromoter = activeOnContracts > 0
-      ? Number((activeContractsResult.data?.length || 0) / activeOnContracts).toFixed(2)
-      : 0;
+    const complianceRate =
+      totalWorkforce > 0
+        ? Math.round((fullyCompliant / totalWorkforce) * 100)
+        : 0;
+
+    const averageContractsPerPromoter =
+      activeOnContracts > 0
+        ? Number(
+            (activeContractsResult.data?.length || 0) / activeOnContracts
+          ).toFixed(2)
+        : 0;
 
     // Validate that all promoters are accounted for
-    const totalCounted = activeOnContracts + 
-                        statusCounts[PromoterStatus.AVAILABLE] +
-                        statusCounts[PromoterStatus.ON_LEAVE] +
-                        statusCounts[PromoterStatus.INACTIVE] +
-                        statusCounts[PromoterStatus.TERMINATED];
+    const totalCounted =
+      activeOnContracts +
+      statusCounts[PromoterStatus.AVAILABLE] +
+      statusCounts[PromoterStatus.ON_LEAVE] +
+      statusCounts[PromoterStatus.INACTIVE] +
+      statusCounts[PromoterStatus.TERMINATED];
 
     if (totalCounted !== totalWorkforce) {
       console.error('❌ Promoter count mismatch!', {
@@ -313,11 +328,12 @@ export async function getEnhancedPromoterMetrics(
     };
 
     // Data validation check
-    const statusSum = statusCounts[PromoterStatus.ACTIVE] + 
-                      statusCounts[PromoterStatus.AVAILABLE] + 
-                      statusCounts[PromoterStatus.ON_LEAVE] + 
-                      statusCounts[PromoterStatus.INACTIVE] + 
-                      statusCounts[PromoterStatus.TERMINATED];
+    const statusSum =
+      statusCounts[PromoterStatus.ACTIVE] +
+      statusCounts[PromoterStatus.AVAILABLE] +
+      statusCounts[PromoterStatus.ON_LEAVE] +
+      statusCounts[PromoterStatus.INACTIVE] +
+      statusCounts[PromoterStatus.TERMINATED];
 
     if (statusSum !== totalWorkforce) {
       console.warn('⚠️ Promoter Metrics: Status sum mismatch!', {
@@ -373,13 +389,14 @@ export function clearPromoterMetricsCache(): void {
  */
 export async function getPromoterStatusSummary() {
   const metrics = await getEnhancedPromoterMetrics();
-  
+
   return Object.entries(metrics.details.byStatus).map(([status, count]) => ({
     status: status as PromoterStatus,
     count,
-    percentage: metrics.totalWorkforce > 0 
-      ? Math.round((count / metrics.totalWorkforce) * 100) 
-      : 0,
+    percentage:
+      metrics.totalWorkforce > 0
+        ? Math.round((count / metrics.totalWorkforce) * 100)
+        : 0,
     definition: PROMOTER_STATUS_DEFINITIONS[status as PromoterStatus],
   }));
 }
@@ -389,7 +406,7 @@ export async function getPromoterStatusSummary() {
  */
 export async function getDocumentComplianceSummary() {
   const metrics = await getEnhancedPromoterMetrics();
-  
+
   return {
     fullyCompliant: {
       count: metrics.fullyCompliant,
@@ -398,9 +415,12 @@ export async function getDocumentComplianceSummary() {
     },
     expiringSoon: {
       count: metrics.expiringDocuments,
-      percentage: metrics.totalWorkforce > 0
-        ? Math.round((metrics.expiringDocuments / metrics.totalWorkforce) * 100)
-        : 0,
+      percentage:
+        metrics.totalWorkforce > 0
+          ? Math.round(
+              (metrics.expiringDocuments / metrics.totalWorkforce) * 100
+            )
+          : 0,
       description: 'Documents expiring within 30 days',
       details: {
         ids: metrics.details.expiringIds,
@@ -409,9 +429,12 @@ export async function getDocumentComplianceSummary() {
     },
     expired: {
       count: metrics.expiredDocuments,
-      percentage: metrics.totalWorkforce > 0
-        ? Math.round((metrics.expiredDocuments / metrics.totalWorkforce) * 100)
-        : 0,
+      percentage:
+        metrics.totalWorkforce > 0
+          ? Math.round(
+              (metrics.expiredDocuments / metrics.totalWorkforce) * 100
+            )
+          : 0,
       description: 'Documents already expired',
       details: {
         ids: metrics.details.criticalIds,
@@ -426,9 +449,10 @@ export async function getDocumentComplianceSummary() {
  */
 export async function getWorkforceUtilizationSummary() {
   const metrics = await getEnhancedPromoterMetrics();
-  
-  const availableWorkforce = metrics.activeOnContracts + metrics.availableForWork;
-  
+
+  const availableWorkforce =
+    metrics.activeOnContracts + metrics.availableForWork;
+
   return {
     total: metrics.totalWorkforce,
     availableWorkforce,
@@ -440,4 +464,3 @@ export async function getWorkforceUtilizationSummary() {
     averageContractsPerPromoter: metrics.averageContractsPerPromoter,
   };
 }
-

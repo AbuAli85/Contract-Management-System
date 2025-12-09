@@ -7,14 +7,17 @@ This directory contains utility scripts for security verification and testing.
 ## 🛡️ Security Header Verification Scripts
 
 ### Purpose
+
 These scripts verify that all required security headers are properly configured on your production portal after deployment.
 
 ### Available Scripts
 
 #### 1. PowerShell Script (Windows)
+
 **File:** `verify-security-headers.ps1`
 
 **Usage:**
+
 ```powershell
 # Default URL (https://portal.thesmartpro.io/en/dashboard)
 .\scripts\verify-security-headers.ps1
@@ -24,13 +27,16 @@ These scripts verify that all required security headers are properly configured 
 ```
 
 **Requirements:**
+
 - Windows PowerShell 5.1 or higher
 - Internet connection
 
 #### 2. Bash Script (Linux/macOS/Git Bash)
+
 **File:** `verify-security-headers.sh`
 
 **Usage:**
+
 ```bash
 # Make executable (first time only)
 chmod +x scripts/verify-security-headers.sh
@@ -43,6 +49,7 @@ chmod +x scripts/verify-security-headers.sh
 ```
 
 **Requirements:**
+
 - Bash shell
 - `curl` command
 - Internet connection
@@ -52,25 +59,30 @@ chmod +x scripts/verify-security-headers.sh
 ## 📊 What These Scripts Check
 
 ### Critical Security Headers
+
 - ✅ **Strict-Transport-Security** - HTTPS enforcement
 - ✅ **Content-Security-Policy** - XSS protection
 - ✅ **X-Frame-Options** - Clickjacking protection
 - ✅ **X-Content-Type-Options** - MIME-type sniffing protection
 
 ### Cross-Origin Isolation
+
 - ✅ **Cross-Origin-Embedder-Policy** - Resource isolation
 - ✅ **Cross-Origin-Opener-Policy** - Window isolation
 - ✅ **Cross-Origin-Resource-Policy** - Resource access control
 
 ### Privacy & Permissions
+
 - ✅ **Referrer-Policy** - Referrer information control
 - ✅ **Permissions-Policy** - Browser feature control
 
 ### Additional Headers
+
 - ✅ **X-DNS-Prefetch-Control** - DNS prefetching
 - ✅ **X-XSS-Protection** - Legacy XSS protection (if present)
 
 ### CORS Configuration
+
 - ✅ **Access-Control-Allow-Origin** - Origin restriction verification
 
 ---
@@ -78,6 +90,7 @@ chmod +x scripts/verify-security-headers.sh
 ## 🎯 Output Interpretation
 
 ### Success Output
+
 ```
 ========================================
 🎉 ALL SECURITY HEADERS CONFIGURED! 🎉
@@ -89,6 +102,7 @@ Your security posture is excellent!
 **Action:** No action needed. All headers are properly configured.
 
 ### Warning Output
+
 ```
 ========================================
 ⚠️  SOME HEADERS NEED ATTENTION  ⚠️
@@ -100,6 +114,7 @@ Please review the warnings above.
 **Action:** Review warnings. Headers are present but may have unexpected values.
 
 ### Failure Output
+
 ```
 ========================================
 ❌  CRITICAL HEADERS MISSING  ❌
@@ -155,19 +170,24 @@ Warnings: 0
 ## 🚀 When to Run These Scripts
 
 ### After Initial Deployment
+
 Run immediately after deploying the security header changes to verify they're working.
 
 ### Regular Checks
+
 Run weekly or monthly to ensure headers remain properly configured.
 
 ### After Configuration Changes
+
 Run after any changes to:
+
 - `next.config.js`
 - `vercel.json`
 - `middleware.ts`
 - Vercel environment variables
 
 ### Before Production Releases
+
 Include in your release checklist to verify security posture.
 
 ---
@@ -179,6 +199,7 @@ Include in your release checklist to verify security posture.
 **Error:** "Execution policy prevents script from running"
 
 **Solution:**
+
 ```powershell
 # Allow script execution (run as Administrator)
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -192,6 +213,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify-security-headers.ps1
 **Error:** "Permission denied"
 
 **Solution:**
+
 ```bash
 # Make script executable
 chmod +x scripts/verify-security-headers.sh
@@ -203,12 +225,14 @@ chmod +x scripts/verify-security-headers.sh
 ### Headers Not Found
 
 **Possible Causes:**
+
 1. Changes not deployed to Vercel yet
 2. Vercel deployment failed
 3. Caching issues (wait a few minutes)
 4. Wrong URL being tested
 
 **Solution:**
+
 ```bash
 # Check Vercel deployment status
 vercel ls
@@ -223,10 +247,12 @@ vercel --prod --force --no-cache
 ### CORS Test Fails
 
 **Expected Behavior:**
+
 - CORS test should show "No Access-Control-Allow-Origin header" for unauthorized origins
 - This is correct behavior and indicates good security
 
 **Unexpected Behavior:**
+
 - If CORS allows `*` (wildcard), this is a security issue
 - Review `middleware.ts` and `next.config.js`
 
@@ -237,15 +263,19 @@ vercel --prod --force --no-cache
 After running these scripts, also verify with online tools:
 
 1. **SecurityHeaders.com**
+
    ```
    https://securityheaders.com/?q=https://portal.thesmartpro.io
    ```
+
    Expected Grade: A or A+
 
 2. **SSL Labs**
+
    ```
    https://www.ssllabs.com/ssltest/analyze.html?d=portal.thesmartpro.io
    ```
+
    Expected Grade: A or A+
 
 3. **Mozilla Observatory**
@@ -272,16 +302,19 @@ After running these scripts, also verify with online tools:
    - Helps identify CSP violations early
 
 2. **Save Output**
+
    ```powershell
    # PowerShell
    .\scripts\verify-security-headers.ps1 | Tee-Object -FilePath security-report.txt
    ```
+
    ```bash
    # Bash
    ./scripts/verify-security-headers.sh | tee security-report.txt
    ```
 
 3. **Automate in CI/CD**
+
    ```yaml
    # GitHub Actions example
    - name: Verify Security Headers

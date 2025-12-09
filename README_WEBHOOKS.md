@@ -37,13 +37,13 @@ WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 
 ## 📊 Quick Comparison
 
-| | eXtra | Sharaf DG | General |
-|-|-------|-----------|---------|
-| **Route** | `/generate-contract` | `/contracts/sharaf-dg` | `/contracts/general` |
-| **Time** | 2-3 min | 3-5 min | 10-15 min |
-| **Images** | ❌ | ✅ | ❌ |
-| **Bilingual** | Partial | Full | Full |
-| **Status** | ✅ | ✅ | ⚠️ |
+|               | eXtra                | Sharaf DG              | General              |
+| ------------- | -------------------- | ---------------------- | -------------------- |
+| **Route**     | `/generate-contract` | `/contracts/sharaf-dg` | `/contracts/general` |
+| **Time**      | 2-3 min              | 3-5 min                | 10-15 min            |
+| **Images**    | ❌                   | ✅                     | ❌                   |
+| **Bilingual** | Partial              | Full                   | Full                 |
+| **Status**    | ✅                   | ✅                     | ⚠️                   |
 
 ---
 
@@ -59,4 +59,3 @@ WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 ## ✅ Next Step
 
 **Copy environment variables to Vercel and deploy!** 🚀
-

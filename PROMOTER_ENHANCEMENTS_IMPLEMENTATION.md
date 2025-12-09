@@ -24,15 +24,18 @@ This document details the new features implemented to address the critical opera
 ## 1. Automated Reminder System
 
 ### Purpose
+
 Automatically sends document expiry reminders at strategic intervals without manual intervention.
 
 ### Files Created
+
 - `lib/services/automated-reminder-scheduler.ts` - Core scheduling logic
 - `app/api/cron/automated-reminders/route.ts` - API endpoint for cron jobs
 
 ### Features
 
 #### Multi-Tier Reminder Schedule
+
 ```
 📅 90 days before expiry → Early Warning (Email)
 📅 30 days before expiry → Standard Reminder (Email)
@@ -47,18 +50,23 @@ Automatically sends document expiry reminders at strategic intervals without man
 ### API Endpoints
 
 #### GET `/api/cron/automated-reminders`
+
 Returns statistics about upcoming reminders without sending them.
 
 **Authorization:**
+
 ```http
 Authorization: Bearer YOUR_CRON_SECRET
 ```
+
 or
+
 ```
 ?secret=YOUR_CRON_SECRET
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -82,11 +90,13 @@ or
 ```
 
 #### POST `/api/cron/automated-reminders`
+
 Executes the automated reminder system.
 
 **Authorization:** Same as GET
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -123,30 +133,38 @@ Executes the automated reminder system.
 ### Setup Instructions
 
 #### 1. Environment Variables
+
 Add to `.env.local`:
+
 ```bash
 CRON_SECRET=your-secure-random-secret-here
 ```
 
 #### 2. Vercel Cron Configuration
+
 Create/update `vercel.json`:
+
 ```json
 {
-  "crons": [{
-    "path": "/api/cron/automated-reminders",
-    "schedule": "0 9 * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/automated-reminders",
+      "schedule": "0 9 * * *"
+    }
+  ]
 }
 ```
 
 #### 3. GitHub Actions Alternative
+
 Create `.github/workflows/automated-reminders.yml`:
+
 ```yaml
 name: Automated Document Reminders
 on:
   schedule:
-    - cron: '0 9 * * *'  # Daily at 9 AM UTC
-  workflow_dispatch:  # Allow manual triggering
+    - cron: '0 9 * * *' # Daily at 9 AM UTC
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   send-reminders:
@@ -187,31 +205,37 @@ console.log(`Sent ${result.remindersSent} critical reminders`);
 ## 2. Bulk Document Request
 
 ### Purpose
+
 Request documents from multiple promoters simultaneously with customizable parameters.
 
 ### Files Created
+
 - `components/promoters/bulk-document-request-dialog.tsx` - UI Component
 - `app/api/promoters/bulk-document-request/route.ts` - API Endpoint
 
 ### Features
 
 #### Document Types
+
 - **ID Card Only** - Request only ID card documents
 - **Passport Only** - Request only passport documents
 - **Both** - Request both ID card and passport
 
 #### Priority Levels
+
 - **Low** - Standard request
 - **Medium** - Important (default)
 - **High** - Urgent
 - **Urgent** - Critical (sends SMS if enabled)
 
 #### Notification Channels
+
 - ✅ Email notifications
 - ✅ SMS notifications (for urgent cases)
 - ✅ In-app notifications
 
 #### Deadline Options
+
 - No specific deadline
 - 7 days from now
 - 14 days from now (default)
@@ -223,19 +247,21 @@ Request documents from multiple promoters simultaneously with customizable param
 #### POST `/api/promoters/bulk-document-request`
 
 **Request:**
+
 ```json
 {
   "promoterIds": ["uuid-1", "uuid-2", "uuid-3"],
-  "documentType": "id_card",  // or "passport" or "both"
-  "priority": "high",          // or "low", "medium", "urgent"
+  "documentType": "id_card", // or "passport" or "both"
+  "priority": "high", // or "low", "medium", "urgent"
   "reason": "Document renewal required for contract assignment",
-  "deadline": "2025-11-15",   // ISO date string
+  "deadline": "2025-11-15", // ISO date string
   "sendEmail": true,
   "sendSms": false
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -314,15 +340,19 @@ const BULK_ACTIONS = [
 ## 3. Data Completeness Tracking
 
 ### Purpose
+
 Visual dashboard showing data quality metrics and identifying incomplete records.
 
 ### File Created
+
 - `components/promoters/data-completeness-dashboard.tsx`
 
 ### Features
 
 #### Overall Completeness Score
+
 Weighted calculation based on:
+
 - Email Address (25%)
 - Phone Number (15%)
 - ID Card Document (30%)
@@ -330,6 +360,7 @@ Weighted calculation based on:
 - Company Assignment (10%)
 
 #### Field-by-Field Breakdown
+
 - **Email Addresses:** Contact email for notifications
 - **Phone Numbers:** Contact phone for SMS alerts
 - **ID Card Documents:** Valid ID card with expiry date
@@ -337,6 +368,7 @@ Weighted calculation based on:
 - **Company Assignment:** Assigned to employer/company
 
 #### Color-Coded Status
+
 - 🟢 **Green (90%+):** Excellent data quality
 - 🟡 **Amber (70-89%):** Good but needs improvement
 - 🔴 **Red (<70%):** Critical - immediate action needed
@@ -399,25 +431,30 @@ function PromotersPage() {
 ## 4. Enhanced Critical Alerts
 
 ### Purpose
+
 Prominent banner displaying critical document issues with quick-action buttons.
 
 ### File Created
+
 - `components/promoters/critical-alerts-banner.tsx`
 
 ### Features
 
 #### Alert Categories
+
 - 🚨 **Expired:** Documents that have already expired
 - ⏰ **Expiring Today:** Documents expiring today
 - ⚠️ **Expiring Soon:** Documents expiring within 3 days
 - 📄 **Missing:** Documents not provided
 
 #### Quick Actions
+
 - **Send Bulk Urgent Reminders:** Send reminders to all with expired/expiring documents
 - **Request Missing Documents:** Bulk request for all missing documents
 - **Show/Hide Details:** Expandable list of individual cases
 
 #### Auto-Selection
+
 - Critical cases (expired & expiring today) are auto-selected
 - Banner dismissible but persists across page reloads until addressed
 
@@ -476,32 +513,39 @@ function PromotersPage() {
 ## 5. Quick-Fix Workflow
 
 ### Purpose
+
 Automated workflow to process multiple critical cases in one action.
 
 ### File Created
+
 - `components/promoters/quick-fix-workflow-dialog.tsx`
 
 ### Features
 
 #### Intelligent Case Detection
+
 Automatically identifies promoters with:
+
 - Expired documents
 - Documents expiring within 3 days
 - Missing critical documents
 - No contact information
 
 #### Bulk Processing
+
 - Auto-selects critical severity cases
 - Batch processes all selected cases
 - Shows real-time progress
 - Handles failures gracefully
 
 #### Action Types
+
 - **Reminders:** For expired/expiring documents
 - **Document Requests:** For missing documents
 - **Priority-based:** Critical cases get SMS notifications
 
 #### Statistics Dashboard
+
 - Total cases found
 - Selected cases count
 - Critical severity count
@@ -514,10 +558,10 @@ import { QuickFixWorkflowDialog } from '@/components/promoters/quick-fix-workflo
 
 function PromotersPage() {
   const [showQuickFix, setShowQuickFix] = useState(false);
-  
+
   // Get critical promoters
-  const criticalPromoters = promoters.filter(p => 
-    p.overallStatus === 'critical' || 
+  const criticalPromoters = promoters.filter(p =>
+    p.overallStatus === 'critical' ||
     p.idDocument.status === 'critical' ||
     p.idDocument.status === 'expired'
   );
@@ -583,7 +627,7 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
       const names = sortedPromoters
         .filter(p => selected.includes(p.id))
         .map(p => p.displayName);
-      
+
       setBulkRequestPromoters({ ids: selected, names });
       setShowBulkRequest(true);
     }
@@ -675,6 +719,7 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
 ### 1. Environment Variables
 
 Add to `.env.local`:
+
 ```bash
 # Cron job security
 CRON_SECRET=generate-a-secure-random-string
@@ -694,6 +739,7 @@ NEXT_PUBLIC_APP_URL=https://portal.thesmartpro.io
 ### 2. Database Requirements
 
 Ensure these tables/columns exist:
+
 - `promoters.email`
 - `promoters.phone_number`
 - `promoters.id_card_expiry_date`
@@ -703,6 +749,7 @@ Ensure these tables/columns exist:
 ### 3. Dependencies
 
 These packages should already be installed:
+
 ```json
 {
   "@radix-ui/react-dialog": "^1.0.0",
@@ -718,6 +765,7 @@ These packages should already be installed:
 ## Testing Checklist
 
 ### Automated Reminders
+
 - [ ] Test cron endpoint with GET (statistics)
 - [ ] Test cron endpoint with POST (actual sending)
 - [ ] Verify reminders sent at correct intervals
@@ -725,6 +773,7 @@ These packages should already be installed:
 - [ ] Verify SMS sent for critical cases
 
 ### Bulk Document Request
+
 - [ ] Request single document type
 - [ ] Request both document types
 - [ ] Test all priority levels
@@ -732,18 +781,21 @@ These packages should already be installed:
 - [ ] Check email/SMS toggles
 
 ### Data Completeness
+
 - [ ] Verify score calculation accuracy
 - [ ] Test "View Incomplete" buttons
 - [ ] Check color coding (red/amber/green)
 - [ ] Validate recommended actions
 
 ### Critical Alerts
+
 - [ ] Banner shows for critical cases
 - [ ] Quick actions trigger correctly
 - [ ] Expand/collapse details works
 - [ ] Dismiss persists correctly
 
 ### Quick-Fix Workflow
+
 - [ ] Critical cases detected accurately
 - [ ] Auto-selection works
 - [ ] Batch processing completes
@@ -755,18 +807,21 @@ These packages should already be installed:
 ## Monitoring & Maintenance
 
 ### Daily Checks
+
 1. Review cron job logs
 2. Check automated reminder success rate
 3. Monitor document completeness score
 4. Track critical alerts count
 
 ### Weekly Tasks
+
 1. Review failed reminders
 2. Update promoter contact information
 3. Analyze data completeness trends
 4. Address missing document patterns
 
 ### Monthly Reviews
+
 1. Reminder system effectiveness
 2. Bulk operation usage statistics
 3. Data quality improvements
@@ -777,18 +832,21 @@ These packages should already be installed:
 ## Troubleshooting
 
 ### Reminders Not Sending
+
 1. Check CRON_SECRET is correct
 2. Verify email service API key
 3. Review supabase connection
 4. Check promoter email addresses exist
 
 ### Bulk Actions Failing
+
 1. Verify API endpoint is accessible
 2. Check network requests in browser console
 3. Review API logs for errors
 4. Validate promoter IDs are correct
 
 ### Data Completeness Issues
+
 1. Refresh promoter data
 2. Clear browser cache
 3. Check database query performance
@@ -799,6 +857,7 @@ These packages should already be installed:
 ## Support & Documentation
 
 For additional help:
+
 - **API Documentation:** See individual route files
 - **Component Props:** Check TypeScript interfaces
 - **Error Logs:** Review browser console and server logs
@@ -809,5 +868,3 @@ For additional help:
 **Document Version:** 1.0  
 **Last Updated:** October 29, 2025  
 **Status:** ✅ Production Ready
-
-

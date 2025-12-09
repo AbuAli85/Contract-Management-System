@@ -9,7 +9,7 @@ Your application is failing because **Supabase environment variables are missing
 ✅ `.env.local` file exists  
 ❌ `NEXT_PUBLIC_SUPABASE_URL` is missing  
 ❌ `NEXT_PUBLIC_SUPABASE_ANON_KEY` is missing  
-❌ `SUPABASE_SERVICE_ROLE_KEY` is missing  
+❌ `SUPABASE_SERVICE_ROLE_KEY` is missing
 
 ## **🚨 THIS IS WHY YOU'RE GETTING ERRORS:**
 
@@ -64,7 +64,7 @@ npm run dev
 ## **🔍 VERIFICATION CHECKLIST:**
 
 - [ ] Supabase URL added to .env.local
-- [ ] Supabase anon key added to .env.local  
+- [ ] Supabase anon key added to .env.local
 - [ ] Service role key added to .env.local
 - [ ] Development server restarted
 - [ ] Debug endpoint returns success
@@ -102,7 +102,7 @@ curl http://localhost:3000/api/debug/auth
 ✅ No more 500 API errors  
 ✅ Successful login  
 ✅ Promoters data loads  
-✅ All pages work normally  
+✅ All pages work normally
 
 ---
 

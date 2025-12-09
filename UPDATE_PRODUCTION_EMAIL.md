@@ -20,6 +20,7 @@ RESEND_FROM_NAME=SmartPro Contract Management System
 ```
 
 **Make sure to:**
+
 - ✅ Select "Production" environment
 - ✅ Click "Save"
 
@@ -53,6 +54,7 @@ git push origin main
 ## ✅ **AFTER UPDATING**
 
 Your emails will:
+
 - ✅ Come from `noreply@portal.thesmartpro.io` (professional!)
 - ✅ Send to **ANY email address** (unlimited!)
 - ✅ Have better deliverability (trusted domain)
@@ -68,7 +70,7 @@ With your verified domain, you can use any address:
 # General notifications
 RESEND_FROM_EMAIL=noreply@portal.thesmartpro.io
 
-# Contract-specific  
+# Contract-specific
 RESEND_FROM_EMAIL=contracts@portal.thesmartpro.io
 
 # Notifications
@@ -108,6 +110,7 @@ Once environment is updated and redeployed:
 ```
 
 Or run test script:
+
 ```bash
 npm run test:email
 ```
@@ -119,11 +122,13 @@ All 5 test emails will be delivered! 🎉
 ## 📊 **BEFORE vs AFTER**
 
 ### **Before (Test Mode):**
+
 - From: `onboarding@resend.dev`
 - To: Only `chairman@falconeyegroup.net` ⚠️
 - Restriction: Can't send to other addresses
 
 ### **After (Verified Domain):**
+
 - From: `notifications@portal.thesmartpro.io` ✅
 - To: **ANY email address worldwide** 🌍
 - Professional appearance
@@ -134,6 +139,7 @@ All 5 test emails will be delivered! 🎉
 ## ✅ **VERIFICATION STATUS**
 
 I can see from your screenshot:
+
 - ✅ Domain: `portal.thesmartpro.io`
 - ✅ Status: **Verified** (green)
 - ✅ DNS Records: All verified

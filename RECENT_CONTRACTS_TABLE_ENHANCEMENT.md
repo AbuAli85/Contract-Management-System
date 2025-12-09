@@ -11,6 +11,7 @@
 Successfully transformed the Recent Contracts section from card-based layout to a **comprehensive, professional table format** with detailed columns, interactive actions, and enhanced data presentation.
 
 ### Key Achievements
+
 - ✅ **Professional Table Layout** - 7 comprehensive columns with detailed information
 - ✅ **Enhanced Data Presentation** - Structured rows with clear hierarchy
 - ✅ **Interactive Actions** - Dropdown menus with view/edit options
@@ -25,12 +26,14 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ### **Before vs After**
 
 **BEFORE:**
+
 - Card-based grid layout (3 columns on desktop)
 - Limited information per card
 - Basic visual hierarchy
 - Simple hover effects
 
 **AFTER:**
+
 - **Professional table** with 7 detailed columns
 - **Comprehensive data** in structured rows
 - **Interactive actions** with dropdown menus
@@ -42,21 +45,22 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 
 ### **7 Professional Columns**
 
-| Column | Width | Content | Description |
-|--------|-------|---------|-------------|
-| **Contract Details** | 300px | Title, ID, Date Range | Main contract information |
-| **Status** | 120px | Badge, Expiry Warning | Visual status indicators |
-| **Value** | 120px | Amount, Currency | Financial information |
-| **Duration** | 140px | Total Days, Time Left | Contract timeline |
-| **Progress** | 100px | Percentage, Progress Bar | Completion status |
-| **Created** | 120px | Date, Time | Creation timestamp |
-| **Actions** | 80px | Dropdown Menu | Interactive options |
+| Column               | Width | Content                  | Description               |
+| -------------------- | ----- | ------------------------ | ------------------------- |
+| **Contract Details** | 300px | Title, ID, Date Range    | Main contract information |
+| **Status**           | 120px | Badge, Expiry Warning    | Visual status indicators  |
+| **Value**            | 120px | Amount, Currency         | Financial information     |
+| **Duration**         | 140px | Total Days, Time Left    | Contract timeline         |
+| **Progress**         | 100px | Percentage, Progress Bar | Completion status         |
+| **Created**          | 120px | Date, Time               | Creation timestamp        |
+| **Actions**          | 80px  | Dropdown Menu            | Interactive options       |
 
 ---
 
 ## 🎯 DETAILED COLUMN FEATURES
 
 ### **1. Contract Details Column**
+
 ```typescript
 <div className="space-y-1">
   <div className="font-medium text-gray-900 truncate max-w-[280px]">
@@ -72,11 +76,13 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Contract Title** - Primary identifier with truncation
 - ✅ **Contract ID** - Shortened ID for reference
 - ✅ **Date Range** - Start and end dates in readable format
 
 ### **2. Status Column**
+
 ```typescript
 <div className="flex flex-col gap-1">
   <Badge className={`${getStatusColor(contract.status)} flex items-center gap-1 w-fit`}>
@@ -93,11 +99,13 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Status Badge** - Color-coded with icons
 - ✅ **Expiry Warning** - Alert for contracts expiring within 30 days
 - ✅ **Visual Indicators** - Clear status recognition
 
 ### **3. Value Column**
+
 ```typescript
 {contract.value ? (
   <div className="space-y-1">
@@ -114,11 +122,13 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Formatted Amount** - Proper number formatting
 - ✅ **Currency Display** - Multi-currency support
 - ✅ **Fallback State** - "No value" for contracts without amounts
 
 ### **4. Duration Column**
+
 ```typescript
 <div className="space-y-1">
   <div className="text-sm font-medium">
@@ -139,12 +149,14 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Total Duration** - Contract length in days
 - ✅ **Time Remaining** - Days left for active contracts
 - ✅ **Status Context** - Different messages per status
 - ✅ **Expiry Warning** - Yellow text for expiring contracts
 
 ### **5. Progress Column**
+
 ```typescript
 {isActive ? (
   <div className="space-y-1">
@@ -159,12 +171,14 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Progress Percentage** - Numerical completion status
 - ✅ **Progress Bar** - Visual progress indicator
 - ✅ **Active Only** - Shows only for active contracts
 - ✅ **Fallback State** - Dash for non-active contracts
 
 ### **6. Created Column**
+
 ```typescript
 <div className="space-y-1">
   <div className="text-sm">
@@ -177,11 +191,13 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Creation Date** - Formatted date display
 - ✅ **Creation Time** - Time of day information
 - ✅ **Hierarchical Display** - Date and time separation
 
 ### **7. Actions Column**
+
 ```typescript
 <DropdownMenu>
   <DropdownMenuTrigger asChild>
@@ -205,6 +221,7 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Three-dot Menu** - Professional action trigger
 - ✅ **View Details** - Navigate to contract details
 - ✅ **Edit Contract** - Admin-only edit option
@@ -215,6 +232,7 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ## 📱 RESPONSIVE DESIGN
 
 ### **Mobile Optimization**
+
 ```typescript
 <div className="overflow-x-auto">
   <Table>
@@ -224,11 +242,13 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Horizontal Scroll** - Table scrolls on small screens
 - ✅ **Fixed Column Widths** - Consistent layout across devices
 - ✅ **Touch-friendly** - Easy interaction on mobile devices
 
 ### **Column Width Management**
+
 ```typescript
 <TableHead className="w-[300px]">Contract Details</TableHead>
 <TableHead className="w-[120px]">Status</TableHead>
@@ -240,6 +260,7 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Optimized Widths** - Balanced column distribution
 - ✅ **Content-based Sizing** - Widths match content needs
 - ✅ **Consistent Layout** - Predictable table structure
@@ -249,6 +270,7 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ## 🎨 ENHANCED UX FEATURES
 
 ### **Row Interactions**
+
 ```typescript
 <TableRow key={contract.id} className="hover:bg-gray-50">
   {/* Row content */}
@@ -256,11 +278,13 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Hover Effects** - Subtle background change on hover
 - ✅ **Click Handlers** - Navigate to contract details
 - ✅ **Visual Feedback** - Clear interaction states
 
 ### **Smart Data Display**
+
 ```typescript
 // Expiry warning for active contracts
 {isExpiringSoon && (
@@ -279,6 +303,7 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ```
 
 **Features:**
+
 - ✅ **Contextual Information** - Different data per status
 - ✅ **Smart Alerts** - Warnings for expiring contracts
 - ✅ **Conditional Display** - Relevant information only
@@ -288,6 +313,7 @@ Successfully transformed the Recent Contracts section from card-based layout to 
 ## 📊 DATA ENHANCEMENTS
 
 ### **Real-time Calculations**
+
 ```typescript
 const now = new Date();
 const startDate = new Date(contract.start_date);
@@ -295,17 +321,24 @@ const endDate = new Date(contract.end_date);
 const isActive = contract.status === 'active';
 const daysRemaining = isActive ? differenceInDays(endDate, now) : 0;
 const totalDays = differenceInDays(endDate, startDate);
-const progress = isActive ? Math.max(0, Math.min(100, (differenceInDays(now, startDate) / totalDays) * 100)) : 0;
+const progress = isActive
+  ? Math.max(
+      0,
+      Math.min(100, (differenceInDays(now, startDate) / totalDays) * 100)
+    )
+  : 0;
 const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ```
 
 **Features:**
+
 - ✅ **Live Progress** - Real-time completion percentage
 - ✅ **Expiry Detection** - Automatic expiry warning
 - ✅ **Duration Calculation** - Accurate time calculations
 - ✅ **Status Logic** - Smart status-based displays
 
 ### **Enhanced Sorting**
+
 ```typescript
 {contracts
   .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -316,6 +349,7 @@ const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ```
 
 **Features:**
+
 - ✅ **Chronological Order** - Most recent contracts first
 - ✅ **Limited Display** - Show top 10 contracts
 - ✅ **Performance Optimized** - Efficient sorting and slicing
@@ -325,6 +359,7 @@ const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ## 🎯 PROFESSIONAL FEATURES
 
 ### **Header Enhancements**
+
 ```typescript
 <div className="flex items-center justify-between">
   <CardTitle className="flex items-center gap-2">
@@ -344,11 +379,13 @@ const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ```
 
 **Features:**
+
 - ✅ **Item Counter** - Shows current vs total contracts
 - ✅ **Action Button** - Quick access to view all
 - ✅ **Professional Layout** - Balanced header design
 
 ### **Empty State Handling**
+
 ```typescript
 {contracts.length > 10 && (
   <div className="flex justify-center mt-6">
@@ -361,6 +398,7 @@ const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ```
 
 **Features:**
+
 - ✅ **Pagination Indicator** - Shows when more contracts available
 - ✅ **Load More Action** - Easy access to additional contracts
 - ✅ **Consistent Styling** - Matches overall design
@@ -370,6 +408,7 @@ const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ## 🚀 TECHNICAL IMPLEMENTATION
 
 ### **Component Structure**
+
 ```typescript
 // Table with responsive wrapper
 <div className="overflow-x-auto">
@@ -391,6 +430,7 @@ const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ```
 
 ### **Performance Optimizations**
+
 - ✅ **Efficient Rendering** - Only render visible contracts
 - ✅ **Optimized Calculations** - Cached date calculations
 - ✅ **Minimal Re-renders** - Stable component structure
@@ -401,18 +441,21 @@ const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
 ## 📈 BENEFITS & IMPACT
 
 ### **For Users**
+
 - ✅ **Better Data Overview** - All contract information at a glance
 - ✅ **Faster Navigation** - Quick access to contract details
 - ✅ **Professional Appearance** - Enterprise-grade table design
 - ✅ **Mobile Friendly** - Works on all device sizes
 
 ### **For Administrators**
+
 - ✅ **Comprehensive View** - All contract details in one place
 - ✅ **Quick Actions** - Easy access to edit/view functions
 - ✅ **Status Monitoring** - Clear visibility of contract statuses
 - ✅ **Efficient Management** - Streamlined contract operations
 
 ### **For Developers**
+
 - ✅ **Maintainable Code** - Clean, structured component
 - ✅ **Reusable Components** - Table components can be reused
 - ✅ **Type Safety** - Full TypeScript support

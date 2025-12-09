@@ -58,9 +58,9 @@ export function NavigationItem({
           className
         )}
       >
-        <div className="flex items-center space-x-3">
-          <Icon className="h-4 w-4 flex-shrink-0" />
-          <span className="text-sm">{label}</span>
+        <div className='flex items-center space-x-3'>
+          <Icon className='h-4 w-4 flex-shrink-0' />
+          <span className='text-sm'>{label}</span>
         </div>
 
         {badge && badge.value > 0 && (
@@ -76,12 +76,8 @@ export function NavigationItem({
                 {badge.value}
               </Badge>
             </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              className="max-w-xs"
-              sideOffset={5}
-            >
-              <p className="text-sm font-medium">{badge.tooltip}</p>
+            <TooltipContent side='right' className='max-w-xs' sideOffset={5}>
+              <p className='text-sm font-medium'>{badge.tooltip}</p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -117,7 +113,7 @@ export function NavigationItemIconOnly({
             )}
             aria-label={label}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className='h-5 w-5' />
             {badge && badge.value > 0 && (
               <span
                 className={cn(
@@ -132,10 +128,10 @@ export function NavigationItemIconOnly({
             )}
           </Link>
         </TooltipTrigger>
-        <TooltipContent side="right" className="flex flex-col gap-1">
-          <p className="font-medium">{label}</p>
+        <TooltipContent side='right' className='flex flex-col gap-1'>
+          <p className='font-medium'>{label}</p>
           {badge && badge.value > 0 && (
-            <p className="text-xs text-muted-foreground">{badge.tooltip}</p>
+            <p className='text-xs text-muted-foreground'>{badge.tooltip}</p>
           )}
         </TooltipContent>
       </Tooltip>
@@ -155,11 +151,10 @@ export function NavigationSection({
 }) {
   return (
     <div className={cn('space-y-1', className)}>
-      <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h3 className='mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
         {title}
       </h3>
-      <div className="space-y-0.5">{children}</div>
+      <div className='space-y-0.5'>{children}</div>
     </div>
   );
 }
-

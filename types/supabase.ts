@@ -4,206 +4,206 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
+    PostgrestVersion: '13.0.5';
+  };
   public: {
     Tables: {
       contracts: {
         Row: {
-          amount: number | null
-          approval_status: string | null
-          approved_at: string | null
-          approved_by: string | null
-          attachments: Json | null
-          basic_salary: number | null
-          billing_frequency: string | null
-          changes_requested_at: string | null
-          changes_requested_by: string | null
-          changes_requested_reason: string | null
-          client_company_id: string | null
-          client_id: string | null
-          contract_number: string
-          contract_type: string
-          contract_value: number | null
-          created_at: string | null
-          created_by: string | null
-          currency: string | null
-          description: string | null
-          employer_id: string | null
-          end_date: string
-          first_party_id: string | null
-          google_doc_url: string | null
-          id: string
-          is_current: boolean | null
-          location_ar: string | null
-          location_en: string | null
-          location_id: string | null
-          notes: string | null
-          notice_period: number | null
-          notify_days_before_contract_expiry: number | null
-          payment_terms: string | null
-          pdf_url: string | null
-          priority: string
-          product_id: string | null
-          products_ar: string | null
-          products_en: string | null
-          promoter_id: string | null
-          rejected_at: string | null
-          rejected_by: string | null
-          rejection_reason: string | null
-          renewal_terms: string | null
-          second_party_id: string | null
-          sent_to_hr_at: string | null
-          sent_to_hr_by: string | null
-          sent_to_legal_at: string | null
-          sent_to_legal_by: string | null
-          start_date: string
-          status: string
-          submitted_for_review_at: string | null
-          tags: string[] | null
-          termination_clause: string | null
-          terms: string | null
-          title: string
-          total_value: number | null
-          type: string
-          updated_at: string | null
-          updated_by: string | null
-          user_id: string | null
-          value: number | null
-        }
+          amount: number | null;
+          approval_status: string | null;
+          approved_at: string | null;
+          approved_by: string | null;
+          attachments: Json | null;
+          basic_salary: number | null;
+          billing_frequency: string | null;
+          changes_requested_at: string | null;
+          changes_requested_by: string | null;
+          changes_requested_reason: string | null;
+          client_company_id: string | null;
+          client_id: string | null;
+          contract_number: string;
+          contract_type: string;
+          contract_value: number | null;
+          created_at: string | null;
+          created_by: string | null;
+          currency: string | null;
+          description: string | null;
+          employer_id: string | null;
+          end_date: string;
+          first_party_id: string | null;
+          google_doc_url: string | null;
+          id: string;
+          is_current: boolean | null;
+          location_ar: string | null;
+          location_en: string | null;
+          location_id: string | null;
+          notes: string | null;
+          notice_period: number | null;
+          notify_days_before_contract_expiry: number | null;
+          payment_terms: string | null;
+          pdf_url: string | null;
+          priority: string;
+          product_id: string | null;
+          products_ar: string | null;
+          products_en: string | null;
+          promoter_id: string | null;
+          rejected_at: string | null;
+          rejected_by: string | null;
+          rejection_reason: string | null;
+          renewal_terms: string | null;
+          second_party_id: string | null;
+          sent_to_hr_at: string | null;
+          sent_to_hr_by: string | null;
+          sent_to_legal_at: string | null;
+          sent_to_legal_by: string | null;
+          start_date: string;
+          status: string;
+          submitted_for_review_at: string | null;
+          tags: string[] | null;
+          termination_clause: string | null;
+          terms: string | null;
+          title: string;
+          total_value: number | null;
+          type: string;
+          updated_at: string | null;
+          updated_by: string | null;
+          user_id: string | null;
+          value: number | null;
+        };
         Insert: {
-          amount?: number | null
-          approval_status?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          attachments?: Json | null
-          basic_salary?: number | null
-          billing_frequency?: string | null
-          changes_requested_at?: string | null
-          changes_requested_by?: string | null
-          changes_requested_reason?: string | null
-          client_company_id?: string | null
-          client_id?: string | null
-          contract_number: string
-          contract_type?: string
-          contract_value?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          currency?: string | null
-          description?: string | null
-          employer_id?: string | null
-          end_date: string
-          first_party_id?: string | null
-          google_doc_url?: string | null
-          id?: string
-          is_current?: boolean | null
-          location_ar?: string | null
-          location_en?: string | null
-          location_id?: string | null
-          notes?: string | null
-          notice_period?: number | null
-          notify_days_before_contract_expiry?: number | null
-          payment_terms?: string | null
-          pdf_url?: string | null
-          priority?: string
-          product_id?: string | null
-          products_ar?: string | null
-          products_en?: string | null
-          promoter_id?: string | null
-          rejected_at?: string | null
-          rejected_by?: string | null
-          rejection_reason?: string | null
-          renewal_terms?: string | null
-          second_party_id?: string | null
-          sent_to_hr_at?: string | null
-          sent_to_hr_by?: string | null
-          sent_to_legal_at?: string | null
-          sent_to_legal_by?: string | null
-          start_date: string
-          status?: string
-          submitted_for_review_at?: string | null
-          tags?: string[] | null
-          termination_clause?: string | null
-          terms?: string | null
-          title: string
-          total_value?: number | null
-          type?: string
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id?: string | null
-          value?: number | null
-        }
+          amount?: number | null;
+          approval_status?: string | null;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          attachments?: Json | null;
+          basic_salary?: number | null;
+          billing_frequency?: string | null;
+          changes_requested_at?: string | null;
+          changes_requested_by?: string | null;
+          changes_requested_reason?: string | null;
+          client_company_id?: string | null;
+          client_id?: string | null;
+          contract_number: string;
+          contract_type?: string;
+          contract_value?: number | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          currency?: string | null;
+          description?: string | null;
+          employer_id?: string | null;
+          end_date: string;
+          first_party_id?: string | null;
+          google_doc_url?: string | null;
+          id?: string;
+          is_current?: boolean | null;
+          location_ar?: string | null;
+          location_en?: string | null;
+          location_id?: string | null;
+          notes?: string | null;
+          notice_period?: number | null;
+          notify_days_before_contract_expiry?: number | null;
+          payment_terms?: string | null;
+          pdf_url?: string | null;
+          priority?: string;
+          product_id?: string | null;
+          products_ar?: string | null;
+          products_en?: string | null;
+          promoter_id?: string | null;
+          rejected_at?: string | null;
+          rejected_by?: string | null;
+          rejection_reason?: string | null;
+          renewal_terms?: string | null;
+          second_party_id?: string | null;
+          sent_to_hr_at?: string | null;
+          sent_to_hr_by?: string | null;
+          sent_to_legal_at?: string | null;
+          sent_to_legal_by?: string | null;
+          start_date: string;
+          status?: string;
+          submitted_for_review_at?: string | null;
+          tags?: string[] | null;
+          termination_clause?: string | null;
+          terms?: string | null;
+          title: string;
+          total_value?: number | null;
+          type?: string;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          user_id?: string | null;
+          value?: number | null;
+        };
         Update: {
-          amount?: number | null
-          approval_status?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          attachments?: Json | null
-          basic_salary?: number | null
-          billing_frequency?: string | null
-          changes_requested_at?: string | null
-          changes_requested_by?: string | null
-          changes_requested_reason?: string | null
-          client_company_id?: string | null
-          client_id?: string | null
-          contract_number?: string
-          contract_type?: string
-          contract_value?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          currency?: string | null
-          description?: string | null
-          employer_id?: string | null
-          end_date?: string
-          first_party_id?: string | null
-          google_doc_url?: string | null
-          id?: string
-          is_current?: boolean | null
-          location_ar?: string | null
-          location_en?: string | null
-          location_id?: string | null
-          notes?: string | null
-          notice_period?: number | null
-          notify_days_before_contract_expiry?: number | null
-          payment_terms?: string | null
-          pdf_url?: string | null
-          priority?: string
-          product_id?: string | null
-          products_ar?: string | null
-          products_en?: string | null
-          promoter_id?: string | null
-          rejected_at?: string | null
-          rejected_by?: string | null
-          rejection_reason?: string | null
-          renewal_terms?: string | null
-          second_party_id?: string | null
-          sent_to_hr_at?: string | null
-          sent_to_hr_by?: string | null
-          sent_to_legal_at?: string | null
-          sent_to_legal_by?: string | null
-          start_date?: string
-          status?: string
-          submitted_for_review_at?: string | null
-          tags?: string[] | null
-          termination_clause?: string | null
-          terms?: string | null
-          title?: string
-          total_value?: number | null
-          type?: string
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id?: string | null
-          value?: number | null
-        }
-        Relationships: []
-      }
+          amount?: number | null;
+          approval_status?: string | null;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          attachments?: Json | null;
+          basic_salary?: number | null;
+          billing_frequency?: string | null;
+          changes_requested_at?: string | null;
+          changes_requested_by?: string | null;
+          changes_requested_reason?: string | null;
+          client_company_id?: string | null;
+          client_id?: string | null;
+          contract_number?: string;
+          contract_type?: string;
+          contract_value?: number | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          currency?: string | null;
+          description?: string | null;
+          employer_id?: string | null;
+          end_date?: string;
+          first_party_id?: string | null;
+          google_doc_url?: string | null;
+          id?: string;
+          is_current?: boolean | null;
+          location_ar?: string | null;
+          location_en?: string | null;
+          location_id?: string | null;
+          notes?: string | null;
+          notice_period?: number | null;
+          notify_days_before_contract_expiry?: number | null;
+          payment_terms?: string | null;
+          pdf_url?: string | null;
+          priority?: string;
+          product_id?: string | null;
+          products_ar?: string | null;
+          products_en?: string | null;
+          promoter_id?: string | null;
+          rejected_at?: string | null;
+          rejected_by?: string | null;
+          rejection_reason?: string | null;
+          renewal_terms?: string | null;
+          second_party_id?: string | null;
+          sent_to_hr_at?: string | null;
+          sent_to_hr_by?: string | null;
+          sent_to_legal_at?: string | null;
+          sent_to_legal_by?: string | null;
+          start_date?: string;
+          status?: string;
+          submitted_for_review_at?: string | null;
+          tags?: string[] | null;
+          termination_clause?: string | null;
+          terms?: string | null;
+          title?: string;
+          total_value?: number | null;
+          type?: string;
+          updated_at?: string | null;
+          updated_by?: string | null;
+          user_id?: string | null;
+          value?: number | null;
+        };
+        Relationships: [];
+      };
       // ... rest would be here but truncated for brevity
-    }
-  }
-}
+    };
+  };
+};

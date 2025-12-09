@@ -77,7 +77,7 @@ export function PartyAssignmentDialog({
     contact_phone: '',
     address_en: '',
   });
-  
+
   const { toast } = useToast();
 
   // Load parties when dialog opens
@@ -95,10 +95,12 @@ export function PartyAssignmentDialog({
       if (!supabase) {
         throw new Error('Failed to initialize Supabase client');
       }
-      
+
       const { data, error } = await supabase
         .from('parties')
-        .select('id, name_en, name_ar, type, status, contact_email, contact_phone, address_en, crn')
+        .select(
+          'id, name_en, name_ar, type, status, contact_email, contact_phone, address_en, crn'
+        )
         .in('type', ['Employer', 'Client'])
         .eq('status', 'Active')
         .order('name_en');
@@ -137,7 +139,7 @@ export function PartyAssignmentDialog({
       if (!supabase) {
         throw new Error('Failed to initialize Supabase client');
       }
-      
+
       const { error } = await supabase
         .from('promoters')
         .update({
@@ -150,7 +152,7 @@ export function PartyAssignmentDialog({
 
       toast({
         title: 'Success',
-        description: selectedPartyId 
+        description: selectedPartyId
           ? 'Party assignment updated successfully'
           : 'Promoter unassigned from party',
       });
@@ -185,14 +187,16 @@ export function PartyAssignmentDialog({
       if (!supabase) {
         throw new Error('Failed to initialize Supabase client');
       }
-      
+
       const { data, error } = await supabase
         .from('parties')
-        .insert([{
-          ...newPartyData,
-          status: 'Active',
-          created_at: new Date().toISOString(),
-        }])
+        .insert([
+          {
+            ...newPartyData,
+            status: 'Active',
+            created_at: new Date().toISOString(),
+          },
+        ])
         .select()
         .single();
 
@@ -232,16 +236,17 @@ export function PartyAssignmentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Building2 className='h-5 w-5' />
             Manage Party Assignment
           </DialogTitle>
           <DialogDescription>
             {promoter ? (
               <>
-                Assign <strong>{promoter.displayName}</strong> to a company or organization
+                Assign <strong>{promoter.displayName}</strong> to a company or
+                organization
               </>
             ) : (
               'Select a party to assign the promoter to'
@@ -249,30 +254,36 @@ export function PartyAssignmentDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* Current Assignment Status */}
           {promoter && (
-            <div className="p-4 bg-slate-50 rounded-lg">
-              <h4 className="font-medium text-sm text-slate-700 mb-2">Current Assignment</h4>
+            <div className='p-4 bg-slate-50 rounded-lg'>
+              <h4 className='font-medium text-sm text-slate-700 mb-2'>
+                Current Assignment
+              </h4>
               {currentParty ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Building2 className="h-4 w-4 text-blue-600" />
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-3'>
+                    <div className='h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center'>
+                      <Building2 className='h-4 w-4 text-blue-600' />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">{currentParty.name_en}</p>
+                      <p className='font-medium text-sm'>
+                        {currentParty.name_en}
+                      </p>
                       {currentParty.name_ar && (
-                        <p className="text-xs text-slate-500">{currentParty.name_ar}</p>
+                        <p className='text-xs text-slate-500'>
+                          {currentParty.name_ar}
+                        </p>
                       )}
                     </div>
                   </div>
-                  <Badge variant="secondary">{currentParty.type}</Badge>
+                  <Badge variant='secondary'>{currentParty.type}</Badge>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-slate-500">
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm">No party assigned</span>
+                <div className='flex items-center gap-2 text-slate-500'>
+                  <AlertCircle className='h-4 w-4' />
+                  <span className='text-sm'>No party assigned</span>
                 </div>
               )}
             </div>
@@ -281,43 +292,45 @@ export function PartyAssignmentDialog({
           {!showNewPartyForm ? (
             <>
               {/* Search and Select Existing Party */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Select Party</h4>
+              <div className='space-y-4'>
+                <div className='flex items-center justify-between'>
+                  <h4 className='font-medium'>Select Party</h4>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => setShowNewPartyForm(true)}
-                    className="flex items-center gap-2"
+                    className='flex items-center gap-2'
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className='h-4 w-4' />
                     New Party
                   </Button>
                 </div>
 
                 {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <div className='relative'>
+                  <Search className='absolute left-3 top-3 h-4 w-4 text-slate-400' />
                   <Input
-                    placeholder="Search parties by name or CRN..."
+                    placeholder='Search parties by name or CRN...'
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className='pl-10'
                   />
                 </div>
 
                 {/* Party List */}
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className='space-y-2 max-h-64 overflow-y-auto'>
                   {isLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin" />
+                    <div className='flex items-center justify-center py-8'>
+                      <Loader2 className='h-6 w-6 animate-spin' />
                     </div>
                   ) : filteredParties.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <div className='text-center py-8 text-slate-500'>
+                      <Building2 className='h-8 w-8 mx-auto mb-2 opacity-50' />
                       <p>No parties found</p>
                       {searchTerm && (
-                        <p className="text-sm">Try adjusting your search terms</p>
+                        <p className='text-sm'>
+                          Try adjusting your search terms
+                        </p>
                       )}
                     </div>
                   ) : (
@@ -331,24 +344,26 @@ export function PartyAssignmentDialog({
                         }`}
                         onClick={() => setSelectedPartyId(null)}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center">
-                              <X className="h-4 w-4 text-slate-500" />
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-3'>
+                            <div className='h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center'>
+                              <X className='h-4 w-4 text-slate-500' />
                             </div>
                             <div>
-                              <p className="font-medium text-sm">Unassigned</p>
-                              <p className="text-xs text-slate-500">Remove party assignment</p>
+                              <p className='font-medium text-sm'>Unassigned</p>
+                              <p className='text-xs text-slate-500'>
+                                Remove party assignment
+                              </p>
                             </div>
                           </div>
                           {selectedPartyId === null && (
-                            <Check className="h-4 w-4 text-blue-600" />
+                            <Check className='h-4 w-4 text-blue-600' />
                           )}
                         </div>
                       </div>
 
                       {/* Party Options */}
-                      {filteredParties.map((party) => (
+                      {filteredParties.map(party => (
                         <div
                           key={party.id}
                           className={`p-3 border rounded-lg cursor-pointer transition-colors ${
@@ -358,43 +373,49 @@ export function PartyAssignmentDialog({
                           }`}
                           onClick={() => setSelectedPartyId(party.id)}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <Building2 className="h-4 w-4 text-blue-600" />
+                          <div className='flex items-center justify-between'>
+                            <div className='flex items-center gap-3'>
+                              <div className='h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center'>
+                                <Building2 className='h-4 w-4 text-blue-600' />
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm truncate">{party.name_en}</p>
+                              <div className='min-w-0 flex-1'>
+                                <p className='font-medium text-sm truncate'>
+                                  {party.name_en}
+                                </p>
                                 {party.name_ar && (
-                                  <p className="text-xs text-slate-500 truncate">{party.name_ar}</p>
+                                  <p className='text-xs text-slate-500 truncate'>
+                                    {party.name_ar}
+                                  </p>
                                 )}
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-xs">
+                                <div className='flex items-center gap-2 mt-1'>
+                                  <Badge variant='outline' className='text-xs'>
                                     {party.type}
                                   </Badge>
                                   {party.crn && (
-                                    <span className="text-xs text-slate-400">CRN: {party.crn}</span>
+                                    <span className='text-xs text-slate-400'>
+                                      CRN: {party.crn}
+                                    </span>
                                   )}
                                 </div>
                               </div>
                             </div>
                             {selectedPartyId === party.id && (
-                              <Check className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                              <Check className='h-4 w-4 text-blue-600 flex-shrink-0' />
                             )}
                           </div>
-                          
+
                           {/* Contact Info */}
                           {(party.contact_email || party.contact_phone) && (
-                            <div className="mt-2 pl-11 text-xs text-slate-500 space-y-1">
+                            <div className='mt-2 pl-11 text-xs text-slate-500 space-y-1'>
                               {party.contact_email && (
-                                <div className="flex items-center gap-1">
-                                  <Mail className="h-3 w-3" />
+                                <div className='flex items-center gap-1'>
+                                  <Mail className='h-3 w-3' />
                                   {party.contact_email}
                                 </div>
                               )}
                               {party.contact_phone && (
-                                <div className="flex items-center gap-1">
-                                  <Phone className="h-3 w-3" />
+                                <div className='flex items-center gap-1'>
+                                  <Phone className='h-3 w-3' />
                                   {party.contact_phone}
                                 </div>
                               )}
@@ -409,101 +430,128 @@ export function PartyAssignmentDialog({
             </>
           ) : (
             /* New Party Form */
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">Create New Party</h4>
+            <div className='space-y-4'>
+              <div className='flex items-center justify-between'>
+                <h4 className='font-medium'>Create New Party</h4>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={() => setShowNewPartyForm(false)}
                 >
                   Cancel
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div>
-                  <Label htmlFor="name_en">Name (English) *</Label>
+                  <Label htmlFor='name_en'>Name (English) *</Label>
                   <Input
-                    id="name_en"
+                    id='name_en'
                     value={newPartyData.name_en}
-                    onChange={(e) => setNewPartyData(prev => ({ ...prev, name_en: e.target.value }))}
-                    placeholder="Company name in English"
+                    onChange={e =>
+                      setNewPartyData(prev => ({
+                        ...prev,
+                        name_en: e.target.value,
+                      }))
+                    }
+                    placeholder='Company name in English'
                   />
                 </div>
                 <div>
-                  <Label htmlFor="name_ar">Name (Arabic)</Label>
+                  <Label htmlFor='name_ar'>Name (Arabic)</Label>
                   <Input
-                    id="name_ar"
+                    id='name_ar'
                     value={newPartyData.name_ar}
-                    onChange={(e) => setNewPartyData(prev => ({ ...prev, name_ar: e.target.value }))}
-                    placeholder="Company name in Arabic"
+                    onChange={e =>
+                      setNewPartyData(prev => ({
+                        ...prev,
+                        name_ar: e.target.value,
+                      }))
+                    }
+                    placeholder='Company name in Arabic'
                   />
                 </div>
                 <div>
-                  <Label htmlFor="type">Type</Label>
+                  <Label htmlFor='type'>Type</Label>
                   <Select
                     value={newPartyData.type}
-                    onValueChange={(value) => setNewPartyData(prev => ({ 
-                      ...prev, 
-                      type: value as 'Employer' | 'Client' | 'Generic' 
-                    }))}
+                    onValueChange={value =>
+                      setNewPartyData(prev => ({
+                        ...prev,
+                        type: value as 'Employer' | 'Client' | 'Generic',
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Employer">Employer</SelectItem>
-                      <SelectItem value="Client">Client</SelectItem>
-                      <SelectItem value="Generic">Generic</SelectItem>
+                      <SelectItem value='Employer'>Employer</SelectItem>
+                      <SelectItem value='Client'>Client</SelectItem>
+                      <SelectItem value='Generic'>Generic</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="contact_email">Contact Email</Label>
+                  <Label htmlFor='contact_email'>Contact Email</Label>
                   <Input
-                    id="contact_email"
-                    type="email"
+                    id='contact_email'
+                    type='email'
                     value={newPartyData.contact_email}
-                    onChange={(e) => setNewPartyData(prev => ({ ...prev, contact_email: e.target.value }))}
-                    placeholder="contact@company.com"
+                    onChange={e =>
+                      setNewPartyData(prev => ({
+                        ...prev,
+                        contact_email: e.target.value,
+                      }))
+                    }
+                    placeholder='contact@company.com'
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contact_phone">Contact Phone</Label>
+                  <Label htmlFor='contact_phone'>Contact Phone</Label>
                   <Input
-                    id="contact_phone"
+                    id='contact_phone'
                     value={newPartyData.contact_phone}
-                    onChange={(e) => setNewPartyData(prev => ({ ...prev, contact_phone: e.target.value }))}
-                    placeholder="+968 1234 5678"
+                    onChange={e =>
+                      setNewPartyData(prev => ({
+                        ...prev,
+                        contact_phone: e.target.value,
+                      }))
+                    }
+                    placeholder='+968 1234 5678'
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="address_en">Address</Label>
+                <div className='md:col-span-2'>
+                  <Label htmlFor='address_en'>Address</Label>
                   <Textarea
-                    id="address_en"
+                    id='address_en'
                     value={newPartyData.address_en}
-                    onChange={(e) => setNewPartyData(prev => ({ ...prev, address_en: e.target.value }))}
-                    placeholder="Company address"
+                    onChange={e =>
+                      setNewPartyData(prev => ({
+                        ...prev,
+                        address_en: e.target.value,
+                      }))
+                    }
+                    placeholder='Company address'
                     rows={2}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className='flex gap-2'>
                 <Button
                   onClick={handleNewPartyCreate}
                   disabled={isUpdating || !newPartyData.name_en.trim()}
-                  className="flex-1"
+                  className='flex-1'
                 >
                   {isUpdating ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <Loader2 className='h-4 w-4 animate-spin mr-2' />
                       Creating...
                     </>
                   ) : (
                     <>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className='h-4 w-4 mr-2' />
                       Create Party
                     </>
                   )}
@@ -514,14 +562,14 @@ export function PartyAssignmentDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isUpdating}>
+          <Button variant='outline' onClick={onClose} disabled={isUpdating}>
             Cancel
           </Button>
           {!showNewPartyForm && (
             <Button onClick={handleAssignmentSave} disabled={isUpdating}>
               {isUpdating ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className='h-4 w-4 animate-spin mr-2' />
                   Updating...
                 </>
               ) : (

@@ -9,15 +9,17 @@ This guide provides comprehensive information for integrating TheSmartPro.io pla
 ## 🔐 Authentication Methods
 
 ### **1. Session-Based Authentication (Current)**
+
 - **Method:** Cookie-based sessions via Supabase Auth
 - **Use Case:** Web applications, browser-based integrations
-- **Headers Required:** 
+- **Headers Required:**
   ```http
   Cookie: sb-<project-ref>-auth-token=<session-token>
   ```
 - **How to Get:** User logs in via `/api/auth/login` endpoint
 
 ### **2. API Key Authentication (Recommended for External Integration)**
+
 - **Status:** ✅ **IMPLEMENTED** - Ready to use!
 - **How to Get:**
   - Generate via `/api/admin/api-keys` endpoint (admin only)
@@ -32,6 +34,7 @@ This guide provides comprehensive information for integrating TheSmartPro.io pla
   ```
 
 ### **3. Service Role Key (Backend Only)**
+
 - **Method:** Supabase Service Role Key
 - **Use Case:** Server-to-server communication, admin operations
 - **Security:** ⚠️ **NEVER expose to frontend/client-side code**
@@ -44,11 +47,13 @@ This guide provides comprehensive information for integrating TheSmartPro.io pla
 ### **Public Endpoints (No Authentication Required)**
 
 #### **1. Public Statistics**
+
 ```http
 GET /api/dashboard/public-stats
 ```
 
 **Response:**
+
 ```json
 {
   "totalContracts": 847,
@@ -64,9 +69,12 @@ GET /api/dashboard/public-stats
 **Use Case:** Display platform statistics on marketing website
 
 **Example Integration:**
+
 ```javascript
 // Fetch public stats
-const response = await fetch('https://portal.thesmartpro.io/api/dashboard/public-stats');
+const response = await fetch(
+  'https://portal.thesmartpro.io/api/dashboard/public-stats'
+);
 const stats = await response.json();
 
 // Display on marketing site
@@ -79,16 +87,19 @@ document.getElementById('total-promoters').textContent = stats.totalPromoters;
 ### **Authenticated Endpoints (Requires Session)**
 
 #### **2. Dashboard Statistics (Full Metrics)**
+
 ```http
 GET /api/dashboard/stats
 ```
 
 **Headers:**
+
 ```http
 Cookie: sb-<project-ref>-auth-token=<session-token>
 ```
 
 **Response:**
+
 ```json
 {
   "totalContracts": 847,
@@ -122,17 +133,20 @@ Cookie: sb-<project-ref>-auth-token=<session-token>
 ---
 
 #### **3. Contracts List**
+
 ```http
 GET /api/contracts?page=1&limit=20&status=all
 ```
 
 **Query Parameters:**
+
 - `page` (optional): Page number (default: 1)
 - `limit` (optional): Items per page (default: 20)
 - `status` (optional): Filter by status (`all`, `active`, `pending`, `approved`, `expired`)
 - `party_id` (optional): Filter by party ID
 
 **Response:**
+
 ```json
 {
   "contracts": [
@@ -143,7 +157,7 @@ GET /api/contracts?page=1&limit=20&status=all
       "status": "pending",
       "start_date": "2025-11-06",
       "end_date": "2027-11-05",
-      "value": 250.00,
+      "value": 250.0,
       "currency": "USD",
       "first_party": {
         "id": "uuid",
@@ -175,11 +189,13 @@ GET /api/contracts?page=1&limit=20&status=all
 ---
 
 #### **4. Single Contract Details**
+
 ```http
 GET /api/contracts/{contract_id}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -205,16 +221,19 @@ GET /api/contracts/{contract_id}
 ---
 
 #### **5. Promoters List**
+
 ```http
 GET /api/promoters?page=1&limit=20&status=active
 ```
 
 **Query Parameters:**
+
 - `page`, `limit`: Pagination
 - `status`: Filter by status (`active`, `inactive`, `pending`)
 - `employer_id`: Filter by employer
 
 **Response:**
+
 ```json
 {
   "promoters": [
@@ -236,22 +255,26 @@ GET /api/promoters?page=1&limit=20&status=active
 ---
 
 #### **6. Parties List**
+
 ```http
 GET /api/parties?type=Client&page=1&limit=20
 ```
 
 **Query Parameters:**
+
 - `type`: Filter by type (`Client`, `Employer`, `Supplier`)
 - `page`, `limit`: Pagination
 
 ---
 
 #### **7. Health Check**
+
 ```http
 GET /api/health-check
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -302,6 +325,7 @@ GET /api/health-check
 ### **1. Marketing Website Integration**
 
 #### **Display Live Statistics:**
+
 ```html
 <!-- Marketing Website HTML -->
 <div class="stats-section">
@@ -316,24 +340,28 @@ GET /api/health-check
 </div>
 
 <script>
-// Fetch and display public stats
-async function loadPlatformStats() {
-  try {
-    const response = await fetch('https://portal.thesmartpro.io/api/dashboard/public-stats');
-    const stats = await response.json();
-    
-    document.getElementById('total-contracts').textContent = stats.totalContracts.toLocaleString();
-    document.getElementById('total-promoters').textContent = stats.totalPromoters.toLocaleString();
-  } catch (error) {
-    console.error('Failed to load stats:', error);
+  // Fetch and display public stats
+  async function loadPlatformStats() {
+    try {
+      const response = await fetch(
+        'https://portal.thesmartpro.io/api/dashboard/public-stats'
+      );
+      const stats = await response.json();
+
+      document.getElementById('total-contracts').textContent =
+        stats.totalContracts.toLocaleString();
+      document.getElementById('total-promoters').textContent =
+        stats.totalPromoters.toLocaleString();
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    }
   }
-}
 
-// Load stats on page load
-loadPlatformStats();
+  // Load stats on page load
+  loadPlatformStats();
 
-// Refresh every 5 minutes
-setInterval(loadPlatformStats, 5 * 60 * 1000);
+  // Refresh every 5 minutes
+  setInterval(loadPlatformStats, 5 * 60 * 1000);
 </script>
 ```
 
@@ -342,12 +370,13 @@ setInterval(loadPlatformStats, 5 * 60 * 1000);
 ### **2. Embedded Dashboard Widget**
 
 #### **Real-Time Metrics Widget:**
+
 ```javascript
 // Widget Configuration
 const widgetConfig = {
   apiUrl: 'https://portal.thesmartpro.io/api/dashboard/stats',
   refreshInterval: 60000, // 1 minute
-  metrics: ['totalContracts', 'activeContracts', 'totalPromoters']
+  metrics: ['totalContracts', 'activeContracts', 'totalPromoters'],
 };
 
 // Widget Implementation
@@ -362,14 +391,14 @@ class PlatformMetricsWidget {
     const response = await fetch(this.config.apiUrl, {
       credentials: 'include', // Include cookies for session auth
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch metrics');
     }
-    
+
     return await response.json();
   }
 
@@ -396,7 +425,7 @@ class PlatformMetricsWidget {
     try {
       this.data = await this.fetchMetrics();
       this.render();
-      
+
       // Auto-refresh
       setInterval(async () => {
         this.data = await this.fetchMetrics();
@@ -418,38 +447,43 @@ widget.start();
 ### **3. Contract Creation Form Integration**
 
 #### **Embed Contract Form:**
+
 ```html
 <!-- Embed contract creation form -->
-<iframe 
+<iframe
   src="https://portal.thesmartpro.io/en/contracts/general"
-  width="100%" 
+  width="100%"
   height="800px"
   frameborder="0"
 ></iframe>
 ```
 
 **Or use API directly:**
+
 ```javascript
 // Create contract via API
 async function createContract(contractData) {
-  const response = await fetch('https://portal.thesmartpro.io/api/contracts/general/generate', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Cookie': 'sb-<project-ref>-auth-token=<session-token>' // Requires auth
-    },
-    body: JSON.stringify({
-      contract_type: 'general-service',
-      promoter_id: 'uuid',
-      first_party_id: 'uuid',
-      second_party_id: 'uuid',
-      job_title: 'Software Developer',
-      basic_salary: 500,
-      contract_start_date: '2025-11-06',
-      contract_end_date: '2027-11-05'
-    })
-  });
-  
+  const response = await fetch(
+    'https://portal.thesmartpro.io/api/contracts/general/generate',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: 'sb-<project-ref>-auth-token=<session-token>', // Requires auth
+      },
+      body: JSON.stringify({
+        contract_type: 'general-service',
+        promoter_id: 'uuid',
+        first_party_id: 'uuid',
+        second_party_id: 'uuid',
+        job_title: 'Software Developer',
+        basic_salary: 500,
+        contract_start_date: '2025-11-06',
+        contract_end_date: '2027-11-05',
+      }),
+    }
+  );
+
   return await response.json();
 }
 ```
@@ -459,11 +493,13 @@ async function createContract(contractData) {
 ## 🔒 Security Recommendations
 
 ### **For Public Endpoints:**
+
 1. ✅ **Rate Limiting:** Implement rate limiting (recommended: 100 requests/minute per IP)
 2. ✅ **CORS:** Configure CORS headers for allowed origins
 3. ✅ **Caching:** Cache public stats for 5-10 minutes to reduce database load
 
 ### **For Authenticated Endpoints:**
+
 1. ✅ **API Keys:** Implement API key authentication for external integrations
 2. ✅ **JWT Tokens:** Consider JWT tokens for stateless authentication
 3. ✅ **RBAC:** Ensure proper role-based access control
@@ -474,6 +510,7 @@ async function createContract(contractData) {
 ## 🚀 Implementation Checklist
 
 ### **Phase 1: Public Stats Integration**
+
 - [x] Public stats endpoint exists (`/api/dashboard/public-stats`)
 - [ ] Add rate limiting
 - [ ] Add CORS configuration
@@ -481,6 +518,7 @@ async function createContract(contractData) {
 - [ ] Test on marketing website
 
 ### **Phase 2: API Key Authentication**
+
 - [x] Create API keys table ✅
 - [x] Implement API key middleware ✅
 - [x] Create admin API endpoints for key management ✅
@@ -488,12 +526,14 @@ async function createContract(contractData) {
 - [x] Document API key usage ✅
 
 ### **Phase 3: Enhanced Public API**
+
 - [ ] Create `/api/public/contracts` endpoint (limited data)
 - [ ] Create `/api/public/promoters` endpoint (limited data)
 - [ ] Add filtering and pagination
 - [ ] Add API versioning (`/api/v1/...`)
 
 ### **Phase 4: Webhooks**
+
 - [ ] Implement webhook system for real-time updates
 - [ ] Support contract created/updated events
 - [ ] Support promoter status changes
@@ -504,10 +544,12 @@ async function createContract(contractData) {
 ## 📝 API Documentation Endpoints
 
 ### **Current Status:**
+
 - ⚠️ **No dedicated API documentation page exists**
 - ✅ **Some endpoints have inline documentation** (e.g., `/api/contracts/general/generate` GET)
 
 ### **Recommended:**
+
 1. Create `/api/docs` endpoint with OpenAPI/Swagger documentation
 2. Create `/api/health` endpoint with API status
 3. Add API versioning (`/api/v1/...`)
@@ -517,6 +559,7 @@ async function createContract(contractData) {
 ## 🔧 Environment Variables Needed
 
 ### **For API Integration:**
+
 ```bash
 # Public API (if implemented)
 PUBLIC_API_ENABLED=true
@@ -537,6 +580,7 @@ REDIS_URL=redis://localhost:6379  # Optional, for caching
 ## 📞 Support & Questions
 
 For API integration support:
+
 1. Check existing endpoints: `https://portal.thesmartpro.io/api/health-check`
 2. Review codebase: `app/api/` directory
 3. Test endpoints: Use browser DevTools or Postman
@@ -550,49 +594,53 @@ For API integration support:
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <title>TheSmartPro.io - Platform Stats</title>
-</head>
-<body>
-  <div class="platform-stats">
-    <h2>Platform Statistics</h2>
-    <div class="stats-grid">
-      <div class="stat">
-        <h3>Total Contracts</h3>
-        <p id="contracts">-</p>
-      </div>
-      <div class="stat">
-        <h3>Active Promoters</h3>
-        <p id="promoters">-</p>
-      </div>
-      <div class="stat">
-        <h3>Total Parties</h3>
-        <p id="parties">-</p>
+  <head>
+    <title>TheSmartPro.io - Platform Stats</title>
+  </head>
+  <body>
+    <div class="platform-stats">
+      <h2>Platform Statistics</h2>
+      <div class="stats-grid">
+        <div class="stat">
+          <h3>Total Contracts</h3>
+          <p id="contracts">-</p>
+        </div>
+        <div class="stat">
+          <h3>Active Promoters</h3>
+          <p id="promoters">-</p>
+        </div>
+        <div class="stat">
+          <h3>Total Parties</h3>
+          <p id="parties">-</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script>
-    async function loadStats() {
-      try {
-        const response = await fetch('https://portal.thesmartpro.io/api/dashboard/public-stats');
-        const data = await response.json();
-        
-        document.getElementById('contracts').textContent = data.totalContracts;
-        document.getElementById('promoters').textContent = data.totalPromoters;
-        document.getElementById('parties').textContent = data.totalParties;
-      } catch (error) {
-        console.error('Error loading stats:', error);
+    <script>
+      async function loadStats() {
+        try {
+          const response = await fetch(
+            'https://portal.thesmartpro.io/api/dashboard/public-stats'
+          );
+          const data = await response.json();
+
+          document.getElementById('contracts').textContent =
+            data.totalContracts;
+          document.getElementById('promoters').textContent =
+            data.totalPromoters;
+          document.getElementById('parties').textContent = data.totalParties;
+        } catch (error) {
+          console.error('Error loading stats:', error);
+        }
       }
-    }
-    
-    // Load on page load
-    loadStats();
-    
-    // Refresh every 5 minutes
-    setInterval(loadStats, 5 * 60 * 1000);
-  </script>
-</body>
+
+      // Load on page load
+      loadStats();
+
+      // Refresh every 5 minutes
+      setInterval(loadStats, 5 * 60 * 1000);
+    </script>
+  </body>
 </html>
 ```
 
@@ -601,12 +649,14 @@ For API integration support:
 ## ✅ Summary
 
 **Available Now:**
+
 - ✅ Public stats endpoint (`/api/dashboard/public-stats`)
 - ✅ Authenticated endpoints (with session cookies)
 - ✅ Contracts, Promoters, Parties APIs
 - ✅ Health check endpoint
 
 **Needs Implementation:**
+
 - ⚠️ API key authentication
 - ⚠️ Dedicated API documentation
 - ⚠️ Rate limiting for public endpoints
@@ -614,6 +664,7 @@ For API integration support:
 - ⚠️ API versioning
 
 **Recommended Next Steps:**
+
 1. Implement API key authentication for external integrations
 2. Add rate limiting to public endpoints
 3. Create comprehensive API documentation

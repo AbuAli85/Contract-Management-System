@@ -1,6 +1,7 @@
 # Document Upload Setup Guide
 
 ## Overview
+
 This guide explains how to configure the Supabase storage bucket for document uploads in the SmartPro Portal.
 
 ---
@@ -160,7 +161,7 @@ CREATE INDEX IF NOT EXISTS idx_promoters_passport_url ON promoters(passport_url)
 
 ```sql
 -- Check if documents were uploaded
-SELECT 
+SELECT
   id,
   name_en,
   id_card_url,
@@ -199,6 +200,7 @@ promoter-documents/
 ### 1. File Type Validation
 
 **Client-side (React):**
+
 ```typescript
 accept: {
   'application/pdf': ['.pdf'],
@@ -208,6 +210,7 @@ accept: {
 ```
 
 **Server-side (Supabase Storage):**
+
 ```sql
 allowed_mime_types = ARRAY['application/pdf', 'image/jpeg', 'image/png']
 ```
@@ -215,11 +218,13 @@ allowed_mime_types = ARRAY['application/pdf', 'image/jpeg', 'image/png']
 ### 2. File Size Limit
 
 **Client-side:**
+
 ```typescript
-maxSize: 10 * 1024 * 1024 // 10MB
+maxSize: 10 * 1024 * 1024; // 10MB
 ```
 
 **Server-side:**
+
 ```sql
 file_size_limit = 10485760 -- 10 MB in bytes
 ```
@@ -227,6 +232,7 @@ file_size_limit = 10485760 -- 10 MB in bytes
 ### 3. Authentication
 
 All upload operations require:
+
 - Valid Supabase auth session
 - User must be authenticated
 - RLS policies enforce access control
@@ -234,6 +240,7 @@ All upload operations require:
 ### 4. File Naming
 
 Files use timestamp-based naming to:
+
 - Prevent filename collisions
 - Allow version history
 - Enable sorting by upload date
@@ -245,12 +252,14 @@ Files use timestamp-based naming to:
 ### Issue: "Failed to upload document"
 
 **Check:**
+
 1. Supabase storage bucket exists
 2. RLS policies are configured
 3. User is authenticated
 4. File meets size/type requirements
 
 **Debug:**
+
 ```javascript
 // In browser console
 const supabase = createClient();
@@ -264,6 +273,7 @@ console.log('Buckets:', buckets);
 ### Issue: "Permission denied"
 
 **Check RLS Policies:**
+
 ```sql
 -- List all policies for storage.objects
 SELECT * FROM pg_policies WHERE tablename = 'objects';
@@ -278,6 +288,7 @@ AND auth.uid() = (storage.foldername(name))[1]::uuid;
 ### Issue: "File too large"
 
 **Solution:**
+
 - Reduce file size or
 - Increase bucket limit:
 
@@ -304,7 +315,7 @@ const compressImage = async (file: File) => {
     maxWidthOrHeight: 1920,
     useWebWorker: true,
   };
-  
+
   try {
     return await imageCompression(file, options);
   } catch (error) {
@@ -325,15 +336,15 @@ const generatePdfThumbnail = async (file: File) => {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
   const page = await pdf.getPage(1);
-  
+
   const viewport = page.getViewport({ scale: 0.5 });
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d')!;
   canvas.height = viewport.height;
   canvas.width = viewport.width;
-  
+
   await page.render({ canvasContext: context, viewport }).promise;
-  
+
   return canvas.toDataURL('image/jpeg', 0.8);
 };
 ```
@@ -347,9 +358,9 @@ import Tesseract from 'tesseract.js';
 
 const extractTextFromImage = async (file: File) => {
   const result = await Tesseract.recognize(file, 'eng', {
-    logger: (m) => console.log(m),
+    logger: m => console.log(m),
   });
-  
+
   return result.data.text;
 };
 ```
@@ -362,7 +373,10 @@ const extractTextFromImage = async (file: File) => {
 
 ```typescript
 // Add to upload handler
-const trackUpload = async (status: 'success' | 'error', documentType: string) => {
+const trackUpload = async (
+  status: 'success' | 'error',
+  documentType: string
+) => {
   await fetch('/api/analytics/track', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -384,7 +398,7 @@ Create admin dashboard to monitor storage:
 
 ```sql
 -- Get storage usage by promoter
-SELECT 
+SELECT
   p.id,
   p.name_en,
   COUNT(o.name) as document_count,
@@ -403,12 +417,14 @@ LIMIT 20;
 ## Checklist
 
 ### Initial Setup
+
 - [ ] Storage bucket `promoter-documents` created
 - [ ] RLS policies configured
 - [ ] Promoters table has URL columns
 - [ ] `react-dropzone` installed
 
 ### Testing
+
 - [ ] Upload works for authenticated users
 - [ ] File type validation works
 - [ ] File size validation works
@@ -417,6 +433,7 @@ LIMIT 20;
 - [ ] URLs saved to database
 
 ### Security
+
 - [ ] RLS policies tested
 - [ ] Only authenticated users can upload
 - [ ] Users can only access their own documents
@@ -425,6 +442,7 @@ LIMIT 20;
 - [ ] File size limits enforced
 
 ### Production
+
 - [ ] Error handling tested
 - [ ] Loading states work correctly
 - [ ] Success/error messages display
@@ -445,4 +463,3 @@ LIMIT 20;
 **Created:** October 29, 2025  
 **Last Updated:** October 29, 2025  
 **Version:** 1.0
-

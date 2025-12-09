@@ -32,10 +32,19 @@ async function applyContractsMigration() {
     if (contracts && contracts.length > 0) {
       const existingColumns = Object.keys(contracts[0]);
       console.log('✅ Existing columns:', existingColumns);
-      
-      const requiredColumns = ['products_en', 'products_ar', 'location_en', 'location_ar', 'product_id', 'location_id'];
-      const missingColumns = requiredColumns.filter(col => !existingColumns.includes(col));
-      
+
+      const requiredColumns = [
+        'products_en',
+        'products_ar',
+        'location_en',
+        'location_ar',
+        'product_id',
+        'location_id',
+      ];
+      const missingColumns = requiredColumns.filter(
+        col => !existingColumns.includes(col)
+      );
+
       if (missingColumns.length === 0) {
         console.log('✅ All required columns already exist!');
         return;
@@ -53,16 +62,32 @@ async function applyContractsMigration() {
     console.log('ADD COLUMN IF NOT EXISTS products_ar TEXT,');
     console.log('ADD COLUMN IF NOT EXISTS location_en TEXT,');
     console.log('ADD COLUMN IF NOT EXISTS location_ar TEXT,');
-    console.log('ADD COLUMN IF NOT EXISTS product_id UUID REFERENCES products(id),');
-    console.log('ADD COLUMN IF NOT EXISTS location_id UUID REFERENCES locations(id);');
+    console.log(
+      'ADD COLUMN IF NOT EXISTS product_id UUID REFERENCES products(id),'
+    );
+    console.log(
+      'ADD COLUMN IF NOT EXISTS location_id UUID REFERENCES locations(id);'
+    );
     console.log('');
     console.log('-- Add comments to the new columns');
-    console.log("COMMENT ON COLUMN contracts.products_en IS 'Products/Services in English for Make.com integration';");
-    console.log("COMMENT ON COLUMN contracts.products_ar IS 'Products/Services in Arabic for Make.com integration';");
-    console.log("COMMENT ON COLUMN contracts.location_en IS 'Location in English for Make.com integration';");
-    console.log("COMMENT ON COLUMN contracts.location_ar IS 'Location in Arabic for Make.com integration';");
-    console.log("COMMENT ON COLUMN contracts.product_id IS 'Reference to products table';");
-    console.log("COMMENT ON COLUMN contracts.location_id IS 'Reference to locations table';");
+    console.log(
+      "COMMENT ON COLUMN contracts.products_en IS 'Products/Services in English for Make.com integration';"
+    );
+    console.log(
+      "COMMENT ON COLUMN contracts.products_ar IS 'Products/Services in Arabic for Make.com integration';"
+    );
+    console.log(
+      "COMMENT ON COLUMN contracts.location_en IS 'Location in English for Make.com integration';"
+    );
+    console.log(
+      "COMMENT ON COLUMN contracts.location_ar IS 'Location in Arabic for Make.com integration';"
+    );
+    console.log(
+      "COMMENT ON COLUMN contracts.product_id IS 'Reference to products table';"
+    );
+    console.log(
+      "COMMENT ON COLUMN contracts.location_id IS 'Reference to locations table';"
+    );
 
     console.log('\n🔧 Instructions:');
     console.log('1. Go to your Supabase dashboard');
@@ -70,7 +95,6 @@ async function applyContractsMigration() {
     console.log('3. Copy and paste the SQL commands above');
     console.log('4. Run the commands');
     console.log('5. Verify the columns were added successfully');
-
   } catch (error) {
     console.error('❌ Error applying migration:', error);
   }

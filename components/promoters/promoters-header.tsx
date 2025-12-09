@@ -121,7 +121,9 @@ export function PromotersHeader({
                   </TooltipTrigger>
                   <TooltipContent className='max-w-xs'>
                     <p className='text-xs'>
-                      Data automatically refreshes when you return to this tab or reconnect to the internet. Use the Refresh button for immediate updates.
+                      Data automatically refreshes when you return to this tab
+                      or reconnect to the internet. Use the Refresh button for
+                      immediate updates.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -165,7 +167,9 @@ export function PromotersHeader({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className='text-xs'>Import promoters from Excel/CSV file</p>
+                  <p className='text-xs'>
+                    Import promoters from Excel/CSV file
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -194,7 +198,9 @@ export function PromotersHeader({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className='text-xs'>Get the latest data immediately (Cmd+R)</p>
+                  <p className='text-xs'>
+                    Get the latest data immediately (Cmd+R)
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

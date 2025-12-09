@@ -21,14 +21,14 @@ export interface FormCompletionIndicatorProps {
 
 /**
  * Form Completion Indicator Component
- * 
+ *
  * Displays a progress bar and completion status
  * Only shows after user has started filling the form
- * 
+ *
  * @example
  * ```tsx
  * const formCompletion = useFormCompletion({ formData, requiredFields });
- * 
+ *
  * <FormCompletionIndicator {...formCompletion} showDetails />
  * ```
  */
@@ -85,10 +85,10 @@ export function FormCompletionIndicator({
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center space-x-2'>
           <StatusIcon className={cn('h-5 w-5', config.color)} />
-          <span className="text-sm font-medium text-gray-900">
+          <span className='text-sm font-medium text-gray-900'>
             Form Completion
           </span>
         </div>
@@ -104,15 +104,15 @@ export function FormCompletionIndicator({
       </div>
 
       {/* Progress Bar */}
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Progress
           value={completion}
-          className="h-2"
+          className='h-2'
           indicatorClassName={config.progressColor}
         />
 
         {showDetails && (
-          <div className="flex items-center justify-between text-xs text-gray-600">
+          <div className='flex items-center justify-between text-xs text-gray-600'>
             <span>
               Required: {requiredCompleted}/{requiredTotal}
             </span>
@@ -127,18 +127,18 @@ export function FormCompletionIndicator({
 
       {/* Missing Required Fields */}
       {missingRequired.length > 0 && showDetails && (
-        <div className="pt-2 border-t border-gray-200">
-          <p className="text-xs font-medium text-gray-700 mb-1">
+        <div className='pt-2 border-t border-gray-200'>
+          <p className='text-xs font-medium text-gray-700 mb-1'>
             Missing required fields:
           </p>
-          <ul className="text-xs text-gray-600 space-y-0.5 ml-4">
+          <ul className='text-xs text-gray-600 space-y-0.5 ml-4'>
             {missingRequired.slice(0, 5).map(field => (
-              <li key={field} className="list-disc">
+              <li key={field} className='list-disc'>
                 {formatFieldName(field)}
               </li>
             ))}
             {missingRequired.length > 5 && (
-              <li className="list-disc text-gray-500">
+              <li className='list-disc text-gray-500'>
                 and {missingRequired.length - 5} more...
               </li>
             )}
@@ -157,7 +157,10 @@ export function FormCompletionBar({
   hasStarted,
   status,
   className,
-}: Pick<FormCompletionIndicatorProps, 'completion' | 'hasStarted' | 'status' | 'className'>) {
+}: Pick<
+  FormCompletionIndicatorProps,
+  'completion' | 'hasStarted' | 'status' | 'className'
+>) {
   if (!hasStarted) {
     return null;
   }
@@ -170,13 +173,13 @@ export function FormCompletionBar({
 
   return (
     <div className={cn('space-y-1', className)}>
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-gray-600">Form Progress</p>
-        <p className="text-xs font-semibold text-gray-900">{completion}%</p>
+      <div className='flex items-center justify-between'>
+        <p className='text-xs font-medium text-gray-600'>Form Progress</p>
+        <p className='text-xs font-semibold text-gray-900'>{completion}%</p>
       </div>
       <Progress
         value={completion}
-        className="h-1.5"
+        className='h-1.5'
         indicatorClassName={statusColor[status]}
       />
     </div>
@@ -193,4 +196,3 @@ function formatFieldName(fieldName: string): string {
     .replace(/^\w/, c => c.toUpperCase())
     .trim();
 }
-

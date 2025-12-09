@@ -1,16 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Download, AlertTriangle, CheckCircle, Package, Loader2 } from 'lucide-react';
-import { 
-  parseCSV, 
-  validateAndTransformCSV, 
-  downloadCSVTemplate, 
+import {
+  Upload,
+  Download,
+  AlertTriangle,
+  CheckCircle,
+  Package,
+  Loader2,
+} from 'lucide-react';
+import {
+  parseCSV,
+  validateAndTransformCSV,
+  downloadCSVTemplate,
   validators,
   transformers,
   type CSVColumn,
@@ -82,8 +95,8 @@ const PRODUCT_COLUMNS: CSVColumn[] = [
     key: 'price',
     label: 'Price',
     required: false,
-    validator: (value) => value ? validators.number(value) : null,
-    transformer: (value) => value ? transformers.number(value) : null,
+    validator: value => (value ? validators.number(value) : null),
+    transformer: value => (value ? transformers.number(value) : null),
     example: '3499.00',
   },
   {
@@ -104,8 +117,8 @@ const PRODUCT_COLUMNS: CSVColumn[] = [
     key: 'stock_quantity',
     label: 'Stock Quantity',
     required: false,
-    validator: (value) => value ? validators.number(value) : null,
-    transformer: (value) => value ? transformers.number(value) : null,
+    validator: value => (value ? validators.number(value) : null),
+    transformer: value => (value ? transformers.number(value) : null),
     example: '50',
   },
   {
@@ -119,19 +132,22 @@ const PRODUCT_COLUMNS: CSVColumn[] = [
     key: 'status',
     label: 'Status',
     required: false,
-    validator: (value) => {
+    validator: value => {
       if (!value) return null;
       const valid = ['active', 'inactive', 'discontinued'];
-      return valid.includes(value.toLowerCase()) ? null : 'Must be: active, inactive, or discontinued';
+      return valid.includes(value.toLowerCase())
+        ? null
+        : 'Must be: active, inactive, or discontinued';
     },
-    transformer: (value) => value ? value.toLowerCase() : 'active',
+    transformer: value => (value ? value.toLowerCase() : 'active'),
     example: 'active',
   },
 ];
 
 export function ProductsCSVImport() {
   const [file, setFile] = useState<File | null>(null);
-  const [parseResult, setParseResult] = useState<CSVParseResult<ProductCSVRow> | null>(null);
+  const [parseResult, setParseResult] =
+    useState<CSVParseResult<ProductCSVRow> | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{
@@ -150,17 +166,23 @@ export function ProductsCSVImport() {
 
     try {
       const { content } = await parseCSV(selectedFile);
-      const result = validateAndTransformCSV<ProductCSVRow>(content, PRODUCT_COLUMNS);
+      const result = validateAndTransformCSV<ProductCSVRow>(
+        content,
+        PRODUCT_COLUMNS
+      );
       setParseResult(result);
     } catch (error) {
       console.error('Error parsing CSV:', error);
       setParseResult({
         data: [],
-        errors: [{
-          row: 0,
-          message: error instanceof Error ? error.message : 'Failed to parse CSV',
-          severity: 'critical',
-        }],
+        errors: [
+          {
+            row: 0,
+            message:
+              error instanceof Error ? error.message : 'Failed to parse CSV',
+            severity: 'critical',
+          },
+        ],
         warnings: [],
         stats: {
           totalRows: 0,
@@ -197,8 +219,10 @@ export function ProductsCSVImport() {
 
     const supplierMap = new Map<string, string>();
     suppliers?.forEach(supplier => {
-      if (supplier.name_en) supplierMap.set(supplier.name_en.toLowerCase(), supplier.id);
-      if (supplier.name_ar) supplierMap.set(supplier.name_ar.toLowerCase(), supplier.id);
+      if (supplier.name_en)
+        supplierMap.set(supplier.name_en.toLowerCase(), supplier.id);
+      if (supplier.name_ar)
+        supplierMap.set(supplier.name_ar.toLowerCase(), supplier.id);
     });
 
     // Import products one by one
@@ -213,7 +237,9 @@ export function ProductsCSVImport() {
           const supplierName = row.supplier_name.toLowerCase();
           supplier_id = supplierMap.get(supplierName) || null;
           if (!supplier_id) {
-            errors.push(`Row ${i + 2}: Supplier "${row.supplier_name}" not found`);
+            errors.push(
+              `Row ${i + 2}: Supplier "${row.supplier_name}" not found`
+            );
           }
         }
 
@@ -242,9 +268,7 @@ export function ProductsCSVImport() {
         });
 
         // Insert into database
-        const { error } = await supabase
-          .from('products')
-          .insert(productData);
+        const { error } = await supabase.from('products').insert(productData);
 
         if (error) {
           errors.push(`Row ${i + 2}: ${error.message}`);
@@ -253,7 +277,9 @@ export function ProductsCSVImport() {
           successCount++;
         }
       } catch (error) {
-        errors.push(`Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         failedCount++;
       }
 
@@ -271,78 +297,82 @@ export function ProductsCSVImport() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
+        <CardTitle className='flex items-center gap-2'>
+          <Package className='h-5 w-5' />
           Import Products from CSV
         </CardTitle>
         <CardDescription>
           Upload a CSV file to bulk import products and inventory items.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center gap-4">
+      <CardContent className='space-y-6'>
+        <div className='flex items-center gap-4'>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={handleDownloadTemplate}
-            className="flex items-center gap-2"
+            className='flex items-center gap-2'
           >
-            <Download className="h-4 w-4" />
+            <Download className='h-4 w-4' />
             Download CSV Template
           </Button>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Upload CSV File</label>
+        <div className='space-y-2'>
+          <label className='text-sm font-medium'>Upload CSV File</label>
           <Input
-            type="file"
-            accept=".csv"
+            type='file'
+            accept='.csv'
             onChange={handleFileChange}
             disabled={isImporting}
           />
         </div>
 
         {parseResult && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-2xl font-bold text-blue-900">
+          <div className='space-y-4'>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+              <div className='p-4 bg-blue-50 rounded-lg border border-blue-200'>
+                <div className='text-2xl font-bold text-blue-900'>
                   {parseResult.stats.totalRows}
                 </div>
-                <div className="text-sm text-blue-700">Total Rows</div>
+                <div className='text-sm text-blue-700'>Total Rows</div>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-2xl font-bold text-green-900">
+              <div className='p-4 bg-green-50 rounded-lg border border-green-200'>
+                <div className='text-2xl font-bold text-green-900'>
                   {parseResult.stats.validRows}
                 </div>
-                <div className="text-sm text-green-700">Valid Rows</div>
+                <div className='text-sm text-green-700'>Valid Rows</div>
               </div>
-              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="text-2xl font-bold text-red-900">
+              <div className='p-4 bg-red-50 rounded-lg border border-red-200'>
+                <div className='text-2xl font-bold text-red-900'>
                   {parseResult.stats.invalidRows}
                 </div>
-                <div className="text-sm text-red-700">Invalid Rows</div>
+                <div className='text-sm text-red-700'>Invalid Rows</div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-2xl font-bold text-gray-900">
+              <div className='p-4 bg-gray-50 rounded-lg border border-gray-200'>
+                <div className='text-2xl font-bold text-gray-900'>
                   {parseResult.stats.emptyRows}
                 </div>
-                <div className="text-sm text-gray-700">Empty Rows</div>
+                <div className='text-sm text-gray-700'>Empty Rows</div>
               </div>
             </div>
 
             {parseResult.errors.length > 0 && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Found {parseResult.errors.length} Error(s)</AlertTitle>
+              <Alert variant='destructive'>
+                <AlertTriangle className='h-4 w-4' />
+                <AlertTitle>
+                  Found {parseResult.errors.length} Error(s)
+                </AlertTitle>
                 <AlertDescription>
-                  <div className="mt-2 max-h-60 overflow-y-auto space-y-1">
+                  <div className='mt-2 max-h-60 overflow-y-auto space-y-1'>
                     {parseResult.errors.slice(0, 10).map((error, idx) => (
-                      <div key={idx} className="text-sm">
-                        Row {error.row}{error.column ? ` - ${error.column}` : ''}: {error.message}
+                      <div key={idx} className='text-sm'>
+                        Row {error.row}
+                        {error.column ? ` - ${error.column}` : ''}:{' '}
+                        {error.message}
                       </div>
                     ))}
                     {parseResult.errors.length > 10 && (
-                      <div className="text-sm font-medium">
+                      <div className='text-sm font-medium'>
                         ...and {parseResult.errors.length - 10} more errors
                       </div>
                     )}
@@ -352,27 +382,27 @@ export function ProductsCSVImport() {
             )}
 
             {parseResult.data.length > 0 && (
-              <div className="space-y-4">
+              <div className='space-y-4'>
                 <Button
                   onClick={handleImport}
                   disabled={isImporting || parseResult.errors.length > 0}
-                  className="w-full"
+                  className='w-full'
                 >
                   {isImporting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                       Importing... {importProgress}%
                     </>
                   ) : (
                     <>
-                      <Upload className="mr-2 h-4 w-4" />
+                      <Upload className='mr-2 h-4 w-4' />
                       Import {parseResult.data.length} Product(s)
                     </>
                   )}
                 </Button>
 
                 {isImporting && (
-                  <Progress value={importProgress} className="w-full" />
+                  <Progress value={importProgress} className='w-full' />
                 )}
               </div>
             )}
@@ -380,25 +410,25 @@ export function ProductsCSVImport() {
         )}
 
         {importResult && (
-          <Alert variant={importResult.failed > 0 ? "default" : "default"}>
-            <CheckCircle className="h-4 w-4" />
+          <Alert variant={importResult.failed > 0 ? 'default' : 'default'}>
+            <CheckCircle className='h-4 w-4' />
             <AlertTitle>Import Complete</AlertTitle>
             <AlertDescription>
-              <div className="space-y-2">
-                <div className="flex gap-4">
-                  <Badge variant="default" className="bg-green-600">
+              <div className='space-y-2'>
+                <div className='flex gap-4'>
+                  <Badge variant='default' className='bg-green-600'>
                     {importResult.success} Succeeded
                   </Badge>
                   {importResult.failed > 0 && (
-                    <Badge variant="destructive">
+                    <Badge variant='destructive'>
                       {importResult.failed} Failed
                     </Badge>
                   )}
                 </div>
                 {importResult.errors.length > 0 && (
-                  <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
+                  <div className='mt-2 max-h-40 overflow-y-auto space-y-1'>
                     {importResult.errors.map((error, idx) => (
-                      <div key={idx} className="text-sm text-red-600">
+                      <div key={idx} className='text-sm text-red-600'>
                         {error}
                       </div>
                     ))}
@@ -411,8 +441,8 @@ export function ProductsCSVImport() {
 
         {parseResult && parseResult.data.length > 0 && !importResult && (
           <div>
-            <h4 className="text-sm font-medium mb-2">Preview (First 5 Rows)</h4>
-            <div className="border rounded-lg overflow-auto max-h-96">
+            <h4 className='text-sm font-medium mb-2'>Preview (First 5 Rows)</h4>
+            <div className='border rounded-lg overflow-auto max-h-96'>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -429,9 +459,15 @@ export function ProductsCSVImport() {
                       <TableCell>{row?.name_en || '-'}</TableCell>
                       <TableCell>{row?.sku || '-'}</TableCell>
                       <TableCell>{row?.category || '-'}</TableCell>
-                      <TableCell>{row?.price ? `$${row.price}` : '-'}</TableCell>
                       <TableCell>
-                        <Badge variant={row?.status === 'active' ? 'default' : 'secondary'}>
+                        {row?.price ? `$${row.price}` : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            row?.status === 'active' ? 'default' : 'secondary'
+                          }
+                        >
                           {row?.status || 'active'}
                         </Badge>
                       </TableCell>
@@ -446,4 +482,3 @@ export function ProductsCSVImport() {
     </Card>
   );
 }
-

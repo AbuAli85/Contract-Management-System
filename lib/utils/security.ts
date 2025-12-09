@@ -58,7 +58,7 @@ export function isValidUrl(url: string): boolean {
 export function generateSecureToken(length: number = 32): string {
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -69,7 +69,7 @@ export async function hashString(str: string): Promise<string> {
   const data = encoder.encode(str);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -87,7 +87,7 @@ export class RateLimiter {
 
   canMakeRequest(): boolean {
     const now = Date.now();
-    this.requests = this.requests.filter((time) => now - time < this.windowMs);
+    this.requests = this.requests.filter(time => now - time < this.windowMs);
 
     if (this.requests.length < this.limit) {
       this.requests.push(now);
@@ -111,7 +111,7 @@ export class RateLimiter {
 export function setupCSPReporting() {
   if (typeof window === 'undefined') return;
 
-  document.addEventListener('securitypolicyviolation', (e) => {
+  document.addEventListener('securitypolicyviolation', e => {
     const violation = {
       blockedURI: e.blockedURI,
       violatedDirective: e.violatedDirective,
@@ -133,7 +133,7 @@ export function setupCSPReporting() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(violation),
-      }).catch((error) => {
+      }).catch(error => {
         console.error('Failed to report CSP violation:', error);
       });
     }
@@ -230,7 +230,7 @@ export function containsSQLInjection(input: string): boolean {
     /(;|\||&)/gi,
   ];
 
-  return sqlPatterns.some((pattern) => pattern.test(input));
+  return sqlPatterns.some(pattern => pattern.test(input));
 }
 
 /**
@@ -246,7 +246,7 @@ export function containsXSS(input: string): boolean {
     /<embed\b[^<]*>/gi,
   ];
 
-  return xssPatterns.some((pattern) => pattern.test(input));
+  return xssPatterns.some(pattern => pattern.test(input));
 }
 
 /**
@@ -285,17 +285,25 @@ export function maskSensitiveData(
 
     case 'phone': {
       const cleaned = data.replace(/\D/g, '');
-      return cleaned.slice(0, -visibleChars).replace(/\d/g, '*') + cleaned.slice(-visibleChars);
+      return (
+        cleaned.slice(0, -visibleChars).replace(/\d/g, '*') +
+        cleaned.slice(-visibleChars)
+      );
     }
 
     case 'card': {
       const cleaned = data.replace(/\s/g, '');
-      return '*'.repeat(cleaned.length - visibleChars) + cleaned.slice(-visibleChars);
+      return (
+        '*'.repeat(cleaned.length - visibleChars) + cleaned.slice(-visibleChars)
+      );
     }
 
     case 'generic':
     default:
-      return '*'.repeat(Math.max(0, data.length - visibleChars)) + data.slice(-visibleChars);
+      return (
+        '*'.repeat(Math.max(0, data.length - visibleChars)) +
+        data.slice(-visibleChars)
+      );
   }
 }
 
@@ -348,4 +356,3 @@ export function validatePasswordStrength(password: string): PasswordStrength {
     isStrong: score >= 3,
   };
 }
-

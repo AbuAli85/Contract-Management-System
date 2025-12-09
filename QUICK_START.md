@@ -16,7 +16,7 @@ import { useDebounce } from '@/lib/utils/performance';
 function YourComponent() {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 500);
-  
+
   // Use debouncedSearch instead of searchTerm for API calls
   useEffect(() => {
     if (debouncedSearch) {
@@ -47,7 +47,7 @@ import { validatePasswordStrength } from '@/lib/utils/security';
 function PasswordInput() {
   const [password, setPassword] = useState('');
   const strength = validatePasswordStrength(password);
-  
+
   return (
     <div>
       <input value={password} onChange={e => setPassword(e.target.value)} />
@@ -117,7 +117,7 @@ import { EnhancedErrorBoundary } from '@/components/errors/enhanced-error-bounda
 
 export default function Layout({ children }) {
   return (
-    <EnhancedErrorBoundary 
+    <EnhancedErrorBoundary
       componentName="Main App"
       maxRetries={3}
     >
@@ -136,7 +136,7 @@ import { usePromoterMutations } from '@/lib/hooks/use-promoter-mutations';
 
 function PromoterActions({ promoter }) {
   const { update, isUpdating } = usePromoterMutations();
-  
+
   const handleStatusToggle = () => {
     update({
       id: promoter.id,
@@ -144,7 +144,7 @@ function PromoterActions({ promoter }) {
     });
     // UI updates instantly, rolls back on error automatically
   };
-  
+
   return (
     <Button onClick={handleStatusToggle} disabled={isUpdating}>
       Update
@@ -193,7 +193,7 @@ import { useIntersectionObserver } from '@/lib/utils/performance';
 function LazyImage({ src }) {
   const ref = useRef(null);
   const isVisible = useIntersectionObserver(ref, { threshold: 0.1 });
-  
+
   return (
     <div ref={ref}>
       {isVisible ? <img src={src} /> : <div>Loading...</div>}
@@ -214,12 +214,12 @@ function FileUpload() {
       allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     });
-    
+
     if (!validation.valid) {
       alert(validation.error);
       return;
     }
-    
+
     // Proceed with upload
   };
 }
@@ -232,7 +232,7 @@ import { useFocusTrap } from '@/lib/utils/accessibility';
 
 function Modal({ isOpen }) {
   const containerRef = useFocusTrap(isOpen);
-  
+
   return (
     <div ref={containerRef}>
       {/* Modal content */}
@@ -246,15 +246,19 @@ function Modal({ isOpen }) {
 ## 🐛 Troubleshooting
 
 ### Issue: "Cannot find module..."
+
 **Solution**: Restart your dev server (`npm run dev`)
 
 ### Issue: TypeScript errors
+
 **Solution**: Run `npm run type-check` to see all errors
 
 ### Issue: Linting errors
+
 **Solution**: Run `npm run lint:fix`
 
 ### Issue: Features not working
+
 **Solution**: Check browser console for errors
 
 ---

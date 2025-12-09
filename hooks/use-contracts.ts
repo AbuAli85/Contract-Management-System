@@ -17,7 +17,7 @@ import { useEffect } from 'react';
 export type ContractWithRelations = {
   id: string;
   contract_number: string | null;
-  status: string;  // Make status required to match ContractDetail
+  status: string; // Make status required to match ContractDetail
   // Date fields - database uses start_date and end_date
   start_date?: string | null;
   end_date?: string | null;
@@ -42,7 +42,7 @@ export type ContractWithRelations = {
   value?: number | null;
   basic_salary?: number | null;
   currency?: string | null;
-  id_card_number?: string | null;  // Added for contract detail page
+  id_card_number?: string | null; // Added for contract detail page
   description?: string | null;
   // Relational data
   first_party: {
@@ -72,7 +72,7 @@ export type ContractWithRelations = {
     email: string | null;
     mobile_number: string | null;
     job_title: string | null;
-    id_card_number?: string | null;  // Added for compatibility
+    id_card_number?: string | null; // Added for compatibility
   } | null;
 };
 // Minimal fields required when creating a new contract
@@ -84,27 +84,29 @@ export type ContractInsert =
 const fetchContracts = async (): Promise<ContractWithRelations[]> => {
   try {
     const response = await fetch('/api/contracts?page=1&limit=100');
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const result = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch contracts');
     }
-    
+
     // Debug: Log the fetched data to see what we're getting
     devLog('📊 Fetched contracts data:', result.contracts);
     if (result.contracts && result.contracts.length > 0) {
       devLog('📊 Sample contract structure:', result.contracts[0]);
     }
-    
+
     return result.contracts || [];
   } catch (error) {
     devLog('Error fetching contracts:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch contracts');
+    throw new Error(
+      error instanceof Error ? error.message : 'Failed to fetch contracts'
+    );
   }
 };
 

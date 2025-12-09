@@ -11,11 +11,13 @@
 5. Click on it and check the Response tab
 
 **Expected Result:**
+
 ```json
 {
   "contracts": [
     {
-      "promoters": {  // ✅ Should be an object, not an array
+      "promoters": {
+        // ✅ Should be an object, not an array
         "id": "...",
         "name_en": "...",
         "name_ar": "..."
@@ -83,6 +85,7 @@
 - [ ] Verify promoter names are present (not "N/A")
 
 **Expected CSV:**
+
 ```csv
 Contract ID,Contract Number,First Party,Second Party,Promoter,Job Title,...
 abc-123,...,ACME Corp,XYZ Ltd,John Doe,Sales Manager,...
@@ -127,7 +130,7 @@ Run this SQL in Supabase SQL Editor:
 
 ```sql
 -- 1. Verify promoter_id is populated
-SELECT 
+SELECT
     COUNT(*) as total_contracts,
     COUNT(promoter_id) as with_promoter_id,
     COUNT(*) - COUNT(promoter_id) as missing_promoter_id,
@@ -136,6 +139,7 @@ FROM contracts;
 ```
 
 **Expected Result:**
+
 - `with_promoter_id` should be close to `total_contracts`
 - `percentage` should be high (>90%)
 
@@ -143,11 +147,11 @@ FROM contracts;
 
 ```sql
 -- 2. Check if promoter_id references valid promoters
-SELECT 
+SELECT
     c.id as contract_id,
     c.contract_number,
     c.promoter_id,
-    CASE 
+    CASE
         WHEN p.id IS NOT NULL THEN '✅ Valid'
         ELSE '❌ Invalid - Promoter not found'
     END as status
@@ -158,6 +162,7 @@ LIMIT 20;
 ```
 
 **Expected Result:**
+
 - All rows should show "✅ Valid"
 - No "❌ Invalid" entries
 
@@ -165,7 +170,7 @@ LIMIT 20;
 
 ```sql
 -- 3. Get sample contracts with promoter data
-SELECT 
+SELECT
     c.contract_number,
     c.title,
     p.name_en as promoter_name_en,
@@ -180,6 +185,7 @@ LIMIT 10;
 ```
 
 **Expected Result:**
+
 - Should return 10 rows with promoter names
 - No NULL values in promoter_name_en or promoter_name_ar
 
@@ -197,28 +203,30 @@ fetch('/api/contracts?page=1&limit=5')
   .then(res => res.json())
   .then(data => {
     console.log('Total contracts:', data.contracts.length);
-    
+
     // Check first contract's promoter structure
     const firstContract = data.contracts[0];
     console.log('First contract promoter:', firstContract.promoters);
-    
+
     // Verify it's an object, not an array
     console.log('Is array?', Array.isArray(firstContract.promoters)); // Should be FALSE
     console.log('Promoter name:', firstContract.promoters?.name_en); // Should show name
-    
+
     // Check all contracts
     const withPromoter = data.contracts.filter(c => c.promoters);
     const withPromoterName = data.contracts.filter(c => c.promoters?.name_en);
-    
+
     console.log('Contracts with promoter object:', withPromoter.length);
     console.log('Contracts with promoter name:', withPromoterName.length);
-    console.log('Percentage with names:', 
-      Math.round(100 * withPromoterName.length / data.contracts.length) + '%'
+    console.log(
+      'Percentage with names:',
+      Math.round((100 * withPromoterName.length) / data.contracts.length) + '%'
     );
   });
 ```
 
 **Expected Console Output:**
+
 ```
 Total contracts: 5
 First contract promoter: {id: "...", name_en: "John Doe", name_ar: "...", ...}
@@ -250,12 +258,14 @@ curl -X GET 'http://localhost:3000/api/contracts?page=1&limit=5' \
 The fix includes enhanced logging. You should see these logs in your server console:
 
 #### ✅ Success Logs
+
 ```
 ✅ Contracts API: Fetched 113 promoters
 ✅ Contracts API: Successfully fetched 50 contracts
 ```
 
 #### ⚠️ Warning Logs (if data issues exist)
+
 ```
 ⚠️ Contracts API: Error fetching promoters: [error message]
 ⚠️ Promoter data not found for contract xyz-789 with promoter_id abc-123
@@ -272,6 +282,7 @@ The fix includes enhanced logging. You should see these logs in your server cons
 3. Check `/api/contracts` request timing
 
 **Expected:**
+
 - Response time: < 500ms for 20 contracts
 - No significant increase from before the fix
 - Promoter data fetched in single batch query (efficient)
@@ -285,6 +296,7 @@ The fix includes enhanced logging. You should see these logs in your server cons
 5. Compare memory usage
 
 **Expected:**
+
 - No memory leaks
 - Similar memory footprint to before fix
 - Objects properly shaped (not arrays)
@@ -316,6 +328,7 @@ The fix includes enhanced logging. You should see these logs in your server cons
 ## Edge Cases to Test
 
 ### 1. Contracts Without Promoter
+
 ```sql
 -- Create a test contract without promoter (if allowed)
 -- Or find existing contracts where promoter_id IS NULL
@@ -323,32 +336,37 @@ SELECT * FROM contracts WHERE promoter_id IS NULL LIMIT 5;
 ```
 
 **Expected Behavior:**
+
 - Should show "N/A" (this is correct)
 - No JavaScript errors
 - No warnings in console (unless intentionally added)
 
 ### 2. Deleted Promoter
+
 ```sql
 -- Check if any promoter_ids reference non-existent promoters
-SELECT c.* 
+SELECT c.*
 FROM contracts c
 LEFT JOIN promoters p ON c.promoter_id = p.id
 WHERE c.promoter_id IS NOT NULL AND p.id IS NULL;
 ```
 
 **Expected Behavior:**
+
 - Should log warning in console: "Promoter data not found for contract..."
 - Display should show "N/A" gracefully
 - No JavaScript errors
 
 ### 3. Promoter with Missing Name Fields
+
 ```sql
 -- Check promoters with null names
-SELECT * FROM promoters 
+SELECT * FROM promoters
 WHERE name_en IS NULL OR name_ar IS NULL;
 ```
 
 **Expected Behavior:**
+
 - Should fallback to available name (English or Arabic)
 - If both null, show "N/A"
 - No JavaScript errors
@@ -360,6 +378,7 @@ WHERE name_en IS NULL OR name_ar IS NULL;
 If issues are found:
 
 ### Immediate Rollback
+
 ```bash
 # Revert the changes
 git revert HEAD
@@ -367,7 +386,9 @@ git push
 ```
 
 ### Or Manual Fix
+
 In `app/api/contracts/route.ts` line 269, change back to:
+
 ```javascript
 promoters: promoter ? [promoter] : null,  // Temporary rollback
 ```
@@ -379,6 +400,7 @@ promoters: promoter ? [promoter] : null,  // Temporary rollback
 ## Success Criteria
 
 ✅ **Fix is successful if:**
+
 1. Promoter names display in contracts table (not "N/A")
 2. No JavaScript errors in browser console
 3. API response returns `promoters` as object (not array)
@@ -389,6 +411,7 @@ promoters: promoter ? [promoter] : null,  // Temporary rollback
 8. All regression tests pass
 
 ❌ **Fix needs review if:**
+
 1. Some contracts still show "N/A" when they shouldn't
 2. JavaScript errors appear in console
 3. API returns arrays instead of objects
@@ -433,4 +456,3 @@ After successful deployment:
 **Created:** 2025-10-22  
 **Last Updated:** 2025-10-22  
 **Status:** ✅ **Ready for Testing**
-

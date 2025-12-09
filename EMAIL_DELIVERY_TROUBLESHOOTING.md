@@ -7,6 +7,7 @@
 ---
 
 ## ✅ **STEP 1: Check Spam/Junk Folder**
+
 **Most common issue!**
 
 1. Check your **Spam/Junk** folder in chairman@falconeyegroup.net
@@ -22,12 +23,14 @@
 ### Go to: https://resend.com/emails
 
 **What to check:**
+
 ```
 ✅ Email Status: "delivered" or "sent"
 ❌ Email Status: "failed", "bounced", "rejected"
 ```
 
 **If you see any failed emails:**
+
 - Click on the email to see error details
 - Common errors:
   - `bounce` = Invalid email address
@@ -43,13 +46,15 @@
 **Check your domain: `portal.thesmartpro.io`**
 
 Required records (should all be ✅ green):
+
 ```
 ✅ SPF Record
-✅ DKIM Record  
+✅ DKIM Record
 ✅ DMARC Record (optional but recommended)
 ```
 
 **If any are ❌ red:**
+
 1. Copy the DNS records from Resend
 2. Add them to your domain DNS settings (GoDaddy/Namecheap/Cloudflare)
 3. Wait 5-30 minutes for DNS propagation
@@ -66,11 +71,13 @@ npm run test:email
 ```
 
 **Expected output:**
+
 ```
 ✅ Email sent successfully: [message-id]
 ```
 
 **If you see errors:**
+
 - `RESEND_API_KEY not configured` → Check .env file
 - `Domain not verified` → See Step 3
 - `Invalid recipient` → Check email address
@@ -98,12 +105,14 @@ npm run test:email
 **Is `chairman@falconeyegroup.net` correct?**
 
 Check:
+
 - ✅ No typos
 - ✅ Domain is active
 - ✅ Mailbox not full
 - ✅ Not blocking external emails
 
 **Test with a different email:**
+
 - Try your personal Gmail/Outlook
 - If that works, issue is with the recipient email
 
@@ -114,6 +123,7 @@ Check:
 **When you click "Send Notification" in the UI, open browser console (F12):**
 
 Look for the API response:
+
 ```json
 {
   "success": true,
@@ -126,6 +136,7 @@ Look for the API response:
 ```
 
 **If `emailResult.success: false`:**
+
 - Check `emailResult.error` for details
 - This means email failed to send
 
@@ -134,13 +145,16 @@ Look for the API response:
 ## 🔧 **COMMON FIXES**
 
 ### Fix 1: Domain Not Fully Verified
+
 ```bash
 # Check Resend dashboard at: https://resend.com/domains
 # Ensure all DNS records are ✅ green
 ```
 
 ### Fix 2: Email Going to Spam
+
 **Add to DNS (DMARC record):**
+
 ```
 Type: TXT
 Name: _dmarc.portal.thesmartpro.io
@@ -148,11 +162,14 @@ Value: v=DMARC1; p=none; rua=mailto:chairman@falconeyegroup.net
 ```
 
 **Whitelist the sender:**
+
 - Add `noreply@portal.thesmartpro.io` to contacts
 - Mark previous emails as "Not Spam"
 
 ### Fix 3: Rate Limiting
+
 Resend has rate limits:
+
 - **Sandbox**: 100 emails/day
 - **Production**: Depends on your plan
 
@@ -202,6 +219,7 @@ sendEmail({
 ## 📞 **RESEND SUPPORT**
 
 If all else fails:
+
 - Email: support@resend.com
 - Docs: https://resend.com/docs
 - Status: https://status.resend.com
@@ -209,4 +227,3 @@ If all else fails:
 ---
 
 **Most likely issue: Email is in spam folder! Check there first! 📧**
-

@@ -35,25 +35,25 @@ class Logger {
   private formatLogEntry(entry: LogEntry): string {
     const { level, message, context, timestamp } = entry;
     const emoji = this.getLevelEmoji(level);
-    
+
     if (this.isDevelopment) {
       // Detailed format for development
       let formatted = `${emoji} [${timestamp}] ${level.toUpperCase()}: ${message}`;
-      
+
       if (context) {
         formatted += `\n  Context: ${JSON.stringify(context, null, 2)}`;
       }
-      
+
       if (entry.error) {
         formatted += `\n  Error: ${entry.error.message || entry.error}`;
         if (entry.error.stack) {
           formatted += `\n  Stack: ${entry.error.stack}`;
         }
       }
-      
+
       return formatted;
     }
-    
+
     // Compact format for production
     return JSON.stringify({
       ...entry,
@@ -128,7 +128,7 @@ class Logger {
   private sendToExternalService(entry: LogEntry): void {
     // TODO: Implement external logging service integration
     // Example: Sentry.captureException(entry.error, { extra: entry.context });
-    
+
     // For now, just log that we would send it
     if (this.isDevelopment) {
       console.log('📤 Would send to external service:', entry.message);
@@ -145,15 +145,27 @@ class Logger {
     this.log('info', message, context);
   }
 
-  warn(message: string, context?: LogContext | undefined, error?: Error | any | undefined): void {
+  warn(
+    message: string,
+    context?: LogContext | undefined,
+    error?: Error | any | undefined
+  ): void {
     this.log('warn', message, context, error);
   }
 
-  error(message: string, context?: LogContext | undefined, error?: Error | any | undefined): void {
+  error(
+    message: string,
+    context?: LogContext | undefined,
+    error?: Error | any | undefined
+  ): void {
     this.log('error', message, context, error);
   }
 
-  fatal(message: string, context?: LogContext | undefined, error?: Error | any | undefined): void {
+  fatal(
+    message: string,
+    context?: LogContext | undefined,
+    error?: Error | any | undefined
+  ): void {
     this.log('fatal', message, context, error);
   }
 
@@ -267,15 +279,11 @@ class Logger {
     context?: LogContext | undefined
   ): void {
     const level = success ? 'info' : 'warn';
-    this.log(
-      level,
-      `Authentication: ${event}`,
-      {
-        ...context,
-        userId: userId ?? undefined,
-        success,
-      }
-    );
+    this.log(level, `Authentication: ${event}`, {
+      ...context,
+      userId: userId ?? undefined,
+      success,
+    });
   }
 
   /**
@@ -301,4 +309,3 @@ export const logger = new Logger();
 
 // Export type for scoped loggers
 export type ScopedLogger = Logger;
-

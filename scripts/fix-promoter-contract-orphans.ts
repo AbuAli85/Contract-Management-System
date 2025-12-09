@@ -1,9 +1,9 @@
 /**
  * Fix Promoter-Contract Orphans
- * 
+ *
  * This script identifies and optionally fixes promoters who are assigned to employers
  * (have employer_id) but have no contracts in the contracts table.
- * 
+ *
  * Usage:
  *   npm run fix-promoter-orphans -- [--dry-run] [--create-contracts]
  */
@@ -44,7 +44,8 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
     // Fallback to manual query if RPC doesn't exist
     const { data: promotersData, error: promotersError } = await supabase
       .from('promoters')
-      .select(`
+      .select(
+        `
         id,
         name_en,
         name_ar,
@@ -57,7 +58,8 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
           name_en,
           name_ar
         )
-      `)
+      `
+      )
       .eq('status', 'active')
       .not('employer_id', 'is', null);
 
@@ -68,7 +70,7 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
 
     // Filter out those with contracts
     const orphaned: OrphanedPromoter[] = [];
-    
+
     for (const promoter of promotersData || []) {
       // Use raw SQL to handle type casting
       const { data: contracts, error: contractsError } = await supabase.rpc(
@@ -83,7 +85,7 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
           .select('id')
           .eq('promoter_id', promoter.id)
           .limit(1);
-        
+
         if (directContracts && directContracts.length === 0) {
           orphaned.push({
             id: promoter.id,
@@ -118,24 +120,28 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
   return data || [];
 }
 
-async function createPlaceholderContract(promoter: OrphanedPromoter): Promise<boolean> {
+async function createPlaceholderContract(
+  promoter: OrphanedPromoter
+): Promise<boolean> {
   console.log(`  Creating placeholder contract for ${promoter.name_en}...`);
 
   const contractNumber = `PLACEHOLDER-${Date.now()}-${promoter.id.substring(0, 4).toUpperCase()}`;
-  
+
   const { error } = await supabase.from('contracts').insert({
     contract_number: contractNumber,
     promoter_id: promoter.id,
     employer_id: promoter.employer_id,
     title: promoter.job_title || 'Employment Contract',
-    description: 'Auto-generated placeholder contract to maintain data integrity',
+    description:
+      'Auto-generated placeholder contract to maintain data integrity',
     contract_type: 'employment',
     status: 'active',
     start_date: promoter.created_at.split('T')[0], // Use promoter creation date
     end_date: null, // No end date for placeholder
     value: 0,
     currency: 'OMR',
-    terms: 'This is a placeholder contract created automatically to represent the promoter-employer relationship.',
+    terms:
+      'This is a placeholder contract created automatically to represent the promoter-employer relationship.',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
@@ -175,7 +181,9 @@ async function main() {
   const createContracts = args.includes('--create-contracts');
 
   console.log('🔧 Promoter-Contract Orphan Diagnostic Tool\n');
-  console.log(`Mode: ${dryRun ? 'DRY RUN (no changes)' : createContracts ? 'FIX MODE' : 'DIAGNOSTIC ONLY'}\n`);
+  console.log(
+    `Mode: ${dryRun ? 'DRY RUN (no changes)' : createContracts ? 'FIX MODE' : 'DIAGNOSTIC ONLY'}\n`
+  );
 
   // Display statistics
   await displayStatistics();
@@ -196,14 +204,16 @@ async function main() {
     console.log(`   Employer: ${promoter.employer_name}`);
     console.log(`   Job Title: ${promoter.job_title || 'N/A'}`);
     console.log(`   Mobile: ${promoter.mobile_number || 'N/A'}`);
-    console.log(`   Created: ${new Date(promoter.created_at).toLocaleDateString()}`);
+    console.log(
+      `   Created: ${new Date(promoter.created_at).toLocaleDateString()}`
+    );
     console.log('');
   });
 
   // Create placeholder contracts if requested
   if (createContracts && !dryRun) {
     console.log('\n🔨 Creating placeholder contracts...\n');
-    
+
     let successCount = 0;
     let failCount = 0;
 
@@ -221,7 +231,9 @@ async function main() {
       console.log(`❌ Failed to create ${failCount} contract(s)`);
     }
   } else if (dryRun) {
-    console.log('💡 Tip: Run with --create-contracts (without --dry-run) to fix these issues\n');
+    console.log(
+      '💡 Tip: Run with --create-contracts (without --dry-run) to fix these issues\n'
+    );
   }
 
   console.log('\n📋 Recommendations:\n');
@@ -232,4 +244,3 @@ async function main() {
 }
 
 main().catch(console.error);
-

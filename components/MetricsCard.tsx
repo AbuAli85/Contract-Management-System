@@ -102,4 +102,3 @@ export function ScopeBadge({ scope, scopeLabel }: ScopeBadgeProps) {
     </TooltipProvider>
   );
 }
-

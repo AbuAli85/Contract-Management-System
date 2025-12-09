@@ -20,18 +20,18 @@ The database allows the following statuses:
 ```sql
 CHECK (status IN (
   -- Core workflow statuses
-  'draft', 
-  'pending', 
+  'draft',
+  'pending',
   'approved',
-  'active', 
-  'completed', 
-  'terminated', 
+  'active',
+  'completed',
+  'terminated',
   'expired',
   'rejected',
   -- Approval workflow statuses
-  'legal_review', 
-  'hr_review', 
-  'final_approval', 
+  'legal_review',
+  'hr_review',
+  'final_approval',
   'signature',
   -- Processing statuses
   'processing',
@@ -42,12 +42,12 @@ CHECK (status IN (
 
 ### Status Categories
 
-| Category | Statuses | Purpose |
-|----------|----------|---------|
-| **Core Workflow** | `draft`, `pending`, `approved`, `active`, `completed`, `terminated`, `expired`, `rejected` | Main contract lifecycle |
-| **Approval Workflow** | `legal_review`, `hr_review`, `final_approval`, `signature` | Multi-stage approval process |
-| **Processing** | `processing`, `generated` | Contract generation/processing states |
-| **Special** | `soon-to-expire` | Warning state for contracts nearing expiration |
+| Category              | Statuses                                                                                   | Purpose                                        |
+| --------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| **Core Workflow**     | `draft`, `pending`, `approved`, `active`, `completed`, `terminated`, `expired`, `rejected` | Main contract lifecycle                        |
+| **Approval Workflow** | `legal_review`, `hr_review`, `final_approval`, `signature`                                 | Multi-stage approval process                   |
+| **Processing**        | `processing`, `generated`                                                                  | Contract generation/processing states          |
+| **Special**           | `soon-to-expire`                                                                           | Warning state for contracts nearing expiration |
 
 ---
 
@@ -161,6 +161,7 @@ CHECK (status IN (
 **Endpoint:** `POST /api/contracts`
 
 **Current Behavior:**
+
 - All new contracts start with `status: 'pending'`
 - `submitted_for_review_at` is automatically set
 - Contracts appear on the pending contracts page
@@ -177,11 +178,13 @@ submitted_for_review_at: new Date().toISOString(),
 **Endpoint:** `GET /api/contracts?status=pending`
 
 **Current Behavior:**
+
 - Shows contracts with `status='pending'` OR `status='generated'`
 - Displays action menu: Approve, Reject, Request Changes, Send to Legal, Send to HR
 - Supports bulk operations
 
-**Code Location:** 
+**Code Location:**
+
 - Frontend: `app/[locale]/contracts/pending/page.tsx`
 - API: `app/api/contracts/route.ts` (lines 222-229)
 
@@ -197,6 +200,7 @@ if (status === 'pending') {
 **Endpoint:** `POST /api/contracts/[id]/approve`
 
 **Available Actions:**
+
 1. **`approve`** - Approves contract (pending → approved)
 2. **`reject`** - Rejects contract (pending → rejected)
 3. **`request_changes`** - Requests changes (pending → draft)
@@ -206,13 +210,17 @@ if (status === 'pending') {
 **Code Location:** `app/api/contracts/[id]/approve/route.ts`
 
 **Current Validation:**
+
 ```typescript
 // Only allows approving contracts with status='pending'
 if (contract.status !== 'pending') {
-  return NextResponse.json({
-    success: false, 
-    error: `Cannot approve contract with status: ${contract.status}. Only pending contracts can be approved.`
-  }, { status: 400 });
+  return NextResponse.json(
+    {
+      success: false,
+      error: `Cannot approve contract with status: ${contract.status}. Only pending contracts can be approved.`,
+    },
+    { status: 400 }
+  );
 }
 ```
 
@@ -223,15 +231,18 @@ if (contract.status !== 'pending') {
 **Function:** `update_contract_status_based_on_dates()`
 
 **Automatic Transitions:**
+
 1. **approved → active**: When `start_date <= CURRENT_DATE`
 2. **active → expired**: When `end_date < CURRENT_DATE`
 
 **Implementation:**
+
 - Database function: `supabase/migrations/20250125_complete_contract_workflow.sql` (lines 126-146)
 - Cron job: `app/api/cron/contract-status-transitions/route.ts`
 - Manual trigger: `app/api/admin/contract-status-transitions/route.ts`
 
 **Code Example:**
+
 ```sql
 -- Update approved contracts to active if start_date has passed
 UPDATE contracts
@@ -255,6 +266,7 @@ WHERE status = 'active'
 ### 1. **Generated Status Not Handled in Approval Flow**
 
 **Problem:**
+
 - Pending page shows contracts with `status='generated'`
 - Approval endpoint only accepts `status='pending'`
 - Generated contracts cannot be approved through the UI
@@ -275,6 +287,7 @@ if (!['pending', 'generated'].includes(contract.status)) { ... }
 ### 2. **Send to Legal/HR Actions Don't Update Status**
 
 **Problem:**
+
 - `send_to_legal` and `send_to_hr` actions only set metadata fields (`sent_to_legal_at`, `sent_to_legal_by`, etc.)
 - They don't update the `status` field to `legal_review` or `hr_review`
 - Contracts remain in `pending` status even after being sent for review
@@ -282,6 +295,7 @@ if (!['pending', 'generated'].includes(contract.status)) { ... }
 **Impact:** Medium - Workflow tracking is incomplete
 
 **Current Code:**
+
 ```typescript
 case 'send_to_legal':
   updateData = {
@@ -293,6 +307,7 @@ case 'send_to_legal':
 ```
 
 **Solution:**
+
 ```typescript
 case 'send_to_legal':
   updateData = {
@@ -306,6 +321,7 @@ case 'send_to_legal':
 ### 3. **Approval Workflow Statuses Not Fully Integrated**
 
 **Problem:**
+
 - Database allows `legal_review`, `hr_review`, `final_approval`, `signature` statuses
 - These statuses are not handled in the approval endpoint
 - No way to transition between these statuses
@@ -314,11 +330,13 @@ case 'send_to_legal':
 
 **Solution:**
 Add support for transitioning between approval workflow statuses:
+
 - `legal_review` → `hr_review` → `final_approval` → `signature` → `approved`
 
 ### 4. **Status Badge Component Missing Extended Statuses**
 
 **Problem:**
+
 - `ContractStatusBadge` component only supports core workflow statuses
 - Missing: `legal_review`, `hr_review`, `final_approval`, `signature`, `processing`, `generated`, `soon-to-expire`
 
@@ -330,6 +348,7 @@ Extend `ContractStatusBadge` to support all statuses from the database constrain
 ### 5. **No Automatic Transition for Generated Contracts**
 
 **Problem:**
+
 - Contracts can be set to `generated` status
 - No automatic mechanism to move `generated` → `pending` or `generated` → `approved`
 
@@ -384,23 +403,23 @@ Extend `ContractStatusBadge` to support all statuses from the database constrain
 
 ## 🔍 Status Transition Matrix
 
-| From Status | To Status | Method | Who Can Do It | Notes |
-|-------------|-----------|--------|---------------|-------|
-| `draft` | `pending` | Automatic | System | On contract submission |
-| `pending` | `approved` | Manual | Admin | Via approve action |
-| `pending` | `rejected` | Manual | Admin | Via reject action |
-| `pending` | `draft` | Manual | Admin | Via request_changes action |
-| `pending` | `legal_review` | Manual | Admin | Via send_to_legal action (needs fix) |
-| `pending` | `hr_review` | Manual | Admin | Via send_to_hr action (needs fix) |
-| `generated` | `approved` | Manual | Admin | Via approve action (needs fix) |
-| `approved` | `active` | Automatic | System | When start_date <= today |
-| `active` | `expired` | Automatic | System | When end_date < today |
-| `active` | `completed` | Manual | Admin | Via admin action |
-| `active` | `terminated` | Manual | Admin | Via admin action |
-| `legal_review` | `hr_review` | Manual | Admin | Not yet implemented |
-| `hr_review` | `final_approval` | Manual | Admin | Not yet implemented |
-| `final_approval` | `signature` | Manual | Admin | Not yet implemented |
-| `signature` | `approved` | Manual | Admin | Not yet implemented |
+| From Status      | To Status        | Method    | Who Can Do It | Notes                                |
+| ---------------- | ---------------- | --------- | ------------- | ------------------------------------ |
+| `draft`          | `pending`        | Automatic | System        | On contract submission               |
+| `pending`        | `approved`       | Manual    | Admin         | Via approve action                   |
+| `pending`        | `rejected`       | Manual    | Admin         | Via reject action                    |
+| `pending`        | `draft`          | Manual    | Admin         | Via request_changes action           |
+| `pending`        | `legal_review`   | Manual    | Admin         | Via send_to_legal action (needs fix) |
+| `pending`        | `hr_review`      | Manual    | Admin         | Via send_to_hr action (needs fix)    |
+| `generated`      | `approved`       | Manual    | Admin         | Via approve action (needs fix)       |
+| `approved`       | `active`         | Automatic | System        | When start_date <= today             |
+| `active`         | `expired`        | Automatic | System        | When end_date < today                |
+| `active`         | `completed`      | Manual    | Admin         | Via admin action                     |
+| `active`         | `terminated`     | Manual    | Admin         | Via admin action                     |
+| `legal_review`   | `hr_review`      | Manual    | Admin         | Not yet implemented                  |
+| `hr_review`      | `final_approval` | Manual    | Admin         | Not yet implemented                  |
+| `final_approval` | `signature`      | Manual    | Admin         | Not yet implemented                  |
+| `signature`      | `approved`       | Manual    | Admin         | Not yet implemented                  |
 
 ---
 
@@ -415,17 +434,20 @@ Based on code analysis:
 - **Special Statuses:** 1
 
 **Fully Implemented:**
+
 - ✅ Core workflow (draft → pending → approved → active → expired)
 - ✅ Approval actions (approve, reject, request_changes)
 - ✅ Automatic date-based transitions
 - ✅ Bulk operations
 
 **Partially Implemented:**
+
 - ⚠️ Generated contracts (shown on pending page but can't be approved)
 - ⚠️ Send to legal/HR (sets metadata but not status)
 - ⚠️ Multi-stage approval workflow (statuses exist but transitions not implemented)
 
 **Not Implemented:**
+
 - ❌ Processing status transitions
 - ❌ Soon-to-expire status automation
 - ❌ Approval workflow stage transitions
@@ -453,4 +475,3 @@ Based on code analysis:
 **Last Updated:** November 16, 2025  
 **Reviewer:** AI Assistant  
 **Status:** ✅ Complete
-

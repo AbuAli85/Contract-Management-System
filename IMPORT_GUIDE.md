@@ -5,6 +5,7 @@
 ### Method 1: CSV Import Page (Recommended)
 
 1. **Access the import page:**
+
    ```
    http://localhost:3000/en/csv-import
    ```
@@ -24,10 +25,12 @@
 Your Excel/CSV file **must** have these exact column headers (case-sensitive):
 
 ### **Required Fields:**
+
 - `name_en` - Full name in English (e.g., "John Doe")
 - `id_card_number` - National ID number (e.g., "123456789")
 
 ### **Optional Fields:**
+
 - `name_ar` - Full name in Arabic (e.g., "جون دو")
 - `passport_number` - Passport number (e.g., "AB1234567")
 - `mobile_number` - Mobile phone number (e.g., "966501234567")
@@ -47,19 +50,19 @@ Your Excel/CSV file **must** have these exact column headers (case-sensitive):
 
 Based on your spreadsheet, here's how to map the columns:
 
-| Your Column | Maps To | Example |
-|------------|---------|---------|
-| Name (EN) | `name_en` | asad shakeel |
-| Name (AR) | `name_ar` | اسد شکیل |
-| ID Card Number | `id_card_number` | 105749346 |
-| Passport N | `passport_number` | bs5165582 |
-| Mobile Nu | `mobile_number` | 966xxxxxxxxx |
-| Nationalit | `nationality` | Saudi |
-| ID Expiry | `id_card_expiry_date` | 25-06-2027 |
-| Passport E | `passport_expiry_date` | 20/03/2027 |
-| Status | `status` | active |
-| Notes | `notes` | Sample practice |
-| Company ID | `employer_id` | ce25ee6c-9cc5-4da0-b31e-3b1ef7131dcf |
+| Your Column    | Maps To                | Example                              |
+| -------------- | ---------------------- | ------------------------------------ |
+| Name (EN)      | `name_en`              | asad shakeel                         |
+| Name (AR)      | `name_ar`              | اسد شکیل                             |
+| ID Card Number | `id_card_number`       | 105749346                            |
+| Passport N     | `passport_number`      | bs5165582                            |
+| Mobile Nu      | `mobile_number`        | 966xxxxxxxxx                         |
+| Nationalit     | `nationality`          | Saudi                                |
+| ID Expiry      | `id_card_expiry_date`  | 25-06-2027                           |
+| Passport E     | `passport_expiry_date` | 20/03/2027                           |
+| Status         | `status`               | active                               |
+| Notes          | `notes`                | Sample practice                      |
+| Company ID     | `employer_id`          | ce25ee6c-9cc5-4da0-b31e-3b1ef7131dcf |
 
 ### Step 2: Fix Data Issues
 
@@ -113,25 +116,30 @@ Based on your spreadsheet, here's how to map the columns:
 ### Common Issues:
 
 **1. "Invalid request data" error:**
-   - Check that column headers match exactly
-   - Ensure required fields are not empty
+
+- Check that column headers match exactly
+- Ensure required fields are not empty
 
 **2. "Duplicate promoter" messages:**
-   - Promoters with the same `id_card_number` already exist
-   - The system will skip them to prevent duplicates
+
+- Promoters with the same `id_card_number` already exist
+- The system will skip them to prevent duplicates
 
 **3. Date format errors:**
-   - Use: DD-MM-YYYY (e.g., 25-06-2027)
-   - Or: DD/MM/YYYY (e.g., 25/06/2027)  
-   - Or: YYYY-MM-DD (e.g., 2027-06-25)
+
+- Use: DD-MM-YYYY (e.g., 25-06-2027)
+- Or: DD/MM/YYYY (e.g., 25/06/2027)
+- Or: YYYY-MM-DD (e.g., 2027-06-25)
 
 **4. Email validation errors:**
-   - Ensure emails are in valid format: user@example.com
-   - Remove invalid emails or leave blank
+
+- Ensure emails are in valid format: user@example.com
+- Remove invalid emails or leave blank
 
 **5. Mobile number format:**
-   - Remove spaces and special characters
-   - Use country code format: 966501234567
+
+- Remove spaces and special characters
+- Use country code format: 966501234567
 
 ---
 
@@ -153,7 +161,6 @@ sagar aranakkal,سجر ارناكال,132891974,y2769195,966xxxxxxxxx,sagar@exam
 
 1. **Start with a small test:**
    - Import 2-3 records first to verify the format works
-   
 2. **Clean your data first:**
    - Remove any ###### errors in Excel
    - Fix mobile numbers that show as scientific notation
@@ -178,6 +185,7 @@ sagar aranakkal,سجر ارناكال,132891974,y2769195,966xxxxxxxxx,sagar@exam
 ## 📞 Need Help?
 
 If you encounter issues:
+
 1. Check the browser console (F12) for detailed error messages
 2. Verify your CSV format matches the template exactly
 3. Ensure all required fields have valid data
@@ -187,8 +195,8 @@ If you encounter issues:
 ## Next Steps After Import
 
 After successfully importing:
+
 1. Go to **Promoters page** to view imported records
 2. Verify the data is correct
 3. Update any missing information individually if needed
 4. Set up notifications for expiring documents
-

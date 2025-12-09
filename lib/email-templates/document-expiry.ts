@@ -79,13 +79,17 @@ export function documentExpiryEmail(data: {
                       </a>
                     </div>
 
-                    ${data.urgent ? `
+                    ${
+                      data.urgent
+                        ? `
                       <div style="background: #fee2e2; border: 2px solid #fca5a5; padding: 15px; border-radius: 6px; margin-top: 20px;">
                         <p style="margin: 0; color: #991b1b; font-weight: 600; font-size: 14px;">
                           ⚠️ <strong>Important:</strong> Expired documents may affect your employment status and contract validity.
                         </p>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                   </td>
                 </tr>
 
@@ -128,4 +132,3 @@ This is an automated notification from SmartPro Contract Management System.
     `,
   };
 }
-

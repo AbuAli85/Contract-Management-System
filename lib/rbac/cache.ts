@@ -289,7 +289,7 @@ class PermissionCache {
       // Try rbac_user_role_assignments view/table (works with both rbac_roles and roles)
       let roleAssignments: any[] | null = null;
       let rolesFetchError: any = null;
-      
+
       // First attempt: rbac_user_role_assignments with roles table (standard)
       try {
         const r = await supabase
@@ -312,14 +312,17 @@ class PermissionCache {
       }
 
       // Fallback: Try direct user_roles table query
-      if ((!roleAssignments || roleAssignments.length === 0) && rolesFetchError) {
+      if (
+        (!roleAssignments || roleAssignments.length === 0) &&
+        rolesFetchError
+      ) {
         try {
           const { data: userRoleData, error: urError } = await supabase
             .from('user_roles')
             .select('user_id, role')
             .eq('user_id', userId)
             .single();
-          
+
           if (!urError && userRoleData) {
             // Get role details by name
             const { data: roleData, error: roleError } = await supabase
@@ -327,12 +330,14 @@ class PermissionCache {
               .select('id, name, category')
               .eq('name', userRoleData.role)
               .single();
-            
+
             if (!roleError && roleData) {
-              roleAssignments = [{
-                role_id: roleData.id,
-                roles: roleData
-              }];
+              roleAssignments = [
+                {
+                  role_id: roleData.id,
+                  roles: roleData,
+                },
+              ];
               rolesFetchError = null;
             }
           }
@@ -354,7 +359,9 @@ class PermissionCache {
       const roles = roleAssignments.map(
         ra =>
           // Handle both table naming conventions
-          (ra.roles?.name as string) || (ra.rbac_roles?.name as string) || 'unknown'
+          (ra.roles?.name as string) ||
+          (ra.rbac_roles?.name as string) ||
+          'unknown'
       );
 
       // Get permissions for these roles (standard tables)

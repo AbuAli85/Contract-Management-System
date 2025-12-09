@@ -1,9 +1,9 @@
 /**
  * Real Promoter Analytics Service
- * 
+ *
  * Replaces mock data with actual database calculations
  * Provides comprehensive analytics and statistics for promoters
- * 
+ *
  * Features:
  * - Real-time performance statistics
  * - Document expiry tracking
@@ -93,10 +93,10 @@ function getDateThresholds() {
   const now = new Date();
   const thirtyDaysFromNow = new Date(now);
   thirtyDaysFromNow.setDate(now.getDate() + 30);
-  
+
   const ninetyDaysFromNow = new Date(now);
   ninetyDaysFromNow.setDate(now.getDate() + 90);
-  
+
   return {
     now: now.toISOString(),
     thirtyDaysFromNow: thirtyDaysFromNow.toISOString(),
@@ -151,8 +151,10 @@ export async function calculatePromoterPerformanceStats(
     }
 
     // Build promoter query with filters
-    let promoterQuery = supabase.from('promoters').select('*', { count: 'exact' });
-    
+    let promoterQuery = supabase
+      .from('promoters')
+      .select('*', { count: 'exact' });
+
     if (filters?.status) {
       promoterQuery = promoterQuery.eq('status', filters.status);
     }
@@ -165,7 +167,7 @@ export async function calculatePromoterPerformanceStats(
 
     // Build contract query
     let contractQuery = supabase.from('contracts').select('*');
-    
+
     if (filters?.dateFrom) {
       contractQuery = contractQuery.gte('start_date', filters.dateFrom);
     }
@@ -187,14 +189,8 @@ export async function calculatePromoterPerformanceStats(
         .select('*', { count: 'exact', head: true })
         .eq('status', 'active'),
       contractQuery,
-      supabase
-        .from('contracts')
-        .select('*')
-        .eq('status', 'active'),
-      supabase
-        .from('contracts')
-        .select('*')
-        .eq('status', 'completed'),
+      supabase.from('contracts').select('*').eq('status', 'active'),
+      supabase.from('contracts').select('*').eq('status', 'completed'),
     ]);
 
     // Handle errors
@@ -215,31 +211,41 @@ export async function calculatePromoterPerformanceStats(
     const completedContracts = completedContractsResult.data?.length || 0;
 
     // Calculate total contract value
-    const totalContractValue = allContracts.reduce((sum: number, contract: any) => {
-      const value = parseFloat(contract.contract_value || '0');
-      return sum + value;
-    }, 0);
+    const totalContractValue = allContracts.reduce(
+      (sum: number, contract: any) => {
+        const value = parseFloat(contract.contract_value || '0');
+        return sum + value;
+      },
+      0
+    );
 
     // Calculate average contract duration (in days)
     const contractsWithDates = allContracts.filter(
       (c: any) => c.start_date && c.end_date
     );
-    
-    const totalDuration = contractsWithDates.reduce((sum: number, contract: any) => {
-      const start = new Date(contract.start_date);
-      const end = new Date(contract.end_date);
-      const duration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      return sum + duration;
-    }, 0);
-    
-    const averageContractDuration = contractsWithDates.length > 0
-      ? Math.round(totalDuration / contractsWithDates.length)
-      : 0;
+
+    const totalDuration = contractsWithDates.reduce(
+      (sum: number, contract: any) => {
+        const start = new Date(contract.start_date);
+        const end = new Date(contract.end_date);
+        const duration = Math.floor(
+          (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return sum + duration;
+      },
+      0
+    );
+
+    const averageContractDuration =
+      contractsWithDates.length > 0
+        ? Math.round(totalDuration / contractsWithDates.length)
+        : 0;
 
     // Calculate contract completion rate
-    const contractCompletionRate = totalContracts > 0
-      ? calculatePercentage(completedContracts, totalContracts)
-      : 0;
+    const contractCompletionRate =
+      totalContracts > 0
+        ? calculatePercentage(completedContracts, totalContracts)
+        : 0;
 
     const stats: PerformanceStats = {
       totalPromoters,
@@ -258,7 +264,10 @@ export async function calculatePromoterPerformanceStats(
     console.error('Error calculating performance stats:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate performance stats',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to calculate performance stats',
     };
   }
 }
@@ -287,7 +296,7 @@ export async function getDocumentExpiryStats(
     let query = supabase
       .from('promoters')
       .select('id_card_expiry_date, passport_expiry_date');
-    
+
     if (filters?.status) {
       query = query.eq('status', filters.status);
     }
@@ -311,13 +320,25 @@ export async function getDocumentExpiryStats(
     let idCardsExpiringSoon = 0;
     let passportsExpiringSoon = 0;
 
-    data?.forEach((promoter) => {
+    data?.forEach(promoter => {
       const idCardExpired = isExpired(promoter.id_card_expiry_date);
       const passportExpired = isExpired(promoter.passport_expiry_date);
-      const idCardExpiringSoon = isExpiringSoon(promoter.id_card_expiry_date, 30);
-      const passportExpiringSoon = isExpiringSoon(promoter.passport_expiry_date, 30);
-      const idCardExpiryWarning = isExpiringSoon(promoter.id_card_expiry_date, 90);
-      const passportExpiryWarning = isExpiringSoon(promoter.passport_expiry_date, 90);
+      const idCardExpiringSoon = isExpiringSoon(
+        promoter.id_card_expiry_date,
+        30
+      );
+      const passportExpiringSoon = isExpiringSoon(
+        promoter.passport_expiry_date,
+        30
+      );
+      const idCardExpiryWarning = isExpiringSoon(
+        promoter.id_card_expiry_date,
+        90
+      );
+      const passportExpiryWarning = isExpiringSoon(
+        promoter.passport_expiry_date,
+        90
+      );
 
       // Count expired documents
       if (idCardExpired) {
@@ -348,8 +369,14 @@ export async function getDocumentExpiryStats(
       }
 
       // Count up to date
-      if (!idCardExpired && !idCardExpiringSoon && !idCardExpiryWarning &&
-          !passportExpired && !passportExpiringSoon && !passportExpiryWarning) {
+      if (
+        !idCardExpired &&
+        !idCardExpiringSoon &&
+        !idCardExpiryWarning &&
+        !passportExpired &&
+        !passportExpiringSoon &&
+        !passportExpiryWarning
+      ) {
         upToDate++;
       }
     });
@@ -370,7 +397,10 @@ export async function getDocumentExpiryStats(
     console.error('Error calculating document expiry stats:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate expiry stats',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to calculate expiry stats',
     };
   }
 }
@@ -395,7 +425,7 @@ export async function getStatusDistribution(
     }
 
     let query = supabase.from('promoters').select('status');
-    
+
     if (filters?.workLocation) {
       query = query.eq('work_location', filters.workLocation);
     }
@@ -433,7 +463,10 @@ export async function getStatusDistribution(
     console.error('Error calculating status distribution:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate status distribution',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to calculate status distribution',
     };
   }
 }
@@ -454,7 +487,7 @@ export async function getLocationDistribution(
     }
 
     let query = supabase.from('promoters').select('work_location');
-    
+
     if (filters?.status) {
       query = query.eq('status', filters.status);
     }
@@ -476,13 +509,13 @@ export async function getLocationDistribution(
     const total = data?.length || 0;
 
     // Convert to distribution array
-    const distribution: LocationDistribution[] = Object.entries(locationCounts).map(
-      ([location, count]) => ({
-        location,
-        count,
-        percentage: calculatePercentage(count, total),
-      })
-    );
+    const distribution: LocationDistribution[] = Object.entries(
+      locationCounts
+    ).map(([location, count]) => ({
+      location,
+      count,
+      percentage: calculatePercentage(count, total),
+    }));
 
     // Sort by count descending
     distribution.sort((a, b) => b.count - a.count);
@@ -492,7 +525,10 @@ export async function getLocationDistribution(
     console.error('Error calculating location distribution:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate location distribution',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to calculate location distribution',
     };
   }
 }
@@ -512,8 +548,10 @@ export async function getEmployerDistribution(
       };
     }
 
-    let query = supabase.from('promoters').select('employer_id, employers(name_en)');
-    
+    let query = supabase
+      .from('promoters')
+      .select('employer_id, employers(name_en)');
+
     if (filters?.status) {
       query = query.eq('status', filters.status);
     }
@@ -527,11 +565,11 @@ export async function getEmployerDistribution(
 
     // Count by employer
     const employerCounts: Record<string, { name: string; count: number }> = {};
-    
+
     data?.forEach((promoter: any) => {
       const employerId = promoter.employer_id || 'unassigned';
       const employerName = promoter.employers?.name_en || 'Unassigned';
-      
+
       if (!employerCounts[employerId]) {
         employerCounts[employerId] = { name: employerName, count: 0 };
       }
@@ -541,14 +579,14 @@ export async function getEmployerDistribution(
     const total = data?.length || 0;
 
     // Convert to distribution array
-    const distribution: EmployerDistribution[] = Object.entries(employerCounts).map(
-      ([employerId, { name, count }]) => ({
-        employerId,
-        employerName: name,
-        count,
-        percentage: calculatePercentage(count, total),
-      })
-    );
+    const distribution: EmployerDistribution[] = Object.entries(
+      employerCounts
+    ).map(([employerId, { name, count }]) => ({
+      employerId,
+      employerName: name,
+      count,
+      percentage: calculatePercentage(count, total),
+    }));
 
     // Sort by count descending
     distribution.sort((a, b) => b.count - a.count);
@@ -558,7 +596,10 @@ export async function getEmployerDistribution(
     console.error('Error calculating employer distribution:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate employer distribution',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to calculate employer distribution',
     };
   }
 }
@@ -620,8 +661,10 @@ export async function getComprehensiveAnalytics(
     console.error('Error getting comprehensive analytics:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get comprehensive analytics',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to get comprehensive analytics',
     };
   }
 }
-

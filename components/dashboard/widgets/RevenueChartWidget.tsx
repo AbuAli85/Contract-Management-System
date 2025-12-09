@@ -8,14 +8,13 @@ export function RevenueChartWidget(props: WidgetProps) {
   return (
     <BaseWidget
       {...props}
-      title="Revenue Chart"
-      description="Revenue trends"
-      icon={<TrendingUp className="h-4 w-4" />}
+      title='Revenue Chart'
+      description='Revenue trends'
+      icon={<TrendingUp className='h-4 w-4' />}
     >
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p className="text-sm">Coming soon...</p>
+      <div className='flex items-center justify-center h-full text-muted-foreground'>
+        <p className='text-sm'>Coming soon...</p>
       </div>
     </BaseWidget>
   );
 }
-

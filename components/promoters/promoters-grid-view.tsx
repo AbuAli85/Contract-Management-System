@@ -102,33 +102,37 @@ function PromoterGridCard({
       )}
       onClick={() => onView()}
     >
-      <CardContent className="p-4">
+      <CardContent className='p-4'>
         {/* Header with checkbox and actions */}
-        <div className="flex items-start justify-between mb-3">
+        <div className='flex items-start justify-between mb-3'>
           <Checkbox
             checked={isSelected}
             onCheckedChange={onSelect}
-            onClick={(e: React.MouseEvent<HTMLInputElement>) => e.stopPropagation()}
-            className="mt-1"
+            onClick={(e: React.MouseEvent<HTMLInputElement>) =>
+              e.stopPropagation()
+            }
+            className='mt-1'
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8 text-muted-foreground hover:text-foreground'
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                  e.stopPropagation()
+                }
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align='end'>
               <DropdownMenuItem onClick={onView}>
-                <Eye className="h-4 w-4 mr-2" />
+                <Eye className='h-4 w-4 mr-2' />
                 View Profile
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className='h-4 w-4 mr-2' />
                 Edit Details
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -136,31 +140,31 @@ function PromoterGridCard({
         </div>
 
         {/* Avatar and Name */}
-        <div className="flex flex-col items-center text-center mb-4">
+        <div className='flex flex-col items-center text-center mb-4'>
           <SafeImage
             src={promoter.profile_picture_url ?? null}
             alt={promoter.displayName}
             width={64}
             height={64}
-            className="h-16 w-16 mb-3 transition-transform group-hover:scale-105"
+            className='h-16 w-16 mb-3 transition-transform group-hover:scale-105'
             fallback={
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                <Users className="h-8 w-8" />
+              <div className='flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500'>
+                <Users className='h-8 w-8' />
               </div>
             }
           />
-          <h3 className="font-semibold text-sm leading-tight mb-1 line-clamp-1">
+          <h3 className='font-semibold text-sm leading-tight mb-1 line-clamp-1'>
             {promoter.displayName}
           </h3>
-          <p className="text-xs text-muted-foreground line-clamp-1">
+          <p className='text-xs text-muted-foreground line-clamp-1'>
             {promoter.job_title || promoter.organisationLabel || '—'}
           </p>
         </div>
 
         {/* Status Badge */}
-        <div className="flex justify-center mb-3">
+        <div className='flex justify-center mb-3'>
           <Badge
-            variant="outline"
+            variant='outline'
             className={cn(
               'rounded-full px-2.5 py-0.5 text-xs font-medium',
               OVERALL_STATUS_BADGES[promoter.overallStatus]
@@ -171,13 +175,13 @@ function PromoterGridCard({
         </div>
 
         {/* Key Info */}
-        <div className="space-y-2 text-xs">
+        <div className='space-y-2 text-xs'>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 text-muted-foreground truncate">
-                  <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span className="truncate">
+                <div className='flex items-center gap-2 text-muted-foreground truncate'>
+                  <Building2 className='h-3.5 w-3.5 flex-shrink-0' />
+                  <span className='truncate'>
                     {promoter.assignmentStatus === 'assigned'
                       ? promoter.organisationLabel
                       : 'Unassigned'}
@@ -185,7 +189,7 @@ function PromoterGridCard({
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-xs">
+                <p className='text-xs'>
                   {promoter.assignmentStatus === 'assigned'
                     ? promoter.organisationLabel
                     : 'Not assigned to any company'}
@@ -197,9 +201,9 @@ function PromoterGridCard({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 text-muted-foreground truncate">
-                  <StatusIcon className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span className="truncate">
+                <div className='flex items-center gap-2 text-muted-foreground truncate'>
+                  <StatusIcon className='h-3.5 w-3.5 flex-shrink-0' />
+                  <span className='truncate'>
                     {promoter.idDocument.status === 'valid'
                       ? 'Documents OK'
                       : promoter.idDocument.status === 'expiring'
@@ -211,7 +215,7 @@ function PromoterGridCard({
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <div className="text-xs space-y-1">
+                <div className='text-xs space-y-1'>
                   <p>ID: {promoter.idDocument.label}</p>
                   <p>Passport: {promoter.passportDocument.label}</p>
                 </div>
@@ -232,11 +236,14 @@ export function PromotersGridView({
   onEditPromoter,
 }: PromotersGridViewProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4" data-view-mode="grid">
+    <div
+      className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4'
+      data-view-mode='grid'
+    >
       {promoters.map((promoter, index) => (
         <div
           key={promoter.id}
-          className="animate-in fade-in slide-in-from-bottom-4"
+          className='animate-in fade-in slide-in-from-bottom-4'
           style={{
             animationDelay: `${index * 30}ms`,
             animationDuration: '400ms',
@@ -255,4 +262,3 @@ export function PromotersGridView({
     </div>
   );
 }
-

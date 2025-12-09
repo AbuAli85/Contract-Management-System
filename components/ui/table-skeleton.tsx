@@ -31,7 +31,7 @@ export function TableSkeleton({
           <TableRow>
             {Array.from({ length: columns }).map((_, i) => (
               <TableHead key={i}>
-                <Skeleton className="h-4 w-24" />
+                <Skeleton className='h-4 w-24' />
               </TableHead>
             ))}
           </TableRow>
@@ -42,7 +42,7 @@ export function TableSkeleton({
           <TableRow key={rowIndex}>
             {Array.from({ length: columns }).map((_, colIndex) => (
               <TableCell key={colIndex}>
-                <Skeleton className="h-4 w-full" />
+                <Skeleton className='h-4 w-full' />
               </TableCell>
             ))}
           </TableRow>
@@ -55,7 +55,7 @@ export function TableSkeleton({
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-32" />
+          <Skeleton className='h-6 w-32' />
         </CardHeader>
         <CardContent>{content}</CardContent>
       </Card>
@@ -64,4 +64,3 @@ export function TableSkeleton({
 
   return content;
 }
-

@@ -17,12 +17,17 @@ import {
   CheckCircle,
   TrendingUp,
 } from 'lucide-react';
-import { TrendIndicator, type TrendData } from '@/components/ui/trend-indicator';
+import {
+  TrendIndicator,
+  type TrendData,
+} from '@/components/ui/trend-indicator';
 import type { DashboardMetrics } from './types';
 
 interface PromotersMetricsCardsProps {
   metrics: DashboardMetrics;
-  onCardClick?: (filterType: 'all' | 'active' | 'alerts' | 'compliance') => void;
+  onCardClick?: (
+    filterType: 'all' | 'active' | 'alerts' | 'compliance'
+  ) => void;
   activeFilter?: 'all' | 'active' | 'alerts' | 'compliance' | null;
   trends?: {
     totalPromoters?: TrendData | null;
@@ -98,13 +103,14 @@ function EnhancedStatCard({
     <Card
       className={cn(
         'shadow-sm overflow-hidden transition-all duration-300 relative',
-        isClickable && 'cursor-pointer hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.98]',
+        isClickable &&
+          'cursor-pointer hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.98]',
         !isClickable && 'hover:shadow-lg hover:scale-105',
         isActive && 'ring-2 ring-primary ring-offset-2 shadow-xl',
         styles.container
       )}
       onClick={onClick}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick();
@@ -116,8 +122,8 @@ function EnhancedStatCard({
       aria-pressed={isClickable && isActive ? true : undefined}
     >
       {isActive && (
-        <div className="absolute top-2 right-2">
-          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+        <div className='absolute top-2 right-2'>
+          <div className='h-2 w-2 rounded-full bg-primary animate-pulse' />
         </div>
       )}
       <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-3'>
@@ -152,19 +158,19 @@ function EnhancedStatCard({
       </CardHeader>
       <CardContent className='space-y-2'>
         {helper && <p className='text-sm text-muted-foreground'>{helper}</p>}
-        
+
         {/* Historical Trend Indicator (new feature) */}
         {trendData && (
           <TrendIndicator
             trend={trendData}
             comparisonPeriod={trendLabel}
-            variant="detailed"
+            variant='detailed'
             showPercent={true}
             invertColors={invertTrendColors}
-            className="w-full justify-center"
+            className='w-full justify-center'
           />
         )}
-        
+
         {/* Legacy trend display (keep for backwards compatibility) */}
         {trend && !trendData && (
           <div className='flex items-center gap-2 rounded-lg bg-green-50/50 p-2 text-xs text-green-700'>
@@ -179,7 +185,7 @@ function EnhancedStatCard({
   );
 }
 
-export function PromotersMetricsCards({ 
+export function PromotersMetricsCards({
   metrics,
   onCardClick,
   activeFilter,

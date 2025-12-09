@@ -117,10 +117,7 @@ export function useWindowSize(debounceMs: number = 150) {
 /**
  * Prefetch hook for data prefetching
  */
-export function usePrefetch<T>(
-  fetchFn: () => Promise<T>,
-  delay: number = 500
-) {
+export function usePrefetch<T>(fetchFn: () => Promise<T>, delay: number = 500) {
   const [isPrefetching, setIsPrefetching] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -193,7 +190,10 @@ export function useOptimisticUpdate<T>(
 export function createDeduplicatedFetcher<T>() {
   const cache = new Map<string, Promise<T>>();
 
-  return async function fetch(key: string, fetcher: () => Promise<T>): Promise<T> {
+  return async function fetch(
+    key: string,
+    fetcher: () => Promise<T>
+  ): Promise<T> {
     if (cache.has(key)) {
       return cache.get(key)!;
     }
@@ -278,7 +278,7 @@ export function useBatchedUpdates<T>(
       }
 
       timeoutRef.current = setTimeout(() => {
-        setValue((prev) => ({
+        setValue(prev => ({
           ...prev,
           ...pendingUpdatesRef.current,
         }));
@@ -294,7 +294,7 @@ export function useBatchedUpdates<T>(
     }
 
     if (Object.keys(pendingUpdatesRef.current).length > 0) {
-      setValue((prev) => ({
+      setValue(prev => ({
         ...prev,
         ...pendingUpdatesRef.current,
       }));
@@ -316,7 +316,10 @@ export function useBatchedUpdates<T>(
 /**
  * Idle callback hook - run tasks when browser is idle
  */
-export function useIdleCallback(callback: () => void, dependencies: any[] = []) {
+export function useIdleCallback(
+  callback: () => void,
+  dependencies: any[] = []
+) {
   useEffect(() => {
     if (typeof window === 'undefined' || !('requestIdleCallback' in window)) {
       // Fallback for browsers that don't support requestIdleCallback
@@ -329,4 +332,3 @@ export function useIdleCallback(callback: () => void, dependencies: any[] = []) 
     return () => window.cancelIdleCallback(handle);
   }, dependencies);
 }
-

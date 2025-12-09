@@ -17,12 +17,13 @@ This checklist ensures your authentication and session management follows securi
 ### Supabase Cookie Settings
 
 #### Current Configuration Check
+
 Verify your Supabase client configuration includes secure cookie settings:
 
 ```typescript
 // Location: lib/supabase/client.ts or similar
 
-import { createBrowserClient } from '@supabase/ssr'
+import { createBrowserClient } from '@supabase/ssr';
 
 export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,27 +32,27 @@ export const supabase = createBrowserClient(
     auth: {
       // Cookie configuration
       storage: {
-        getItem: (key) => {
+        getItem: key => {
           // Custom cookie implementation
         },
         setItem: (key, value) => {
           // Ensure cookies are set with secure flags
         },
-        removeItem: (key) => {
+        removeItem: key => {
           // Proper cleanup
-        }
+        },
       },
       // Flow type
       flowType: 'pkce', // ✅ Use PKCE for better security
-      
+
       // Auto refresh settings
       autoRefreshToken: true,
-      
+
       // Persist session
       persistSession: true,
-      
+
       // Detect session in URL (useful for email confirmations)
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
     },
     // Cookie options for SSR
     cookieOptions: {
@@ -60,9 +61,9 @@ export const supabase = createBrowserClient(
       domain: '.thesmartpro.io', // Set your domain
       path: '/',
       sameSite: 'lax', // or 'strict' for maximum security
-    }
+    },
   }
-)
+);
 ```
 
 ### Required Cookie Attributes
@@ -70,30 +71,37 @@ export const supabase = createBrowserClient(
 Ensure all authentication cookies have these attributes:
 
 - [ ] **`Secure`** - Cookie only sent over HTTPS
+
   ```javascript
   Set-Cookie: sb-auth-token=...; Secure
   ```
 
 - [ ] **`HttpOnly`** - Cookie not accessible via JavaScript
+
   ```javascript
   Set-Cookie: sb-auth-token=...; HttpOnly
   ```
 
 - [ ] **`SameSite=Strict` or `SameSite=Lax`** - CSRF protection
+
   ```javascript
   Set-Cookie: sb-auth-token=...; SameSite=Lax
   ```
+
   - Use `Strict` if all navigation is same-origin
   - Use `Lax` if you have email links that authenticate users
 
 - [ ] **`Max-Age` or `Expires`** - Session timeout
+
   ```javascript
   Set-Cookie: sb-auth-token=...; Max-Age=3600
   ```
+
   - Recommended: 1-24 hours for session tokens
   - Recommended: 7-30 days for refresh tokens
 
 - [ ] **`Domain`** - Properly scoped to your domain
+
   ```javascript
   Set-Cookie: sb-auth-token=...; Domain=.thesmartpro.io
   ```
@@ -104,6 +112,7 @@ Ensure all authentication cookies have these attributes:
   ```
 
 ### Example: Ideal Cookie Header
+
 ```
 Set-Cookie: sb-access-token=eyJhbGc...; Path=/; Domain=.thesmartpro.io; Secure; HttpOnly; SameSite=Lax; Max-Age=3600
 Set-Cookie: sb-refresh-token=eyJhbGc...; Path=/; Domain=.thesmartpro.io; Secure; HttpOnly; SameSite=Strict; Max-Age=604800
@@ -145,16 +154,16 @@ Set-Cookie: sb-refresh-token=eyJhbGc...; Path=/; Domain=.thesmartpro.io; Secure;
 const SESSION_CONFIG = {
   // Access token lifetime (short)
   accessTokenLifetime: 60 * 60, // 1 hour
-  
+
   // Refresh token lifetime (longer)
   refreshTokenLifetime: 60 * 60 * 24 * 7, // 7 days
-  
+
   // Absolute session timeout (maximum session duration)
   absoluteTimeout: 60 * 60 * 24 * 30, // 30 days
-  
+
   // Idle timeout (inactivity timeout)
   idleTimeout: 60 * 30, // 30 minutes
-  
+
   // Remember me duration (if implemented)
   rememberMeDuration: 60 * 60 * 24 * 30, // 30 days
 };
@@ -182,7 +191,7 @@ const SESSION_CONFIG = {
   // Example: Require MFA for sensitive actions
   async function requireMFA(userId: string, action: string) {
     const user = await getUser(userId);
-    
+
     // Check if user has MFA enabled
     if (user.mfa_enabled) {
       // Require MFA verification
@@ -207,9 +216,9 @@ import { supabase } from '@/lib/supabase/client';
 async function enrollMFA() {
   const { data, error } = await supabase.auth.mfa.enroll({
     factorType: 'totp',
-    friendlyName: 'My Authenticator App'
+    friendlyName: 'My Authenticator App',
   });
-  
+
   if (data) {
     // Show QR code to user
     const { qr_code, secret, totp_uri } = data;
@@ -221,16 +230,16 @@ async function enrollMFA() {
 async function verifyMFA(code: string) {
   const factors = await supabase.auth.mfa.listFactors();
   const totpFactor = factors.data?.totp[0];
-  
+
   if (totpFactor) {
     const { data, error } = await supabase.auth.mfa.verify({
       factorId: totpFactor.id,
-      code: code
+      code: code,
     });
-    
+
     return !error;
   }
-  
+
   return false;
 }
 ```
@@ -240,6 +249,7 @@ async function verifyMFA(code: string) {
 ## 🚫 Rate Limiting
 
 ### Current Implementation
+
 Location: `middleware.ts`
 
 ```typescript
@@ -261,33 +271,33 @@ const ENHANCED_RATE_LIMIT_CONFIG = {
     maxRequests: 5, // 5 attempts per 15 minutes
     blockDuration: 60 * 60 * 1000, // Block for 1 hour after limit
   },
-  
+
   '/api/auth/signup': {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 3, // 3 signups per hour per IP
   },
-  
+
   '/api/auth/forgot-password': {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 3, // 3 password reset requests per hour
   },
-  
+
   '/api/auth/verify-email': {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 5, // 5 verification attempts per hour
   },
-  
+
   // Sensitive operations
   '/api/contracts': {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 60, // 60 requests per minute
   },
-  
+
   '/api/promoters': {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 60, // 60 requests per minute
   },
-  
+
   // Global API rate limit
   '/api/*': {
     windowMs: 60 * 1000, // 1 minute
@@ -302,27 +312,26 @@ Your project already includes `@upstash/ratelimit`. Implement it:
 
 ```typescript
 // lib/rate-limit.ts
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 // Create rate limiter
 export const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
+  limiter: Ratelimit.slidingWindow(10, '10 s'),
   analytics: true,
-  prefix: "@upstash/ratelimit",
+  prefix: '@upstash/ratelimit',
 });
 
 // Usage in API routes
 export async function checkRateLimit(identifier: string) {
-  const { success, limit, reset, remaining } = await ratelimit.limit(
-    identifier
-  );
-  
+  const { success, limit, reset, remaining } =
+    await ratelimit.limit(identifier);
+
   if (!success) {
     throw new Error('Rate limit exceeded');
   }
-  
+
   return { limit, reset, remaining };
 }
 ```
@@ -348,19 +357,17 @@ interface LoginAttempt {
 
 export async function logLoginAttempt(attempt: LoginAttempt) {
   // Log to database
-  const { data, error } = await supabase
-    .from('login_attempts')
-    .insert({
-      user_id: attempt.user_id,
-      email: attempt.email,
-      ip_address: attempt.ip_address,
-      user_agent: attempt.user_agent,
-      success: attempt.success,
-      failure_reason: attempt.failure_reason,
-      timestamp: attempt.timestamp,
-      location: attempt.location,
-    });
-    
+  const { data, error } = await supabase.from('login_attempts').insert({
+    user_id: attempt.user_id,
+    email: attempt.email,
+    ip_address: attempt.ip_address,
+    user_agent: attempt.user_agent,
+    success: attempt.success,
+    failure_reason: attempt.failure_reason,
+    timestamp: attempt.timestamp,
+    location: attempt.location,
+  });
+
   // Optional: Alert on suspicious activity
   if (!attempt.success) {
     await checkForBruteForce(attempt.email, attempt.ip_address);
@@ -370,14 +377,14 @@ export async function logLoginAttempt(attempt: LoginAttempt) {
 async function checkForBruteForce(email: string, ip: string) {
   // Check last 10 minutes
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-  
+
   const { data: recentFailures } = await supabase
     .from('login_attempts')
     .select('*')
     .eq('email', email)
     .eq('success', false)
     .gte('timestamp', tenMinutesAgo.toISOString());
-    
+
   if (recentFailures && recentFailures.length >= 5) {
     // Alert security team
     await sendSecurityAlert({
@@ -386,7 +393,7 @@ async function checkForBruteForce(email: string, ip: string) {
       ip,
       attempts: recentFailures.length,
     });
-    
+
     // Consider account lockout
     await lockAccount(email, '15 minutes');
   }
@@ -407,7 +414,7 @@ CREATE TABLE login_attempts (
   failure_reason TEXT,
   location TEXT,
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
+
   -- Indexes for performance
   INDEX idx_login_attempts_email ON login_attempts(email),
   INDEX idx_login_attempts_ip ON login_attempts(ip_address),
@@ -455,24 +462,24 @@ CREATE POLICY "System can insert login attempts"
 // Get security metrics
 async function getSecurityMetrics() {
   const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  
+
   // Failed login attempts
   const { count: failedLogins } = await supabase
     .from('login_attempts')
     .select('*', { count: 'exact', head: true })
     .eq('success', false)
     .gte('timestamp', last24Hours.toISOString());
-    
+
   // MFA adoption
   const { count: totalUsers } = await supabase
     .from('users')
     .select('*', { count: 'exact', head: true });
-    
+
   const { count: mfaUsers } = await supabase
     .from('users')
     .select('*', { count: 'exact', head: true })
     .eq('mfa_enabled', true);
-    
+
   return {
     failedLogins,
     mfaAdoptionRate: totalUsers > 0 ? (mfaUsers / totalUsers) * 100 : 0,
@@ -519,6 +526,7 @@ curl -X POST https://portal.thesmartpro.io/api/contracts \
 ## 🚀 Implementation Priority
 
 ### High Priority (Do Now)
+
 1. ✅ Verify Supabase cookie configuration (Secure, HttpOnly, SameSite)
 2. ⬜ Enable MFA for all admin accounts
 3. ⬜ Implement login attempt logging
@@ -526,6 +534,7 @@ curl -X POST https://portal.thesmartpro.io/api/contracts \
 5. ⬜ Configure session timeouts
 
 ### Medium Priority (This Week)
+
 6. ⬜ Create security monitoring dashboard
 7. ⬜ Implement brute force detection
 8. ⬜ Set up security alerts
@@ -533,6 +542,7 @@ curl -X POST https://portal.thesmartpro.io/api/contracts \
 10. ⬜ Test all security measures
 
 ### Low Priority (This Month)
+
 11. ⬜ Implement IP geolocation for login attempts
 12. ⬜ Add device fingerprinting
 13. ⬜ Implement suspicious activity alerts
@@ -551,4 +561,3 @@ curl -X POST https://portal.thesmartpro.io/api/contracts \
 
 **Last Updated:** October 24, 2025  
 **Next Review:** November 24, 2025
-

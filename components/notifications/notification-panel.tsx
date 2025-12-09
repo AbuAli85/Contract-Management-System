@@ -35,7 +35,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 // Notification types
-export type NotificationType = 
+export type NotificationType =
   | 'contract_expiring'
   | 'pending_approval'
   | 'promoter_added'
@@ -61,7 +61,9 @@ interface NotificationPanelProps {
   unreadCount?: number;
 }
 
-export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: NotificationPanelProps) {
+export function NotificationPanel({
+  unreadCount: initialUnreadCount = 0,
+}: NotificationPanelProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,7 +79,7 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
   // Set up real-time updates with Supabase
   useEffect(() => {
     const supabase = createClient();
-    
+
     if (!supabase) {
       console.warn('Supabase client not available for real-time notifications');
       return;
@@ -97,7 +99,7 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
             schema: 'public',
             table: 'contracts',
           },
-          (payload) => {
+          payload => {
             console.log('📬 Contract change detected:', payload);
             // Refresh notifications when contracts change
             if (open) {
@@ -117,7 +119,7 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
             schema: 'public',
             table: 'promoters',
           },
-          (payload) => {
+          payload => {
             console.log('📬 Promoter change detected:', payload);
             // Refresh notifications when promoters change
             if (open) {
@@ -147,19 +149,21 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
       const response = await fetch('/api/dashboard/notifications');
       if (response.ok) {
         const data = await response.json();
-        
+
         // Map API notifications to our format
-        const mappedNotifications = (data.notifications || []).map((n: any) => ({
-          id: n.id,
-          type: mapCategoryToType(n.category, n.type),
-          title: n.title,
-          description: n.message,
-          timestamp: n.timestamp,
-          read: n.read,
-          action_url: n.action?.url,
-          metadata: n.metadata,
-        }));
-        
+        const mappedNotifications = (data.notifications || []).map(
+          (n: any) => ({
+            id: n.id,
+            type: mapCategoryToType(n.category, n.type),
+            title: n.title,
+            description: n.message,
+            timestamp: n.timestamp,
+            read: n.read,
+            action_url: n.action?.url,
+            metadata: n.metadata,
+          })
+        );
+
         setNotifications(mappedNotifications);
         setUnreadCount(data.summary?.unread || 0);
       } else {
@@ -177,9 +181,13 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
     }
   };
 
-  const mapCategoryToType = (category: string, apiType: string): NotificationType => {
+  const mapCategoryToType = (
+    category: string,
+    apiType: string
+  ): NotificationType => {
     if (category === 'contract') {
-      if (apiType === 'warning' || apiType === 'error') return 'contract_expiring';
+      if (apiType === 'warning' || apiType === 'error')
+        return 'contract_expiring';
       return 'contract_created';
     }
     if (category === 'promoter') return 'promoter_added';
@@ -191,15 +199,16 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await fetch(`/api/dashboard/notifications/${notificationId}/read`, {
-        method: 'PATCH',
-      });
+      const response = await fetch(
+        `/api/dashboard/notifications/${notificationId}/read`,
+        {
+          method: 'PATCH',
+        }
+      );
 
       if (response.ok) {
         setNotifications(prev =>
-          prev.map(n =>
-            n.id === notificationId ? { ...n, read: true } : n
-          )
+          prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
         );
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
@@ -210,14 +219,15 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetch('/api/dashboard/notifications/mark-all-read', {
-        method: 'PATCH',
-      });
+      const response = await fetch(
+        '/api/dashboard/notifications/mark-all-read',
+        {
+          method: 'PATCH',
+        }
+      );
 
       if (response.ok) {
-        setNotifications(prev =>
-          prev.map(n => ({ ...n, read: true }))
-        );
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);
         toast({
           title: 'Success',
@@ -236,12 +246,16 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
 
   const deleteNotification = async (notificationId: string) => {
     try {
-      const response = await fetch(`/api/dashboard/notifications/${notificationId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/dashboard/notifications/${notificationId}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (response.ok) {
-        const wasUnread = notifications.find(n => n.id === notificationId)?.read === false;
+        const wasUnread =
+          notifications.find(n => n.id === notificationId)?.read === false;
         setNotifications(prev => prev.filter(n => n.id !== notificationId));
         if (wasUnread) {
           setUnreadCount(prev => Math.max(0, prev - 1));
@@ -285,23 +299,23 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
     switch (type) {
       case 'contract_expiring':
       case 'contract_created':
-        return <FileText className="h-5 w-5 text-blue-500" />;
+        return <FileText className='h-5 w-5 text-blue-500' />;
       case 'pending_approval':
-        return <Clock className="h-5 w-5 text-orange-500" />;
+        return <Clock className='h-5 w-5 text-orange-500' />;
       case 'promoter_added':
-        return <Users className="h-5 w-5 text-green-500" />;
+        return <Users className='h-5 w-5 text-green-500' />;
       case 'document_expiring':
-        return <Calendar className="h-5 w-5 text-amber-500" />;
+        return <Calendar className='h-5 w-5 text-amber-500' />;
       case 'system_update':
-        return <Settings className="h-5 w-5 text-purple-500" />;
+        return <Settings className='h-5 w-5 text-purple-500' />;
       case 'party_added':
-        return <Building2 className="h-5 w-5 text-indigo-500" />;
+        return <Building2 className='h-5 w-5 text-indigo-500' />;
       case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className='h-5 w-5 text-red-500' />;
       case 'success':
-        return <Check className="h-5 w-5 text-green-500" />;
+        return <Check className='h-5 w-5 text-green-500' />;
       default:
-        return <Bell className="h-5 w-5 text-gray-500" />;
+        return <Bell className='h-5 w-5 text-gray-500' />;
     }
   };
 
@@ -329,26 +343,26 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button variant='ghost' size='sm' className='relative'>
+          <Bell className='h-5 w-5' />
           {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+            <Badge
+              variant='destructive'
+              className='absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs'
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className='w-full sm:max-w-lg'>
         <SheetHeader>
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
+          <div className='flex items-center justify-between'>
+            <SheetTitle className='flex items-center gap-2'>
+              <Bell className='h-5 w-5' />
               Notifications
               {unreadCount > 0 && (
-                <Badge variant="secondary">{unreadCount} new</Badge>
+                <Badge variant='secondary'>{unreadCount} new</Badge>
               )}
             </SheetTitle>
           </div>
@@ -358,49 +372,51 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
         </SheetHeader>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 mt-4">
+        <div className='flex gap-2 mt-4'>
           <Button
-            variant="outline"
-            size="sm"
+            variant='outline'
+            size='sm'
             onClick={markAllAsRead}
-            disabled={loading || notifications.length === 0 || unreadCount === 0}
-            className="flex-1"
+            disabled={
+              loading || notifications.length === 0 || unreadCount === 0
+            }
+            className='flex-1'
           >
-            <CheckCheck className="mr-2 h-4 w-4" />
+            <CheckCheck className='mr-2 h-4 w-4' />
             Mark All Read
           </Button>
           <Button
-            variant="outline"
-            size="sm"
+            variant='outline'
+            size='sm'
             onClick={clearAll}
             disabled={loading || notifications.length === 0}
-            className="flex-1"
+            className='flex-1'
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className='mr-2 h-4 w-4' />
             Clear All
           </Button>
         </div>
 
-        <Separator className="my-4" />
+        <Separator className='my-4' />
 
         {/* Notifications List */}
-        <ScrollArea className="h-[calc(100vh-200px)]">
+        <ScrollArea className='h-[calc(100vh-200px)]'>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className='flex items-center justify-center py-12'>
+              <Loader2 className='h-8 w-8 animate-spin text-primary' />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="py-4">
+            <div className='py-4'>
               <EmptyState
                 icon={Bell}
                 title="You're all caught up!"
                 description="No new notifications right now. We'll let you know when something important happens."
-                iconClassName="text-green-500"
+                iconClassName='text-green-500'
               />
             </div>
           ) : (
-            <div className="space-y-2">
-              {notifications.map((notification) => (
+            <div className='space-y-2'>
+              {notifications.map(notification => (
                 <div
                   key={notification.id}
                   className={cn(
@@ -412,70 +428,71 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
                 >
                   {/* Unread Indicator */}
                   {!notification.read && (
-                    <div className="absolute top-2 right-2">
-                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    <div className='absolute top-2 right-2'>
+                      <div className='h-2 w-2 rounded-full bg-primary animate-pulse' />
                     </div>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className='flex gap-3'>
                     {/* Icon */}
-                    <div className="flex-shrink-0 mt-1">
+                    <div className='flex-shrink-0 mt-1'>
                       {getNotificationIcon(notification.type)}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-sm leading-tight mb-1">
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-start justify-between gap-2'>
+                        <div className='flex-1'>
+                          <h4 className='font-semibold text-sm leading-tight mb-1'>
                             {notification.title}
                           </h4>
-                          <p className="text-sm text-muted-foreground leading-snug">
+                          <p className='text-sm text-muted-foreground leading-snug'>
                             {notification.description}
                           </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(notification.timestamp), {
-                                addSuffix: true,
-                              })}
+                          <div className='flex items-center gap-2 mt-2'>
+                            <Clock className='h-3 w-3 text-muted-foreground' />
+                            <span className='text-xs text-muted-foreground'>
+                              {formatDistanceToNow(
+                                new Date(notification.timestamp),
+                                {
+                                  addSuffix: true,
+                                }
+                              )}
                             </span>
                           </div>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex gap-2 mt-3">
+                      <div className='flex gap-2 mt-3'>
                         {notification.action_url && (
                           <Button
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-xs"
+                            variant='link'
+                            size='sm'
+                            className='h-auto p-0 text-xs'
                             asChild
                           >
-                            <a href={notification.action_url}>
-                              View Details →
-                            </a>
+                            <a href={notification.action_url}>View Details →</a>
                           </Button>
                         )}
                         {!notification.read && (
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 text-xs"
+                            variant='ghost'
+                            size='sm'
+                            className='h-auto p-0 text-xs'
                             onClick={() => markAsRead(notification.id)}
                           >
-                            <Check className="mr-1 h-3 w-3" />
+                            <Check className='mr-1 h-3 w-3' />
                             Mark as read
                           </Button>
                         )}
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto p-0 text-xs text-red-500 hover:text-red-600"
+                          variant='ghost'
+                          size='sm'
+                          className='h-auto p-0 text-xs text-red-500 hover:text-red-600'
                           onClick={() => deleteNotification(notification.id)}
                         >
-                          <Trash2 className="mr-1 h-3 w-3" />
+                          <Trash2 className='mr-1 h-3 w-3' />
                           Delete
                         </Button>
                       </div>
@@ -490,4 +507,3 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
     </Sheet>
   );
 }
-

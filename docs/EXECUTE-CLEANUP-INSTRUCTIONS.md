@@ -1,6 +1,7 @@
 # How to Execute the Passport URL Cleanup
 
 ## Current Status
+
 - ✅ Valid Passport URLs: 32
 - ⚠️ NO_PASSPORT Placeholders: 41 (need to clean up)
 - ✅ Null Passport URLs: 108
@@ -18,7 +19,7 @@
 Copy and paste this query to see what will be changed:
 
 ```sql
-SELECT 
+SELECT
   id,
   name_en,
   passport_number,
@@ -37,7 +38,7 @@ Copy and paste this query to perform the cleanup:
 
 ```sql
 UPDATE promoters
-SET 
+SET
   passport_url = NULL,
   updated_at = NOW()
 WHERE passport_url LIKE '%NO_PASSPORT%';
@@ -50,7 +51,7 @@ WHERE passport_url LIKE '%NO_PASSPORT%';
 Run this verification query:
 
 ```sql
-SELECT 
+SELECT
   'FINAL STATUS' as section,
   COUNT(*) as total_promoters,
   COUNT(CASE WHEN passport_url IS NOT NULL AND passport_url NOT LIKE '%NO_PASSPORT%' THEN 1 END) as valid_passport_urls,
@@ -60,6 +61,7 @@ FROM promoters;
 ```
 
 **Expected Results After Cleanup:**
+
 - ✅ Total Promoters: 181
 - ✅ Valid Passport URLs: 32
 - ✅ Null Passport URLs: 149 (108 + 41)
@@ -109,18 +111,19 @@ Once cleanup is complete:
 ### If remaining_placeholders is still > 0:
 
 Check for case variations:
+
 ```sql
-SELECT passport_url 
-FROM promoters 
-WHERE passport_url ILIKE '%no_passport%' 
+SELECT passport_url
+FROM promoters
+WHERE passport_url ILIKE '%no_passport%'
    OR passport_url ILIKE '%no-passport%';
 ```
 
 Then update accordingly:
+
 ```sql
 UPDATE promoters
 SET passport_url = NULL, updated_at = NOW()
-WHERE passport_url ILIKE '%no_passport%' 
+WHERE passport_url ILIKE '%no_passport%'
    OR passport_url ILIKE '%no-passport%';
 ```
-

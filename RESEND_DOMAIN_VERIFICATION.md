@@ -3,10 +3,12 @@
 ## ⚠️ **Current Issue**
 
 When using `onboarding@resend.dev` (test email), you can **only** send to:
+
 - ✅ `chairman@falconeyegroup.net` (your verified account)
 - ❌ NOT to `Operations@falconeyegroup.net` or other emails
 
 **Error:**
+
 ```
 You can only send testing emails to your own email address
 ```
@@ -29,6 +31,7 @@ This will let you send to ANY email address using `@falconeyegroup.net`
 Resend will show you 3 DNS records to add. You need to add these to your domain provider:
 
 #### **Record 1: SPF (TXT)**
+
 ```
 Type: TXT
 Name: @ (or falconeyegroup.net)
@@ -36,6 +39,7 @@ Value: v=spf1 include:amazonses.com ~all
 ```
 
 #### **Record 2: DKIM (TXT)**
+
 ```
 Type: TXT
 Name: resend._domainkey
@@ -43,6 +47,7 @@ Value: [Resend will provide this - copy from dashboard]
 ```
 
 #### **Record 3: DMARC (TXT)** - Optional but recommended
+
 ```
 Type: TXT
 Name: _dmarc
@@ -88,9 +93,10 @@ Add this to the notify API temporarily:
 // Around line 100-120
 
 // TEMPORARY: For testing with onboarding@resend.dev
-const emailRecipient = process.env.RESEND_FROM_EMAIL === 'onboarding@resend.dev' 
-  ? 'chairman@falconeyegroup.net'  // Send to verified email during testing
-  : promoter.email || 'chairman@falconeyegroup.net';
+const emailRecipient =
+  process.env.RESEND_FROM_EMAIL === 'onboarding@resend.dev'
+    ? 'chairman@falconeyegroup.net' // Send to verified email during testing
+    : promoter.email || 'chairman@falconeyegroup.net';
 
 await sendEmail({
   to: emailRecipient,
@@ -111,6 +117,7 @@ await sendEmail({
 5. ✅ Professional appearance
 
 ### **Benefits:**
+
 - ✅ Send to unlimited recipients
 - ✅ Professional email address
 - ✅ Better inbox placement
@@ -135,8 +142,9 @@ await sendEmail({
 ## 🔍 **Find Your DNS Provider**
 
 Your domain `falconeyegroup.net` is registered with a provider. Common ones:
+
 - GoDaddy
-- Namecheap  
+- Namecheap
 - Google Domains
 - Cloudflare
 - Route53 (AWS)
@@ -148,6 +156,7 @@ Log in to your provider → DNS Management → Add the 3 records from Resend
 ## 💡 **WHY This Happens**
 
 Resend's free tier restrictions:
+
 - `onboarding@resend.dev` = Test email (can only send to account owner)
 - `yourname@yourdomain.com` = Verified domain (can send to anyone)
 
@@ -158,13 +167,15 @@ This prevents spam and abuse while testing.
 ## ✅ **CURRENT STATUS**
 
 **Right Now:**
+
 - ✅ Email system: **100% working**
 - ✅ Notification API: **100% working**
 - ⚠️ Can only send to: `chairman@falconeyegroup.net`
 
 **After Domain Verification (15 min):**
+
 - ✅ Email system: **100% working**
-- ✅ Notification API: **100% working**  
+- ✅ Notification API: **100% working**
 - ✅ Can send to: **ANY email address** 🌍
 
 ---
@@ -174,10 +185,12 @@ This prevents spam and abuse while testing.
 **Choose One:**
 
 ### **A. Verify Domain (Recommended for Production)**
+
 → Follow Step 1-4 above (15 minutes)
 → Professional and unrestricted
 
 ### **B. Keep Testing (Quick Solution)**
+
 → Only use for development
 → All test emails go to `chairman@falconeyegroup.net`
 → Works fine for testing features

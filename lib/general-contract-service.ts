@@ -201,23 +201,28 @@ export class GeneralContractService {
   /**
    * Create a general contract in the database
    */
-  async createContract(data: GeneralContractData, userId?: string): Promise<any> {
+  async createContract(
+    data: GeneralContractData,
+    userId?: string
+  ): Promise<any> {
     const supabase = await this.getSupabaseClient();
 
     // Get current user ID - either from parameter or from server client
     let currentUserId = userId;
-    
+
     if (!currentUserId) {
       // Try to get from server client (has access to cookies)
       try {
         const serverClient = await createClient();
-        const { data: { user: currentUser } } = await serverClient.auth.getUser();
+        const {
+          data: { user: currentUser },
+        } = await serverClient.auth.getUser();
         currentUserId = currentUser?.id;
       } catch (error) {
         console.warn('Could not get user from server client:', error);
       }
     }
-    
+
     if (!currentUserId) {
       throw new Error('You must be logged in to create contracts');
     }
@@ -245,20 +250,20 @@ export class GeneralContractService {
       contract_type: mappedContractType,
       contract_number: contractNumber,
       title: `${data.job_title} - ${data.contract_type} Contract - ${contractNumber}`,
-      status: 'pending',  // ✅ FIXED: Use 'pending' instead of 'draft' to show on pending page
-      approval_status: 'pending',  // Set approval status
+      status: 'pending', // ✅ FIXED: Use 'pending' instead of 'draft' to show on pending page
+      approval_status: 'pending', // Set approval status
       promoter_id: data.promoter_id,
       client_id: data.first_party_id,
       employer_id: data.second_party_id,
-      first_party_id: data.first_party_id,  // Also set first_party_id for consistency
-      second_party_id: data.second_party_id,  // Also set second_party_id for consistency
+      first_party_id: data.first_party_id, // Also set first_party_id for consistency
+      second_party_id: data.second_party_id, // Also set second_party_id for consistency
       value: data.basic_salary,
       start_date: this.formatDate(data.contract_start_date),
       end_date: this.formatDate(data.contract_end_date),
       terms: data.special_terms || '',
       description: this.buildDescription(data),
       user_id: currentUserId, // Track who created the contract
-      submitted_for_review_at: new Date().toISOString(),  // Track when submitted for review
+      submitted_for_review_at: new Date().toISOString(), // Track when submitted for review
       // New bilingual fields for Make.com
       products_en: data.products_en || '',
       products_ar: data.products_ar || '',
@@ -386,7 +391,9 @@ export class GeneralContractService {
         contract.promoter?.passport_url
       ),
       // Make.com compatible field names (stored_*)
-      stored_promoter_id_card_image_url: ensureValidImageUrl(contract.promoter?.id_card_url),
+      stored_promoter_id_card_image_url: ensureValidImageUrl(
+        contract.promoter?.id_card_url
+      ),
       stored_promoter_passport_image_url: ensureValidImageUrl(
         contract.promoter?.passport_url
       ),
@@ -396,14 +403,18 @@ export class GeneralContractService {
       first_party_crn: contract.client?.crn || '',
       first_party_logo: ensureValidImageUrl(contract.client?.logo_url),
       first_party_logo_url: ensureValidImageUrl(contract.client?.logo_url),
-      stored_first_party_logo_url: ensureValidImageUrl(contract.client?.logo_url),
+      stored_first_party_logo_url: ensureValidImageUrl(
+        contract.client?.logo_url
+      ),
       // Second party (employer) data with validated image URLs
       second_party_name_en: contract.employer?.name_en || '',
       second_party_name_ar: contract.employer?.name_ar || '',
       second_party_crn: contract.employer?.crn || '',
       second_party_logo: ensureValidImageUrl(contract.employer?.logo_url),
       second_party_logo_url: ensureValidImageUrl(contract.employer?.logo_url),
-      stored_second_party_logo_url: ensureValidImageUrl(contract.employer?.logo_url),
+      stored_second_party_logo_url: ensureValidImageUrl(
+        contract.employer?.logo_url
+      ),
       // Additional image fields for Make.com template compatibility
       header_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as header
       footer_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as footer
@@ -600,7 +611,7 @@ export class GeneralContractService {
           if (attempt < maxRetries) {
             const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
             console.log(`⏳ Waiting ${waitTime}ms before retry...`);
-            await new Promise((resolve) => setTimeout(resolve, waitTime));
+            await new Promise(resolve => setTimeout(resolve, waitTime));
           }
         }
       } catch (error) {
@@ -626,7 +637,7 @@ export class GeneralContractService {
         if (attempt < maxRetries) {
           const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
           console.log(`⏳ Waiting ${waitTime}ms before retry...`);
-          await new Promise((resolve) => setTimeout(resolve, waitTime));
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
     }

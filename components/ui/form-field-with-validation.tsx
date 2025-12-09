@@ -34,22 +34,29 @@ export function FormFieldWithValidation({
   isValid = false,
   className,
 }: FormFieldWithValidationProps) {
-  const hasValue = value !== '' && value !== 0 && value !== null && value !== undefined;
+  const hasValue =
+    value !== '' && value !== 0 && value !== null && value !== undefined;
   const showSuccess = hasValue && !error && isValid;
 
   return (
     <div className={cn('space-y-2', className)}>
-      <Label htmlFor={name} className="flex items-center gap-1">
+      <Label htmlFor={name} className='flex items-center gap-1'>
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className='text-red-500'>*</span>}
       </Label>
-      <div className="relative">
+      <div className='relative'>
         <Input
           id={name}
           name={name}
           type={type}
           value={value}
-          onChange={(e) => onChange(type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
+          onChange={e =>
+            onChange(
+              type === 'number'
+                ? parseFloat(e.target.value) || 0
+                : e.target.value
+            )
+          }
           onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
@@ -62,23 +69,28 @@ export function FormFieldWithValidation({
           aria-describedby={error ? `${name}-error` : undefined}
         />
         {/* Validation icon */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+        <div className='absolute right-3 top-1/2 -translate-y-1/2'>
           {error && (
-            <AlertCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
+            <AlertCircle className='h-4 w-4 text-red-500' aria-hidden='true' />
           )}
           {showSuccess && (
-            <CheckCircle2 className="h-4 w-4 text-green-500" aria-hidden="true" />
+            <CheckCircle2
+              className='h-4 w-4 text-green-500'
+              aria-hidden='true'
+            />
           )}
         </div>
       </div>
       {/* Error message */}
       {error && (
-        <p id={`${name}-error`} className="text-sm text-red-500 flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" aria-hidden="true" />
+        <p
+          id={`${name}-error`}
+          className='text-sm text-red-500 flex items-center gap-1'
+        >
+          <AlertCircle className='h-3 w-3' aria-hidden='true' />
           {error.message}
         </p>
       )}
     </div>
   );
 }
-

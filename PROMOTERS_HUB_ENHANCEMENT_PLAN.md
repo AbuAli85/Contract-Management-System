@@ -24,6 +24,7 @@
 ### ⚠️ Areas for Improvement
 
 #### 1. Performance Issues
+
 - ❌ Client-side filtering on large datasets (should be server-side)
 - ❌ All promoters loaded for metrics calculation
 - ❌ Heavy re-renders on filter changes
@@ -31,6 +32,7 @@
 - ⚠️ Multiple API calls for metrics
 
 #### 2. UX/UI Enhancements Needed
+
 - ⚠️ No quick actions in table rows
 - ⚠️ No bulk operations visible at first glance
 - ⚠️ Missing visual feedback on hover
@@ -40,6 +42,7 @@
 - ⚠️ Missing favorite/pin promoters
 
 #### 3. Data Visualization Gaps
+
 - ❌ No charts for document expiry timeline
 - ❌ No trends over time
 - ❌ No geographical distribution map
@@ -47,6 +50,7 @@
 - ❌ No contract history visualization
 
 #### 4. Feature Gaps
+
 - ❌ No export to Excel with formatting
 - ❌ No print-friendly view
 - ❌ No saved filter presets
@@ -56,6 +60,7 @@
 - ❌ No automated notifications
 
 #### 5. Accessibility Issues
+
 - ⚠️ Some ARIA labels missing
 - ⚠️ Keyboard navigation could be improved
 - ⚠️ Screen reader announcements limited
@@ -67,11 +72,13 @@
 ### Phase 1: Critical Performance Fixes (Priority: HIGH)
 
 #### 1.1 Server-Side Filtering & Sorting
+
 **Current:** Client-side filtering of all promoters  
 **Problem:** Slow with 1000+ promoters  
 **Solution:** Move to API with query parameters
 
 **Implementation:**
+
 ```typescript
 // Update API endpoint to accept filters
 GET /api/promoters?
@@ -86,23 +93,27 @@ GET /api/promoters?
 ```
 
 **Benefits:**
+
 - ✅ Fast filtering even with 10,000+ records
 - ✅ Reduced client-side processing
 - ✅ Better database query optimization
 - ✅ Reduced network payload
 
 **Files to Modify:**
+
 - `app/api/promoters/route.ts` - Add query parameter handling
 - `components/promoters/enhanced-promoters-view-refactored.tsx` - Pass filters to API
 
 ---
 
 #### 1.2 Optimize Metrics Calculation
+
 **Current:** Calculated from paginated results  
 **Problem:** Inaccurate on filtered data  
 **Solution:** Dedicated metrics API endpoint
 
 **Implementation:**
+
 ```typescript
 // Already exists but needs integration
 GET /api/promoters/enhanced-metrics
@@ -120,22 +131,26 @@ Response:
 ```
 
 **Benefits:**
+
 - ✅ Accurate system-wide metrics
 - ✅ Fast calculation with database aggregation
 - ✅ Cached for performance
 - ✅ Independent of pagination
 
 **Files to Modify:**
+
 - `components/promoters/enhanced-promoters-view-refactored.tsx` - Use API metrics exclusively
 
 ---
 
 #### 1.3 Virtual Scrolling for Large Tables
+
 **Current:** All rows rendered  
 **Problem:** Slow with 100+ rows  
 **Solution:** React Virtuoso or TanStack Virtual
 
 **Implementation:**
+
 ```typescript
 import { useVirtualizer } from '@tanstack/react-virtual';
 
@@ -148,12 +163,14 @@ const rowVirtualizer = useVirtualizer({
 ```
 
 **Benefits:**
+
 - ✅ Smooth scrolling with 1000+ rows
 - ✅ Only renders visible rows
 - ✅ Reduced memory usage
 - ✅ Better performance
 
 **Files to Modify:**
+
 - `components/promoters/promoters-table.tsx` - Add virtual scrolling
 
 ---
@@ -161,9 +178,11 @@ const rowVirtualizer = useVirtualizer({
 ### Phase 2: UX/UI Enhancements (Priority: MEDIUM)
 
 #### 2.1 Quick Actions Row Hover
+
 **Add:** Quick action buttons on row hover
 
 **Implementation:**
+
 ```typescript
 <TableRow className="group hover:bg-muted/50">
   {/* ... columns ... */}
@@ -184,6 +203,7 @@ const rowVirtualizer = useVirtualizer({
 ```
 
 **Benefits:**
+
 - ✅ Faster access to common actions
 - ✅ Reduced clicks
 - ✅ Better user flow
@@ -191,9 +211,11 @@ const rowVirtualizer = useVirtualizer({
 ---
 
 #### 2.2 Advanced Search with Multiple Fields
+
 **Add:** Search across multiple fields simultaneously
 
 **Implementation:**
+
 ```typescript
 <AdvancedSearch
   fields={[
@@ -208,6 +230,7 @@ const rowVirtualizer = useVirtualizer({
 ```
 
 **Benefits:**
+
 - ✅ More precise filtering
 - ✅ Better user control
 - ✅ Find specific promoters faster
@@ -215,13 +238,18 @@ const rowVirtualizer = useVirtualizer({
 ---
 
 #### 2.3 Saved Filter Presets
+
 **Add:** Save and load filter combinations
 
 **Implementation:**
+
 ```typescript
 const filterPresets = [
   { name: 'Expiring Documents', filters: { documents: 'expiring' } },
-  { name: 'Unassigned Active', filters: { status: 'active', assignment: 'unassigned' } },
+  {
+    name: 'Unassigned Active',
+    filters: { status: 'active', assignment: 'unassigned' },
+  },
   { name: 'Critical Alerts', filters: { status: 'critical' } },
 ];
 
@@ -230,6 +258,7 @@ localStorage.setItem('promoter-filter-presets', JSON.stringify(userPresets));
 ```
 
 **Benefits:**
+
 - ✅ Quick access to common views
 - ✅ Reduced repetitive filtering
 - ✅ Personalized experience
@@ -237,9 +266,11 @@ localStorage.setItem('promoter-filter-presets', JSON.stringify(userPresets));
 ---
 
 #### 2.4 Inline Editing
+
 **Add:** Edit fields directly in table
 
 **Implementation:**
+
 ```typescript
 <TableCell onDoubleClick={() => setEditing(true)}>
   {editing ? (
@@ -256,6 +287,7 @@ localStorage.setItem('promoter-filter-presets', JSON.stringify(userPresets));
 ```
 
 **Benefits:**
+
 - ✅ Faster edits
 - ✅ No navigation required
 - ✅ Better workflow
@@ -265,9 +297,11 @@ localStorage.setItem('promoter-filter-presets', JSON.stringify(userPresets));
 ### Phase 3: Data Visualization (Priority: MEDIUM)
 
 #### 3.1 Document Expiry Timeline Chart
+
 **Add:** Visual timeline of document expirations
 
 **Implementation:**
+
 ```typescript
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
@@ -287,6 +321,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 ```
 
 **Benefits:**
+
 - ✅ Visual planning for renewals
 - ✅ Identify busy renewal periods
 - ✅ Better resource allocation
@@ -294,9 +329,11 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 ---
 
 #### 3.2 Status Distribution Pie Chart
+
 **Add:** Visual breakdown of promoter statuses
 
 **Implementation:**
+
 ```typescript
 import { PieChart, Pie, Cell, Legend } from 'recharts';
 
@@ -318,6 +355,7 @@ const statusData = [
 ```
 
 **Benefits:**
+
 - ✅ Quick visual overview
 - ✅ Easy to spot imbalances
 - ✅ Better decision making
@@ -325,9 +363,11 @@ const statusData = [
 ---
 
 #### 3.3 Compliance Trend Chart
+
 **Add:** Track compliance rate over time
 
 **Implementation:**
+
 ```typescript
 import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 
@@ -347,6 +387,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ```
 
 **Benefits:**
+
 - ✅ Track improvement over time
 - ✅ Identify seasonal patterns
 - ✅ Measure compliance initiatives
@@ -356,9 +397,11 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ### Phase 4: Advanced Features (Priority: LOW)
 
 #### 4.1 Bulk Actions Panel
+
 **Add:** Enhanced bulk operations UI
 
 **Implementation:**
+
 ```typescript
 <BulkActionsPanel selected={selectedPromoters.size}>
   <Button onClick={() => bulkSendReminders()}>
@@ -381,6 +424,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ```
 
 **Benefits:**
+
 - ✅ Faster bulk operations
 - ✅ Clear action options
 - ✅ Better workflow
@@ -388,9 +432,11 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ---
 
 #### 4.2 Column Customization
+
 **Add:** Choose which columns to display
 
 **Implementation:**
+
 ```typescript
 <ColumnSelector
   columns={[
@@ -408,6 +454,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ```
 
 **Benefits:**
+
 - ✅ Personalized view
 - ✅ Focus on relevant data
 - ✅ Less visual clutter
@@ -415,9 +462,11 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ---
 
 #### 4.3 Smart Notifications
+
 **Add:** Proactive notifications for critical events
 
 **Implementation:**
+
 ```typescript
 // Auto-notify for:
 - Documents expiring in 7 days
@@ -436,6 +485,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ```
 
 **Benefits:**
+
 - ✅ Proactive management
 - ✅ Never miss critical dates
 - ✅ Better oversight
@@ -443,9 +493,11 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ---
 
 #### 4.4 Export Enhancements
+
 **Add:** Multiple export formats with options
 
 **Implementation:**
+
 ```typescript
 <ExportDialog>
   <RadioGroup>
@@ -453,7 +505,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
     <Radio value="xlsx">Excel with formatting</Radio>
     <Radio value="pdf">PDF Report</Radio>
   </RadioGroup>
-  
+
   <CheckboxGroup>
     <Checkbox>Include document images</Checkbox>
     <Checkbox>Include contract history</Checkbox>
@@ -463,6 +515,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 ```
 
 **Benefits:**
+
 - ✅ Flexible export options
 - ✅ Ready-to-use reports
 - ✅ Better data portability
@@ -566,7 +619,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 
 ```typescript
 // Already partially implemented, enhance with:
-<Card 
+<Card
   className={cn(
     "cursor-pointer transition-all duration-200",
     "hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1",
@@ -768,17 +821,20 @@ useQuery({
 ## 🔥 Quick Wins (Implement Now)
 
 ### 1. Add Metric Card Tooltips ✅
+
 ```typescript
 // Already implemented - verify working
 ```
 
 ### 2. Improve Loading States ⏳
+
 ```typescript
 // Add shimmer effect to skeletons
 <Skeleton className="animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
 ```
 
 ### 3. Add Success Animations ⏳
+
 ```typescript
 // After bulk action
 <motion.div
@@ -791,6 +847,7 @@ useQuery({
 ```
 
 ### 4. Enhanced Error Messages ⏳
+
 ```typescript
 // More specific error handling
 if (error.message.includes('timeout')) {
@@ -803,6 +860,7 @@ if (error.message.includes('timeout')) {
 ```
 
 ### 5. Add Recent Activity Feed ⏳
+
 ```typescript
 <Card>
   <CardHeader>
@@ -819,6 +877,7 @@ if (error.message.includes('timeout')) {
 ## 🎯 Implementation Priority
 
 ### Immediate (This Sprint)
+
 1. ✅ Fix metrics undefined values - **COMPLETE**
 2. ⏳ Add loading states for metrics cards
 3. ⏳ Improve error messages
@@ -826,6 +885,7 @@ if (error.message.includes('timeout')) {
 5. ⏳ Enhance empty states
 
 ### Short Term (Next Sprint)
+
 1. ⏳ Server-side filtering and sorting
 2. ⏳ Optimize metrics API integration
 3. ⏳ Add virtual scrolling
@@ -833,6 +893,7 @@ if (error.message.includes('timeout')) {
 5. ⏳ Add document expiry chart
 
 ### Medium Term (Next Month)
+
 1. ⏳ Advanced search functionality
 2. ⏳ Inline editing capability
 3. ⏳ Bulk operations panel
@@ -840,6 +901,7 @@ if (error.message.includes('timeout')) {
 5. ⏳ Real-time updates
 
 ### Long Term (Future)
+
 1. ⏳ Full analytics dashboard
 2. ⏳ AI-powered insights
 3. ⏳ Automated workflows
@@ -851,6 +913,7 @@ if (error.message.includes('timeout')) {
 ## 📝 Files to Create/Modify
 
 ### Create New Components
+
 1. `components/promoters/metric-card-skeleton.tsx` - Loading states
 2. `components/promoters/quick-actions-menu.tsx` - Hover actions
 3. `components/promoters/advanced-search-dialog.tsx` - Multi-field search
@@ -861,6 +924,7 @@ if (error.message.includes('timeout')) {
 8. `components/promoters/activity-feed.tsx` - Recent changes
 
 ### Modify Existing Files
+
 1. `app/api/promoters/route.ts` - Add server-side filtering
 2. `components/promoters/promoters-table.tsx` - Add virtual scrolling
 3. `components/promoters/promoters-header.tsx` - Add quick stats
@@ -906,4 +970,3 @@ After implementing enhancements, measure:
 **Document Version:** 1.0  
 **Last Updated:** January 25, 2025  
 **Status:** Ready for Review & Implementation
-

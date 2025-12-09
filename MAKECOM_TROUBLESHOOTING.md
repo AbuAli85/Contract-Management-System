@@ -5,6 +5,7 @@
 PDF generation script successfully triggers Make.com webhook, but contracts are not being updated with PDF URLs.
 
 ### Test Results:
+
 - ✅ Script runs successfully
 - ✅ Make.com webhook called (returned 200 OK)
 - ❌ Contract NOT updated (status still "pending", no pdf_url)
@@ -13,14 +14,18 @@ PDF generation script successfully triggers Make.com webhook, but contracts are 
 ## 🔍 Possible Causes
 
 ### 1. Make.com Scenario Not Active/Configured
+
 **Check:**
+
 1. Login to Make.com: https://www.make.com/
 2. Find your contract generation scenario
 3. Verify status is **"Active"** (not "Draft" or "Paused")
 4. Check execution history for errors
 
 ### 2. Make.com Scenario Not Calling Back
+
 **The callback should be:**
+
 ```
 POST https://your-app.vercel.app/api/webhook/contract-pdf-ready
 
@@ -35,18 +40,23 @@ Body:
 ```
 
 **Check in Make.com:**
+
 - Does your scenario have an HTTP module to call the callback URL?
 - Is the callback URL correct?
 - Is the payload formatted correctly?
 
 ### 3. Google Docs Template Issues
+
 **Check:**
+
 - Does the Google Docs template exist?
 - Is it shared with the service account?
 - Are placeholders correct?
 
 ### 4. Make.com Execution Failing
+
 **Check Make.com execution logs:**
+
 - Look for errors in the scenario history
 - Check which module is failing
 - Verify all required fields are being received
@@ -88,12 +98,15 @@ Body:
 If Make.com integration is too complex, we have alternatives:
 
 ### Option A: Use Local PDF Generation
+
 Modify the system to generate PDFs locally using a library like `puppeteer` or `pdfkit`.
 
 ### Option B: Manual PDF Upload
+
 Add a feature to manually upload PDFs for contracts.
 
 ### Option C: Simpler Webhook
+
 Create a simpler webhook that just generates from a template without all the complexity.
 
 ## 📋 Next Steps
@@ -107,10 +120,10 @@ Create a simpler webhook that just generates from a template without all the com
 ## 💡 Recommended Action
 
 **Check your Make.com scenario NOW:**
+
 1. Go to https://www.make.com/
 2. Find the contract generation scenario
 3. Look at recent executions
 4. Share any error messages you see
 
 This will help us diagnose why the callback isn't happening.
-

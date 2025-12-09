@@ -1,15 +1,16 @@
 /**
  * SEO Metadata Configuration
- * 
+ *
  * Comprehensive SEO setup with Open Graph tags, Twitter Cards, and structured data.
  * Removes "(Build: dev)" from production and implements best practices.
- * 
+ *
  * Location: app/[locale]/layout.tsx
  */
 
 import { Metadata } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io';
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io';
 const siteName = 'Contract Management System';
 const siteDescription =
   'Professional contract management and workforce tracking system. Streamline your business operations with comprehensive contract lifecycle management, promoter tracking, and compliance monitoring.';
@@ -199,7 +200,9 @@ export const softwareApplicationSchema = {
   ],
 };
 
-export const breadcrumbSchema = (items: Array<{ name: string; url: string }>) => ({
+export const breadcrumbSchema = (
+  items: Array<{ name: string; url: string }>
+) => ({
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: items.map((item, index) => ({
@@ -212,11 +215,11 @@ export const breadcrumbSchema = (items: Array<{ name: string; url: string }>) =>
 
 /**
  * Example usage in layout.tsx:
- * 
+ *
  * import { baseMetadata, organizationSchema, softwareApplicationSchema } from './seo-metadata';
- * 
+ *
  * export const metadata = baseMetadata;
- * 
+ *
  * export default function RootLayout({ children }) {
  *   return (
  *     <html lang="en">
@@ -238,15 +241,14 @@ export const breadcrumbSchema = (items: Array<{ name: string; url: string }>) =>
  *     </html>
  *   );
  * }
- * 
+ *
  * Example usage in page.tsx:
- * 
+ *
  * import { generatePageMetadata } from './seo-metadata';
- * 
+ *
  * export const metadata = generatePageMetadata({
  *   title: 'Dashboard',
  *   description: 'View your contract management dashboard',
  *   path: '/en/dashboard',
  * });
  */
-

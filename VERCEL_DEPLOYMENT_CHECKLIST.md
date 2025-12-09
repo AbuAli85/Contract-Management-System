@@ -40,6 +40,7 @@ Copy this checklist and mark items as you complete them.
 ## 🔑 Environment Variables (Critical!)
 
 ### Required
+
 - [ ] `NEXT_PUBLIC_SUPABASE_URL`
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - [ ] `SUPABASE_SERVICE_ROLE_KEY`
@@ -48,12 +49,14 @@ Copy this checklist and mark items as you complete them.
 - [ ] `NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=false`
 
 ### Recommended
+
 - [ ] `UPSTASH_REDIS_REST_URL` (for rate limiting)
 - [ ] `UPSTASH_REDIS_REST_TOKEN`
 - [ ] `WEBHOOK_URL` (Make.com webhook)
 - [ ] `RBAC_ENFORCEMENT=true`
 
 ### Optional
+
 - [ ] `NEXT_PUBLIC_SENTRY_DSN` (error tracking)
 - [ ] SMTP settings (for emails)
 - [ ] Analytics tokens
@@ -73,6 +76,7 @@ Copy this checklist and mark items as you complete them.
 ## 🔄 Post-Deployment Configuration
 
 ### Supabase
+
 - [ ] Auth callback URL updated:
   ```
   https://your-project.vercel.app/auth/callback
@@ -81,6 +85,7 @@ Copy this checklist and mark items as you complete them.
 - [ ] Storage policies tested
 
 ### Make.com
+
 - [ ] Webhook endpoint confirmed:
   ```
   https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn
@@ -182,26 +187,26 @@ Before announcing to users:
 
 ## 📞 Quick Reference
 
-| Resource | Link |
-|----------|------|
-| Vercel Dashboard | https://vercel.com/dashboard |
-| Supabase Dashboard | https://app.supabase.com |
+| Resource           | Link                              |
+| ------------------ | --------------------------------- |
+| Vercel Dashboard   | https://vercel.com/dashboard      |
+| Supabase Dashboard | https://app.supabase.com          |
 | Make.com Dashboard | https://www.make.com/en/scenarios |
-| Upstash Dashboard | https://console.upstash.com |
-| Sentry Dashboard | https://sentry.io |
+| Upstash Dashboard  | https://console.upstash.com       |
+| Sentry Dashboard   | https://sentry.io                 |
 
 ---
 
 ## 🐛 Common Issues
 
-| Issue | Quick Fix |
-|-------|-----------|
-| Build fails | Check environment variables |
-| Can't login | Verify Supabase callback URL |
-| 404 errors | Clear Vercel cache, redeploy |
-| Images broken | Check Supabase storage policies |
+| Issue            | Quick Fix                              |
+| ---------------- | -------------------------------------- |
+| Build fails      | Check environment variables            |
+| Can't login      | Verify Supabase callback URL           |
+| 404 errors       | Clear Vercel cache, redeploy           |
+| Images broken    | Check Supabase storage policies        |
 | Slow performance | Check function timeouts in vercel.json |
-| CORS errors | Update ALLOWED_ORIGINS |
+| CORS errors      | Update ALLOWED_ORIGINS                 |
 
 ---
 
@@ -209,7 +214,6 @@ Before announcing to users:
 
 **Deployed By**: [Your Name]
 
-**Production URL**: https://___________________
+**Production URL**: https://********\_\_\_********
 
-**Status**: [ ] In Progress  [ ] Ready  [ ] Live ✅
-
+**Status**: [ ] In Progress [ ] Ready [ ] Live ✅

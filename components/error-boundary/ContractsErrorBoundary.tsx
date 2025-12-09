@@ -63,7 +63,7 @@ export class ContractsErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState((prevState) => ({
+    this.setState(prevState => ({
       hasError: false,
       error: null,
       errorInfo: null,
@@ -80,40 +80,36 @@ export class ContractsErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="container mx-auto py-6 space-y-4">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
+        <div className='container mx-auto py-6 space-y-4'>
+          <Alert variant='destructive'>
+            <AlertTriangle className='h-4 w-4' />
             <AlertTitle>Something Went Wrong</AlertTitle>
-            <AlertDescription className="space-y-3">
-              <p className="font-medium">
+            <AlertDescription className='space-y-3'>
+              <p className='font-medium'>
                 An unexpected error occurred while loading this page.
               </p>
-              <div className="text-sm space-y-2">
-                <p className="text-muted-foreground">Error details:</p>
-                <div className="bg-destructive/10 p-3 rounded-md">
-                  <p className="font-mono text-xs break-all">
+              <div className='text-sm space-y-2'>
+                <p className='text-muted-foreground'>Error details:</p>
+                <div className='bg-destructive/10 p-3 rounded-md'>
+                  <p className='font-mono text-xs break-all'>
                     {this.state.error?.message || 'Unknown error'}
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 mt-4">
-                <Button
-                  onClick={this.handleReset}
-                  variant="default"
-                  size="sm"
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
+              <div className='flex flex-wrap gap-2 mt-4'>
+                <Button onClick={this.handleReset} variant='default' size='sm'>
+                  <RefreshCw className='mr-2 h-4 w-4' />
                   Try Again
                 </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/en/dashboard">
-                    <Home className="mr-2 h-4 w-4" />
+                <Button variant='outline' size='sm' asChild>
+                  <Link href='/en/dashboard'>
+                    <Home className='mr-2 h-4 w-4' />
                     Go to Dashboard
                   </Link>
                 </Button>
               </div>
               {this.state.retryCount > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className='text-xs text-muted-foreground mt-2'>
                   Retry attempts: {this.state.retryCount}
                 </p>
               )}
@@ -121,25 +117,26 @@ export class ContractsErrorBoundary extends Component<Props, State> {
           </Alert>
 
           <Card>
-            <CardContent className="py-12">
-              <div className="text-center text-muted-foreground">
-                <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
-                <h3 className="text-lg font-semibold mb-2">
+            <CardContent className='py-12'>
+              <div className='text-center text-muted-foreground'>
+                <AlertTriangle className='mx-auto mb-4 h-12 w-12 text-red-500' />
+                <h3 className='text-lg font-semibold mb-2'>
                   Error Loading Contracts
                 </h3>
-                <p className="text-sm mb-4">
+                <p className='text-sm mb-4'>
                   If this problem persists, please contact support.
                 </p>
-                {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-                  <details className="mt-4 text-left">
-                    <summary className="cursor-pointer text-xs font-medium mb-2">
-                      Developer Info (Development Only)
-                    </summary>
-                    <pre className="text-xs bg-muted p-4 rounded-md overflow-auto max-h-96">
-                      {this.state.errorInfo.componentStack}
-                    </pre>
-                  </details>
-                )}
+                {process.env.NODE_ENV === 'development' &&
+                  this.state.errorInfo && (
+                    <details className='mt-4 text-left'>
+                      <summary className='cursor-pointer text-xs font-medium mb-2'>
+                        Developer Info (Development Only)
+                      </summary>
+                      <pre className='text-xs bg-muted p-4 rounded-md overflow-auto max-h-96'>
+                        {this.state.errorInfo.componentStack}
+                      </pre>
+                    </details>
+                  )}
               </div>
             </CardContent>
           </Card>
@@ -150,4 +147,3 @@ export class ContractsErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
-

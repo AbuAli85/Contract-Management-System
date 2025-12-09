@@ -30,7 +30,12 @@ import {
   ExternalLink,
   FileText,
 } from 'lucide-react';
-import type { DashboardPromoter, DocumentHealth, DocumentStatus, OverallStatus } from './types';
+import type {
+  DashboardPromoter,
+  DocumentHealth,
+  DocumentStatus,
+  OverallStatus,
+} from './types';
 
 interface PromotersTableEnhancedRowProps {
   promoter: DashboardPromoter;
@@ -69,29 +74,36 @@ const OVERALL_STATUS_LABELS: Record<OverallStatus, string> = {
   inactive: 'Inactive',
 };
 
-function DocumentBadge({ label, health }: { label: string; health: DocumentHealth }) {
+function DocumentBadge({
+  label,
+  health,
+}: {
+  label: string;
+  health: DocumentHealth;
+}) {
   const Icon = DOCUMENT_STATUS_ICONS[health.status];
-  
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <Badge
-            variant="outline"
+            variant='outline'
             className={cn(
               'flex items-center gap-1.5 text-xs font-medium transition-all cursor-help',
               DOCUMENT_STATUS_STYLES[health.status]
             )}
           >
-            <Icon className="h-3 w-3" />
+            <Icon className='h-3 w-3' />
             {label}
           </Badge>
         </TooltipTrigger>
-        <TooltipContent side="right" className="max-w-xs">
-          <p className="font-medium">{health.label}</p>
+        <TooltipContent side='right' className='max-w-xs'>
+          <p className='font-medium'>{health.label}</p>
           {health.daysRemaining !== null && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {health.daysRemaining} days {health.status === 'expired' ? 'ago' : 'remaining'}
+            <p className='text-xs text-muted-foreground mt-1'>
+              {health.daysRemaining} days{' '}
+              {health.status === 'expired' ? 'ago' : 'remaining'}
             </p>
           )}
         </TooltipContent>
@@ -136,16 +148,17 @@ export function PromotersTableEnhancedRow({
           'border-l-4 border-l-red-500 bg-red-50/20 hover:bg-red-50/40',
         promoter.overallStatus === 'warning' &&
           'border-l-4 border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40',
-        isSelected && 'bg-primary/10 border-l-4 border-l-primary hover:bg-primary/20'
+        isSelected &&
+          'bg-primary/10 border-l-4 border-l-primary hover:bg-primary/20'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onView}
     >
       {/* Selection Checkbox */}
-      <TableCell className='w-[50px]' onClick={(e) => e.stopPropagation()}>
-        <Checkbox 
-          checked={isSelected} 
+      <TableCell className='w-[50px]' onClick={e => e.stopPropagation()}>
+        <Checkbox
+          checked={isSelected}
           onCheckedChange={onSelect}
           aria-label={`Select ${promoter.displayName}`}
         />
@@ -192,7 +205,10 @@ export function PromotersTableEnhancedRow({
             {promoter.assignmentStatus === 'assigned' ? (
               <>
                 <Building2 className='h-3.5 w-3.5 text-blue-600' />
-                <span className='truncate max-w-[200px]' title={promoter.organisationLabel}>
+                <span
+                  className='truncate max-w-[200px]'
+                  title={promoter.organisationLabel}
+                >
                   {promoter.organisationLabel}
                 </span>
               </>
@@ -209,7 +225,9 @@ export function PromotersTableEnhancedRow({
                 : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
             )}
           >
-            {promoter.assignmentStatus === 'assigned' ? '✓ Assigned' : '○ Available'}
+            {promoter.assignmentStatus === 'assigned'
+              ? '✓ Assigned'
+              : '○ Available'}
           </Badge>
         </div>
       </TableCell>
@@ -274,62 +292,70 @@ export function PromotersTableEnhancedRow({
       </TableCell>
 
       {/* Quick Actions (Visible on Hover) */}
-      <TableCell className='text-right' onClick={(e) => e.stopPropagation()}>
-        <div className={cn(
-          'flex items-center justify-end gap-1 transition-opacity duration-200',
-          isHovered ? 'opacity-100' : 'opacity-0'
-        )}>
+      <TableCell className='text-right' onClick={e => e.stopPropagation()}>
+        <div
+          className={cn(
+            'flex items-center justify-end gap-1 transition-opacity duration-200',
+            isHovered ? 'opacity-100' : 'opacity-0'
+          )}
+        >
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
-                  onClick={(e) => {
+                  size='icon'
+                  variant='ghost'
+                  className='h-8 w-8 hover:bg-blue-100 hover:text-blue-600'
+                  onClick={e => {
                     e.stopPropagation();
                     onView();
                   }}
                   aria-label={`View ${promoter.displayName}'s profile`}
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className='h-4 w-4' />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>View Profile</p></TooltipContent>
+              <TooltipContent>
+                <p>View Profile</p>
+              </TooltipContent>
             </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 hover:bg-purple-100 hover:text-purple-600"
-                  onClick={(e) => {
+                  size='icon'
+                  variant='ghost'
+                  className='h-8 w-8 hover:bg-purple-100 hover:text-purple-600'
+                  onClick={e => {
                     e.stopPropagation();
                     onEdit();
                   }}
                   aria-label={`Edit ${promoter.displayName}'s details`}
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className='h-4 w-4' />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>Edit Details</p></TooltipContent>
+              <TooltipContent>
+                <p>Edit Details</p>
+              </TooltipContent>
             </Tooltip>
 
             {promoter.contactEmail && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 hover:bg-green-100 hover:text-green-600"
+                    size='icon'
+                    variant='ghost'
+                    className='h-8 w-8 hover:bg-green-100 hover:text-green-600'
                     onClick={handleEmailClick}
                     aria-label={`Email ${promoter.displayName}`}
                   >
-                    <Mail className="h-4 w-4" />
+                    <Mail className='h-4 w-4' />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent><p>Send Email</p></TooltipContent>
+                <TooltipContent>
+                  <p>Send Email</p>
+                </TooltipContent>
               </Tooltip>
             )}
 
@@ -337,57 +363,63 @@ export function PromotersTableEnhancedRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 hover:bg-yellow-100 hover:text-yellow-600"
+                    size='icon'
+                    variant='ghost'
+                    className='h-8 w-8 hover:bg-yellow-100 hover:text-yellow-600'
                     onClick={handlePhoneClick}
                     aria-label={`Call ${promoter.displayName}`}
                   >
-                    <Phone className="h-4 w-4" />
+                    <Phone className='h-4 w-4' />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent><p>Call Promoter</p></TooltipContent>
+                <TooltipContent>
+                  <p>Call Promoter</p>
+                </TooltipContent>
               </Tooltip>
             )}
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 hover:bg-indigo-100 hover:text-indigo-600"
-                  onClick={(e) => {
+                  size='icon'
+                  variant='ghost'
+                  className='h-8 w-8 hover:bg-indigo-100 hover:text-indigo-600'
+                  onClick={e => {
                     e.stopPropagation();
-                    window.open(`/${locale}/manage-promoters/${promoter.id}?tab=documents`, '_blank');
+                    window.open(
+                      `/${locale}/manage-promoters/${promoter.id}?tab=documents`,
+                      '_blank'
+                    );
                   }}
                   aria-label={`View ${promoter.displayName}'s documents`}
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className='h-4 w-4' />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent><p>View Documents</p></TooltipContent>
+              <TooltipContent>
+                <p>View Documents</p>
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
 
         {/* Always visible action button for mobile */}
         <Button
-          size="icon"
-          variant="ghost"
+          size='icon'
+          variant='ghost'
           className={cn(
             'h-8 w-8',
             isHovered && 'opacity-0 pointer-events-none'
           )}
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onView();
           }}
           aria-label={`View ${promoter.displayName}`}
         >
-          <ExternalLink className="h-4 w-4" />
+          <ExternalLink className='h-4 w-4' />
         </Button>
       </TableCell>
     </TableRow>
   );
 }
-

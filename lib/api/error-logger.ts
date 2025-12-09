@@ -1,6 +1,6 @@
 /**
  * Comprehensive Error Logging Utility
- * 
+ *
  * Provides structured error logging for API routes with:
  * - Request context capture
  * - Error categorization
@@ -10,7 +10,7 @@
 
 import { NextRequest } from 'next/server';
 
-export type ErrorCategory = 
+export type ErrorCategory =
   | 'authentication'
   | 'authorization'
   | 'validation'
@@ -36,11 +36,13 @@ export interface ErrorContext {
     code?: string | undefined;
     details?: any;
   };
-  request?: {
-    params?: Record<string, any> | undefined;
-    body?: any;
-    query?: Record<string, any> | undefined;
-  } | undefined;
+  request?:
+    | {
+        params?: Record<string, any> | undefined;
+        body?: any;
+        query?: Record<string, any> | undefined;
+      }
+    | undefined;
 }
 
 class APIErrorLogger {
@@ -73,7 +75,7 @@ class APIErrorLogger {
     if (!stack || this.isProduction) {
       return undefined;
     }
-    
+
     // In development, show full stack
     // In production, remove file paths that might expose system info
     return stack
@@ -105,7 +107,7 @@ class APIErrorLogger {
     ];
 
     const sanitized = { ...body };
-    
+
     for (const field of sensitiveFields) {
       if (field in sanitized) {
         sanitized[field] = '[REDACTED]';
@@ -121,47 +123,59 @@ class APIErrorLogger {
   private formatConsoleError(context: ErrorContext): void {
     const icon = this.getCategoryIcon(context.category);
     const color = this.getCategoryColor(context.category);
-    
+
     console.error('\n' + '='.repeat(80));
     console.error(`${icon} API ERROR - ${context.category.toUpperCase()}`);
     console.error('='.repeat(80));
     console.error(`\n📍 Endpoint: ${context.method} ${context.endpoint}`);
     console.error(`⏰ Time: ${context.timestamp}`);
     console.error(`🆔 Request ID: ${context.requestId}`);
-    
+
     if (context.userId) {
       console.error(`👤 User: ${context.userEmail || context.userId}`);
     }
-    
+
     console.error(`🌐 IP: ${context.ip}`);
     console.error(`\n❌ Error: ${context.error.message}`);
-    
+
     if (context.error.code) {
       console.error(`📋 Code: ${context.error.code}`);
     }
-    
+
     if (context.error.details) {
-      console.error(`📄 Details:`, JSON.stringify(context.error.details, null, 2));
+      console.error(
+        `📄 Details:`,
+        JSON.stringify(context.error.details, null, 2)
+      );
     }
-    
+
     if (context.error.stack && this.isDevelopment) {
       console.error(`\n📚 Stack Trace:\n${context.error.stack}`);
     }
-    
+
     if (context.request) {
       if (context.request.params) {
-        console.error(`\n🔍 Params:`, JSON.stringify(context.request.params, null, 2));
+        console.error(
+          `\n🔍 Params:`,
+          JSON.stringify(context.request.params, null, 2)
+        );
       }
-      
+
       if (context.request.query) {
-        console.error(`❓ Query:`, JSON.stringify(context.request.query, null, 2));
+        console.error(
+          `❓ Query:`,
+          JSON.stringify(context.request.query, null, 2)
+        );
       }
-      
+
       if (context.request.body && this.isDevelopment) {
-        console.error(`📦 Body:`, JSON.stringify(context.request.body, null, 2));
+        console.error(
+          `📦 Body:`,
+          JSON.stringify(context.request.body, null, 2)
+        );
       }
     }
-    
+
     console.error('\n' + '='.repeat(80) + '\n');
   }
 
@@ -215,7 +229,7 @@ class APIErrorLogger {
   ): Promise<ErrorContext> {
     const requestId = this.generateRequestId();
     const url = new URL(request.url);
-    
+
     const context: ErrorContext = {
       category,
       endpoint: url.pathname,
@@ -228,7 +242,9 @@ class APIErrorLogger {
       timestamp: new Date().toISOString(),
       error: {
         message: error instanceof Error ? error.message : String(error),
-        stack: this.sanitizeStack(error instanceof Error ? error.stack : undefined),
+        stack: this.sanitizeStack(
+          error instanceof Error ? error.stack : undefined
+        ),
         code: error?.code || error?.statusCode,
         details: error?.details || error?.data,
       },
@@ -363,10 +379,12 @@ class APIErrorLogger {
     //     extra: context,
     //   });
     // }
-    
+
     // For now, just log that we would send to monitoring
     if (this.isProduction) {
-      console.log(`[Monitoring] Would send error to external service: ${context.requestId}`);
+      console.log(
+        `[Monitoring] Would send error to external service: ${context.requestId}`
+      );
     }
   }
 }
@@ -376,8 +394,11 @@ export const apiErrorLogger = new APIErrorLogger();
 
 // Export helper functions for common use cases
 export const logAuthError = apiErrorLogger.logAuthError.bind(apiErrorLogger);
-export const logAuthorizationError = apiErrorLogger.logAuthorizationError.bind(apiErrorLogger);
-export const logValidationError = apiErrorLogger.logValidationError.bind(apiErrorLogger);
-export const logDatabaseError = apiErrorLogger.logDatabaseError.bind(apiErrorLogger);
-export const logRateLimitError = apiErrorLogger.logRateLimitError.bind(apiErrorLogger);
-
+export const logAuthorizationError =
+  apiErrorLogger.logAuthorizationError.bind(apiErrorLogger);
+export const logValidationError =
+  apiErrorLogger.logValidationError.bind(apiErrorLogger);
+export const logDatabaseError =
+  apiErrorLogger.logDatabaseError.bind(apiErrorLogger);
+export const logRateLimitError =
+  apiErrorLogger.logRateLimitError.bind(apiErrorLogger);

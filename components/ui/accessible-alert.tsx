@@ -1,6 +1,6 @@
 /**
  * Accessible Alert Component
- * 
+ *
  * Enhanced alert component with ARIA attributes and screen reader support
  */
 
@@ -23,8 +23,7 @@ const alertVariants = cva(
           'border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400',
         warning:
           'border-yellow-500/50 text-yellow-700 dark:text-yellow-400 [&>svg]:text-yellow-700 dark:[&>svg]:text-yellow-400',
-        info:
-          'border-blue-500/50 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-700 dark:[&>svg]:text-blue-400',
+        info: 'border-blue-500/50 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-700 dark:[&>svg]:text-blue-400',
       },
     },
     defaultVariants: {
@@ -91,7 +90,7 @@ const AccessibleAlert = React.forwardRef<HTMLDivElement, AccessibleAlertProps>(
     const ariaProps: Record<string, string> = {
       role: variant === 'destructive' ? 'alert' : 'status',
     };
-    
+
     if (live) {
       ariaProps['aria-live'] = liveMode;
       ariaProps['aria-atomic'] = 'true';
@@ -138,4 +137,3 @@ const AccessibleAlertDescription = React.forwardRef<
 AccessibleAlertDescription.displayName = 'AccessibleAlertDescription';
 
 export { AccessibleAlert, AccessibleAlertTitle, AccessibleAlertDescription };
-

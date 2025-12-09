@@ -27,7 +27,9 @@ async function addContractsColumns() {
     if (productsEnError && productsEnError.code === '42703') {
       console.log('Adding products_en column...');
       // Column doesn't exist, we need to add it via SQL
-      console.log('⚠️ Column products_en does not exist. Please add it manually via SQL:');
+      console.log(
+        '⚠️ Column products_en does not exist. Please add it manually via SQL:'
+      );
       console.log('ALTER TABLE contracts ADD COLUMN products_en TEXT;');
     } else {
       console.log('✅ products_en column already exists');
@@ -40,7 +42,9 @@ async function addContractsColumns() {
       .limit(1);
 
     if (productsArError && productsArError.code === '42703') {
-      console.log('⚠️ Column products_ar does not exist. Please add it manually via SQL:');
+      console.log(
+        '⚠️ Column products_ar does not exist. Please add it manually via SQL:'
+      );
       console.log('ALTER TABLE contracts ADD COLUMN products_ar TEXT;');
     } else {
       console.log('✅ products_ar column already exists');
@@ -53,7 +57,9 @@ async function addContractsColumns() {
       .limit(1);
 
     if (locationEnError && locationEnError.code === '42703') {
-      console.log('⚠️ Column location_en does not exist. Please add it manually via SQL:');
+      console.log(
+        '⚠️ Column location_en does not exist. Please add it manually via SQL:'
+      );
       console.log('ALTER TABLE contracts ADD COLUMN location_en TEXT;');
     } else {
       console.log('✅ location_en column already exists');
@@ -66,7 +72,9 @@ async function addContractsColumns() {
       .limit(1);
 
     if (locationArError && locationArError.code === '42703') {
-      console.log('⚠️ Column location_ar does not exist. Please add it manually via SQL:');
+      console.log(
+        '⚠️ Column location_ar does not exist. Please add it manually via SQL:'
+      );
       console.log('ALTER TABLE contracts ADD COLUMN location_ar TEXT;');
     } else {
       console.log('✅ location_ar column already exists');
@@ -79,8 +87,12 @@ async function addContractsColumns() {
       .limit(1);
 
     if (productIdError && productIdError.code === '42703') {
-      console.log('⚠️ Column product_id does not exist. Please add it manually via SQL:');
-      console.log('ALTER TABLE contracts ADD COLUMN product_id UUID REFERENCES products(id);');
+      console.log(
+        '⚠️ Column product_id does not exist. Please add it manually via SQL:'
+      );
+      console.log(
+        'ALTER TABLE contracts ADD COLUMN product_id UUID REFERENCES products(id);'
+      );
     } else {
       console.log('✅ product_id column already exists');
     }
@@ -92,20 +104,35 @@ async function addContractsColumns() {
       .limit(1);
 
     if (locationIdError && locationIdError.code === '42703') {
-      console.log('⚠️ Column location_id does not exist. Please add it manually via SQL:');
-      console.log('ALTER TABLE contracts ADD COLUMN location_id UUID REFERENCES locations(id);');
+      console.log(
+        '⚠️ Column location_id does not exist. Please add it manually via SQL:'
+      );
+      console.log(
+        'ALTER TABLE contracts ADD COLUMN location_id UUID REFERENCES locations(id);'
+      );
     } else {
       console.log('✅ location_id column already exists');
     }
 
     console.log('\n📋 SQL Commands to run manually:');
-    console.log('ALTER TABLE contracts ADD COLUMN IF NOT EXISTS products_en TEXT;');
-    console.log('ALTER TABLE contracts ADD COLUMN IF NOT EXISTS products_ar TEXT;');
-    console.log('ALTER TABLE contracts ADD COLUMN IF NOT EXISTS location_en TEXT;');
-    console.log('ALTER TABLE contracts ADD COLUMN IF NOT EXISTS location_ar TEXT;');
-    console.log('ALTER TABLE contracts ADD COLUMN IF NOT EXISTS product_id UUID REFERENCES products(id);');
-    console.log('ALTER TABLE contracts ADD COLUMN IF NOT EXISTS location_id UUID REFERENCES locations(id);');
-
+    console.log(
+      'ALTER TABLE contracts ADD COLUMN IF NOT EXISTS products_en TEXT;'
+    );
+    console.log(
+      'ALTER TABLE contracts ADD COLUMN IF NOT EXISTS products_ar TEXT;'
+    );
+    console.log(
+      'ALTER TABLE contracts ADD COLUMN IF NOT EXISTS location_en TEXT;'
+    );
+    console.log(
+      'ALTER TABLE contracts ADD COLUMN IF NOT EXISTS location_ar TEXT;'
+    );
+    console.log(
+      'ALTER TABLE contracts ADD COLUMN IF NOT EXISTS product_id UUID REFERENCES products(id);'
+    );
+    console.log(
+      'ALTER TABLE contracts ADD COLUMN IF NOT EXISTS location_id UUID REFERENCES locations(id);'
+    );
   } catch (error) {
     console.error('❌ Error checking contracts table columns:', error);
   }

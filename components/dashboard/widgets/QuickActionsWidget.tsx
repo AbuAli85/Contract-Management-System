@@ -2,14 +2,14 @@
 
 import { BaseWidget } from '../BaseWidget';
 import { Button } from '@/components/ui/button';
-import { 
-  Plus, 
-  FileText, 
-  Users, 
-  Building, 
+import {
+  Plus,
+  FileText,
+  Users,
+  Building,
   Search,
   BarChart,
-  Settings
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import type { WidgetProps } from '@/lib/types/dashboard';
@@ -27,7 +27,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
   {
     id: 'create_contract',
     label: 'New Contract',
-    icon: <Plus className="h-4 w-4" />,
+    icon: <Plus className='h-4 w-4' />,
     href: '/en/contracts/create',
     description: 'Create a new contract',
     color: 'primary',
@@ -35,7 +35,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
   {
     id: 'add_promoter',
     label: 'Add Promoter',
-    icon: <Users className="h-4 w-4" />,
+    icon: <Users className='h-4 w-4' />,
     href: '/en/promoters/create',
     description: 'Register new promoter',
     color: 'default',
@@ -43,7 +43,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
   {
     id: 'add_party',
     label: 'Add Party',
-    icon: <Building className="h-4 w-4" />,
+    icon: <Building className='h-4 w-4' />,
     href: '/en/parties/create',
     description: 'Create new party',
     color: 'default',
@@ -51,7 +51,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
   {
     id: 'search_contracts',
     label: 'Search',
-    icon: <Search className="h-4 w-4" />,
+    icon: <Search className='h-4 w-4' />,
     href: '/en/contracts',
     description: 'Search contracts',
     color: 'default',
@@ -59,7 +59,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
   {
     id: 'view_reports',
     label: 'Reports',
-    icon: <BarChart className="h-4 w-4" />,
+    icon: <BarChart className='h-4 w-4' />,
     href: '/en/reports',
     description: 'View analytics',
     color: 'default',
@@ -67,7 +67,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
   {
     id: 'settings',
     label: 'Settings',
-    icon: <Settings className="h-4 w-4" />,
+    icon: <Settings className='h-4 w-4' />,
     href: '/en/settings',
     description: 'System settings',
     color: 'default',
@@ -96,36 +96,38 @@ export function QuickActionsWidget(props: WidgetProps) {
   return (
     <BaseWidget
       {...props}
-      title="Quick Actions"
-      description="Common tasks and shortcuts"
-      icon={<FileText className="h-4 w-4" />}
+      title='Quick Actions'
+      description='Common tasks and shortcuts'
+      icon={<FileText className='h-4 w-4' />}
     >
       {layout === 'grid' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
           {actions.map((action: QuickAction) => (
             <Link key={action.id} href={action.href}>
               <Button
                 variant={getButtonVariant(action.color)}
-                className="w-full h-auto py-4 flex-col gap-2"
+                className='w-full h-auto py-4 flex-col gap-2'
               >
                 {action.icon}
-                <span className="text-xs font-medium">{action.label}</span>
+                <span className='text-xs font-medium'>{action.label}</span>
               </Button>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className='space-y-2'>
           {actions.map((action: QuickAction) => (
             <Link key={action.id} href={action.href}>
               <Button
-                variant="outline"
-                className="w-full justify-start gap-3 h-auto py-3"
+                variant='outline'
+                className='w-full justify-start gap-3 h-auto py-3'
               >
                 {action.icon}
-                <div className="flex-1 text-left">
-                  <div className="font-medium">{action.label}</div>
-                  <div className="text-xs text-muted-foreground">{action.description}</div>
+                <div className='flex-1 text-left'>
+                  <div className='font-medium'>{action.label}</div>
+                  <div className='text-xs text-muted-foreground'>
+                    {action.description}
+                  </div>
                 </div>
               </Button>
             </Link>
@@ -135,4 +137,3 @@ export function QuickActionsWidget(props: WidgetProps) {
     </BaseWidget>
   );
 }
-

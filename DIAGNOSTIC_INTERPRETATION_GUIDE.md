@@ -1,6 +1,7 @@
 # 📊 Diagnostic Results Interpretation Guide
 
 **How to Use This Guide:**
+
 1. Run the diagnostic script
 2. Compare your results to the examples below
 3. Identify which issues apply to your system
@@ -35,6 +36,7 @@ supabase db execute --file scripts/diagnose-user-system.sql > diagnostic-results
 **What you're checking:** Which user-related tables exist
 
 **Good Result ✅:**
+
 ```
 table_name                  | column_count
 ----------------------------|-------------
@@ -46,6 +48,7 @@ user_role_assignments      | 10
 ```
 
 **Problem Result ❌:**
+
 ```
 table_name                  | column_count
 ----------------------------|-------------
@@ -58,6 +61,7 @@ roles                      | 7           ← Conflicts with rbac_roles
 ```
 
 **What it means:**
+
 - ✅ Only `profiles` table exists (good)
 - ❌ Both `users` AND `profiles` exist (needs consolidation)
 - ❌ Multiple RBAC systems (`user_roles`, `rbac_*`, `roles`) (needs cleanup)
@@ -69,6 +73,7 @@ roles                      | 7           ← Conflicts with rbac_roles
 **What you're checking:** Correct column structure
 
 **Good Result ✅:**
+
 ```
 column_name     | data_type | is_nullable
 ----------------|-----------|------------
@@ -87,6 +92,7 @@ updated_at      | timestamp | YES
 ```
 
 **Problem Result ❌:**
+
 ```
 column_name     | data_type | is_nullable
 ----------------|-----------|------------
@@ -97,6 +103,7 @@ role            | text      | YES          ← Problem: Role in profiles table
 ```
 
 **What it means:**
+
 - ✅ `id` is primary key (references auth.users.id)
 - ❌ Both `id` and `user_id` exist (wrong structure)
 - ❌ `role` column in profiles (should use RBAC tables instead)
@@ -106,11 +113,13 @@ role            | text      | YES          ← Problem: Role in profiles table
 ### SECTION 3: Users Table (Should NOT Exist)
 
 **Good Result ✅:**
+
 ```
 (No rows returned - table doesn't exist)
 ```
 
 **Problem Result ❌:**
+
 ```
 column_name     | data_type | is_nullable
 ----------------|-----------|------------
@@ -122,6 +131,7 @@ status          | text      | NO
 ```
 
 **What it means:**
+
 - ✅ `users` table doesn't exist (correct - we use `profiles`)
 - ❌ `users` table exists (needs consolidation with `profiles`)
 
@@ -132,6 +142,7 @@ status          | text      | NO
 **What you're checking:** Correct relationships
 
 **Good Result ✅:**
+
 ```
 table_name              | column_name | foreign_table | foreign_column
 ------------------------|-------------|---------------|---------------
@@ -143,6 +154,7 @@ role_permissions       | permission_id| permissions  | id
 ```
 
 **Problem Result ❌:**
+
 ```
 table_name              | column_name | foreign_table | foreign_column
 ------------------------|-------------|---------------|---------------
@@ -152,6 +164,7 @@ rbac_user_role_assign  | user_id     | profiles      | id           ← Mixed
 ```
 
 **What it means:**
+
 - ✅ All FKs point to `profiles.id` (correct)
 - ❌ Some FKs point to `profiles.user_id` (wrong structure)
 - ❌ Inconsistent FK targets (some to id, some to user_id)
@@ -163,18 +176,21 @@ rbac_user_role_assign  | user_id     | profiles      | id           ← Mixed
 **What you're checking:** Where roles are stored
 
 **Good Result ✅:**
+
 ```
 NOTICE: No role column in profiles
 (Roles stored in user_role_assignments table only)
 ```
 
 **Problem Result ❌:**
+
 ```
 NOTICE: profiles.role column exists
 NOTICE: users.role column exists
 ```
 
 **What it means:**
+
 - ✅ Roles stored only in RBAC tables (correct)
 - ❌ Roles stored in multiple places (data can be out of sync)
 
@@ -185,6 +201,7 @@ NOTICE: users.role column exists
 **What you're checking:** Which RBAC tables exist
 
 **Good Result ✅:**
+
 ```
 table_name              | columns | size
 ------------------------|---------|------
@@ -195,6 +212,7 @@ user_role_assignments  | 10      | 72 kB
 ```
 
 **Problem Result ❌:**
+
 ```
 table_name                    | columns | size
 ------------------------------|---------|------
@@ -207,6 +225,7 @@ user_roles                    | 4       | 24 kB    ← Another system!
 ```
 
 **What it means:**
+
 - ✅ Single RBAC system (clean)
 - ❌ Multiple RBAC systems (`rbac_*` AND `roles` AND `user_roles`) (needs consolidation)
 
@@ -217,6 +236,7 @@ user_roles                    | 4       | 24 kB    ← Another system!
 **What you're checking:** How much data exists
 
 **Expected Output:**
+
 ```
 NOTICE: profiles has 115 records
 NOTICE: roles has 5 records
@@ -225,6 +245,7 @@ NOTICE: user_role_assignments has 120 records
 ```
 
 **What it means:**
+
 - Compare counts across duplicated tables
 - If `users` has 115 but `profiles` has 90, you have missing data
 - If numbers match, consolidation will be easier
@@ -236,6 +257,7 @@ NOTICE: user_role_assignments has 120 records
 **What you're checking:** Auth.users vs Profiles sync
 
 **Good Result ✅:**
+
 ```
 email              | auth_full_name | profile_full_name | status
 -------------------|----------------|-------------------|--------
@@ -244,6 +266,7 @@ user2@test.com    | Jane Smith     | Jane Smith        | ✅ OK
 ```
 
 **Problem Result ❌:**
+
 ```
 email                        | auth_full_name | profile_full_name | status
 -----------------------------|----------------|-------------------|------------------
@@ -253,6 +276,7 @@ user3@test.com              | NULL           | Jane Smith        | ⚠️ Name m
 ```
 
 **What it means:**
+
 - ✅ All data is synced (great!)
 - ❌ Names don't match (needs sync)
 - ⚠️ NULL values (incomplete data, needs migration)
@@ -264,6 +288,7 @@ user3@test.com              | NULL           | Jane Smith        | ⚠️ Name m
 **What you're checking:** Data integrity
 
 **Good Result ✅:**
+
 ```
 check_type                    | count
 ------------------------------|------
@@ -272,6 +297,7 @@ auth.users without profiles   | 0
 ```
 
 **Problem Result ❌:**
+
 ```
 check_type                    | count
 ------------------------------|------
@@ -280,6 +306,7 @@ auth.users without profiles   | 12     ← Users without profiles!
 ```
 
 **What it means:**
+
 - ✅ No orphans (perfect data integrity)
 - ❌ Orphaned profiles (will be cleaned during migration)
 - ❌ Missing profiles (will be created during migration)
@@ -291,6 +318,7 @@ auth.users without profiles   | 12     ← Users without profiles!
 **What you're checking:** Security coverage
 
 **Good Result ✅:**
+
 ```
 tablename             | policyname
 ----------------------|------------------------------------------
@@ -306,6 +334,7 @@ permissions          | Anyone can view permissions
 ```
 
 **Problem Result ❌:**
+
 ```
 tablename             | policyname
 ----------------------|------------------------------------------
@@ -316,6 +345,7 @@ profiles             | Users can update own profile
 ```
 
 **What it means:**
+
 - ✅ Complete RLS coverage (secure)
 - ❌ Missing policies (security gaps)
 - ❌ No RLS on critical tables (major security issue)
@@ -327,6 +357,7 @@ profiles             | Users can update own profile
 **What you're checking:** Functions needing fixes
 
 **Good Result ✅:**
+
 ```
 function_name                    | security_type
 ---------------------------------|------------------
@@ -336,6 +367,7 @@ refresh_user_permissions_cache  | SECURITY INVOKER
 ```
 
 **Problem Result ❌:**
+
 ```
 function_name                    | security_type
 ---------------------------------|----------------------
@@ -347,6 +379,7 @@ validate_promoter_assignment    | ⚠️ SECURITY DEFINER
 ```
 
 **What it means:**
+
 - ✅ All functions using SECURITY INVOKER or have search_path set
 - ❌ Functions with SECURITY DEFINER (will be fixed by migration)
 
@@ -356,15 +389,15 @@ validate_promoter_assignment    | ⚠️ SECURITY DEFINER
 
 Based on your results, determine which migrations you need:
 
-| Your Situation | What You Need |
-|----------------|---------------|
-| **✅ profiles table exists, no users table** | Good! Just apply function fixes |
-| **❌ Both profiles AND users tables exist** | Apply consolidation migration |
-| **❌ Multiple RBAC systems (rbac_* AND roles)** | Apply consolidation migration |
-| **❌ Data sync mismatches** | Apply consolidation migration |
-| **⚠️ 26 SECURITY DEFINER functions** | Apply function fixes migration |
-| **❌ Orphaned records** | Apply consolidation migration |
-| **❌ Missing RLS policies** | Apply consolidation migration |
+| Your Situation                                    | What You Need                   |
+| ------------------------------------------------- | ------------------------------- |
+| **✅ profiles table exists, no users table**      | Good! Just apply function fixes |
+| **❌ Both profiles AND users tables exist**       | Apply consolidation migration   |
+| **❌ Multiple RBAC systems (rbac\_\* AND roles)** | Apply consolidation migration   |
+| **❌ Data sync mismatches**                       | Apply consolidation migration   |
+| **⚠️ 26 SECURITY DEFINER functions**              | Apply function fixes migration  |
+| **❌ Orphaned records**                           | Apply consolidation migration   |
+| **❌ Missing RLS policies**                       | Apply consolidation migration   |
 
 ---
 
@@ -373,30 +406,35 @@ Based on your results, determine which migrations you need:
 ### If You See: "Both users and profiles exist"
 
 **Action:**
+
 1. ✅ Apply: `20251026_consolidate_user_profile_system.sql`
 2. This will merge them into single `profiles` table
 
 ### If You See: "Multiple RBAC systems"
 
 **Action:**
+
 1. ✅ Apply: `20251026_consolidate_user_profile_system.sql`
 2. This will consolidate into single RBAC system
 
 ### If You See: "Data mismatches"
 
 **Action:**
+
 1. ✅ Apply: `20251026_consolidate_user_profile_system.sql`
 2. This will sync all data and create auto-sync triggers
 
 ### If You See: "26 SECURITY DEFINER functions"
 
 **Action:**
+
 1. ✅ Apply: `20251026_fix_function_search_paths.sql`
 2. This will fix all function warnings
 
 ### If You See: "Orphaned records"
 
 **Action:**
+
 1. ✅ Apply: `20251026_consolidate_user_profile_system.sql`
 2. Migration handles cleanup automatically
 
@@ -434,6 +472,7 @@ auth.users without profiles: 8       ← Needs migration
 ## ✅ What to Do After Running Diagnostics
 
 1. **Save the output**
+
    ```bash
    # Keep for reference
    cp diagnostic-results.txt before-fix-diagnostics.txt
@@ -473,4 +512,3 @@ After reviewing your diagnostic results, check:
 **Need Help Interpreting Your Results?**
 
 Post your diagnostic output and I can help analyze it!
-

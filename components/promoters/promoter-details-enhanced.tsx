@@ -91,12 +91,12 @@ interface PromoterDetailsEnhancedProps {
   onRefresh?: () => void;
 }
 
-export function PromoterDetailsEnhanced({ 
-  promoterDetails, 
-  isLoading = false, 
-  isRefreshing = false, 
+export function PromoterDetailsEnhanced({
+  promoterDetails,
+  isLoading = false,
+  isRefreshing = false,
   error = null,
-  onRefresh 
+  onRefresh,
 }: PromoterDetailsEnhancedProps) {
   const params = useParams();
   const router = useRouter();
@@ -104,7 +104,8 @@ export function PromoterDetailsEnhanced({
   const locale = params?.locale as string;
   const role = useUserRole();
 
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
+  const [performanceMetrics, setPerformanceMetrics] =
+    useState<PerformanceMetrics | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
@@ -138,49 +139,68 @@ export function PromoterDetailsEnhanced({
         contractsResponse,
         tasksResponse,
         attendanceResponse,
-        ratingsResponse
+        ratingsResponse,
       ] = await Promise.allSettled([
         // Get contract metrics
         supabase
           .from('contracts')
           .select('id, status, start_date, end_date, created_at')
           .eq('promoter_id', promoterId),
-        
+
         // Get task metrics (if tasks table exists)
         supabase
           .from('promoter_tasks')
           .select('id, status, created_at, completed_at')
           .eq('promoter_id', promoterId),
-        
+
         // Get attendance data (if attendance table exists)
         supabase
           .from('promoter_attendance')
           .select('id, date, status')
           .eq('promoter_id', promoterId)
-          .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-        
+          .gte(
+            'date',
+            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+          ),
+
         // Get ratings/feedback (if feedback table exists)
         supabase
           .from('promoter_feedback')
           .select('id, rating, created_at')
-          .eq('promoter_id', promoterId)
+          .eq('promoter_id', promoterId),
       ]);
 
       // Process contracts data
-      const contracts = contractsResponse.status === 'fulfilled' ? contractsResponse.value.data || [] : [];
+      const contracts =
+        contractsResponse.status === 'fulfilled'
+          ? contractsResponse.value.data || []
+          : [];
       const totalContracts = contracts.length;
-      const activeContracts = contracts.filter((c: any) => c.status === 'active').length;
-      const completedContracts = contracts.filter((c: any) => c.status === 'completed').length;
+      const activeContracts = contracts.filter(
+        (c: any) => c.status === 'active'
+      ).length;
+      const completedContracts = contracts.filter(
+        (c: any) => c.status === 'completed'
+      ).length;
 
       // Process tasks data
-      const tasks = tasksResponse.status === 'fulfilled' ? tasksResponse.value.data || [] : [];
+      const tasks =
+        tasksResponse.status === 'fulfilled'
+          ? tasksResponse.value.data || []
+          : [];
       const totalTasks = tasks.length;
-      const completedTasks = tasks.filter((t: any) => t.status === 'completed').length;
-      const pendingTasks = tasks.filter((t: any) => t.status === 'pending').length;
+      const completedTasks = tasks.filter(
+        (t: any) => t.status === 'completed'
+      ).length;
+      const pendingTasks = tasks.filter(
+        (t: any) => t.status === 'pending'
+      ).length;
       const overdueTasks = tasks.filter((t: any) => {
         if (!t.created_at) return false;
         const createdDate = new Date(t.created_at);
-        const daysSinceCreated = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysSinceCreated = Math.floor(
+          (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
         return daysSinceCreated > 7 && t.status !== 'completed';
       }).length;
 
@@ -190,31 +210,52 @@ export function PromoterDetailsEnhanced({
       const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
-      const thisMonthTasks = tasks.filter((t: any) => 
-        t.created_at && new Date(t.created_at) >= thisMonthStart
+      const thisMonthTasks = tasks.filter(
+        (t: any) => t.created_at && new Date(t.created_at) >= thisMonthStart
       ).length;
-      
-      const lastMonthTasks = tasks.filter((t: any) => 
-        t.created_at && new Date(t.created_at) >= lastMonthStart && new Date(t.created_at) <= lastMonthEnd
+
+      const lastMonthTasks = tasks.filter(
+        (t: any) =>
+          t.created_at &&
+          new Date(t.created_at) >= lastMonthStart &&
+          new Date(t.created_at) <= lastMonthEnd
       ).length;
 
       // Process attendance data
-      const attendance = attendanceResponse.status === 'fulfilled' ? attendanceResponse.value.data || [] : [];
-      const attendanceRate = attendance.length > 0 
-        ? Math.round((attendance.filter((a: any) => a.status === 'present').length / attendance.length) * 100)
-        : 95; // Default high attendance if no data
+      const attendance =
+        attendanceResponse.status === 'fulfilled'
+          ? attendanceResponse.value.data || []
+          : [];
+      const attendanceRate =
+        attendance.length > 0
+          ? Math.round(
+              (attendance.filter((a: any) => a.status === 'present').length /
+                attendance.length) *
+                100
+            )
+          : 95; // Default high attendance if no data
 
       // Process ratings data
-      const ratings = ratingsResponse.status === 'fulfilled' ? ratingsResponse.value.data || [] : [];
-      const averageRating = ratings.length > 0 
-        ? ratings.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / ratings.length
-        : 4.2; // Default rating if no data
+      const ratings =
+        ratingsResponse.status === 'fulfilled'
+          ? ratingsResponse.value.data || []
+          : [];
+      const averageRating =
+        ratings.length > 0
+          ? ratings.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) /
+            ratings.length
+          : 4.2; // Default rating if no data
 
       // Calculate overall score based on multiple factors
-      const taskCompletionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 90;
-      const contractSuccessRate = totalContracts > 0 ? (completedContracts / totalContracts) * 100 : 85;
+      const taskCompletionRate =
+        totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 90;
+      const contractSuccessRate =
+        totalContracts > 0 ? (completedContracts / totalContracts) * 100 : 85;
       const overallScore = Math.round(
-        (attendanceRate * 0.3 + taskCompletionRate * 0.3 + contractSuccessRate * 0.2 + averageRating * 20 * 0.2)
+        attendanceRate * 0.3 +
+          taskCompletionRate * 0.3 +
+          contractSuccessRate * 0.2 +
+          averageRating * 20 * 0.2
       );
 
       const metrics: PerformanceMetrics = {
@@ -239,7 +280,11 @@ export function PromoterDetailsEnhanced({
       console.log('✅ Performance metrics loaded:', metrics);
     } catch (error) {
       console.error('❌ Error fetching performance metrics:', error);
-      setMetricsError(error instanceof Error ? error.message : 'Failed to load performance metrics');
+      setMetricsError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to load performance metrics'
+      );
       // Set fallback metrics
       const fallbackMetrics: PerformanceMetrics = {
         overallScore: 75,
@@ -255,8 +300,13 @@ export function PromoterDetailsEnhanced({
         lastMonthTasks: 0,
         averageRating: 4.0,
         totalContracts: promoterDetails?.contracts?.length || 0,
-        activeContracts: promoterDetails?.contracts?.filter((c: any) => c.status === 'active').length || 0,
-        completedContracts: promoterDetails?.contracts?.filter((c: any) => c.status === 'completed').length || 0,
+        activeContracts:
+          promoterDetails?.contracts?.filter((c: any) => c.status === 'active')
+            .length || 0,
+        completedContracts:
+          promoterDetails?.contracts?.filter(
+            (c: any) => c.status === 'completed'
+          ).length || 0,
       };
       setPerformanceMetrics(fallbackMetrics);
     } finally {
@@ -282,17 +332,19 @@ export function PromoterDetailsEnhanced({
         auditLogsResponse,
         contractsResponse,
         documentsResponse,
-        communicationsResponse
+        communicationsResponse,
       ] = await Promise.allSettled([
         // Get audit logs for this promoter
         supabase
           .from('audit_logs')
-          .select('id, action, table_name, record_id, new_values, old_values, created_at, user_id')
+          .select(
+            'id, action, table_name, record_id, new_values, old_values, created_at, user_id'
+          )
           .eq('table_name', 'promoters')
           .eq('record_id', promoterId)
           .order('created_at', { ascending: false })
           .limit(20),
-        
+
         // Get recent contract activities
         supabase
           .from('contracts')
@@ -300,29 +352,32 @@ export function PromoterDetailsEnhanced({
           .eq('promoter_id', promoterId)
           .order('updated_at', { ascending: false })
           .limit(10),
-        
+
         // Get document activities via API route to avoid RLS issues
         fetch(`/api/promoters/${promoterId}/documents`)
-          .then(res => res.ok ? res.json() : { documents: [] })
+          .then(res => (res.ok ? res.json() : { documents: [] }))
           .then(result => ({ data: result.documents || [], error: null }))
           .catch(error => {
             console.warn('Documents API not available:', error);
             return { data: [], error: null };
           }),
-        
+
         // Get communications (if communications table exists)
         supabase
           .from('promoter_communications')
           .select('id, type, subject, communication_time')
           .eq('promoter_id', promoterId)
           .order('communication_time', { ascending: false })
-          .limit(10)
+          .limit(10),
       ]);
 
       const activities: ActivityItem[] = [];
 
       // Process audit logs
-      if (auditLogsResponse.status === 'fulfilled' && auditLogsResponse.value.data) {
+      if (
+        auditLogsResponse.status === 'fulfilled' &&
+        auditLogsResponse.value.data
+      ) {
         auditLogsResponse.value.data.forEach((log: any) => {
           activities.push({
             id: `audit-${log.id}`,
@@ -334,15 +389,18 @@ export function PromoterDetailsEnhanced({
             metadata: {
               action: log.action,
               newValues: log.new_values,
-              oldValues: log.old_values
+              oldValues: log.old_values,
             },
-            status: 'info'
+            status: 'info',
           });
         });
       }
 
       // Process contract activities
-      if (contractsResponse.status === 'fulfilled' && contractsResponse.value.data) {
+      if (
+        contractsResponse.status === 'fulfilled' &&
+        contractsResponse.value.data
+      ) {
         contractsResponse.value.data.forEach((contract: any) => {
           const isNew = contract.created_at === contract.updated_at;
           activities.push({
@@ -356,15 +414,18 @@ export function PromoterDetailsEnhanced({
               contractId: contract.id,
               contractTitle: contract.title,
               contractNumber: contract.contract_number,
-              status: contract.status
+              status: contract.status,
             },
-            status: contract.status === 'active' ? 'success' : 'info'
+            status: contract.status === 'active' ? 'success' : 'info',
           });
         });
       }
 
       // Process document activities
-      if (documentsResponse.status === 'fulfilled' && documentsResponse.value.data) {
+      if (
+        documentsResponse.status === 'fulfilled' &&
+        documentsResponse.value.data
+      ) {
         documentsResponse.value.data.forEach((doc: any) => {
           activities.push({
             id: `document-${doc.id}`,
@@ -376,15 +437,18 @@ export function PromoterDetailsEnhanced({
             metadata: {
               documentType: doc.document_type,
               documentId: doc.id,
-              status: doc.status
+              status: doc.status,
             },
-            status: doc.status === 'approved' ? 'success' : 'warning'
+            status: doc.status === 'approved' ? 'success' : 'warning',
           });
         });
       }
 
       // Process communication activities
-      if (communicationsResponse.status === 'fulfilled' && communicationsResponse.value.data) {
+      if (
+        communicationsResponse.status === 'fulfilled' &&
+        communicationsResponse.value.data
+      ) {
         communicationsResponse.value.data.forEach((comm: any) => {
           activities.push({
             id: `comm-${comm.id}`,
@@ -395,15 +459,18 @@ export function PromoterDetailsEnhanced({
             user: 'System',
             metadata: {
               communicationType: comm.type,
-              subject: comm.subject
+              subject: comm.subject,
             },
-            status: 'info'
+            status: 'info',
           });
         });
       }
 
       // Sort activities by timestamp (most recent first)
-      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      activities.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
 
       // Limit to 20 most recent activities
       const limitedActivities = activities.slice(0, 20);
@@ -412,7 +479,9 @@ export function PromoterDetailsEnhanced({
       console.log('✅ Activities loaded:', limitedActivities.length, 'items');
     } catch (error) {
       console.error('❌ Error fetching activities:', error);
-      setActivitiesError(error instanceof Error ? error.message : 'Failed to load activities');
+      setActivitiesError(
+        error instanceof Error ? error.message : 'Failed to load activities'
+      );
       // Set fallback activities
       const fallbackActivities: ActivityItem[] = [
         {
@@ -422,8 +491,8 @@ export function PromoterDetailsEnhanced({
           description: 'Promoter profile was created',
           timestamp: promoterDetails?.created_at || new Date().toISOString(),
           user: 'System',
-          status: 'info'
-        }
+          status: 'info',
+        },
       ];
       setActivities(fallbackActivities);
     } finally {
@@ -502,7 +571,7 @@ export function PromoterDetailsEnhanced({
     if (navigator.share) {
       navigator.share({
         title: `Promoter Profile - ${promoterDetails?.name_en}`,
-        url: window.location.href
+        url: window.location.href,
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
@@ -510,7 +579,11 @@ export function PromoterDetailsEnhanced({
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this promoter? This action cannot be undone.')) {
+    if (
+      confirm(
+        'Are you sure you want to delete this promoter? This action cannot be undone.'
+      )
+    ) {
       // Implement delete functionality
       console.log('Delete promoter:', promoterDetails?.name_en);
     }
@@ -521,14 +594,20 @@ export function PromoterDetailsEnhanced({
   };
 
   const handleDocumentView = (type: string) => {
-    const url = type === 'id_card' ? promoterDetails?.id_card_url : promoterDetails?.passport_url;
+    const url =
+      type === 'id_card'
+        ? promoterDetails?.id_card_url
+        : promoterDetails?.passport_url;
     if (url) {
       window.open(url, '_blank');
     }
   };
 
   const handleDocumentDownload = (type: string) => {
-    const url = type === 'id_card' ? promoterDetails?.id_card_url : promoterDetails?.passport_url;
+    const url =
+      type === 'id_card'
+        ? promoterDetails?.id_card_url
+        : promoterDetails?.passport_url;
     if (url) {
       const link = document.createElement('a');
       link.href = url;
@@ -543,9 +622,9 @@ export function PromoterDetailsEnhanced({
 
   if (error || !promoterDetails) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="mb-4 text-red-600">{error || 'Promoter not found'}</p>
+      <div className='flex min-h-screen items-center justify-center'>
+        <div className='text-center'>
+          <p className='mb-4 text-red-600'>{error || 'Promoter not found'}</p>
           <Button onClick={() => router.push(`/${locale}/promoters`)}>
             Back to Promoters
           </Button>
@@ -555,13 +634,17 @@ export function PromoterDetailsEnhanced({
   }
 
   // Calculate document health status in real-time
-  const calculateDocumentStatus = (expiryDate: string | null | undefined): 'valid' | 'expiring' | 'expired' | 'missing' => {
+  const calculateDocumentStatus = (
+    expiryDate: string | null | undefined
+  ): 'valid' | 'expiring' | 'expired' | 'missing' => {
     if (!expiryDate) return 'missing';
-    
+
     const expiry = new Date(expiryDate);
     const now = new Date();
-    const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const daysUntilExpiry = Math.ceil(
+      (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (daysUntilExpiry < 0) return 'expired';
     if (daysUntilExpiry <= 30) return 'expiring';
     return 'valid';
@@ -572,39 +655,41 @@ export function PromoterDetailsEnhanced({
       number: promoterDetails.id_card_number || undefined,
       expiryDate: promoterDetails.id_card_expiry_date || undefined,
       url: promoterDetails.id_card_url || undefined,
-      status: calculateDocumentStatus(promoterDetails.id_card_expiry_date)
+      status: calculateDocumentStatus(promoterDetails.id_card_expiry_date),
     },
     passport: {
       number: promoterDetails.passport_number || undefined,
       expiryDate: promoterDetails.passport_expiry_date || undefined,
       url: promoterDetails.passport_url || undefined,
-      status: calculateDocumentStatus(promoterDetails.passport_expiry_date)
-    }
+      status: calculateDocumentStatus(promoterDetails.passport_expiry_date),
+    },
   };
 
   return (
-    <div className="container mx-auto space-y-6 py-6">
+    <div className='container mx-auto space-y-6 py-6'>
       {/* Header with refresh button */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <Button
-          variant="outline"
+          variant='outline'
           onClick={() => router.back()}
-          className="flex items-center gap-2"
+          className='flex items-center gap-2'
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className='h-4 w-4' />
           Back
         </Button>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-purple-100 text-purple-700">
+        <div className='flex items-center gap-2'>
+          <Badge variant='outline' className='bg-purple-100 text-purple-700'>
             Intelligence Hub
           </Badge>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2"
+            className='flex items-center gap-2'
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+            />
             Refresh
           </Button>
         </div>
@@ -621,22 +706,46 @@ export function PromoterDetailsEnhanced({
       />
 
       {/* Enhanced Tabs with Two-Column Layout */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-10 gap-1">
-          <TabsTrigger value="overview" className="text-xs lg:text-sm">Overview</TabsTrigger>
-          <TabsTrigger value="performance" className="text-xs lg:text-sm">Performance</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs lg:text-sm">Analytics</TabsTrigger>
-          <TabsTrigger value="comparison" className="text-xs lg:text-sm">Comparison</TabsTrigger>
-          <TabsTrigger value="kpi" className="text-xs lg:text-sm">KPI & Goals</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs lg:text-sm">Documents</TabsTrigger>
-          <TabsTrigger value="compliance" className="text-xs lg:text-sm">Compliance</TabsTrigger>
-          <TabsTrigger value="contracts" className="text-xs lg:text-sm">Contracts</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs lg:text-sm">Notes</TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs lg:text-sm">Activity</TabsTrigger>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className='space-y-6'
+      >
+        <TabsList className='grid w-full grid-cols-3 lg:grid-cols-10 gap-1'>
+          <TabsTrigger value='overview' className='text-xs lg:text-sm'>
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value='performance' className='text-xs lg:text-sm'>
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value='analytics' className='text-xs lg:text-sm'>
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value='comparison' className='text-xs lg:text-sm'>
+            Comparison
+          </TabsTrigger>
+          <TabsTrigger value='kpi' className='text-xs lg:text-sm'>
+            KPI & Goals
+          </TabsTrigger>
+          <TabsTrigger value='documents' className='text-xs lg:text-sm'>
+            Documents
+          </TabsTrigger>
+          <TabsTrigger value='compliance' className='text-xs lg:text-sm'>
+            Compliance
+          </TabsTrigger>
+          <TabsTrigger value='contracts' className='text-xs lg:text-sm'>
+            Contracts
+          </TabsTrigger>
+          <TabsTrigger value='notes' className='text-xs lg:text-sm'>
+            Notes
+          </TabsTrigger>
+          <TabsTrigger value='activity' className='text-xs lg:text-sm'>
+            Activity
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab with Two-Column Layout */}
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value='overview' className='space-y-6'>
           <PromoterIntelligenceHubLayout
             promoterData={promoterDetails}
             performanceMetrics={performanceMetrics}
@@ -654,18 +763,20 @@ export function PromoterDetailsEnhanced({
             onAddToFavorites={handleAddToFavorites}
             onShare={handleShare}
             onDelete={handleDelete}
-            hasDocuments={!!(promoterDetails.id_card_url || promoterDetails.passport_url)}
+            hasDocuments={
+              !!(promoterDetails.id_card_url || promoterDetails.passport_url)
+            }
             hasContracts={promoterDetails.contracts.length > 0}
           >
             {/* Main Content Area */}
-            <div className="space-y-6">
+            <div className='space-y-6'>
               {isLoadingMetrics ? (
-                <div className="flex items-center justify-center p-8">
-                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <div className='flex items-center justify-center p-8'>
+                  <Loader2 className='h-6 w-6 animate-spin mr-2' />
                   <span>Loading performance metrics...</span>
                 </div>
               ) : metricsError ? (
-                <div className="flex items-center justify-center p-8 text-red-600">
+                <div className='flex items-center justify-center p-8 text-red-600'>
                   <span>⚠️ {metricsError}</span>
                 </div>
               ) : performanceMetrics ? (
@@ -688,38 +799,38 @@ export function PromoterDetailsEnhanced({
         </TabsContent>
 
         {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-6">
+        <TabsContent value='performance' className='space-y-6'>
           {isLoadingMetrics ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <div className='flex items-center justify-center p-8'>
+              <Loader2 className='h-6 w-6 animate-spin mr-2' />
               <span>Loading performance metrics...</span>
             </div>
           ) : metricsError ? (
-            <div className="flex items-center justify-center p-8 text-red-600">
+            <div className='flex items-center justify-center p-8 text-red-600'>
               <span>⚠️ {metricsError}</span>
             </div>
           ) : performanceMetrics ? (
             <>
               <PromoterPerformanceMetrics metrics={performanceMetrics} />
-              <PromoterSmartTags 
+              <PromoterSmartTags
                 promoterId={promoterId}
                 isAdmin={role === 'admin'}
                 existingTags={promoterDetails.tags || []}
-                onTagsUpdate={(tags) => console.log('Tags updated:', tags)}
+                onTagsUpdate={tags => console.log('Tags updated:', tags)}
               />
             </>
           ) : (
-            <div className="flex items-center justify-center p-8 text-gray-500">
+            <div className='flex items-center justify-center p-8 text-gray-500'>
               <span>No performance data available</span>
             </div>
           )}
         </TabsContent>
 
         {/* Analytics Dashboard Tab */}
-        <TabsContent value="analytics" className="space-y-6">
+        <TabsContent value='analytics' className='space-y-6'>
           {isLoadingMetrics ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <div className='flex items-center justify-center p-8'>
+              <Loader2 className='h-6 w-6 animate-spin mr-2' />
               <span>Loading analytics...</span>
             </div>
           ) : (
@@ -732,10 +843,10 @@ export function PromoterDetailsEnhanced({
         </TabsContent>
 
         {/* Comparison View Tab */}
-        <TabsContent value="comparison" className="space-y-6">
+        <TabsContent value='comparison' className='space-y-6'>
           {isLoadingMetrics ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <div className='flex items-center justify-center p-8'>
+              <Loader2 className='h-6 w-6 animate-spin mr-2' />
               <span>Loading comparison data...</span>
             </div>
           ) : performanceMetrics ? (
@@ -744,14 +855,14 @@ export function PromoterDetailsEnhanced({
               promoterName={promoterDetails.name_en}
             />
           ) : (
-            <div className="flex items-center justify-center p-8 text-gray-500">
+            <div className='flex items-center justify-center p-8 text-gray-500'>
               <span>No comparison data available</span>
             </div>
           )}
         </TabsContent>
 
         {/* KPI Tracker Tab */}
-        <TabsContent value="kpi" className="space-y-6">
+        <TabsContent value='kpi' className='space-y-6'>
           <PromoterKPITracker
             promoterId={promoterId}
             isAdmin={role === 'admin'}
@@ -759,7 +870,7 @@ export function PromoterDetailsEnhanced({
         </TabsContent>
 
         {/* Documents Tab */}
-        <TabsContent value="documents" className="space-y-6">
+        <TabsContent value='documents' className='space-y-6'>
           <PromoterDocumentHealth
             documents={documentHealth}
             onUpload={handleDocumentUpload}
@@ -777,7 +888,7 @@ export function PromoterDetailsEnhanced({
         </TabsContent>
 
         {/* Compliance Tab */}
-        <TabsContent value="compliance" className="space-y-6">
+        <TabsContent value='compliance' className='space-y-6'>
           <PromoterComplianceTracker
             promoterId={promoterId}
             promoterData={promoterDetails}
@@ -788,7 +899,7 @@ export function PromoterDetailsEnhanced({
         </TabsContent>
 
         {/* Contracts Tab */}
-        <TabsContent value="contracts" className="space-y-6">
+        <TabsContent value='contracts' className='space-y-6'>
           <PromoterContractSummary
             contracts={promoterDetails.contracts}
             onCreateContract={handleCreateContract}
@@ -799,24 +910,24 @@ export function PromoterDetailsEnhanced({
         </TabsContent>
 
         {/* Notes & Comments Tab */}
-        <TabsContent value="notes" className="space-y-6">
+        <TabsContent value='notes' className='space-y-6'>
           <PromoterNotesComments
             promoterId={promoterId}
             isAdmin={role === 'admin'}
-            currentUserId="current-user-id"
+            currentUserId='current-user-id'
             currentUserName={role === 'admin' ? 'Admin User' : 'User'}
           />
         </TabsContent>
 
         {/* Activity Tab */}
-        <TabsContent value="activity" className="space-y-6">
+        <TabsContent value='activity' className='space-y-6'>
           {isLoadingActivities ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <div className='flex items-center justify-center p-8'>
+              <Loader2 className='h-6 w-6 animate-spin mr-2' />
               <span>Loading activity timeline...</span>
             </div>
           ) : activitiesError ? (
-            <div className="flex items-center justify-center p-8 text-red-600">
+            <div className='flex items-center justify-center p-8 text-red-600'>
               <span>⚠️ {activitiesError}</span>
             </div>
           ) : (

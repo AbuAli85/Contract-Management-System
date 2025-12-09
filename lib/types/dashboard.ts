@@ -316,4 +316,3 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, WidgetDefinition> = {
     configurable: true,
   },
 };
-

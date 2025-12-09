@@ -2,7 +2,7 @@
 /**
  * Security Audit Script
  * Scans the codebase for potential security issues
- * 
+ *
  * Run with: node scripts/security-audit.js
  */
 
@@ -75,7 +75,8 @@ const SECURITY_PATTERNS = [
   },
   {
     name: 'Console.log with Sensitive Data',
-    pattern: /console\.log\s*\([^)]*(?:password|secret|token|key|credential)[^)]*\)/gi,
+    pattern:
+      /console\.log\s*\([^)]*(?:password|secret|token|key|credential)[^)]*\)/gi,
     severity: 'MEDIUM',
     exclude: ['node_modules'],
   },
@@ -114,14 +115,14 @@ const SKIP_DIRS = ['node_modules', '.next', '.git', 'dist', 'build', '.vercel'];
 function getAllFiles(dirPath, files = []) {
   try {
     const items = fs.readdirSync(dirPath);
-    
+
     for (const item of items) {
       const fullPath = path.join(dirPath, item);
-      
+
       if (SKIP_DIRS.includes(item)) continue;
-      
+
       const stat = fs.statSync(fullPath);
-      
+
       if (stat.isDirectory()) {
         getAllFiles(fullPath, files);
       } else if (SCAN_EXTENSIONS.some(ext => item.endsWith(ext))) {
@@ -131,7 +132,7 @@ function getAllFiles(dirPath, files = []) {
   } catch (error) {
     // Skip directories we can't access
   }
-  
+
   return files;
 }
 
@@ -139,7 +140,7 @@ function scanFile(filePath, pattern) {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
     const matches = content.match(pattern.pattern);
-    
+
     if (matches) {
       // Check if file should be excluded
       if (pattern.exclude) {
@@ -149,7 +150,7 @@ function scanFile(filePath, pattern) {
           }
         }
       }
-      
+
       return {
         file: filePath,
         matches: matches.length,
@@ -160,13 +161,13 @@ function scanFile(filePath, pattern) {
   } catch (error) {
     // Skip files we can't read
   }
-  
+
   return null;
 }
 
 function runAudit() {
   logSection('🔐 CONTRACT MANAGEMENT SYSTEM - SECURITY AUDIT');
-  
+
   const projectRoot = path.resolve(__dirname, '..');
   const results = {
     critical: [],
@@ -174,35 +175,40 @@ function runAudit() {
     medium: [],
     low: [],
   };
-  
+
   log(`\n📁 Scanning directory: ${projectRoot}\n`);
-  
+
   // Get all files
   const files = getAllFiles(projectRoot);
   log(`Found ${files.length} files to scan\n`);
-  
+
   // Run each security check
   for (const pattern of SECURITY_PATTERNS) {
     log(`\n🔍 Checking for: ${pattern.name}`);
-    
+
     let foundIssues = [];
-    
+
     for (const file of files) {
       const result = scanFile(file, pattern);
       if (result) {
         foundIssues.push(result);
       }
     }
-    
+
     if (foundIssues.length > 0) {
       logWarning(`Found ${foundIssues.length} potential issues:`);
-      
+
       for (const issue of foundIssues) {
         const relativePath = path.relative(projectRoot, issue.file);
-        log(`  - ${relativePath} (${issue.matches} matches)`, 
-            issue.severity === 'CRITICAL' ? COLORS.RED : 
-            issue.severity === 'HIGH' ? COLORS.YELLOW : COLORS.RESET);
-        
+        log(
+          `  - ${relativePath} (${issue.matches} matches)`,
+          issue.severity === 'CRITICAL'
+            ? COLORS.RED
+            : issue.severity === 'HIGH'
+              ? COLORS.YELLOW
+              : COLORS.RESET
+        );
+
         results[issue.severity.toLowerCase()].push({
           pattern: pattern.name,
           file: relativePath,
@@ -213,13 +219,13 @@ function runAudit() {
       logSuccess('No issues found');
     }
   }
-  
+
   // Check for environment variable usage
   logSection('📋 ENVIRONMENT VARIABLE CHECK');
-  
+
   const envVarsUsed = new Set();
   const envRegex = /process\.env\.([A-Z_][A-Z0-9_]*)/g;
-  
+
   for (const file of files) {
     try {
       const content = fs.readFileSync(file, 'utf8');
@@ -231,24 +237,27 @@ function runAudit() {
       // Skip
     }
   }
-  
+
   log(`\nFound ${envVarsUsed.size} environment variables used:`);
-  
-  const sensitiveEnvVars = [...envVarsUsed].filter(v => 
-    v.includes('SECRET') || 
-    v.includes('KEY') || 
-    v.includes('PASSWORD') ||
-    v.includes('TOKEN')
+
+  const sensitiveEnvVars = [...envVarsUsed].filter(
+    v =>
+      v.includes('SECRET') ||
+      v.includes('KEY') ||
+      v.includes('PASSWORD') ||
+      v.includes('TOKEN')
   );
-  
+
   if (sensitiveEnvVars.length > 0) {
-    log('\n⚠️  Sensitive environment variables (ensure these are not committed):');
+    log(
+      '\n⚠️  Sensitive environment variables (ensure these are not committed):'
+    );
     sensitiveEnvVars.forEach(v => log(`  - ${v}`, COLORS.YELLOW));
   }
-  
+
   // Check for .env files that shouldn't be committed
   logSection('📁 SENSITIVE FILE CHECK');
-  
+
   const sensitiveFiles = [
     '.env',
     '.env.local',
@@ -257,12 +266,12 @@ function runAudit() {
     'service-account.json',
     'google-credentials.json',
   ];
-  
+
   for (const file of sensitiveFiles) {
     const filePath = path.join(projectRoot, file);
     if (fs.existsSync(filePath)) {
       logWarning(`Found sensitive file: ${file}`);
-      
+
       // Check if it's in .gitignore
       const gitignorePath = path.join(projectRoot, '.gitignore');
       if (fs.existsSync(gitignorePath)) {
@@ -275,32 +284,38 @@ function runAudit() {
       }
     }
   }
-  
+
   // Summary
   logSection('📊 AUDIT SUMMARY');
-  
+
   const totalCritical = results.critical.length;
   const totalHigh = results.high.length;
   const totalMedium = results.medium.length;
   const totalLow = results.low.length;
-  
-  log(`\n  CRITICAL: ${totalCritical}`, totalCritical > 0 ? COLORS.RED : COLORS.GREEN);
+
+  log(
+    `\n  CRITICAL: ${totalCritical}`,
+    totalCritical > 0 ? COLORS.RED : COLORS.GREEN
+  );
   log(`  HIGH:     ${totalHigh}`, totalHigh > 0 ? COLORS.YELLOW : COLORS.GREEN);
-  log(`  MEDIUM:   ${totalMedium}`, totalMedium > 0 ? COLORS.YELLOW : COLORS.GREEN);
+  log(
+    `  MEDIUM:   ${totalMedium}`,
+    totalMedium > 0 ? COLORS.YELLOW : COLORS.GREEN
+  );
   log(`  LOW:      ${totalLow}`, totalLow > 0 ? COLORS.RESET : COLORS.GREEN);
-  
+
   const totalIssues = totalCritical + totalHigh + totalMedium + totalLow;
-  
+
   if (totalIssues === 0) {
     logSuccess('\n🎉 No security issues found!');
   } else {
     logWarning(`\n⚠️  Found ${totalIssues} potential security issues.`);
     log('Review each finding and address as needed.\n');
   }
-  
+
   // Recommendations
   logSection('💡 RECOMMENDATIONS');
-  
+
   log(`
 1. SECRETS MANAGEMENT
    - Store all secrets in environment variables
@@ -328,11 +343,10 @@ function runAudit() {
    - Keep dependencies updated
    - Remove unused dependencies
 `);
-  
+
   return totalIssues;
 }
 
 // Run the audit
 const issueCount = runAudit();
 process.exit(issueCount > 0 ? 1 : 0);
-

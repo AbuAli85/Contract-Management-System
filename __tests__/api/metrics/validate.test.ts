@@ -61,7 +61,9 @@ describe('GET /api/metrics/validate', () => {
       },
     });
 
-    const request = new NextRequest('http://localhost:3000/api/metrics/validate');
+    const request = new NextRequest(
+      'http://localhost:3000/api/metrics/validate'
+    );
     const response = await GET(request);
 
     expect(response.status).toBe(401);
@@ -88,7 +90,9 @@ describe('GET /api/metrics/validate', () => {
       })),
     });
 
-    const request = new NextRequest('http://localhost:3000/api/metrics/validate');
+    const request = new NextRequest(
+      'http://localhost:3000/api/metrics/validate'
+    );
     const response = await GET(request);
 
     expect(response.status).toBe(403);
@@ -97,7 +101,9 @@ describe('GET /api/metrics/validate', () => {
   });
 
   it('should return integrity check report for admin users', async () => {
-    const request = new NextRequest('http://localhost:3000/api/metrics/validate');
+    const request = new NextRequest(
+      'http://localhost:3000/api/metrics/validate'
+    );
     const response = await GET(request);
 
     expect(response.status).toBe(200);
@@ -112,10 +118,13 @@ describe('GET /api/metrics/validate', () => {
 
 describe('POST /api/metrics/validate', () => {
   it('should return 400 when metrics data is missing', async () => {
-    const request = new NextRequest('http://localhost:3000/api/metrics/validate', {
-      method: 'POST',
-      body: JSON.stringify({}),
-    });
+    const request = new NextRequest(
+      'http://localhost:3000/api/metrics/validate',
+      {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }
+    );
 
     const response = await POST(request);
 
@@ -139,10 +148,13 @@ describe('POST /api/metrics/validate', () => {
       byStatus: {},
     };
 
-    const request = new NextRequest('http://localhost:3000/api/metrics/validate', {
-      method: 'POST',
-      body: JSON.stringify({ metrics: metricsData }),
-    });
+    const request = new NextRequest(
+      'http://localhost:3000/api/metrics/validate',
+      {
+        method: 'POST',
+        body: JSON.stringify({ metrics: metricsData }),
+      }
+    );
 
     const response = await POST(request);
 
@@ -153,4 +165,3 @@ describe('POST /api/metrics/validate', () => {
     expect(data.validation).toHaveProperty('isValid');
   });
 });
-

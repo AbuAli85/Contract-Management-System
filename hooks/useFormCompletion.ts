@@ -1,6 +1,6 @@
 /**
  * Form Completion Hook
- * 
+ *
  * Tracks form completion percentage and provides visual feedback
  * Only shows indicator after user has started filling the form
  */
@@ -40,7 +40,7 @@ function isFieldFilled(value: any): boolean {
 
 /**
  * Hook to track form completion
- * 
+ *
  * @example
  * ```tsx
  * const { completion, hasStarted, status, missingRequired } = useFormCompletion({
@@ -61,7 +61,7 @@ export function useFormCompletion({
   // Check if user has started filling the form
   useEffect(() => {
     if (!hasStarted) {
-      const anyFieldFilled = Object.entries(formData).some(([key, value]) => 
+      const anyFieldFilled = Object.entries(formData).some(([key, value]) =>
         isFieldFilled(value)
       );
 
@@ -76,12 +76,12 @@ export function useFormCompletion({
     // Required fields completion
     const filledRequired = requiredFields.filter(field => {
       const value = formData[field];
-      
+
       // Use custom validator if provided
       if (customValidators[field]) {
         return customValidators[field](value);
       }
-      
+
       return isFieldFilled(value);
     });
 
@@ -92,11 +92,11 @@ export function useFormCompletion({
     // Optional fields completion
     const filledOptional = optionalFields.filter(field => {
       const value = formData[field];
-      
+
       if (customValidators[field]) {
         return customValidators[field](value);
       }
-      
+
       return isFieldFilled(value);
     });
 
@@ -104,9 +104,8 @@ export function useFormCompletion({
     // Required fields count double toward completion
     const totalWeight = requiredFields.length * 2 + optionalFields.length;
     const completedWeight = filledRequired.length * 2 + filledOptional.length;
-    const completion = totalWeight > 0 
-      ? Math.round((completedWeight / totalWeight) * 100) 
-      : 0;
+    const completion =
+      totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
 
     // Determine status
     let status: 'not-started' | 'in-progress' | 'completed' = 'not-started';
@@ -149,4 +148,3 @@ export function useRequiredFieldsCompletion(
     isComplete: missingRequired.length === 0,
   };
 }
-

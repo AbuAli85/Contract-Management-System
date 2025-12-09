@@ -31,7 +31,15 @@ interface DocumentUploadDialogProps {
   isOpen: boolean;
   onClose: () => void;
   promoterId: string;
-  documentType: 'id_card' | 'passport' | 'work_permit' | 'health_certificate' | 'criminal_record' | 'contract' | 'training_certificate' | 'insurance';
+  documentType:
+    | 'id_card'
+    | 'passport'
+    | 'work_permit'
+    | 'health_certificate'
+    | 'criminal_record'
+    | 'contract'
+    | 'training_certificate'
+    | 'insurance';
   currentDocument?: {
     number?: string;
     expiryDate?: string;
@@ -63,8 +71,12 @@ export function PromoterDocumentUploadDialog({
 }: DocumentUploadDialogProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
-  const [documentNumber, setDocumentNumber] = useState(currentDocument?.number || '');
-  const [expiryDate, setExpiryDate] = useState(currentDocument?.expiryDate || '');
+  const [documentNumber, setDocumentNumber] = useState(
+    currentDocument?.number || ''
+  );
+  const [expiryDate, setExpiryDate] = useState(
+    currentDocument?.expiryDate || ''
+  );
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -104,27 +116,30 @@ export function PromoterDocumentUploadDialog({
     multiple: false,
   });
 
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = event.target.files?.[0];
+      if (!selectedFile) return;
 
-    // Validate file type
-    const fileExt = selectedFile.name.split('.').pop()?.toLowerCase();
-    const validExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
-    if (!fileExt || !validExtensions.includes(fileExt)) {
-      setError('Please select a PDF, JPG, or PNG file');
-      return;
-    }
+      // Validate file type
+      const fileExt = selectedFile.name.split('.').pop()?.toLowerCase();
+      const validExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+      if (!fileExt || !validExtensions.includes(fileExt)) {
+        setError('Please select a PDF, JPG, or PNG file');
+        return;
+      }
 
-    // Validate file size
-    if (selectedFile.size > MAX_FILE_SIZE) {
-      setError('File size must be less than 10MB');
-      return;
-    }
+      // Validate file size
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        setError('File size must be less than 10MB');
+        return;
+      }
 
-    setFile(selectedFile);
-    setError(null);
-  }, []);
+      setFile(selectedFile);
+      setError(null);
+    },
+    []
+  );
 
   const handleRemoveFile = () => {
     setFile(null);
@@ -140,7 +155,10 @@ export function PromoterDocumentUploadDialog({
       return;
     }
 
-    if (!documentNumber && (documentType === 'id_card' || documentType === 'passport')) {
+    if (
+      !documentNumber &&
+      (documentType === 'id_card' || documentType === 'passport')
+    ) {
       setError('Document number is required');
       return;
     }
@@ -151,7 +169,7 @@ export function PromoterDocumentUploadDialog({
 
     try {
       const supabase = createClient();
-      
+
       if (!supabase) {
         throw new Error('Failed to initialize Supabase client');
       }
@@ -173,15 +191,15 @@ export function PromoterDocumentUploadDialog({
       setUploadProgress(50);
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('promoter-documents')
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('promoter-documents').getPublicUrl(fileName);
 
       setUploadProgress(75);
 
       // Update promoter record with document info
       const updateData: any = {};
-      
+
       if (documentType === 'id_card') {
         updateData.id_card_url = publicUrl;
         if (documentNumber) updateData.id_card_number = documentNumber;
@@ -224,7 +242,6 @@ export function PromoterDocumentUploadDialog({
         onClose();
         resetForm();
       }, 500);
-
     } catch (error) {
       console.error('Upload error:', error);
       setError(
@@ -254,7 +271,7 @@ export function PromoterDocumentUploadDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <DialogTitle>Upload {documentLabel}</DialogTitle>
           <DialogDescription>
@@ -262,48 +279,52 @@ export function PromoterDocumentUploadDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className='space-y-4 py-4'>
           {/* File Upload Area */}
           <div>
-            <Label className="mb-2 block">Document File *</Label>
+            <Label className='mb-2 block'>Document File *</Label>
             {!file ? (
               <div
                 {...getRootProps()}
                 className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                  isDragActive 
-                    ? 'border-primary bg-primary/5' 
+                  isDragActive
+                    ? 'border-primary bg-primary/5'
                     : 'border-gray-300 hover:border-primary'
                 }`}
               >
                 <input {...getInputProps()} />
-                <Upload className={`mx-auto h-12 w-12 mb-3 ${
-                  isDragActive ? 'text-primary' : 'text-gray-400'
-                }`} />
-                <p className="text-sm text-gray-600 font-medium">
-                  {isDragActive ? 'Drop file here' : 'Drag & drop or click to select'}
+                <Upload
+                  className={`mx-auto h-12 w-12 mb-3 ${
+                    isDragActive ? 'text-primary' : 'text-gray-400'
+                  }`}
+                />
+                <p className='text-sm text-gray-600 font-medium'>
+                  {isDragActive
+                    ? 'Drop file here'
+                    : 'Drag & drop or click to select'}
                 </p>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className='text-xs text-gray-400 mt-2'>
                   PDF, JPG, or PNG (max 10MB)
                 </p>
               </div>
             ) : (
-              <div className="border border-gray-300 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-8 w-8 text-primary" />
+              <div className='border border-gray-300 rounded-lg p-4 flex items-center justify-between'>
+                <div className='flex items-center gap-3'>
+                  <FileText className='h-8 w-8 text-primary' />
                   <div>
-                    <p className="text-sm font-medium">{file.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className='text-sm font-medium'>{file.name}</p>
+                    <p className='text-xs text-gray-500'>
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
                 </div>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={handleRemoveFile}
                   disabled={isUploading}
                 >
-                  <X className="h-4 w-4" />
+                  <X className='h-4 w-4' />
                 </Button>
               </div>
             )}
@@ -312,12 +333,12 @@ export function PromoterDocumentUploadDialog({
           {/* Document Number */}
           {(documentType === 'id_card' || documentType === 'passport') && (
             <div>
-              <Label htmlFor="documentNumber">Document Number *</Label>
+              <Label htmlFor='documentNumber'>Document Number *</Label>
               <Input
-                id="documentNumber"
+                id='documentNumber'
                 value={documentNumber}
-                onChange={(e) => setDocumentNumber(e.target.value)}
-                placeholder="Enter document number"
+                onChange={e => setDocumentNumber(e.target.value)}
+                placeholder='Enter document number'
                 disabled={isUploading}
               />
             </div>
@@ -325,12 +346,12 @@ export function PromoterDocumentUploadDialog({
 
           {/* Expiry Date */}
           <div>
-            <Label htmlFor="expiryDate">Expiry Date (Optional)</Label>
+            <Label htmlFor='expiryDate'>Expiry Date (Optional)</Label>
             <Input
-              id="expiryDate"
-              type="date"
+              id='expiryDate'
+              type='date'
               value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
+              onChange={e => setExpiryDate(e.target.value)}
               disabled={isUploading}
               min={new Date().toISOString().split('T')[0]}
             />
@@ -339,9 +360,9 @@ export function PromoterDocumentUploadDialog({
           {/* Upload Progress */}
           {isUploading && (
             <div>
-              <Label className="mb-2 block">Uploading...</Label>
-              <Progress value={uploadProgress} className="h-2" />
-              <p className="text-xs text-gray-500 mt-1">
+              <Label className='mb-2 block'>Uploading...</Label>
+              <Progress value={uploadProgress} className='h-2' />
+              <p className='text-xs text-gray-500 mt-1'>
                 {uploadProgress}% complete
               </p>
             </div>
@@ -349,8 +370,8 @@ export function PromoterDocumentUploadDialog({
 
           {/* Error Message */}
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+            <Alert variant='destructive'>
+              <AlertCircle className='h-4 w-4' />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -358,10 +379,10 @@ export function PromoterDocumentUploadDialog({
           {/* Current Document Info */}
           {currentDocument?.url && !isUploading && (
             <Alert>
-              <CheckCircle2 className="h-4 w-4" />
+              <CheckCircle2 className='h-4 w-4' />
               <AlertDescription>
-                A document is already uploaded. Uploading a new file will replace
-                it.
+                A document is already uploaded. Uploading a new file will
+                replace it.
               </AlertDescription>
             </Alert>
           )}
@@ -369,7 +390,7 @@ export function PromoterDocumentUploadDialog({
 
         <DialogFooter>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={handleClose}
             disabled={isUploading}
           >
@@ -378,12 +399,12 @@ export function PromoterDocumentUploadDialog({
           <Button onClick={handleUpload} disabled={!file || isUploading}>
             {isUploading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 Uploading...
               </>
             ) : (
               <>
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className='mr-2 h-4 w-4' />
                 Upload Document
               </>
             )}
@@ -393,4 +414,3 @@ export function PromoterDocumentUploadDialog({
     </Dialog>
   );
 }
-

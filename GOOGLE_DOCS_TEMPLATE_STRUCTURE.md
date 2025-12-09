@@ -96,16 +96,16 @@
 **First Party (Employer)**  
 [Insert placeholder image here - set Alt text to: image_8]  
 Signature  
-Date: ******\_\_\_\_******
+Date: **\*\***\_\_\_\_**\*\***
 
 **Second Party (Client)**  
 [Insert placeholder image here - set Alt text to: image_9]  
 Signature  
-Date: ******\_\_\_\_******
+Date: **\*\***\_\_\_\_**\*\***
 
 **Third Party (Employee)**  
-Signature: ******\_\_\_\_******  
-Date: ******\_\_\_\_******
+Signature: **\*\***\_\_\_\_**\*\***  
+Date: **\*\***\_\_\_\_**\*\***
 
 ---
 

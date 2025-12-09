@@ -1,5 +1,9 @@
 import { sendEmail } from '../lib/services/email.service';
-import { documentExpiryEmail, contractApprovalEmail, welcomeEmail } from '../lib/email-templates';
+import {
+  documentExpiryEmail,
+  contractApprovalEmail,
+  welcomeEmail,
+} from '../lib/email-templates';
 
 // CHANGE THIS TO YOUR EMAIL ADDRESS
 const TEST_EMAIL = 'chairman@falconeyegroup.net';
@@ -42,7 +46,10 @@ async function testEmail() {
   });
 
   if (result2.success) {
-    console.log('✅ Urgent document expiry email sent! Message ID:', result2.messageId);
+    console.log(
+      '✅ Urgent document expiry email sent! Message ID:',
+      result2.messageId
+    );
   } else {
     console.log('❌ Failed to send:', result2.error);
   }
@@ -65,7 +72,10 @@ async function testEmail() {
   });
 
   if (result3.success) {
-    console.log('✅ Warning document expiry email sent! Message ID:', result3.messageId);
+    console.log(
+      '✅ Warning document expiry email sent! Message ID:',
+      result3.messageId
+    );
   } else {
     console.log('❌ Failed to send:', result3.error);
   }
@@ -90,7 +100,10 @@ async function testEmail() {
   });
 
   if (result4.success) {
-    console.log('✅ Contract approval email sent! Message ID:', result4.messageId);
+    console.log(
+      '✅ Contract approval email sent! Message ID:',
+      result4.messageId
+    );
   } else {
     console.log('❌ Failed to send:', result4.error);
   }
@@ -129,4 +142,3 @@ async function testEmail() {
 
 // Run the test
 testEmail().catch(console.error);
-

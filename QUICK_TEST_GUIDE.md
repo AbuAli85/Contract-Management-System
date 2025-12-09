@@ -1,7 +1,9 @@
 # Quick Test Guide - Fix for Authentication Error
 
 ## Problem
+
 The validation tests failed because they need authentication:
+
 ```
 ❌ API Availability: API is not accessible
 ❌ Data Consistency: Insufficient permissions
@@ -12,6 +14,7 @@ The validation tests failed because they need authentication:
 ### Option 1: Automated Script (Easiest) ⭐
 
 **Windows:**
+
 ```powershell
 # 1. Add test credentials to .env.local
 echo TEST_USER_EMAIL=your-email@example.com >> .env.local
@@ -22,6 +25,7 @@ echo TEST_USER_PASSWORD=your-password >> .env.local
 ```
 
 **Linux/macOS:**
+
 ```bash
 # 1. Add test credentials to .env.local
 echo 'TEST_USER_EMAIL=your-email@example.com' >> .env.local
@@ -35,23 +39,27 @@ chmod +x tests/run-with-auth.sh
 ### Option 2: Manual Steps
 
 **Step 1: Add to .env.local**
+
 ```env
 TEST_USER_EMAIL=your-test-account@example.com
 TEST_USER_PASSWORD=your-secure-password
 ```
 
 **Step 2: Get Token**
+
 ```bash
 node tests/get-auth-token.js
 ```
 
 **Step 3: Run Tests (Windows PowerShell)**
+
 ```powershell
 $env:SUPABASE_AUTH_TOKEN="paste-token-from-step-2"
 node tests/performance-validation.js
 ```
 
 **Step 3: Run Tests (Linux/macOS)**
+
 ```bash
 export SUPABASE_AUTH_TOKEN="paste-token-from-step-2"
 node tests/performance-validation.js
@@ -126,16 +134,19 @@ Total Tests: 6
 ## Troubleshooting
 
 ### "Cannot find module @supabase/supabase-js"
+
 ```bash
 npm install @supabase/supabase-js
 ```
 
 ### "Authentication failed"
+
 - Check `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` in `.env.local`
 - Ensure the user exists and can log in via the web UI
 - Try logging in manually first
 
 ### "Token expired"
+
 Just run the script again - it gets a fresh token each time.
 
 ## Full Documentation

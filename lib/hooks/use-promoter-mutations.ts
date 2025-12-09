@@ -42,7 +42,7 @@ export function usePromoterMutations() {
 
       return response.json();
     },
-    onMutate: async (newPromoter) => {
+    onMutate: async newPromoter => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['promoters'] });
 
@@ -52,7 +52,7 @@ export function usePromoterMutations() {
       // Optimistically update
       queryClient.setQueryData(['promoters'], (old: any) => {
         if (!old) return old;
-        
+
         const optimisticPromoter = {
           ...newPromoter,
           id: `temp-${Date.now()}`,
@@ -80,7 +80,7 @@ export function usePromoterMutations() {
         variant: 'destructive',
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: 'Promoter created',
         description: `Successfully created ${data.promoter.full_name || 'promoter'}`,
@@ -143,7 +143,7 @@ export function usePromoterMutations() {
         variant: 'destructive',
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: 'Promoter updated',
         description: 'Changes saved successfully',
@@ -255,7 +255,7 @@ export function usePromoterMutations() {
         variant: 'destructive',
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: 'Bulk update completed',
         description: `Updated ${data.count || 0} promoters`,
@@ -277,4 +277,3 @@ export function usePromoterMutations() {
     isBulkUpdating: bulkUpdateMutation.isPending,
   };
 }
-

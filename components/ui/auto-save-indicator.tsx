@@ -2,13 +2,13 @@
 
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Cloud, 
-  CloudOff, 
-  Check, 
-  Loader2, 
+import {
+  Cloud,
+  CloudOff,
+  Check,
+  Loader2,
   AlertCircle,
-  Clock
+  Clock,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -27,7 +27,7 @@ interface AutoSaveIndicatorProps {
 
 /**
  * Auto-Save Status Indicator
- * 
+ *
  * Visual feedback for auto-save state:
  * - Saving (spinner)
  * - Saved (checkmark + timestamp)
@@ -54,7 +54,7 @@ export function AutoSaveIndicator({
     if (diffSeconds < 60) return `${diffSeconds}s ago`;
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    
+
     return lastSaved.toLocaleTimeString();
   };
 
@@ -65,25 +65,25 @@ export function AutoSaveIndicator({
           <TooltipTrigger asChild>
             <div className={cn('flex items-center gap-2', className)}>
               {error ? (
-                <AlertCircle className="h-4 w-4 text-destructive animate-pulse" />
+                <AlertCircle className='h-4 w-4 text-destructive animate-pulse' />
               ) : isSaving ? (
-                <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+                <Loader2 className='h-4 w-4 text-muted-foreground animate-spin' />
               ) : lastSaved ? (
-                <Check className="h-4 w-4 text-green-600" />
+                <Check className='h-4 w-4 text-green-600' />
               ) : (
-                <Cloud className="h-4 w-4 text-muted-foreground" />
+                <Cloud className='h-4 w-4 text-muted-foreground' />
               )}
             </div>
           </TooltipTrigger>
           <TooltipContent>
             {error ? (
-              <p className="text-sm text-destructive">Save failed: {error}</p>
+              <p className='text-sm text-destructive'>Save failed: {error}</p>
             ) : isSaving ? (
-              <p className="text-sm">Saving draft...</p>
+              <p className='text-sm'>Saving draft...</p>
             ) : lastSaved ? (
-              <p className="text-sm">Draft saved {getTimeSinceLastSave()}</p>
+              <p className='text-sm'>Draft saved {getTimeSinceLastSave()}</p>
             ) : (
-              <p className="text-sm">Not saved yet</p>
+              <p className='text-sm'>Not saved yet</p>
             )}
           </TooltipContent>
         </Tooltip>
@@ -93,37 +93,40 @@ export function AutoSaveIndicator({
 
   return (
     <Badge
-      variant="outline"
+      variant='outline'
       className={cn(
         'flex items-center gap-2 transition-all',
         error && 'bg-destructive/10 text-destructive border-destructive/30',
         isSaving && 'bg-blue-50 text-blue-700 border-blue-200',
-        !isSaving && !error && lastSaved && 'bg-green-50 text-green-700 border-green-200',
+        !isSaving &&
+          !error &&
+          lastSaved &&
+          'bg-green-50 text-green-700 border-green-200',
         !isSaving && !error && !lastSaved && 'bg-muted text-muted-foreground',
         className
       )}
     >
       {error ? (
         <>
-          <AlertCircle className="h-3.5 w-3.5 animate-pulse" />
-          <span className="text-xs font-medium">Save failed</span>
+          <AlertCircle className='h-3.5 w-3.5 animate-pulse' />
+          <span className='text-xs font-medium'>Save failed</span>
         </>
       ) : isSaving ? (
         <>
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          <span className="text-xs font-medium">Saving...</span>
+          <Loader2 className='h-3.5 w-3.5 animate-spin' />
+          <span className='text-xs font-medium'>Saving...</span>
         </>
       ) : lastSaved ? (
         <>
-          <Check className="h-3.5 w-3.5" />
-          <span className="text-xs font-medium">
+          <Check className='h-3.5 w-3.5' />
+          <span className='text-xs font-medium'>
             Saved {getTimeSinceLastSave()}
           </span>
         </>
       ) : (
         <>
-          <CloudOff className="h-3.5 w-3.5" />
-          <span className="text-xs font-medium">Not saved</span>
+          <CloudOff className='h-3.5 w-3.5' />
+          <span className='text-xs font-medium'>Not saved</span>
         </>
       )}
     </Badge>
@@ -132,7 +135,7 @@ export function AutoSaveIndicator({
 
 /**
  * Draft Recovery Dialog Trigger
- * 
+ *
  * Shows when draft is available on page load
  */
 interface DraftRecoveryBannerProps {
@@ -149,31 +152,32 @@ export function DraftRecoveryBanner({
   className,
 }: DraftRecoveryBannerProps) {
   return (
-    <div className={cn(
-      'flex items-start gap-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg',
-      className
-    )}>
-      <div className="flex-shrink-0">
-        <Clock className="h-5 w-5 text-blue-600" />
+    <div
+      className={cn(
+        'flex items-start gap-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg',
+        className
+      )}
+    >
+      <div className='flex-shrink-0'>
+        <Clock className='h-5 w-5 text-blue-600' />
       </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-blue-900">
-          Draft Available
-        </h3>
-        <p className="text-sm text-blue-700 mt-1">
-          We found unsaved changes from {draftAge}. Would you like to restore them?
+      <div className='flex-1 min-w-0'>
+        <h3 className='text-sm font-semibold text-blue-900'>Draft Available</h3>
+        <p className='text-sm text-blue-700 mt-1'>
+          We found unsaved changes from {draftAge}. Would you like to restore
+          them?
         </p>
       </div>
-      <div className="flex-shrink-0 flex items-center gap-2">
+      <div className='flex-shrink-0 flex items-center gap-2'>
         <button
           onClick={onRestore}
-          className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors"
+          className='px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors'
         >
           Restore
         </button>
         <button
           onClick={onDiscard}
-          className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+          className='px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors'
         >
           Discard
         </button>

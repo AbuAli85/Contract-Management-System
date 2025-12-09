@@ -1,11 +1,11 @@
 /**
  * Promoter File Upload Service
- * 
+ *
  * Handles file uploads for promoter documents including:
  * - ID card images
  * - Passport images
  * - Profile pictures
- * 
+ *
  * Features:
  * - File validation (type, size)
  * - Automatic file naming with timestamps
@@ -40,7 +40,12 @@ export type DocumentType = 'id_card' | 'passport' | 'profile_picture' | 'other';
 
 const STORAGE_BUCKET = 'promoter-documents';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+];
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
 
 // ============================================================================
@@ -73,7 +78,9 @@ export function validateFile(file: File): FileValidationResult {
   }
 
   // Check file extension
-  const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  const extension = file.name
+    .toLowerCase()
+    .substring(file.name.lastIndexOf('.'));
   if (!ALLOWED_EXTENSIONS.includes(extension)) {
     return {
       valid: false,
@@ -109,7 +116,10 @@ export function validateFiles(files: File[]): FileValidationResult {
 /**
  * Generates a unique file name with timestamp
  */
-function generateFileName(originalName: string, documentType: DocumentType): string {
+function generateFileName(
+  originalName: string,
+  documentType: DocumentType
+): string {
   const timestamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 8);
   const extension = originalName.substring(originalName.lastIndexOf('.'));
@@ -229,7 +239,10 @@ export async function uploadProfilePicture(
     console.error('Error uploading profile picture:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to upload profile picture',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to upload profile picture',
     };
   }
 }
@@ -246,7 +259,7 @@ export async function uploadMultipleDocuments(
   promoterId: string,
   documentType: DocumentType
 ): Promise<FileUploadResult[]> {
-  const uploadPromises = files.map((file) =>
+  const uploadPromises = files.map(file =>
     uploadPromoterDocument(file, promoterId, documentType)
   );
   return Promise.all(uploadPromises);
@@ -259,14 +272,18 @@ export async function uploadMultipleDocuments(
 /**
  * Delete a document by its storage path
  */
-export async function deletePromoterDocument(filePath: string): Promise<FileUploadResult> {
+export async function deletePromoterDocument(
+  filePath: string
+): Promise<FileUploadResult> {
   try {
     const supabase = createClient();
     if (!supabase) {
       return { success: false, error: 'Failed to initialize storage client' };
     }
 
-    const { error } = await supabase.storage.from(STORAGE_BUCKET).remove([filePath]);
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .remove([filePath]);
 
     if (error) {
       console.error('Delete error:', error);
@@ -306,7 +323,8 @@ export async function deletePromoterDocumentByUrl(
     console.error('Error deleting document by URL:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete document',
+      error:
+        error instanceof Error ? error.message : 'Failed to delete document',
     };
   }
 }
@@ -338,7 +356,9 @@ export async function deletePromoterDocuments(
     }
 
     // Delete all files
-    const filePaths = files.map((file) => `${promoterId}/${documentType}/${file.name}`);
+    const filePaths = files.map(
+      file => `${promoterId}/${documentType}/${file.name}`
+    );
     const { error: deleteError } = await supabase.storage
       .from(STORAGE_BUCKET)
       .remove(filePaths);
@@ -352,7 +372,8 @@ export async function deletePromoterDocuments(
     console.error('Error deleting promoter documents:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete documents',
+      error:
+        error instanceof Error ? error.message : 'Failed to delete documents',
     };
   }
 }
@@ -429,7 +450,10 @@ export async function deleteAllPromoterDocuments(
     console.error('Error deleting all promoter documents:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete all documents',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete all documents',
     };
   }
 }
@@ -468,7 +492,9 @@ export async function getFileMetadata(filePath: string) {
     if (!supabase) {
       return { success: false, error: 'Failed to initialize storage client' };
     }
-    const { data, error } = await supabase.storage.from(STORAGE_BUCKET).list(filePath);
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .list(filePath);
 
     if (error) {
       return { success: false, error: error.message };
@@ -478,8 +504,8 @@ export async function getFileMetadata(filePath: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get file metadata',
+      error:
+        error instanceof Error ? error.message : 'Failed to get file metadata',
     };
   }
 }
-

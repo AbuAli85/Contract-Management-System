@@ -30,16 +30,16 @@ interface TrendIndicatorProps {
 
 /**
  * Trend Indicator Component
- * 
+ *
  * Displays metric trends with arrows and percentage changes
- * 
+ *
  * Features:
  * - Up/Down/Stable indicators
  * - Color coding (green=good, red=bad)
  * - Percentage change display
  * - Tooltips with detailed info
  * - Multiple display variants
- * 
+ *
  * @example
  * ```tsx
  * <TrendIndicator
@@ -72,11 +72,12 @@ export function TrendIndicator({
   const isStable = direction === 'stable';
 
   // Get appropriate icon
-  const Icon = direction === 'up' 
-    ? TrendingUp 
-    : direction === 'down' 
-    ? TrendingDown 
-    : Minus;
+  const Icon =
+    direction === 'up'
+      ? TrendingUp
+      : direction === 'down'
+        ? TrendingDown
+        : Minus;
 
   // Color classes
   const colorClass = cn(
@@ -109,20 +110,28 @@ export function TrendIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={cn('flex items-center gap-1', colorClass, className)}>
-              {showIcon && <Icon className="h-3.5 w-3.5" />}
+            <div
+              className={cn('flex items-center gap-1', colorClass, className)}
+            >
+              {showIcon && <Icon className='h-3.5 w-3.5' />}
               {showPercent && (
-                <span className="text-xs font-semibold">{formatPercent()}</span>
+                <span className='text-xs font-semibold'>{formatPercent()}</span>
               )}
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <div className="text-xs space-y-1">
-              <p className="font-medium">
-                {direction === 'up' ? 'Increased' : direction === 'down' ? 'Decreased' : 'Stable'}
+            <div className='text-xs space-y-1'>
+              <p className='font-medium'>
+                {direction === 'up'
+                  ? 'Increased'
+                  : direction === 'down'
+                    ? 'Decreased'
+                    : 'Stable'}
               </p>
-              <p>Change: {formatChange()} ({formatPercent()})</p>
-              <p className="text-muted-foreground">{comparisonPeriod}</p>
+              <p>
+                Change: {formatChange()} ({formatPercent()})
+              </p>
+              <p className='text-muted-foreground'>{comparisonPeriod}</p>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -136,28 +145,38 @@ export function TrendIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={cn(
-              'flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all',
-              bgClass,
-              colorClass,
-              className
-            )}>
-              {showIcon && <Icon className="h-3.5 w-3.5" />}
+            <div
+              className={cn(
+                'flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all',
+                bgClass,
+                colorClass,
+                className
+              )}
+            >
+              {showIcon && <Icon className='h-3.5 w-3.5' />}
               {showValue && <span>{formatChange()}</span>}
-              {showPercent && <span className="font-bold">{formatPercent()}</span>}
+              {showPercent && (
+                <span className='font-bold'>{formatPercent()}</span>
+              )}
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <div className="text-xs space-y-1">
-              <p className="font-medium">
-                {direction === 'up' ? '📈 Increasing' : direction === 'down' ? '📉 Decreasing' : '➡️ Stable'}
+            <div className='text-xs space-y-1'>
+              <p className='font-medium'>
+                {direction === 'up'
+                  ? '📈 Increasing'
+                  : direction === 'down'
+                    ? '📉 Decreasing'
+                    : '➡️ Stable'}
               </p>
               <p>Current: {trend.value}</p>
-              {previousValue !== undefined && (
-                <p>Previous: {previousValue}</p>
-              )}
-              <p>Change: {formatChange()} ({formatPercent()})</p>
-              <p className="text-muted-foreground pt-1 border-t">{comparisonPeriod}</p>
+              {previousValue !== undefined && <p>Previous: {previousValue}</p>}
+              <p>
+                Change: {formatChange()} ({formatPercent()})
+              </p>
+              <p className='text-muted-foreground pt-1 border-t'>
+                {comparisonPeriod}
+              </p>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -170,21 +189,25 @@ export function TrendIndicator({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={cn('flex items-center gap-1.5', colorClass, className)}>
-            {showIcon && <Icon className="h-4 w-4" />}
+          <div
+            className={cn('flex items-center gap-1.5', colorClass, className)}
+          >
+            {showIcon && <Icon className='h-4 w-4' />}
             {showPercent && (
-              <span className="text-sm font-medium">{formatPercent()}</span>
+              <span className='text-sm font-medium'>{formatPercent()}</span>
             )}
             {showValue && (
-              <span className="text-xs text-muted-foreground">
+              <span className='text-xs text-muted-foreground'>
                 ({formatChange()})
               </span>
             )}
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <div className="text-xs">
-            <p>{formatPercent()} {comparisonPeriod}</p>
+          <div className='text-xs'>
+            <p>
+              {formatPercent()} {comparisonPeriod}
+            </p>
           </div>
         </TooltipContent>
       </Tooltip>
@@ -211,9 +234,12 @@ export function MetricTrend({
   className,
 }: MetricTrendProps) {
   const change = current - previous;
-  const changePercent = previous === 0 
-    ? (current > 0 ? 100 : 0)
-    : Math.round((change / previous) * 100);
+  const changePercent =
+    previous === 0
+      ? current > 0
+        ? 100
+        : 0
+      : Math.round((change / previous) * 100);
 
   const trend: 'up' | 'down' | 'stable' =
     Math.abs(changePercent) < 1 ? 'stable' : change > 0 ? 'up' : 'down';
@@ -230,10 +256,9 @@ export function MetricTrend({
     <TrendIndicator
       trend={trendData}
       comparisonPeriod={label}
-      variant="compact"
+      variant='compact'
       invertColors={invertColors}
       className={className}
     />
   );
 }
-

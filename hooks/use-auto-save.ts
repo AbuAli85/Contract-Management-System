@@ -24,10 +24,10 @@ export interface AutoSaveState {
 
 /**
  * Auto-Save Hook for Forms
- * 
+ *
  * Automatically saves form data to localStorage at regular intervals
  * Provides draft recovery on page reload
- * 
+ *
  * @example
  * ```tsx
  * const autoSave = useAutoSave({
@@ -35,14 +35,14 @@ export interface AutoSaveState {
  *   interval: 30000, // 30 seconds
  *   onSave: (data) => console.log('Draft saved:', data),
  * });
- * 
+ *
  * // In your form
  * useEffect(() => {
  *   if (formData) {
  *     autoSave.saveDraft(formData);
  *   }
  * }, [formData]);
- * 
+ *
  * // On component mount, check for draft
  * useEffect(() => {
  *   const draft = autoSave.loadDraft();
@@ -78,7 +78,7 @@ export function useAutoSave(options: AutoSaveOptions): AutoSaveState {
         const parsed = JSON.parse(saved);
         setHasDraft(true);
         setLastSaved(parsed.timestamp ? new Date(parsed.timestamp) : null);
-        
+
         if (onRestore) {
           onRestore(parsed.data);
         }
@@ -176,7 +176,7 @@ export function useAutoSave(options: AutoSaveOptions): AutoSaveState {
     if (diffSeconds < 60) return `${diffSeconds}s ago`;
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    
+
     return lastSaved.toLocaleString();
   }, [lastSaved]);
 
@@ -219,7 +219,7 @@ export function useAutoSave(options: AutoSaveOptions): AutoSaveState {
 
 /**
  * Debounced Auto-Save Hook
- * 
+ *
  * Similar to useAutoSave but uses debouncing instead of interval
  * Better for forms that update frequently
  */
@@ -239,7 +239,7 @@ export function useDebouncedAutoSave(
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);
-  
+
   // Debounce the pending data
   const [debouncedData] = useDebounce(pendingData, debounceMs);
 
@@ -253,7 +253,7 @@ export function useDebouncedAutoSave(
         const parsed = JSON.parse(saved);
         setHasDraft(true);
         setLastSaved(parsed.timestamp ? new Date(parsed.timestamp) : null);
-        
+
         if (onRestore) {
           onRestore(parsed.data);
         }
@@ -350,7 +350,7 @@ export function useDebouncedAutoSave(
     if (diffSeconds < 60) return `${diffSeconds}s ago`;
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    
+
     return lastSaved.toLocaleString();
   }, [lastSaved]);
 

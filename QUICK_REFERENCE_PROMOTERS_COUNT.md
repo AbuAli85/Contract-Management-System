@@ -22,6 +22,7 @@ If all show "112" as the total → ✅ Fix is working!
 ## Code Changes Cheat Sheet
 
 ### Before (Wrong ❌)
+
 ```typescript
 const metrics = useMemo(() => {
   const total = dashboardPromoters.length; // Only 50 items
@@ -30,6 +31,7 @@ const metrics = useMemo(() => {
 ```
 
 ### After (Correct ✅)
+
 ```typescript
 const metrics = useMemo(() => {
   const total = pagination?.total || dashboardPromoters.length; // 112 items
@@ -46,11 +48,13 @@ const metrics = useMemo(() => {
 ## Key Points
 
 ### What Changed
+
 - Total count now uses `pagination.total` from API
 - Table header clarified: "records on this page (of X total)"
 - Added documentation comments
 
 ### What Didn't Change
+
 - API behavior (still returns paginated data)
 - Component interfaces
 - Performance characteristics
@@ -58,12 +62,12 @@ const metrics = useMemo(() => {
 
 ## Data Sources
 
-| Metric | Source | Value | Scope |
-|--------|--------|-------|-------|
-| **Total** | `pagination.total` | 112 | ✅ All promoters in DB |
-| **Page count** | `promoters.length` | 50 | ✅ Current page only |
-| **Active** | Filter current page | ~38 | ⚠️ Current page only |
-| **Critical** | Filter current page | ~5 | ⚠️ Current page only |
+| Metric         | Source              | Value | Scope                  |
+| -------------- | ------------------- | ----- | ---------------------- |
+| **Total**      | `pagination.total`  | 112   | ✅ All promoters in DB |
+| **Page count** | `promoters.length`  | 50    | ✅ Current page only   |
+| **Active**     | Filter current page | ~38   | ⚠️ Current page only   |
+| **Critical**   | Filter current page | ~5    | ⚠️ Current page only   |
 
 ## API Response Structure
 
@@ -106,6 +110,7 @@ const metrics = useMemo(() => {
 ## Rollback Command
 
 If needed:
+
 ```bash
 git revert <commit-hash>
 ```
@@ -135,4 +140,3 @@ Use `pagination.total` for the total count, not `promoters.length` (which is onl
 **Risk**: 🟢 Low  
 **Impact**: 🎯 High  
 **Docs**: 📚 Complete
-

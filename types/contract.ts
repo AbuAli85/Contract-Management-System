@@ -1,10 +1,10 @@
 export interface ContractDetail {
   id: string;
-  status: string;  // Make required to match usage
+  status: string; // Make required to match usage
   created_at?: string;
   updated_at?: string;
-  contract_start_date?: string | null;  // Allow null to match ContractWithRelations
-  contract_end_date?: string | null;    // Allow null to match ContractWithRelations
+  contract_start_date?: string | null; // Allow null to match ContractWithRelations
+  contract_end_date?: string | null; // Allow null to match ContractWithRelations
   job_title?: string | null;
   work_location?: string | null;
   email?: string | null;

@@ -5,11 +5,13 @@ This guide explains how to handle migration mismatches between your local reposi
 ## Understanding the Problem
 
 When you see the error:
+
 ```
 Remote migration versions not found in local migrations directory.
 ```
 
 This means:
+
 - Your remote Supabase database has migrations that aren't in your local `supabase/migrations/` folder
 - This typically happens when migrations were applied directly via Supabase Dashboard or another environment
 
@@ -64,6 +66,7 @@ supabase db push --linked
 The CI/CD workflow now uses `--include-all` flag automatically when a mismatch is detected. This pushes all local migrations even if they're not in the remote history.
 
 **Manual usage:**
+
 ```bash
 supabase db push --linked --include-all
 ```
@@ -75,6 +78,7 @@ supabase db push --linked --include-all
 To avoid migration mismatches:
 
 1. ✅ **Always commit migrations before deploying**
+
    ```bash
    git add supabase/migrations/
    git commit -m "feat: add new migration"
@@ -107,6 +111,7 @@ The GitHub Actions workflow (`migrate.yml`) will:
 **Cause:** Remote database has migrations not in local repo.
 
 **Solution:**
+
 ```bash
 # Pull remote migrations
 supabase link --project-ref YOUR_PROJECT_REF
@@ -121,6 +126,7 @@ git push
 **Cause:** Local repo has migrations not applied to remote.
 
 **Solution:**
+
 ```bash
 # Push local migrations
 supabase db push --linked --include-all
@@ -131,6 +137,7 @@ supabase db push --linked --include-all
 **Cause:** Migration history got out of sync.
 
 **Solution:**
+
 ```bash
 # Repair the history
 supabase migration repair --status reverted <migration_versions>
@@ -155,4 +162,3 @@ supabase db reset --linked
 - [Supabase Migration Docs](https://supabase.com/docs/guides/cli/local-development#database-migrations)
 - [Supabase CLI Reference](https://supabase.com/docs/reference/cli)
 - [Migration Best Practices](https://supabase.com/docs/guides/database/migrations)
-

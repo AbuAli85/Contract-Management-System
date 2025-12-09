@@ -1,6 +1,7 @@
 # Import Promoters to Production
 
 ## Issue
+
 The production database has 0 promoters, but the data exists (you shared 50+ promoters earlier).
 
 ## Steps to Import Data
@@ -28,7 +29,6 @@ The production database has 0 promoters, but the data exists (you shared 50+ pro
 
 1. **Export Promoters to CSV:**
    - From your local database or source
-   
 2. **Import via Supabase:**
    - Go to **Table Editor** → **promoters**
    - Click **Insert** → **Import from CSV**
@@ -46,6 +46,7 @@ psql "postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres" -f your_promoters
 ## After Import
 
 1. **Verify Data:**
+
    ```sql
    SELECT COUNT(*) FROM promoters;
    ```
@@ -59,4 +60,3 @@ psql "postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres" -f your_promoters
 - Make sure to use the **production** Supabase project
 - Check that you're connected to the correct database
 - Verify RLS policies allow data access with SERVICE_ROLE key
-

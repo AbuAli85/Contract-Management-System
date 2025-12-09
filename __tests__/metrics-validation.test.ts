@@ -1,7 +1,7 @@
 /**
  * Metrics Validation Tests
  * Ensures data integrity and consistency across all metric calculations
- * 
+ *
  * Created: October 27, 2025
  */
 
@@ -50,7 +50,9 @@ describe('Contract Metrics Validation', () => {
 
     const result = validateContractMetrics(metrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('Total contracts does not equal sum'))).toBe(true);
+    expect(
+      result.errors.some(e => e.includes('Total contracts does not equal sum'))
+    ).toBe(true);
   });
 
   test('should fail for negative counts', () => {
@@ -70,7 +72,7 @@ describe('Contract Metrics Validation', () => {
 
     const result = validateContractMetrics(metrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('negative count'))).toBe(true);
+    expect(result.errors.some(e => e.includes('negative count'))).toBe(true);
   });
 
   test('should fail when active exceeds total', () => {
@@ -90,7 +92,11 @@ describe('Contract Metrics Validation', () => {
 
     const result = validateContractMetrics(metrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('Active contracts cannot exceed total'))).toBe(true);
+    expect(
+      result.errors.some(e =>
+        e.includes('Active contracts cannot exceed total')
+      )
+    ).toBe(true);
   });
 });
 
@@ -148,7 +154,9 @@ describe('Promoter Metrics Validation', () => {
 
     const result = validatePromoterMetrics(metrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('Total workforce does not match'))).toBe(true);
+    expect(
+      result.errors.some(e => e.includes('Total workforce does not match'))
+    ).toBe(true);
   });
 
   test('should fail for invalid utilization rate', () => {
@@ -176,7 +184,11 @@ describe('Promoter Metrics Validation', () => {
 
     const result = validatePromoterMetrics(metrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('Utilization rate must be between 0 and 100'))).toBe(true);
+    expect(
+      result.errors.some(e =>
+        e.includes('Utilization rate must be between 0 and 100')
+      )
+    ).toBe(true);
   });
 
   test('should fail for invalid compliance rate', () => {
@@ -204,7 +216,11 @@ describe('Promoter Metrics Validation', () => {
 
     const result = validatePromoterMetrics(metrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('Compliance rate must be between 0 and 100'))).toBe(true);
+    expect(
+      result.errors.some(e =>
+        e.includes('Compliance rate must be between 0 and 100')
+      )
+    ).toBe(true);
   });
 });
 
@@ -248,7 +264,9 @@ describe('Cross-Metrics Validation', () => {
     };
 
     const result = validateCrossMetrics(contractMetrics, promoterMetrics);
-    expect(result.warnings.some((w) => w.includes('active contracts but no promoters'))).toBe(true);
+    expect(
+      result.warnings.some(w => w.includes('active contracts but no promoters'))
+    ).toBe(true);
   });
 
   test('should fail when promoters assigned but no active contracts', () => {
@@ -266,7 +284,13 @@ describe('Cross-Metrics Validation', () => {
 
     const result = validateCrossMetrics(contractMetrics, promoterMetrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('Promoters are assigned to contracts but no contracts are marked as active'))).toBe(true);
+    expect(
+      result.errors.some(e =>
+        e.includes(
+          'Promoters are assigned to contracts but no contracts are marked as active'
+        )
+      )
+    ).toBe(true);
   });
 
   test('should fail when promoters on contracts exceeds total workforce', () => {
@@ -283,7 +307,11 @@ describe('Cross-Metrics Validation', () => {
 
     const result = validateCrossMetrics(contractMetrics, promoterMetrics);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('Promoters on contracts exceeds total workforce'))).toBe(true);
+    expect(
+      result.errors.some(e =>
+        e.includes('Promoters on contracts exceeds total workforce')
+      )
+    ).toBe(true);
   });
 });
 
@@ -372,4 +400,3 @@ describe('All Metrics Validation', () => {
     expect(result.errors.length).toBeGreaterThan(1);
   });
 });
-

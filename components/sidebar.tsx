@@ -95,7 +95,7 @@ function SidebarContent({
   const pathname = useSafePathname();
   const extractedLocale = useLocaleFromParams();
   const locale = propLocale || extractedLocale;
-  
+
   // Auto-expand menus based on current path
   const getInitialExpandedMenus = () => {
     const expanded: Record<string, boolean> = {};
@@ -105,20 +105,22 @@ function SidebarContent({
     }
     return expanded;
   };
-  
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(getInitialExpandedMenus());
+
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
+    getInitialExpandedMenus()
+  );
   const { user, loading, mounted: authMounted, signOut } = useAuth();
   const { profile: userProfile } = useUserProfile();
   const { roleInfo } = useRolePermissions();
   const { theme, setTheme } = useTheme();
   const { unreadCount: notificationCount } = useNotifications();
   const { count: pendingUsersCount = 0 } = usePendingUsersCount();
-  
+
   // Toggle expanded menu
   const toggleMenu = (menuTitle: string) => {
     setExpandedMenus(prev => ({
       ...prev,
-      [menuTitle]: !prev[menuTitle]
+      [menuTitle]: !prev[menuTitle],
     }));
   };
 
@@ -128,7 +130,7 @@ function SidebarContent({
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   // Auto-expand relevant menus when pathname changes
   useEffect(() => {
     if (pathname?.includes('/manage-parties')) {
@@ -538,11 +540,11 @@ function SidebarContent({
               const IconComponent = item.icon;
               const hasChildren = item.children && item.children.length > 0;
               const isActive = item.href ? isActiveRoute(item.href) : false;
-              
+
               // If item has children, render as expandable menu
               if (hasChildren && !isSidebarCollapsed) {
                 const isExpanded = expandedMenus[item.title] || false;
-                
+
                 return (
                   <div key={item.title} className='space-y-1'>
                     <button
@@ -559,14 +561,16 @@ function SidebarContent({
                         <ChevronRight className='h-4 w-4 transition-transform' />
                       )}
                     </button>
-                    
+
                     {/* Children items */}
                     {isExpanded && (
                       <div className='ml-4 space-y-1 border-l-2 border-muted pl-3'>
                         {(item.children || []).map((child: any) => {
                           const ChildIcon = child.icon;
-                          const isChildActive = child.href ? isActiveRoute(child.href) : false;
-                          
+                          const isChildActive = child.href
+                            ? isActiveRoute(child.href)
+                            : false;
+
                           return (
                             <Link
                               key={child.title}
@@ -580,7 +584,9 @@ function SidebarContent({
                             >
                               <div className='flex items-center space-x-2'>
                                 <ChildIcon className='h-3 w-3 shrink-0' />
-                                <span className='truncate text-xs'>{child.title}</span>
+                                <span className='truncate text-xs'>
+                                  {child.title}
+                                </span>
                               </div>
                             </Link>
                           );

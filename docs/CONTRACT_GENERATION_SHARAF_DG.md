@@ -9,11 +9,13 @@
 ## 📊 Workflow Overview
 
 ### Purpose
+
 Automated generation of bilingual (English/Arabic) deployment letters for promoters assigned to Sharaf DG contracts.
 
 ### Flow Summary
+
 ```
-Webhook Trigger → Store Variables → Fetch Template → Generate Document → 
+Webhook Trigger → Store Variables → Fetch Template → Generate Document →
 Export PDF → Upload to Storage → Notify App → Return Response
 ```
 
@@ -22,64 +24,70 @@ Export PDF → Upload to Storage → Notify App → Return Response
 ## 🔄 Detailed Workflow Analysis
 
 ### Module 1: Webhook Trigger
+
 **Type:** Custom Webhook  
 **Purpose:** Receive contract generation request
 
 **Input Fields:**
+
 ```typescript
 {
-  contract_id: string           // UUID
-  contract_number: string       // e.g., "SDG-2025-001"
-  contract_type: string         // Type of contract
-  promoter_id: string          // UUID
-  first_party_id: string       // Employer party UUID
-  second_party_id: string      // Client party UUID (Sharaf DG)
-  
+  contract_id: string; // UUID
+  contract_number: string; // e.g., "SDG-2025-001"
+  contract_type: string; // Type of contract
+  promoter_id: string; // UUID
+  first_party_id: string; // Employer party UUID
+  second_party_id: string; // Client party UUID (Sharaf DG)
+
   // Promoter Information
-  promoter_name_en: string     // English name
-  promoter_name_ar: string     // Arabic name
-  promoter_mobile_number: string
-  promoter_email: string
-  promoter_id_card_number: string
-  promoter_id_card_url: string      // Image URL
-  promoter_passport_url: string     // Image URL
-  passport_number: string
-  
+  promoter_name_en: string; // English name
+  promoter_name_ar: string; // Arabic name
+  promoter_mobile_number: string;
+  promoter_email: string;
+  promoter_id_card_number: string;
+  promoter_id_card_url: string; // Image URL
+  promoter_passport_url: string; // Image URL
+  passport_number: string;
+
   // Party Information
-  first_party_name_en: string       // e.g., "Falcon Eye Group"
-  first_party_name_ar: string
-  first_party_crn: string           // Commercial Registration Number
-  first_party_logo: string          // Logo URL
-  
-  second_party_name_en: string      // "Sharaf DG"
-  second_party_name_ar: string
-  second_party_crn: string
-  second_party_logo: string
-  
+  first_party_name_en: string; // e.g., "Falcon Eye Group"
+  first_party_name_ar: string;
+  first_party_crn: string; // Commercial Registration Number
+  first_party_logo: string; // Logo URL
+
+  second_party_name_en: string; // "Sharaf DG"
+  second_party_name_ar: string;
+  second_party_crn: string;
+  second_party_logo: string;
+
   // Contract Details
-  job_title: string
-  department: string
-  work_location: string
-  basic_salary: number
-  contract_start_date: string       // ISO date
-  contract_end_date: string         // ISO date
-  special_terms: string             // Optional
+  job_title: string;
+  department: string;
+  work_location: string;
+  basic_salary: number;
+  contract_start_date: string; // ISO date
+  contract_end_date: string; // ISO date
+  special_terms: string; // Optional
 }
 ```
 
 ### Modules 2-4: Variable Storage
+
 **Purpose:** Store contract data in Make.com variables for use throughout workflow
 
 **Why Needed:**
+
 - Ensures data persistence across modules
 - Allows data transformation (e.g., date formatting)
 - Prevents re-fetching data from webhook
 
 ### Module 5: Fetch Google Doc Template
+
 **Template ID:** `1KEaL5uiIueZTCasMXVJInlrp0dPmd8Z6tm8Qof7ih2E`  
 **Location:** `/contracts/templates/Promoters deployment letter-Sharaf DG`
 
 **Template Placeholders:**
+
 ```
 English Fields:
 - {{first_party_name_en}}
@@ -106,9 +114,11 @@ Images (special handling):
 ```
 
 ### Module 6: Create Document from Template
+
 **Purpose:** Generate filled document from template
 
 **Features:**
+
 - Text placeholder replacement
 - Image embedding (ID card and passport)
 - Date formatting
@@ -118,29 +128,35 @@ Images (special handling):
 **Output Folder:** `1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP`
 
 ### Module 7: Export to PDF
+
 **Format:** `application/pdf`  
 **Source:** Generated Google Doc  
 **Output:** PDF binary data
 
 ### Module 8: Upload to Supabase
+
 **Bucket:** Environment variable `CONTRACTS_STORAGE_BUCKET`  
 **File Name:** `{contract_number}-{promoter_name_en}.pdf`  
 **Upsert:** Enabled (overwrites if exists)
 
 **Public URL Pattern:**
+
 ```
 https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{contract_number}.pdf
 ```
 
 ### Module 9: Notify Application
+
 **Endpoint:** `{CONTRACTS_API_URL}/api/webhook/contract-pdf-ready`  
 **Method:** PATCH  
 **Headers:**
+
 - `X-Webhook-Secret`: Secure webhook validation
 - `X-Make-Request-ID`: Trace requests
 - `Content-Type`: application/json
 
 **Payload:**
+
 ```json
 {
   "contract_id": "uuid",
@@ -156,6 +172,7 @@ https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{con
 ```
 
 ### Module 10: Webhook Response
+
 **Status:** 200  
 **Body:** Same as notification payload
 
@@ -166,11 +183,13 @@ https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{con
 ### Document Structure
 
 #### Section 1: Header
+
 - First party logo (left)
 - Second party logo (right)
 - Document title (bilingual)
 
 #### Section 2: Document Information (Arabic)
+
 ```
 التاريخ: {{contract_start_date}}
 الموضوع: خطاب إلحاق موظف
@@ -182,6 +201,7 @@ https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{con
 ```
 
 #### Section 3: Promoter Details (Arabic)
+
 ```
 الاسم: {{promoter_name_ar}}
 رقم الهوية: {{id_card_number}}
@@ -189,6 +209,7 @@ https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{con
 ```
 
 #### Section 4: Contract Terms
+
 - Start date / End date
 - Job title
 - Department
@@ -196,31 +217,33 @@ https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{con
 - Basic salary (if applicable)
 
 #### Section 5: Document Images
+
 - ID Card Image (embedded)
 - Passport Image (embedded)
 
 #### Section 6: Footer
+
 - Company stamp
 - Authorized signature
 - Date
 
 ### Template Placeholders Mapping
 
-| Placeholder | Source Field | Format |
-|-------------|--------------|--------|
-| `{{first_party_name_en}}` | `first_party_name_en` | As-is |
-| `{{first_party_name_ar}}` | `first_party_name_ar` | RTL |
-| `{{second_party_name_en}}` | `second_party_name_en` | As-is |
-| `{{second_party_name_ar}}` | `second_party_name_ar` | RTL |
-| `{{promoter_name_ar}}` | `promoter_name_ar` | RTL |
-| `{{id_card_number}}` | `promoter_id_card_number` | As-is |
-| `{{passport_number}}` | `passport_number` | As-is |
-| `{{contract_start_date}}` | `contract_start_date` | DD-MM-YYYY |
-| `{{contract_end_date}}` | `contract_end_date` | DD-MM-YYYY |
-| `{{first_party_crn}}` | `first_party_crn` | As-is |
-| `{{second_party_crn}}` | `second_party_crn` | As-is |
-| `ID_CARD_IMAGE` | `promoter_id_card_url` | Image embed |
-| `PASSPORT_IMAGE` | `promoter_passport_url` | Image embed |
+| Placeholder                | Source Field              | Format      |
+| -------------------------- | ------------------------- | ----------- |
+| `{{first_party_name_en}}`  | `first_party_name_en`     | As-is       |
+| `{{first_party_name_ar}}`  | `first_party_name_ar`     | RTL         |
+| `{{second_party_name_en}}` | `second_party_name_en`    | As-is       |
+| `{{second_party_name_ar}}` | `second_party_name_ar`    | RTL         |
+| `{{promoter_name_ar}}`     | `promoter_name_ar`        | RTL         |
+| `{{id_card_number}}`       | `promoter_id_card_number` | As-is       |
+| `{{passport_number}}`      | `passport_number`         | As-is       |
+| `{{contract_start_date}}`  | `contract_start_date`     | DD-MM-YYYY  |
+| `{{contract_end_date}}`    | `contract_end_date`       | DD-MM-YYYY  |
+| `{{first_party_crn}}`      | `first_party_crn`         | As-is       |
+| `{{second_party_crn}}`     | `second_party_crn`        | As-is       |
+| `ID_CARD_IMAGE`            | `promoter_id_card_url`    | Image embed |
+| `PASSPORT_IMAGE`           | `promoter_passport_url`   | Image embed |
 
 ---
 
@@ -244,6 +267,7 @@ interface Props {
 ### 2. Generation Status Indicator
 
 **States:**
+
 - `idle`: Not generated
 - `generating`: In progress (show spinner)
 - `generated`: PDF ready (show download link)
@@ -252,6 +276,7 @@ interface Props {
 ### 3. PDF Viewer/Download
 
 **Features:**
+
 - Inline PDF preview
 - Download button
 - Share link
@@ -261,11 +286,12 @@ interface Props {
 ### 4. Regeneration Confirmation
 
 **Flow:**
+
 ```
-User clicks "Regenerate" → 
-Show confirmation modal → 
-"This will overwrite existing PDF. Continue?" → 
-Yes: Trigger generation → 
+User clicks "Regenerate" →
+Show confirmation modal →
+"This will overwrite existing PDF. Continue?" →
+Yes: Trigger generation →
 Update status
 ```
 
@@ -273,6 +299,7 @@ Update status
 
 **Purpose:** Preview template before generation  
 **Features:**
+
 - Show all placeholders
 - Sample data filling
 - Validation of required fields
@@ -290,13 +317,13 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const contractId = params.id;
-  
+
   // 1. Fetch complete contract data
   const contract = await getContractWithRelations(contractId);
-  
+
   // 2. Validate all required fields
   validateContractData(contract);
-  
+
   // 3. Call Make.com webhook
   const response = await fetch(MAKE_WEBHOOK_URL, {
     method: 'POST',
@@ -310,11 +337,11 @@ export async function POST(
       // ... all fields
     }),
   });
-  
+
   // 4. Return immediate response
   return Response.json({
     status: 'generating',
-    message: 'PDF generation started'
+    message: 'PDF generation started',
   });
 }
 ```
@@ -329,10 +356,10 @@ export async function PATCH(request: Request) {
   if (secret !== process.env.PDF_WEBHOOK_SECRET) {
     return new Response('Unauthorized', { status: 401 });
   }
-  
+
   // 2. Parse payload
   const data = await request.json();
-  
+
   // 3. Update contract in database
   await supabase
     .from('contracts')
@@ -343,14 +370,14 @@ export async function PATCH(request: Request) {
       pdf_status: data.status,
     })
     .eq('id', data.contract_id);
-  
+
   // 4. Send notification to user (optional)
   await sendNotification({
     userId: contract.created_by,
     type: 'contract_pdf_ready',
     contractId: data.contract_id,
   });
-  
+
   return Response.json({ success: true });
 }
 ```
@@ -361,13 +388,13 @@ export async function PATCH(request: Request) {
 
 ### Possible Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| Missing required field | Incomplete contract data | Validate before calling webhook |
-| Image URL inaccessible | Invalid promoter document URLs | Check URLs are publicly accessible |
-| Template not found | Wrong template ID | Verify template exists in Google Drive |
-| Supabase upload failed | Storage bucket issue | Check bucket permissions |
-| Webhook timeout | Large file/slow network | Implement retry mechanism |
+| Error                  | Cause                          | Solution                               |
+| ---------------------- | ------------------------------ | -------------------------------------- |
+| Missing required field | Incomplete contract data       | Validate before calling webhook        |
+| Image URL inaccessible | Invalid promoter document URLs | Check URLs are publicly accessible     |
+| Template not found     | Wrong template ID              | Verify template exists in Google Drive |
+| Supabase upload failed | Storage bucket issue           | Check bucket permissions               |
+| Webhook timeout        | Large file/slow network        | Implement retry mechanism              |
 
 ### Retry Logic
 
@@ -433,4 +460,3 @@ CREATE INDEX IF NOT EXISTS idx_contracts_pdf_status ON contracts(pdf_status);
 **Template Guide:** See `SHARAF_DG_TEMPLATE_GUIDE.md` (next)  
 **UI Components:** See `CONTRACT_PDF_UI_COMPONENTS.md` (next)  
 **API Implementation:** See API routes above
-

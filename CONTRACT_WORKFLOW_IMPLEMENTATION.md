@@ -16,16 +16,16 @@ draft → pending → approved → active → expired/completed/terminated
 
 ### Status Definitions
 
-| Status | Description | Color | Who Can Set | Next States |
-|--------|-------------|-------|-------------|-------------|
-| `draft` | Initial creation, being edited | Gray | System, User | pending |
-| `pending` | Awaiting admin approval | Orange | System (on submit) | approved, rejected, draft |
-| `approved` | Approved by admin, ready to start | Blue | Admin only | active |
-| `active` | Currently active (on/after start_date) | Green | System (automatic) | expired, completed, terminated |
-| `completed` | Successfully finished | Emerald | Admin | - |
-| `terminated` | Terminated before completion | Red | Admin | - |
-| `expired` | Past end_date | Red | System (automatic) | - |
-| `rejected` | Rejected during approval | Red | Admin | draft (if resubmitted) |
+| Status       | Description                            | Color   | Who Can Set        | Next States                    |
+| ------------ | -------------------------------------- | ------- | ------------------ | ------------------------------ |
+| `draft`      | Initial creation, being edited         | Gray    | System, User       | pending                        |
+| `pending`    | Awaiting admin approval                | Orange  | System (on submit) | approved, rejected, draft      |
+| `approved`   | Approved by admin, ready to start      | Blue    | Admin only         | active                         |
+| `active`     | Currently active (on/after start_date) | Green   | System (automatic) | expired, completed, terminated |
+| `completed`  | Successfully finished                  | Emerald | Admin              | -                              |
+| `terminated` | Terminated before completion           | Red     | Admin              | -                              |
+| `expired`    | Past end_date                          | Red     | System (automatic) | -                              |
+| `rejected`   | Rejected during approval               | Red     | Admin              | draft (if resubmitted)         |
 
 ## 🎯 Implementation Details
 
@@ -34,6 +34,7 @@ draft → pending → approved → active → expired/completed/terminated
 **Migration:** `supabase/migrations/20250125_complete_contract_workflow.sql`
 
 **New Columns:**
+
 - `approved_by` - UUID reference to admin who approved
 - `approved_at` - Timestamp of approval
 - `rejected_by` - UUID reference to admin who rejected
@@ -45,9 +46,10 @@ draft → pending → approved → active → expired/completed/terminated
 - `submitted_for_review_at` - Timestamp when submitted for review
 
 **Status Constraint:**
+
 ```sql
 CHECK (status IN (
-  'draft', 'pending', 'approved', 'active', 
+  'draft', 'pending', 'approved', 'active',
   'completed', 'terminated', 'expired', 'rejected'
 ))
 ```
@@ -55,14 +57,17 @@ CHECK (status IN (
 ### 2. API Endpoints
 
 #### Contract Creation
+
 **Endpoint:** `POST /api/contracts`
 
 **Changes:**
+
 - All new contracts now start with `status: 'pending'`
 - `submitted_for_review_at` is automatically set to current timestamp
 - All contract creation variants updated to use pending status
 
 **Example:**
+
 ```typescript
 {
   contract_number: "CON-2025-001",
@@ -73,12 +78,15 @@ CHECK (status IN (
 ```
 
 #### Contract Approval
+
 **Endpoint:** `POST /api/contracts/[id]/approve`
 
 **Required Permission:** `contract:approve:all` (Admin only)
 
 **Actions:**
+
 1. **approve** - Approve contract (pending → approved)
+
    ```json
    {
      "action": "approve"
@@ -86,6 +94,7 @@ CHECK (status IN (
    ```
 
 2. **reject** - Reject contract (pending → rejected)
+
    ```json
    {
      "action": "reject",
@@ -94,6 +103,7 @@ CHECK (status IN (
    ```
 
 3. **request_changes** - Request changes (pending → draft)
+
    ```json
    {
      "action": "request_changes",
@@ -102,6 +112,7 @@ CHECK (status IN (
    ```
 
 4. **send_to_legal** - Flag for legal review
+
    ```json
    {
      "action": "send_to_legal"
@@ -116,21 +127,26 @@ CHECK (status IN (
    ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "message": "Contract CON-2025-001 has been approved successfully",
-  "contract": { /* updated contract */ },
+  "contract": {
+    /* updated contract */
+  },
   "action": "approve"
 }
 ```
 
 #### Contract Status Check
+
 **Endpoint:** `GET /api/contracts/[id]/approve`
 
 **Permission:** `contract:read:own`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -147,18 +163,17 @@ CHECK (status IN (
 ### 3. Frontend Components
 
 #### ContractStatusBadge
+
 **File:** `components/contracts/contract-status-badge.tsx`
 
 **Usage:**
+
 ```tsx
-<ContractStatusBadge 
-  status="pending" 
-  size="sm" 
-  showIcon={true}
-/>
+<ContractStatusBadge status='pending' size='sm' showIcon={true} />
 ```
 
 **Supported Statuses:**
+
 - draft (Gray)
 - pending (Orange)
 - approved (Blue)
@@ -169,9 +184,11 @@ CHECK (status IN (
 - rejected (Red)
 
 #### Pending Contracts Page
+
 **File:** `app/[locale]/contracts/pending/page.tsx`
 
 **Features:**
+
 - Fetches contracts with `status=pending`
 - Shows submission timestamp
 - Displays action menu with approve/reject options
@@ -180,22 +197,27 @@ CHECK (status IN (
 - Send to legal/HR review
 
 **Permissions Required:**
+
 - View: `contract:read:own` or admin
 - Actions: `contract:approve:all` (admin only)
 
 #### Approved Contracts Page
+
 **File:** `app/[locale]/contracts/approved/page.tsx`
 
 **Features:**
+
 - Fetches contracts with `status=approved`
 - Shows approval timestamp and approver
 - Displays days until start date
 - Download PDF functionality
 
 #### All Contracts Page
+
 **File:** `app/[locale]/contracts/page.tsx`
 
 **Features:**
+
 - Shows all contracts with proper status badges
 - Filter by status dropdown
 - Status-based statistics cards
@@ -211,6 +233,7 @@ This function automatically updates contract statuses based on dates:
 2. **active → expired**: When `end_date < CURRENT_DATE`
 
 **Usage:**
+
 ```sql
 SELECT update_contract_status_based_on_dates();
 ```
@@ -220,9 +243,10 @@ SELECT update_contract_status_based_on_dates();
 ### 5. Database Views
 
 #### Pending Contracts View
+
 ```sql
 CREATE VIEW pending_contracts_view AS
-SELECT 
+SELECT
   c.*,
   u.email as created_by_email,
   u.full_name as created_by_name,
@@ -234,9 +258,10 @@ ORDER BY c.submitted_for_review_at ASC;
 ```
 
 #### Approved Contracts View
+
 ```sql
 CREATE VIEW approved_contracts_view AS
-SELECT 
+SELECT
   c.*,
   u.email as approved_by_email,
   u.full_name as approved_by_name,
@@ -251,17 +276,18 @@ ORDER BY c.start_date ASC;
 
 ### RBAC Permissions
 
-| Permission | Resource | Action | Scope | Description | Who Has It |
-|------------|----------|--------|-------|-------------|------------|
-| `contract:read:own` | contract | read | own | Read own contracts | All users |
-| `contract:create:own` | contract | create | own | Create contracts | All users |
-| `contract:update:own` | contract | update | own | Update own contracts | All users |
-| `contract:approve:all` | contract | approve | all | Approve any contract | Admin, Manager |
-| `contract:read:all` | contract | read | all | Read all contracts | Admin |
+| Permission             | Resource | Action  | Scope | Description          | Who Has It     |
+| ---------------------- | -------- | ------- | ----- | -------------------- | -------------- |
+| `contract:read:own`    | contract | read    | own   | Read own contracts   | All users      |
+| `contract:create:own`  | contract | create  | own   | Create contracts     | All users      |
+| `contract:update:own`  | contract | update  | own   | Update own contracts | All users      |
+| `contract:approve:all` | contract | approve | all   | Approve any contract | Admin, Manager |
+| `contract:read:all`    | contract | read    | all   | Read all contracts   | Admin          |
 
 ### Role Capabilities
 
 **Admin:**
+
 - ✅ Create contracts (start as pending)
 - ✅ View all contracts
 - ✅ Approve/reject contracts
@@ -269,12 +295,14 @@ ORDER BY c.start_date ASC;
 - ✅ Send to legal/HR review
 
 **Manager:**
+
 - ✅ Create contracts (start as pending)
 - ✅ View all contracts
 - ✅ Approve/reject contracts
 - ✅ Request changes
 
 **User:**
+
 - ✅ Create contracts (start as pending)
 - ✅ View own contracts only
 - ❌ Cannot approve contracts
@@ -284,38 +312,48 @@ ORDER BY c.start_date ASC;
 ### Test Case 1: Create and Approve Contract
 
 1. **Create Contract** (as User)
+
    ```bash
    POST /api/contracts
    Body: { contract_number: "TEST-001", title: "Test Contract", ... }
    ```
+
    ✅ **Expected:** Contract created with `status: "pending"`
 
 2. **View on Pending Page** (as Admin)
+
    ```bash
    GET /api/contracts?status=pending
    ```
+
    ✅ **Expected:** TEST-001 appears in pending contracts
 
 3. **Approve Contract** (as Admin)
+
    ```bash
    POST /api/contracts/[id]/approve
    Body: { action: "approve" }
    ```
-   ✅ **Expected:** 
+
+   ✅ **Expected:**
    - Contract status → `approved`
    - `approved_by` set to admin user ID
    - `approved_at` set to current timestamp
 
 4. **View on Approved Page** (as Admin)
+
    ```bash
    GET /api/contracts?status=approved
    ```
+
    ✅ **Expected:** TEST-001 appears in approved contracts
 
 5. **Wait for Start Date** (or manually update)
+
    ```sql
    UPDATE contracts SET status = 'active' WHERE id = '...' AND start_date <= CURRENT_DATE;
    ```
+
    ✅ **Expected:** Contract status → `active`
 
 6. **View on All Contracts** (as Any User)
@@ -330,9 +368,9 @@ ORDER BY c.start_date ASC;
 2. **Reject Contract** (as Admin)
    ```bash
    POST /api/contracts/[id]/approve
-   Body: { 
-     action: "reject", 
-     reason: "Missing required information" 
+   Body: {
+     action: "reject",
+     reason: "Missing required information"
    }
    ```
    ✅ **Expected:**
@@ -347,9 +385,9 @@ ORDER BY c.start_date ASC;
 2. **Request Changes** (as Admin)
    ```bash
    POST /api/contracts/[id]/approve
-   Body: { 
-     action: "request_changes", 
-     reason: "Please update salary field" 
+   Body: {
+     action: "request_changes",
+     reason: "Please update salary field"
    }
    ```
    ✅ **Expected:**
@@ -364,7 +402,7 @@ ORDER BY c.start_date ASC;
 2. **Bulk Approve**
    - Select 5 contracts
    - Click "Bulk Actions" → "Approve Selected"
-   ✅ **Expected:** All 5 contracts approved simultaneously
+     ✅ **Expected:** All 5 contracts approved simultaneously
 
 ## 🎨 UI Components
 
@@ -372,20 +410,21 @@ ORDER BY c.start_date ASC;
 
 ```typescript
 const statusConfig = {
-  draft: 'bg-gray-100 text-gray-700',      // Gray
+  draft: 'bg-gray-100 text-gray-700', // Gray
   pending: 'bg-orange-100 text-orange-700', // Orange
-  approved: 'bg-blue-100 text-blue-700',    // Blue
-  active: 'bg-green-100 text-green-700',    // Green
+  approved: 'bg-blue-100 text-blue-700', // Blue
+  active: 'bg-green-100 text-green-700', // Green
   completed: 'bg-emerald-100 text-emerald-700', // Emerald
-  terminated: 'bg-red-100 text-red-700',    // Red
-  expired: 'bg-red-100 text-red-700',       // Red
-  rejected: 'bg-red-100 text-red-700',      // Red
+  terminated: 'bg-red-100 text-red-700', // Red
+  expired: 'bg-red-100 text-red-700', // Red
+  rejected: 'bg-red-100 text-red-700', // Red
 };
 ```
 
 ### Action Dialogs
 
 **Approval Confirmation:**
+
 ```
 Title: Approve Contract
 Description: Are you sure you want to approve this contract? This will activate the contract.
@@ -393,6 +432,7 @@ Actions: [Cancel] [Approve]
 ```
 
 **Rejection Dialog:**
+
 ```
 Title: Reject Contract
 Description: Are you sure you want to reject this contract? Please provide a reason.
@@ -401,6 +441,7 @@ Actions: [Cancel] [Reject]
 ```
 
 **Request Changes Dialog:**
+
 ```
 Title: Request Changes
 Description: Request changes to this contract. Please provide details about what needs to be changed.
@@ -426,6 +467,7 @@ The All Contracts page shows comprehensive statistics:
 ### Database Indexes
 
 Created for performance:
+
 ```sql
 CREATE INDEX idx_contracts_status ON contracts(status);
 CREATE INDEX idx_contracts_approved_by ON contracts(approved_by);
@@ -453,9 +495,10 @@ The migration automatically updates existing contracts:
 ### Rollback
 
 If needed, you can rollback by:
+
 ```sql
 ALTER TABLE contracts DROP CONSTRAINT contracts_status_check;
-ALTER TABLE contracts ADD CONSTRAINT contracts_status_check 
+ALTER TABLE contracts ADD CONSTRAINT contracts_status_check
   CHECK (status IN ('draft', 'active', 'completed', 'terminated', 'expired'));
 ```
 
@@ -484,6 +527,7 @@ ALTER TABLE contracts ADD CONSTRAINT contracts_status_check
 ## 📞 Support
 
 For issues or questions:
+
 1. Check the console logs for detailed error messages
 2. Verify permissions using the RBAC debug panel
 3. Check the database views for contract status
@@ -494,4 +538,3 @@ For issues or questions:
 **Last Updated:** 2025-01-25
 **Version:** 1.0
 **Status:** ✅ Complete and Tested
-

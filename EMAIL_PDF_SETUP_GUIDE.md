@@ -92,15 +92,15 @@ curl https://portal.thesmartpro.io/api/test-email
 
 Your system now includes these professional email templates:
 
-| Template | Purpose | Status |
-|----------|---------|--------|
-| **Password Reset** | Secure password recovery | ✅ Ready |
-| **Welcome Email** | New user onboarding | ✅ Ready |
-| **Document Expiry** | ID/Passport expiration alerts | ✅ Ready |
-| **Contract Approval** | Contract status changes | ✅ Ready |
-| **Contract Status Change** | Any status update | ✅ Ready |
-| **Urgent Notification** | Critical alerts | ✅ Ready |
-| **Standard Notification** | General notifications | ✅ Ready |
+| Template                   | Purpose                       | Status   |
+| -------------------------- | ----------------------------- | -------- |
+| **Password Reset**         | Secure password recovery      | ✅ Ready |
+| **Welcome Email**          | New user onboarding           | ✅ Ready |
+| **Document Expiry**        | ID/Passport expiration alerts | ✅ Ready |
+| **Contract Approval**      | Contract status changes       | ✅ Ready |
+| **Contract Status Change** | Any status update             | ✅ Ready |
+| **Urgent Notification**    | Critical alerts               | ✅ Ready |
+| **Standard Notification**  | General notifications         | ✅ Ready |
 
 ---
 
@@ -111,6 +111,7 @@ You have **two options** for PDF generation:
 ### Option A: Native jsPDF (Recommended) ✅
 
 **Pros:**
+
 - ✅ No external dependencies
 - ✅ Works offline
 - ✅ Free forever
@@ -118,6 +119,7 @@ You have **two options** for PDF generation:
 - ✅ Better long-term maintainability
 
 **Cons:**
+
 - ⚠️ Requires more code
 - ⚠️ Complex layouts need work
 
@@ -130,6 +132,7 @@ npm list jspdf
 ```
 
 **Usage:** PDF generation is already implemented! See:
+
 - `lib/pdf-generator.ts` - PDF generation service
 - `app/api/contracts/[id]/generate-pdf/route.ts` - API endpoint
 
@@ -143,11 +146,13 @@ curl -X POST https://portal.thesmartpro.io/api/contracts/YOUR_CONTRACT_ID/genera
 ### Option B: Make.com Webhook (Alternative)
 
 **Pros:**
+
 - ✅ Easier for complex documents
 - ✅ Visual workflow builder
 - ✅ Can integrate with Google Docs templates
 
 **Cons:**
+
 - ❌ Requires external service
 - ❌ Costs $9-29/month after free tier
 - ❌ Internet connection required
@@ -236,6 +241,7 @@ https://resend.com/emails
 #### 1. Emails Going to Spam
 
 **Solution:**
+
 - ✅ Verify domain in Resend
 - ✅ Add SPF, DKIM, DMARC records
 - ✅ Use professional "From" address
@@ -245,6 +251,7 @@ https://resend.com/emails
 #### 2. API Key Not Working
 
 **Solution:**
+
 ```bash
 # Check if key is valid
 curl https://api.resend.com/emails \
@@ -256,6 +263,7 @@ curl https://api.resend.com/emails \
 #### 3. Rate Limit Exceeded
 
 **Free Tier Limits:**
+
 - 100 emails/day
 - 3,000 emails/month
 - 10 emails/second
@@ -268,18 +276,18 @@ curl https://api.resend.com/emails \
 
 ### Email Service (Resend)
 
-| Plan | Monthly Cost | Emails/Month | Best For |
-|------|--------------|--------------|----------|
-| **Free** | $0 | 3,000 | Testing, small teams |
-| **Pro** | $20 | 50,000 | Small to medium businesses |
-| **Business** | $100 | 500,000 | Large businesses |
+| Plan         | Monthly Cost | Emails/Month | Best For                   |
+| ------------ | ------------ | ------------ | -------------------------- |
+| **Free**     | $0           | 3,000        | Testing, small teams       |
+| **Pro**      | $20          | 50,000       | Small to medium businesses |
+| **Business** | $100         | 500,000      | Large businesses           |
 
 ### PDF Generation
 
-| Option | Monthly Cost | Best For |
-|--------|--------------|----------|
-| **jsPDF (Native)** | $0 | All businesses ✅ Recommended |
-| **Make.com** | $9-29 | Complex workflows only |
+| Option             | Monthly Cost | Best For                      |
+| ------------------ | ------------ | ----------------------------- |
+| **jsPDF (Native)** | $0           | All businesses ✅ Recommended |
+| **Make.com**       | $9-29        | Complex workflows only        |
 
 **Recommended Total Cost:** $20/month (Resend Pro) + $0 (Native PDF) = **$20/month**
 
@@ -288,6 +296,7 @@ curl https://api.resend.com/emails \
 ## ✅ Final Checklist
 
 ### Email Setup
+
 - [ ] Resend account created
 - [ ] Domain verified with DNS records
 - [ ] API key generated and saved
@@ -296,12 +305,14 @@ curl https://api.resend.com/emails \
 - [ ] Production emails working
 
 ### PDF Setup
+
 - [ ] Decided on PDF method (jsPDF recommended)
 - [ ] Test PDF generated successfully
 - [ ] PDF storage configured (Supabase)
 - [ ] PDF download working
 
 ### Integration
+
 - [ ] Password reset emails working
 - [ ] Document expiry alerts working
 - [ ] Contract status emails working
@@ -334,4 +345,3 @@ Once all checklist items are complete:
 **Impact:** Critical - Enables all notifications and documentation
 
 **Status:** 🎉 **Both features are now production-ready!**
-

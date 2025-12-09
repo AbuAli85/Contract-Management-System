@@ -46,7 +46,7 @@ export async function parseCSV(
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = e => {
       const content = e.target?.result as string;
       if (!content) {
         reject(new Error('File is empty'));
@@ -65,7 +65,7 @@ export async function parseCSV(
         reject(new Error('CSV file has no headers'));
         return;
       }
-      
+
       const headers = parseCSVLine(firstLine);
       resolve({ content, headers });
     };
@@ -167,7 +167,7 @@ export function validateAndTransformCSV<T>(
       },
     };
   }
-  
+
   const headers = parseCSVLine(firstLine);
   const headerMap = new Map<string, number>();
   headers.forEach((header, index) => {
@@ -177,7 +177,11 @@ export function validateAndTransformCSV<T>(
   // Check for missing required columns
   const missingColumns = columns
     .filter(col => col.required)
-    .filter(col => !headerMap.has(col.label.toLowerCase()) && !headerMap.has(col.key.toLowerCase()));
+    .filter(
+      col =>
+        !headerMap.has(col.label.toLowerCase()) &&
+        !headerMap.has(col.key.toLowerCase())
+    );
 
   if (missingColumns.length > 0) {
     errors.push({
@@ -310,7 +314,7 @@ export function downloadCSVTemplate(columns: CSVColumn[], filename: string) {
   const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
-  
+
   link.setAttribute('href', url);
   link.setAttribute('download', filename);
   link.style.visibility = 'hidden';
@@ -329,13 +333,16 @@ export const validators = {
   },
 
   phone: (value: string): string | null => {
-    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
-    return phoneRegex.test(value.replace(/\s/g, '')) ? null : 'Invalid phone number';
+    const phoneRegex =
+      /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
+    return phoneRegex.test(value.replace(/\s/g, ''))
+      ? null
+      : 'Invalid phone number';
   },
 
   date: (value: string): string | null => {
     if (!value || !value.trim()) return null;
-    
+
     // Try multiple date formats
     const formats = [
       // DD-MM-YYYY or DD/MM/YYYY
@@ -343,12 +350,12 @@ export const validators = {
       // YYYY-MM-DD
       /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/,
     ];
-    
+
     for (const format of formats) {
       const match = value.trim().match(format);
       if (match && match[1] && match[2] && match[3]) {
         let day, month, year;
-        
+
         if (match[1].length === 4) {
           // YYYY-MM-DD format
           year = parseInt(match[1], 10);
@@ -360,22 +367,23 @@ export const validators = {
           month = parseInt(match[2], 10);
           year = parseInt(match[3], 10);
         }
-        
+
         // Validate date parts
         if (month < 1 || month > 12) return 'Invalid month (must be 1-12)';
         if (day < 1 || day > 31) return 'Invalid day (must be 1-31)';
-        if (year < 1900 || year > 2100) return 'Invalid year (must be 1900-2100)';
-        
+        if (year < 1900 || year > 2100)
+          return 'Invalid year (must be 1900-2100)';
+
         // Create date and validate it's real
         const date = new Date(year, month - 1, day);
         if (date.getDate() !== day || date.getMonth() !== month - 1) {
-          return 'Invalid date (e.g., 31st Feb doesn\'t exist)';
+          return "Invalid date (e.g., 31st Feb doesn't exist)";
         }
-        
+
         return null; // Valid date
       }
     }
-    
+
     return 'Invalid date format (use DD-MM-YYYY, DD/MM/YYYY, or YYYY-MM-DD)';
   },
 
@@ -396,13 +404,17 @@ export const validators = {
     return value && value.trim() ? null : 'This field is required';
   },
 
-  minLength: (min: number) => (value: string): string | null => {
-    return value.length >= min ? null : `Must be at least ${min} characters`;
-  },
+  minLength:
+    (min: number) =>
+    (value: string): string | null => {
+      return value.length >= min ? null : `Must be at least ${min} characters`;
+    },
 
-  maxLength: (max: number) => (value: string): string | null => {
-    return value.length <= max ? null : `Must be at most ${max} characters`;
-  },
+  maxLength:
+    (max: number) =>
+    (value: string): string | null => {
+      return value.length <= max ? null : `Must be at most ${max} characters`;
+    },
 };
 
 /**
@@ -410,14 +422,14 @@ export const validators = {
  */
 export const transformers = {
   trim: (value: string) => value.trim(),
-  
+
   lowercase: (value: string) => value.toLowerCase(),
-  
+
   uppercase: (value: string) => value.toUpperCase(),
-  
+
   date: (value: string) => {
     if (!value || !value.trim()) return null;
-    
+
     // Parse multiple date formats and convert to ISO
     const formats = [
       // DD-MM-YYYY or DD/MM/YYYY
@@ -425,12 +437,12 @@ export const transformers = {
       // YYYY-MM-DD
       /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/,
     ];
-    
+
     for (const format of formats) {
       const match = value.trim().match(format);
       if (match && match[1] && match[2] && match[3]) {
         let day, month, year;
-        
+
         if (match[1].length === 4) {
           // YYYY-MM-DD format
           year = parseInt(match[1], 10);
@@ -442,34 +454,33 @@ export const transformers = {
           month = parseInt(match[2], 10);
           year = parseInt(match[3], 10);
         }
-        
+
         // Create date object (month is 0-indexed in JS)
         const date = new Date(year, month - 1, day);
-        
+
         // Validate it's a real date
         if (date.getDate() === day && date.getMonth() === month - 1) {
           return date.toISOString().split('T')[0]; // Return YYYY-MM-DD format
         }
       }
     }
-    
+
     // Try parsing as-is (fallback)
     const date = new Date(value);
     return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
   },
-  
+
   number: (value: string) => {
     const num = Number(value);
     return isNaN(num) ? null : num;
   },
-  
+
   boolean: (value: string) => {
     const lower = value.toLowerCase().trim();
     return lower === 'true' || lower === 'yes' || lower === '1';
   },
-  
+
   nullIfEmpty: (value: string) => {
     return value && value.trim() ? value.trim() : null;
   },
 };
-

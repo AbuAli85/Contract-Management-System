@@ -3,7 +3,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
-import { Search, X, Clock, FileText, Users, Building2, Loader2 } from 'lucide-react';
+import {
+  Search,
+  X,
+  Clock,
+  FileText,
+  Users,
+  Building2,
+  Loader2,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,7 +54,7 @@ export default function GlobalSearch() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  
+
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -66,8 +74,11 @@ export default function GlobalSearch() {
   // Save recent searches to localStorage
   const saveRecentSearch = (searchQuery: string) => {
     if (searchQuery.trim().length < 2) return;
-    
-    const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
+
+    const updated = [
+      searchQuery,
+      ...recentSearches.filter(s => s !== searchQuery),
+    ].slice(0, 5);
     setRecentSearches(updated);
     localStorage.setItem('recent-searches', JSON.stringify(updated));
   };
@@ -82,9 +93,11 @@ export default function GlobalSearch() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&limit=8`);
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(searchQuery)}&limit=8`
+      );
       const data: SearchResponse = await response.json();
-      
+
       if (data.success) {
         setResults(data.results);
       } else {
@@ -102,7 +115,7 @@ export default function GlobalSearch() {
   const handleInputChange = (value: string) => {
     setQuery(value);
     setSelectedIndex(-1);
-    
+
     if (value.trim().length >= 2) {
       debouncedSearch(value);
     } else {
@@ -113,12 +126,12 @@ export default function GlobalSearch() {
   // Handle search submission
   const handleSearch = (searchQuery: string = query) => {
     if (searchQuery.trim().length < 2) return;
-    
+
     saveRecentSearch(searchQuery);
     setIsOpen(false);
     setQuery('');
     setResults([]);
-    
+
     // Navigate to search results page or perform search
     router.push(`/en/search?q=${encodeURIComponent(searchQuery)}`);
   };
@@ -130,13 +143,11 @@ export default function GlobalSearch() {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => 
-          prev < results.length - 1 ? prev + 1 : prev
-        );
+        setSelectedIndex(prev => (prev < results.length - 1 ? prev + 1 : prev));
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+        setSelectedIndex(prev => (prev > 0 ? prev - 1 : -1));
         break;
       case 'Enter':
         e.preventDefault();
@@ -189,56 +200,58 @@ export default function GlobalSearch() {
   }, []);
 
   return (
-    <div className="relative flex-1 max-w-md" data-search-wrapper>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className='relative flex-1 max-w-md' data-search-wrapper>
+      <div className='relative'>
+        <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
         <Input
           ref={inputRef}
-          type="text"
-          placeholder="Search contracts, promoters, parties..."
+          type='text'
+          placeholder='Search contracts, promoters, parties...'
           value={query}
-          onChange={(e) => handleInputChange(e.target.value)}
+          onChange={e => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          className="w-full pl-10 pr-10 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-          role="combobox"
-          aria-label="Global search"
+          className='w-full pl-10 pr-10 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent'
+          role='combobox'
+          aria-label='Global search'
           aria-expanded={isOpen}
-          aria-autocomplete="list"
-          aria-controls="search-results"
+          aria-autocomplete='list'
+          aria-controls='search-results'
           data-search-input
         />
         {query && (
           <Button
-            variant="ghost"
-            size="sm"
+            variant='ghost'
+            size='sm'
             onClick={() => {
               setQuery('');
               setResults([]);
               setIsOpen(false);
             }}
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+            className='absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0'
           >
-            <X className="h-3 w-3" />
+            <X className='h-3 w-3' />
           </Button>
         )}
       </div>
 
       {/* Search Results Dropdown */}
       {isOpen && (
-        <Card 
+        <Card
           ref={resultsRef}
-          className="absolute top-full left-0 right-0 mt-1 z-[60] max-h-96 overflow-y-auto shadow-2xl border-2"
+          className='absolute top-full left-0 right-0 mt-1 z-[60] max-h-96 overflow-y-auto shadow-2xl border-2'
           data-search-results
         >
-          <CardContent className="p-0">
+          <CardContent className='p-0'>
             {isLoading ? (
-              <div className="flex items-center justify-center p-4">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                <span className="text-sm text-muted-foreground">Searching...</span>
+              <div className='flex items-center justify-center p-4'>
+                <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                <span className='text-sm text-muted-foreground'>
+                  Searching...
+                </span>
               </div>
             ) : results.length > 0 ? (
-              <div className="py-2">
+              <div className='py-2'>
                 {results.map((result, index) => {
                   const Icon = typeIcons[result.type];
                   return (
@@ -249,17 +262,22 @@ export default function GlobalSearch() {
                         index === selectedIndex ? 'bg-muted/50' : ''
                       }`}
                     >
-                      <div className="flex-shrink-0">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
+                      <div className='flex-shrink-0'>
+                        <Icon className='h-4 w-4 text-muted-foreground' />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <p className="text-sm font-medium truncate">{result.title}</p>
-                          <Badge variant="secondary" className={typeColors[result.type]}>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center space-x-2'>
+                          <p className='text-sm font-medium truncate'>
+                            {result.title}
+                          </p>
+                          <Badge
+                            variant='secondary'
+                            className={typeColors[result.type]}
+                          >
                             {result.type}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className='text-xs text-muted-foreground truncate'>
                           {result.subtitle}
                         </p>
                       </div>
@@ -268,12 +286,12 @@ export default function GlobalSearch() {
                 })}
               </div>
             ) : query.length >= 2 ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
+              <div className='p-4 text-center text-sm text-muted-foreground'>
                 No results found for "{query}"
               </div>
             ) : recentSearches.length > 0 ? (
-              <div className="py-2">
-                <div className="px-4 py-2 text-xs font-medium text-muted-foreground border-b">
+              <div className='py-2'>
+                <div className='px-4 py-2 text-xs font-medium text-muted-foreground border-b'>
                   Recent Searches
                 </div>
                 {recentSearches.map((search, index) => (
@@ -283,15 +301,15 @@ export default function GlobalSearch() {
                       setQuery(search);
                       handleSearch(search);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center space-x-2"
+                    className='w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center space-x-2'
                   >
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-sm">{search}</span>
+                    <Clock className='h-3 w-3 text-muted-foreground' />
+                    <span className='text-sm'>{search}</span>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-sm text-muted-foreground">
+              <div className='p-4 text-center text-sm text-muted-foreground'>
                 Start typing to search...
               </div>
             )}

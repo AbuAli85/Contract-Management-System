@@ -1,14 +1,17 @@
 # Parties Management System - Restructure Complete
 
 ## Overview
+
 The Parties Management system has been restructured to provide better organization and user experience. Instead of combining form and list views on a single page, the system now separates concerns into dedicated pages.
 
 ## New Structure
 
 ### Main Menu: Parties & Employers
+
 The sidebar now contains a collapsible "Parties & Employers" menu with the following sub-pages:
 
 #### 1. **Manage Parties** (`/[locale]/manage-parties`)
+
 - **Purpose**: Form-only page for creating and editing parties
 - **Features**:
   - Clean form interface for adding new parties
@@ -17,6 +20,7 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
   - Support for all party types: Employer, Client, Generic
 
 #### 2. **Employers** (`/[locale]/manage-parties/employers`)
+
 - **Purpose**: View all employer-type parties
 - **Features**:
   - Comprehensive list of all employers
@@ -27,6 +31,7 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
   - Statistics dashboard
 
 #### 3. **Clients** (`/[locale]/manage-parties/clients`)
+
 - **Purpose**: View all client-type parties
 - **Features**:
   - Comprehensive list of all clients
@@ -37,6 +42,7 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
   - Statistics dashboard
 
 #### 4. **Generic Parties** (`/[locale]/manage-parties/generic`)
+
 - **Purpose**: View all generic-type parties
 - **Features**:
   - Comprehensive list of generic parties
@@ -50,12 +56,14 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
 ### Files Created/Modified
 
 #### New Pages:
+
 1. `app/[locale]/manage-parties/page.tsx` - Form-only page (restructured)
 2. `app/[locale]/manage-parties/employers/page.tsx` - Employers view (new)
 3. `app/[locale]/manage-parties/clients/page.tsx` - Clients view (new)
 4. `app/[locale]/manage-parties/generic/page.tsx` - Generic parties view (new)
 
 #### Updated:
+
 1. `components/sidebar.tsx` - Added nested navigation support and "Parties & Employers" menu
 
 ### Navigation Structure
@@ -97,15 +105,17 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
 ### Key Features
 
 #### Sidebar Enhancement
+
 - **Nested Navigation**: The sidebar now supports hierarchical menu items
 - **Expandable/Collapsible**: Parent menu items can be expanded/collapsed
 - **Visual Hierarchy**: Child items are indented with a left border for clear visual distinction
 - **Active State Tracking**: Both parent and child items highlight when active
 
 #### Shared Features Across All Views
+
 1. **Statistics Dashboard**: Overview cards showing key metrics
 2. **Advanced Filtering**: Search, status, and document status filters
-3. **Document Status Tracking**: 
+3. **Document Status Tracking**:
    - Valid (green)
    - Expiring soon (yellow, < 30 days)
    - Expired (red)
@@ -117,6 +127,7 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
 ## User Workflows
 
 ### Creating a New Party
+
 1. Navigate to "Parties & Employers" → "Manage Parties"
 2. Fill in the form with party details
 3. Select party type (Employer, Client, Generic)
@@ -124,12 +135,14 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
 5. Automatically redirected to the appropriate view page
 
 ### Editing an Existing Party
+
 1. Navigate to the appropriate view (Employers, Clients, or Generic)
 2. Click "Edit" on the desired party
 3. Modify details in the form
 4. Submit changes
 
 ### Viewing Party Details
+
 1. Navigate to the appropriate view based on party type
 2. Use filters and search to find specific parties
 3. For employers: Expand to see assigned promoters
@@ -138,6 +151,7 @@ The sidebar now contains a collapsible "Parties & Employers" menu with the follo
 ## API Integration
 
 All pages use the existing API endpoints:
+
 - `GET /api/parties` - Fetch all parties
 - `GET /api/parties/[id]` - Fetch specific party
 - `GET /api/parties/[id]/promoters` - Fetch promoters for employer
@@ -157,6 +171,7 @@ All pages use the existing API endpoints:
 ## Future Enhancements
 
 Potential improvements:
+
 1. Bulk operations (select multiple parties for actions)
 2. Export to CSV/Excel
 3. Advanced analytics per party type
@@ -167,6 +182,7 @@ Potential improvements:
 ## Testing
 
 To test the new structure:
+
 1. Navigate to the sidebar and find "Parties & Employers"
 2. Click to expand the menu
 3. Test each sub-page:
@@ -182,4 +198,3 @@ To test the new structure:
 - All existing API endpoints remain unchanged
 - The system maintains backward compatibility with existing data
 - The UI follows the existing design system and patterns
-

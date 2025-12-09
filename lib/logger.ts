@@ -62,12 +62,12 @@ class Logger {
       // Store in localStorage for debugging (keep last 100 logs)
       const logs = JSON.parse(localStorage.getItem('app_logs') || '[]');
       logs.push(entry);
-      
+
       // Keep only last 100 logs to avoid storage issues
       if (logs.length > 100) {
         logs.shift();
       }
-      
+
       localStorage.setItem('app_logs', JSON.stringify(logs));
 
       // TODO: Integrate with external logging service (Sentry, LogRocket, etc.)
@@ -117,7 +117,7 @@ class Logger {
    */
   getLogs(): LogEntry[] {
     if (!this.isClient) return [];
-    
+
     try {
       return JSON.parse(localStorage.getItem('app_logs') || '[]');
     } catch {
@@ -130,7 +130,7 @@ class Logger {
    */
   clearLogs() {
     if (!this.isClient) return;
-    
+
     try {
       localStorage.removeItem('app_logs');
     } catch {
@@ -140,4 +140,3 @@ class Logger {
 }
 
 export const logger = new Logger();
-

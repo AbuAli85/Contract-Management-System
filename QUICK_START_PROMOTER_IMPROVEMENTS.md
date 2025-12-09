@@ -115,12 +115,14 @@ All features are now active:
 ## 🎯 What's New?
 
 ### For Users
+
 - Upload documents directly from forms
 - Receive automatic expiry reminders
 - View real-time analytics
 - Faster page loads
 
 ### For Developers
+
 - 5 new service files
 - 2 updated components
 - Comprehensive error handling
@@ -131,13 +133,13 @@ All features are now active:
 
 ## 📊 Quick Feature Overview
 
-| Feature | Location | What It Does |
-|---------|----------|--------------|
-| File Upload | Add/Edit Promoter Form | Upload ID cards & passports |
-| Reminders | Promoters Table | Send expiry reminders |
-| Notifications | Database | Track all sent messages |
-| Analytics | Dashboard | Real-time statistics |
-| Bulk Actions | Improved Actions | Update multiple records |
+| Feature       | Location               | What It Does                |
+| ------------- | ---------------------- | --------------------------- |
+| File Upload   | Add/Edit Promoter Form | Upload ID cards & passports |
+| Reminders     | Promoters Table        | Send expiry reminders       |
+| Notifications | Database               | Track all sent messages     |
+| Analytics     | Dashboard              | Real-time statistics        |
+| Bulk Actions  | Improved Actions       | Update multiple records     |
 
 ---
 
@@ -176,15 +178,19 @@ Then update the placeholder functions in:
 ## 🐛 Common Issues
 
 ### "Storage bucket not found"
+
 **Solution:** Re-run Step 2
 
 ### "Permission denied for table promoter_notifications"
+
 **Solution:** Check RLS policies are enabled
 
 ### "File upload fails"
+
 **Solution:** Verify storage policies from Step 2
 
 ### "Build errors"
+
 **Solution:** Run `npm install` to ensure dependencies are up to date
 
 ---
@@ -216,5 +222,4 @@ Then update the placeholder functions in:
 
 ---
 
-*Last Updated: October 27, 2025*
-
+_Last Updated: October 27, 2025_

@@ -1,6 +1,6 @@
 /**
  * Real-time Updates Hook
- * 
+ *
  * Uses Supabase Realtime to subscribe to database changes
  * Automatically updates data when changes occur
  */
@@ -24,7 +24,7 @@ export interface RealtimeOptions {
 
 /**
  * Hook for real-time database updates
- * 
+ *
  * @example
  * ```tsx
  * useRealtimeUpdates({
@@ -43,37 +43,35 @@ export function useRealtimeUpdates(options: RealtimeOptions) {
 
   useEffect(() => {
     const channelName = `${options.table}-changes-${Math.random()}`;
-    
-    let channelBuilder = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes' as any,
-        {
-          event: options.event || '*',
-          schema: options.schema || 'public',
-          table: options.table,
-          filter: options.filter,
-        },
-        (payload) => {
-          console.log('Realtime change detected:', payload);
 
-          // Call specific event handler
-          switch (payload.eventType) {
-            case 'INSERT':
-              options.onInsert?.(payload);
-              break;
-            case 'UPDATE':
-              options.onUpdate?.(payload);
-              break;
-            case 'DELETE':
-              options.onDelete?.(payload);
-              break;
-          }
+    let channelBuilder = supabase.channel(channelName).on(
+      'postgres_changes' as any,
+      {
+        event: options.event || '*',
+        schema: options.schema || 'public',
+        table: options.table,
+        filter: options.filter,
+      },
+      payload => {
+        console.log('Realtime change detected:', payload);
 
-          // Always call general onChange handler
-          options.onChange?.(payload);
+        // Call specific event handler
+        switch (payload.eventType) {
+          case 'INSERT':
+            options.onInsert?.(payload);
+            break;
+          case 'UPDATE':
+            options.onUpdate?.(payload);
+            break;
+          case 'DELETE':
+            options.onDelete?.(payload);
+            break;
         }
-      );
+
+        // Always call general onChange handler
+        options.onChange?.(payload);
+      }
+    );
 
     const newChannel = channelBuilder.subscribe();
     setChannel(newChannel);
@@ -81,12 +79,7 @@ export function useRealtimeUpdates(options: RealtimeOptions) {
     return () => {
       supabase.removeChannel(newChannel);
     };
-  }, [
-    options.table,
-    options.schema,
-    options.filter,
-    options.event,
-  ]);
+  }, [options.table, options.schema, options.filter, options.event]);
 
   return { channel };
 }
@@ -158,7 +151,7 @@ export function useRealtimeData<T>(
   // Subscribe to real-time updates
   useRealtimeUpdates({
     ...options,
-    onChange: (payload) => {
+    onChange: payload => {
       console.log('Data changed, refetching...', payload);
       fetchData();
     },
@@ -183,7 +176,7 @@ export function useRealtimePresence(roomName: string) {
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
         setPresenceState(state);
-        
+
         // Extract online user IDs
         const users = Object.keys(state);
         setOnlineUsers(users);
@@ -194,7 +187,7 @@ export function useRealtimePresence(roomName: string) {
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('User left:', key, leftPresences);
       })
-      .subscribe(async (status) => {
+      .subscribe(async status => {
         if (status === 'SUBSCRIBED') {
           // Track this user's presence
           await channel.track({
@@ -225,25 +218,23 @@ export function useRealtimeNotifications(userId: string) {
   useRealtimeUpdates({
     table: 'notifications',
     filter: `user_id=eq.${userId}`,
-    onInsert: (payload) => {
-      setNotifications((prev) => [payload.new, ...prev]);
+    onInsert: payload => {
+      setNotifications(prev => [payload.new, ...prev]);
       if (!payload.new.read) {
-        setUnreadCount((prev) => prev + 1);
+        setUnreadCount(prev => prev + 1);
       }
     },
-    onUpdate: (payload) => {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === payload.new.id ? payload.new : n))
+    onUpdate: payload => {
+      setNotifications(prev =>
+        prev.map(n => (n.id === payload.new.id ? payload.new : n))
       );
       // Recalculate unread count
-      setUnreadCount(
-        notifications.filter((n) => !n.read).length
-      );
+      setUnreadCount(notifications.filter(n => !n.read).length);
     },
-    onDelete: (payload) => {
-      setNotifications((prev) => prev.filter((n) => n.id !== payload.old.id));
+    onDelete: payload => {
+      setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
       if (!payload.old.read) {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+        setUnreadCount(prev => Math.max(0, prev - 1));
       }
     },
   });
@@ -263,7 +254,7 @@ export function useRealtimeNotifications(userId: string) {
       .update({ read: true })
       .eq('user_id', userId)
       .eq('read', false);
-    
+
     setUnreadCount(0);
   }, [userId]);
 
@@ -274,4 +265,3 @@ export function useRealtimeNotifications(userId: string) {
     markAllAsRead,
   };
 }
-

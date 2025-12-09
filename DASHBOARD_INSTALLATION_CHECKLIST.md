@@ -11,12 +11,14 @@ npm install react-grid-layout @types/react-grid-layout date-fns
 ### 2. Apply Database Migration ⏱️ 3 minutes
 
 **Option A - Supabase CLI:**
+
 ```bash
 cd Contract-Management-System
 npx supabase migration up
 ```
 
 **Option B - Manual:**
+
 1. Open Supabase Dashboard
 2. Navigate to SQL Editor
 3. Copy & paste: `supabase/migrations/20251022_add_dashboard_layouts.sql`
@@ -25,13 +27,15 @@ npx supabase migration up
 ### 3. Verify Database Tables ⏱️ 1 minute
 
 Run in SQL Editor:
+
 ```sql
-SELECT table_name FROM information_schema.tables 
+SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
 AND table_name LIKE '%dashboard%' OR table_name LIKE '%layout%';
 ```
 
 Expected tables:
+
 - ✅ `dashboard_layouts`
 - ✅ `widget_configurations`
 - ✅ `default_layouts_by_role`
@@ -40,6 +44,7 @@ Expected tables:
 ### 4. Import CSS Styles ⏱️ 1 minute
 
 Add to `app/layout.tsx`:
+
 ```tsx
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -48,13 +53,14 @@ import 'react-resizable/css/styles.css';
 ### 5. Test Dashboard Page ⏱️ 5 minutes
 
 Create test page `app/[locale]/dashboard/test/page.tsx`:
+
 ```tsx
 import { CustomizableDashboard } from '@/components/dashboard/CustomizableDashboard';
 
 export default function TestDashboard() {
   return (
-    <div className="container mx-auto py-6">
-      <CustomizableDashboard userRole="admin" />
+    <div className='container mx-auto py-6'>
+      <CustomizableDashboard userRole='admin' />
     </div>
   );
 }
@@ -80,6 +86,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
 ## 📁 Files Created
 
 ### Components (11 files)
+
 - ✅ `components/dashboard/BaseWidget.tsx`
 - ✅ `components/dashboard/CustomizableDashboard.tsx`
 - ✅ `components/dashboard/WidgetFactory.tsx`
@@ -94,18 +101,22 @@ Visit: `http://localhost:3000/en/dashboard/test`
 - ✅ `components/dashboard/widgets/index.ts`
 
 ### API Routes (4 files)
+
 - ✅ `app/api/dashboard/layout/route.ts`
 - ✅ `app/api/dashboard/layout/default/route.ts`
 - ✅ `app/api/dashboard/activity/route.ts`
 - ✅ `app/api/contracts/expiring/route.ts`
 
 ### Types & Utilities (1 file)
+
 - ✅ `lib/types/dashboard.ts`
 
 ### Database (1 file)
+
 - ✅ `supabase/migrations/20251022_add_dashboard_layouts.sql`
 
 ### Documentation (2 files)
+
 - ✅ `CUSTOMIZABLE_DASHBOARD_GUIDE.md`
 - ✅ `DASHBOARD_INSTALLATION_CHECKLIST.md`
 
@@ -118,6 +129,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
 ### Manual Testing
 
 1. **Load Dashboard**
+
    ```
    ✅ Page loads without errors
    ✅ Shows default widgets based on role
@@ -125,6 +137,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 2. **Edit Mode**
+
    ```
    ✅ Click "Edit Layout" button
    ✅ "Edit Mode" badge appears
@@ -133,6 +146,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 3. **Add Widget**
+
    ```
    ✅ Click "Add Widget" button
    ✅ Widget library modal opens
@@ -143,6 +157,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 4. **Move Widget**
+
    ```
    ✅ Click and drag widget
    ✅ Widget moves with cursor
@@ -151,6 +166,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 5. **Resize Widget**
+
    ```
    ✅ Drag resize handle
    ✅ Widget resizes smoothly
@@ -159,6 +175,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 6. **Remove Widget**
+
    ```
    ✅ Click X button on widget
    ✅ Confirmation dialog appears
@@ -167,6 +184,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 7. **Save Layout**
+
    ```
    ✅ Click "Save" button
    ✅ API call succeeds
@@ -175,6 +193,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 8. **Reset Layout**
+
    ```
    ✅ Click "Reset" button
    ✅ Confirmation dialog appears
@@ -183,6 +202,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
    ```
 
 9. **Persistence**
+
    ```
    ✅ Refresh page
    ✅ Layout persists
@@ -205,6 +225,7 @@ Visit: `http://localhost:3000/en/dashboard/test`
 ### Issue 1: "Cannot find module 'react-grid-layout'"
 
 **Solution:**
+
 ```bash
 npm install react-grid-layout @types/react-grid-layout
 ```
@@ -212,6 +233,7 @@ npm install react-grid-layout @types/react-grid-layout
 ### Issue 2: Widgets not draggable
 
 **Solution:**
+
 - Ensure Edit Mode is enabled
 - Check CSS is imported:
   ```tsx
@@ -222,6 +244,7 @@ npm install react-grid-layout @types/react-grid-layout
 ### Issue 3: Database error on save
 
 **Solution:**
+
 - Run migration: `npx supabase migration up`
 - Check RLS policies are enabled
 - Verify user is authenticated
@@ -229,6 +252,7 @@ npm install react-grid-layout @types/react-grid-layout
 ### Issue 4: Widgets show loading forever
 
 **Solution:**
+
 - Check API endpoints are running
 - Verify database queries succeed
 - Check browser console for errors
@@ -237,6 +261,7 @@ npm install react-grid-layout @types/react-grid-layout
 ### Issue 5: Layout doesn't persist
 
 **Solution:**
+
 - Check API `/api/dashboard/layout` works
 - Verify database INSERT succeeds
 - Check RLS allows user to insert
@@ -299,7 +324,7 @@ You'll know the system is working when:
 ✅ Responsive on all devices  
 ✅ No errors in console  
 ✅ Default layouts load for new users  
-✅ Performance is acceptable  
+✅ Performance is acceptable
 
 ---
 
@@ -321,4 +346,3 @@ You'll know the system is working when:
 **Support:** See `CUSTOMIZABLE_DASHBOARD_GUIDE.md` for detailed docs
 
 Happy customizing! 🚀
-

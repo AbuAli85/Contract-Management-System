@@ -436,9 +436,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch contracts');
       }
@@ -450,12 +450,17 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           employer_id: contract.employer_id || '',
           client_id: contract.client_id || '',
           promoter_id: contract.promoter_id || '',
-          employer_name_en: contract.first_party?.name_en || contract.client?.name_en || '',
-          employer_name_ar: contract.first_party?.name_ar || contract.client?.name_ar || '',
+          employer_name_en:
+            contract.first_party?.name_en || contract.client?.name_en || '',
+          employer_name_ar:
+            contract.first_party?.name_ar || contract.client?.name_ar || '',
           employer_crn: contract.first_party?.crn || contract.client?.crn || '',
-          client_name_en: contract.second_party?.name_en || contract.employer?.name_en || '',
-          client_name_ar: contract.second_party?.name_ar || contract.employer?.name_ar || '',
-          client_crn: contract.second_party?.crn || contract.employer?.crn || '',
+          client_name_en:
+            contract.second_party?.name_en || contract.employer?.name_en || '',
+          client_name_ar:
+            contract.second_party?.name_ar || contract.employer?.name_ar || '',
+          client_crn:
+            contract.second_party?.crn || contract.employer?.crn || '',
           promoter_name_en: contract.promoters?.name_en || '',
           promoter_name_ar: contract.promoters?.name_ar || '',
           email: contract.email || '',
@@ -463,7 +468,12 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           work_location: contract.work_location || '',
           start_date: contract.start_date || contract.contract_start_date || '',
           end_date: contract.end_date || contract.contract_end_date || '',
-          value: contract.contract_value || contract.value || contract.basic_salary || contract.amount || 0,
+          value:
+            contract.contract_value ||
+            contract.value ||
+            contract.basic_salary ||
+            contract.amount ||
+            0,
           status: contract.status || '',
           is_current: contract.is_current ?? false,
           created_at: contract.created_at || '',

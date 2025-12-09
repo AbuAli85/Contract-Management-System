@@ -125,7 +125,7 @@ export default function SimpleContractGeneratorWithValidation() {
 
   // Auto-save form data
   useEffect(() => {
-    const subscription = watch((data) => {
+    const subscription = watch(data => {
       localStorage.setItem('contract-form-draft', JSON.stringify(data));
       setLastSaved(new Date());
     });
@@ -284,7 +284,7 @@ export default function SimpleContractGeneratorWithValidation() {
       if (result.success) {
         // Enhanced success message with Make.com status
         let successMessage = `Contract generated successfully using ${generationMethod} method`;
-        
+
         if (generationMethod === 'makecom' && result.data?.makecom) {
           const makecom = result.data.makecom;
           if (makecom.success) {
@@ -498,7 +498,9 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.first_party_id}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.first_party_id && !errors.first_party_id}
+                      isValid={
+                        !!dirtyFields.first_party_id && !errors.first_party_id
+                      }
                     />
                   )}
                 />
@@ -512,7 +514,7 @@ export default function SimpleContractGeneratorWithValidation() {
                       label='Second Party (Employer)'
                       name='second_party_id'
                       value={field.value}
-                      onChange={(value) => {
+                      onChange={value => {
                         field.onChange(value);
                         setValue('promoter_id', ''); // Clear promoter when employer changes
                       }}
@@ -523,7 +525,9 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.second_party_id}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.second_party_id && !errors.second_party_id}
+                      isValid={
+                        !!dirtyFields.second_party_id && !errors.second_party_id
+                      }
                     />
                   )}
                 />
@@ -552,7 +556,9 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.contract_type}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.contract_type && !errors.contract_type}
+                      isValid={
+                        !!dirtyFields.contract_type && !errors.contract_type
+                      }
                     />
                   )}
                 />
@@ -610,7 +616,9 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.work_location}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.work_location && !errors.work_location}
+                      isValid={
+                        !!dirtyFields.work_location && !errors.work_location
+                      }
                       placeholder='Select work location'
                       options={[
                         { value: 'Extra Os1', label: 'Extra Os1' },
@@ -637,7 +645,9 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.basic_salary}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.basic_salary && !errors.basic_salary}
+                      isValid={
+                        !!dirtyFields.basic_salary && !errors.basic_salary
+                      }
                       placeholder='0'
                     />
                   )}
@@ -658,7 +668,10 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.contract_start_date}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.contract_start_date && !errors.contract_start_date}
+                      isValid={
+                        !!dirtyFields.contract_start_date &&
+                        !errors.contract_start_date
+                      }
                     />
                   )}
                 />
@@ -678,7 +691,10 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.contract_end_date}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.contract_end_date && !errors.contract_end_date}
+                      isValid={
+                        !!dirtyFields.contract_end_date &&
+                        !errors.contract_end_date
+                      }
                     />
                   )}
                 />
@@ -701,7 +717,10 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.probation_period}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.probation_period && !errors.probation_period}
+                      isValid={
+                        !!dirtyFields.probation_period &&
+                        !errors.probation_period
+                      }
                     />
                   )}
                 />
@@ -724,7 +743,9 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.notice_period}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.notice_period && !errors.notice_period}
+                      isValid={
+                        !!dirtyFields.notice_period && !errors.notice_period
+                      }
                     />
                   )}
                 />
@@ -747,7 +768,9 @@ export default function SimpleContractGeneratorWithValidation() {
                       error={errors.working_hours}
                       disabled={generating}
                       required
-                      isValid={!!dirtyFields.working_hours && !errors.working_hours}
+                      isValid={
+                        !!dirtyFields.working_hours && !errors.working_hours
+                      }
                     />
                   )}
                 />
@@ -766,7 +789,10 @@ export default function SimpleContractGeneratorWithValidation() {
                       onBlur={field.onBlur}
                       error={errors.housing_allowance}
                       disabled={generating}
-                      isValid={!!dirtyFields.housing_allowance && !errors.housing_allowance}
+                      isValid={
+                        !!dirtyFields.housing_allowance &&
+                        !errors.housing_allowance
+                      }
                       placeholder='0'
                     />
                   )}
@@ -786,7 +812,10 @@ export default function SimpleContractGeneratorWithValidation() {
                       onBlur={field.onBlur}
                       error={errors.transport_allowance}
                       disabled={generating}
-                      isValid={!!dirtyFields.transport_allowance && !errors.transport_allowance}
+                      isValid={
+                        !!dirtyFields.transport_allowance &&
+                        !errors.transport_allowance
+                      }
                       placeholder='0'
                     />
                   )}
@@ -815,7 +844,8 @@ export default function SimpleContractGeneratorWithValidation() {
             </div>
 
             {/* Contract Summary */}
-            {(watchedFields.contract_start_date || watchedFields.contract_end_date) && (
+            {(watchedFields.contract_start_date ||
+              watchedFields.contract_end_date) && (
               <div className='bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
                 <h3 className='font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center'>
                   <Calendar className='h-4 w-4 mr-2' />
@@ -862,7 +892,8 @@ export default function SimpleContractGeneratorWithValidation() {
                       Generating contract...
                     </p>
                     <p className='text-sm text-blue-700 dark:text-blue-300'>
-                      Please wait while we process your request. This may take a few moments.
+                      Please wait while we process your request. This may take a
+                      few moments.
                     </p>
                   </div>
                 </div>
@@ -896,7 +927,8 @@ export default function SimpleContractGeneratorWithValidation() {
               <Alert variant='destructive'>
                 <AlertTriangle className='h-4 w-4' />
                 <AlertDescription>
-                  Please fix the validation errors above before submitting the form.
+                  Please fix the validation errors above before submitting the
+                  form.
                 </AlertDescription>
               </Alert>
             )}
@@ -915,4 +947,3 @@ export default function SimpleContractGeneratorWithValidation() {
     </div>
   );
 }
-

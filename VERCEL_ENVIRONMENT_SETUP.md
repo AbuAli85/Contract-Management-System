@@ -1,22 +1,25 @@
 # 🚀 Vercel Environment Setup Guide
 
 ## ❌ Current Issue
+
 Your Vercel build is failing because **environment variables are missing**. The diagnostic shows:
 
 ```
-⚠️  NEXT_PUBLIC_SUPABASE_URL is not set (might be needed for production)        
-⚠️  NEXT_PUBLIC_SUPABASE_ANON_KEY is not set (might be needed for production)   
-⚠️  SUPABASE_SERVICE_ROLE_KEY is not set (might be needed for production)       
+⚠️  NEXT_PUBLIC_SUPABASE_URL is not set (might be needed for production)
+⚠️  NEXT_PUBLIC_SUPABASE_ANON_KEY is not set (might be needed for production)
+⚠️  SUPABASE_SERVICE_ROLE_KEY is not set (might be needed for production)
 ```
 
 ## ✅ Solution: Set Environment Variables in Vercel
 
 ### Step 1: Go to Vercel Dashboard
+
 1. Visit [vercel.com/dashboard](https://vercel.com/dashboard)
 2. Find your project: `Contract-Management-System`
 3. Click on the project
 
 ### Step 2: Navigate to Settings
+
 1. Click on **"Settings"** tab
 2. Click on **"Environment Variables"** in the left sidebar
 
@@ -25,18 +28,21 @@ Your Vercel build is failing because **environment variables are missing**. The 
 Add these **3 critical environment variables**:
 
 #### 1. `NEXT_PUBLIC_SUPABASE_URL`
+
 - **Value**: Your Supabase project URL
 - **Example**: `https://your-project-id.supabase.co`
 - **Environment**: Production, Preview, Development
 - **Description**: Public Supabase URL for client-side operations
 
 #### 2. `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
 - **Value**: Your Supabase anon/public key
 - **Example**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
 - **Environment**: Production, Preview, Development
 - **Description**: Public Supabase key for client-side authentication
 
 #### 3. `SUPABASE_SERVICE_ROLE_KEY`
+
 - **Value**: Your Supabase service role key
 - **Example**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
 - **Environment**: Production, Preview, Development
@@ -74,11 +80,11 @@ cat .env.local
 
 ## 📋 Environment Variables Summary
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Yes | Public Supabase key |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Yes | Service role key |
+| Variable                        | Required | Description          |
+| ------------------------------- | -------- | -------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | ✅ Yes   | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Yes   | Public Supabase key  |
+| `SUPABASE_SERVICE_ROLE_KEY`     | ✅ Yes   | Service role key     |
 
 ## 🎯 Expected Result
 

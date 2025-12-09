@@ -13,6 +13,7 @@ This guide outlines performance optimization strategies for the SmartPro Promote
 ## 📊 Current Performance Baseline
 
 **Targets (Lighthouse):**
+
 - Performance: > 90
 - First Contentful Paint (FCP): < 1.8s
 - Largest Contentful Paint (LCP): < 2.5s
@@ -46,14 +47,16 @@ const PromoterAnalytics = dynamic(
 );
 
 const EnhancedCharts = dynamic(
-  () => import('@/components/dashboard/enhanced-dashboard-charts').then(mod => ({ default: mod.EnhancedDashboardCharts })),
+  () =>
+    import('@/components/dashboard/enhanced-dashboard-charts').then(mod => ({
+      default: mod.EnhancedDashboardCharts,
+    })),
   { loading: () => <ChartsSkeleton /> }
 );
 
-const DataTable = dynamic(
-  () => import('@/components/ui/data-table'),
-  { loading: () => <TableSkeleton /> }
-);
+const DataTable = dynamic(() => import('@/components/ui/data-table'), {
+  loading: () => <TableSkeleton />,
+});
 ```
 
 #### Route-Based Code Splitting
@@ -92,32 +95,32 @@ const HistoryTab = lazy(() => import('./tabs/HistoryTab'));
 
 export function PromoterDetails() {
   return (
-    <Tabs defaultValue="overview">
+    <Tabs defaultValue='overview'>
       <TabsList>
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="documents">Documents</TabsTrigger>
-        <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        <TabsTrigger value="history">History</TabsTrigger>
+        <TabsTrigger value='overview'>Overview</TabsTrigger>
+        <TabsTrigger value='documents'>Documents</TabsTrigger>
+        <TabsTrigger value='analytics'>Analytics</TabsTrigger>
+        <TabsTrigger value='history'>History</TabsTrigger>
       </TabsList>
-      
-      <TabsContent value="overview">
+
+      <TabsContent value='overview'>
         {/* Render immediately */}
         <OverviewContent />
       </TabsContent>
-      
-      <TabsContent value="documents">
+
+      <TabsContent value='documents'>
         <Suspense fallback={<TabSkeleton />}>
           <DocumentsTab />
         </Suspense>
       </TabsContent>
-      
-      <TabsContent value="analytics">
+
+      <TabsContent value='analytics'>
         <Suspense fallback={<TabSkeleton />}>
           <AnalyticsTab />
         </Suspense>
       </TabsContent>
-      
-      <TabsContent value="history">
+
+      <TabsContent value='history'>
         <Suspense fallback={<TabSkeleton />}>
           <HistoryTab />
         </Suspense>
@@ -135,20 +138,20 @@ export function PromoterDetails() {
 
 ```tsx
 // Before: Standard img tag
-<img src="/avatar.jpg" alt="User" width="40" height="40" />
+<img src='/avatar.jpg' alt='User' width='40' height='40' />;
 
 // After: Optimized Next.js Image
 import Image from 'next/image';
 
 <Image
-  src="/avatar.jpg"
-  alt="User"
+  src='/avatar.jpg'
+  alt='User'
   width={40}
   height={40}
-  loading="lazy"
-  placeholder="blur"
-  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRg..." // or use plaiceholder
-/>
+  loading='lazy'
+  placeholder='blur'
+  blurDataURL='data:image/jpeg;base64,/9j/4AAQSkZJRg...' // or use plaiceholder
+/>;
 ```
 
 #### Configure Image Optimization
@@ -180,7 +183,7 @@ module.exports = {
   alt={promoter.name}
   width={200}
   height={200}
-  loading="lazy" // Browser-native lazy loading
+  loading='lazy' // Browser-native lazy loading
   onLoadingComplete={() => console.log('Image loaded')}
 />
 ```
@@ -257,8 +260,8 @@ export function PromotersList({ promoters }) {
   return (
     <div>
       {sortedPromoters.map(promoter => (
-        <PromoterCard 
-          key={promoter.id} 
+        <PromoterCard
+          key={promoter.id}
           promoter={promoter}
           onEdit={handleEdit} // Stable reference
         />
@@ -279,16 +282,18 @@ export function PromoterCard({ promoter, onEdit }) {
 }
 
 // After: Only re-renders when props change
-export const PromoterCard = memo(function PromoterCard({ 
-  promoter, 
-  onEdit 
-}: PromoterCardProps) {
-  // Component logic
-}, (prevProps, nextProps) => {
-  // Custom comparison function (optional)
-  return prevProps.promoter.id === nextProps.promoter.id &&
-         prevProps.promoter.updatedAt === nextProps.promoter.updatedAt;
-});
+export const PromoterCard = memo(
+  function PromoterCard({ promoter, onEdit }: PromoterCardProps) {
+    // Component logic
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function (optional)
+    return (
+      prevProps.promoter.id === nextProps.promoter.id &&
+      prevProps.promoter.updatedAt === nextProps.promoter.updatedAt
+    );
+  }
+);
 ```
 
 #### Virtualization for Long Lists
@@ -311,7 +316,7 @@ export function VirtualizedPromotersList({ promoters }) {
       height={600}
       itemCount={promoters.length}
       itemSize={100}
-      width="100%"
+      width='100%'
     >
       {Row}
     </FixedSizeList>
@@ -359,10 +364,7 @@ export function PromoterLink({ promoterId }) {
   };
 
   return (
-    <Link 
-      href={`/promoters/${promoterId}`}
-      onMouseEnter={handleMouseEnter}
-    >
+    <Link href={`/promoters/${promoterId}`} onMouseEnter={handleMouseEnter}>
       View Details
     </Link>
   );
@@ -454,6 +456,7 @@ export default function RootLayout({ children }) {
 ## 📋 Implementation Checklist
 
 ### Phase 1: Low-Hanging Fruit (Week 1)
+
 - [ ] Replace heavy imports with tree-shakeable alternatives
 - [ ] Add loading="lazy" to images below the fold
 - [ ] Memoize expensive calculations with useMemo
@@ -461,12 +464,14 @@ export default function RootLayout({ children }) {
 - [ ] Implement bundle analyzer and check for large dependencies
 
 ### Phase 2: Code Splitting (Week 2)
+
 - [ ] Dynamic import heavy chart libraries
 - [ ] Lazy load analytics components
 - [ ] Split large pages into smaller chunks
 - [ ] Implement progressive loading for tabs
 
 ### Phase 3: Advanced Optimizations (Week 3)
+
 - [ ] Implement virtualization for long lists
 - [ ] Add prefetching for common navigation paths
 - [ ] Set up service worker for offline support
@@ -492,4 +497,3 @@ export default function RootLayout({ children }) {
 - [web.dev Performance](https://web.dev/performance/)
 - [React Performance](https://react.dev/reference/react/useMemo)
 - [Bundle Size Analysis](https://bundlephobia.com/)
-

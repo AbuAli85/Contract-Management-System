@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
  * Get Supabase Authentication Token
- * 
+ *
  * This script authenticates with Supabase and returns an access token
  * for use in API testing and validation scripts.
- * 
+ *
  * Usage:
  *   node tests/get-auth-token.js
- * 
+ *
  * Environment Variables:
  *   NEXT_PUBLIC_SUPABASE_URL       - Supabase project URL (required)
  *   NEXT_PUBLIC_SUPABASE_ANON_KEY  - Supabase anonymous key (required)
@@ -77,20 +77,27 @@ let createClient;
 
   console.error('✅ Authentication successful');
   console.error(`   User ID: ${data.user.id}`);
-  console.error(`   Token expires: ${new Date(data.session.expires_at * 1000).toISOString()}`);
+  console.error(
+    `   Token expires: ${new Date(data.session.expires_at * 1000).toISOString()}`
+  );
   console.error('');
   console.error('📋 Access Token (copy this):');
-  console.error('─────────────────────────────────────────────────────────────');
+  console.error(
+    '─────────────────────────────────────────────────────────────'
+  );
 
   // Output the token to stdout (so it can be captured)
   console.log(data.session.access_token);
 
-  console.error('─────────────────────────────────────────────────────────────');
+  console.error(
+    '─────────────────────────────────────────────────────────────'
+  );
   console.error('');
   console.error('💡 Usage:');
-  console.error('   export SUPABASE_AUTH_TOKEN="$(node tests/get-auth-token.js)"');
+  console.error(
+    '   export SUPABASE_AUTH_TOKEN="$(node tests/get-auth-token.js)"'
+  );
   console.error('   node tests/performance-validation.js');
 
   process.exit(0);
 })();
-

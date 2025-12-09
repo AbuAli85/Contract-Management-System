@@ -160,7 +160,13 @@ ${errorInfo?.componentStack || 'No component stack'}
   };
 
   render() {
-    const { children, fallback, componentName, showDetails = false, maxRetries = 3 } = this.props;
+    const {
+      children,
+      fallback,
+      componentName,
+      showDetails = false,
+      maxRetries = 3,
+    } = this.props;
     const { hasError, error, errorInfo, retryCount, errorId } = this.state;
 
     if (hasError) {
@@ -171,63 +177,69 @@ ${errorInfo?.componentStack || 'No component stack'}
 
       // Default error UI
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-6">
-          <Card className="max-w-2xl w-full border-destructive">
+        <div className='min-h-[400px] flex items-center justify-center p-6'>
+          <Card className='max-w-2xl w-full border-destructive'>
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
-                  <AlertTriangle className="h-6 w-6 text-red-600" />
+              <div className='flex items-center gap-3'>
+                <div className='p-3 bg-red-100 dark:bg-red-900/20 rounded-full'>
+                  <AlertTriangle className='h-6 w-6 text-red-600' />
                 </div>
-                <div className="flex-1">
-                  <CardTitle className="text-xl">Something went wrong</CardTitle>
+                <div className='flex-1'>
+                  <CardTitle className='text-xl'>
+                    Something went wrong
+                  </CardTitle>
                   <CardDescription>
                     {componentName
                       ? `An error occurred in the ${componentName} component`
                       : 'An unexpected error has occurred'}
                   </CardDescription>
                 </div>
-                <Badge variant="destructive" className="ml-auto">
+                <Badge variant='destructive' className='ml-auto'>
                   Error ID: {errorId.slice(-8)}
                 </Badge>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className='space-y-4'>
               {/* Error Message */}
-              <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm font-medium mb-1">Error Message:</p>
-                <p className="text-sm text-muted-foreground font-mono">
+              <div className='rounded-lg bg-muted p-4'>
+                <p className='text-sm font-medium mb-1'>Error Message:</p>
+                <p className='text-sm text-muted-foreground font-mono'>
                   {error?.message || 'Unknown error'}
                 </p>
               </div>
 
               {/* Retry Information */}
               {retryCount > 0 && (
-                <div className="text-sm text-muted-foreground">
+                <div className='text-sm text-muted-foreground'>
                   Retry attempt: {retryCount} of {maxRetries}
                 </div>
               )}
 
               {/* Error Details (Development Only or if showDetails is true) */}
               {(process.env.NODE_ENV === 'development' || showDetails) && (
-                <details className="group">
-                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
+                <details className='group'>
+                  <summary className='cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground'>
                     Show technical details
                   </summary>
-                  <div className="mt-3 space-y-3">
+                  <div className='mt-3 space-y-3'>
                     {/* Stack Trace */}
-                    <div className="rounded-lg bg-slate-900 p-4 text-xs text-slate-100 overflow-auto max-h-60">
-                      <p className="font-semibold mb-2 text-slate-300">Stack Trace:</p>
-                      <pre className="whitespace-pre-wrap break-all">
+                    <div className='rounded-lg bg-slate-900 p-4 text-xs text-slate-100 overflow-auto max-h-60'>
+                      <p className='font-semibold mb-2 text-slate-300'>
+                        Stack Trace:
+                      </p>
+                      <pre className='whitespace-pre-wrap break-all'>
                         {error?.stack || 'No stack trace available'}
                       </pre>
                     </div>
 
                     {/* Component Stack */}
                     {errorInfo?.componentStack && (
-                      <div className="rounded-lg bg-slate-900 p-4 text-xs text-slate-100 overflow-auto max-h-60">
-                        <p className="font-semibold mb-2 text-slate-300">Component Stack:</p>
-                        <pre className="whitespace-pre-wrap">
+                      <div className='rounded-lg bg-slate-900 p-4 text-xs text-slate-100 overflow-auto max-h-60'>
+                        <p className='font-semibold mb-2 text-slate-300'>
+                          Component Stack:
+                        </p>
+                        <pre className='whitespace-pre-wrap'>
                           {errorInfo.componentStack}
                         </pre>
                       </div>
@@ -237,11 +249,11 @@ ${errorInfo?.componentStack || 'No component stack'}
               )}
 
               {/* Helpful Tips */}
-              <div className="rounded-lg border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20 p-4">
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+              <div className='rounded-lg border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20 p-4'>
+                <p className='text-sm font-medium text-blue-900 dark:text-blue-100 mb-2'>
                   What you can do:
                 </p>
-                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
+                <ul className='text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside'>
                   <li>Try refreshing the page</li>
                   <li>Clear your browser cache and cookies</li>
                   <li>Check your internet connection</li>
@@ -250,35 +262,35 @@ ${errorInfo?.componentStack || 'No component stack'}
               </div>
             </CardContent>
 
-            <CardFooter className="flex flex-wrap gap-2">
+            <CardFooter className='flex flex-wrap gap-2'>
               {/* Retry Button */}
               {retryCount < maxRetries && (
-                <Button onClick={this.handleReset} variant="default">
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                <Button onClick={this.handleReset} variant='default'>
+                  <RefreshCw className='h-4 w-4 mr-2' />
                   Try Again
                 </Button>
               )}
 
               {/* Go Home Button */}
-              <Button onClick={this.handleGoHome} variant="outline">
-                <Home className="h-4 w-4 mr-2" />
+              <Button onClick={this.handleGoHome} variant='outline'>
+                <Home className='h-4 w-4 mr-2' />
                 Go to Homepage
               </Button>
 
               {/* Report Issue Button */}
-              <Button onClick={this.handleReportIssue} variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
+              <Button onClick={this.handleReportIssue} variant='outline'>
+                <FileText className='h-4 w-4 mr-2' />
                 Report Issue
               </Button>
 
               {/* Copy Error ID */}
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
+                size='sm'
                 onClick={() => {
                   navigator.clipboard.writeText(errorId);
                 }}
-                className="ml-auto"
+                className='ml-auto'
               >
                 Copy Error ID
               </Button>
@@ -307,4 +319,3 @@ export function withErrorBoundary<P extends object>(
     );
   };
 }
-

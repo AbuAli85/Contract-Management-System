@@ -59,14 +59,14 @@ jobs:
           else
             REF="${{ secrets.SUPABASE_STAGING_PROJECT_REF || secrets.SUPABASE_PROJECT_REF }}"
           fi
-          
+
           if [ -z "$REF" ]; then
             echo "❌ Error: SUPABASE_PROJECT_REF secret is not set"
             echo "Please set SUPABASE_PROJECT_REF in your GitHub repository secrets"
             echo "You can find your Project Ref in Supabase Dashboard → Settings → General → Reference ID"
             exit 1
           fi
-          
+
           echo "ref=$REF" >> $GITHUB_OUTPUT
           echo "✅ Using project ref: ${REF:0:8}..." # Show first 8 chars for verification
 
@@ -91,7 +91,7 @@ jobs:
           echo "📁 Creating Supabase directory structure..."
           mkdir -p supabase/.temp
           mkdir -p supabase/migrations
-          
+
           # Verify password format (without exposing it)
           if [ -n "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
             PASSWORD_LENGTH=${#SUPABASE_DB_PASSWORD}
@@ -107,16 +107,16 @@ jobs:
           else
             echo "⚠️  SUPABASE_DB_PASSWORD secret is not set"
           fi
-          
+
           # Link to Supabase project with retry logic
           echo "🔗 Linking to Supabase project..."
-          
+
           LINK_OUTPUT=""
           LINK_FAILED=true
           max_attempts=3
           attempt=1
           delay=5
-          
+
           while [ $attempt -le $max_attempts ]; do
             echo "🔄 Attempt $attempt of $max_attempts..."
             
@@ -173,7 +173,7 @@ jobs:
             # Increment attempt counter
             attempt=$((attempt + 1))
           done
-          
+
           if [ "$LINK_FAILED" = true ]; then
             echo ""
             echo "❌ Failed to link after $max_attempts attempts"
@@ -293,7 +293,7 @@ jobs:
           # Check migration status
           echo "📊 Checking migration status..."
           supabase migration list --linked || true
-          
+
           # Attempt normal deployment first
           echo ""
           echo "🔄 Attempting normal migration deployment..."

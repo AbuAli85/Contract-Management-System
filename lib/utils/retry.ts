@@ -1,6 +1,6 @@
 /**
  * Retry Utility
- * 
+ *
  * Provides intelligent retry mechanisms for failed operations with:
  * - Exponential backoff
  * - Maximum retry attempts
@@ -90,7 +90,7 @@ function calculateDelay(
 
 /**
  * Retry a function with exponential backoff
- * 
+ *
  * @example
  * ```typescript
  * const data = await retryAsync(
@@ -153,14 +153,14 @@ export async function retryAsync<T>(
 
 /**
  * Create a retry wrapper for a function
- * 
+ *
  * @example
  * ```typescript
  * const fetchWithRetry = withRetry(
  *   fetch,
  *   { maxAttempts: 3, initialDelay: 1000 }
  * );
- * 
+ *
  * const response = await fetchWithRetry('/api/data');
  * ```
  */
@@ -347,9 +347,7 @@ export class CircuitBreaker {
 
     if (this.failures >= this.threshold) {
       this.isOpen = true;
-      console.warn(
-        `⚠️ Circuit breaker opened after ${this.failures} failures`
-      );
+      console.warn(`⚠️ Circuit breaker opened after ${this.failures} failures`);
     }
   }
 
@@ -367,4 +365,3 @@ export class CircuitBreaker {
     };
   }
 }
-

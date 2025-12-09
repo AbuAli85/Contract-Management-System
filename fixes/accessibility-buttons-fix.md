@@ -1,9 +1,11 @@
 # Fix: Add Accessible Labels to Icon-Only Buttons
 
 ## Issue
+
 At least 5 icon-only buttons lack `aria-label` attributes, making them inaccessible to screen reader users.
 
 ## WCAG Compliance
+
 This violates WCAG 2.1 Level A success criterion 4.1.2 (Name, Role, Value).
 
 ## Solution
@@ -21,6 +23,7 @@ grep -r "<button>" components/ app/ | grep -v "aria-label"
 For each icon-only button, add a descriptive `aria-label`:
 
 **Before:**
+
 ```typescript
 <button onClick={handleRefresh}>
   <RefreshIcon />
@@ -28,6 +31,7 @@ For each icon-only button, add a descriptive `aria-label`:
 ```
 
 **After:**
+
 ```typescript
 <button onClick={handleRefresh} aria-label="Refresh data">
   <RefreshIcon />
@@ -36,21 +40,22 @@ For each icon-only button, add a descriptive `aria-label`:
 
 ### Common Button Types and Suggested Labels
 
-| Button Type | Suggested aria-label |
-|------------|---------------------|
-| Calendar picker | "Open calendar" |
-| Close/dismiss | "Close" or "Dismiss" |
-| Menu toggle | "Open menu" |
-| Search | "Search" |
-| Filter | "Filter results" |
-| Refresh | "Refresh data" |
-| Delete | "Delete item" |
-| Edit | "Edit item" |
-| Settings | "Open settings" |
+| Button Type     | Suggested aria-label |
+| --------------- | -------------------- |
+| Calendar picker | "Open calendar"      |
+| Close/dismiss   | "Close" or "Dismiss" |
+| Menu toggle     | "Open menu"          |
+| Search          | "Search"             |
+| Filter          | "Filter results"     |
+| Refresh         | "Refresh data"       |
+| Delete          | "Delete item"        |
+| Edit            | "Edit item"          |
+| Settings        | "Open settings"      |
 
 ### Step 3: Verify All Interactive Elements
 
 Check other interactive elements too:
+
 - Links without text
 - Image buttons
 - Custom controls

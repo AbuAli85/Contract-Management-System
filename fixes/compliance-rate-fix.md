@@ -1,9 +1,11 @@
 # Fix: Compliance Rate Calculation
 
 ## Issue
+
 The compliance rate on the Promoters page shows **0%** and **NaN/181 compliant** instead of the actual compliance percentage.
 
 ## Root Cause
+
 The `PromoterMetrics` interface in `lib/metrics.ts` is missing the `complianceRate` field, and the `getPromoterMetrics` function doesn't calculate it.
 
 ## Solution
@@ -54,27 +56,41 @@ let expiringCount = 0;
 
 if (promotersData) {
   promotersData.forEach(promoter => {
-    const idExpiry = promoter.id_expiry_date ? new Date(promoter.id_expiry_date) : null;
-    const passportExpiry = promoter.passport_expiry_date ? new Date(promoter.passport_expiry_date) : null;
+    const idExpiry = promoter.id_expiry_date
+      ? new Date(promoter.id_expiry_date)
+      : null;
+    const passportExpiry = promoter.passport_expiry_date
+      ? new Date(promoter.passport_expiry_date)
+      : null;
 
     const idExpired = idExpiry && idExpiry < now;
     const passportExpired = passportExpiry && passportExpiry < now;
-    const idExpiring = idExpiry && idExpiry >= now && idExpiry <= thirtyDaysFromNow;
-    const passportExpiring = passportExpiry && passportExpiry >= now && passportExpiry <= thirtyDaysFromNow;
+    const idExpiring =
+      idExpiry && idExpiry >= now && idExpiry <= thirtyDaysFromNow;
+    const passportExpiring =
+      passportExpiry &&
+      passportExpiry >= now &&
+      passportExpiry <= thirtyDaysFromNow;
 
     if (idExpired || passportExpired) {
       criticalCount++;
     } else if (idExpiring || passportExpiring) {
       expiringCount++;
-    } else if (idExpiry && passportExpiry && idExpiry > thirtyDaysFromNow && passportExpiry > thirtyDaysFromNow) {
+    } else if (
+      idExpiry &&
+      passportExpiry &&
+      idExpiry > thirtyDaysFromNow &&
+      passportExpiry > thirtyDaysFromNow
+    ) {
       compliantCount++;
     }
   });
 }
 
-const complianceRate = totalCount && totalCount > 0
-  ? Math.round((compliantCount / totalCount) * 100)
-  : 0;
+const complianceRate =
+  totalCount && totalCount > 0
+    ? Math.round((compliantCount / totalCount) * 100)
+    : 0;
 
 const unassignedCount = (activeCount || 0) - uniquePromotersOnAssignments;
 ```

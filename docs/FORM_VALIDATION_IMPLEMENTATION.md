@@ -5,6 +5,7 @@ This document describes the comprehensive form validation implemented across the
 ## Overview
 
 All major forms in the application now have:
+
 - ✅ Real-time inline validation using **react-hook-form** with **zod** schemas
 - ✅ Visual feedback (red borders for errors, green for valid fields)
 - ✅ Error messages displayed below fields
@@ -23,9 +24,10 @@ All major forms in the application now have:
 **Page**: `app/[locale]/generate-contract/page.tsx`
 
 **Validation Rules**:
+
 - **Promoter**: Required, must select from list
 - **First Party (Client)**: Required
-- **Second Party (Employer)**: Required  
+- **Second Party (Employer)**: Required
 - **Contract Type**: Required
 - **Job Title**: Required, 2-100 characters
 - **Department**: Required, 2-100 characters
@@ -41,6 +43,7 @@ All major forms in the application now have:
 - **Special Terms**: Optional
 
 **Features**:
+
 - Real-time validation as user types
 - Visual border feedback (red/green)
 - Error icons and messages
@@ -55,6 +58,7 @@ All major forms in the application now have:
 **Schema**: `lib/schemas/profile-form-schema.ts`
 
 **Validation Rules**:
+
 - **Full Name**: Required, 2-100 characters
 - **Email**: Read-only, valid email format
 - **Phone**: Optional, international phone format validation
@@ -67,11 +71,13 @@ All major forms in the application now have:
 - **SMS Notifications**: Boolean
 
 **Password Change Validation**:
+
 - **Current Password**: Required
 - **New Password**: Required, min 8 characters, must contain uppercase, lowercase, and number
 - **Confirm Password**: Required, must match new password
 
 **Features**:
+
 - Real-time validation
 - Password strength requirements clearly displayed
 - Visual feedback on all fields
@@ -84,6 +90,7 @@ All major forms in the application now have:
 **Schema**: `lib/party-schema.ts`
 
 **Validation Rules**:
+
 - **Name (English)**: Required, 2-255 characters
 - **Name (Arabic)**: Optional, 2-255 characters
 - **CRN**: Optional, 5-50 characters
@@ -101,10 +108,12 @@ All major forms in the application now have:
 - **Notes**: Optional, max 2000 characters
 
 **Cross-field Validation**:
+
 - If CRN is provided, CR expiry date must be in the future
 - If license number is provided, license expiry date must be in the future
 
 **Features**:
+
 - Comprehensive validation with react-hook-form
 - Visual feedback (red/green borders)
 - Submit button disabled until valid
@@ -117,6 +126,7 @@ All major forms in the application now have:
 **Schema**: `lib/schemas/promoter-form-schema.ts`
 
 **Validation Rules** (Comprehensive):
+
 - **Basic Information**:
   - name_en: Optional, 2-255 chars
   - name_ar: Optional, 2-255 chars
@@ -181,6 +191,7 @@ All major forms in the application now have:
   - notify_days_before_passport_expiry: Default 210, 1-365
 
 **Cross-field Validations**:
+
 - If passport number provided, passport expiry date required
 - If work permit number provided, work permit expiry date required
 - If visa number provided, visa expiry date required
@@ -189,6 +200,7 @@ All major forms in the application now have:
 - IBAN format validation
 
 **Features**:
+
 - Multi-step form with sections (Basic, Contact, Documents, Personal, Emergency, Employment, Education, Banking, Status, Additional)
 - Progressive disclosure pattern
 - Comprehensive validation with react-hook-form
@@ -198,10 +210,12 @@ All major forms in the application now have:
 ## Reusable Validation Components
 
 ### FormFieldWithValidation
+
 **Location**: `components/ui/form-field-with-validation.tsx`
 
 Provides a standard Input field with:
-- Required field indicator (*)
+
+- Required field indicator (\*)
 - Red border on error
 - Green border on valid
 - Error icon (AlertCircle) on invalid
@@ -211,10 +225,12 @@ Provides a standard Input field with:
 - Accessibility (aria-invalid, aria-describedby)
 
 ### SelectFieldWithValidation
+
 **Location**: `components/ui/select-field-with-validation.tsx`
 
 Provides a Select dropdown with:
-- Required field indicator (*)
+
+- Required field indicator (\*)
 - Visual validation feedback
 - Error/success icons
 - Error messages
@@ -230,7 +246,7 @@ import { myFormSchema, type MyFormData } from '@/lib/schemas/my-form-schema';
 
 function MyForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm<MyFormData>({
     resolver: zodResolver(myFormSchema),
     mode: 'onChange', // Real-time validation
@@ -243,10 +259,10 @@ function MyForm() {
       await submitData(data);
       toast({ title: 'Success', description: 'Data saved successfully' });
     } catch (error) {
-      toast({ 
-        title: 'Error', 
-        description: 'Failed to save', 
-        variant: 'destructive' 
+      toast({
+        title: 'Error',
+        description: 'Failed to save',
+        variant: 'destructive'
       });
     } finally {
       setIsSubmitting(false);
@@ -272,9 +288,9 @@ function MyForm() {
           />
         )}
       />
-      
-      <Button 
-        type="submit" 
+
+      <Button
+        type="submit"
         disabled={isSubmitting || !form.formState.isValid}
       >
         {isSubmitting ? (
@@ -294,53 +310,61 @@ function MyForm() {
 ## Common Validation Rules
 
 ### Email Validation
+
 ```typescript
-z.string().email('Please enter a valid email address')
+z.string().email('Please enter a valid email address');
 ```
 
 ### Phone Validation
+
 ```typescript
 const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
-z.string().regex(phoneRegex, 'Please enter a valid phone number')
+z.string().regex(phoneRegex, 'Please enter a valid phone number');
 ```
 
 ### Required Field with Length
+
 ```typescript
 z.string()
   .min(2, 'Must be at least 2 characters')
-  .max(100, 'Must be less than 100 characters')
+  .max(100, 'Must be less than 100 characters');
 ```
 
 ### Optional Field with Length
+
 ```typescript
 z.string()
   .max(100, 'Must be less than 100 characters')
   .optional()
-  .or(z.literal(''))
+  .or(z.literal(''));
 ```
 
 ### Date in Future
+
 ```typescript
 z.date().refine(date => date > new Date(), {
   message: 'Date must be in the future',
-})
+});
 ```
 
 ### Date in Past
+
 ```typescript
 z.date().refine(date => date < new Date(), {
   message: 'Date cannot be in the future',
-})
+});
 ```
 
 ### Positive Number with Max
+
 ```typescript
 z.number()
   .positive('Must be greater than 0')
-  .max(1000000, 'Please enter a valid amount')
+  .max(1000000, 'Please enter a valid amount');
 ```
 
 ### Cross-field Validation (Date Range)
+
 ```typescript
 .refine((data) => {
   if (data.start_date && data.end_date) {
@@ -356,6 +380,7 @@ z.number()
 ## Accessibility Features
 
 All validated forms include:
+
 - `aria-invalid` attribute on error state
 - `aria-describedby` linking to error messages
 - `aria-label` for screen readers
@@ -382,6 +407,7 @@ All validated forms include:
 ## Future Enhancements
 
 Consider adding:
+
 1. Field-level async validation (e.g., check if email already exists)
 2. Debounced validation for expensive checks
 3. Form progress indicators
@@ -398,4 +424,3 @@ Consider adding:
 - Follow the established pattern when adding new forms
 - Keep validation rules consistent across similar fields
 - Update this document when adding new validated forms
-

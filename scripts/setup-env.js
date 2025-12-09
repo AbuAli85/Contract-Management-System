@@ -11,11 +11,11 @@ const readline = require('readline');
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 function question(prompt) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     rl.question(prompt, resolve);
   });
 }
@@ -23,31 +23,35 @@ function question(prompt) {
 async function setupEnvironment() {
   console.log('🚀 Environment Setup Script');
   console.log('============================\n');
-  
+
   const envPath = path.join(process.cwd(), '.env.local');
-  
+
   if (fs.existsSync(envPath)) {
-    const overwrite = await question('⚠️  .env.local already exists. Overwrite? (y/N): ');
+    const overwrite = await question(
+      '⚠️  .env.local already exists. Overwrite? (y/N): '
+    );
     if (overwrite.toLowerCase() !== 'y' && overwrite.toLowerCase() !== 'yes') {
       console.log('❌ Setup cancelled.');
       rl.close();
       return;
     }
   }
-  
+
   console.log('\n📝 Please provide your Supabase credentials:');
-  console.log('(You can find these in your Supabase project dashboard > Settings > API)\n');
-  
+  console.log(
+    '(You can find these in your Supabase project dashboard > Settings > API)\n'
+  );
+
   const supabaseUrl = await question('🔗 Supabase Project URL: ');
   const supabaseAnonKey = await question('🔑 Supabase Anon Key: ');
   const serviceRoleKey = await question('🔐 Service Role Key (optional): ');
-  
+
   if (!supabaseUrl || !supabaseAnonKey) {
     console.log('❌ Supabase URL and Anon Key are required!');
     rl.close();
     return;
   }
-  
+
   const envContent = `# ========================================
 # 🔐 CONTRACT MANAGEMENT SYSTEM
 # ========================================
@@ -118,13 +122,17 @@ NEXT_PUBLIC_FEATURE_API_ACCESS=true
     console.log('\n✅ .env.local file created successfully!');
     console.log('\n🔧 Next steps:');
     console.log('1. Restart your development server: npm run dev');
-    console.log('2. Test the debug endpoint: http://localhost:3000/api/debug/auth');
+    console.log(
+      '2. Test the debug endpoint: http://localhost:3000/api/debug/auth'
+    );
     console.log('3. Try logging in to your application');
-    console.log('\n📖 If you encounter issues, see CRITICAL_ERROR_FIX_GUIDE.md');
+    console.log(
+      '\n📖 If you encounter issues, see CRITICAL_ERROR_FIX_GUIDE.md'
+    );
   } catch (error) {
     console.log('❌ Error creating .env.local file:', error.message);
   }
-  
+
   rl.close();
 }
 

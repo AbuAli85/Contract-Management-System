@@ -10,6 +10,7 @@
 ## 🎯 WHY THIS MATTERS
 
 Your account `operations@falconeyegroup.net` is an **ADMIN account** with full system access:
+
 - ✅ Manage all 181 promoters
 - ✅ Approve/reject contracts
 - ✅ Create/delete users
@@ -17,12 +18,14 @@ Your account `operations@falconeyegroup.net` is an **ADMIN account** with full s
 - ✅ Access sensitive data
 
 **Without MFA, your account is vulnerable to:**
+
 - 🚨 Password theft
 - 🚨 Phishing attacks
 - 🚨 Credential stuffing
 - 🚨 Unauthorized access
 
 **With MFA enabled:**
+
 - ✅ 99.9% protection against account takeover
 - ✅ Compliance with security best practices
 - ✅ Peace of mind
@@ -36,6 +39,7 @@ Your account `operations@falconeyegroup.net` is an **ADMIN account** with full s
 #### Step 1: Install Authenticator App (if not already installed)
 
 Choose one (all free):
+
 - **Google Authenticator** (iOS/Android)
 - **Microsoft Authenticator** (iOS/Android)
 - **Authy** (iOS/Android/Desktop)
@@ -73,6 +77,7 @@ Choose one (all free):
 #### Step 6: Save Backup Codes 🚨 **CRITICAL**
 
 You'll receive **8 backup recovery codes**. Example:
+
 ```
 BACKUP-001: A3B7K9
 BACKUP-002: M5N8P2
@@ -82,6 +87,7 @@ BACKUP-008: Z9X7C5
 ```
 
 **IMPORTANT:** Store these codes securely:
+
 - ✅ Save in password manager (recommended)
 - ✅ Print and keep in secure location
 - ✅ Share with IT administrator
@@ -116,7 +122,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
   "qrCode": "data:image/png;base64,...",
   "secret": "JBSWY3DPEHPK3PXP",
   "backupCodes": [
-    "ABC123", "DEF456", "GHI789", 
+    "ABC123", "DEF456", "GHI789",
     "JKL012", "MNO345", "PQR678",
     "STU901", "VWX234"
   ]
@@ -172,6 +178,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 ### Q: Lost my phone / Can't access authenticator app?
 
 **A:** Use a backup code!
+
 1. When prompted for MFA code, look for "Use backup code" link
 2. Enter one of your 8 backup codes
 3. That code will be consumed (single-use)
@@ -182,6 +189,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 ### Q: Backup codes lost too?
 
 **A:** Contact the other admin:
+
 - Email: luxsess2001@gmail.com
 - User: Fahad alamri
 - They can temporarily disable your MFA so you can set up new codes
@@ -189,6 +197,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 ### Q: Code says "invalid" or "incorrect"?
 
 **A:** Common causes:
+
 1. **Time sync issue** - Make sure your phone's time is auto-synced
 2. **Old code** - Codes change every 30 seconds, use the current one
 3. **Wrong account** - Make sure you're viewing the correct entry in your app
@@ -196,6 +205,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 ### Q: Can I use SMS instead of an app?
 
 **A:** Not currently implemented, but you can:
+
 1. Use authenticator app (recommended)
 2. Use backup codes as fallback
 3. Request phone number-based 2FA (future feature)
@@ -205,6 +215,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 ## 🛡️ SECURITY BEST PRACTICES
 
 ### ✅ DO:
+
 - ✅ Use a reputable authenticator app
 - ✅ Store backup codes in password manager
 - ✅ Print backup codes and store securely
@@ -214,6 +225,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 - ✅ Use different authenticator app than password manager (multi-layer)
 
 ### ❌ DON'T:
+
 - ❌ Screenshot backup codes and save on device
 - ❌ Email backup codes to yourself
 - ❌ Share MFA codes with anyone
@@ -226,6 +238,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 ## 🎓 RECOMMENDED AUTHENTICATOR APPS
 
 ### **Google Authenticator** ⭐
+
 - ✅ Simple and reliable
 - ✅ Works offline
 - ✅ Free
@@ -233,6 +246,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 - ❌ No multi-device sync
 
 ### **Microsoft Authenticator** ⭐
+
 - ✅ Cloud backup available
 - ✅ Multi-device sync
 - ✅ Free
@@ -240,6 +254,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 - ✅ Biometric support
 
 ### **Authy** ⭐⭐ **RECOMMENDED**
+
 - ✅ Cloud backup
 - ✅ Multi-device sync
 - ✅ Desktop app available
@@ -248,6 +263,7 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 - ✅ Most user-friendly
 
 ### **1Password** (Premium)
+
 - ✅ Integrated with password manager
 - ✅ Cloud backup
 - ✅ Multi-device
@@ -258,11 +274,11 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 
 ## 📊 IMPACT ON SECURITY SCORE
 
-| Metric | Before MFA | After MFA |
-|--------|-----------|-----------|
-| Account Protection | 60% | **99.9%** |
-| Phishing Resistance | 30% | **95%** |
-| Password Theft Protection | 0% | **100%** |
+| Metric                     | Before MFA | After MFA  |
+| -------------------------- | ---------- | ---------- |
+| Account Protection         | 60%        | **99.9%**  |
+| Phishing Resistance        | 30%        | **95%**    |
+| Password Theft Protection  | 0%         | **100%**   |
 | **Overall Security Score** | **95/100** | **99/100** |
 
 ---
@@ -279,11 +295,13 @@ curl -X POST https://your-domain.com/api/auth/mfa \
 ## 📞 NEED HELP?
 
 ### Contact:
+
 - **Primary Admin:** luxsess2001@gmail.com (Fahad alamri)
 - **IT Support:** (if available)
 - **Documentation:** This guide
 
 ### Common Issues:
+
 1. Time sync problems → Enable auto time sync on phone
 2. QR code won't scan → Enter secret manually (long alphanumeric string)
 3. Lost backup codes → Contact other admin to disable MFA temporarily
@@ -307,6 +325,7 @@ After completing MFA setup, verify:
 ## 🎉 CONGRATULATIONS!
 
 Once MFA is enabled:
+
 - ✅ Your account is **99.9% protected** against unauthorized access
 - ✅ You're compliant with security best practices
 - ✅ Your data and the entire system are more secure
@@ -320,4 +339,4 @@ Takes 5 minutes. Protects forever. ✨
 
 ---
 
-*For questions or support, contact the primary administrator or refer to the main security report.*
+_For questions or support, contact the primary administrator or refer to the main security report._

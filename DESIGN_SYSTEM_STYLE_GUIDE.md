@@ -6,13 +6,13 @@
 
 Our application uses a **5-color semantic system** to ensure consistency and improve usability.
 
-| Color | Usage | Examples |
-|-------|-------|----------|
-| **🔴 Red (Critical)** | Errors, expired items, critical alerts | Expired documents, system errors, critical status |
-| **🟡 Amber (Warning)** | Warnings, items expiring soon | Documents expiring in 30 days, attention needed |
-| **🟢 Green (Success)** | Success states, valid items, active status | Active promoters, valid documents, success messages |
-| **🔵 Blue (Info)** | Information, primary actions, navigation | Info messages, primary buttons, navigation items |
-| **⚪ Gray (Neutral)** | Neutral, inactive states | Disabled items, inactive status, neutral information |
+| Color                  | Usage                                      | Examples                                             |
+| ---------------------- | ------------------------------------------ | ---------------------------------------------------- |
+| **🔴 Red (Critical)**  | Errors, expired items, critical alerts     | Expired documents, system errors, critical status    |
+| **🟡 Amber (Warning)** | Warnings, items expiring soon              | Documents expiring in 30 days, attention needed      |
+| **🟢 Green (Success)** | Success states, valid items, active status | Active promoters, valid documents, success messages  |
+| **🔵 Blue (Info)**     | Information, primary actions, navigation   | Info messages, primary buttons, navigation items     |
+| **⚪ Gray (Neutral)**  | Neutral, inactive states                   | Disabled items, inactive status, neutral information |
 
 ### Color Implementation
 
@@ -35,18 +35,21 @@ const colors = SEMANTIC_COLORS.success;
 ### Status Mappings
 
 #### Document Status
+
 - `valid` → Green (Success)
-- `expiring` → Amber (Warning)  
+- `expiring` → Amber (Warning)
 - `expired` → Red (Critical)
 - `missing` → Gray (Neutral)
 
 #### Overall Status
+
 - `active` → Green (Success)
 - `warning` → Amber (Warning)
 - `critical` → Red (Critical)
 - `inactive` → Gray (Neutral)
 
 #### Notification Types
+
 - `error` → Red (Critical)
 - `warning` → Amber (Warning)
 - `success` → Green (Success)
@@ -96,10 +99,10 @@ Use consistent colors for tab states:
 
 ```tsx
 // Active tab (info/blue)
-className="bg-blue-100 text-blue-700 border-blue-200"
+className = 'bg-blue-100 text-blue-700 border-blue-200';
 
 // Inactive tab (neutral/gray)
-className="bg-gray-50 text-gray-600 border-gray-200"
+className = 'bg-gray-50 text-gray-600 border-gray-200';
 ```
 
 ### Filter Labels
@@ -108,13 +111,13 @@ Apply semantic colors based on filter purpose:
 
 ```tsx
 // Attention filters (warning/amber)
-className="bg-amber-100 text-amber-800"
+className = 'bg-amber-100 text-amber-800';
 
 // General filters (info/blue)
-className="bg-blue-100 text-blue-800"
+className = 'bg-blue-100 text-blue-800';
 
 // Critical filters (critical/red)
-className="bg-red-100 text-red-800"
+className = 'bg-red-100 text-red-800';
 ```
 
 ---
@@ -124,7 +127,7 @@ className="bg-red-100 text-red-800"
 ### ❌ Don't Use These Colors
 
 - **Pink** - No semantic meaning
-- **Purple** - No semantic meaning  
+- **Purple** - No semantic meaning
 - **Teal** - No semantic meaning
 - **Cyan** - No semantic meaning
 - **Indigo** - No semantic meaning
@@ -207,12 +210,13 @@ import { SEMANTIC_COLORS } from '@/lib/design-system/colors';
 const colors = SEMANTIC_COLORS.success;
 
 // ❌ Bad - Hardcoded colors
-className="bg-green-50 text-green-700"
+className = 'bg-green-50 text-green-700';
 ```
 
 ### 2. Check Color Meaning
 
 Before using a color, ask:
+
 - What does this color mean to users?
 - Is it consistent with other similar elements?
 - Does it follow the semantic system?
@@ -251,16 +255,19 @@ When updating components to use the new color system:
 ## Benefits
 
 ### For Users
+
 - **Intuitive**: Colors have clear, consistent meaning
 - **Reduced cognitive load**: No need to learn new color meanings
 - **Better accessibility**: High contrast, color-independent design
 
 ### For Developers
+
 - **Consistent**: One source of truth for colors
 - **Maintainable**: Easy to update colors globally
 - **Scalable**: Clear guidelines for new components
 
 ### For Design
+
 - **Professional**: Clean, cohesive visual design
 - **Usable**: Colors support user tasks
 - **Accessible**: Meets accessibility standards

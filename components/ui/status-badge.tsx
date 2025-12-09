@@ -1,7 +1,10 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { SEMANTIC_COLORS, type SemanticColor } from '@/lib/design-system/colors';
+import {
+  SEMANTIC_COLORS,
+  type SemanticColor,
+} from '@/lib/design-system/colors';
 
 interface StatusBadgeProps {
   status: SemanticColor;
@@ -13,19 +16,19 @@ interface StatusBadgeProps {
 const sizeClasses = {
   sm: 'px-1.5 py-0.5 text-xs',
   md: 'px-2 py-1 text-sm',
-  lg: 'px-3 py-1.5 text-base'
+  lg: 'px-3 py-1.5 text-base',
 };
 
-export function StatusBadge({ 
-  status, 
-  children, 
+export function StatusBadge({
+  status,
+  children,
   className,
-  size = 'md'
+  size = 'md',
 }: StatusBadgeProps) {
   const colors = SEMANTIC_COLORS[status];
-  
+
   return (
-    <span 
+    <span
       className={cn(
         'inline-flex items-center rounded-full font-medium',
         colors.badge,
@@ -41,11 +44,11 @@ export function StatusBadge({
 /**
  * Pre-configured status badges for common use cases
  */
-export function DocumentStatusBadge({ 
-  status, 
-  children, 
+export function DocumentStatusBadge({
+  status,
+  children,
   className,
-  size = 'md'
+  size = 'md',
 }: {
   status: 'valid' | 'expiring' | 'expired' | 'missing';
   children: React.ReactNode;
@@ -56,25 +59,21 @@ export function DocumentStatusBadge({
     valid: 'success',
     expiring: 'warning',
     expired: 'critical',
-    missing: 'neutral'
+    missing: 'neutral',
   };
-  
+
   return (
-    <StatusBadge 
-      status={statusMap[status]} 
-      className={className}
-      size={size}
-    >
+    <StatusBadge status={statusMap[status]} className={className} size={size}>
       {children}
     </StatusBadge>
   );
 }
 
-export function OverallStatusBadge({ 
-  status, 
-  children, 
+export function OverallStatusBadge({
+  status,
+  children,
   className,
-  size = 'md'
+  size = 'md',
 }: {
   status: 'active' | 'warning' | 'critical' | 'inactive';
   children: React.ReactNode;
@@ -85,15 +84,11 @@ export function OverallStatusBadge({
     active: 'success',
     warning: 'warning',
     critical: 'critical',
-    inactive: 'neutral'
+    inactive: 'neutral',
   };
-  
+
   return (
-    <StatusBadge 
-      status={statusMap[status]} 
-      className={className}
-      size={size}
-    >
+    <StatusBadge status={statusMap[status]} className={className} size={size}>
       {children}
     </StatusBadge>
   );

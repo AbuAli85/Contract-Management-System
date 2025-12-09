@@ -20,14 +20,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
  * Settings component for managing user's currency preferences
  */
 export function CurrencyPreferenceSettings() {
-  const {
-    preferredCurrency,
-    setPreferredCurrency,
-    loading,
-    error,
-  } = useCurrencyPreference();
-  
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(preferredCurrency);
+  const { preferredCurrency, setPreferredCurrency, loading, error } =
+    useCurrencyPreference();
+
+  const [selectedCurrency, setSelectedCurrency] =
+    useState<CurrencyCode>(preferredCurrency);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -66,8 +63,8 @@ export function CurrencyPreferenceSettings() {
           <CardDescription>Loading your currency settings...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin" />
+          <div className='flex items-center gap-2'>
+            <Loader2 className='h-5 w-5 animate-spin' />
             <span>Loading...</span>
           </div>
         </CardContent>
@@ -80,60 +77,55 @@ export function CurrencyPreferenceSettings() {
       <CardHeader>
         <CardTitle>Currency Preferences</CardTitle>
         <CardDescription>
-          Choose your preferred currency for displaying amounts throughout the application.
-          Original currencies will be shown in tooltips.
+          Choose your preferred currency for displaying amounts throughout the
+          application. Original currencies will be shown in tooltips.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="currency-selector">Preferred Currency</Label>
+      <CardContent className='space-y-4'>
+        <div className='space-y-2'>
+          <Label htmlFor='currency-selector'>Preferred Currency</Label>
           <CurrencySelector
             value={selectedCurrency}
             onChange={setSelectedCurrency}
-            className="w-full max-w-md"
+            className='w-full max-w-md'
           />
-          <p className="text-sm text-muted-foreground">
-            All monetary amounts will be displayed in this currency when possible.
-            Exchange rates are updated daily.
+          <p className='text-sm text-muted-foreground'>
+            All monetary amounts will be displayed in this currency when
+            possible. Exchange rates are updated daily.
           </p>
         </div>
 
         {(error || saveError) && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error || saveError}
-            </AlertDescription>
+          <Alert variant='destructive'>
+            <AlertCircle className='h-4 w-4' />
+            <AlertDescription>{error || saveError}</AlertDescription>
           </Alert>
         )}
 
         {saveSuccess && (
-          <Alert className="border-green-500 bg-green-50 text-green-800">
-            <CheckCircle className="h-4 w-4 text-green-600" />
+          <Alert className='border-green-500 bg-green-50 text-green-800'>
+            <CheckCircle className='h-4 w-4 text-green-600' />
             <AlertDescription>
               Currency preference updated successfully!
             </AlertDescription>
           </Alert>
         )}
 
-        <div className="flex gap-3 pt-4">
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-          >
+        <div className='flex gap-3 pt-4'>
+          <Button onClick={handleSave} disabled={!hasChanges || saving}>
             {saving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 Saving...
               </>
             ) : (
               'Save Changes'
             )}
           </Button>
-          
+
           {hasChanges && (
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setSelectedCurrency(preferredCurrency)}
               disabled={saving}
             >
@@ -145,4 +137,3 @@ export function CurrencyPreferenceSettings() {
     </Card>
   );
 }
-

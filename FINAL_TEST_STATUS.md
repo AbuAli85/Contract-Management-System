@@ -33,6 +33,7 @@
 ## ✅ Success Looks Like
 
 ### Browser View
+
 ```
 ┌─────────────────────────────────────────┐
 │  Promoter Management                    │
@@ -50,6 +51,7 @@
 ```
 
 ### Browser Console (F12)
+
 ```javascript
 🚀 PromoterManagement component mounted
 🔄 useEffect triggered
@@ -60,6 +62,7 @@
 ```
 
 ### Network Tab (F12 → Network)
+
 ```
 Request: GET /api/promoters
 Status: 200 OK
@@ -69,6 +72,7 @@ Response: { success: true, promoters: [...], count: 112 }
 ## ❌ Failure Looks Like
 
 ### If You See Error Message
+
 ```
 ┌─────────────────────────────────────────┐
 │  🛡️ Permission Denied                   │
@@ -83,20 +87,23 @@ Response: { success: true, promoters: [...], count: 112 }
 ```
 
 **If this happens:**
+
 1. Log out and log back in
 2. Clear ALL cookies (DevTools → Application → Clear site data)
 3. Try incognito mode
 
 ### If Console Shows Errors
+
 ```javascript
 📡 Response status: 403 Forbidden
 ❌ API Error Response: { error: "Insufficient permissions" }
 ```
 
 **Fix:**
+
 ```sql
 -- Verify your user has permissions in Supabase:
-SELECT 
+SELECT
   p.email,
   perm.name as permission
 FROM profiles p
@@ -116,34 +123,39 @@ Expected: Should show `promoter:read:own` and `promoter:manage:own`
 **Try these in order:**
 
 1. **Log out and back in**
+
    ```
    Click Profile → Logout → Login again
    ```
 
 2. **Clear ALL browser data**
+
    ```
    F12 → Application → Storage → Clear site data
    ```
 
 3. **Use incognito mode**
+
    ```
    Ctrl+Shift+N (Chrome) or Ctrl+Shift+P (Firefox)
    Log in fresh
    ```
 
 4. **Verify permission in database**
+
    ```sql
    -- Run in Supabase SQL Editor
-   SELECT * FROM user_role_assignments 
+   SELECT * FROM user_role_assignments
    WHERE user_id = auth.uid();
    ```
 
 5. **Check RBAC enforcement mode**
+
    ```bash
    # Check .env or .env.local
    # For development, should be:
    RBAC_ENFORCEMENT=dry-run
-   
+
    # Or disabled:
    RBAC_ENFORCEMENT=disabled
    ```
@@ -153,6 +165,7 @@ Expected: Should show `promoter:read:own` and `promoter:manage:own`
 This means permissions work, but no data exists.
 
 **Check data:**
+
 ```sql
 SELECT COUNT(*) FROM promoters;
 ```
@@ -162,6 +175,7 @@ If 0, you need to add promoters via the UI or seed script.
 ### Issue 3: Different Error
 
 Share these details:
+
 1. Exact error message
 2. Console output (F12)
 3. Network tab screenshot
@@ -182,6 +196,7 @@ After testing, you should have:
 ## 🎉 Success Criteria
 
 **Issue is FIXED when:**
+
 - ✅ Manage Promoters page loads successfully
 - ✅ Shows promoter data (names, IDs, statuses)
 - ✅ No error messages in UI
@@ -193,14 +208,16 @@ After testing, you should have:
 Please share:
 
 **If it works:**
+
 ```
-✅ SUCCESS! 
+✅ SUCCESS!
 - Page loads correctly
 - Shows X promoters
 - No errors
 ```
 
 **If it doesn't work:**
+
 ```
 ❌ Still broken
 - Error message: [paste exact error]
@@ -221,4 +238,3 @@ Please share:
 **Current Status**: ⏳ Waiting for test results
 
 **Next Action**: Test the page and report back! 🚀
-

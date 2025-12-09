@@ -44,7 +44,7 @@ npx supabase db remote execute --file scripts/verify-indexes.sql
 
 ```sql
 -- View all indexes on contracts table
-SELECT 
+SELECT
   schemaname,
   tablename,
   indexname,
@@ -55,6 +55,7 @@ ORDER BY indexname;
 ```
 
 **Expected Output:** You should see 10+ indexes, including:
+
 - `idx_contracts_status`
 - `idx_contracts_status_created_at`
 - `idx_contracts_status_updated_at`
@@ -75,13 +76,14 @@ ORDER BY indexname;
 ```sql
 -- Test query performance
 EXPLAIN ANALYZE
-SELECT * FROM contracts 
-WHERE status = 'pending' 
-ORDER BY created_at DESC 
+SELECT * FROM contracts
+WHERE status = 'pending'
+ORDER BY created_at DESC
 LIMIT 20;
 ```
 
 **What to Look For:**
+
 - `Index Scan using idx_contracts_status_created_at` ✅
 - Execution time < 100ms ✅
 - NOT `Seq Scan on contracts` ❌
@@ -91,13 +93,14 @@ LIMIT 20;
 ```sql
 -- Test multi-status query
 EXPLAIN ANALYZE
-SELECT * FROM contracts 
+SELECT * FROM contracts
 WHERE status IN ('pending', 'legal_review', 'hr_review', 'final_approval', 'signature')
-ORDER BY created_at DESC 
+ORDER BY created_at DESC
 LIMIT 100;
 ```
 
 **What to Look For:**
+
 - `Index Scan` or `Bitmap Index Scan` ✅
 - Execution time < 200ms ✅
 
@@ -106,13 +109,14 @@ LIMIT 100;
 ```sql
 -- Replace 'user-uuid' with actual user ID
 EXPLAIN ANALYZE
-SELECT * FROM contracts 
+SELECT * FROM contracts
 WHERE (first_party_id = 'user-uuid' OR second_party_id = 'user-uuid')
 AND status = 'pending'
 ORDER BY created_at DESC;
 ```
 
 **What to Look For:**
+
 - Uses `idx_contracts_composite_parties` or multiple indexes ✅
 - Execution time < 150ms ✅
 
@@ -121,24 +125,27 @@ ORDER BY created_at DESC;
 ## Performance Benchmarks
 
 ### Before Indexes
+
 - Pending contracts query: **3-10 seconds**
 - Full table scan on large datasets
 - High database CPU usage
 - Poor user experience
 
 ### After Indexes
+
 - Pending contracts query: **<100ms**
 - Index scan only
 - Minimal CPU usage
 - Excellent user experience
 
 ### Expected Improvements
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Query Time | 3-10s | <100ms | 97%+ |
-| CPU Usage | High | Low | 80%+ |
-| Disk I/O | High | Minimal | 90%+ |
-| User Wait | 10s | <1s | 90% |
+
+| Metric     | Before | After   | Improvement |
+| ---------- | ------ | ------- | ----------- |
+| Query Time | 3-10s  | <100ms  | 97%+        |
+| CPU Usage  | High   | Low     | 80%+        |
+| Disk I/O   | High   | Minimal | 90%+        |
+| User Wait  | 10s    | <1s     | 90%         |
 
 ---
 
@@ -147,18 +154,21 @@ ORDER BY created_at DESC;
 ### Issue: Indexes Not Created
 
 **Check for Errors:**
+
 ```sql
 -- Check PostgreSQL logs
-SELECT * FROM pg_stat_activity 
+SELECT * FROM pg_stat_activity
 WHERE state = 'active';
 ```
 
 **Common Causes:**
+
 - Missing permissions
 - Syntax errors (check PostgreSQL version compatibility)
 - Existing locks on contracts table
 
 **Solution:**
+
 - Ensure you have superuser or table owner permissions
 - Check for active transactions blocking the table
 - Retry migration
@@ -168,9 +178,10 @@ WHERE state = 'active';
 ### Issue: Indexes Created But Not Used
 
 **Check Index Usage:**
+
 ```sql
 -- Check if indexes are being used
-SELECT 
+SELECT
   schemaname,
   tablename,
   indexname,
@@ -183,6 +194,7 @@ ORDER BY idx_scan DESC;
 ```
 
 **Force Index Usage:**
+
 ```sql
 -- Analyze table to update statistics
 ANALYZE contracts;
@@ -192,6 +204,7 @@ DISCARD PLANS;
 ```
 
 **Check Query Planner:**
+
 ```sql
 -- Check planner configuration
 SHOW enable_indexscan;
@@ -204,6 +217,7 @@ SHOW enable_seqscan;
 ### Issue: Slow Queries Still Occurring
 
 **Diagnose:**
+
 1. Run `EXPLAIN ANALYZE` on slow query
 2. Check if index is actually being used
 3. Check for table bloat
@@ -212,15 +226,17 @@ SHOW enable_seqscan;
 **Solutions:**
 
 **Vacuum and Analyze:**
+
 ```sql
 -- Clean up table and update statistics
 VACUUM ANALYZE contracts;
 ```
 
 **Check Table Bloat:**
+
 ```sql
 -- Check for table bloat
-SELECT 
+SELECT
   schemaname,
   tablename,
   pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
@@ -231,6 +247,7 @@ WHERE tablename = 'contracts';
 ```
 
 **Rebuild Indexes (if needed):**
+
 ```sql
 -- Only if indexes are corrupted or bloated
 REINDEX TABLE contracts;
@@ -243,12 +260,14 @@ REINDEX TABLE contracts;
 ### Regular Maintenance Tasks
 
 **Weekly:**
+
 ```sql
 -- Update statistics
 ANALYZE contracts;
 ```
 
 **Monthly:**
+
 ```sql
 -- Clean up dead tuples
 VACUUM contracts;
@@ -258,6 +277,7 @@ ANALYZE contracts;
 ```
 
 **Quarterly:**
+
 ```sql
 -- Full vacuum and reindex
 VACUUM FULL contracts;
@@ -268,9 +288,10 @@ ANALYZE contracts;
 ### Monitoring
 
 **Index Health Check:**
+
 ```sql
 -- Monitor index usage
-SELECT 
+SELECT
   indexname,
   idx_scan,
   idx_tup_read,
@@ -282,9 +303,10 @@ ORDER BY idx_scan DESC;
 ```
 
 **Unused Indexes:**
+
 ```sql
 -- Find unused indexes (idx_scan = 0)
-SELECT 
+SELECT
   schemaname,
   tablename,
   indexname,
@@ -358,4 +380,3 @@ If you encounter issues:
 **Estimated Time:** 5-10 minutes  
 **Risk Level:** Low (indexes are non-breaking)  
 **Rollback Time:** <1 minute
-

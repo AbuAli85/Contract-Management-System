@@ -63,7 +63,9 @@ export function standardNotificationEmail(data: StandardNotificationData) {
                       </p>
                     </div>
 
-                    ${data.details?.contractInfo ? `
+                    ${
+                      data.details?.contractInfo
+                        ? `
                       <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 25px 0;">
                         <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 16px;">
                           📄 Contract Information
@@ -77,23 +79,35 @@ export function standardNotificationEmail(data: StandardNotificationData) {
                             <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Employer:</td>
                             <td style="text-align: right; font-weight: 600; padding: 8px 0;">${data.details.contractInfo.employer}</td>
                           </tr>
-                          ${data.details.contractInfo.startDate ? `
+                          ${
+                            data.details.contractInfo.startDate
+                              ? `
                             <tr>
                               <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Start Date:</td>
                               <td style="text-align: right; font-weight: 600; padding: 8px 0;">${data.details.contractInfo.startDate}</td>
                             </tr>
-                          ` : ''}
-                          ${data.details.contractInfo.salary ? `
+                          `
+                              : ''
+                          }
+                          ${
+                            data.details.contractInfo.salary
+                              ? `
                             <tr>
                               <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Salary:</td>
                               <td style="text-align: right; font-weight: 600; color: #059669; padding: 8px 0;">${data.details.contractInfo.salary}</td>
                             </tr>
-                          ` : ''}
+                          `
+                              : ''
+                          }
                         </table>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${data.details?.documentStatus ? `
+                    ${
+                      data.details?.documentStatus
+                        ? `
                       <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 25px 0;">
                         <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 16px;">
                           📋 Document Status
@@ -119,9 +133,13 @@ export function standardNotificationEmail(data: StandardNotificationData) {
                           </tr>
                         </table>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${data.details?.accountInfo ? `
+                    ${
+                      data.details?.accountInfo
+                        ? `
                       <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 25px 0;">
                         <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 16px;">
                           👤 Account Information
@@ -135,24 +153,34 @@ export function standardNotificationEmail(data: StandardNotificationData) {
                             <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Assignment Status:</td>
                             <td style="text-align: right; font-weight: 600; padding: 8px 0; text-transform: capitalize;">${data.details.accountInfo.assignmentStatus}</td>
                           </tr>
-                          ${data.details.accountInfo.lastActive ? `
+                          ${
+                            data.details.accountInfo.lastActive
+                              ? `
                             <tr>
                               <td style="color: #6b7280; font-size: 14px; padding: 8px 0;">Last Active:</td>
                               <td style="text-align: right; font-weight: 600; padding: 8px 0;">${data.details.accountInfo.lastActive}</td>
                             </tr>
-                          ` : ''}
+                          `
+                              : ''
+                          }
                         </table>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${data.actionUrl ? `
+                    ${
+                      data.actionUrl
+                        ? `
                       <div style="text-align: center; margin: 30px 0;">
                         <a href="${data.actionUrl}" 
                            style="display: inline-block; background: #3b82f6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                           ${data.actionText || 'View Details'}
                         </a>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
                     <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 25px 0;">
                       <p style="margin: 0; color: #1e40af; font-size: 13px; text-align: center;">
@@ -187,19 +215,27 @@ Dear ${data.promoterName},
 
 ${data.message}
 
-${data.details?.contractInfo ? `
+${
+  data.details?.contractInfo
+    ? `
 CONTRACT INFORMATION:
 - Type: ${data.details.contractInfo.type}
 - Employer: ${data.details.contractInfo.employer}
 ${data.details.contractInfo.startDate ? `- Start Date: ${data.details.contractInfo.startDate}` : ''}
 ${data.details.contractInfo.salary ? `- Salary: ${data.details.contractInfo.salary}` : ''}
-` : ''}
+`
+    : ''
+}
 
-${data.details?.documentStatus ? `
+${
+  data.details?.documentStatus
+    ? `
 DOCUMENT STATUS:
 - ID Card: ${data.details.documentStatus.idCardStatus}${data.details.documentStatus.idCardExpiry ? ` (${data.details.documentStatus.idCardExpiry})` : ''}
 - Passport: ${data.details.documentStatus.passportStatus}${data.details.documentStatus.passportExpiry ? ` (${data.details.documentStatus.passportExpiry})` : ''}
-` : ''}
+`
+    : ''
+}
 
 ${data.actionUrl ? `View details at: ${data.actionUrl}` : ''}
 
@@ -211,4 +247,3 @@ Powered by Falcon Eye Group
     `,
   };
 }
-

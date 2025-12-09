@@ -13,13 +13,13 @@ export interface PromoterMetrics {
   inactive: number; // Status != 'active'
   onAssignments: number; // Currently working on contracts
   available: number; // Active but not on assignments
-  
+
   // Document compliance
   critical: number; // Expired documents
   expiring: number; // Expiring within 30 days
   compliant: number; // All documents valid
   complianceRate: number; // Percentage
-  
+
   // Additional details
   details: {
     criticalIds: number;
@@ -56,7 +56,9 @@ export async function getPromoterMetrics(): Promise<PromoterMetrics> {
   try {
     // Calculate date thresholds
     const now = new Date();
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysFromNow = new Date(
+      now.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
 
     // Execute all count queries in parallel for performance
     const [
@@ -150,7 +152,8 @@ export async function getPromoterMetrics(): Promise<PromoterMetrics> {
     const assigned = active - unassigned;
     const available = active - onAssignments;
     const inactive = total - active;
-    const complianceRate = total > 0 ? Math.round((compliant / total) * 100) : 0;
+    const complianceRate =
+      total > 0 ? Math.round((compliant / total) * 100) : 0;
 
     return {
       total,
@@ -180,14 +183,15 @@ export async function getPromoterMetrics(): Promise<PromoterMetrics> {
 /**
  * Get label for promoter metric with tooltip explanation
  */
-export function getPromoterMetricLabel(
-  metricType: keyof PromoterMetrics
-): {
+export function getPromoterMetricLabel(metricType: keyof PromoterMetrics): {
   title: string;
   subtitle: string;
   tooltip: string;
 } {
-  const labels: Record<string, { title: string; subtitle: string; tooltip: string }> = {
+  const labels: Record<
+    string,
+    { title: string; subtitle: string; tooltip: string }
+  > = {
     total: {
       title: 'Total Promoters',
       subtitle: 'All registered promoters',
@@ -228,7 +232,8 @@ export function getPromoterMetricLabel(
     critical: {
       title: 'Critical Documents',
       subtitle: 'Expired',
-      tooltip: 'Promoters with expired ID cards or passports requiring immediate attention',
+      tooltip:
+        'Promoters with expired ID cards or passports requiring immediate attention',
     },
     expiring: {
       title: 'Expiring Soon',
@@ -265,4 +270,3 @@ export function formatPromoterMetrics(metrics: PromoterMetrics) {
     complianceRate: `${metrics.complianceRate}%`,
   };
 }
-

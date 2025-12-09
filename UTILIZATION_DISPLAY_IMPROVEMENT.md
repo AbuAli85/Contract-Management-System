@@ -11,6 +11,7 @@
 When there are no active contracts in the system:
 
 **Current Display:**
+
 ```
 ┌─────────────────┐
 │ Utilization     │
@@ -21,6 +22,7 @@ When there are no active contracts in the system:
 ```
 
 **Issues:**
+
 1. "0%" implies poor performance
 2. Doesn't convey the actual situation (no contracts to assign to)
 3. The trend arrow is meaningless
@@ -31,6 +33,7 @@ When there are no active contracts in the system:
 ## ✅ **The Solution**
 
 **New Display When No Active Contracts:**
+
 ```
 ┌─────────────────┐
 │ Utilization     │
@@ -42,6 +45,7 @@ When there are no active contracts in the system:
 ```
 
 **Benefits:**
+
 1. ✅ Clear and honest - "N/A" is more accurate than "0%"
 2. ✅ Contextual explanation - "No active contracts yet"
 3. ✅ No misleading trend arrows
@@ -57,11 +61,11 @@ When there are no active contracts in the system:
 // Quick stat calculation
 {
   label: 'Utilization',
-  value: stats?.active === 0 
+  value: stats?.active === 0
     ? 'N/A'                              // No contracts
     : `${promoterStats?.utilizationRate || 0}%`,  // Show percentage
   change: utilizationChange,
-  trend: stats?.active === 0 
+  trend: stats?.active === 0
     ? 'neutral'                          // No trend when N/A
     : determineGrowthTrend(utilizationChange),
   icon: <TrendingUp className='h-5 w-5' />,
@@ -150,6 +154,7 @@ When there are no active contracts in the system:
 ## 🔍 **Edge Cases Handled**
 
 ### **Case 1: Zero Active Contracts**
+
 ```typescript
 stats?.active === 0
 → Display: "N/A"
@@ -158,6 +163,7 @@ stats?.active === 0
 ```
 
 ### **Case 2: Contracts Exist, Zero Utilization**
+
 ```typescript
 stats?.active > 0 && utilizationRate === 0
 → Display: "0%"
@@ -168,6 +174,7 @@ stats?.active > 0 && utilizationRate === 0
 This is a valid state - contracts exist but no promoters assigned yet.
 
 ### **Case 3: Contracts Exist, Some Utilization**
+
 ```typescript
 stats?.active > 0 && utilizationRate > 0
 → Display: "X%"
@@ -184,12 +191,14 @@ Normal operational state.
 ### **User Psychology**
 
 **Seeing "0%":**
+
 - ❌ Feels like failure
 - ❌ Implies something is wrong
 - ❌ Doesn't explain why
 - ❌ Creates unnecessary concern
 
 **Seeing "N/A - No active contracts yet":**
+
 - ✅ Neutral, factual
 - ✅ Explains the situation
 - ✅ Sets correct expectations
@@ -202,12 +211,14 @@ Normal operational state.
 **Scenario:** New system deployment or between contract periods
 
 **Old Display:**
+
 ```
 "Utilization: 0%"
 Manager: "Why is our utilization so bad?!"
 ```
 
 **New Display:**
+
 ```
 "Utilization: N/A - No active contracts yet"
 Manager: "Ah, we haven't started contracts yet. Makes sense."
@@ -222,16 +233,18 @@ Manager: "Ah, we haven't started contracts yet. Makes sense."
 When utilization is N/A, show a call-to-action:
 
 ```tsx
-{stat.value === 'N/A' && (
-  <div className='mt-2'>
-    <Button size='sm' variant='outline' asChild>
-      <Link href='/en/contracts/new'>
-        <Plus className='h-3 w-3 mr-1' />
-        Create First Contract
-      </Link>
-    </Button>
-  </div>
-)}
+{
+  stat.value === 'N/A' && (
+    <div className='mt-2'>
+      <Button size='sm' variant='outline' asChild>
+        <Link href='/en/contracts/new'>
+          <Plus className='h-3 w-3 mr-1' />
+          Create First Contract
+        </Link>
+      </Button>
+    </div>
+  );
+}
 ```
 
 ---
@@ -265,13 +278,13 @@ Different messages based on system state:
 ```typescript
 const getUtilizationMessage = () => {
   if (stats.active === 0 && stats.total === 0) {
-    return "Create your first contract to track utilization";
+    return 'Create your first contract to track utilization';
   }
   if (stats.active === 0 && stats.total > 0) {
-    return "No active contracts - previous contracts completed";
+    return 'No active contracts - previous contracts completed';
   }
   if (stats.active > 0 && utilizationRate === 0) {
-    return "Contracts exist but no promoters assigned yet";
+    return 'Contracts exist but no promoters assigned yet';
   }
   return null;
 };
@@ -300,6 +313,7 @@ const getUtilizationMessage = () => {
 ## 📊 **Testing Scenarios**
 
 ### **Test 1: No Contracts**
+
 ```
 Given: stats.active = 0
 When: Dashboard loads
@@ -307,6 +321,7 @@ Then: Display "N/A" with "No active contracts yet"
 ```
 
 ### **Test 2: Contracts Added**
+
 ```
 Given: stats.active changes from 0 to 1
 When: Dashboard refreshes
@@ -314,6 +329,7 @@ Then: Display "0%" or actual percentage with trend
 ```
 
 ### **Test 3: Contracts Removed**
+
 ```
 Given: stats.active changes from 1 to 0
 When: Dashboard refreshes
@@ -321,6 +337,7 @@ Then: Display changes back to "N/A"
 ```
 
 ### **Test 4: Zero Utilization with Contracts**
+
 ```
 Given: stats.active = 5, utilizationRate = 0
 When: Dashboard loads
@@ -332,15 +349,18 @@ Then: Display "0%" (not N/A) with appropriate trend
 ## 🎨 **Design Considerations**
 
 ### **Typography**
+
 - "N/A" in same font size as percentages (3xl, bold)
 - Subtext slightly smaller (xs) and muted color
 
 ### **Color Scheme**
+
 - N/A text: gray-900 (same as numbers)
 - Subtext: gray-500 (muted, informative)
 - No color coding (neutral state)
 
 ### **Spacing**
+
 - Maintains same card height
 - Consistent padding
 - Aligned with other quick stats
@@ -350,14 +370,17 @@ Then: Display "0%" (not N/A) with appropriate trend
 ## 🚀 **Deployment**
 
 ### **Files Modified:**
+
 - `app/[locale]/dashboard/page.tsx`
   - Line 259-264: Updated value calculation
   - Line 397-415: Updated rendering logic
 
 ### **Breaking Changes:**
+
 - None - purely visual enhancement
 
 ### **Backward Compatibility:**
+
 - ✅ Fully compatible
 - ✅ No API changes
 - ✅ No data model changes
@@ -369,11 +392,13 @@ Then: Display "0%" (not N/A) with appropriate trend
 ### **User Experience**
 
 **Before:**
+
 - Confusion about "0%" meaning
 - Perceived as system problem
 - Questions about low utilization
 
 **After:**
+
 - Clear understanding of system state
 - No confusion or concern
 - Professional, polished appearance
@@ -398,4 +423,3 @@ By showing "N/A - No active contracts yet" instead of "0%", we:
 ---
 
 **The dashboard now communicates clearly in all states!** 🎉
-

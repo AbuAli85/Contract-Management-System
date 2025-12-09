@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -75,7 +81,7 @@ export function DashboardActivityFeed({
 
   const getActivityIcon = (type: string, status: string) => {
     const iconProps = { className: 'h-4 w-4' };
-    
+
     switch (type) {
       case 'contract':
         return <FileText {...iconProps} />;
@@ -132,7 +138,8 @@ export function DashboardActivityFeed({
               Recent Activity
             </CardTitle>
             <CardDescription>
-              Latest updates and changes • Updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+              Latest updates and changes • Updated{' '}
+              {formatDistanceToNow(lastUpdated, { addSuffix: true })}
             </CardDescription>
           </div>
           <Button
@@ -150,7 +157,10 @@ export function DashboardActivityFeed({
           <div className='space-y-3'>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className='flex items-start gap-3 p-3 rounded-lg bg-gray-50 animate-pulse'>
+                <div
+                  key={i}
+                  className='flex items-start gap-3 p-3 rounded-lg bg-gray-50 animate-pulse'
+                >
                   <div className='w-10 h-10 bg-gray-200 rounded-lg' />
                   <div className='flex-1 space-y-2'>
                     <div className='h-4 bg-gray-200 rounded w-3/4' />
@@ -176,10 +186,12 @@ export function DashboardActivityFeed({
                     animation: 'fadeIn 0.3s ease-out forwards',
                   }}
                 >
-                  <div className={cn(
-                    'p-2 rounded-lg border transition-colors',
-                    getActivityColor(activity.status)
-                  )}>
+                  <div
+                    className={cn(
+                      'p-2 rounded-lg border transition-colors',
+                      getActivityColor(activity.status)
+                    )}
+                  >
                     {getActivityIcon(activity.type, activity.status)}
                   </div>
                   <div className='flex-1 min-w-0'>
@@ -197,13 +209,17 @@ export function DashboardActivityFeed({
                     <div className='flex items-center gap-2 mt-2'>
                       <Clock className='h-3 w-3 text-gray-400' />
                       <span className='text-xs text-gray-500'>
-                        {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(activity.timestamp), {
+                          addSuffix: true,
+                        })}
                       </span>
                       {activity.user && (
                         <>
                           <span className='text-gray-300'>•</span>
                           <User className='h-3 w-3 text-gray-400' />
-                          <span className='text-xs text-gray-500'>{activity.user}</span>
+                          <span className='text-xs text-gray-500'>
+                            {activity.user}
+                          </span>
                         </>
                       )}
                     </div>
@@ -213,7 +229,7 @@ export function DashboardActivityFeed({
             )}
           </div>
         </ScrollArea>
-        
+
         {activities.length > maxItems && (
           <div className='mt-4 pt-4 border-t'>
             <Button variant='outline' className='w-full' size='sm'>
@@ -275,4 +291,3 @@ function getMockActivities(): ActivityItem[] {
     },
   ];
 }
-

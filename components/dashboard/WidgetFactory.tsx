@@ -49,12 +49,11 @@ export function WidgetFactory({
       return <QuickActionsWidget {...widgetProps} />;
     default:
       return (
-        <div className="p-4 border rounded-lg bg-muted">
-          <p className="text-sm text-muted-foreground">
+        <div className='p-4 border rounded-lg bg-muted'>
+          <p className='text-sm text-muted-foreground'>
             Unknown widget type: {widget.type}
           </p>
         </div>
       );
   }
 }
-

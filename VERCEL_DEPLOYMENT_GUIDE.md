@@ -35,6 +35,7 @@ git push origin main
 ### Step 3: Configure Project Settings
 
 #### Framework Preset
+
 - **Framework**: Next.js
 - **Root Directory**: `./` (default)
 - **Build Command**: `npm run build` (auto-detected)
@@ -178,6 +179,7 @@ value: process.env.ALLOWED_ORIGINS?.split(',')[0] || 'https://your-project.verce
 ### 1. Update Supabase Auth Callback URLs
 
 In Supabase Dashboard → Authentication → URL Configuration, add:
+
 ```
 https://your-project.vercel.app/auth/callback
 https://your-custom-domain.com/auth/callback
@@ -190,6 +192,7 @@ In Supabase Dashboard → Settings → API, add your Vercel URL to allowed origi
 ### 3. Test the Make.com Webhook
 
 The webhook is already configured at:
+
 ```
 https://hook.eu2.make.com/4g8e8c9yru1uej21vo0vv8zapk739lvn
 ```
@@ -199,6 +202,7 @@ Test by creating a Sharaf DG contract and generating a PDF.
 ### 4. Verify Image URLs
 
 Ensure Supabase storage buckets are configured correctly:
+
 - Navigate to Storage → Policies
 - Make sure buckets are accessible (public or with proper RLS policies)
 
@@ -207,6 +211,7 @@ Ensure Supabase storage buckets are configured correctly:
 ## 🧪 Step 9: Test Your Deployment
 
 ### Test Checklist:
+
 - [ ] Homepage loads
 - [ ] Login/Authentication works
 - [ ] Dashboard displays correctly
@@ -224,6 +229,7 @@ Ensure Supabase storage buckets are configured correctly:
 ### Issue 1: Build Fails with TypeScript Errors
 
 **Solution**: Already configured in `next.config.js`:
+
 ```javascript
 typescript: {
   ignoreBuildErrors: true,
@@ -233,6 +239,7 @@ typescript: {
 ### Issue 2: Function Timeout
 
 **Solution**: Already configured in `vercel.json` with extended timeouts:
+
 - Default API routes: 60 seconds
 - PDF generation: 120 seconds
 - Contract generation: 90 seconds
@@ -240,6 +247,7 @@ typescript: {
 ### Issue 3: Image Loading Issues
 
 **Solution**: Verify Supabase domain in `next.config.js`:
+
 ```javascript
 images: {
   domains: ['your-project.supabase.co'],
@@ -259,6 +267,7 @@ images: {
 ## 📱 Automatic Deployments
 
 Vercel automatically deploys:
+
 - **Production**: Every push to `main` branch
 - **Preview**: Every pull request
 - **Development**: Every push to other branches
@@ -274,6 +283,7 @@ Vercel automatically deploys:
    - Change from `https://portal.thesmartpro.io` to your domain
 
 2. **Disable Test Accounts**:
+
    ```bash
    NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS=false
    ```
@@ -295,10 +305,12 @@ Vercel automatically deploys:
 ## 📊 Monitoring Your Deployment
 
 ### Vercel Analytics (Free)
+
 - Automatically enabled
 - View in Vercel Dashboard → Analytics
 
 ### Custom Monitoring
+
 - Set up Sentry for error tracking
 - Configure Google Analytics (optional)
 - Monitor API performance in Vercel logs
@@ -362,6 +374,7 @@ vercel env ls
 Your Contract Management System is now live on Vercel!
 
 **Next Steps:**
+
 1. Share the URL with your team
 2. Monitor initial usage
 3. Set up custom domain
@@ -382,6 +395,7 @@ Your Contract Management System is now live on Vercel!
 ## 🔄 Continuous Deployment
 
 Every time you push to GitHub:
+
 1. Vercel automatically detects changes
 2. Runs build process
 3. Deploys to preview URL (for branches)
@@ -392,4 +406,3 @@ Monitor all deployments in your Vercel dashboard.
 ---
 
 **Happy Deploying! 🚀**
-

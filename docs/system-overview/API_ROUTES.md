@@ -6,26 +6,26 @@ This document describes the API routes structure and provides guidance for conso
 
 ### Core Routes
 
-| Route | Purpose | Status |
-|-------|---------|--------|
-| `/api/auth/*` | Authentication endpoints | ✅ Active |
-| `/api/contracts/*` | Contract management | ✅ Active |
-| `/api/promoters/*` | Promoter management | ✅ Active |
-| `/api/parties/*` | Party/company management | ✅ Active |
-| `/api/users/*` | User management | ✅ Active |
-| `/api/dashboard/*` | Dashboard data | ✅ Active |
-| `/api/analytics/*` | Analytics and reporting | ✅ Active |
-| `/api/admin/*` | Admin operations | ✅ Active |
+| Route              | Purpose                  | Status    |
+| ------------------ | ------------------------ | --------- |
+| `/api/auth/*`      | Authentication endpoints | ✅ Active |
+| `/api/contracts/*` | Contract management      | ✅ Active |
+| `/api/promoters/*` | Promoter management      | ✅ Active |
+| `/api/parties/*`   | Party/company management | ✅ Active |
+| `/api/users/*`     | User management          | ✅ Active |
+| `/api/dashboard/*` | Dashboard data           | ✅ Active |
+| `/api/analytics/*` | Analytics and reporting  | ✅ Active |
+| `/api/admin/*`     | Admin operations         | ✅ Active |
 
 ### Webhook Routes
 
-| Route | Purpose | Status |
-|-------|---------|--------|
-| `/api/webhook/makecom*` | Make.com integration | ✅ Active |
-| `/api/webhook/contract-pdf-ready*` | PDF ready callbacks | ✅ Active |
-| `/api/webhooks/resend` | Email delivery webhooks | ✅ Active |
-| `/api/webhooks/payment-success` | Payment webhooks | ⚠️ Review |
-| `/api/webhooks/booking-events` | Booking webhooks | 📁 Disabled |
+| Route                              | Purpose                 | Status      |
+| ---------------------------------- | ----------------------- | ----------- |
+| `/api/webhook/makecom*`            | Make.com integration    | ✅ Active   |
+| `/api/webhook/contract-pdf-ready*` | PDF ready callbacks     | ✅ Active   |
+| `/api/webhooks/resend`             | Email delivery webhooks | ✅ Active   |
+| `/api/webhooks/payment-success`    | Payment webhooks        | ⚠️ Review   |
+| `/api/webhooks/booking-events`     | Booking webhooks        | 📁 Disabled |
 
 ### Disabled Routes
 
@@ -44,7 +44,7 @@ These routes are in `_disabled` or `_disabled_debug` folders and are not active:
 
 Multiple routes serving similar purposes:
 
-- `/api/get-user-role` 
+- `/api/get-user-role`
 - `/api/check-user-role`
 - `/api/user-role`
 - `/api/users/roles`
@@ -158,6 +158,7 @@ All API routes should:
 ## API Response Format
 
 Standard success response:
+
 ```json
 {
   "success": true,
@@ -171,6 +172,7 @@ Standard success response:
 ```
 
 Standard error response:
+
 ```json
 {
   "success": false,
@@ -181,4 +183,3 @@ Standard error response:
   }
 }
 ```
-

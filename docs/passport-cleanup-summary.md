@@ -18,6 +18,7 @@ The 41 remaining `NO_PASSPORT` placeholders should be set to `NULL` for clarity.
 **Run this script**: `scripts/cleanup-no-passport-placeholders.sql`
 
 **Preview first** (safe - read-only):
+
 ```sql
 SELECT id, name_en, passport_url
 FROM promoters
@@ -26,6 +27,7 @@ ORDER BY name_en;
 ```
 
 **Then execute cleanup**:
+
 ```sql
 UPDATE promoters
 SET passport_url = NULL, updated_at = NOW()
@@ -33,6 +35,7 @@ WHERE passport_url LIKE '%NO_PASSPORT%';
 ```
 
 **Expected result after cleanup**:
+
 - Valid Passport URLs: 32 ✅
 - Null Passport URLs: 149 ✅ (108 + 41)
 - Remaining Placeholders: 0 ✅
@@ -44,6 +47,7 @@ Verify that the 32 valid passport URLs are correctly assigned to their promoters
 **Run this script**: `scripts/verify-valid-passport-urls.sql`
 
 This will check:
+
 - ✅ Name matches in URL
 - ✅ Passport number matches in URL
 - ⚠️ Potential mismatches
@@ -72,8 +76,9 @@ After cleanup, test contract generation:
 ## Verification Queries
 
 ### Check cleanup was successful:
+
 ```sql
-SELECT 
+SELECT
   COUNT(*) as total_promoters,
   COUNT(CASE WHEN passport_url IS NOT NULL AND passport_url NOT LIKE '%NO_PASSPORT%' THEN 1 END) as valid_passport_urls,
   COUNT(CASE WHEN passport_url IS NULL THEN 1 END) as null_passport_urls,
@@ -82,13 +87,14 @@ FROM promoters;
 ```
 
 ### List promoters needing passport images:
+
 ```sql
-SELECT 
+SELECT
   name_en,
   passport_number,
   passport_url
 FROM promoters
-WHERE passport_number IS NOT NULL 
+WHERE passport_number IS NOT NULL
   AND passport_url IS NULL
 ORDER BY name_en;
 ```
@@ -106,4 +112,3 @@ ORDER BY name_en;
 - `scripts/verify-valid-passport-urls.sql` - Verification script
 - `scripts/fix-passport-urls-analysis.sql` - Full analysis script
 - `docs/passport-url-fix-guide.md` - Detailed fix guide
-

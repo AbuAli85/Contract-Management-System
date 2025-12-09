@@ -53,8 +53,12 @@ export function CurrencyDisplay({
             targetCurrency
           );
           if (converted !== null) {
-            setDisplayText(currencyService.formatCompact(converted, targetCurrency));
-            setTooltipText(`Original: ${currencyService.format(amount, currency)}`);
+            setDisplayText(
+              currencyService.formatCompact(converted, targetCurrency)
+            );
+            setTooltipText(
+              `Original: ${currencyService.format(amount, currency)}`
+            );
             setIsConverted(true);
           } else {
             setDisplayText(currencyService.formatCompact(amount, currency));
@@ -71,7 +75,13 @@ export function CurrencyDisplay({
         setDisplayText(
           showCode
             ? currencyService.formatWithCode(
-                result.converted ? (await currencyService.convert(amount, currency, targetCurrency) ?? amount) : amount,
+                result.converted
+                  ? ((await currencyService.convert(
+                      amount,
+                      currency,
+                      targetCurrency
+                    )) ?? amount)
+                  : amount,
                 targetCurrency
               )
             : result.display
@@ -92,7 +102,9 @@ export function CurrencyDisplay({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`${className} cursor-help border-b border-dashed border-gray-400`}>
+          <span
+            className={`${className} cursor-help border-b border-dashed border-gray-400`}
+          >
             {displayText}
           </span>
         </TooltipTrigger>
@@ -121,4 +133,3 @@ export function CurrencyAmount({
   const formatted = currencyService.format(value, currency);
   return <span className={className}>{formatted}</span>;
 }
-

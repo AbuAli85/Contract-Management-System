@@ -20,15 +20,23 @@ import {
   XCircle,
   Loader2,
 } from 'lucide-react';
-import type { ComplianceReport, DocumentAlert } from '@/lib/document-monitor-types';
-import { formatDocumentType, getSeverityColor } from '@/lib/document-monitor-types';
+import type {
+  ComplianceReport,
+  DocumentAlert,
+} from '@/lib/document-monitor-types';
+import {
+  formatDocumentType,
+  getSeverityColor,
+} from '@/lib/document-monitor-types';
 import { format } from 'date-fns';
 
 interface ComplianceDashboardProps {
   locale?: string;
 }
 
-export function ComplianceDashboard({ locale = 'en' }: ComplianceDashboardProps) {
+export function ComplianceDashboard({
+  locale = 'en',
+}: ComplianceDashboardProps) {
   const [report, setReport] = useState<ComplianceReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [sendingAlerts, setSendingAlerts] = useState(false);
@@ -62,7 +70,9 @@ export function ComplianceDashboard({ locale = 'en' }: ComplianceDashboardProps)
       const data = await response.json();
 
       if (data.success) {
-        alert(`Alerts sent successfully! ${data.alertResults.emailsSent} emails, ${data.alertResults.notificationsCreated} notifications`);
+        alert(
+          `Alerts sent successfully! ${data.alertResults.emailsSent} emails, ${data.alertResults.notificationsCreated} notifications`
+        );
       }
     } catch (error) {
       console.error('Error sending alerts:', error);
@@ -92,15 +102,15 @@ export function ComplianceDashboard({ locale = 'en' }: ComplianceDashboardProps)
     report.summary.complianceRate >= 90
       ? 'text-green-600'
       : report.summary.complianceRate >= 70
-      ? 'text-yellow-600'
-      : 'text-red-600';
+        ? 'text-yellow-600'
+        : 'text-red-600';
 
   const complianceStatus =
     report.summary.complianceRate >= 90
       ? 'Excellent'
       : report.summary.complianceRate >= 70
-      ? 'Good'
-      : 'Needs Attention';
+        ? 'Good'
+        : 'Needs Attention';
 
   return (
     <div className='space-y-6'>
@@ -122,10 +132,7 @@ export function ComplianceDashboard({ locale = 'en' }: ComplianceDashboardProps)
           >
             Refresh
           </Button>
-          <Button
-            onClick={handleSendAlerts}
-            disabled={sendingAlerts}
-          >
+          <Button onClick={handleSendAlerts} disabled={sendingAlerts}>
             {sendingAlerts ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -156,8 +163,8 @@ export function ComplianceDashboard({ locale = 'en' }: ComplianceDashboardProps)
                 report.summary.complianceRate >= 90
                   ? 'default'
                   : report.summary.complianceRate >= 70
-                  ? 'secondary'
-                  : 'destructive'
+                    ? 'secondary'
+                    : 'destructive'
               }
             >
               {complianceStatus}
@@ -170,7 +177,10 @@ export function ComplianceDashboard({ locale = 'en' }: ComplianceDashboardProps)
               {report.summary.complianceRate}%
             </span>
             <div className='text-sm text-muted-foreground'>
-              <div>{report.summary.compliant} of {report.summary.total} promoters compliant</div>
+              <div>
+                {report.summary.compliant} of {report.summary.total} promoters
+                compliant
+              </div>
               <div className='flex items-center gap-1 text-xs'>
                 <TrendingUp className='h-3 w-3' />
                 Target: 95%
@@ -286,12 +296,14 @@ export function ComplianceDashboard({ locale = 'en' }: ComplianceDashboardProps)
       </div>
 
       {/* Detailed Alerts Table */}
-      {(report.alerts.critical.length > 0 || report.alerts.urgent.length > 0) && (
+      {(report.alerts.critical.length > 0 ||
+        report.alerts.urgent.length > 0) && (
         <Card>
           <CardHeader>
             <CardTitle>Alerts Requiring Action</CardTitle>
             <CardDescription>
-              {report.alerts.critical.length + report.alerts.urgent.length} promoters need immediate attention
+              {report.alerts.critical.length + report.alerts.urgent.length}{' '}
+              promoters need immediate attention
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -321,7 +333,13 @@ interface AlertCardProps {
   icon: any;
 }
 
-function AlertCard({ severity, count, title, subtitle, icon: Icon }: AlertCardProps) {
+function AlertCard({
+  severity,
+  count,
+  title,
+  subtitle,
+  icon: Icon,
+}: AlertCardProps) {
   const colors = {
     critical: 'border-red-200 bg-red-50',
     urgent: 'border-orange-200 bg-orange-50',
@@ -341,7 +359,9 @@ function AlertCard({ severity, count, title, subtitle, icon: Icon }: AlertCardPr
         <Icon className={`h-4 w-4 ${textColors[severity]}`} />
       </CardHeader>
       <CardContent>
-        <div className={`text-3xl font-bold ${textColors[severity]}`}>{count}</div>
+        <div className={`text-3xl font-bold ${textColors[severity]}`}>
+          {count}
+        </div>
         <p className='text-xs text-muted-foreground mt-1'>{subtitle}</p>
       </CardContent>
     </Card>
@@ -357,7 +377,11 @@ function DocumentAlertRow({ alert }: { alert: DocumentAlert }) {
     >
       <div className='flex items-center gap-4'>
         <div>
-          <Badge variant={alert.severity === 'critical' ? 'destructive' : 'secondary'}>
+          <Badge
+            variant={
+              alert.severity === 'critical' ? 'destructive' : 'secondary'
+            }
+          >
             {alert.severity.toUpperCase()}
           </Badge>
         </div>
@@ -378,4 +402,3 @@ function DocumentAlertRow({ alert }: { alert: DocumentAlert }) {
     </div>
   );
 }
-

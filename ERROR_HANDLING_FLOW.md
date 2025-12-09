@@ -137,6 +137,7 @@
 ## 🚨 Error Handling States
 
 ### 1. Loading State
+
 ```
 ┌──────────────────────────┐
 │                          │
@@ -148,6 +149,7 @@
 ```
 
 ### 2. Error State
+
 ```
 ┌──────────────────────────────────────┐
 │  ⚠️  Failed to Load Parties          │
@@ -171,6 +173,7 @@
 ```
 
 ### 3. Success State
+
 ```
 ┌──────────────────────────────────────┐
 │  Manage Parties                      │
@@ -196,6 +199,7 @@
 ## 🔍 Logging Timeline
 
 ### Successful Request
+
 ```
 Time  | Event                                    | Duration
 ------|------------------------------------------|----------
@@ -209,6 +213,7 @@ Time  | Event                                    | Duration
 ```
 
 ### Failed Request (Auth Error)
+
 ```
 Time  | Event                                    | Duration
 ------|------------------------------------------|----------
@@ -219,6 +224,7 @@ Time  | Event                                    | Duration
 ```
 
 ### Failed Request (Database Error)
+
 ```
 Time  | Event                                    | Duration
 ------|------------------------------------------|----------
@@ -231,6 +237,7 @@ Time  | Event                                    | Duration
 ```
 
 ### Failed Request (Timeout + Retries)
+
 ```
 Time   | Event                                   | Duration
 -------|------------------------------------------|----------
@@ -299,18 +306,18 @@ Time   | Event                                   | Duration
 
 ## 📊 Error Types & Handling
 
-| Error Type | HTTP Status | Retry? | User Action | Log Level |
-|------------|-------------|--------|-------------|-----------|
-| Network Timeout | - | ✅ Yes (3x) | "Try Again" | ⚠️ WARN |
-| Network Offline | - | ✅ Yes (3x) | "Check connection" | ⚠️ WARN |
-| 401 Unauthorized | 401 | ❌ No | Redirect to login | 🔵 INFO |
-| 403 Forbidden | 403 | ❌ No | "No permission" | ⚠️ WARN |
-| 404 Not Found | 404 | ❌ No | Navigate home | 🔵 INFO |
-| 500 Server Error | 500 | ✅ Yes (3x) | "Try Again" | 🔴 ERROR |
-| Database Error | 500 | ✅ Yes (3x) | "Try Again" | 🔴 ERROR |
-| Validation Error | 400 | ❌ No | Show details | 🔵 INFO |
-| Rate Limited | 429 | ✅ Yes (1x) | "Too many requests" | ⚠️ WARN |
-| JS Runtime Error | - | ❌ No | Error Boundary | 🔴 ERROR |
+| Error Type       | HTTP Status | Retry?      | User Action         | Log Level |
+| ---------------- | ----------- | ----------- | ------------------- | --------- |
+| Network Timeout  | -           | ✅ Yes (3x) | "Try Again"         | ⚠️ WARN   |
+| Network Offline  | -           | ✅ Yes (3x) | "Check connection"  | ⚠️ WARN   |
+| 401 Unauthorized | 401         | ❌ No       | Redirect to login   | 🔵 INFO   |
+| 403 Forbidden    | 403         | ❌ No       | "No permission"     | ⚠️ WARN   |
+| 404 Not Found    | 404         | ❌ No       | Navigate home       | 🔵 INFO   |
+| 500 Server Error | 500         | ✅ Yes (3x) | "Try Again"         | 🔴 ERROR  |
+| Database Error   | 500         | ✅ Yes (3x) | "Try Again"         | 🔴 ERROR  |
+| Validation Error | 400         | ❌ No       | Show details        | 🔵 INFO   |
+| Rate Limited     | 429         | ✅ Yes (1x) | "Too many requests" | ⚠️ WARN   |
+| JS Runtime Error | -           | ❌ No       | Error Boundary      | 🔴 ERROR  |
 
 ---
 
@@ -328,12 +335,14 @@ App Component Tree
 ```
 
 **What Error Boundary Catches:**
+
 - ✅ Component render errors
 - ✅ Lifecycle method errors
 - ✅ Constructor errors
 - ✅ Event handler errors (if throw in render)
 
 **What Error Boundary DOESN'T Catch:**
+
 - ❌ Async errors (handled by React Query)
 - ❌ Event handler errors (need try/catch)
 - ❌ Server-side errors (need API error handling)
@@ -344,6 +353,7 @@ App Component Tree
 ## 🎨 User Experience Flow
 
 ### Happy Path (< 2 seconds)
+
 ```
 User clicks        Loading         Data appears
   link            spinner         Parties table
@@ -355,6 +365,7 @@ User clicks        Loading         Data appears
 ```
 
 ### Error Path with Retry (< 10 seconds)
+
 ```
 User clicks     Loading     Retry 1    Retry 2    Retry 3    Error card
   link          spinner     (1s wait)  (2s wait)  (4s wait)   appears
@@ -365,6 +376,7 @@ User clicks     Loading     Retry 1    Retry 2    Retry 3    Error card
 ```
 
 ### Error Recovery Path (< 5 seconds)
+
 ```
 Error card     User clicks    Loading      Data appears
  displayed    "Try Again"     spinner     Parties table
@@ -399,12 +411,14 @@ const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
 ## 📈 Success Metrics
 
 ### Before Implementation
+
 - ❌ Error rate: Unknown
 - ❌ Recovery rate: 0% (requires full page reload)
 - ❌ User confusion: High (generic error messages)
 - ❌ Debugging difficulty: High (no request tracking)
 
 ### After Implementation
+
 - ✅ Error rate: Measurable (logged with request IDs)
 - ✅ Recovery rate: 75%+ (3 auto-retries + manual)
 - ✅ User confusion: Low (clear error messages + actions)
@@ -434,4 +448,3 @@ const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
 **Implementation Complete** ✅  
 **Status:** Production Ready  
 **Date:** 2025-10-22
-

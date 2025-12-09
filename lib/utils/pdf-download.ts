@@ -23,7 +23,7 @@ export async function downloadContractPDF(
   try {
     // First try to use our internal PDF view API if available
     const internalPdfUrl = `/api/contracts/${contract.contract_id}/pdf/view`;
-    
+
     // Determine which URL to use (prefer internal API, then pdf_url from Supabase, then Google Drive)
     const downloadUrl = contract.pdf_url || contract.google_drive_url;
 
@@ -42,7 +42,7 @@ export async function downloadContractPDF(
     // Try internal API first, then fallback to external URLs
     let finalUrl = internalPdfUrl;
     let useInternalApi = true;
-    
+
     // If it's a Google Drive URL, convert to direct download link
     if (downloadUrl.includes('docs.google.com')) {
       // Extract document ID from Google Drive URL
@@ -64,7 +64,7 @@ export async function downloadContractPDF(
     let response = await fetch(finalUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/pdf',
+        Accept: 'application/pdf',
       },
     });
 
@@ -72,7 +72,7 @@ export async function downloadContractPDF(
     if (!response.ok && useInternalApi && downloadUrl) {
       console.log('Internal API failed, trying external URL...');
       finalUrl = downloadUrl;
-      
+
       // Convert Google Drive URL if needed
       if (downloadUrl.includes('docs.google.com')) {
         const docIdMatch = downloadUrl.match(/\/d\/([^\/]+)/);
@@ -81,11 +81,11 @@ export async function downloadContractPDF(
           finalUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
         }
       }
-      
+
       response = await fetch(finalUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/pdf',
+          Accept: 'application/pdf',
         },
       });
     }
@@ -99,18 +99,24 @@ export async function downloadContractPDF(
     if (!contentType || !contentType.includes('application/pdf')) {
       // If it's not a PDF, try to get the text to see what we got
       const text = await response.text();
-      console.error('Expected PDF but got:', contentType, text.substring(0, 200));
-      throw new Error(`Expected PDF but got ${contentType}. The file may be corrupted or unavailable.`);
+      console.error(
+        'Expected PDF but got:',
+        contentType,
+        text.substring(0, 200)
+      );
+      throw new Error(
+        `Expected PDF but got ${contentType}. The file may be corrupted or unavailable.`
+      );
     }
 
     // Create blob from response
     const blob = await response.blob();
-    
+
     // Validate blob size and type
     if (blob.size === 0) {
       throw new Error('Downloaded file is empty');
     }
-    
+
     if (blob.type && !blob.type.includes('pdf')) {
       throw new Error(`Downloaded file is not a PDF (type: ${blob.type})`);
     }
@@ -119,12 +125,14 @@ export async function downloadContractPDF(
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileName || `${contract.contract_number || contract.contract_id}-contract.pdf`;
-    
+    a.download =
+      fileName ||
+      `${contract.contract_number || contract.contract_id}-contract.pdf`;
+
     // Trigger download
     document.body.appendChild(a);
     a.click();
-    
+
     // Cleanup
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
@@ -139,7 +147,10 @@ export async function downloadContractPDF(
   } catch (error) {
     console.error('PDF download error:', error);
     toast.error('❌ Download Failed', {
-      description: error instanceof Error ? error.message : 'Failed to download contract PDF',
+      description:
+        error instanceof Error
+          ? error.message
+          : 'Failed to download contract PDF',
     });
     return false;
   }
@@ -244,4 +255,3 @@ export async function downloadMultipleContracts(
     description: `Downloaded ${contracts.length} contract(s)`,
   });
 }
-

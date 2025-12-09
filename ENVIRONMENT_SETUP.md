@@ -22,6 +22,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 **Where to find these:**
+
 1. Go to https://app.supabase.com
 2. Select your project
 3. Go to Settings → API
@@ -39,25 +40,30 @@ CSRF_SECRET=your-random-secret-here
 **How to generate:**
 
 **Option 1: Using OpenSSL (Recommended)**
+
 ```bash
 openssl rand -base64 32
 ```
 
 **Option 2: Using Node.js**
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 **Option 3: Using PowerShell (Windows)**
+
 ```powershell
 [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
 ```
 
 **Option 4: Online Generator**
+
 - Visit: https://generate-secret.vercel.app/32
 - Copy the generated value
 
-⚠️ **Important:** 
+⚠️ **Important:**
+
 - Never commit this to Git
 - Use different secrets for dev/staging/production
 - Store securely (1Password, LastPass, etc.)
@@ -81,6 +87,7 @@ ALLOWED_ORIGINS=https://portal.thesmartpro.io,https://www.thesmartpro.io
 ```
 
 **Local Development:**
+
 ```bash
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 ```
@@ -138,10 +145,12 @@ npm run dev
 **Common Issues:**
 
 ❌ `Missing Supabase environment variables`
+
 - Solution: Check variable names match exactly
 - Solution: Restart dev server after adding variables
 
 ❌ `Authentication service unavailable`
+
 - Solution: Verify Supabase URL and keys are correct
 - Solution: Check Supabase project is active
 
@@ -161,9 +170,10 @@ For each environment variable:
 
 **Variable Name:** `CSRF_SECRET`  
 **Value:** (paste generated secret)  
-**Environment:** 
+**Environment:**
+
 - ✅ Production
-- ✅ Preview  
+- ✅ Preview
 - ✅ Development
 
 Click "Save"
@@ -183,11 +193,13 @@ Minimum required for production:
 ### Step 4: Redeploy
 
 After adding variables:
+
 1. Go to Deployments tab
 2. Click "..." on latest deployment
 3. Click "Redeploy"
 
 Or push a new commit:
+
 ```bash
 git commit --allow-empty -m "chore: trigger redeploy"
 git push origin main
@@ -225,19 +237,30 @@ Create a test file: `scripts/check-env.js`
 // Check environment variables (safe - doesn't log secrets)
 console.log('Environment Check:');
 console.log('================');
-console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing');
-console.log('Supabase Anon Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing');
-console.log('Service Role Key:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Set' : '❌ Missing');
+console.log(
+  'Supabase URL:',
+  process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing'
+);
+console.log(
+  'Supabase Anon Key:',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'
+);
+console.log(
+  'Service Role Key:',
+  process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Set' : '❌ Missing'
+);
 console.log('CSRF Secret:', process.env.CSRF_SECRET ? '✅ Set' : '❌ Missing');
 console.log('Node Environment:', process.env.NODE_ENV || 'Not set');
 ```
 
 Run:
+
 ```bash
 node scripts/check-env.js
 ```
 
 Expected output:
+
 ```
 Environment Check:
 ================
@@ -261,6 +284,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://dev-project.supabase.co
 ```
 
 **Features:**
+
 - Hot reload enabled
 - Source maps included
 - Detailed error messages
@@ -275,6 +299,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://prod-project.supabase.co
 ```
 
 **Features:**
+
 - Optimized builds
 - Minified code
 - Production error handling
@@ -287,12 +312,14 @@ NEXT_PUBLIC_SUPABASE_URL=https://prod-project.supabase.co
 ### Issue: "Missing Supabase environment variables"
 
 **Check:**
+
 1. Variable names are spelled correctly
 2. No extra spaces in values
 3. `.env.local` is in project root
 4. Server was restarted after adding variables
 
 **Fix:**
+
 ```bash
 # Kill server (Ctrl+C)
 # Restart
@@ -302,11 +329,13 @@ npm run dev
 ### Issue: "Invalid CSRF token"
 
 **Check:**
+
 1. `CSRF_SECRET` is set in environment
 2. Value is at least 16 characters
 3. No special characters breaking the value
 
 **Fix:**
+
 ```bash
 # Generate new secret
 openssl rand -base64 32
@@ -320,21 +349,25 @@ CSRF_SECRET=new-secret-here
 ### Issue: Cookies not secure
 
 **Development (Expected):**
+
 - HTTP connections: `secure: false`
 - This is normal in development
 
 **Production (Must Fix):**
+
 - Verify `NODE_ENV=production` in Vercel
 - Check deployment logs for errors
 
 ### Issue: Environment variables not updating
 
 **Vercel:**
+
 1. Update variable in dashboard
 2. **Important:** Redeploy the project
 3. Variables only update on new deployments
 
 **Local:**
+
 1. Update `.env.local`
 2. Restart dev server (`Ctrl+C`, then `npm run dev`)
 
@@ -354,11 +387,13 @@ app/layout.tsx                  → NODE_ENV (indirectly)
 ### Variable Prefixes
 
 **`NEXT_PUBLIC_*`**
+
 - Exposed to browser
 - Can be used in client components
 - Bundled into JavaScript
 
 **No prefix**
+
 - Server-side only
 - Never exposed to browser
 - Secure for secrets
@@ -389,4 +424,3 @@ Before deploying, verify:
 ---
 
 **Need Help?** Check the troubleshooting section or review `IMPLEMENTATION_SUMMARY.md` for context.
-

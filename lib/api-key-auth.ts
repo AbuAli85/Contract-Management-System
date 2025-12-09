@@ -63,7 +63,9 @@ export function extractApiKey(request: NextRequest): string | null {
 /**
  * Validate API key and return key information
  */
-export async function validateApiKey(apiKey: string): Promise<ApiKeyAuthResult> {
+export async function validateApiKey(
+  apiKey: string
+): Promise<ApiKeyAuthResult> {
   try {
     if (!apiKey || apiKey.length < 20) {
       return {
@@ -78,9 +80,11 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyAuthResult> 
 
     // Query database for matching key
     const supabase = await createClient();
-    
+
     // Use service role client to bypass RLS for API key lookup
-    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+    const { createClient: createServiceClient } = await import(
+      '@supabase/supabase-js'
+    );
     const serviceClient = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -148,7 +152,10 @@ export async function validateApiKey(apiKey: string): Promise<ApiKeyAuthResult> 
 /**
  * Check if API key has required permission
  */
-export function hasPermission(apiKey: ApiKey, requiredPermission: string): boolean {
+export function hasPermission(
+  apiKey: ApiKey,
+  requiredPermission: string
+): boolean {
   if (!apiKey.permissions || apiKey.permissions.length === 0) {
     return false;
   }
@@ -168,7 +175,10 @@ export function hasPermission(apiKey: ApiKey, requiredPermission: string): boole
   }
 
   // Check admin permission
-  if (apiKey.permissions.includes('*') || apiKey.permissions.includes('admin')) {
+  if (
+    apiKey.permissions.includes('*') ||
+    apiKey.permissions.includes('admin')
+  ) {
     return true;
   }
 
@@ -178,7 +188,10 @@ export function hasPermission(apiKey: ApiKey, requiredPermission: string): boole
 /**
  * Check if origin is allowed for this API key
  */
-export function isOriginAllowed(apiKey: ApiKey, origin: string | null): boolean {
+export function isOriginAllowed(
+  apiKey: ApiKey,
+  origin: string | null
+): boolean {
   // If no origins specified, allow all
   if (!apiKey.allowedOrigins || apiKey.allowedOrigins.length === 0) {
     return true;
@@ -217,7 +230,8 @@ export function withApiKeyAuth(
         return NextResponse.json(
           {
             error: 'API key required',
-            message: 'Please provide an API key in the Authorization header (Bearer <key>) or X-API-Key header',
+            message:
+              'Please provide an API key in the Authorization header (Bearer <key>) or X-API-Key header',
           },
           { status: 401 }
         );
@@ -229,7 +243,8 @@ export function withApiKeyAuth(
         return NextResponse.json(
           {
             error: 'Invalid API key',
-            message: validation.error || 'The provided API key is invalid or expired',
+            message:
+              validation.error || 'The provided API key is invalid or expired',
           },
           { status: 401 }
         );
@@ -250,7 +265,10 @@ export function withApiKeyAuth(
       }
 
       // Check permission if required
-      if (requiredPermission && !hasPermission(apiKeyData, requiredPermission)) {
+      if (
+        requiredPermission &&
+        !hasPermission(apiKeyData, requiredPermission)
+      ) {
         return NextResponse.json(
           {
             error: 'Insufficient permissions',
@@ -289,15 +307,18 @@ export async function logApiKeyUsage(
   request: NextRequest
 ): Promise<void> {
   try {
-    const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+    const { createClient: createServiceClient } = await import(
+      '@supabase/supabase-js'
+    );
     const serviceClient = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                      request.headers.get('x-real-ip') || 
-                      'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     await serviceClient.from('api_key_usage_logs').insert({
@@ -314,4 +335,3 @@ export async function logApiKeyUsage(
     // Don't throw - logging failures shouldn't break the API
   }
 }
-

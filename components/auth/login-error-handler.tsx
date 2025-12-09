@@ -12,10 +12,14 @@ interface LoginErrorHandlerProps {
   onContactSupport?: () => void;
 }
 
-export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErrorHandlerProps) {
+export function LoginErrorHandler({
+  error,
+  onRetry,
+  onContactSupport,
+}: LoginErrorHandlerProps) {
   const getErrorType = (errorMessage: string) => {
     const message = errorMessage.toLowerCase();
-    
+
     if (message.includes('captcha') || message.includes('verification')) {
       return 'captcha';
     }
@@ -44,12 +48,14 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
       case 'captcha':
         return {
           title: 'CAPTCHA Verification Required',
-          description: 'Your Supabase project has CAPTCHA enabled. This needs to be disabled for the application to work properly.',
+          description:
+            'Your Supabase project has CAPTCHA enabled. This needs to be disabled for the application to work properly.',
           icon: <Shield className='h-5 w-5' />,
           actions: [
             {
               label: 'View Supabase Dashboard',
-              action: () => window.open('https://supabase.com/dashboard', '_blank'),
+              action: () =>
+                window.open('https://supabase.com/dashboard', '_blank'),
               variant: 'default' as const,
             },
             {
@@ -70,7 +76,8 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
       case 'credentials':
         return {
           title: 'Invalid Credentials',
-          description: 'The email or password you entered is incorrect. Please check your credentials and try again.',
+          description:
+            'The email or password you entered is incorrect. Please check your credentials and try again.',
           icon: <AlertCircle className='h-5 w-5' />,
           actions: [
             {
@@ -90,7 +97,8 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
       case 'pending':
         return {
           title: 'Account Pending Approval',
-          description: 'Your account is currently under review and awaiting approval from an administrator.',
+          description:
+            'Your account is currently under review and awaiting approval from an administrator.',
           icon: <AlertCircle className='h-5 w-5' />,
           actions: [
             {
@@ -110,7 +118,8 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
       case 'inactive':
         return {
           title: 'Account Deactivated',
-          description: 'Your account has been deactivated. Please contact an administrator to restore access.',
+          description:
+            'Your account has been deactivated. Please contact an administrator to restore access.',
           icon: <AlertCircle className='h-5 w-5' />,
           actions: [
             {
@@ -130,7 +139,8 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
       case 'connection':
         return {
           title: 'Connection Error',
-          description: 'Unable to connect to the authentication service. Please check your internet connection.',
+          description:
+            'Unable to connect to the authentication service. Please check your internet connection.',
           icon: <AlertCircle className='h-5 w-5' />,
           actions: [
             {
@@ -150,7 +160,8 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
       case 'server':
         return {
           title: 'Server Error',
-          description: 'There is a temporary issue with our servers. Please try again in a few moments.',
+          description:
+            'There is a temporary issue with our servers. Please try again in a few moments.',
           icon: <AlertCircle className='h-5 w-5' />,
           actions: [
             {
@@ -175,7 +186,8 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
       default:
         return {
           title: 'Login Error',
-          description: 'An unexpected error occurred during login. Please try again.',
+          description:
+            'An unexpected error occurred during login. Please try again.',
           icon: <AlertCircle className='h-5 w-5' />,
           actions: [
             {
@@ -207,7 +219,9 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
         <CardHeader className='text-center space-y-4'>
           <div className='flex items-center justify-center gap-2'>
             {content.icon}
-            <CardTitle className='text-xl text-red-600'>{content.title}</CardTitle>
+            <CardTitle className='text-xl text-red-600'>
+              {content.title}
+            </CardTitle>
           </div>
           <p className='text-gray-600'>{content.description}</p>
         </CardHeader>
@@ -240,8 +254,12 @@ export function LoginErrorHandler({ error, onRetry, onContactSupport }: LoginErr
                 className='w-full'
               >
                 {action.label}
-                {action.label.includes('Dashboard') && <ExternalLink className='ml-2 h-4 w-4' />}
-                {action.label.includes('Retry') && <RefreshCw className='ml-2 h-4 w-4' />}
+                {action.label.includes('Dashboard') && (
+                  <ExternalLink className='ml-2 h-4 w-4' />
+                )}
+                {action.label.includes('Retry') && (
+                  <RefreshCw className='ml-2 h-4 w-4' />
+                )}
               </Button>
             ))}
           </div>

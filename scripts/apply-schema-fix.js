@@ -23,11 +23,13 @@ async function applySchemaFix() {
     console.log('🧪 Testing current problematic query...');
     const { data: testData, error: testError } = await supabase
       .from('contracts')
-      .select(`
+      .select(
+        `
         *,
         first_party:parties!contracts_first_party_id_fkey(id,name_en,name_ar,crn,type),
         second_party:parties!contracts_second_party_id_fkey(id,name_en,name_ar,crn,type)
-      `)
+      `
+      )
       .limit(1);
 
     if (testError) {
@@ -42,11 +44,13 @@ async function applySchemaFix() {
     console.log('🧪 Testing working schema query...');
     const { data: workingData, error: workingError } = await supabase
       .from('contracts')
-      .select(`
+      .select(
+        `
         *,
         employer:parties!contracts_employer_id_fkey(id,name_en,name_ar,crn,type),
         client:parties!contracts_client_id_fkey(id,name_en,name_ar,crn,type)
-      `)
+      `
+      )
       .limit(1);
 
     if (workingError) {
@@ -61,10 +65,15 @@ async function applySchemaFix() {
     console.log('   - Solution: Update code to use correct column names\n');
 
     console.log('🔧 Recommended fix:');
-    console.log('   1. Update all queries to use employer_id/client_id instead of first_party_id/second_party_id');
-    console.log('   2. Or create a database migration to add the missing columns');
-    console.log('   3. The migration approach is safer for backward compatibility\n');
-
+    console.log(
+      '   1. Update all queries to use employer_id/client_id instead of first_party_id/second_party_id'
+    );
+    console.log(
+      '   2. Or create a database migration to add the missing columns'
+    );
+    console.log(
+      '   3. The migration approach is safer for backward compatibility\n'
+    );
   } catch (error) {
     console.error('❌ Unexpected error:', error.message);
   }

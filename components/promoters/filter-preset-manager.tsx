@@ -53,7 +53,9 @@ interface FilterPresetManagerProps {
   currentFilters: Record<string, any>;
   presets: FilterPreset[];
   onApplyPreset: (preset: FilterPreset) => void;
-  onSavePreset: (preset: Omit<FilterPreset, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onSavePreset: (
+    preset: Omit<FilterPreset, 'id' | 'createdAt' | 'updatedAt'>
+  ) => void;
   onUpdatePreset: (id: string, updates: Partial<FilterPreset>) => void;
   onDeletePreset: (id: string) => void;
 }
@@ -121,7 +123,7 @@ export function FilterPresetManager({
   const handleImportPreset = () => {
     try {
       const imported = JSON.parse(importJson);
-      
+
       if (!imported.name || !imported.filters) {
         throw new Error('Invalid preset format');
       }
@@ -170,15 +172,15 @@ export function FilterPresetManager({
     }
   };
 
-  const customPresets = presets.filter((p) => !p.isDefault);
+  const customPresets = presets.filter(p => !p.isDefault);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className='flex items-center gap-2'>
       {/* Save Current Filters */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Bookmark className="h-4 w-4 mr-2" />
+          <Button variant='outline' size='sm'>
+            <Bookmark className='h-4 w-4 mr-2' />
             Save Filters
           </Button>
         </DialogTrigger>
@@ -189,35 +191,35 @@ export function FilterPresetManager({
               Save your current filter configuration for quick access later
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="preset-name">Preset Name *</Label>
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='preset-name'>Preset Name *</Label>
               <Input
-                id="preset-name"
-                placeholder="My Custom Filter"
+                id='preset-name'
+                placeholder='My Custom Filter'
                 value={newPresetName}
-                onChange={(e) => setNewPresetName(e.target.value)}
+                onChange={e => setNewPresetName(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="preset-description">Description (optional)</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='preset-description'>Description (optional)</Label>
               <Textarea
-                id="preset-description"
-                placeholder="Describe what this filter is for..."
+                id='preset-description'
+                placeholder='Describe what this filter is for...'
                 value={newPresetDescription}
-                onChange={(e) => setNewPresetDescription(e.target.value)}
+                onChange={e => setNewPresetDescription(e.target.value)}
                 rows={3}
               />
             </div>
-            <div className="rounded-lg bg-muted p-3 text-sm">
-              <p className="font-medium mb-2">Current Filters:</p>
-              <pre className="text-xs overflow-auto">
+            <div className='rounded-lg bg-muted p-3 text-sm'>
+              <p className='font-medium mb-2'>Current Filters:</p>
+              <pre className='text-xs overflow-auto'>
                 {JSON.stringify(currentFilters, null, 2)}
               </pre>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+            <Button variant='outline' onClick={() => setIsCreateOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleSavePreset}>Save Preset</Button>
@@ -228,67 +230,72 @@ export function FilterPresetManager({
       {/* Manage Presets */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" />
+          <Button variant='outline' size='sm'>
+            <Edit className='h-4 w-4 mr-2' />
             Manage ({customPresets.length})
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[300px]">
+        <DropdownMenuContent align='end' className='w-[300px]'>
           <DropdownMenuLabel>Saved Filter Presets</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          
+
           {customPresets.length === 0 ? (
-            <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+            <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
               No saved presets yet
             </div>
           ) : (
-            customPresets.map((preset) => (
-              <div key={preset.id} className="px-2 py-2 hover:bg-accent rounded-sm">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
+            customPresets.map(preset => (
+              <div
+                key={preset.id}
+                className='px-2 py-2 hover:bg-accent rounded-sm'
+              >
+                <div className='flex items-start justify-between gap-2'>
+                  <div className='flex-1 min-w-0'>
                     <button
                       onClick={() => onApplyPreset(preset)}
-                      className="text-left w-full"
+                      className='text-left w-full'
                     >
-                      <p className="font-medium text-sm truncate">{preset.name}</p>
+                      <p className='font-medium text-sm truncate'>
+                        {preset.name}
+                      </p>
                       {preset.description && (
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className='text-xs text-muted-foreground truncate'>
                           {preset.description}
                         </p>
                       )}
                     </button>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className='flex items-center gap-1'>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
+                      variant='ghost'
+                      size='icon'
+                      className='h-7 w-7'
                       onClick={() => handleSharePreset(preset)}
-                      title="Share preset"
+                      title='Share preset'
                     >
                       {copiedUrl ? (
-                        <Check className="h-3 w-3 text-green-600" />
+                        <Check className='h-3 w-3 text-green-600' />
                       ) : (
-                        <Share2 className="h-3 w-3" />
+                        <Share2 className='h-3 w-3' />
                       )}
                     </Button>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
+                      variant='ghost'
+                      size='icon'
+                      className='h-7 w-7'
                       onClick={() => handleExportPreset(preset)}
-                      title="Export preset"
+                      title='Export preset'
                     >
-                      <Download className="h-3 w-3" />
+                      <Download className='h-3 w-3' />
                     </Button>
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
+                      variant='ghost'
+                      size='icon'
+                      className='h-7 w-7'
                       onClick={() => onDeletePreset(preset.id)}
-                      title="Delete preset"
+                      title='Delete preset'
                     >
-                      <Trash2 className="h-3 w-3 text-red-600" />
+                      <Trash2 className='h-3 w-3 text-red-600' />
                     </Button>
                   </div>
                 </div>
@@ -297,9 +304,9 @@ export function FilterPresetManager({
           )}
 
           <DropdownMenuSeparator />
-          
+
           <DropdownMenuItem onClick={() => setIsImportOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" />
+            <Upload className='h-4 w-4 mr-2' />
             Import Preset
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -314,21 +321,21 @@ export function FilterPresetManager({
               Paste the JSON configuration of a filter preset
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="import-json">JSON Configuration</Label>
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='import-json'>JSON Configuration</Label>
               <Textarea
-                id="import-json"
+                id='import-json'
                 placeholder='{"name": "My Filter", "filters": {...}}'
                 value={importJson}
-                onChange={(e) => setImportJson(e.target.value)}
+                onChange={e => setImportJson(e.target.value)}
                 rows={10}
-                className="font-mono text-xs"
+                className='font-mono text-xs'
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportOpen(false)}>
+            <Button variant='outline' onClick={() => setIsImportOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleImportPreset}>Import</Button>
@@ -338,4 +345,3 @@ export function FilterPresetManager({
     </div>
   );
 }
-

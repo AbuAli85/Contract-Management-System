@@ -3,6 +3,7 @@
 ## 🔴 BEFORE (Issues)
 
 ### Loading State
+
 ```
 ┌─────────────────────────────────┐
 │  [Spinner]                      │
@@ -12,7 +13,9 @@
 │  No way to cancel or retry     │
 └─────────────────────────────────┘
 ```
+
 **Problems:**
+
 - No timeout mechanism
 - No progress indicators
 - No way to retry or cancel
@@ -21,6 +24,7 @@
 ---
 
 ### Error State
+
 ```
 ┌─────────────────────────────────┐
 │  ❌ Failed to Load              │
@@ -30,7 +34,9 @@
 │  [Retry]  [View All]           │
 └─────────────────────────────────┘
 ```
+
 **Problems:**
+
 - Generic error message
 - No indication of what went wrong
 - Limited action options
@@ -38,6 +44,7 @@
 ---
 
 ### Empty State (0 results)
+
 ```
 ┌─────────────────────────────────┐
 │  No Pending Contracts           │
@@ -48,7 +55,9 @@
 │  [View All Contracts]          │
 └─────────────────────────────────┘
 ```
+
 **Problems:**
+
 - Looks identical to error state
 - No visual distinction from loading timeout
 - Users confused: "Is this an error or success?"
@@ -58,6 +67,7 @@
 ## 🟢 AFTER (Fixed)
 
 ### Loading State (0-3 seconds)
+
 ```
 ┌─────────────────────────────────────────┐
 │  🕐 Pending Contracts                   │
@@ -70,7 +80,9 @@
 │                                         │
 └─────────────────────────────────────────┘
 ```
+
 **Improvements:**
+
 - Clean, professional design
 - Clear loading indicator
 - User knows request is in progress
@@ -78,6 +90,7 @@
 ---
 
 ### Loading State (3-10 seconds)
+
 ```
 ┌─────────────────────────────────────────┐
 │  🕐 Pending Contracts                   │
@@ -98,7 +111,9 @@
 │                                         │
 └─────────────────────────────────────────┘
 ```
+
 **Improvements:**
+
 - Progress updates for slow requests
 - Clear timeout warning
 - User can cancel and retry early
@@ -107,6 +122,7 @@
 ---
 
 ### Error State (with details)
+
 ```
 ┌─────────────────────────────────────────────┐
 │  🕐 Pending Contracts                       │
@@ -128,7 +144,9 @@
 │  Retry attempts: 1                          │
 └─────────────────────────────────────────────┘
 ```
+
 **Improvements:**
+
 - Specific error message
 - List of possible causes
 - Multiple recovery options
@@ -138,6 +156,7 @@
 ---
 
 ### Success State (0 results)
+
 ```
 ┌─────────────────────────────────────────────┐
 │  🕐 Pending Contracts  [Badge: 0]           │
@@ -164,7 +183,9 @@
 │                                             │
 └─────────────────────────────────────────────┘
 ```
+
 **Improvements:**
+
 - Green color scheme (success, not error)
 - Positive messaging
 - Clear success indicator
@@ -175,6 +196,7 @@
 ---
 
 ### Success State (with results)
+
 ```
 ┌─────────────────────────────────────────────┐
 │  🕐 Pending Contracts  [Badge: 3]           │
@@ -205,7 +227,9 @@
 │                                             │
 └─────────────────────────────────────────────┘
 ```
+
 **Improvements:**
+
 - Clear contract cards with status badges
 - All relevant information visible
 - Color-coded status indicators
@@ -215,6 +239,7 @@
 ---
 
 ### Search/Filter State (no matches)
+
 ```
 ┌─────────────────────────────────────────────┐
 │  🕐 Pending Contracts  [Badge: 3]           │
@@ -235,7 +260,9 @@
 │                                             │
 └─────────────────────────────────────────────┘
 ```
+
 **Improvements:**
+
 - Shows search term in quotes
 - Clear indication that search filtered results
 - Easy to clear search
@@ -245,26 +272,27 @@
 
 ## Key Improvements Summary
 
-| Feature | Before | After |
-|---------|--------|-------|
-| **Loading Timeout** | ❌ None (infinite) | ✅ 10 seconds with warning |
-| **Progress Updates** | ❌ None | ✅ Shows slow loading message |
-| **Cancel During Load** | ❌ Not possible | ✅ Cancel and retry button |
-| **Error Details** | ❌ Generic | ✅ Specific with causes |
-| **Error Recovery** | ❌ Basic retry | ✅ Multiple retry options + counter |
-| **Empty State** | ❌ Ambiguous | ✅ Clear success state |
-| **Permission Handling** | ❌ Could hang forever | ✅ 5 second fallback timeout |
-| **Refresh** | ❌ Reload page | ✅ Button with loading state |
-| **Search Feedback** | ❌ Confusing | ✅ Clear "no matches" message |
-| **Memory Leaks** | ❌ Possible | ✅ Prevented with refs |
-| **Duplicate Requests** | ❌ Possible | ✅ Prevented with flag |
-| **Logging** | ❌ Minimal | ✅ Comprehensive debugging |
+| Feature                 | Before                | After                               |
+| ----------------------- | --------------------- | ----------------------------------- |
+| **Loading Timeout**     | ❌ None (infinite)    | ✅ 10 seconds with warning          |
+| **Progress Updates**    | ❌ None               | ✅ Shows slow loading message       |
+| **Cancel During Load**  | ❌ Not possible       | ✅ Cancel and retry button          |
+| **Error Details**       | ❌ Generic            | ✅ Specific with causes             |
+| **Error Recovery**      | ❌ Basic retry        | ✅ Multiple retry options + counter |
+| **Empty State**         | ❌ Ambiguous          | ✅ Clear success state              |
+| **Permission Handling** | ❌ Could hang forever | ✅ 5 second fallback timeout        |
+| **Refresh**             | ❌ Reload page        | ✅ Button with loading state        |
+| **Search Feedback**     | ❌ Confusing          | ✅ Clear "no matches" message       |
+| **Memory Leaks**        | ❌ Possible           | ✅ Prevented with refs              |
+| **Duplicate Requests**  | ❌ Possible           | ✅ Prevented with flag              |
+| **Logging**             | ❌ Minimal            | ✅ Comprehensive debugging          |
 
 ---
 
 ## User Experience Flow
 
 ### Scenario 1: Fast Load (< 1 second)
+
 ```
 User clicks "Pending Contracts"
   ↓
@@ -272,11 +300,13 @@ User clicks "Pending Contracts"
   ↓
 ✅ Page loads with contracts
 ```
+
 **Result:** Seamless experience
 
 ---
 
 ### Scenario 2: Slow Load (3-10 seconds)
+
 ```
 User clicks "Pending Contracts"
   ↓
@@ -287,11 +317,13 @@ User clicks "Pending Contracts"
   ↓ (continues loading)
 ✅ Page loads with contracts
 ```
+
 **Result:** User informed, can retry if needed
 
 ---
 
 ### Scenario 3: Timeout (> 10 seconds)
+
 ```
 User clicks "Pending Contracts"
   ↓
@@ -306,11 +338,13 @@ User clicks "Retry Now"
   ↓
 ✅ Page loads with contracts
 ```
+
 **Result:** Clear error, easy recovery
 
 ---
 
 ### Scenario 4: No Pending Contracts
+
 ```
 User clicks "Pending Contracts"
   ↓
@@ -320,11 +354,13 @@ User clicks "Pending Contracts"
    [Green success indicator]
    "All contracts are up to date"
 ```
+
 **Result:** Clear success state, not confusing
 
 ---
 
 ### Scenario 5: Network Error
+
 ```
 User clicks "Pending Contracts"
   ↓
@@ -338,6 +374,7 @@ User fixes network, clicks "Retry Now"
   ↓
 ✅ Page loads with contracts
 ```
+
 **Result:** Clear error, guided recovery
 
 ---
@@ -345,6 +382,7 @@ User fixes network, clicks "Retry Now"
 ## Technical Implementation Comparison
 
 ### Before: Simple useEffect
+
 ```typescript
 useEffect(() => {
   if (!permissions.isLoading && hasPermission) {
@@ -352,7 +390,9 @@ useEffect(() => {
   }
 }, [permissions.isLoading, hasPermission]);
 ```
+
 **Problems:**
+
 - No timeout
 - Could wait forever
 - No cleanup
@@ -360,17 +400,18 @@ useEffect(() => {
 ---
 
 ### After: Robust useEffect
+
 ```typescript
 useEffect(() => {
   mountedRef.current = true;
-  
+
   const permissionTimeout = setTimeout(() => {
     if (permissions.isLoading) {
       console.warn('Permissions timeout, proceeding...');
       fetchPendingContracts();
     }
   }, 5000);
-  
+
   if (!permissions.isLoading) {
     clearTimeout(permissionTimeout);
     if (hasPermission) {
@@ -380,14 +421,16 @@ useEffect(() => {
       setPermissionError(true);
     }
   }
-  
+
   return () => {
     mountedRef.current = false;
     clearTimeout(permissionTimeout);
   };
 }, [permissions.isLoading, hasPermission, fetchPendingContracts]);
 ```
+
 **Improvements:**
+
 - 5 second permission timeout
 - Proper cleanup
 - Memory leak prevention
@@ -400,9 +443,9 @@ useEffect(() => {
 **Before:** 🔴 Users stuck on loading screen, unable to access pending contracts
 
 **After:** 🟢 Professional, responsive page with:
+
 - Clear loading progress
 - Automatic timeout protection
 - Comprehensive error handling
 - Easy retry functionality
 - Proper success states for 0 results
-

@@ -9,7 +9,9 @@ export interface ContractStatusChangeEmailProps {
   contractUrl?: string;
 }
 
-export function contractStatusChangeEmail(props: ContractStatusChangeEmailProps) {
+export function contractStatusChangeEmail(
+  props: ContractStatusChangeEmailProps
+) {
   const {
     recipientName,
     contractNumber,
@@ -24,16 +26,19 @@ export function contractStatusChangeEmail(props: ContractStatusChangeEmailProps)
   // Status color mapping
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
-    if (statusLower.includes('approved') || statusLower.includes('active')) return '#10b981';
+    if (statusLower.includes('approved') || statusLower.includes('active'))
+      return '#10b981';
     if (statusLower.includes('pending')) return '#f59e0b';
-    if (statusLower.includes('rejected') || statusLower.includes('expired')) return '#ef4444';
+    if (statusLower.includes('rejected') || statusLower.includes('expired'))
+      return '#ef4444';
     if (statusLower.includes('draft')) return '#6b7280';
     return '#3b82f6';
   };
 
   const getStatusIcon = (status: string) => {
     const statusLower = status.toLowerCase();
-    if (statusLower.includes('approved') || statusLower.includes('active')) return '✅';
+    if (statusLower.includes('approved') || statusLower.includes('active'))
+      return '✅';
     if (statusLower.includes('pending')) return '⏳';
     if (statusLower.includes('rejected')) return '❌';
     if (statusLower.includes('expired')) return '⚠️';
@@ -114,7 +119,9 @@ export function contractStatusChangeEmail(props: ContractStatusChangeEmailProps)
                           <td style="color: #6b7280; font-size: 14px;">Changed By:</td>
                           <td style="font-weight: 600; font-size: 14px;">${changedBy}</td>
                         </tr>
-                        ${reason ? `
+                        ${
+                          reason
+                            ? `
                         <tr>
                           <td colspan="2" style="padding-top: 15px;">
                             <div style="background: #eff6ff; border-left: 3px solid #3b82f6; padding: 12px; border-radius: 4px;">
@@ -122,28 +129,40 @@ export function contractStatusChangeEmail(props: ContractStatusChangeEmailProps)
                             </div>
                           </td>
                         </tr>
-                        ` : ''}
+                        `
+                            : ''
+                        }
                       </table>
                     </div>
 
-                    ${contractUrl ? `
+                    ${
+                      contractUrl
+                        ? `
                     <div style="text-align: center; margin: 35px 0;">
                       <a href="${contractUrl}" 
                          style="display: inline-block; background: #667eea; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                         View Contract Details
                       </a>
                     </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${newStatus.toLowerCase().includes('approved') ? `
+                    ${
+                      newStatus.toLowerCase().includes('approved')
+                        ? `
                     <div style="background: #d1fae5; border: 2px solid #6ee7b7; padding: 15px; border-radius: 6px; margin-top: 20px;">
                       <p style="margin: 0; color: #065f46; font-weight: 600; font-size: 14px;">
                         🎉 <strong>Congratulations!</strong> Your contract has been approved and is now active.
                       </p>
                     </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
 
-                    ${newStatus.toLowerCase().includes('rejected') ? `
+                    ${
+                      newStatus.toLowerCase().includes('rejected')
+                        ? `
                     <div style="background: #fee2e2; border: 2px solid #fca5a5; padding: 15px; border-radius: 6px; margin-top: 20px;">
                       <p style="margin: 0 0 10px 0; color: #991b1b; font-weight: 600; font-size: 14px;">
                         ℹ️ <strong>Action Required:</strong> Your contract was not approved.
@@ -152,7 +171,9 @@ export function contractStatusChangeEmail(props: ContractStatusChangeEmailProps)
                         Please review the reason above and contact your administrator for next steps.
                       </p>
                     </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                   </td>
                 </tr>
 
@@ -198,4 +219,3 @@ This is an automated notification from SmartPro Contract Management System.
     `,
   };
 }
-

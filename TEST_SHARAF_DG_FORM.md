@@ -3,14 +3,17 @@
 ## ⚡ **Quick Test (Right Now):**
 
 ### **1. Open the Form**
+
 Go to: https://portal.thesmartpro.io/en/contracts/sharaf-dg
 
 ### **2. Open Console**
+
 Press **F12** → Click **Console** tab
 
 ### **3. Check What You See**
 
 #### **✅ Good Signs:**
+
 ```
 ✅ Loaded X promoters, Y clients, Z employers
 ✅ Contract number auto-generated
@@ -18,6 +21,7 @@ Form shows all dropdowns
 ```
 
 #### **❌ Bad Signs:**
+
 ```
 ❌ Failed to load data
 ❌ Supabase client not available
@@ -29,6 +33,7 @@ Form shows all dropdowns
 ## 📝 **Fill Form in This Order:**
 
 ### **Step 1: Select Second Party (Employer) FIRST!**
+
 ```
 Second Party (Employer) *
 ↓ Choose your company
@@ -36,6 +41,7 @@ Second Party (Employer) *
 ```
 
 ### **Step 2: Select Promoter**
+
 ```
 Select Promoter *
 ↓ Dropdown now shows only YOUR company's promoters
@@ -43,18 +49,21 @@ Select Promoter *
 ```
 
 ### **Step 3: Select First Party (Client)**
+
 ```
 First Party (Client) *
 ↓ Choose Sharaf DG
 ```
 
 ### **Step 4: Select Supplier/Brand**
+
 ```
 Supplier/Brand Name *
 ↓ Choose brand (Samsung, LG, etc.)
 ```
 
 ### **Step 5: Fill Contract Details**
+
 ```
 Contract Number: SDG-20250126-XXX (auto-filled)
 Start Date: [select date]
@@ -66,6 +75,7 @@ Work Location: Sharaf DG Mall of Oman
 ### **Step 6: Click "Create Contract"**
 
 Watch console for:
+
 ```
 📝 Form submitted, validating...
 ✅ Validation passed, creating contract...
@@ -80,6 +90,7 @@ Watch console for:
 ### **Check Console for Error Messages:**
 
 #### **Error Type 1: Validation Failed**
+
 ```
 ❌ Validation failed
 Missing Required Fields: Promoter, First Party (Client)
@@ -88,6 +99,7 @@ Missing Required Fields: Promoter, First Party (Client)
 **Solution**: Fill in all missing fields
 
 #### **Error Type 2: Database Error**
+
 ```
 ❌ Database error: {...}
 code: "PGRST204"
@@ -96,6 +108,7 @@ code: "PGRST204"
 **Solution**: Wait for deployment (fixes are being deployed)
 
 #### **Error Type 3: Supabase Error**
+
 ```
 ❌ Supabase client not available
 ```
@@ -103,11 +116,13 @@ code: "PGRST204"
 **Solution**: Check your internet connection and Supabase status
 
 #### **Error Type 4: Silent Failure**
+
 ```
 (No console messages at all)
 ```
 
-**Solution**: 
+**Solution**:
+
 1. Hard refresh: `Ctrl + Shift + R`
 2. Clear cache
 3. Try incognito mode
@@ -117,12 +132,14 @@ code: "PGRST204"
 ## 🔍 **Manual Debug in Console:**
 
 ### **Test 1: Check Form State**
+
 ```javascript
 // Copy and paste in console:
 console.log('Form data:', localStorage.getItem('sharaf-dg-form-draft'));
 ```
 
 ### **Test 2: Check if Button is Clickable**
+
 ```javascript
 // In console:
 const btn = document.querySelector('button[type="submit"]');
@@ -132,6 +149,7 @@ console.log('Loading:', btn?.textContent);
 ```
 
 ### **Test 3: Manually Trigger Validation**
+
 ```javascript
 // In console - this will show what's missing:
 const form = document.querySelector('form');
@@ -184,6 +202,7 @@ Party Data Complete:
 5. **PDF Section** → Shows "Generate PDF" button
 
 ### **Visual Flow:**
+
 ```
 [Create Contract] button clicked
         ↓
@@ -201,12 +220,14 @@ Party Data Complete:
 ## 🔧 **Quick Fixes to Try:**
 
 ### **Fix 1: Hard Refresh**
+
 ```bash
 Ctrl + Shift + R (Windows)
 Cmd + Shift + R (Mac)
 ```
 
 ### **Fix 2: Clear Form and Retry**
+
 ```
 Click "Clear Form" button
 Reload page
@@ -214,6 +235,7 @@ Fill form again
 ```
 
 ### **Fix 3: Incognito Mode**
+
 ```
 Ctrl + Shift + N (Windows)
 Cmd + Shift + N (Mac)
@@ -221,9 +243,10 @@ Login and try form
 ```
 
 ### **Fix 4: Check Promoter Images**
+
 ```sql
 -- Run in Supabase SQL Editor:
-SELECT 
+SELECT
   name_en,
   id_card_url,
   passport_url,
@@ -243,7 +266,7 @@ ORDER BY name_en;
 ## 📊 **What Console Should Show (Success):**
 
 ```
-📝 Form submitted, validating... 
+📝 Form submitted, validating...
 {
   promoter_id: "uuid-here",
   first_party_id: "client-uuid",
@@ -257,7 +280,7 @@ ORDER BY name_en;
 
 ✅ Validation passed, creating contract...
 
-📤 Inserting contract: 
+📤 Inserting contract:
 {
   contract_number: "SDG-20250126-547",
   title: "Sharaf DG Deployment - Ahmed Al-Balushi",
@@ -268,7 +291,7 @@ ORDER BY name_en;
   terms: "{...json...}"
 }
 
-✅ Contract created successfully: 
+✅ Contract created successfully:
 {
   id: "new-uuid",
   contract_number: "SDG-20250126-547",
@@ -297,12 +320,14 @@ Contract SDG-20250126-547 has been saved. Now generate the PDF.
 ## ⏰ **Wait for Deployment**
 
 Current fixes are deploying to production:
+
 - ✅ Database compatibility
 - ✅ Enhanced error logging
 - ✅ Better validation messages
 - ✅ Detailed console output
 
 **After deployment (~2-3 min from last push):**
+
 1. Hard refresh
 2. Try creating contract
 3. Console will show detailed logs
@@ -311,4 +336,3 @@ Current fixes are deploying to production:
 ---
 
 **The enhanced logging is now live - you'll see exactly what's happening when you click the button!** 🔍
-

@@ -92,6 +92,7 @@ Visit your Vercel URL and test:
 Your Contract Management System is now live!
 
 **Need help?** Check:
+
 - `VERCEL_QUICK_START.md` - Quick start guide
 - `VERCEL_DEPLOYMENT_GUIDE.md` - Full documentation
 - `VERCEL_DEPLOYMENT_CHECKLIST.md` - Complete checklist
@@ -100,12 +101,12 @@ Your Contract Management System is now live!
 
 ## 🐛 Quick Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| Build fails | Check environment variables |
-| Can't login | Update Supabase callback URL |
-| PDF fails | Verify Make.com webhook is active |
-| Images broken | Check Supabase storage is public |
+| Problem       | Fix                               |
+| ------------- | --------------------------------- |
+| Build fails   | Check environment variables       |
+| Can't login   | Update Supabase callback URL      |
+| PDF fails     | Verify Make.com webhook is active |
+| Images broken | Check Supabase storage is public  |
 
 ---
 
@@ -127,4 +128,3 @@ After deployment:
 ---
 
 **That's it! You're live! 🚀**
-

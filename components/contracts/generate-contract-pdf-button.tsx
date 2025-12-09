@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Download, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react';
+import {
+  FileText,
+  Download,
+  ExternalLink,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -54,16 +60,23 @@ export function GenerateContractPDFButton({
     setShowRegenerateDialog(false);
 
     try {
-      const response = await fetch(`/api/contracts/${contract.id}/generate-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `/api/contracts/${contract.id}/generate-pdf`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        const errorMessage = error.details || error.message || error.error || 'Failed to generate PDF';
+        const errorMessage =
+          error.details ||
+          error.message ||
+          error.error ||
+          'Failed to generate PDF';
         console.error('PDF generation error response:', error);
         throw new Error(errorMessage);
       }
@@ -71,7 +84,8 @@ export function GenerateContractPDFButton({
       const data = await response.json();
 
       toast.success('PDF Generation Started', {
-        description: 'Your contract PDF is being generated. You\'ll be notified when it\'s ready.',
+        description:
+          "Your contract PDF is being generated. You'll be notified when it's ready.",
       });
 
       // Poll for status updates
@@ -81,7 +95,8 @@ export function GenerateContractPDFButton({
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('Generation Failed', {
-        description: error instanceof Error ? error.message : 'Failed to generate PDF',
+        description:
+          error instanceof Error ? error.message : 'Failed to generate PDF',
       });
     } finally {
       setIsGenerating(false);
@@ -107,7 +122,9 @@ export function GenerateContractPDFButton({
         } else if (updated.pdf_status === 'error') {
           clearInterval(interval);
           toast.error('Generation Failed', {
-            description: updated.pdf_error_message || 'An error occurred during PDF generation.',
+            description:
+              updated.pdf_error_message ||
+              'An error occurred during PDF generation.',
           });
         }
       } catch (error) {
@@ -121,8 +138,8 @@ export function GenerateContractPDFButton({
 
   if (isGeneratingStatus) {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <RefreshCw className="h-4 w-4 animate-spin" />
+      <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+        <RefreshCw className='h-4 w-4 animate-spin' />
         <span>Generating PDF...</span>
       </div>
     );
@@ -130,18 +147,18 @@ export function GenerateContractPDFButton({
 
   if (hasError) {
     return (
-      <div className="flex items-center gap-2">
+      <div className='flex items-center gap-2'>
         <Button
-          variant="outline"
-          size="sm"
+          variant='outline'
+          size='sm'
           onClick={handleGenerate}
           disabled={isGenerating}
         >
-          <RefreshCw className="mr-2 h-4 w-4" />
+          <RefreshCw className='mr-2 h-4 w-4' />
           Retry Generation
         </Button>
-        <div className="flex items-center gap-1 text-sm text-destructive">
-          <AlertCircle className="h-4 w-4" />
+        <div className='flex items-center gap-1 text-sm text-destructive'>
+          <AlertCircle className='h-4 w-4' />
           <span>Failed</span>
         </div>
       </div>
@@ -164,13 +181,14 @@ export function GenerateContractPDFButton({
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/pdf',
+          Accept: 'application/pdf',
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}`;
+        const errorMessage =
+          errorData.error || errorData.message || `HTTP ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -196,7 +214,8 @@ export function GenerateContractPDFButton({
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Download Failed', {
-        description: error instanceof Error ? error.message : 'Failed to download PDF',
+        description:
+          error instanceof Error ? error.message : 'Failed to download PDF',
       });
     }
   };
@@ -204,57 +223,62 @@ export function GenerateContractPDFButton({
   if (hasPDF) {
     return (
       <>
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <Button
-            variant="outline"
-            size="sm"
+            variant='outline'
+            size='sm'
             onClick={() => handleDownloadPDF(contract.pdf_url!)}
             disabled={isGenerating}
           >
-            <Download className="mr-2 h-4 w-4" />
+            <Download className='mr-2 h-4 w-4' />
             Download PDF
           </Button>
 
           {contract.google_drive_url && (
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={() => window.open(contract.google_drive_url!, '_blank')}
             >
-              <ExternalLink className="mr-2 h-4 w-4" />
+              <ExternalLink className='mr-2 h-4 w-4' />
               Open in Drive
             </Button>
           )}
 
           <Button
-            variant="ghost"
-            size="sm"
+            variant='ghost'
+            size='sm'
             onClick={handleGenerate}
             disabled={isGenerating}
           >
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className='mr-2 h-4 w-4' />
             Regenerate
           </Button>
         </div>
 
-        <Dialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
+        <Dialog
+          open={showRegenerateDialog}
+          onOpenChange={setShowRegenerateDialog}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Regenerate Contract PDF?</DialogTitle>
               <DialogDescription>
-                This will create a new PDF and overwrite the existing one. The current PDF will
-                be replaced. This action cannot be undone.
+                This will create a new PDF and overwrite the existing one. The
+                current PDF will be replaced. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => setShowRegenerateDialog(false)}
               >
                 Cancel
               </Button>
               <Button onClick={generatePDF} disabled={isGenerating}>
-                {isGenerating && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                {isGenerating && (
+                  <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
+                )}
                 Yes, Regenerate
               </Button>
             </DialogFooter>
@@ -266,23 +290,22 @@ export function GenerateContractPDFButton({
 
   return (
     <Button
-      variant="default"
-      size="sm"
+      variant='default'
+      size='sm'
       onClick={handleGenerate}
       disabled={isGenerating}
     >
       {isGenerating ? (
         <>
-          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          <RefreshCw className='mr-2 h-4 w-4 animate-spin' />
           Generating...
         </>
       ) : (
         <>
-          <FileText className="mr-2 h-4 w-4" />
+          <FileText className='mr-2 h-4 w-4' />
           Generate PDF
         </>
       )}
     </Button>
   );
 }
-

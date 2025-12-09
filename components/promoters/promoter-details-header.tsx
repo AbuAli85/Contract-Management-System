@@ -5,19 +5,19 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Edit, 
-  Phone, 
-  Mail, 
-  MessageSquare, 
-  Calendar, 
-  MapPin, 
+import {
+  Edit,
+  Phone,
+  Mail,
+  MessageSquare,
+  Calendar,
+  MapPin,
   Star,
   TrendingUp,
   Clock,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -49,7 +49,7 @@ export function PromoterDetailsHeader({
   onCall,
   onEmail,
   onMessage,
-  isAdmin
+  isAdmin,
 }: PromoterDetailsHeaderProps) {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -69,15 +69,15 @@ export function PromoterDetailsHeader({
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle className='h-4 w-4' />;
       case 'inactive':
-        return <XCircle className="h-4 w-4" />;
+        return <XCircle className='h-4 w-4' />;
       case 'warning':
-        return <AlertCircle className="h-4 w-4" />;
+        return <AlertCircle className='h-4 w-4' />;
       case 'critical':
-        return <AlertCircle className="h-4 w-4" />;
+        return <AlertCircle className='h-4 w-4' />;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <Clock className='h-4 w-4' />;
     }
   };
 
@@ -85,8 +85,10 @@ export function PromoterDetailsHeader({
     if (!lastActive) return 'Never';
     const date = new Date(lastActive);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    );
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
@@ -94,59 +96,63 @@ export function PromoterDetailsHeader({
   };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+    <Card className='mb-6'>
+      <CardContent className='p-6'>
+        <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6'>
           {/* Profile Section */}
-          <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage 
-                src={promoter.profile_picture_url} 
+          <div className='flex items-start gap-4'>
+            <Avatar className='h-20 w-20'>
+              <AvatarImage
+                src={promoter.profile_picture_url}
                 alt={promoter.name_en}
-                className="object-cover"
+                className='object-cover'
               />
-              <AvatarFallback className="text-lg font-semibold">
+              <AvatarFallback className='text-lg font-semibold'>
                 {promoter.name_en?.charAt(0) || 'P'}
               </AvatarFallback>
             </Avatar>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900 truncate">
+
+            <div className='flex-1 min-w-0'>
+              <div className='flex items-center gap-3 mb-2'>
+                <h1 className='text-2xl font-bold text-gray-900 truncate'>
                   {promoter.name_en}
                 </h1>
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant='outline'
                   className={`${getStatusColor(promoter.status)} flex items-center gap-1`}
                 >
                   {getStatusIcon(promoter.status)}
                   {promoter.status}
                 </Badge>
               </div>
-              
+
               {promoter.name_ar && (
-                <p className="text-lg text-gray-600 mb-2" dir="rtl">
+                <p className='text-lg text-gray-600 mb-2' dir='rtl'>
                   {promoter.name_ar}
                 </p>
               )}
-              
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+
+              <div className='flex flex-wrap items-center gap-4 text-sm text-gray-500'>
                 {promoter.email && (
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-4 w-4" />
-                    <span className="truncate max-w-[200px]">{promoter.email}</span>
+                  <div className='flex items-center gap-1'>
+                    <Mail className='h-4 w-4' />
+                    <span className='truncate max-w-[200px]'>
+                      {promoter.email}
+                    </span>
                   </div>
                 )}
                 {promoter.phone && (
-                  <div className="flex items-center gap-1">
-                    <Phone className="h-4 w-4" />
+                  <div className='flex items-center gap-1'>
+                    <Phone className='h-4 w-4' />
                     <span>{promoter.phone}</span>
                   </div>
                 )}
                 {promoter.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    <span className="truncate max-w-[150px]">{promoter.location}</span>
+                  <div className='flex items-center gap-1'>
+                    <MapPin className='h-4 w-4' />
+                    <span className='truncate max-w-[150px]'>
+                      {promoter.location}
+                    </span>
                   </div>
                 )}
               </div>
@@ -154,73 +160,73 @@ export function PromoterDetailsHeader({
           </div>
 
           {/* Stats Section */}
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4 min-w-[200px]">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Star className="h-4 w-4 text-yellow-500" />
-                  <span className="text-lg font-semibold">
+          <div className='flex flex-col sm:flex-row lg:flex-col gap-4'>
+            <div className='grid grid-cols-2 gap-4 min-w-[200px]'>
+              <div className='text-center'>
+                <div className='flex items-center justify-center gap-1 mb-1'>
+                  <Star className='h-4 w-4 text-yellow-500' />
+                  <span className='text-lg font-semibold'>
                     {promoter.rating ? promoter.rating.toFixed(1) : 'N/A'}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">Rating</p>
+                <p className='text-xs text-gray-500'>Rating</p>
               </div>
-              
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <TrendingUp className="h-4 w-4 text-blue-500" />
-                  <span className="text-lg font-semibold">
+
+              <div className='text-center'>
+                <div className='flex items-center justify-center gap-1 mb-1'>
+                  <TrendingUp className='h-4 w-4 text-blue-500' />
+                  <span className='text-lg font-semibold'>
                     {formatLastActive(promoter.last_active)}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">Last Active</p>
+                <p className='text-xs text-gray-500'>Last Active</p>
               </div>
             </div>
 
             {/* Quick Actions */}
             {isAdmin && (
-              <div className="flex flex-wrap gap-2">
+              <div className='flex flex-wrap gap-2'>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={onEdit}
-                  className="flex items-center gap-2"
+                  className='flex items-center gap-2'
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className='h-4 w-4' />
                   Edit
                 </Button>
-                
+
                 {promoter.phone && (
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={onCall}
-                    className="flex items-center gap-2"
+                    className='flex items-center gap-2'
                   >
-                    <Phone className="h-4 w-4" />
+                    <Phone className='h-4 w-4' />
                     Call
                   </Button>
                 )}
-                
+
                 {promoter.email && (
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={onEmail}
-                    className="flex items-center gap-2"
+                    className='flex items-center gap-2'
                   >
-                    <Mail className="h-4 w-4" />
+                    <Mail className='h-4 w-4' />
                     Email
                   </Button>
                 )}
-                
+
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={onMessage}
-                  className="flex items-center gap-2"
+                  className='flex items-center gap-2'
                 >
-                  <MessageSquare className="h-4 w-4" />
+                  <MessageSquare className='h-4 w-4' />
                   Message
                 </Button>
               </div>

@@ -7,7 +7,8 @@ const tokens = new Tokens();
  * @returns A CSRF token string
  */
 export function generateCSRFToken(): string {
-  const secret = process.env.CSRF_SECRET || 'default-secret-change-in-production';
+  const secret =
+    process.env.CSRF_SECRET || 'default-secret-change-in-production';
   return tokens.create(secret);
 }
 
@@ -17,7 +18,7 @@ export function generateCSRFToken(): string {
  * @returns True if valid, false otherwise
  */
 export function verifyCSRFToken(token: string): boolean {
-  const secret = process.env.CSRF_SECRET || 'default-secret-change-in-production';
+  const secret =
+    process.env.CSRF_SECRET || 'default-secret-change-in-production';
   return tokens.verify(secret, token);
 }
-

@@ -1,6 +1,6 @@
 /**
  * Automated Reminder Scheduler for Document Expirations
- * 
+ *
  * This service automatically sends reminders at strategic intervals:
  * - 90 days before expiry (early warning)
  * - 30 days before expiry (standard reminder)
@@ -12,7 +12,10 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { sendDocumentExpiryReminder, sendBulkNotifications } from './promoter-notification.service';
+import {
+  sendDocumentExpiryReminder,
+  sendBulkNotifications,
+} from './promoter-notification.service';
 import type { BulkNotificationConfig } from './promoter-notification.service';
 
 export interface ReminderSchedule {
@@ -30,50 +33,50 @@ export const REMINDER_SCHEDULES: ReminderSchedule[] = [
     priority: 'low',
     sendEmail: true,
     sendSms: false,
-    description: 'Early warning - 3 months notice'
+    description: 'Early warning - 3 months notice',
   },
   {
     daysBeforeExpiry: 30,
     priority: 'medium',
     sendEmail: true,
     sendSms: false,
-    description: 'Standard reminder - 1 month notice'
+    description: 'Standard reminder - 1 month notice',
   },
   {
     daysBeforeExpiry: 14,
     priority: 'high',
     sendEmail: true,
     sendSms: false,
-    description: 'Urgent reminder - 2 weeks notice'
+    description: 'Urgent reminder - 2 weeks notice',
   },
   {
     daysBeforeExpiry: 7,
     priority: 'urgent',
     sendEmail: true,
     sendSms: true,
-    description: 'Critical reminder - 1 week notice'
+    description: 'Critical reminder - 1 week notice',
   },
   {
     daysBeforeExpiry: 3,
     priority: 'critical',
     sendEmail: true,
     sendSms: true,
-    description: 'Emergency reminder - 3 days notice'
+    description: 'Emergency reminder - 3 days notice',
   },
   {
     daysBeforeExpiry: 1,
     priority: 'critical',
     sendEmail: true,
     sendSms: true,
-    description: 'Final alert - expires tomorrow'
+    description: 'Final alert - expires tomorrow',
   },
   {
     daysBeforeExpiry: 0,
     priority: 'critical',
     sendEmail: true,
     sendSms: true,
-    description: 'Expiry day alert'
-  }
+    description: 'Expiry day alert',
+  },
 ];
 
 export interface PromoterDocument {
@@ -102,13 +105,17 @@ export interface ReminderResult {
 /**
  * Get all documents that need reminders based on expiry dates
  */
-export async function getDocumentsNeedingReminders(): Promise<PromoterDocument[]> {
+export async function getDocumentsNeedingReminders(): Promise<
+  PromoterDocument[]
+> {
   const supabase = await createClient();
-  
+
   // Get all active promoters with their document information
   const { data: promoters, error } = await supabase
     .from('promoters')
-    .select('id, full_name, email, phone_number, id_card_expiry_date, passport_expiry_date')
+    .select(
+      'id, full_name, email, phone_number, id_card_expiry_date, passport_expiry_date'
+    )
     .eq('status', 'active')
     .not('id_card_expiry_date', 'is', null)
     .or('passport_expiry_date.not.is.null');
@@ -131,7 +138,9 @@ export async function getDocumentsNeedingReminders(): Promise<PromoterDocument[]
     if (promoter.id_card_expiry_date) {
       const expiryDate = new Date(promoter.id_card_expiry_date);
       expiryDate.setHours(0, 0, 0, 0);
-      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntilExpiry = Math.ceil(
+        (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       // Determine status
       let status: 'valid' | 'expiring' | 'expired' | 'critical' = 'valid';
@@ -153,7 +162,7 @@ export async function getDocumentsNeedingReminders(): Promise<PromoterDocument[]
           documentType: 'id_card',
           expiryDate: promoter.id_card_expiry_date,
           daysUntilExpiry,
-          status
+          status,
         });
       }
     }
@@ -162,7 +171,9 @@ export async function getDocumentsNeedingReminders(): Promise<PromoterDocument[]
     if (promoter.passport_expiry_date) {
       const expiryDate = new Date(promoter.passport_expiry_date);
       expiryDate.setHours(0, 0, 0, 0);
-      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntilExpiry = Math.ceil(
+        (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       // Determine status
       let status: 'valid' | 'expiring' | 'expired' | 'critical' = 'valid';
@@ -184,7 +195,7 @@ export async function getDocumentsNeedingReminders(): Promise<PromoterDocument[]
           documentType: 'passport',
           expiryDate: promoter.passport_expiry_date,
           daysUntilExpiry,
-          status
+          status,
         });
       }
     }
@@ -196,7 +207,9 @@ export async function getDocumentsNeedingReminders(): Promise<PromoterDocument[]
 /**
  * Determine if a document should receive a reminder today
  */
-function shouldSendReminderToday(document: PromoterDocument): ReminderSchedule | null {
+function shouldSendReminderToday(
+  document: PromoterDocument
+): ReminderSchedule | null {
   const { daysUntilExpiry } = document;
 
   // For expired documents, send reminder every 7 days
@@ -208,14 +221,18 @@ function shouldSendReminderToday(document: PromoterDocument): ReminderSchedule |
         priority: 'critical',
         sendEmail: true,
         sendSms: true,
-        description: `Overdue by ${daysSinceExpiry} days`
+        description: `Overdue by ${daysSinceExpiry} days`,
       };
     }
     return null;
   }
 
   // Check if today matches any reminder schedule
-  return REMINDER_SCHEDULES.find(schedule => schedule.daysBeforeExpiry === daysUntilExpiry) || null;
+  return (
+    REMINDER_SCHEDULES.find(
+      schedule => schedule.daysBeforeExpiry === daysUntilExpiry
+    ) || null
+  );
 }
 
 /**
@@ -223,7 +240,7 @@ function shouldSendReminderToday(document: PromoterDocument): ReminderSchedule |
  */
 export async function sendAutomatedReminders(): Promise<ReminderResult> {
   console.log('🤖 Starting automated reminder system...');
-  
+
   const result: ReminderResult = {
     success: true,
     totalProcessed: 0,
@@ -232,8 +249,8 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
     details: {
       byPriority: {},
       byDocumentType: {},
-      byStatus: {}
-    }
+      byStatus: {},
+    },
   };
 
   try {
@@ -272,26 +289,36 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
             promoterId: doc.promoterId,
             documentType: doc.documentType,
             expiryDate: doc.expiryDate,
-            daysBeforeExpiry: Math.max(0, doc.daysUntilExpiry)
+            daysBeforeExpiry: Math.max(0, doc.daysUntilExpiry),
           });
 
           if (reminderResult.success) {
             result.remindersSent++;
-            
-            // Update statistics
-            result.details.byPriority[schedule.priority] = (result.details.byPriority[schedule.priority] || 0) + 1;
-            result.details.byDocumentType[doc.documentType] = (result.details.byDocumentType[doc.documentType] || 0) + 1;
-            result.details.byStatus[doc.status] = (result.details.byStatus[doc.status] || 0) + 1;
 
-            console.log(`✅ Sent ${schedule.priority} reminder to ${doc.promoterName} for ${doc.documentType}`);
+            // Update statistics
+            result.details.byPriority[schedule.priority] =
+              (result.details.byPriority[schedule.priority] || 0) + 1;
+            result.details.byDocumentType[doc.documentType] =
+              (result.details.byDocumentType[doc.documentType] || 0) + 1;
+            result.details.byStatus[doc.status] =
+              (result.details.byStatus[doc.status] || 0) + 1;
+
+            console.log(
+              `✅ Sent ${schedule.priority} reminder to ${doc.promoterName} for ${doc.documentType}`
+            );
           } else {
-            result.errors.push(`Failed to send reminder to ${doc.promoterName}: ${reminderResult.error}`);
+            result.errors.push(
+              `Failed to send reminder to ${doc.promoterName}: ${reminderResult.error}`
+            );
             console.error(`❌ Failed to send reminder:`, reminderResult.error);
           }
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        result.errors.push(`Error processing promoter ${promoterId}: ${errorMessage}`);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        result.errors.push(
+          `Error processing promoter ${promoterId}: ${errorMessage}`
+        );
         console.error(`❌ Error processing promoter:`, error);
       }
     }
@@ -301,12 +328,12 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
       totalProcessed: result.totalProcessed,
       remindersSent: result.remindersSent,
       errorCount: result.errors.length,
-      details: result.details
+      details: result.details,
     });
-
   } catch (error) {
     result.success = false;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     result.errors.push(errorMessage);
     console.error('❌ Error in automated reminder system:', error);
   }
@@ -320,7 +347,7 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
  */
 export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
   console.log('🚨 Starting bulk critical reminder system...');
-  
+
   const result: ReminderResult = {
     success: true,
     totalProcessed: 0,
@@ -329,17 +356,19 @@ export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
     details: {
       byPriority: {},
       byDocumentType: {},
-      byStatus: {}
-    }
+      byStatus: {},
+    },
   };
 
   try {
     // Get all documents
     const documents = await getDocumentsNeedingReminders();
-    
+
     // Filter only critical and expired documents
-    const criticalDocuments = documents.filter(doc => 
-      (doc.status === 'critical' || doc.status === 'expired') && doc.promoterEmail
+    const criticalDocuments = documents.filter(
+      doc =>
+        (doc.status === 'critical' || doc.status === 'expired') &&
+        doc.promoterEmail
     );
 
     result.totalProcessed = criticalDocuments.length;
@@ -358,29 +387,34 @@ export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
     const bulkConfig: BulkNotificationConfig = {
       promoterIds: Array.from(promoterGroups.keys()),
       title: 'URGENT: Document Action Required',
-      message: 'One or more of your documents have expired or are expiring very soon. Please take immediate action to renew them.',
+      message:
+        'One or more of your documents have expired or are expiring very soon. Please take immediate action to renew them.',
       priority: 'urgent',
       sendEmail: true,
       sendSms: true,
-      sendInApp: true
+      sendInApp: true,
     };
 
     const bulkResult = await sendBulkNotifications(bulkConfig);
-    
+
     if (bulkResult.success) {
       result.remindersSent = bulkResult.results.filter(r => r.success).length;
-      result.errors = bulkResult.results.filter(r => !r.success).map(r => r.error || 'Unknown error');
-      
-      console.log(`✅ Bulk reminders sent: ${result.remindersSent}/${result.totalProcessed}`);
+      result.errors = bulkResult.results
+        .filter(r => !r.success)
+        .map(r => r.error || 'Unknown error');
+
+      console.log(
+        `✅ Bulk reminders sent: ${result.remindersSent}/${result.totalProcessed}`
+      );
     } else {
       result.success = false;
       const errorMsg = 'Bulk send failed';
       result.errors.push(errorMsg);
     }
-
   } catch (error) {
     result.success = false;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     result.errors.push(errorMessage);
     console.error('❌ Error in bulk critical reminder system:', error);
   }
@@ -393,7 +427,7 @@ export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
  */
 export async function getReminderStatistics() {
   const documents = await getDocumentsNeedingReminders();
-  
+
   const stats = {
     total: documents.length,
     critical: documents.filter(d => d.status === 'critical').length,
@@ -401,16 +435,19 @@ export async function getReminderStatistics() {
     expired: documents.filter(d => d.status === 'expired').length,
     byDocumentType: {
       id_card: documents.filter(d => d.documentType === 'id_card').length,
-      passport: documents.filter(d => d.documentType === 'passport').length
+      passport: documents.filter(d => d.documentType === 'passport').length,
     },
     upcomingReminders: {
       today: documents.filter(d => shouldSendReminderToday(d) !== null).length,
-      thisWeek: documents.filter(d => d.daysUntilExpiry >= 0 && d.daysUntilExpiry <= 7).length,
-      thisMonth: documents.filter(d => d.daysUntilExpiry >= 0 && d.daysUntilExpiry <= 30).length
+      thisWeek: documents.filter(
+        d => d.daysUntilExpiry >= 0 && d.daysUntilExpiry <= 7
+      ).length,
+      thisMonth: documents.filter(
+        d => d.daysUntilExpiry >= 0 && d.daysUntilExpiry <= 30
+      ).length,
     },
-    missingContact: documents.filter(d => !d.promoterEmail).length
+    missingContact: documents.filter(d => !d.promoterEmail).length,
   };
 
   return stats;
 }
-

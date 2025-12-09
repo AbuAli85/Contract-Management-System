@@ -25,7 +25,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Download, FileSpreadsheet, FileJson, FileText, Loader2 } from 'lucide-react';
+import {
+  Download,
+  FileSpreadsheet,
+  FileJson,
+  FileText,
+  Loader2,
+} from 'lucide-react';
 import type { DashboardPromoter } from './types';
 
 interface EnhancedBulkExportDialogProps {
@@ -70,7 +76,7 @@ export function EnhancedBulkExportDialog({
   const [options, setOptions] = useState<ExportOptions>({
     format: 'csv',
     includeFields: new Set(
-      AVAILABLE_FIELDS.filter((f) => f.default).map((f) => f.id)
+      AVAILABLE_FIELDS.filter(f => f.default).map(f => f.id)
     ),
     includeAll: selectedIds ? false : true,
     dateFormat: 'locale',
@@ -78,7 +84,7 @@ export function EnhancedBulkExportDialog({
 
   const dataToExport = options.includeAll
     ? promoters
-    : promoters.filter((p) => selectedIds?.includes(p.id));
+    : promoters.filter(p => selectedIds?.includes(p.id));
 
   const handleFieldToggle = (fieldId: string, checked: boolean) => {
     const newFields = new Set(options.includeFields);
@@ -93,7 +99,7 @@ export function EnhancedBulkExportDialog({
   const handleSelectAllFields = () => {
     setOptions({
       ...options,
-      includeFields: new Set(AVAILABLE_FIELDS.map((f) => f.id)),
+      includeFields: new Set(AVAILABLE_FIELDS.map(f => f.id)),
     });
   };
 
@@ -122,18 +128,14 @@ export function EnhancedBulkExportDialog({
   };
 
   const prepareDataForExport = () => {
-    return dataToExport.map((promoter) => {
+    return dataToExport.map(promoter => {
       const row: Record<string, any> = {};
 
-      options.includeFields.forEach((fieldId) => {
+      options.includeFields.forEach(fieldId => {
         const value = promoter[fieldId as keyof DashboardPromoter];
 
         // Format dates
-        if (
-          fieldId.includes('date') &&
-          typeof value === 'string' &&
-          value
-        ) {
+        if (fieldId.includes('date') && typeof value === 'string' && value) {
           row[fieldId] = formatDate(value);
         } else {
           row[fieldId] = value ?? '';
@@ -151,9 +153,9 @@ export function EnhancedBulkExportDialog({
     const headers = Array.from(options.includeFields);
     const csv = [
       headers.join(','),
-      ...data.map((row) =>
+      ...data.map(row =>
         headers
-          .map((header) => {
+          .map(header => {
             const value = row[header];
             // Escape quotes and wrap in quotes if contains comma
             const stringValue = String(value ?? '').replace(/"/g, '""');
@@ -179,7 +181,8 @@ export function EnhancedBulkExportDialog({
     // Note: This requires xlsx library
     toast({
       title: 'Excel export',
-      description: 'Excel export requires the xlsx library. Falling back to CSV.',
+      description:
+        'Excel export requires the xlsx library. Falling back to CSV.',
     });
     exportToCSV();
   };
@@ -251,25 +254,25 @@ export function EnhancedBulkExportDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Download className='h-5 w-5' />
             Export Promoters Data
           </DialogTitle>
           <DialogDescription>
-            Export {options.includeAll ? 'all' : selectedIds?.length || 0} promoters
-            with customizable options
+            Export {options.includeAll ? 'all' : selectedIds?.length || 0}{' '}
+            promoters with customizable options
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* Export Format */}
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label>Export Format</Label>
             <Select
               value={options.format}
-              onValueChange={(value) =>
+              onValueChange={value =>
                 setOptions({ ...options, format: value as ExportFormat })
               }
             >
@@ -277,27 +280,27 @@ export function EnhancedBulkExportDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="csv">
-                  <div className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-4 w-4" />
+                <SelectItem value='csv'>
+                  <div className='flex items-center gap-2'>
+                    <FileSpreadsheet className='h-4 w-4' />
                     CSV (Comma Separated Values)
                   </div>
                 </SelectItem>
-                <SelectItem value="json">
-                  <div className="flex items-center gap-2">
-                    <FileJson className="h-4 w-4" />
+                <SelectItem value='json'>
+                  <div className='flex items-center gap-2'>
+                    <FileJson className='h-4 w-4' />
                     JSON (JavaScript Object Notation)
                   </div>
                 </SelectItem>
-                <SelectItem value="excel">
-                  <div className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-4 w-4" />
+                <SelectItem value='excel'>
+                  <div className='flex items-center gap-2'>
+                    <FileSpreadsheet className='h-4 w-4' />
                     Excel (.xlsx)
                   </div>
                 </SelectItem>
-                <SelectItem value="pdf">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
+                <SelectItem value='pdf'>
+                  <div className='flex items-center gap-2'>
+                    <FileText className='h-4 w-4' />
                     PDF (Portable Document Format)
                   </div>
                 </SelectItem>
@@ -306,7 +309,7 @@ export function EnhancedBulkExportDialog({
           </div>
 
           {/* Date Format */}
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label>Date Format</Label>
             <Select
               value={options.dateFormat}
@@ -318,50 +321,52 @@ export function EnhancedBulkExportDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="iso">ISO 8601 (2024-01-15T10:30:00.000Z)</SelectItem>
-                <SelectItem value="locale">Locale (1/15/2024)</SelectItem>
-                <SelectItem value="custom">Custom (15/01/2024)</SelectItem>
+                <SelectItem value='iso'>
+                  ISO 8601 (2024-01-15T10:30:00.000Z)
+                </SelectItem>
+                <SelectItem value='locale'>Locale (1/15/2024)</SelectItem>
+                <SelectItem value='custom'>Custom (15/01/2024)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Fields Selection */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
+          <div className='space-y-3'>
+            <div className='flex items-center justify-between'>
               <Label>Fields to Include</Label>
-              <div className="flex gap-2">
+              <div className='flex gap-2'>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={handleSelectAllFields}
-                  type="button"
+                  type='button'
                 >
                   Select All
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={handleDeselectAllFields}
-                  type="button"
+                  type='button'
                 >
                   Deselect All
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 border rounded-lg">
-              {AVAILABLE_FIELDS.map((field) => (
-                <div key={field.id} className="flex items-center space-x-2">
+            <div className='grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 border rounded-lg'>
+              {AVAILABLE_FIELDS.map(field => (
+                <div key={field.id} className='flex items-center space-x-2'>
                   <Checkbox
                     id={field.id}
                     checked={options.includeFields.has(field.id)}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={checked =>
                       handleFieldToggle(field.id, checked as boolean)
                     }
                   />
                   <label
                     htmlFor={field.id}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer'
                   >
                     {field.label}
                   </label>
@@ -371,9 +376,9 @@ export function EnhancedBulkExportDialog({
           </div>
 
           {/* Summary */}
-          <div className="rounded-lg bg-muted p-4 text-sm">
-            <p className="font-medium mb-2">Export Summary:</p>
-            <ul className="space-y-1 text-muted-foreground">
+          <div className='rounded-lg bg-muted p-4 text-sm'>
+            <p className='font-medium mb-2'>Export Summary:</p>
+            <ul className='space-y-1 text-muted-foreground'>
               <li>• Records: {dataToExport.length}</li>
               <li>• Fields: {options.includeFields.size}</li>
               <li>• Format: {options.format.toUpperCase()}</li>
@@ -383,18 +388,18 @@ export function EnhancedBulkExportDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isExporting}>
+          <Button variant='outline' onClick={onClose} disabled={isExporting}>
             Cancel
           </Button>
           <Button onClick={handleExport} disabled={isExporting}>
             {isExporting ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                 Exporting...
               </>
             ) : (
               <>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className='h-4 w-4 mr-2' />
                 Export
               </>
             )}
@@ -404,4 +409,3 @@ export function EnhancedBulkExportDialog({
     </Dialog>
   );
 }
-

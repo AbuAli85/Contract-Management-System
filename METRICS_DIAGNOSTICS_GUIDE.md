@@ -1,6 +1,7 @@
 # Metrics Diagnostics Guide
 
 ## Overview
+
 This guide explains how to diagnose and fix metrics display issues in the SmartPro Portal.
 
 ---
@@ -8,6 +9,7 @@ This guide explains how to diagnose and fix metrics display issues in the SmartP
 ## Issue #5: Contradictory Metrics Display
 
 ### Symptoms Observed
+
 1. **Active Workforce vs Awaiting Assignment:**
    - Shows "Active workforce: 171"
    - Also shows "171 awaiting assignment"
@@ -21,6 +23,7 @@ This guide explains how to diagnose and fix metrics display issues in the SmartP
 ### Root Cause Analysis
 
 #### 1. Terminology Confusion
+
 The metrics are using ambiguous terminology:
 
 - **"Active workforce"** likely means promoters with `status = 'active'` in database
@@ -28,6 +31,7 @@ The metrics are using ambiguous terminology:
 - **"Assigned staff"** means promoters currently on active contracts
 
 **Resolution:** These are not contradictory, just poorly labeled. The correct interpretation:
+
 - Total Active: 171
 - Unassigned (available): 171
 - Currently on contracts: 10
@@ -35,6 +39,7 @@ The metrics are using ambiguous terminology:
 This suggests most promoters are in the system but not deployed.
 
 #### 2. Data Consistency Issue
+
 The metrics calculation in `lib/metrics.ts` handles this correctly:
 
 ```typescript
@@ -67,21 +72,25 @@ GET /api/diagnostics/metrics?check=full&format=json
 #### Usage Examples
 
 **1. Full Diagnostics (JSON):**
+
 ```bash
 curl https://portal.thesmartpro.io/api/diagnostics/metrics?check=full
 ```
 
 **2. Full Diagnostics (Markdown Report):**
+
 ```bash
 curl https://portal.thesmartpro.io/api/diagnostics/metrics?check=full&format=markdown
 ```
 
 **3. Validation Only:**
+
 ```bash
 curl https://portal.thesmartpro.io/api/diagnostics/metrics?check=validation
 ```
 
 **4. Consistency Checks Only:**
+
 ```bash
 curl https://portal.thesmartpro.io/api/diagnostics/metrics?check=consistency
 ```
@@ -89,6 +98,7 @@ curl https://portal.thesmartpro.io/api/diagnostics/metrics?check=consistency
 ### Running Diagnostics in Production
 
 **Option 1: Browser Console**
+
 ```javascript
 fetch('/api/diagnostics/metrics?check=full')
   .then(res => res.json())
@@ -102,6 +112,7 @@ fetch('/api/diagnostics/metrics?check=full')
 ```
 
 **Option 2: Download Report**
+
 ```javascript
 fetch('/api/diagnostics/metrics?check=full&format=markdown')
   .then(res => res.text())
@@ -120,12 +131,14 @@ fetch('/api/diagnostics/metrics?check=full&format=markdown')
 #### Fix 1: Update Dashboard Labels (High Priority)
 
 **Before:**
+
 - "Active workforce: 171"
 - "171 awaiting assignment"
 
 **After:**
+
 - "Total Promoters: 171"
-- "Available (unassigned): 161"  
+- "Available (unassigned): 161"
 - "On Active Contracts: 10"
 
 **Implementation:**
@@ -172,19 +185,32 @@ The compliance rate (66%) is calculated based on document validity:
 ```typescript
 // From lib/metrics.ts (lines 465-482)
 promotersData.forEach(promoter => {
-  const idExpiry = promoter.id_card_expiry_date ? new Date(promoter.id_card_expiry_date) : null;
-  const passportExpiry = promoter.passport_expiry_date ? new Date(promoter.passport_expiry_date) : null;
+  const idExpiry = promoter.id_card_expiry_date
+    ? new Date(promoter.id_card_expiry_date)
+    : null;
+  const passportExpiry = promoter.passport_expiry_date
+    ? new Date(promoter.passport_expiry_date)
+    : null;
 
   const idExpired = idExpiry && idExpiry < now;
   const passportExpired = passportExpiry && passportExpiry < now;
-  const idExpiring = idExpiry && idExpiry >= now && idExpiry <= thirtyDaysFromNow;
-  const passportExpiring = passportExpiry && passportExpiry >= now && passportExpiry <= thirtyDaysFromNow;
+  const idExpiring =
+    idExpiry && idExpiry >= now && idExpiry <= thirtyDaysFromNow;
+  const passportExpiring =
+    passportExpiry &&
+    passportExpiry >= now &&
+    passportExpiry <= thirtyDaysFromNow;
 
   if (idExpired || passportExpired) {
     criticalCount++;
   } else if (idExpiring || passportExpiring) {
     expiringCount++;
-  } else if (idExpiry && passportExpiry && idExpiry > thirtyDaysFromNow && passportExpiry > thirtyDaysFromNow) {
+  } else if (
+    idExpiry &&
+    passportExpiry &&
+    idExpiry > thirtyDaysFromNow &&
+    passportExpiry > thirtyDaysFromNow
+  ) {
     compliantCount++;
   }
 });
@@ -202,7 +228,7 @@ This is **independent** of assignment status.
 
 ```sql
 -- Run in Supabase SQL Editor
-SELECT 
+SELECT
   COUNT(*) as total_promoters,
   COUNT(*) FILTER (WHERE status = 'active') as active_promoters
 FROM promoters;
@@ -218,21 +244,21 @@ WHERE status = 'active' AND promoter_id IS NOT NULL;
 -- Promoters with valid documents (not expired, not expiring soon)
 SELECT COUNT(*) as compliant
 FROM promoters
-WHERE 
+WHERE
   id_card_expiry_date > NOW() + INTERVAL '30 days'
   AND passport_expiry_date > NOW() + INTERVAL '30 days';
 
 -- Promoters with expired documents
 SELECT COUNT(*) as critical
 FROM promoters
-WHERE 
+WHERE
   id_card_expiry_date < NOW()
   OR passport_expiry_date < NOW();
 
 -- Promoters with expiring soon documents
 SELECT COUNT(*) as expiring
 FROM promoters
-WHERE 
+WHERE
   (id_card_expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days')
   OR (passport_expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days');
 ```
@@ -245,14 +271,14 @@ fetch('/api/dashboard/promoter-metrics?refresh=true')
   .then(res => res.json())
   .then(data => {
     console.log('Metrics:', data.metrics);
-    
+
     // Verify calculations
     const { active, onAssignments, available } = data.metrics;
     console.assert(
       available === active - onAssignments,
       'Available should equal active minus onAssignments'
     );
-    
+
     console.log('✅ Metrics calculation is correct');
   });
 ```
@@ -264,13 +290,14 @@ fetch('/api/dashboard/promoter-metrics?refresh=true')
 ### Set Up Alerts
 
 **1. Metrics Validation Alerts:**
+
 ```typescript
 // Add to dashboard component
 useEffect(() => {
   const checkMetrics = async () => {
     const metrics = await getPromoterMetrics();
     const validation = validateMetrics(metrics);
-    
+
     if (!validation.isValid) {
       // Send alert to admin
       await fetch('/api/alerts', {
@@ -283,23 +310,27 @@ useEffect(() => {
       });
     }
   };
-  
+
   checkMetrics();
 }, []);
 ```
 
 **2. Data Consistency Checks:**
+
 ```typescript
 // Run periodically (e.g., every 6 hours)
-setInterval(async () => {
-  const checks = await checkDataConsistency();
-  const failed = checks.filter(c => c.status === 'FAIL');
-  
-  if (failed.length > 0) {
-    console.error('Data consistency check failed:', failed);
-    // Send notification
-  }
-}, 6 * 60 * 60 * 1000);
+setInterval(
+  async () => {
+    const checks = await checkDataConsistency();
+    const failed = checks.filter(c => c.status === 'FAIL');
+
+    if (failed.length > 0) {
+      console.error('Data consistency check failed:', failed);
+      // Send notification
+    }
+  },
+  6 * 60 * 60 * 1000
+);
 ```
 
 ---
@@ -320,6 +351,7 @@ setInterval(async () => {
 ### Expected Behavior
 
 For 181 total promoters:
+
 - **171 active** (status = 'active')
 - **10 inactive** (181 - 171)
 - **10 on assignments** (assigned to active contracts)
@@ -333,6 +365,7 @@ These numbers are **consistent and correct**.
 ## Next Steps
 
 1. **Test diagnostics endpoint:**
+
    ```bash
    curl https://portal.thesmartpro.io/api/diagnostics/metrics?check=full&format=markdown > report.md
    ```
@@ -349,4 +382,3 @@ These numbers are **consistent and correct**.
 
 **Created:** October 29, 2025  
 **Last Updated:** October 29, 2025
-

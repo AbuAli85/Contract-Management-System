@@ -3,6 +3,7 @@
 ## Current Situation
 
 The 3 remaining cases have valid passport images, but:
+
 1. **ahmed khalil**: File has `REAL_PASSPORT` marker instead of passport number in filename
 2. **ahtisham ul haq**: File has wrong name (`vishnu_dathan_binu`) but correct passport number
 3. **vishnu dathan binu**: File has wrong name (`Muhammad_qamar`) but correct passport number
@@ -10,6 +11,7 @@ The 3 remaining cases have valid passport images, but:
 ## The Issue
 
 The verification query is checking for **both** name AND passport number match, but:
+
 - Case 1: Name matches, but passport number not in filename (REAL_PASSPORT)
 - Cases 2 & 3: Passport number matches, but name doesn't match
 
@@ -18,6 +20,7 @@ The verification query is checking for **both** name AND passport number match, 
 ### Option 1: Lenient Validation (Workaround) ✅ RECOMMENDED
 
 Accept these files with lenient validation rules:
+
 - ✅ **ahmed khalil**: Accept REAL_PASSPORT files if name matches
 - ⚠️ **ahtisham ul haq**: Accept if passport number matches (even if name doesn't)
 - ⚠️ **vishnu dathan binu**: Accept if passport number matches (even if name doesn't)
@@ -30,7 +33,7 @@ Accept these files with lenient validation rules:
 
 Rename the files in Supabase storage to have correct names:
 
-1. **ahmed khalil**: 
+1. **ahmed khalil**:
    - Current: `ahmed_khalil_REAL_PASSPORT.png`
    - Rename to: `ahmed_khalil_eg4128603.png`
 
@@ -43,6 +46,7 @@ Rename the files in Supabase storage to have correct names:
    - Rename to: `vishnu_dathan_binu_fd4227081.png`
 
 **How to rename**:
+
 - Go to Supabase Dashboard → Storage → `promoter-documents` bucket
 - Find the file → Click "..." → Rename
 - Update the URL in database after renaming
@@ -67,14 +71,14 @@ The contract generation code will work fine with these URLs. Use lenient validat
 
 ```sql
 -- This accepts files if passport number matches, even if name doesn't
-SELECT 
+SELECT
   name_en,
   passport_url,
-  CASE 
-    WHEN LOWER(passport_url) LIKE '%' || LOWER(REPLACE(name_en, ' ', '_')) || '%' 
+  CASE
+    WHEN LOWER(passport_url) LIKE '%' || LOWER(REPLACE(name_en, ' ', '_')) || '%'
          AND (passport_number IS NULL OR LOWER(passport_url) LIKE '%' || LOWER(passport_number) || '%')
     THEN '✅ Valid'
-    WHEN LOWER(passport_url) LIKE '%real_passport%' 
+    WHEN LOWER(passport_url) LIKE '%real_passport%'
          AND LOWER(passport_url) LIKE '%' || LOWER(REPLACE(name_en, ' ', '_')) || '%'
     THEN '✅ Valid (REAL_PASSPORT)'
     WHEN passport_number IS NOT NULL
@@ -93,11 +97,13 @@ When you have time, rename the files in storage to have correct names. This make
 ## Why This Works
 
 The contract generation code (`app/api/contracts/makecom/generate/route.ts`) validates:
+
 - ✅ URL format (must be valid HTTP/HTTPS URL)
 - ✅ URL accessibility (not a placeholder like NO_PASSPORT)
 - ✅ URL doesn't contain broken image patterns
 
 It does **NOT** validate:
+
 - ❌ Filename content (name/passport number in filename)
 - ❌ File naming conventions
 
@@ -106,6 +112,7 @@ So these URLs will work fine for contract generation, even with wrong filenames.
 ## Final Status
 
 After accepting with lenient validation:
+
 - ✅ **32 valid passport URLs** - All accepted
 - ✅ **Contract generation** - Will work correctly
 - ⚠️ **Data cleanliness** - Files have wrong names (acceptable for now)
@@ -122,4 +129,3 @@ After accepting with lenient validation:
 3. 📝 (Optional) Rename files in storage when convenient
 
 The passport image issue is now **resolved** - all 32 valid URLs will work correctly in contract generation! 🎉
-

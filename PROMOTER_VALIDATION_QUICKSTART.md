@@ -5,7 +5,7 @@
 ✅ **Database Migration** - Adds AI suggestion engine & audit trail  
 ✅ **API Endpoints** - List, suggest, and bulk-assign promoters  
 ✅ **Admin Interface** - Beautiful UI to manage contracts without promoters  
-✅ **Validation Library** - Prevent future contracts without promoters  
+✅ **Validation Library** - Prevent future contracts without promoters
 
 ---
 
@@ -24,6 +24,7 @@ supabase migration up
 ```
 
 **What it does:**
+
 - Creates `promoter_suggestions` table (AI suggestions storage)
 - Creates `contract_promoter_audit` table (change history)
 - Adds 6 database functions for managing promoters
@@ -51,6 +52,7 @@ git push origin main
 1. **Navigate to:** `/en/admin/contracts-without-promoters`
 
 2. **You'll see:**
+
    ```
    ┌─────────────────────────────────────────────┐
    │ Statistics Dashboard                        │
@@ -81,12 +83,12 @@ git push origin main
 
 ### Database Functions (Automatic)
 
-| Function | What It Does | When You Need It |
-|----------|--------------|------------------|
-| `get_contracts_without_promoters()` | Finds contracts missing promoters | Automatic (used by API) |
-| `suggest_promoters_for_contract()` | AI suggestions based on history | Click "Generate" button |
-| `bulk_assign_promoters()` | Assign many at once | Click "Save Assignments" |
-| `get_promoter_assignment_stats()` | Dashboard statistics | Automatic (dashboard) |
+| Function                            | What It Does                      | When You Need It         |
+| ----------------------------------- | --------------------------------- | ------------------------ |
+| `get_contracts_without_promoters()` | Finds contracts missing promoters | Automatic (used by API)  |
+| `suggest_promoters_for_contract()`  | AI suggestions based on history   | Click "Generate" button  |
+| `bulk_assign_promoters()`           | Assign many at once               | Click "Save Assignments" |
+| `get_promoter_assignment_stats()`   | Dashboard statistics              | Automatic (dashboard)    |
 
 ### API Endpoints (Automatic)
 
@@ -104,11 +106,13 @@ PUT  /api/admin/contracts-without-promoters
 ### Admin Interface (Manual)
 
 **Dashboard View:**
+
 - Statistics cards showing completion percentage
 - Filter by priority (high/medium/low)
 - Filter by status (draft/pending/active)
 
 **Assignment View:**
+
 - Checkbox selection for bulk actions
 - AI-powered suggestions with confidence scores
 - One-click "Auto-assign Top Suggestions"
@@ -122,12 +126,14 @@ PUT  /api/admin/contracts-without-promoters
 ### How It Picks Promoters
 
 1. **Historical Match (85% confidence)**
+
    ```
    "This promoter worked with ACME Corp last month"
    → High confidence, good match
    ```
 
 2. **Available Promoter (60% confidence)**
+
    ```
    "This promoter is active and has no current assignments"
    → Medium confidence, available
@@ -171,6 +177,7 @@ From your database queries, you have:
 ```
 
 **Action Plan:**
+
 1. ⚠️ Fix 2 active contracts (immediate)
 2. 📝 Fix or delete 14 draft contracts (when convenient)
 
@@ -183,6 +190,7 @@ From your database queries, you have:
 **Already included!** The validation library warns users but allows saving drafts without promoters.
 
 In your contract form:
+
 ```typescript
 import { validatePromoterRequirement } from '@/lib/validations/contract-promoter-validation';
 
@@ -210,15 +218,16 @@ After fixing all 16 contracts, enable database constraint:
 ```sql
 -- Run this in Supabase SQL Editor
 ALTER TABLE contracts
-ADD CONSTRAINT check_promoter_required 
+ADD CONSTRAINT check_promoter_required
 CHECK (
-    promoter_id IS NOT NULL 
+    promoter_id IS NOT NULL
     OR contract_type IN ('partnership', 'consultancy')
     OR status = 'draft'
 );
 ```
 
 **Effect:**
+
 - ✅ Draft contracts: Can be saved without promoters
 - ✅ Partnership/Consultancy: Don't need promoters
 - ❌ Active/Pending employment contracts: **MUST** have promoters
@@ -229,6 +238,7 @@ CHECK (
 ## 🎨 Screenshots Guide
 
 ### Dashboard View
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  Contracts Without Promoters                            │
@@ -278,19 +288,25 @@ After deployment, verify:
 ## 🆘 Troubleshooting
 
 ### "Permission Denied"
+
 **Fix:** Ensure your user is admin:
+
 ```sql
 UPDATE users SET role = 'admin' WHERE email = 'your-email@example.com';
 ```
 
 ### "No suggestions generated"
+
 **Fix:** Check you have active promoters:
+
 ```sql
 SELECT COUNT(*) FROM promoters WHERE status = 'active';
 ```
+
 If 0, create some promoters first!
 
 ### "Function does not exist"
+
 **Fix:** Migration didn't run. Re-run Step 1.
 
 ---
@@ -303,17 +319,18 @@ After completing these steps:
 ✅ Admin interface will show "No contracts found without promoters"  
 ✅ Future contracts can't be activated without promoters  
 ✅ Audit trail tracks all changes  
-✅ AI suggestions help with future assignments  
+✅ AI suggestions help with future assignments
 
 **Total time:** 10 minutes  
 **Contracts fixed:** 16  
-**Future problems prevented:** ∞  
+**Future problems prevented:** ∞
 
 ---
 
 ## 📚 Full Documentation
 
 For detailed information, see:
+
 - `PROMOTER_VALIDATION_IMPLEMENTATION_GUIDE.md` - Complete guide
 - `supabase/migrations/20251023_add_promoter_validation.sql` - Database code
 - `app/api/admin/contracts-without-promoters/route.ts` - API endpoints
@@ -322,4 +339,3 @@ For detailed information, see:
 ---
 
 **Questions?** Everything is documented, tested, and ready to deploy! 🚀
-

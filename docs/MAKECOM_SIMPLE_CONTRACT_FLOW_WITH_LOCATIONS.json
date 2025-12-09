@@ -1,587 +1,580 @@
 {
-    "name": "Contract Generation - Simple (with Locations)",
-    "description": "Updated Make.com flow for simple contract generation with Arabic and English location fields",
-    "flow": [
-        {
-            "id": 1,
-            "module": "gateway:CustomWebHook",
-            "version": 1,
-            "parameters": {
-                "hook": 2640726,
-                "maxResults": 1
-            },
-            "mapper": {},
-            "metadata": {
-                "designer": {
-                    "x": 0,
-                    "y": 0
-                },
-                "restore": {
-                    "parameters": {
-                        "hook": {
-                            "data": {
-                                "editable": "true"
-                            },
-                            "label": "FetchContract"
-                        }
-                    }
-                },
-                "parameters": [
-                    {
-                        "name": "hook",
-                        "type": "hook:gateway-webhook",
-                        "label": "Webhook",
-                        "required": true
-                    },
-                    {
-                        "name": "maxResults",
-                        "type": "number",
-                        "label": "Maximum number of results"
-                    }
-                ],
-                "interface": [
-                    {
-                        "name": "contract_id",
-                        "type": "text"
-                    },
-                    {
-                        "name": "contract_number",
-                        "type": "text"
-                    },
-                    {
-                        "name": "contract_type",
-                        "type": "text"
-                    },
-                    {
-                        "name": "work_location",
-                        "type": "text",
-                        "label": "Work Location (English)"
-                    },
-                    {
-                        "name": "location_en",
-                        "type": "text",
-                        "label": "Location (English)"
-                    },
-                    {
-                        "name": "location_ar",
-                        "type": "text",
-                        "label": "Location (Arabic)"
-                    }
-                ]
-            }
+  "name": "Contract Generation - Simple (with Locations)",
+  "description": "Updated Make.com flow for simple contract generation with Arabic and English location fields",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 2640726,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
         },
-        {
-            "id": 53,
-            "module": "util:SetVariable2",
-            "version": 1,
-            "parameters": {},
-            "mapper": {
-                "name": "contract_id",
-                "scope": "roundtrip",
-                "value": "{{1.contract_id}}"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 300,
-                    "y": 0
-                },
-                "restore": {
-                    "expect": {
-                        "scope": {
-                            "label": "One cycle"
-                        }
-                    }
-                },
-                "expect": [
-                    {
-                        "name": "name",
-                        "type": "text",
-                        "label": "Variable name",
-                        "required": true
-                    },
-                    {
-                        "name": "scope",
-                        "type": "select",
-                        "label": "Variable lifetime",
-                        "required": true,
-                        "validate": {
-                            "enum": [
-                                "roundtrip",
-                                "execution"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "value",
-                        "type": "any",
-                        "label": "Variable value"
-                    }
-                ],
-                "interface": [
-                    {
-                        "name": "contract_id",
-                        "type": "any",
-                        "label": "contract_id"
-                    }
-                ]
+        "restore": {
+          "parameters": {
+            "hook": {
+              "data": {
+                "editable": "true"
+              },
+              "label": "FetchContract"
             }
+          }
         },
-        {
-            "id": 54,
-            "module": "util:SetVariable2",
-            "version": 1,
-            "parameters": {},
-            "mapper": {
-                "name": "contract_number",
-                "scope": "roundtrip",
-                "value": "{{1.contract_number}}"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 600,
-                    "y": 0
-                },
-                "restore": {
-                    "expect": {
-                        "scope": {
-                            "label": "One cycle"
-                        }
-                    }
-                },
-                "expect": [
-                    {
-                        "name": "name",
-                        "type": "text",
-                        "label": "Variable name",
-                        "required": true
-                    },
-                    {
-                        "name": "scope",
-                        "type": "select",
-                        "label": "Variable lifetime",
-                        "required": true,
-                        "validate": {
-                            "enum": [
-                                "roundtrip",
-                                "execution"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "value",
-                        "type": "any",
-                        "label": "Variable value"
-                    }
-                ],
-                "interface": [
-                    {
-                        "name": "contract_number",
-                        "type": "any",
-                        "label": "contract_number"
-                    }
-                ]
-            }
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ],
+        "interface": [
+          {
+            "name": "contract_id",
+            "type": "text"
+          },
+          {
+            "name": "contract_number",
+            "type": "text"
+          },
+          {
+            "name": "contract_type",
+            "type": "text"
+          },
+          {
+            "name": "work_location",
+            "type": "text",
+            "label": "Work Location (English)"
+          },
+          {
+            "name": "location_en",
+            "type": "text",
+            "label": "Location (English)"
+          },
+          {
+            "name": "location_ar",
+            "type": "text",
+            "label": "Location (Arabic)"
+          }
+        ]
+      }
+    },
+    {
+      "id": 53,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contract_id",
+        "scope": "roundtrip",
+        "value": "{{1.contract_id}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
         },
-        {
-            "id": 57,
-            "module": "supabase:searchRows",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 10479309
-            },
-            "mapper": {
-                "limit": "1",
-                "table": "promoters",
-                "search": [
-                    [
-                        {
-                            "a": "id",
-                            "b": "{{1.promoter_id}}",
-                            "o": "text:eq."
-                        }
-                    ]
-                ]
-            },
-            "metadata": {
-                "designer": {
-                    "x": 900,
-                    "y": 0
-                }
+        "restore": {
+          "expect": {
+            "scope": {
+              "label": "One cycle"
             }
+          }
         },
-        {
-            "id": 58,
-            "module": "supabase:searchRows",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 10479309
-            },
-            "mapper": {
-                "limit": "1",
-                "table": "parties",
-                "search": [
-                    [
-                        {
-                            "a": "id",
-                            "b": "{{1.first_party_id}}",
-                            "o": "text:eq."
-                        }
-                    ]
-                ]
-            },
-            "metadata": {
-                "designer": {
-                    "x": 1200,
-                    "y": 0
-                }
+        "expect": [
+          {
+            "name": "name",
+            "type": "text",
+            "label": "Variable name",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "select",
+            "label": "Variable lifetime",
+            "required": true,
+            "validate": {
+              "enum": ["roundtrip", "execution"]
             }
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "label": "Variable value"
+          }
+        ],
+        "interface": [
+          {
+            "name": "contract_id",
+            "type": "any",
+            "label": "contract_id"
+          }
+        ]
+      }
+    },
+    {
+      "id": 54,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contract_number",
+        "scope": "roundtrip",
+        "value": "{{1.contract_number}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
         },
-        {
-            "id": 59,
-            "module": "supabase:searchRows",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 10479309
-            },
-            "mapper": {
-                "limit": "1",
-                "table": "parties",
-                "search": [
-                    [
-                        {
-                            "a": "id",
-                            "b": "{{1.second_party_id}}",
-                            "o": "text:eq."
-                        }
-                    ]
-                ]
-            },
-            "metadata": {
-                "designer": {
-                    "x": 1500,
-                    "y": 0
-                }
+        "restore": {
+          "expect": {
+            "scope": {
+              "label": "One cycle"
             }
+          }
         },
-        {
-            "id": 55,
-            "module": "util:SetVariables",
-            "version": 1,
-            "parameters": {},
-            "mapper": {
-                "scope": "roundtrip",
-                "variables": [
-                    {
-                        "name": "stored_contract_type",
-                        "value": "{{1.contract_type}}"
-                    },
-                    {
-                        "name": "stored_promoter_id",
-                        "value": "{{1.promoter_id}}"
-                    },
-                    {
-                        "name": "stored_first_party_id",
-                        "value": "{{1.first_party_id}}"
-                    },
-                    {
-                        "name": "stored_second_party_id",
-                        "value": "{{1.second_party_id}}"
-                    },
-                    {
-                        "name": "stored_job_title",
-                        "value": "{{1.job_title}}"
-                    },
-                    {
-                        "name": "stored_department",
-                        "value": "{{1.department}}"
-                    },
-                    {
-                        "name": "stored_work_location",
-                        "value": "{{1.work_location}}"
-                    },
-                    {
-                        "name": "stored_location_en",
-                        "value": "{{ifempty(1.location_en; 1.work_location)}}"
-                    },
-                    {
-                        "name": "stored_location_ar",
-                        "value": "{{ifempty(1.location_ar; 1.work_location)}}"
-                    },
-                    {
-                        "name": "stored_basic_salary",
-                        "value": "{{1.basic_salary}}"
-                    },
-                    {
-                        "name": "stored_contract_start_date",
-                        "value": "{{1.contract_start_date}}"
-                    },
-                    {
-                        "name": "stored_contract_end_date",
-                        "value": "{{1.contract_end_date}}"
-                    },
-                    {
-                        "name": "stored_special_terms",
-                        "value": "{{1.special_terms}}"
-                    },
-                    {
-                        "name": "stored_promoter_id_card_image_url",
-                        "value": "{{1.promoter_id_card_url}}"
-                    },
-                    {
-                        "name": "stored_promoter_passport_image_url",
-                        "value": "{{1.promoter_passport_url}}"
-                    },
-                    {
-                        "name": "stored_promoter_name_en",
-                        "value": "{{1.promoter_name_en}}"
-                    },
-                    {
-                        "name": "stored_promoter_name_ar",
-                        "value": "{{1.promoter_name_ar}}"
-                    },
-                    {
-                        "name": "stored_promoter_mobile_number",
-                        "value": "{{1.promoter_mobile_number}}"
-                    },
-                    {
-                        "name": "stored_promoter_email",
-                        "value": "{{1.promoter_email}}"
-                    },
-                    {
-                        "name": "stored_promoter_id_card_number",
-                        "value": "{{1.promoter_id_card_number}}"
-                    },
-                    {
-                        "name": "stored_first_party_name_ar",
-                        "value": "{{1.first_party_name_ar}}"
-                    },
-                    {
-                        "name": "stored_first_party_name_en",
-                        "value": "{{1.first_party_name_en}}"
-                    },
-                    {
-                        "name": "stored_second_party_name_ar",
-                        "value": "{{1.second_party_name_ar}}"
-                    },
-                    {
-                        "name": "stored_second_party_name_en",
-                        "value": "{{1.second_party_name_en}}"
-                    },
-                    {
-                        "name": "stored_first_party_logo_url",
-                        "value": "{{1.first_party_logo}}"
-                    },
-                    {
-                        "name": "stored_second_party_logo_url",
-                        "value": "{{1.second_party_logo}}"
-                    }
-                ]
-            },
-            "metadata": {
-                "designer": {
-                    "x": 1800,
-                    "y": 0
-                }
+        "expect": [
+          {
+            "name": "name",
+            "type": "text",
+            "label": "Variable name",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "select",
+            "label": "Variable lifetime",
+            "required": true,
+            "validate": {
+              "enum": ["roundtrip", "execution"]
             }
-        },
-        {
-            "id": 4,
-            "module": "google-docs:getADocument",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 8511693
-            },
-            "mapper": {
-                "filter": "image",
-                "select": "dropdown",
-                "document": "/1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a/1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
-                "destination": "drive",
-                "includeTabsContent": false
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2100,
-                    "y": 0
-                }
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "label": "Variable value"
+          }
+        ],
+        "interface": [
+          {
+            "name": "contract_number",
+            "type": "any",
+            "label": "contract_number"
+          }
+        ]
+      }
+    },
+    {
+      "id": 57,
+      "module": "supabase:searchRows",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "limit": "1",
+        "table": "promoters",
+        "search": [
+          [
+            {
+              "a": "id",
+              "b": "{{1.promoter_id}}",
+              "o": "text:eq."
             }
-        },
-        {
-            "id": 5,
-            "module": "util:SetVariable2",
-            "version": 1,
-            "parameters": {},
-            "mapper": {
-                "name": "template_content",
-                "scope": "roundtrip",
-                "value": "{{4.body.content}}"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2400,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 56,
-            "module": "google-docs:createADocumentFromTemplate",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 8511693
-            },
-            "mapper": {
-                "select": "dropdown",
-                "name": "{{1.contract_number}}-{{1.promoter_name_en}}.pdf",
-                "destination": "drive",
-                "from": "drive",
-                "document": "/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
-                "requests": {
-                    "ref_number": "{{1.contract_number}}",
-                    "first_party_name_ar": "{{1.first_party_name_ar}}",
-                    "first_party_crn": "{{1.first_party_crn}}",
-                    "second_party_name_ar": "{{1.second_party_name_ar}}",
-                    "second_party_crn": "{{1.second_party_crn}}",
-                    "promoter_name_ar": "{{1.promoter_name_ar}}",
-                    "id_card_number": "{{1.promoter_id_card_number}}",
-                    "contract_start_date": "{{formatDate(1.contract_start_date; \"DD-MM-YYYY\")}}",
-                    "contract_end_date": "{{formatDate(1.contract_end_date; \"DD-MM-YYYY\")}}",
-                    "first_party_name_en": "{{1.first_party_name_en}}",
-                    "second_party_name_en": "{{1.second_party_name_en}}",
-                    "promoter_name_en": "{{1.promoter_name_en}}",
-                    "location_ar": "{{55.stored_location_ar}}",
-                    "location_en": "{{55.stored_location_en}}"
-                },
-                "image": {
-                    "kix.9n0jtkeyw9ii-t.0": "{{55.stored_first_party_logo_url}}",
-                    "kix.2k5omiotmkl-t.0": "{{55.stored_promoter_id_card_image_url}}",
-                    "kix.4io8vw4k1u1n-t.0": "{{55.stored_promoter_passport_image_url}}"
-                },
-                "folderId": "1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2700,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 8,
-            "module": "google-docs:exportADocument",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 8511693
-            },
-            "mapper": {
-                "document": "{{56.id}}",
-                "mimeType": "application/pdf",
-                "destination": "drive"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 3000,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 9,
-            "module": "supabase:uploadAFile",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 10479309
-            },
-            "mapper": {
-                "upsert": true,
-                "bucketID": "{{var.organization.CONTRACTS_STORAGE_BUCKET}}",
-                "file_data": "{{8.data}}",
-                "file_name": "{{54.contract_number}}-{{55.stored_promoter_name_en}}.pdf"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 3300,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 10,
-            "module": "http:ActionSendData",
-            "version": 3,
-            "parameters": {
-                "handleErrors": true,
-                "useNewZLibDeCompress": true
-            },
-            "mapper": {
-                "ca": "",
-                "qs": [],
-                "url": "{{var.organization.CONTRACTS_API_URL}}/api/webhook/contract-pdf-ready",
-                "data": "{\n  \"contract_id\": \"{{53.contract_id}}\",\n  \"contract_number\": \"{{54.contract_number}}\",\n  \"pdf_url\": \"https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{{54.contract_number}}.pdf\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{56.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": false,\n    \"passport\": false\n  }\n}",
-                "gzip": true,
-                "method": "patch",
-                "headers": [
-                    {
-                        "name": "X-Webhook-Secret",
-                        "value": "{{var.organization.PDF_WEBHOOK_SECRET}}"
-                    },
-                    {
-                        "name": "X-Make-Request-ID",
-                        "value": "{{var.scenario.executionId}}"
-                    },
-                    {
-                        "name": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "timeout": "",
-                "useMtls": false,
-                "authPass": "",
-                "authUser": "",
-                "bodyType": "raw",
-                "contentType": "application/json",
-                "serializeUrl": false,
-                "shareCookies": false,
-                "parseResponse": false,
-                "followRedirect": true,
-                "useQuerystring": false,
-                "followAllRedirects": false,
-                "rejectUnauthorized": true
-            },
-            "metadata": {
-                "designer": {
-                    "x": 3600,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 11,
-            "module": "gateway:WebhookRespond",
-            "version": 1,
-            "parameters": {},
-            "mapper": {
-                "body": "{\n  \"contract_id\": \"{{53.contract_id}}\",\n  \"contract_number\": \"{{54.contract_number}}\",\n  \"pdf_url\": \"https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{{54.contract_number}}.pdf\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{56.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": false,\n    \"passport\": false\n  }\n}",
-                "status": "200",
-                "headers": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ]
-            },
-            "metadata": {
-                "designer": {
-                    "x": 3900,
-                    "y": 0
-                }
-            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
         }
-    ],
-    "notes": [
-        {
-            "title": "Location Fields Update",
-            "content": "Added support for bilingual location fields (location_ar and location_en). These are stored in module 55 with fallback to work_location if not provided, and mapped to the Google Docs template in module 56."
+      }
+    },
+    {
+      "id": 58,
+      "module": "supabase:searchRows",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "limit": "1",
+        "table": "parties",
+        "search": [
+          [
+            {
+              "a": "id",
+              "b": "{{1.first_party_id}}",
+              "o": "text:eq."
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
         }
-    ]
+      }
+    },
+    {
+      "id": 59,
+      "module": "supabase:searchRows",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "limit": "1",
+        "table": "parties",
+        "search": [
+          [
+            {
+              "a": "id",
+              "b": "{{1.second_party_id}}",
+              "o": "text:eq."
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 55,
+      "module": "util:SetVariables",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "scope": "roundtrip",
+        "variables": [
+          {
+            "name": "stored_contract_type",
+            "value": "{{1.contract_type}}"
+          },
+          {
+            "name": "stored_promoter_id",
+            "value": "{{1.promoter_id}}"
+          },
+          {
+            "name": "stored_first_party_id",
+            "value": "{{1.first_party_id}}"
+          },
+          {
+            "name": "stored_second_party_id",
+            "value": "{{1.second_party_id}}"
+          },
+          {
+            "name": "stored_job_title",
+            "value": "{{1.job_title}}"
+          },
+          {
+            "name": "stored_department",
+            "value": "{{1.department}}"
+          },
+          {
+            "name": "stored_work_location",
+            "value": "{{1.work_location}}"
+          },
+          {
+            "name": "stored_location_en",
+            "value": "{{ifempty(1.location_en; 1.work_location)}}"
+          },
+          {
+            "name": "stored_location_ar",
+            "value": "{{ifempty(1.location_ar; 1.work_location)}}"
+          },
+          {
+            "name": "stored_basic_salary",
+            "value": "{{1.basic_salary}}"
+          },
+          {
+            "name": "stored_contract_start_date",
+            "value": "{{1.contract_start_date}}"
+          },
+          {
+            "name": "stored_contract_end_date",
+            "value": "{{1.contract_end_date}}"
+          },
+          {
+            "name": "stored_special_terms",
+            "value": "{{1.special_terms}}"
+          },
+          {
+            "name": "stored_promoter_id_card_image_url",
+            "value": "{{1.promoter_id_card_url}}"
+          },
+          {
+            "name": "stored_promoter_passport_image_url",
+            "value": "{{1.promoter_passport_url}}"
+          },
+          {
+            "name": "stored_promoter_name_en",
+            "value": "{{1.promoter_name_en}}"
+          },
+          {
+            "name": "stored_promoter_name_ar",
+            "value": "{{1.promoter_name_ar}}"
+          },
+          {
+            "name": "stored_promoter_mobile_number",
+            "value": "{{1.promoter_mobile_number}}"
+          },
+          {
+            "name": "stored_promoter_email",
+            "value": "{{1.promoter_email}}"
+          },
+          {
+            "name": "stored_promoter_id_card_number",
+            "value": "{{1.promoter_id_card_number}}"
+          },
+          {
+            "name": "stored_first_party_name_ar",
+            "value": "{{1.first_party_name_ar}}"
+          },
+          {
+            "name": "stored_first_party_name_en",
+            "value": "{{1.first_party_name_en}}"
+          },
+          {
+            "name": "stored_second_party_name_ar",
+            "value": "{{1.second_party_name_ar}}"
+          },
+          {
+            "name": "stored_second_party_name_en",
+            "value": "{{1.second_party_name_en}}"
+          },
+          {
+            "name": "stored_first_party_logo_url",
+            "value": "{{1.first_party_logo}}"
+          },
+          {
+            "name": "stored_second_party_logo_url",
+            "value": "{{1.second_party_logo}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "google-docs:getADocument",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8511693
+      },
+      "mapper": {
+        "filter": "image",
+        "select": "dropdown",
+        "document": "/1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a/1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
+        "destination": "drive",
+        "includeTabsContent": false
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "template_content",
+        "scope": "roundtrip",
+        "value": "{{4.body.content}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 56,
+      "module": "google-docs:createADocumentFromTemplate",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8511693
+      },
+      "mapper": {
+        "select": "dropdown",
+        "name": "{{1.contract_number}}-{{1.promoter_name_en}}.pdf",
+        "destination": "drive",
+        "from": "drive",
+        "document": "/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
+        "requests": {
+          "ref_number": "{{1.contract_number}}",
+          "first_party_name_ar": "{{1.first_party_name_ar}}",
+          "first_party_crn": "{{1.first_party_crn}}",
+          "second_party_name_ar": "{{1.second_party_name_ar}}",
+          "second_party_crn": "{{1.second_party_crn}}",
+          "promoter_name_ar": "{{1.promoter_name_ar}}",
+          "id_card_number": "{{1.promoter_id_card_number}}",
+          "contract_start_date": "{{formatDate(1.contract_start_date; \"DD-MM-YYYY\")}}",
+          "contract_end_date": "{{formatDate(1.contract_end_date; \"DD-MM-YYYY\")}}",
+          "first_party_name_en": "{{1.first_party_name_en}}",
+          "second_party_name_en": "{{1.second_party_name_en}}",
+          "promoter_name_en": "{{1.promoter_name_en}}",
+          "location_ar": "{{55.stored_location_ar}}",
+          "location_en": "{{55.stored_location_en}}"
+        },
+        "image": {
+          "kix.9n0jtkeyw9ii-t.0": "{{55.stored_first_party_logo_url}}",
+          "kix.2k5omiotmkl-t.0": "{{55.stored_promoter_id_card_image_url}}",
+          "kix.4io8vw4k1u1n-t.0": "{{55.stored_promoter_passport_image_url}}"
+        },
+        "folderId": "1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "google-docs:exportADocument",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8511693
+      },
+      "mapper": {
+        "document": "{{56.id}}",
+        "mimeType": "application/pdf",
+        "destination": "drive"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 9,
+      "module": "supabase:uploadAFile",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "upsert": true,
+        "bucketID": "{{var.organization.CONTRACTS_STORAGE_BUCKET}}",
+        "file_data": "{{8.data}}",
+        "file_name": "{{54.contract_number}}-{{55.stored_promoter_name_en}}.pdf"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "{{var.organization.CONTRACTS_API_URL}}/api/webhook/contract-pdf-ready",
+        "data": "{\n  \"contract_id\": \"{{53.contract_id}}\",\n  \"contract_number\": \"{{54.contract_number}}\",\n  \"pdf_url\": \"https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{{54.contract_number}}.pdf\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{56.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": false,\n    \"passport\": false\n  }\n}",
+        "gzip": true,
+        "method": "patch",
+        "headers": [
+          {
+            "name": "X-Webhook-Secret",
+            "value": "{{var.organization.PDF_WEBHOOK_SECRET}}"
+          },
+          {
+            "name": "X-Make-Request-ID",
+            "value": "{{var.scenario.executionId}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3600,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 11,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "body": "{\n  \"contract_id\": \"{{53.contract_id}}\",\n  \"contract_number\": \"{{54.contract_number}}\",\n  \"pdf_url\": \"https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/{{54.contract_number}}.pdf\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{56.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": false,\n    \"passport\": false\n  }\n}",
+        "status": "200",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 3900,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "notes": [
+    {
+      "title": "Location Fields Update",
+      "content": "Added support for bilingual location fields (location_ar and location_en). These are stored in module 55 with fallback to work_location if not provided, and mapped to the Google Docs template in module 56."
+    }
+  ]
 }
-

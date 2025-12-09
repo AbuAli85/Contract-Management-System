@@ -200,13 +200,26 @@ export function SimplifiedNavigation({
                     active && 'bg-accent font-semibold text-accent-foreground',
                     !active && 'text-muted-foreground'
                   )}
-                  title={isCollapsed ? (locale === 'ar' ? item.labelAr : item.label) : (item as any).description}
+                  title={
+                    isCollapsed
+                      ? locale === 'ar'
+                        ? item.labelAr
+                        : item.label
+                      : (item as any).description
+                  }
                 >
                   <Icon className='h-4 w-4 shrink-0' aria-hidden='true' />
                   {!isCollapsed && (
                     <>
-                      <span className='flex-1'>{locale === 'ar' ? item.labelAr : item.label}</span>
-                      {active && <ChevronRight className='h-4 w-4 shrink-0' aria-hidden='true' />}
+                      <span className='flex-1'>
+                        {locale === 'ar' ? item.labelAr : item.label}
+                      </span>
+                      {active && (
+                        <ChevronRight
+                          className='h-4 w-4 shrink-0'
+                          aria-hidden='true'
+                        />
+                      )}
                     </>
                   )}
                 </Link>

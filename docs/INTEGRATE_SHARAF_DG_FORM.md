@@ -25,6 +25,7 @@ supabase db push
 ```
 
 Or via Supabase Dashboard:
+
 1. SQL Editor → New Query
 2. Copy `supabase/migrations/20251026_add_contract_pdf_fields.sql`
 3. Run
@@ -48,6 +49,7 @@ NEXT_PUBLIC_CONTRACTS_STORAGE_BUCKET=contracts
 ```
 
 **How to generate secret:**
+
 ```bash
 # Option 1: Node.js
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -92,9 +94,9 @@ const menuItems = [
       },
       {
         title: 'Sharaf DG Deployment', // NEW
-        href: '/contracts/sharaf-dg',  // NEW
-        icon: Building,                 // NEW
-        badge: 'PDF',                   // NEW
+        href: '/contracts/sharaf-dg', // NEW
+        icon: Building, // NEW
+        badge: 'PDF', // NEW
       },
     ],
   },
@@ -160,18 +162,18 @@ import { createClient } from '@/lib/supabase/server';
 export default async function SharafDGPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     redirect('/login');
   }
-  
+
   // Check if user has permission
   const { data: hasPermission } = await supabase
     .rpc('user_has_permission', {
       p_user_id: user.id,
       p_permission_name: 'contracts:create:all'
     });
-  
+
   if (!hasPermission) {
     return <div>Access Denied</div>;
   }
@@ -209,6 +211,7 @@ export default async function SharafDGPage() {
 ### Step 7: Test End-to-End (10 min)
 
 1. **Navigate to form:**
+
    ```
    http://localhost:3000/contracts/sharaf-dg
    ```
@@ -303,14 +306,14 @@ After integration, verify:
 
 ### What's Different in Sharaf DG Form
 
-| Feature | eXtra | General | Sharaf DG |
-|---------|-------|---------|-----------|
-| Fields | 15 | 30 | 12 |
-| Validation | Basic | Extensive | Medium + Image check |
-| PDF | None | External | ✅ Integrated |
-| Images | No | No | ✅ Required |
-| Status Tracking | No | No | ✅ Real-time |
-| Client | eXtra | Any | Sharaf DG only |
+| Feature         | eXtra | General   | Sharaf DG            |
+| --------------- | ----- | --------- | -------------------- |
+| Fields          | 15    | 30        | 12                   |
+| Validation      | Basic | Extensive | Medium + Image check |
+| PDF             | None  | External  | ✅ Integrated        |
+| Images          | No    | No        | ✅ Required          |
+| Status Tracking | No    | No        | ✅ Real-time         |
+| Client          | eXtra | Any       | Sharaf DG only       |
 
 ### What's Similar
 
@@ -327,6 +330,7 @@ After integration, verify:
 ### Form doesn't show in navigation
 
 **Check:**
+
 1. Navigation component file location
 2. Import statement added
 3. Route path correct
@@ -335,6 +339,7 @@ After integration, verify:
 ### PDF generation fails
 
 **Check:**
+
 1. Environment variables set correctly
 2. Make.com webhook URL is correct
 3. Template ID is correct in Make.com
@@ -344,6 +349,7 @@ After integration, verify:
 ### Images don't embed in PDF
 
 **Check:**
+
 1. Image URLs are publicly accessible
 2. Images are not too large (< 5MB)
 3. Alt text in template is exactly: `ID_CARD_IMAGE` and `PASSPORT_IMAGE`
@@ -385,7 +391,7 @@ curl -X POST http://localhost:3000/api/contracts/YOUR-CONTRACT-ID/generate-pdf
 ✅ Status updates in real-time  
 ✅ Download and Drive links work  
 ✅ Mobile responsive  
-✅ Accessible to correct users  
+✅ Accessible to correct users
 
 ---
 
@@ -394,4 +400,3 @@ curl -X POST http://localhost:3000/api/contracts/YOUR-CONTRACT-ID/generate-pdf
 **Dependencies:** Database migration, Environment variables, Make.com scenario
 
 **Start with Step 1 and proceed sequentially!** 🚀
-

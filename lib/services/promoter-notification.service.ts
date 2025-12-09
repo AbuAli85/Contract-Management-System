@@ -1,8 +1,8 @@
 /**
  * Promoter Notification Service
- * 
+ *
  * Handles sending notifications and reminders to promoters
- * 
+ *
  * Features:
  * - Document expiry reminders
  * - Document requests
@@ -26,7 +26,12 @@ export type NotificationType =
   | 'general_message'
   | 'urgent_alert';
 
-export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'read' | 'archived';
+export type NotificationStatus =
+  | 'pending'
+  | 'sent'
+  | 'failed'
+  | 'read'
+  | 'archived';
 
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -129,10 +134,10 @@ async function sendSMS(
 ): Promise<{ success: boolean; error?: string }> {
   // TODO: Replace with actual SMS service integration
   console.log(`[SMS PLACEHOLDER] To: ${to}, Message: ${message}`);
-  
+
   // Simulate success
   return { success: true };
-  
+
   // Example with Twilio:
   // const twilio = require('twilio');
   // const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -345,12 +350,18 @@ export async function sendNotification(
 
     // Update status based on results
     const allChannelsFailed =
-      (config.sendEmail && !sent.email) &&
-      (config.sendSms && !sent.sms) &&
+      config.sendEmail &&
+      !sent.email &&
+      config.sendSms &&
+      !sent.sms &&
       !sent.inApp;
 
     if (allChannelsFailed) {
-      await updateNotificationStatus(notificationId, 'failed', 'All channels failed');
+      await updateNotificationStatus(
+        notificationId,
+        'failed',
+        'All channels failed'
+      );
       return {
         success: false,
         notificationId,
@@ -383,7 +394,7 @@ export async function sendDocumentExpiryReminder(
 ): Promise<NotificationResult> {
   const documentName = config.documentType.replace('_', ' ').toUpperCase();
   const expiryDate = new Date(config.expiryDate).toLocaleDateString();
-  
+
   const title = `${documentName} Expiring Soon`;
   const message = `Your ${documentName} will expire on ${expiryDate} (in ${config.daysBeforeExpiry} days). Please renew it as soon as possible to avoid any service interruptions.`;
 
@@ -412,7 +423,7 @@ export async function sendDocumentRequest(
   config: DocumentRequestConfig
 ): Promise<NotificationResult> {
   const documentName = config.documentType.replace('_', ' ').toUpperCase();
-  
+
   let message = `We need you to submit your ${documentName}.`;
   if (config.reason) {
     message += ` Reason: ${config.reason}`;
@@ -532,7 +543,9 @@ export async function checkAndSendExpiryReminders(): Promise<{
     // Fetch promoters with expiring documents
     const { data: promoters, error } = await supabase
       .from('promoters')
-      .select('id, id_card_expiry_date, passport_expiry_date, id_card_url, passport_url')
+      .select(
+        'id, id_card_expiry_date, passport_expiry_date, id_card_url, passport_url'
+      )
       .or(
         `id_card_expiry_date.lte.${ninetyDays.toISOString()},passport_expiry_date.lte.${ninetyDays.toISOString()}`
       )
@@ -723,4 +736,3 @@ export async function getRecentNotifications(
     };
   }
 }
-

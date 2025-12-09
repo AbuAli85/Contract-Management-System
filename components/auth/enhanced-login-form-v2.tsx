@@ -49,7 +49,9 @@ export default function EnhancedLoginFormV2() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'error'>('checking');
+  const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'error'>(
+    'checking'
+  );
   const [rememberMe, setRememberMe] = useState(false);
   const [showErrorHandler, setShowErrorHandler] = useState(false);
   const router = useRouter();
@@ -63,7 +65,7 @@ export default function EnhancedLoginFormV2() {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setApiStatus(data.ready ? 'ready' : 'error');
@@ -123,31 +125,46 @@ export default function EnhancedLoginFormV2() {
       console.log('🔐 Enhanced Login V2 - Email:', formData.email);
 
       // Use session manager for authentication
-      const result = await authSessionManager.signIn(formData.email, formData.password);
+      const result = await authSessionManager.signIn(
+        formData.email,
+        formData.password
+      );
 
       if (!result.success) {
         console.error('🔐 Enhanced Login V2 - Auth error:', result.error);
 
         // Enhanced error handling with detailed error handler
-        if (result.error?.includes('captcha') || result.error?.includes('verification')) {
+        if (
+          result.error?.includes('captcha') ||
+          result.error?.includes('verification')
+        ) {
           setShowErrorHandler(true);
           return;
         }
 
         // Handle specific error types
         if (result.error?.includes('Invalid login credentials')) {
-          setError('Invalid email or password. Please check your credentials and try again.');
+          setError(
+            'Invalid email or password. Please check your credentials and try again.'
+          );
         } else if (result.error?.includes('pending approval')) {
-          setError('Your account is pending approval. Please contact an administrator.');
+          setError(
+            'Your account is pending approval. Please contact an administrator.'
+          );
         } else if (result.error?.includes('deactivated')) {
-          setError('Your account has been deactivated. Please contact an administrator.');
+          setError(
+            'Your account has been deactivated. Please contact an administrator.'
+          );
         } else {
           setError(result.error || 'Login failed. Please try again.');
         }
         return;
       }
 
-      console.log('🔐 Enhanced Login V2 - Login successful:', result.session?.user.id);
+      console.log(
+        '🔐 Enhanced Login V2 - Login successful:',
+        result.session?.user.id
+      );
       setSuccess('Login successful! Redirecting...');
 
       if (result.session?.profile) {
@@ -172,7 +189,9 @@ export default function EnhancedLoginFormV2() {
       }
 
       // Determine redirect path based on user role
-      const redirectPath = getRedirectPath(result.session?.profile?.role || 'user');
+      const redirectPath = getRedirectPath(
+        result.session?.profile?.role || 'user'
+      );
 
       // Force refresh the session in AuthProvider to update React context immediately
       console.log('🔐 Forcing auth state refresh...');
@@ -180,7 +199,10 @@ export default function EnhancedLoginFormV2() {
         await refreshSession();
         console.log('✅ Auth state refreshed successfully');
       } catch (refreshError) {
-        console.warn('⚠️ Could not refresh session, proceeding anyway:', refreshError);
+        console.warn(
+          '⚠️ Could not refresh session, proceeding anyway:',
+          refreshError
+        );
       }
 
       // Wait longer for session to fully propagate across all contexts
@@ -190,10 +212,15 @@ export default function EnhancedLoginFormV2() {
       }, 1000); // Increased from 500ms to 1000ms for better session propagation
     } catch (error) {
       console.error('🔐 Enhanced Login V2 - Exception:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
       // Show error handler for connection issues
-      if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('connection')) {
+      if (
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('network') ||
+        errorMessage.includes('connection')
+      ) {
         setShowErrorHandler(true);
       } else {
         setError(`Connection error: ${errorMessage}`);
@@ -207,7 +234,7 @@ export default function EnhancedLoginFormV2() {
     setFormData({ email, password });
     setError('');
     setSuccess('');
-    
+
     // Auto-submit after setting form data
     setTimeout(() => {
       const form = document.querySelector('form');
@@ -258,7 +285,10 @@ export default function EnhancedLoginFormV2() {
         }}
         onContactSupport={() => {
           // In a real app, this would open a support ticket or contact form
-          window.open('mailto:support@example.com?subject=Login Issue', '_blank');
+          window.open(
+            'mailto:support@example.com?subject=Login Issue',
+            '_blank'
+          );
         }}
       />
     );
@@ -279,11 +309,12 @@ export default function EnhancedLoginFormV2() {
             <Alert variant='destructive'>
               <AlertCircle className='h-4 w-4' />
               <AlertDescription>
-                The authentication service is currently unavailable. Please try again later.
+                The authentication service is currently unavailable. Please try
+                again later.
               </AlertDescription>
             </Alert>
-            <Button 
-              onClick={() => window.location.reload()} 
+            <Button
+              onClick={() => window.location.reload()}
               className='w-full'
               variant='outline'
             >
@@ -307,15 +338,16 @@ export default function EnhancedLoginFormV2() {
             </div>
             <h1 className='text-2xl font-bold text-gray-900'>Welcome Back</h1>
           </div>
-          <p className='text-gray-600'>
-            Sign in to your account to continue
-          </p>
+          <p className='text-gray-600'>Sign in to your account to continue</p>
         </div>
 
         {/* API Status Badge */}
         {apiStatus === 'ready' && (
           <div className='flex justify-center'>
-            <Badge variant='outline' className='bg-green-50 text-green-700 border-green-200'>
+            <Badge
+              variant='outline'
+              className='bg-green-50 text-green-700 border-green-200'
+            >
               <CheckCircle className='mr-1 h-3 w-3' />
               Service Ready
             </Badge>
@@ -399,7 +431,7 @@ export default function EnhancedLoginFormV2() {
                     id='remember'
                     type='checkbox'
                     checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
+                    onChange={e => setRememberMe(e.target.checked)}
                     className='rounded border-gray-300'
                     disabled={loading}
                     aria-label='Remember me'
@@ -431,12 +463,18 @@ export default function EnhancedLoginFormV2() {
               {success && (
                 <Alert className='border-green-200 bg-green-50'>
                   <CheckCircle className='h-4 w-4 text-green-600' />
-                  <AlertDescription className='text-green-800'>{success}</AlertDescription>
+                  <AlertDescription className='text-green-800'>
+                    {success}
+                  </AlertDescription>
                 </Alert>
               )}
 
               {/* Login Button */}
-              <Button type='submit' className='w-full' disabled={loading || apiStatus !== 'ready'}>
+              <Button
+                type='submit'
+                className='w-full'
+                disabled={loading || apiStatus !== 'ready'}
+              >
                 {loading ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -453,49 +491,55 @@ export default function EnhancedLoginFormV2() {
 
             {/* Test accounts are only available in development for testing purposes */}
             {/* They are hidden in production for security reasons */}
-            {process.env.NODE_ENV === 'development' && 
-             process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true' && (
-              <div className='mt-6 pt-6 border-t border-gray-200'>
-                <p className='text-xs text-gray-500 text-center mb-3'>
-                  Quick test accounts for development:
-                </p>
-                <div className='grid grid-cols-1 gap-2'>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    size='sm'
-                    onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
-                    disabled={loading}
-                    className='text-xs'
-                  >
-                    <User className='mr-1 h-3 w-3' />
-                    Test Provider
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    size='sm'
-                    onClick={() => quickLogin('client@test.com', 'TestPass123!')}
-                    disabled={loading}
-                    className='text-xs'
-                  >
-                    <User className='mr-1 h-3 w-3' />
-                    Test Client
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    size='sm'
-                    onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
-                    disabled={loading}
-                    className='text-xs'
-                  >
-                    <User className='mr-1 h-3 w-3' />
-                    Test Admin
-                  </Button>
+            {process.env.NODE_ENV === 'development' &&
+              process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true' && (
+                <div className='mt-6 pt-6 border-t border-gray-200'>
+                  <p className='text-xs text-gray-500 text-center mb-3'>
+                    Quick test accounts for development:
+                  </p>
+                  <div className='grid grid-cols-1 gap-2'>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      onClick={() =>
+                        quickLogin('provider@test.com', 'TestPass123!')
+                      }
+                      disabled={loading}
+                      className='text-xs'
+                    >
+                      <User className='mr-1 h-3 w-3' />
+                      Test Provider
+                    </Button>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      onClick={() =>
+                        quickLogin('client@test.com', 'TestPass123!')
+                      }
+                      disabled={loading}
+                      className='text-xs'
+                    >
+                      <User className='mr-1 h-3 w-3' />
+                      Test Client
+                    </Button>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      onClick={() =>
+                        quickLogin('admin@test.com', 'TestPass123!')
+                      }
+                      disabled={loading}
+                      className='text-xs'
+                    >
+                      <User className='mr-1 h-3 w-3' />
+                      Test Admin
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </CardContent>
         </Card>
 
@@ -503,7 +547,10 @@ export default function EnhancedLoginFormV2() {
         <div className='text-center text-sm text-gray-500'>
           <p>
             Don't have an account?{' '}
-            <Button variant='link' className='p-0 h-auto text-blue-600 hover:text-blue-800'>
+            <Button
+              variant='link'
+              className='p-0 h-auto text-blue-600 hover:text-blue-800'
+            >
               Contact administrator
             </Button>
           </p>

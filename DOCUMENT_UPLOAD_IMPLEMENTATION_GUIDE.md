@@ -9,6 +9,7 @@
 ## 📋 Overview
 
 Created a complete document upload system with:
+
 - Drag & drop file upload
 - File type validation (PDF, JPG, PNG)
 - File size validation (max 10MB)
@@ -24,6 +25,7 @@ Created a complete document upload system with:
 **Location:** `components/promoters/promoter-document-upload-dialog.tsx`
 
 **Features:**
+
 - ✅ Simple file upload with native input (drag & drop optional)
 - ✅ File type validation (PDF, JPG, PNG only)
 - ✅ File size validation (10MB limit)
@@ -110,7 +112,9 @@ import { PromoterDocumentUploadDialog } from './promoter-document-upload-dialog'
 
 ```typescript
 const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-const [uploadDocumentType, setUploadDocumentType] = useState<'id_card' | 'passport' | null>(null);
+const [uploadDocumentType, setUploadDocumentType] = useState<
+  'id_card' | 'passport' | null
+>(null);
 ```
 
 **Step 3:** Update the upload handler
@@ -135,8 +139,8 @@ const handleDocumentUpload = (type: 'id_card' | 'passport') => {
     promoterId={promoterDetails.id}
     documentType={uploadDocumentType}
     currentDocument={{
-      number: uploadDocumentType === 'id_card' 
-        ? promoterDetails.id_card_number 
+      number: uploadDocumentType === 'id_card'
+        ? promoterDetails.id_card_number
         : promoterDetails.passport_number,
       expiryDate: uploadDocumentType === 'id_card'
         ? promoterDetails.id_card_expiry_date
@@ -209,6 +213,7 @@ onClick={() => {
 ## 🧪 Testing Checklist
 
 ### Basic Upload
+
 - [ ] Can select file by clicking upload area
 - [ ] Can drag & drop file into upload area
 - [ ] File name and size display correctly
@@ -216,6 +221,7 @@ onClick={() => {
 - [ ] Upload button is disabled without file
 
 ### File Validation
+
 - [ ] Accepts PDF files
 - [ ] Accepts JPG/JPEG files
 - [ ] Accepts PNG files
@@ -223,6 +229,7 @@ onClick={() => {
 - [ ] Shows error for invalid file types
 
 ### Document Info
+
 - [ ] Document number input works for ID cards
 - [ ] Document number input works for passports
 - [ ] Expiry date picker works
@@ -230,6 +237,7 @@ onClick={() => {
 - [ ] Minimum date is today's date
 
 ### Upload Process
+
 - [ ] Progress bar shows during upload
 - [ ] Success toast appears after upload
 - [ ] Dialog closes automatically after success
@@ -237,6 +245,7 @@ onClick={() => {
 - [ ] Can replace existing documents
 
 ### Error Handling
+
 - [ ] Shows error if upload fails
 - [ ] Shows error for network issues
 - [ ] Can retry after error
@@ -277,6 +286,7 @@ ADD COLUMN IF NOT EXISTS documents JSONB DEFAULT '{}'::jsonb;
 ### 1. File Upload Security
 
 The component includes:
+
 - ✅ File type validation (whitelist approach)
 - ✅ File size limits (10MB)
 - ✅ Authenticated upload only (Supabase RLS)
@@ -285,6 +295,7 @@ The component includes:
 ### 2. Storage Security
 
 Supabase Storage policies ensure:
+
 - ✅ Only authenticated users can upload
 - ✅ Public read access (for viewing documents)
 - ✅ Only owners can update/delete
@@ -304,7 +315,7 @@ await supabase.from('audit_log').insert({
   action: 'document_upload',
   resource_type: 'promoter_document',
   resource_id: promoterId,
-  metadata: { documentType, fileName: file.name }
+  metadata: { documentType, fileName: file.name },
 });
 ```
 
@@ -330,6 +341,7 @@ className="border-primary bg-primary/5"
 ## 📱 Mobile Responsiveness
 
 The component is fully responsive:
+
 - ✅ Works on mobile devices
 - ✅ Touch-friendly drag & drop
 - ✅ Responsive dialog width
@@ -342,6 +354,7 @@ The component is fully responsive:
 ### Issue: "Bucket does not exist"
 
 **Solution:** Create the storage bucket in Supabase dashboard:
+
 1. Go to Storage
 2. Click "Create bucket"
 3. Name: `promoter-documents`
@@ -353,6 +366,7 @@ The component is fully responsive:
 ### Issue: "Policy violation"
 
 **Solution:** Check RLS policies:
+
 ```sql
 -- View existing policies
 SELECT * FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage';
@@ -365,12 +379,13 @@ SELECT * FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage'
 ### Issue: Upload fails silently
 
 **Solution:** Check browser console for errors:
+
 ```javascript
 // Enable verbose Supabase logging
 const supabase = createClient(url, key, {
   auth: {
-    debug: true
-  }
+    debug: true,
+  },
 });
 ```
 
@@ -379,6 +394,7 @@ const supabase = createClient(url, key, {
 ### Issue: File too large errors
 
 **Solution:** Increase Supabase storage limits:
+
 1. Go to Settings > Storage
 2. Increase max file size (default 50MB)
 3. Update component MAX_FILE_SIZE if needed
@@ -390,35 +406,41 @@ const supabase = createClient(url, key, {
 ### Potential Improvements:
 
 1. **Image Compression**
+
    ```typescript
    import imageCompression from 'browser-image-compression';
-   
+
    const compressedFile = await imageCompression(file, {
      maxSizeMB: 1,
-     maxWidthOrHeight: 1920
+     maxWidthOrHeight: 1920,
    });
    ```
 
 2. **PDF Thumbnails**
+
    ```typescript
    import * as pdfjsLib from 'pdfjs-dist';
-   
-   const generateThumbnail = async (pdfFile) => {
+
+   const generateThumbnail = async pdfFile => {
      // Generate thumbnail from first page
    };
    ```
 
 3. **OCR for Document Parsing**
+
    ```typescript
    import Tesseract from 'tesseract.js';
-   
-   const extractDocumentNumber = async (imageFile) => {
-     const { data: { text } } = await Tesseract.recognize(imageFile);
+
+   const extractDocumentNumber = async imageFile => {
+     const {
+       data: { text },
+     } = await Tesseract.recognize(imageFile);
      // Parse document number from text
    };
    ```
 
 4. **Multi-file Upload**
+
    ```typescript
    const onDrop = useCallback((acceptedFiles: File[]) => {
      setFiles(acceptedFiles); // Handle multiple files
@@ -452,6 +474,7 @@ Implementation complete when:
 ## 📞 Support
 
 If you encounter issues:
+
 1. Check browser console for errors
 2. Check Supabase logs
 3. Verify storage bucket exists
@@ -465,11 +488,10 @@ If you encounter issues:
 **Testing Status:** ⏳ Pending Testing
 
 **Next Steps:**
+
 1. Install `react-dropzone` package
 2. Create Supabase storage bucket
 3. Configure storage policies
 4. Integrate component into existing views
 5. Test upload flow
 6. Deploy to production
-
-

@@ -3,6 +3,7 @@
 ## 🚀 New Features At A Glance
 
 ### Data Integrity & Validation
+
 ```typescript
 // Check data integrity
 import { runFullDataIntegrityCheck } from '@/lib/metrics';
@@ -17,17 +18,18 @@ if (!validation.isValid) {
 ```
 
 ### Navigation with Smart Badges
+
 ```tsx
 import { NavigationItem } from '@/components/navigation/NavigationItem';
 import { useNavigationBadges } from '@/hooks/useNavigationBadges';
 
 function MyNav() {
   const { badges } = useNavigationBadges();
-  
+
   return (
     <NavigationItem
-      label="Promoters"
-      href="/promoters"
+      label='Promoters'
+      href='/promoters'
       icon={Users}
       badge={badges.promoters} // Shows critical/expiring counts with tooltip
     />
@@ -36,6 +38,7 @@ function MyNav() {
 ```
 
 ### Form Completion Tracking
+
 ```tsx
 import { useFormCompletion } from '@/hooks/useFormCompletion';
 import { FormCompletionIndicator } from '@/components/forms/FormCompletionIndicator';
@@ -45,9 +48,9 @@ function MyForm() {
   const completion = useFormCompletion({
     formData,
     requiredFields: ['name', 'email', 'phone'],
-    optionalFields: ['address', 'notes']
+    optionalFields: ['address', 'notes'],
   });
-  
+
   return (
     <>
       <FormCompletionIndicator {...completion} showDetails />
@@ -58,15 +61,19 @@ function MyForm() {
 ```
 
 ### Bilingual Support (RTL)
+
 ```tsx
-import { BilingualContainer, BilingualCard } from '@/components/layout/BilingualContainer';
+import {
+  BilingualContainer,
+  BilingualCard,
+} from '@/components/layout/BilingualContainer';
 
 function MyComponent({ locale }) {
   return (
     <BilingualContainer locale={locale}>
       <BilingualCard
         locale={locale}
-        title="عنوان" // Automatically right-aligned for Arabic
+        title='عنوان' // Automatically right-aligned for Arabic
         content={<p>المحتوى</p>}
       />
     </BilingualContainer>
@@ -75,6 +82,7 @@ function MyComponent({ locale }) {
 ```
 
 ### Accessible Components
+
 ```tsx
 import { AccessibleButton } from '@/components/accessibility/AccessibleButton';
 import { AccessibleFormField } from '@/components/accessibility/AccessibleForm';
@@ -83,17 +91,17 @@ function MyUI() {
   return (
     <>
       <AccessibleButton
-        ariaLabel="Save contract"
+        ariaLabel='Save contract'
         icon={Save}
         onClick={handleSave}
-        kbd="⌘S"
+        kbd='⌘S'
       >
         Save
       </AccessibleButton>
-      
+
       <AccessibleFormField
-        id="email"
-        label="Email"
+        id='email'
+        label='Email'
         required
         error={errors.email}
         hint="We'll never share your email"
@@ -106,8 +114,12 @@ function MyUI() {
 ```
 
 ### Keyboard Shortcuts
+
 ```tsx
-import { KeyboardShortcuts, useCommonShortcuts } from '@/components/accessibility/KeyboardShortcuts';
+import {
+  KeyboardShortcuts,
+  useCommonShortcuts,
+} from '@/components/accessibility/KeyboardShortcuts';
 
 function MyApp() {
   const shortcuts = useCommonShortcuts();
@@ -115,15 +127,19 @@ function MyApp() {
   // Ctrl+H: Home
   // /: Focus search
   // ?: Show shortcuts help
-  
+
   return <KeyboardShortcuts shortcuts={shortcuts} />;
 }
 ```
 
 ### Responsive Layout
+
 ```tsx
 import { ResponsiveSidebar } from '@/components/layout/ResponsiveSidebar';
-import { MetricsGrid, ResponsiveContainer } from '@/components/layout/ResponsiveGrid';
+import {
+  MetricsGrid,
+  ResponsiveContainer,
+} from '@/components/layout/ResponsiveGrid';
 
 function Dashboard() {
   return (
@@ -131,7 +147,7 @@ function Dashboard() {
       <ResponsiveSidebar>
         {/* Collapses to hamburger on mobile */}
       </ResponsiveSidebar>
-      
+
       <ResponsiveContainer>
         <MetricsGrid>
           {/* Auto-adjusts: 1 col mobile, 2 tablet, 4 desktop */}
@@ -147,14 +163,15 @@ function Dashboard() {
 ```
 
 ### Global Search
+
 ```tsx
 import { GlobalSearch } from '@/components/search/GlobalSearch';
 
 function Header() {
   return (
-    <GlobalSearch 
-      placeholder="Search contracts, promoters, parties..."
-      onResultSelect={(result) => {
+    <GlobalSearch
+      placeholder='Search contracts, promoters, parties...'
+      onResultSelect={result => {
         console.log('Selected:', result);
       }}
     />
@@ -163,6 +180,7 @@ function Header() {
 ```
 
 ### Real-time Updates
+
 ```tsx
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { RealtimeDashboard } from '@/components/realtime/RealtimeDashboard';
@@ -171,9 +189,9 @@ import { RealtimeDashboard } from '@/components/realtime/RealtimeDashboard';
 function MyComponent() {
   useRealtimeUpdates({
     table: 'contracts',
-    onChange: (payload) => {
+    onChange: payload => {
       refetchData();
-    }
+    },
   });
 }
 
@@ -188,9 +206,13 @@ function Dashboard() {
 ```
 
 ### Performance Optimization
+
 ```tsx
 // Memoized components
-import { MetricCard, DataTableRow } from '@/lib/performance/optimized-components';
+import {
+  MetricCard,
+  DataTableRow,
+} from '@/lib/performance/optimized-components';
 
 // Lazy-loaded heavy components
 import { LazyLineChart, LazyDataTable } from '@/lib/performance/lazy-imports';
@@ -201,9 +223,9 @@ import { OptimizedImage, AvatarImage } from '@/lib/performance/image-loader';
 function MyPage() {
   return (
     <>
-      <MetricCard title="Sales" value={1234} /> {/* Memoized */}
+      <MetricCard title='Sales' value={1234} /> {/* Memoized */}
       <LazyLineChart data={chartData} /> {/* Loaded on demand */}
-      <OptimizedImage src="/logo.png" alt="Logo" width={200} height={50} />
+      <OptimizedImage src='/logo.png' alt='Logo' width={200} height={50} />
     </>
   );
 }
@@ -212,6 +234,7 @@ function MyPage() {
 ## 📊 API Endpoints
 
 ### Badge Counts
+
 ```
 GET /api/navigation/badge-counts
 Returns: {
@@ -223,6 +246,7 @@ Returns: {
 ```
 
 ### Metrics Validation
+
 ```
 GET /api/metrics/validate
 Returns: Full data integrity report (admin only)
@@ -233,6 +257,7 @@ Returns: Validation results
 ```
 
 ### Global Search
+
 ```
 GET /api/search?q=query&limit=5
 Returns: {
@@ -245,6 +270,7 @@ Returns: {
 ## 🎨 Tailwind RTL Classes
 
 Use direction-agnostic classes for RTL support:
+
 ```css
 /* Instead of ml-4 use: */ ms-4  /* margin-start */
 /* Instead of mr-4 use: */ me-4  /* margin-end */
@@ -256,15 +282,15 @@ Use direction-agnostic classes for RTL support:
 
 ## ⌨️ Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+K` or `Cmd+K` | Open global search |
-| `Ctrl+H` or `Cmd+H` | Go to dashboard |
-| `/` | Focus search input |
-| `Shift+?` | Show keyboard shortcuts help |
-| `Esc` | Close modal/dropdown |
-| `↑↓` | Navigate search results |
-| `Enter` | Select search result |
+| Shortcut            | Action                       |
+| ------------------- | ---------------------------- |
+| `Ctrl+K` or `Cmd+K` | Open global search           |
+| `Ctrl+H` or `Cmd+H` | Go to dashboard              |
+| `/`                 | Focus search input           |
+| `Shift+?`           | Show keyboard shortcuts help |
+| `Esc`               | Close modal/dropdown         |
+| `↑↓`                | Navigate search results      |
+| `Enter`             | Select search result         |
 
 ## 🧪 Testing Utilities
 
@@ -300,19 +326,23 @@ xl: '1280px'  // Large desktop
 ✅ Focus management  
 ✅ Color contrast (WCAG AA)  
 ✅ Form validation errors  
-✅ Loading states  
+✅ Loading states
 
 ## 🔧 Configuration
 
 ### Enable Real-time (Supabase)
+
 Realtime is automatically enabled. To use:
+
 1. Ensure Supabase Realtime is enabled in project settings
 2. Subscribe to table changes using `useRealtimeUpdates` hook
 
 ### Enable Search
+
 Search is automatically available. No configuration needed.
 
 ### Enable RTL
+
 1. Set locale to 'ar' in URL: `/ar/dashboard`
 2. Components automatically adjust direction
 
@@ -328,6 +358,7 @@ Search is automatically available. No configuration needed.
 ## 🐛 Troubleshooting
 
 ### Metrics validation fails
+
 ```typescript
 // Check console for validation errors
 const report = await runFullDataIntegrityCheck();
@@ -336,11 +367,13 @@ console.log('Consistency:', report.consistencyChecks);
 ```
 
 ### Real-time not working
+
 1. Check Supabase Realtime is enabled
 2. Check browser console for WebSocket errors
 3. Verify table has RLS policies that allow SELECT
 
 ### Search not returning results
+
 1. Check user has permission to view data
 2. Verify search query is at least 2 characters
 3. Check API route `/api/search` is accessible

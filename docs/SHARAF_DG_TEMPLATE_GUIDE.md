@@ -9,8 +9,9 @@
 ## 🎨 Template Structure
 
 ### Page Setup
+
 - **Size:** A4 (210mm × 297mm)
-- **Margins:** 
+- **Margins:**
   - Top: 2.5cm
   - Bottom: 2.5cm
   - Left: 2.5cm
@@ -199,6 +200,7 @@ EMPLOYEE DEPLOYMENT LETTER
 ### Step 7: Add Borders/Lines
 
 Use horizontal lines to separate sections:
+
 - Insert → Horizontal line
 - Or use underscores: `_______________________`
 
@@ -226,21 +228,21 @@ Colors:
 
 ## 🎯 Placeholder Reference Table
 
-| Placeholder | Data Type | Example | Format |
-|-------------|-----------|---------|--------|
-| `{{first_party_name_ar}}` | Text (RTL) | مجموعة عين الصقر | Arabic |
-| `{{first_party_name_en}}` | Text | Falcon Eye Group | English |
-| `{{second_party_name_ar}}` | Text (RTL) | شرف دي جي | Arabic |
-| `{{second_party_name_en}}` | Text | Sharaf DG | English |
-| `{{promoter_name_ar}}` | Text (RTL) | أحمد محمد | Arabic |
-| `{{promoter_name_en}}` | Text | Ahmad Mohammed | English |
-| `{{id_card_number}}` | Number | 123456789 | As-is |
-| `{{passport_number}}` | Text | A12345678 | As-is |
-| `{{contract_start_date}}` | Date | 01-11-2025 | DD-MM-YYYY |
-| `{{contract_end_date}}` | Date | 31-12-2025 | DD-MM-YYYY |
-| `{{contract_number}}` | Text | SDG-2025-001 | As-is |
-| `{{first_party_crn}}` | Number | 1234567890 | As-is |
-| `{{second_party_crn}}` | Number | 9876543210 | As-is |
+| Placeholder                | Data Type  | Example          | Format     |
+| -------------------------- | ---------- | ---------------- | ---------- |
+| `{{first_party_name_ar}}`  | Text (RTL) | مجموعة عين الصقر | Arabic     |
+| `{{first_party_name_en}}`  | Text       | Falcon Eye Group | English    |
+| `{{second_party_name_ar}}` | Text (RTL) | شرف دي جي        | Arabic     |
+| `{{second_party_name_en}}` | Text       | Sharaf DG        | English    |
+| `{{promoter_name_ar}}`     | Text (RTL) | أحمد محمد        | Arabic     |
+| `{{promoter_name_en}}`     | Text       | Ahmad Mohammed   | English    |
+| `{{id_card_number}}`       | Number     | 123456789        | As-is      |
+| `{{passport_number}}`      | Text       | A12345678        | As-is      |
+| `{{contract_start_date}}`  | Date       | 01-11-2025       | DD-MM-YYYY |
+| `{{contract_end_date}}`    | Date       | 31-12-2025       | DD-MM-YYYY |
+| `{{contract_number}}`      | Text       | SDG-2025-001     | As-is      |
+| `{{first_party_crn}}`      | Number     | 1234567890       | As-is      |
+| `{{second_party_crn}}`     | Number     | 9876543210       | As-is      |
 
 ---
 
@@ -395,4 +397,3 @@ Google Drive
 ---
 
 **Next:** Implement UI components (`CONTRACT_PDF_UI_COMPONENTS.md`)
-

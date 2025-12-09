@@ -6,10 +6,14 @@
 require('dotenv').config({ path: '.env.local' });
 
 const WEBHOOK_SECRET = process.env.MAKE_WEBHOOK_SECRET;
-const WEBHOOK_URL = process.env.MAKECOM_WEBHOOK_URL_SIMPLE || 'https://portal.thesmartpro.io/api/webhook/makecom-simple';
+const WEBHOOK_URL =
+  process.env.MAKECOM_WEBHOOK_URL_SIMPLE ||
+  'https://portal.thesmartpro.io/api/webhook/makecom-simple';
 
 if (!WEBHOOK_SECRET) {
-  console.error('❌ Error: MAKE_WEBHOOK_SECRET environment variable is not set');
+  console.error(
+    '❌ Error: MAKE_WEBHOOK_SECRET environment variable is not set'
+  );
   console.error('Please set it in your .env.local file');
   process.exit(1);
 }
@@ -20,12 +24,15 @@ async function diagnoseWebhook500() {
   // Test 1: Check if webhook is accessible
   console.log('\n🧪 Test 1: Webhook accessibility');
   try {
-    const response = await fetch('https://portal.thesmartpro.io/api/webhook/makecom-simple', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      'https://portal.thesmartpro.io/api/webhook/makecom-simple',
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    });
+    );
 
     const result = await response.json();
     console.log('📊 GET Response Status:', response.status);
@@ -44,19 +51,22 @@ async function diagnoseWebhook500() {
   console.log('\n🧪 Test 2: Minimal payload test');
   try {
     const minimalPayload = {
-      "contract_type": "full-time-permanent",
-      "promoter_id": "f174aa8c-e25d-4432-b365-0148723d12ea"
+      contract_type: 'full-time-permanent',
+      promoter_id: 'f174aa8c-e25d-4432-b365-0148723d12ea',
     };
 
-    const response = await fetch('https://portal.thesmartpro.io/api/webhook/makecom-simple', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Webhook-Secret': WEBHOOK_SECRET,
-        'X-Request-ID': `diagnostic-${Date.now()}`
-      },
-      body: JSON.stringify(minimalPayload)
-    });
+    const response = await fetch(
+      'https://portal.thesmartpro.io/api/webhook/makecom-simple',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Secret': WEBHOOK_SECRET,
+          'X-Request-ID': `diagnostic-${Date.now()}`,
+        },
+        body: JSON.stringify(minimalPayload),
+      }
+    );
 
     const result = await response.json();
     console.log('📊 Minimal Response Status:', response.status);
@@ -76,31 +86,35 @@ async function diagnoseWebhook500() {
   console.log('\n🧪 Test 3: Complete payload test');
   try {
     const completePayload = {
-      "contract_id": `diagnostic-${Date.now()}`,
-      "contract_number": `DIAG-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-      "contract_type": "full-time-permanent",
-      "promoter_id": "f174aa8c-e25d-4432-b365-0148723d12ea",
-      "first_party_id": "4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce",
-      "second_party_id": "a7453123-f814-47a5-b3fa-e119eb5f2da6",
-      "job_title": "promoter",
-      "department": "Sales",
-      "work_location": "seeb",
-      "basic_salary": "250",
-      "contract_start_date": "2025-10-19",
-      "contract_end_date": "2027-10-18",
-      "special_terms": "",
-      "header_logo": "https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/party-logos/extra%20logo1.png"
+      contract_id: `diagnostic-${Date.now()}`,
+      contract_number: `DIAG-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+      contract_type: 'full-time-permanent',
+      promoter_id: 'f174aa8c-e25d-4432-b365-0148723d12ea',
+      first_party_id: '4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce',
+      second_party_id: 'a7453123-f814-47a5-b3fa-e119eb5f2da6',
+      job_title: 'promoter',
+      department: 'Sales',
+      work_location: 'seeb',
+      basic_salary: '250',
+      contract_start_date: '2025-10-19',
+      contract_end_date: '2027-10-18',
+      special_terms: '',
+      header_logo:
+        'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/party-logos/extra%20logo1.png',
     };
 
-    const response = await fetch('https://portal.thesmartpro.io/api/webhook/makecom-simple', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Webhook-Secret': WEBHOOK_SECRET,
-        'X-Request-ID': `diagnostic-complete-${Date.now()}`
-      },
-      body: JSON.stringify(completePayload)
-    });
+    const response = await fetch(
+      'https://portal.thesmartpro.io/api/webhook/makecom-simple',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Secret': WEBHOOK_SECRET,
+          'X-Request-ID': `diagnostic-complete-${Date.now()}`,
+        },
+        body: JSON.stringify(completePayload),
+      }
+    );
 
     const result = await response.json();
     console.log('📊 Complete Response Status:', response.status);
@@ -120,18 +134,21 @@ async function diagnoseWebhook500() {
   // Test 4: Test with invalid webhook secret
   console.log('\n🧪 Test 4: Invalid webhook secret test');
   try {
-    const response = await fetch('https://portal.thesmartpro.io/api/webhook/makecom-simple', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Webhook-Secret': 'invalid-secret',
-        'X-Request-ID': `diagnostic-invalid-${Date.now()}`
-      },
-      body: JSON.stringify({
-        "contract_type": "full-time-permanent",
-        "promoter_id": "f174aa8c-e25d-4432-b365-0148723d12ea"
-      })
-    });
+    const response = await fetch(
+      'https://portal.thesmartpro.io/api/webhook/makecom-simple',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Secret': 'invalid-secret',
+          'X-Request-ID': `diagnostic-invalid-${Date.now()}`,
+        },
+        body: JSON.stringify({
+          contract_type: 'full-time-permanent',
+          promoter_id: 'f174aa8c-e25d-4432-b365-0148723d12ea',
+        }),
+      }
+    );
 
     const result = await response.json();
     console.log('📊 Invalid Secret Response Status:', response.status);
@@ -149,18 +166,21 @@ async function diagnoseWebhook500() {
   // Test 5: Test with missing required fields
   console.log('\n🧪 Test 5: Missing required fields test');
   try {
-    const response = await fetch('https://portal.thesmartpro.io/api/webhook/makecom-simple', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Webhook-Secret': WEBHOOK_SECRET,
-        'X-Request-ID': `diagnostic-missing-${Date.now()}`
-      },
-      body: JSON.stringify({
-        "contract_type": "full-time-permanent"
-        // Missing promoter_id
-      })
-    });
+    const response = await fetch(
+      'https://portal.thesmartpro.io/api/webhook/makecom-simple',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Secret': WEBHOOK_SECRET,
+          'X-Request-ID': `diagnostic-missing-${Date.now()}`,
+        },
+        body: JSON.stringify({
+          contract_type: 'full-time-permanent',
+          // Missing promoter_id
+        }),
+      }
+    );
 
     const result = await response.json();
     console.log('📊 Missing Fields Response Status:', response.status);
@@ -181,32 +201,36 @@ async function testExactFailingPayload() {
   console.log('\n🔍 Testing exact failing payload...');
 
   const failingPayload = {
-    "contract_id": "960531e3406b4336bea96153cf35ce3c",
-    "contract_number": "PAC-Su102025-2159",
-    "contract_type": "full-time-permanent",
-    "promoter_id": "6966eb51-9e0a-483f-8167-e6572e62769f",
-    "first_party_id": "4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce",
-    "second_party_id": "a7453123-f814-47a5-b3fa-e119eb5f2da6",
-    "job_title": "",
-    "department": "",
-    "work_location": "",
-    "basic_salary": "250",
-    "contract_start_date": "2025-10-19",
-    "contract_end_date": "2027-10-18",
-    "special_terms": "",
-    "header_logo": "https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/party-logos/extra%20logo1.png"
+    contract_id: '960531e3406b4336bea96153cf35ce3c',
+    contract_number: 'PAC-Su102025-2159',
+    contract_type: 'full-time-permanent',
+    promoter_id: '6966eb51-9e0a-483f-8167-e6572e62769f',
+    first_party_id: '4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce',
+    second_party_id: 'a7453123-f814-47a5-b3fa-e119eb5f2da6',
+    job_title: '',
+    department: '',
+    work_location: '',
+    basic_salary: '250',
+    contract_start_date: '2025-10-19',
+    contract_end_date: '2027-10-18',
+    special_terms: '',
+    header_logo:
+      'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/party-logos/extra%20logo1.png',
   };
 
   try {
-    const response = await fetch('https://portal.thesmartpro.io/api/webhook/makecom-simple', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Webhook-Secret': WEBHOOK_SECRET,
-        'X-Request-ID': '960531e3406b4336bea96153cf35ce3c'
-      },
-      body: JSON.stringify(failingPayload)
-    });
+    const response = await fetch(
+      'https://portal.thesmartpro.io/api/webhook/makecom-simple',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Secret': WEBHOOK_SECRET,
+          'X-Request-ID': '960531e3406b4336bea96153cf35ce3c',
+        },
+        body: JSON.stringify(failingPayload),
+      }
+    );
 
     const result = await response.json();
     console.log('📊 Exact Failing Payload Response Status:', response.status);
@@ -226,7 +250,7 @@ async function testExactFailingPayload() {
 // Run all diagnostics
 async function runDiagnostics() {
   console.log('🚀 Starting webhook 500 error diagnostics...');
-  
+
   await diagnoseWebhook500();
   await testExactFailingPayload();
 
@@ -237,7 +261,7 @@ async function runDiagnostics() {
   console.log('4. Test authentication');
   console.log('5. Test validation');
   console.log('6. Test exact failing payload');
-  
+
   console.log('\n💡 If all tests pass but Make.com still gets 500:');
   console.log('- Check Make.com webhook secret configuration');
   console.log('- Verify Make.com is sending correct headers');

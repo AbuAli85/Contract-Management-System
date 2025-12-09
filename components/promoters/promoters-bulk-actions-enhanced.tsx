@@ -69,7 +69,8 @@ export function PromotersBulkActionsEnhanced({
             />
             <div className='flex flex-col'>
               <span className='text-sm font-semibold'>
-                {selectedCount} {selectedCount === 1 ? 'promoter' : 'promoters'} selected
+                {selectedCount} {selectedCount === 1 ? 'promoter' : 'promoters'}{' '}
+                selected
               </span>
               <span className='text-xs text-muted-foreground'>
                 of {totalCount} on this page
@@ -83,11 +84,11 @@ export function PromotersBulkActionsEnhanced({
           <div className='flex items-center gap-2 flex-wrap'>
             {/* Send Document Reminders */}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => onBulkAction('send_reminders')}
               disabled={isPerformingAction}
-              className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+              className='hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600'
             >
               {isPerformingAction ? (
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -99,11 +100,11 @@ export function PromotersBulkActionsEnhanced({
 
             {/* Assign to Company */}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => onBulkAction('assign_company')}
               disabled={isPerformingAction}
-              className="hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600"
+              className='hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600'
             >
               <Building2 className='mr-2 h-4 w-4' />
               Assign to Company
@@ -111,11 +112,11 @@ export function PromotersBulkActionsEnhanced({
 
             {/* Export Selected */}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => onBulkAction('export')}
               disabled={isPerformingAction}
-              className="hover:bg-green-50 hover:border-green-200 hover:text-green-600"
+              className='hover:bg-green-50 hover:border-green-200 hover:text-green-600'
             >
               <Download className='mr-2 h-4 w-4' />
               Export
@@ -125,46 +126,50 @@ export function PromotersBulkActionsEnhanced({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   disabled={isPerformingAction}
                 >
                   <MoreHorizontal className='h-4 w-4' />
                   <span className='ml-2 hidden sm:inline'>More</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align='end'>
                 <DropdownMenuLabel>Bulk Operations</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                
+
                 <DropdownMenuItem onClick={() => onBulkAction('update_status')}>
                   <UserCheck className='mr-2 h-4 w-4' />
                   Update Status
                 </DropdownMenuItem>
-                
-                <DropdownMenuItem onClick={() => onBulkAction('request_documents')}>
+
+                <DropdownMenuItem
+                  onClick={() => onBulkAction('request_documents')}
+                >
                   <FileText className='mr-2 h-4 w-4' />
                   Request Documents
                 </DropdownMenuItem>
-                
-                <DropdownMenuItem onClick={() => onBulkAction('send_notification')}>
+
+                <DropdownMenuItem
+                  onClick={() => onBulkAction('send_notification')}
+                >
                   <Send className='mr-2 h-4 w-4' />
                   Send Custom Notification
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuSeparator />
-                
-                <DropdownMenuItem 
+
+                <DropdownMenuItem
                   onClick={() => onBulkAction('archive')}
-                  className="text-amber-600 focus:text-amber-600 focus:bg-amber-50"
+                  className='text-amber-600 focus:text-amber-600 focus:bg-amber-50'
                 >
                   <Archive className='mr-2 h-4 w-4' />
                   Archive Selected
                 </DropdownMenuItem>
-                
-                <DropdownMenuItem 
+
+                <DropdownMenuItem
                   onClick={() => onBulkAction('delete')}
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  className='text-destructive focus:text-destructive focus:bg-destructive/10'
                 >
                   <Trash2 className='mr-2 h-4 w-4' />
                   Delete Selected
@@ -177,10 +182,10 @@ export function PromotersBulkActionsEnhanced({
         {/* Clear Selection */}
         <Button
           variant='ghost'
-          size="sm"
+          size='sm'
           onClick={onClearSelection}
           disabled={isPerformingAction}
-          className="hover:bg-destructive/10 hover:text-destructive"
+          className='hover:bg-destructive/10 hover:text-destructive'
         >
           <X className='mr-2 h-4 w-4' />
           <span className='hidden sm:inline'>Clear</span>
@@ -189,4 +194,3 @@ export function PromotersBulkActionsEnhanced({
     </Card>
   );
 }
-
