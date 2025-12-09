@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, type ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,7 +101,7 @@ interface PromotersFiltersProps {
 
 // Filter preset with icon and count support
 interface EnhancedFilterPreset extends FilterPreset {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   category: 'status' | 'document' | 'assignment';
   count?: number; // Will be populated dynamically
 }
