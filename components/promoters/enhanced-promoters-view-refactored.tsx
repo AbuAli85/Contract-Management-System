@@ -1871,24 +1871,26 @@ function EnhancedPromotersViewRefactoredContent({
         onClose={() => setShowAdvancedExport(false)}
       />
 
-      {/* Enhanced Metrics */}
-      <section aria-labelledby='metrics-heading'>
-        <h2 id='metrics-heading' className='sr-only'>
-          Promoter Statistics
-        </h2>
-        {isLoading ? (
-          <MetricsCardsSkeleton />
-        ) : (
-          <PromotersMetricsCards
-            metrics={metrics}
-            onCardClick={handleMetricCardClick}
-            activeFilter={activeMetricFilter}
-          />
-        )}
-      </section>
+      {/* Enhanced Metrics - Only for Employers/Admins */}
+      {!roleContext.isEmployee && (
+        <section aria-labelledby='metrics-heading'>
+          <h2 id='metrics-heading' className='sr-only'>
+            Promoter Statistics
+          </h2>
+          {isLoading ? (
+            <MetricsCardsSkeleton />
+          ) : (
+            <PromotersMetricsCards
+              metrics={metrics}
+              onCardClick={handleMetricCardClick}
+              activeFilter={activeMetricFilter}
+            />
+          )}
+        </section>
+      )}
 
-      {/* AI-Powered Smart Insights */}
-      {!isLoading && dashboardPromoters.length > 0 && (
+      {/* AI-Powered Smart Insights - Only for Employers/Admins */}
+      {!isLoading && dashboardPromoters.length > 0 && !roleContext.isEmployee && (
         <section aria-labelledby='smart-insights-heading' className='mt-6'>
           <h2 id='smart-insights-heading' className='sr-only'>
             AI-Powered Smart Insights

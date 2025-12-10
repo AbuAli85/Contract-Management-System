@@ -91,6 +91,8 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
   }, []);
 
   // Get available employer IDs
+  const [employers, setEmployers] = useState<Array<{ id: string; name_en: string }>>([]);
+
   const fetchEmployerIds = async () => {
     try {
       const { data } = await supabase
@@ -98,12 +100,17 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
         .select('id, name_en')
         .eq('type', 'Employer')
         .order('name_en');
+      if (data) setEmployers(data);
       return data || [];
     } catch (error) {
       console.error('Error fetching employers:', error);
       return [];
     }
   };
+
+  useEffect(() => {
+    fetchEmployerIds();
+  }, []);
 
   // Determine user's effective role
   const getUserEffectiveRole = (user: User): string => {
@@ -416,15 +423,27 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
             {newRole === 'employer' && (
               <>
                 <div className='space-y-2'>
-                  <Label>Employer ID (UUID)</Label>
+                  <Label>Select Employer</Label>
+                  <Select value={employerId} onValueChange={setEmployerId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select an employer' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employers.map(employer => (
+                        <SelectItem key={employer.id} value={employer.id}>
+                          {employer.name_en}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className='text-xs text-muted-foreground'>
+                    Or enter UUID manually below
+                  </p>
                   <Input
-                    placeholder='Enter employer UUID'
+                    placeholder='Or enter employer UUID manually'
                     value={employerId}
                     onChange={(e) => setEmployerId(e.target.value)}
                   />
-                  <p className='text-xs text-muted-foreground'>
-                    Get from companies/parties table where type = 'Employer'
-                  </p>
                 </div>
 
                 <div className='space-y-2'>
