@@ -64,7 +64,7 @@ interface PromotersTableRowProps {
   isSelected: boolean;
   onSelect: () => void;
   onView: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
   isColumnVisible?: (columnId: string) => boolean;
   onInlineUpdate?:
     | ((promoterId: string, field: string, value: string) => Promise<void>)
@@ -227,7 +227,7 @@ function EnhancedActionsMenu({
         title: '✏️ Opening editor...',
         description: `Ready to edit ${promoter.displayName}'s information.`,
       });
-      onEdit();
+      onEdit?.();
     } catch (error) {
       console.error('Error editing details:', error);
       toast({

@@ -103,8 +103,8 @@ interface PromotersTableProps {
   onSort: (field: SortField) => void;
   onViewModeChange: (mode: 'table' | 'grid' | 'cards' | 'analytics') => void;
   onViewPromoter: (promoter: DashboardPromoter) => void;
-  onEditPromoter: (promoter: DashboardPromoter) => void;
-  onAddPromoter: () => void;
+  onEditPromoter?: (promoter: DashboardPromoter) => void;
+  onAddPromoter?: () => void;
   onResetFilters: () => void;
   onPageChange: (page: number) => void;
   onPartyAssignmentUpdate?: (
@@ -467,7 +467,7 @@ export function PromotersTable({
                             isSelected={selectedPromoters.has(promoter.id)}
                             onSelect={() => onSelectPromoter(promoter.id)}
                             onView={() => onViewPromoter(promoter)}
-                            onEdit={() => onEditPromoter(promoter)}
+                            onEdit={onEditPromoter ? () => onEditPromoter(promoter) : undefined}
                             isColumnVisible={isColumnVisible}
                             onInlineUpdate={onInlineUpdate}
                             enableInlineEdit={enableInlineEdit}
@@ -516,7 +516,7 @@ export function PromotersTable({
                     selectedPromoters={selectedPromoters}
                     onSelectPromoter={onSelectPromoter}
                     onViewPromoter={onViewPromoter}
-                    onEditPromoter={onEditPromoter}
+                    onEditPromoter={onEditPromoter || (() => {})}
                   />
                   {isFetching && promoters.length > 0 && (
                     <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
@@ -542,7 +542,7 @@ export function PromotersTable({
                       selectedPromoters={selectedPromoters}
                       onSelectPromoter={onSelectPromoter}
                       onViewPromoter={onViewPromoter}
-                      onEditPromoter={onEditPromoter}
+                      onEditPromoter={onEditPromoter || (() => {})}
                       {...(onPartyAssignmentUpdate && {
                         onPartyAssignmentUpdate,
                       })}
@@ -553,7 +553,7 @@ export function PromotersTable({
                       selectedPromoters={selectedPromoters}
                       onSelectPromoter={onSelectPromoter}
                       onViewPromoter={onViewPromoter}
-                      onEditPromoter={onEditPromoter}
+                      onEditPromoter={onEditPromoter || (() => {})}
                     />
                   )}
                   {isFetching && promoters.length > 0 && (

@@ -50,6 +50,7 @@ import { PromotersAdvancedExport } from './promoters-advanced-export';
 import { PromotersErrorBoundary } from './promoters-error-boundary';
 import { PromotersAdvancedFilters } from './promoters-advanced-filters';
 import { PromotersEnhancedCharts } from './promoters-enhanced-charts';
+import { RoleContextProvider, useRoleContext } from './promoters-role-context';
 import { Button } from '../ui/button';
 
 interface PromotersResponse {
@@ -308,6 +309,8 @@ async function fetchPromoters(
     assignment?: string;
     sortField?: string;
     sortOrder?: string;
+    employerId?: string | null; // Role-based filtering
+    userId?: string | null; // For employees to see only their own data
   }
 ): Promise<PromotersResponse> {
   console.log(
@@ -336,6 +339,9 @@ async function fetchPromoters(
       params.set('assignment', filters.assignment);
     if (filters?.sortField) params.set('sortField', filters.sortField);
     if (filters?.sortOrder) params.set('sortOrder', filters.sortOrder);
+    // Role-based filtering
+    if (filters?.employerId) params.set('employerId', filters.employerId);
+    if (filters?.userId) params.set('userId', filters.userId);
 
     timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
@@ -1803,18 +1809,31 @@ export function EnhancedPromotersViewRefactored({
           </div>
         </div>
       )}
-      {/* Premium Header */}
+      {/* Role-Based Header */}
       <header>
-        <PromotersPremiumHeader
-          metrics={metrics}
-          promoters={dashboardPromoters}
-          isFetching={isDataFetching}
-          onRefresh={handleRefresh}
-          onAddPromoter={handleAddPromoter}
-          locale={derivedLocale}
-          autoRefreshEnabled={autoRefreshEnabled}
-          onToggleAutoRefresh={setAutoRefreshEnabled}
-        />
+        {roleContext.isEmployee ? (
+          // Employee View - Show their own profile
+          <Card className='shadow-xl border-2 border-primary/20'>
+            <CardHeader className='bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-b-2 border-primary/20'>
+              <CardTitle className='text-2xl font-bold flex items-center gap-3'>
+                <Users className='h-6 w-6 text-primary' />
+                My Profile
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        ) : (
+          // Employer/Admin View - Show full dashboard header
+          <PromotersPremiumHeader
+            metrics={metrics}
+            promoters={dashboardPromoters}
+            isFetching={isDataFetching}
+            onRefresh={handleRefresh}
+            onAddPromoter={roleContext.canCreate ? handleAddPromoter : undefined}
+            locale={derivedLocale}
+            autoRefreshEnabled={autoRefreshEnabled}
+            onToggleAutoRefresh={setAutoRefreshEnabled}
+          />
+        )}
       </header>
 
       {/* Advanced Export Dialog */}
@@ -1897,32 +1916,32 @@ export function EnhancedPromotersViewRefactored({
         showFloating={true}
       />
 
-      {/* Quick Actions Panel */}
-      {!isLoading && (
+      {/* Quick Actions Panel - Only for Employers/Admins */}
+      {!isLoading && !roleContext.isEmployee && (
         <section aria-labelledby='quick-actions-heading' className='mt-6'>
           <h2 id='quick-actions-heading' className='sr-only'>
             Quick Actions
           </h2>
           <PromotersQuickActionsPanel
-            onAddPromoter={handleAddPromoter}
-            onImport={handleImportPromoters}
-            onExport={handleExport}
-            onViewAnalytics={() => setViewMode('analytics')}
-            onSendNotification={() => {
+            onAddPromoter={roleContext.canCreate ? handleAddPromoter : undefined}
+            onImport={roleContext.canCreate ? handleImportPromoters : undefined}
+            onExport={roleContext.canExport ? handleExport : undefined}
+            onViewAnalytics={roleContext.canViewAnalytics ? () => setViewMode('analytics') : undefined}
+            onSendNotification={roleContext.canBulkActions ? () => {
               toast({
                 title: 'Notification Sent',
                 description: `Sending notifications to ${selectedPromoters.size} selected promoters`,
               });
-            }}
-            onScheduleMeeting={() => {
+            } : undefined}
+            onScheduleMeeting={roleContext.canBulkActions ? () => {
               toast({
                 title: 'Meeting Scheduled',
                 description: 'Scheduling meeting with selected promoters',
               });
-            }}
-            onBulkAction={(action) => {
+            } : undefined}
+            onBulkAction={roleContext.canBulkActions ? (action) => {
               handleBulkAction(action);
-            }}
+            } : undefined}
             selectedCount={selectedPromoters.size}
           />
         </section>
@@ -1952,20 +1971,22 @@ export function EnhancedPromotersViewRefactored({
         />
       </section>
 
-      {/* Bulk Actions Bar */}
-      <section aria-labelledby='bulk-actions-heading'>
-        <h2 id='bulk-actions-heading' className='sr-only'>
-          Bulk Actions
-        </h2>
-        <PromotersBulkActions
-          selectedCount={selectedPromoters.size}
-          totalCount={sortedPromoters.length}
-          isPerformingAction={isPerformingBulkAction}
-          onSelectAll={handleSelectAll}
-          onBulkAction={handleBulkAction}
-          onClearSelection={() => setSelectedPromoters(new Set())}
-        />
-      </section>
+          {/* Bulk Actions Bar - Only for Employers/Admins */}
+          {roleContext.canBulkActions && (
+            <section aria-labelledby='bulk-actions-heading'>
+              <h2 id='bulk-actions-heading' className='sr-only'>
+                Bulk Actions
+              </h2>
+              <PromotersBulkActions
+                selectedCount={selectedPromoters.size}
+                totalCount={sortedPromoters.length}
+                isPerformingAction={isPerformingBulkAction}
+                onSelectAll={handleSelectAll}
+                onBulkAction={handleBulkAction}
+                onClearSelection={() => setSelectedPromoters(new Set())}
+              />
+            </section>
+          )}
 
       {/* Main Content */}
       <section aria-labelledby='promoters-content-heading'>
@@ -2219,5 +2240,15 @@ export function EnhancedPromotersViewRefactored({
       </section>
       </main>
     </PromotersErrorBoundary>
+  );
+}
+
+export function EnhancedPromotersViewRefactored({
+  locale,
+}: PromotersViewProps) {
+  return (
+    <RoleContextProvider>
+      <EnhancedPromotersViewRefactoredContent locale={locale} />
+    </RoleContextProvider>
   );
 }
