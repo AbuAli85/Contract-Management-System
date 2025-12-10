@@ -127,7 +127,7 @@ interface PromoterFormProfessionalProps {
 
 export default function PromoterFormProfessional(
   props: PromoterFormProfessionalProps
-) {
+): JSX.Element {
   const { promoterToEdit, onFormSubmit, onCancel } = props;
   const { toast } = useToast();
   const isEditMode = Boolean(promoterToEdit);

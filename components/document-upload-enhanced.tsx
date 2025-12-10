@@ -617,8 +617,9 @@ export default function DocumentUploadEnhanced({
                   e.preventDefault();
                   e.stopPropagation();
                   const files = e.dataTransfer.files;
-                  if (files.length > 0) {
-                    handleFileUpload(files[0], false);
+                  const file = files[0];
+                  if (file) {
+                    handleFileUpload(file, false);
                   }
                 }}
               >
