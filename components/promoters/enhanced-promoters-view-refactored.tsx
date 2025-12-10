@@ -24,6 +24,7 @@ import type {
 
 // Import the new modular components
 import { PromotersHeader } from './promoters-header';
+import { PromotersPremiumHeader } from './promoters-premium-header';
 import { PromotersMetricsCards } from './promoters-metrics-cards';
 import { PromotersFilters } from './promoters-filters';
 import { PromotersBulkActions } from './promoters-bulk-actions';
@@ -1778,9 +1779,9 @@ export function EnhancedPromotersViewRefactored({
           </div>
         </div>
       )}
-      {/* Enhanced Header */}
+      {/* Premium Header */}
       <header>
-        <PromotersHeader
+        <PromotersPremiumHeader
           metrics={metrics}
           promoters={dashboardPromoters}
           isFetching={isDataFetching}

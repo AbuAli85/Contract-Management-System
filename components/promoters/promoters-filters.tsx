@@ -326,24 +326,26 @@ export function PromotersFilters({
   ]);
 
   return (
-    <Card className='sticky top-16 z-50 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/50 overflow-visible border-2 border-slate-200/50 dark:border-slate-700/50'>
-      <CardHeader className='pb-5 overflow-visible bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-800/50 border-b border-slate-200/50 dark:border-slate-700/50'>
-        <div className='flex items-start justify-between gap-4 flex-wrap'>
+    <Card className='sticky top-16 z-50 shadow-2xl bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 overflow-visible border-2 border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm'>
+      <CardHeader className='pb-6 overflow-visible bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-b-2 border-primary/20 relative overflow-hidden'>
+        <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer pointer-events-none opacity-50' />
+        <div className='relative flex items-start justify-between gap-4 flex-wrap'>
           <div className='flex-1 min-w-0 max-w-full'>
-            <CardTitle className='text-xl font-bold flex items-center gap-3 flex-wrap'>
-              <div className='rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-2 border border-primary/20'>
-                <Filter className='h-5 w-5 text-primary flex-shrink-0' />
+            <CardTitle className='text-2xl font-black flex items-center gap-4 flex-wrap'>
+              <div className='rounded-2xl bg-gradient-to-br from-primary/30 via-blue-500/30 to-indigo-500/30 p-3 border-2 border-primary/40 shadow-xl'>
+                <Filter className='h-6 w-6 text-white flex-shrink-0' />
               </div>
-              <span className='whitespace-nowrap bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent'>
-                Advanced Filters
+              <span className='whitespace-nowrap bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-100 dark:to-white bg-clip-text text-transparent'>
+                Advanced Filtering System
               </span>
-              <Badge variant='outline' className='bg-primary/10 text-primary border-primary/20 text-xs font-semibold'>
-                Enterprise
+              <Badge variant='outline' className='bg-gradient-to-r from-primary/20 to-blue-500/20 text-primary border-primary/40 text-xs font-black px-3 py-1 shadow-lg'>
+                <Sparkles className='h-3 w-3 mr-1' />
+                Premium
               </Badge>
             </CardTitle>
-            <CardDescription className='text-sm mt-2 break-words font-medium text-slate-600 dark:text-slate-400'>
+            <CardDescription className='text-base mt-3 break-words font-semibold text-slate-700 dark:text-slate-300'>
               Refine the promoter roster by lifecycle stage, document health, or
-              assignment status with precision filtering.
+              assignment status with precision filtering and AI-powered suggestions.
             </CardDescription>
           </div>
           {hasFiltersApplied && (

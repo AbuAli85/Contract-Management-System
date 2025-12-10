@@ -102,12 +102,13 @@ function EnhancedStatCard({
   return (
     <Card
       className={cn(
-        'shadow-lg overflow-hidden transition-all duration-300 relative border-2',
-        'bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/50',
+        'shadow-2xl overflow-hidden transition-all duration-300 relative border-2',
+        'bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900',
+        'backdrop-blur-sm',
         isClickable &&
-          'cursor-pointer hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98]',
-        !isClickable && 'hover:shadow-xl hover:scale-[1.01]',
-        isActive && 'ring-2 ring-primary ring-offset-2 shadow-2xl border-primary/50',
+          'cursor-pointer hover:shadow-3xl hover:scale-[1.03] hover:-translate-y-2 active:scale-[0.97] hover:border-primary/60',
+        !isClickable && 'hover:shadow-2xl hover:scale-[1.02]',
+        isActive && 'ring-4 ring-primary ring-offset-4 shadow-3xl border-primary/70 bg-gradient-to-br from-primary/5 via-blue-500/5 to-primary/5',
         styles.container
       )}
       onClick={onClick}
@@ -127,40 +128,42 @@ function EnhancedStatCard({
           <div className='h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-lg' />
         </div>
       )}
-      {/* Professional gradient accent */}
-      <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50 opacity-60' />
+      {/* Premium gradient accent with animation */}
+      <div className='absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80' />
+      <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer' />
       
-      <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-4 pt-5'>
-        <div className='space-y-2 flex-1 min-w-0'>
+      <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-5 pt-6'>
+        <div className='space-y-3 flex-1 min-w-0'>
           <div className='flex items-center gap-2 flex-wrap'>
-            <CardTitle className='text-xs font-bold text-muted-foreground uppercase tracking-wider'>
+            <CardTitle className='text-xs font-black text-muted-foreground uppercase tracking-widest'>
               {title}
             </CardTitle>
             {tooltip && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <HelpCircle className='h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors flex-shrink-0' />
+                    <HelpCircle className='h-4 w-4 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors flex-shrink-0 hover:scale-110' />
                   </TooltipTrigger>
-                  <TooltipContent className='max-w-xs bg-slate-900 border-slate-700'>
-                    <p className='text-sm text-white'>{tooltip}</p>
+                  <TooltipContent className='max-w-xs bg-slate-900 border-slate-700 shadow-2xl'>
+                    <p className='text-sm text-white font-medium'>{tooltip}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
           </div>
-          <div className='text-4xl font-bold tracking-tight bg-gradient-to-br from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent'>
+          <div className='text-5xl font-black tracking-tight bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-100 dark:to-slate-200 bg-clip-text text-transparent drop-shadow-lg'>
             {value}
           </div>
         </div>
         <div
           className={cn(
-            'rounded-xl p-3 shadow-md flex-shrink-0',
-            'bg-gradient-to-br',
+            'rounded-2xl p-4 shadow-xl flex-shrink-0 border-2 border-white/20',
+            'bg-gradient-to-br backdrop-blur-sm',
+            'hover:scale-110 transition-transform duration-300',
             styles.icon
           )}
         >
-          <Icon className='h-6 w-6' />
+          <Icon className='h-7 w-7' />
         </div>
       </CardHeader>
       <CardContent className='space-y-2'>

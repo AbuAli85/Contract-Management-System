@@ -227,25 +227,26 @@ export function PromotersSmartInsights({
   }
 
   return (
-    <Card className={cn('shadow-xl border-2 border-primary/20', className)}>
-      <CardHeader className='bg-gradient-to-r from-primary/5 to-blue-500/5 border-b border-primary/10'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <div className='rounded-lg bg-gradient-to-br from-primary/20 to-blue-500/20 p-2 border border-primary/30'>
-              <Brain className='h-5 w-5 text-primary' />
+    <Card className={cn('shadow-2xl border-2 border-primary/30 bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900 backdrop-blur-sm', className)}>
+      <CardHeader className='bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-b-2 border-primary/20 relative overflow-hidden'>
+        <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer pointer-events-none' />
+        <div className='relative flex items-center justify-between'>
+          <div className='flex items-center gap-4'>
+            <div className='rounded-2xl bg-gradient-to-br from-primary/30 via-blue-500/30 to-indigo-500/30 p-3 border-2 border-primary/40 shadow-xl'>
+              <Brain className='h-6 w-6 text-white' />
             </div>
             <div>
-              <CardTitle className='text-lg font-bold flex items-center gap-2'>
-                <Sparkles className='h-4 w-4 text-primary' />
-                AI-Powered Insights
+              <CardTitle className='text-xl font-black flex items-center gap-2 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent'>
+                <Sparkles className='h-5 w-5 text-primary' />
+                AI-Powered Intelligence
               </CardTitle>
-              <p className='text-sm text-muted-foreground mt-1'>
-                Intelligent recommendations based on your data
+              <p className='text-sm text-muted-foreground mt-1 font-semibold'>
+                Advanced recommendations powered by machine learning
               </p>
             </div>
           </div>
-          <Badge variant='outline' className='bg-primary/10 text-primary border-primary/20'>
-            {insights.length} insights
+          <Badge variant='outline' className='bg-gradient-to-r from-primary/20 to-blue-500/20 text-primary border-primary/40 font-bold shadow-lg px-4 py-1.5'>
+            {insights.length} Active Insights
           </Badge>
         </div>
       </CardHeader>
@@ -254,11 +255,14 @@ export function PromotersSmartInsights({
           <div
             key={insight.id}
             className={cn(
-              'rounded-lg border-2 p-4 transition-all duration-300',
-              'hover:shadow-lg hover:scale-[1.01]',
+              'rounded-xl border-2 p-5 transition-all duration-300 relative overflow-hidden',
+              'hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1',
+              'backdrop-blur-sm',
               getTypeColor(insight.type)
             )}
           >
+            {/* Premium gradient overlay */}
+            <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent' />
             <div className='flex items-start justify-between gap-4'>
               <div className='flex items-start gap-3 flex-1'>
                 <div
