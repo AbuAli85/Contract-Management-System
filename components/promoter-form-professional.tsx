@@ -926,15 +926,21 @@ export default function PromoterFormProfessional(
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className='space-y-6'>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
-          <TabsList className='grid w-full grid-cols-6'>
-            <TabsTrigger value='personal'>Personal</TabsTrigger>
-            <TabsTrigger value='documents'>Documents</TabsTrigger>
-            <TabsTrigger value='contact'>Contact</TabsTrigger>
-            <TabsTrigger value='professional'>Professional</TabsTrigger>
-            <TabsTrigger value='financial'>Financial</TabsTrigger>
-            <TabsTrigger value='settings'>Settings</TabsTrigger>
+      <form 
+        onSubmit={handleSubmit} 
+        className='space-y-6' 
+        role='form' 
+        aria-label={isEditMode ? 'Edit promoter form' : 'Add new promoter form'}
+        noValidate
+      >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full' aria-label='Promoter form sections'>
+          <TabsList className='grid w-full grid-cols-6' role='tablist'>
+            <TabsTrigger value='personal' aria-label='Personal information tab'>Personal</TabsTrigger>
+            <TabsTrigger value='documents' aria-label='Documents tab'>Documents</TabsTrigger>
+            <TabsTrigger value='contact' aria-label='Contact information tab'>Contact</TabsTrigger>
+            <TabsTrigger value='professional' aria-label='Professional information tab'>Professional</TabsTrigger>
+            <TabsTrigger value='financial' aria-label='Financial information tab'>Financial</TabsTrigger>
+            <TabsTrigger value='settings' aria-label='Settings tab'>Settings</TabsTrigger>
           </TabsList>
 
           {/* Personal Information Tab */}
