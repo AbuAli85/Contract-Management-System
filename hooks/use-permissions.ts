@@ -254,9 +254,44 @@ export function usePermissions() {
     }
   };
 
+  // hasPermission function for string-based permission checks (e.g., 'promoter:read')
+  const hasPermission = (permission: string): boolean => {
+    if (loading || authLoading) return false;
+    if (role === 'admin') return true;
+    
+    // Parse permission string (format: 'resource:action' or 'resource:action:scope')
+    const parts = permission.split(':');
+    const resource = parts[0];
+    const action = parts[1];
+    const scope = parts[2];
+
+    // Check resource-based permissions
+    if (action === 'read') {
+      return canRead(resource);
+    }
+    if (action === 'create') {
+      return canCreate(resource);
+    }
+    if (action === 'update') {
+      return canUpdate(resource);
+    }
+    if (action === 'delete') {
+      return canDelete(resource);
+    }
+
+    // For 'read:own' permissions, allow if user can read the resource
+    if (action === 'read' && scope === 'own') {
+      return canRead(resource) || role === 'manager' || role === 'user';
+    }
+
+    // Default: use can() function
+    return can(permission);
+  };
+
   return {
     role,
     roles,
+    loading: loading || authLoading,
     isLoading: loading || authLoading,
     refreshRoles,
 
@@ -268,6 +303,7 @@ export function usePermissions() {
     canCreate,
     canUpdate,
     canDelete,
+    hasPermission, // Add missing hasPermission function
     hasAnyResourcePermission,
     hasAnyPermission,
 

@@ -1,5 +1,8 @@
 'use client';
 
+// Filter browser extension errors early
+import '@/lib/utils/console-filter';
+
 import React, {
   createContext,
   useContext,
