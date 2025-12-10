@@ -46,6 +46,8 @@ import { AnalyticsToolbar } from './analytics-toolbar';
 import { AnalyticsInsightsPanel } from './analytics-insights-panel';
 import { PromotersSmartInsights } from './promoters-smart-insights';
 import { PromotersQuickActionsPanel } from './promoters-quick-actions-panel';
+import { PromotersAdvancedExport } from './promoters-advanced-export';
+import { PromotersErrorBoundary } from './promoters-error-boundary';
 import { Button } from '../ui/button';
 
 interface PromotersResponse {
@@ -447,7 +449,7 @@ async function fetchPromoters(
 export function EnhancedPromotersViewRefactored({
   locale,
 }: PromotersViewProps) {
-  logger.log('🚀 Enhanced PromotersView component mounted');
+  // Component mounted - initialization complete
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -526,6 +528,7 @@ export function EnhancedPromotersViewRefactored({
     useState<PromotersResponse | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [showAdvancedExport, setShowAdvancedExport] = useState(false);
 
   const derivedLocale = useMemo(() => {
     if (locale && typeof locale === 'string') return locale;
@@ -724,16 +727,18 @@ export function EnhancedPromotersViewRefactored({
   const promoters = (response as PromotersResponse)?.promoters ?? [];
   const pagination = (response as PromotersResponse)?.pagination;
 
-  // Debug logging
-  logger.log('📊 Component state:', {
-    isLoading,
-    isError,
-    isFetching,
-    hasResponse: !!response,
-    hasPromoters: !!promoters,
-    promotersCount: promoters.length,
-    errorMessage: error?.message,
-  });
+  // Component state tracking (only log in development)
+  if (process.env.NODE_ENV === 'development') {
+    logger.log('📊 Component state:', {
+      isLoading,
+      isError,
+      isFetching,
+      hasResponse: !!response,
+      hasPromoters: !!promoters,
+      promotersCount: promoters.length,
+      errorMessage: error?.message,
+    });
+  }
 
   // Regular dashboard promoters (paginated)
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
@@ -1666,7 +1671,12 @@ export function EnhancedPromotersViewRefactored({
   );
 
   const handleExport = useCallback(() => {
-    // Export all visible promoters
+    // Show advanced export dialog for better UX
+    setShowAdvancedExport(true);
+  }, []);
+
+  const handleQuickExport = useCallback(() => {
+    // Quick export - simple CSV with default fields
     const headers = [
       'Name',
       'Email',
@@ -1677,17 +1687,26 @@ export function EnhancedPromotersViewRefactored({
       'ID Expiry',
       'Passport Expiry',
     ];
-    const rows = sortedPromoters.map(p => [
-      p.displayName,
-      p.contactEmail,
-      p.contactPhone,
-      p.overallStatus,
-      p.organisationLabel,
-      p.job_title || '—',
-      formatDisplayDate(p.id_card_expiry_date),
-      formatDisplayDate(p.passport_expiry_date),
-    ]);
-    const csv = [headers.join(','), ...rows.map(row => row.join(','))].join(
+    const rows = sortedPromoters.map(p => {
+      // Escape CSV values properly
+      const escapeCSV = (value: string) => {
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      };
+      return [
+        escapeCSV(p.displayName || ''),
+        escapeCSV(p.contactEmail || ''),
+        escapeCSV(p.contactPhone || ''),
+        escapeCSV(p.overallStatus || ''),
+        escapeCSV(p.organisationLabel || ''),
+        escapeCSV(p.job_title || '—'),
+        escapeCSV(formatDisplayDate(p.id_card_expiry_date)),
+        escapeCSV(formatDisplayDate(p.passport_expiry_date)),
+      ];
+    });
+    const csv = [headers.map(h => `"${h}"`).join(','), ...rows.map(row => row.join(','))].join(
       '\n'
     );
 
@@ -1696,7 +1715,9 @@ export function EnhancedPromotersViewRefactored({
     const link = document.createElement('a');
     link.href = url;
     link.download = `promoters-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
     toast({
@@ -1760,7 +1781,8 @@ export function EnhancedPromotersViewRefactored({
   const showLoadingOverlay = isDataFetching && response;
 
   return (
-    <main className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
+    <PromotersErrorBoundary>
+      <main className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8' role='main' aria-label='Promoter Intelligence Hub'>
       {/* Loading overlay */}
       {showLoadingOverlay && (
         <div
@@ -1792,6 +1814,22 @@ export function EnhancedPromotersViewRefactored({
           onToggleAutoRefresh={setAutoRefreshEnabled}
         />
       </header>
+
+      {/* Advanced Export Dialog */}
+      <PromotersAdvancedExport
+        promoters={sortedPromoters}
+        selectedIds={selectedPromoters}
+        isOpen={showAdvancedExport}
+        onClose={() => setShowAdvancedExport(false)}
+      />
+
+      {/* Advanced Export Dialog */}
+      <PromotersAdvancedExport
+        promoters={sortedPromoters}
+        selectedIds={selectedPromoters}
+        isOpen={showAdvancedExport}
+        onClose={() => setShowAdvancedExport(false)}
+      />
 
       {/* Enhanced Metrics */}
       <section aria-labelledby='metrics-heading'>
@@ -2171,6 +2209,7 @@ export function EnhancedPromotersViewRefactored({
           </div>
         )}
       </section>
-    </main>
+      </main>
+    </PromotersErrorBoundary>
   );
 }

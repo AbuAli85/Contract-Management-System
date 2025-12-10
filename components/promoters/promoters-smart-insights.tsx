@@ -222,8 +222,26 @@ export function PromotersSmartInsights({
     }
   };
 
+  // Show empty state with helpful message if no insights
   if (insights.length === 0) {
-    return null;
+    return (
+      <Card className={cn('shadow-xl border-2 border-primary/20', className)}>
+        <CardHeader className='bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-b-2 border-primary/20'>
+          <CardTitle className='text-xl font-black flex items-center gap-2 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent'>
+            <Brain className='h-5 w-5 text-primary' />
+            AI-Powered Intelligence
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='p-6 text-center'>
+          <div className='flex flex-col items-center gap-3'>
+            <CheckCircle className='h-12 w-12 text-green-500 opacity-50' />
+            <p className='text-sm text-muted-foreground font-medium'>
+              All systems operating optimally. No critical insights at this time.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

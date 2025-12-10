@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -246,7 +246,7 @@ export function PromotersTable({
           )}
         </div>
       </CardHeader>
-      <CardContent className='p-0'>
+      <CardContent className='p-0' aria-label={tableLabel}>
         {promoters.length === 0 ? (
           hasFiltersApplied ? (
             <EmptySearchState
@@ -292,8 +292,8 @@ export function PromotersTable({
                   data-view-mode='table'
                 >
                   <div className='min-w-[1200px] lg:min-w-[1300px] xl:min-w-[1400px]'>
-                    <Table className='table-fixed'>
-                      <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
+                    <Table className='table-fixed border-collapse'>
+                      <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-lg border-b-2 border-slate-200/80 dark:border-slate-700/80'>
                         <TableRow className='hover:bg-transparent border-0'>
                           {isColumnVisible('checkbox') && (
                             <TableHead className='w-[50px] text-center py-4'>
