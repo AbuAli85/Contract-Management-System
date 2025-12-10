@@ -22,6 +22,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import {
   Save,
@@ -38,8 +44,11 @@ import {
   Building,
   Upload,
   Eye,
+  EyeOff,
   Download,
   AlertTriangle,
+  AlertCircle,
+  Info,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -1280,143 +1289,218 @@ export default function PromoterFormProfessional(
 
           {/* Documents Tab */}
           <TabsContent value='documents' className='space-y-6'>
-            <Card>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <FileText className='h-5 w-5' />
-                  Document Information
-                </CardTitle>
-                <CardDescription>ID and passport details</CardDescription>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='id_number'>ID Number *</Label>
-                    <Input
-                      id='id_number'
-                      value={formData.id_number}
-                      onChange={e =>
-                        handleInputChange('id_number', e.target.value)
-                      }
-                      placeholder='Enter ID number'
-                      className={
-                        validationErrors.id_number ? 'border-red-500' : ''
-                      }
-                    />
-                    {validationErrors.id_number && (
-                      <p className='text-sm text-red-500'>
-                        {validationErrors.id_number}
-                      </p>
-                    )}
+            <TooltipProvider>
+              <Card>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2'>
+                    <FileText className='h-5 w-5' />
+                    Document Information
+                  </CardTitle>
+                  <CardDescription>
+                    ID, passport, visa, and work permit details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-6'>
+                {/* ID Card Section */}
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-2 pb-2 border-b'>
+                    <FileText className='h-5 w-5 text-primary' />
+                    <h3 className='text-lg font-semibold'>ID Card Information</h3>
                   </div>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='id_number' className='flex items-center gap-2'>
+                        ID Number <span className='text-red-500'>*</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className='h-4 w-4 text-muted-foreground cursor-help' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>National ID or Civil ID number</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </Label>
+                      <Input
+                        id='id_number'
+                        value={formData.id_number}
+                        onChange={e =>
+                          handleInputChange('id_number', e.target.value)
+                        }
+                        placeholder='Enter ID number'
+                        className={
+                          validationErrors.id_number ? 'border-red-500' : ''
+                        }
+                        required
+                      />
+                      {validationErrors.id_number && (
+                        <p className='text-sm text-red-500 flex items-center gap-1'>
+                          <AlertCircle className='h-3 w-3' />
+                          {validationErrors.id_number}
+                        </p>
+                      )}
+                    </div>
 
-                  <div>
-                    <DateInput
-                      id='id_expiry_date'
-                      label='ID Expiry Date'
-                      value={formData.id_expiry_date}
-                      onChange={value =>
-                        handleInputChange('id_expiry_date', value)
-                      }
-                      placeholder='DD/MM/YYYY'
-                    />
-                    {validationErrors.id_expiry_date && (
-                      <p className='text-sm text-red-500 mt-1'>
-                        {validationErrors.id_expiry_date}
-                      </p>
-                    )}
+                    <div className='space-y-2'>
+                      <DateInput
+                        id='id_expiry_date'
+                        label='ID Expiry Date'
+                        value={formData.id_expiry_date}
+                        onChange={value =>
+                          handleInputChange('id_expiry_date', value)
+                        }
+                        placeholder='DD/MM/YYYY'
+                        className={
+                          validationErrors.id_expiry_date ? 'border-red-500' : ''
+                        }
+                      />
+                      {validationErrors.id_expiry_date && (
+                        <p className='text-sm text-red-500 mt-1 flex items-center gap-1'>
+                          <AlertCircle className='h-3 w-3' />
+                          {validationErrors.id_expiry_date}
+                        </p>
+                      )}
+                    </div>
                   </div>
-
-                  <div className='space-y-2'>
-                    <Label
-                      htmlFor='passport_number'
-                      className='flex items-center gap-2'
-                    >
-                      Passport Number
-                      <Badge variant='outline' className='text-xs font-normal'>
-                        Highly Recommended
-                      </Badge>
-                    </Label>
-                    <Input
-                      id='passport_number'
-                      value={formData.passport_number}
-                      onChange={e =>
-                        handleInputChange('passport_number', e.target.value)
-                      }
-                      placeholder='Enter passport number (recommended for compliance)'
-                    />
-                    {!formData.passport_number && (
-                      <p className='text-xs text-amber-600 flex items-center gap-1'>
-                        <AlertTriangle className='h-3 w-3' />
-                        Passport required for international assignments and
-                        compliance tracking
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <DateInput
-                      id='passport_expiry_date'
-                      label='Passport Expiry Date'
-                      value={formData.passport_expiry_date}
-                      onChange={value =>
-                        handleInputChange('passport_expiry_date', value)
-                      }
-                      placeholder='DD/MM/YYYY'
-                    />
-                    {validationErrors.passport_expiry_date && (
-                      <p className='text-sm text-red-500 mt-1'>
-                        {validationErrors.passport_expiry_date}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='visa_number'>Visa Number</Label>
-                    <Input
-                      id='visa_number'
-                      value={formData.visa_number}
-                      onChange={e =>
-                        handleInputChange('visa_number', e.target.value)
-                      }
-                      placeholder='Enter visa number'
-                    />
-                  </div>
-
-                  <DateInput
-                    id='visa_expiry_date'
-                    label='Visa Expiry Date'
-                    value={formData.visa_expiry_date}
-                    onChange={value =>
-                      handleInputChange('visa_expiry_date', value)
-                    }
-                    placeholder='DD/MM/YYYY'
-                  />
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='work_permit_number'>
-                      Work Permit Number
-                    </Label>
-                    <Input
-                      id='work_permit_number'
-                      value={formData.work_permit_number}
-                      onChange={e =>
-                        handleInputChange('work_permit_number', e.target.value)
-                      }
-                      placeholder='Enter work permit number'
-                    />
-                  </div>
-
-                  <DateInput
-                    id='work_permit_expiry_date'
-                    label='Work Permit Expiry Date'
-                    value={formData.work_permit_expiry_date}
-                    onChange={value =>
-                      handleInputChange('work_permit_expiry_date', value)
-                    }
-                    placeholder='DD/MM/YYYY'
-                  />
                 </div>
+
+                {/* Passport Section */}
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-2 pb-2 border-b'>
+                    <FileText className='h-5 w-5 text-blue-500' />
+                    <h3 className='text-lg font-semibold'>Passport Information</h3>
+                    <Badge variant='outline' className='bg-blue-50 text-blue-700 border-blue-200'>
+                      Highly Recommended
+                    </Badge>
+                  </div>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='passport_number' className='flex items-center gap-2'>
+                        Passport Number
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className='h-4 w-4 text-muted-foreground cursor-help' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Required for international assignments and compliance tracking</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </Label>
+                      <Input
+                        id='passport_number'
+                        value={formData.passport_number}
+                        onChange={e =>
+                          handleInputChange('passport_number', e.target.value)
+                        }
+                        placeholder='Enter passport number'
+                        className={
+                          !formData.passport_number
+                            ? 'border-amber-300 bg-amber-50/50'
+                            : ''
+                        }
+                      />
+                      {!formData.passport_number && (
+                        <p className='text-xs text-amber-600 flex items-center gap-1'>
+                          <AlertTriangle className='h-3 w-3' />
+                          Passport required for international assignments and compliance tracking
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='space-y-2'>
+                      <DateInput
+                        id='passport_expiry_date'
+                        label='Passport Expiry Date'
+                        value={formData.passport_expiry_date}
+                        onChange={value =>
+                          handleInputChange('passport_expiry_date', value)
+                        }
+                        placeholder='DD/MM/YYYY'
+                        className={
+                          validationErrors.passport_expiry_date ? 'border-red-500' : ''
+                        }
+                      />
+                      {validationErrors.passport_expiry_date && (
+                        <p className='text-sm text-red-500 mt-1 flex items-center gap-1'>
+                          <AlertCircle className='h-3 w-3' />
+                          {validationErrors.passport_expiry_date}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visa Section */}
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-2 pb-2 border-b'>
+                    <FileText className='h-5 w-5 text-green-500' />
+                    <h3 className='text-lg font-semibold'>Visa Information</h3>
+                    <Badge variant='outline' className='text-xs'>Optional</Badge>
+                  </div>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='visa_number'>
+                        Visa Number
+                      </Label>
+                      <Input
+                        id='visa_number'
+                        value={formData.visa_number}
+                        onChange={e =>
+                          handleInputChange('visa_number', e.target.value)
+                        }
+                        placeholder='Enter visa number (if applicable)'
+                      />
+                    </div>
+
+                    <div className='space-y-2'>
+                      <DateInput
+                        id='visa_expiry_date'
+                        label='Visa Expiry Date'
+                        value={formData.visa_expiry_date}
+                        onChange={value =>
+                          handleInputChange('visa_expiry_date', value)
+                        }
+                        placeholder='DD/MM/YYYY'
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Work Permit Section */}
+                <div className='space-y-4'>
+                  <div className='flex items-center gap-2 pb-2 border-b'>
+                    <FileText className='h-5 w-5 text-purple-500' />
+                    <h3 className='text-lg font-semibold'>Work Permit Information</h3>
+                    <Badge variant='outline' className='text-xs'>Optional</Badge>
+                  </div>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='work_permit_number'>
+                        Work Permit Number
+                      </Label>
+                      <Input
+                        id='work_permit_number'
+                        value={formData.work_permit_number}
+                        onChange={e =>
+                          handleInputChange('work_permit_number', e.target.value)
+                        }
+                        placeholder='Enter work permit number (if applicable)'
+                      />
+                    </div>
+
+                    <div className='space-y-2'>
+                      <DateInput
+                        id='work_permit_expiry_date'
+                        label='Work Permit Expiry Date'
+                        value={formData.work_permit_expiry_date}
+                        onChange={value =>
+                          handleInputChange('work_permit_expiry_date', value)
+                        }
+                        placeholder='DD/MM/YYYY'
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
 
                 {/* Document Upload Section */}
                 <div className='mt-6 space-y-4'>
@@ -1435,12 +1519,20 @@ export default function PromoterFormProfessional(
 
                   {/* Display current documents */}
                   {(formData.id_card_url || formData.passport_url) && (
-                    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                    <div className='grid grid-cols-1 gap-4 md:grid-cols-2 mb-4'>
                       {formData.id_card_url && (
-                        <div className='p-4 border rounded-lg'>
-                          <div className='flex items-center justify-between mb-2'>
-                            <h5 className='font-medium'>ID Card Document</h5>
-                            <div className='flex gap-2'>
+                        <Card className='border-2 border-green-200 bg-green-50/50'>
+                          <CardContent className='p-4'>
+                            <div className='flex items-center justify-between mb-3'>
+                              <div className='flex items-center gap-2'>
+                                <FileText className='h-5 w-5 text-green-600' />
+                                <h5 className='font-semibold text-green-900'>ID Card Document</h5>
+                                <Badge variant='outline' className='bg-green-100 text-green-700 border-green-300'>
+                                  Uploaded
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className='flex gap-2 mt-3'>
                               <Button
                                 type='button'
                                 variant='outline'
@@ -1448,8 +1540,9 @@ export default function PromoterFormProfessional(
                                 onClick={() =>
                                   window.open(formData.id_card_url, '_blank')
                                 }
+                                className='flex-1'
                               >
-                                <Eye className='mr-1 h-3 w-3' />
+                                <Eye className='mr-2 h-4 w-4' />
                                 View
                               </Button>
                               <Button
@@ -1462,23 +1555,29 @@ export default function PromoterFormProfessional(
                                   link.download = 'id_card_document';
                                   link.click();
                                 }}
+                                className='flex-1'
                               >
-                                <Download className='mr-1 h-3 w-3' />
+                                <Download className='mr-2 h-4 w-4' />
                                 Download
                               </Button>
                             </div>
-                          </div>
-                          <p className='text-sm text-muted-foreground'>
-                            ID card document uploaded
-                          </p>
-                        </div>
+                          </CardContent>
+                        </Card>
                       )}
 
                       {formData.passport_url && (
-                        <div className='p-4 border rounded-lg'>
-                          <div className='flex items-center justify-between mb-2'>
-                            <h5 className='font-medium'>Passport Document</h5>
-                            <div className='flex gap-2'>
+                        <Card className='border-2 border-blue-200 bg-blue-50/50'>
+                          <CardContent className='p-4'>
+                            <div className='flex items-center justify-between mb-3'>
+                              <div className='flex items-center gap-2'>
+                                <FileText className='h-5 w-5 text-blue-600' />
+                                <h5 className='font-semibold text-blue-900'>Passport Document</h5>
+                                <Badge variant='outline' className='bg-blue-100 text-blue-700 border-blue-300'>
+                                  Uploaded
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className='flex gap-2 mt-3'>
                               <Button
                                 type='button'
                                 variant='outline'
@@ -1486,8 +1585,9 @@ export default function PromoterFormProfessional(
                                 onClick={() =>
                                   window.open(formData.passport_url, '_blank')
                                 }
+                                className='flex-1'
                               >
-                                <Eye className='mr-1 h-3 w-3' />
+                                <Eye className='mr-2 h-4 w-4' />
                                 View
                               </Button>
                               <Button
@@ -1500,16 +1600,14 @@ export default function PromoterFormProfessional(
                                   link.download = 'passport_document';
                                   link.click();
                                 }}
+                                className='flex-1'
                               >
-                                <Download className='mr-1 h-3 w-3' />
+                                <Download className='mr-2 h-4 w-4' />
                                 Download
                               </Button>
                             </div>
-                          </div>
-                          <p className='text-sm text-muted-foreground'>
-                            Passport document uploaded
-                          </p>
-                        </div>
+                          </CardContent>
+                        </Card>
                       )}
                     </div>
                   )}
@@ -1563,6 +1661,7 @@ export default function PromoterFormProfessional(
                 </div>
               </CardContent>
             </Card>
+            </TooltipProvider>
           </TabsContent>
 
           {/* Contact Information Tab */}
