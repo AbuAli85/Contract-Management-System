@@ -94,33 +94,35 @@ export function PromotersHeader({
   };
 
   return (
-    <Card className='relative overflow-hidden border-none bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl'>
-      <div className='absolute inset-0 opacity-10'>
+    <Card className='relative overflow-visible border-none bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl'>
+      <div className='absolute inset-0 opacity-10 pointer-events-none'>
         <div className='absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_1px)] bg-[length:40px_40px]' />
       </div>
-      <CardHeader className='relative pb-6'>
-        <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between'>
-          <div className='space-y-3 flex-1 min-w-0'>
-            <div className='flex items-center gap-3'>
-              <div className='rounded-lg bg-white/10 p-3 backdrop-blur-sm'>
+      <CardHeader className='relative pb-6 overflow-visible'>
+        <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between w-full'>
+          <div className='space-y-3 flex-1 min-w-0 w-full lg:max-w-[calc(100%-400px)]'>
+            <div className='flex items-center gap-3 flex-wrap'>
+              <div className='rounded-lg bg-white/10 p-3 backdrop-blur-sm flex-shrink-0'>
                 <Users className='h-6 w-6' />
               </div>
-              <CardTitle className='text-4xl font-bold tracking-tight lg:text-5xl'>
+              <CardTitle className='text-4xl font-bold tracking-tight lg:text-5xl break-words'>
                 Promoter Intelligence Hub
               </CardTitle>
             </div>
-            <CardDescription className='max-w-3xl text-base text-white/80 leading-relaxed'>
+            <CardDescription className='max-w-3xl text-base text-white/80 leading-relaxed break-words'>
               Monitor workforce readiness, document compliance, and partner
               coverage in real-time to keep every engagement on track.{' '}
               <span className='font-semibold text-white/90'>{metrics.total}</span> promoters in system.
             </CardDescription>
-            <div className='flex flex-wrap items-center gap-2 text-sm text-white/70 pt-2'>
+            <div className='flex flex-wrap items-center gap-2.5 text-sm text-white/70 pt-2 w-full'>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge 
                       className={cn(
-                        'text-white border-white/20 cursor-pointer transition-all px-2.5 py-1',
+                        'text-white border-white/20 cursor-pointer transition-all px-3 py-1.5',
+                        'inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0',
+                        'overflow-visible',
                         autoRefreshEnabled 
                           ? 'bg-green-500/20 hover:bg-green-500/30' 
                           : 'bg-white/10 hover:bg-white/20'
@@ -128,10 +130,10 @@ export function PromotersHeader({
                       onClick={() => onToggleAutoRefresh?.(!autoRefreshEnabled)}
                     >
                       <Activity className={cn(
-                        'mr-1.5 h-3 w-3 flex-shrink-0 transition-transform',
+                        'h-3.5 w-3.5 flex-shrink-0 transition-transform',
                         autoRefreshEnabled && 'animate-pulse'
                       )} />
-                      <span className='whitespace-nowrap'>
+                      <span className='whitespace-nowrap overflow-visible'>
                         {autoRefreshEnabled ? 'Auto-refresh on' : 'Auto-refresh off'}
                       </span>
                     </Badge>
@@ -148,9 +150,9 @@ export function PromotersHeader({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className='bg-emerald-500/20 text-emerald-100 border-emerald-400/30 cursor-help px-2.5 py-1'>
-                      <CheckCircle className='mr-1.5 h-3 w-3 flex-shrink-0' />
-                      <span className='whitespace-nowrap'>{Math.round(metrics.complianceRate || 0)}% compliant</span>
+                    <Badge className='bg-emerald-500/20 text-emerald-100 border-emerald-400/30 cursor-help px-3 py-1.5 inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 overflow-visible'>
+                      <CheckCircle className='h-3.5 w-3.5 flex-shrink-0' />
+                      <span className='whitespace-nowrap overflow-visible'>{Math.round(metrics.complianceRate || 0)}% compliant</span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -163,9 +165,9 @@ export function PromotersHeader({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className='bg-amber-500/20 text-amber-100 border-amber-400/30 cursor-help px-2.5 py-1'>
-                      <AlertTriangle className='mr-1.5 h-3 w-3 flex-shrink-0' />
-                      <span className='whitespace-nowrap'>{metrics.critical || 0} critical</span>
+                    <Badge className='bg-amber-500/20 text-amber-100 border-amber-400/30 cursor-help px-3 py-1.5 inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 overflow-visible'>
+                      <AlertTriangle className='h-3.5 w-3.5 flex-shrink-0' />
+                      <span className='whitespace-nowrap overflow-visible'>{metrics.critical || 0} critical</span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -178,9 +180,9 @@ export function PromotersHeader({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className='bg-blue-500/20 text-blue-100 border-blue-400/30 cursor-help px-2.5 py-1'>
-                      <Building2 className='mr-1.5 h-3 w-3 flex-shrink-0' />
-                      <span className='whitespace-nowrap'>{metrics.companies || 0} companies</span>
+                    <Badge className='bg-blue-500/20 text-blue-100 border-blue-400/30 cursor-help px-3 py-1.5 inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 overflow-visible'>
+                      <Building2 className='h-3.5 w-3.5 flex-shrink-0' />
+                      <span className='whitespace-nowrap overflow-visible'>{metrics.companies || 0} companies</span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>

@@ -352,7 +352,7 @@ export function PromotersFilters({
           )}
         </div>
       </CardHeader>
-      <CardContent className='space-y-6'>
+      <CardContent className='space-y-6 overflow-visible'>
         {/* Quick Filter Presets */}
         <div className='space-y-3'>
           <div className='flex items-center justify-between'>
@@ -596,9 +596,12 @@ export function PromotersFilters({
               </div>
             </div>
           )}
-          <div className='grid gap-4 sm:grid-cols-3'>
-            <div className='space-y-2 min-w-0'>
-              <Label className='text-sm font-medium whitespace-nowrap'>
+          <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full'>
+            <div className='space-y-2 min-w-[160px] w-full'>
+              <Label 
+                htmlFor='lifecycle-select'
+                className='text-sm font-medium block overflow-visible whitespace-normal break-words leading-tight'
+              >
                 Lifecycle Stage
               </Label>
               <Select
@@ -607,7 +610,7 @@ export function PromotersFilters({
                   onStatusFilterChange(value as OverallStatus | 'all')
                 }
               >
-                <SelectTrigger className='w-full'>
+                <SelectTrigger id='lifecycle-select' className='w-full min-w-[140px]'>
                   <SelectValue placeholder='All statuses' />
                 </SelectTrigger>
                 <SelectContent>
@@ -619,8 +622,11 @@ export function PromotersFilters({
                 </SelectContent>
               </Select>
             </div>
-            <div className='space-y-2 min-w-0'>
-              <Label className='text-sm font-medium whitespace-nowrap'>
+            <div className='space-y-2 min-w-[160px] w-full'>
+              <Label 
+                htmlFor='document-select'
+                className='text-sm font-medium block overflow-visible whitespace-normal break-words leading-tight'
+              >
                 Document Health
               </Label>
               <Select
@@ -631,7 +637,7 @@ export function PromotersFilters({
                   )
                 }
               >
-                <SelectTrigger className='w-full'>
+                <SelectTrigger id='document-select' className='w-full min-w-[140px]'>
                   <SelectValue placeholder='All documents' />
                 </SelectTrigger>
                 <SelectContent>
@@ -642,8 +648,11 @@ export function PromotersFilters({
                 </SelectContent>
               </Select>
             </div>
-            <div className='space-y-2 min-w-0'>
-              <Label className='text-sm font-medium whitespace-nowrap'>
+            <div className='space-y-2 min-w-[160px] w-full'>
+              <Label 
+                htmlFor='assignment-select'
+                className='text-sm font-medium block overflow-visible whitespace-normal break-words leading-tight'
+              >
                 Assignment Status
               </Label>
               <Select
@@ -654,7 +663,7 @@ export function PromotersFilters({
                   )
                 }
               >
-                <SelectTrigger className='w-full'>
+                <SelectTrigger id='assignment-select' className='w-full min-w-[140px]'>
                   <SelectValue placeholder='All assignments' />
                 </SelectTrigger>
                 <SelectContent>
