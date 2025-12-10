@@ -102,11 +102,12 @@ function EnhancedStatCard({
   return (
     <Card
       className={cn(
-        'shadow-sm overflow-hidden transition-all duration-300 relative',
+        'shadow-lg overflow-hidden transition-all duration-300 relative border-2',
+        'bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/50',
         isClickable &&
-          'cursor-pointer hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.98]',
-        !isClickable && 'hover:shadow-lg hover:scale-105',
-        isActive && 'ring-2 ring-primary ring-offset-2 shadow-xl',
+          'cursor-pointer hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98]',
+        !isClickable && 'hover:shadow-xl hover:scale-[1.01]',
+        isActive && 'ring-2 ring-primary ring-offset-2 shadow-2xl border-primary/50',
         styles.container
       )}
       onClick={onClick}
@@ -122,34 +123,40 @@ function EnhancedStatCard({
       aria-pressed={isClickable && isActive ? true : undefined}
     >
       {isActive && (
-        <div className='absolute top-2 right-2'>
-          <div className='h-2 w-2 rounded-full bg-primary animate-pulse' />
+        <div className='absolute top-3 right-3 z-10'>
+          <div className='h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-lg' />
         </div>
       )}
-      <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-3'>
-        <div className='space-y-1'>
-          <div className='flex items-center gap-2'>
-            <CardTitle className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
+      {/* Professional gradient accent */}
+      <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50 opacity-60' />
+      
+      <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-4 pt-5'>
+        <div className='space-y-2 flex-1 min-w-0'>
+          <div className='flex items-center gap-2 flex-wrap'>
+            <CardTitle className='text-xs font-bold text-muted-foreground uppercase tracking-wider'>
               {title}
             </CardTitle>
             {tooltip && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <HelpCircle className='h-4 w-4 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors' />
+                    <HelpCircle className='h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors flex-shrink-0' />
                   </TooltipTrigger>
-                  <TooltipContent className='max-w-xs'>
-                    <p className='text-sm'>{tooltip}</p>
+                  <TooltipContent className='max-w-xs bg-slate-900 border-slate-700'>
+                    <p className='text-sm text-white'>{tooltip}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
           </div>
-          <div className='text-3xl font-bold tracking-tight'>{value}</div>
+          <div className='text-4xl font-bold tracking-tight bg-gradient-to-br from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent'>
+            {value}
+          </div>
         </div>
         <div
           className={cn(
-            'rounded-lg p-3 text-white transition-transform group-hover:scale-110',
+            'rounded-xl p-3 shadow-md flex-shrink-0',
+            'bg-gradient-to-br',
             styles.icon
           )}
         >

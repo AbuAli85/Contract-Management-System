@@ -326,17 +326,24 @@ export function PromotersFilters({
   ]);
 
   return (
-    <Card className='sticky top-16 z-50 shadow-lg bg-white dark:bg-slate-900'>
-      <CardHeader className='pb-5'>
+    <Card className='sticky top-16 z-50 shadow-xl bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-900 dark:to-slate-800/50 overflow-visible border-2 border-slate-200/50 dark:border-slate-700/50'>
+      <CardHeader className='pb-5 overflow-visible bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-800/50 border-b border-slate-200/50 dark:border-slate-700/50'>
         <div className='flex items-start justify-between gap-4 flex-wrap'>
-          <div className='flex-1 min-w-0'>
-            <CardTitle className='text-lg flex items-center gap-2 flex-wrap'>
-              <Filter className='h-5 w-5 text-primary flex-shrink-0' />
-              <span className='whitespace-nowrap'>Smart Filters</span>
+          <div className='flex-1 min-w-0 max-w-full'>
+            <CardTitle className='text-xl font-bold flex items-center gap-3 flex-wrap'>
+              <div className='rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 p-2 border border-primary/20'>
+                <Filter className='h-5 w-5 text-primary flex-shrink-0' />
+              </div>
+              <span className='whitespace-nowrap bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent'>
+                Advanced Filters
+              </span>
+              <Badge variant='outline' className='bg-primary/10 text-primary border-primary/20 text-xs font-semibold'>
+                Enterprise
+              </Badge>
             </CardTitle>
-            <CardDescription className='text-sm mt-1'>
+            <CardDescription className='text-sm mt-2 break-words font-medium text-slate-600 dark:text-slate-400'>
               Refine the promoter roster by lifecycle stage, document health, or
-              assignment status.
+              assignment status with precision filtering.
             </CardDescription>
           </div>
           {hasFiltersApplied && (
@@ -352,7 +359,7 @@ export function PromotersFilters({
           )}
         </div>
       </CardHeader>
-      <CardContent className='space-y-6 overflow-visible'>
+      <CardContent className='space-y-6 overflow-visible pt-6'>
         {/* Quick Filter Presets */}
         <div className='space-y-3'>
           <div className='flex items-center justify-between'>
