@@ -267,21 +267,35 @@ export function usePermissions() {
 
     // Check resource-based permissions
     if (action === 'read') {
+      if (scope === 'own') {
+        // For 'read:own' permissions, allow for all authenticated users
+        return true;
+      }
       return canRead(resource);
     }
     if (action === 'create') {
       return canCreate(resource);
     }
     if (action === 'update') {
+      if (scope === 'own') {
+        // For 'update:own' permissions, allow for all authenticated users
+        return true;
+      }
       return canUpdate(resource);
     }
     if (action === 'delete') {
       return canDelete(resource);
     }
 
-    // For 'read:own' permissions, allow if user can read the resource
-    if (action === 'read' && scope === 'own') {
-      return canRead(resource) || role === 'manager' || role === 'user';
+    // Special permission checks
+    if (permission === 'promoter:read:own') {
+      return true; // All authenticated users can view their own profile
+    }
+    if (permission === 'promoter:update:own') {
+      return true; // All authenticated users can update their own profile
+    }
+    if (permission === 'contract:read:own') {
+      return true; // All authenticated users can read their own contracts
     }
 
     // Default: use can() function

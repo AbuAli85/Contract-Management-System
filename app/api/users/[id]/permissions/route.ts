@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getUserPermissions, getUserRole, getDefaultPermissionsForRole } from '@/lib/services/permission-service';
+import { getServiceRoleClient } from '@/lib/supabase/service-role';
 
 export async function GET(
   request: NextRequest,
@@ -18,38 +20,45 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user has admin permissions
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Check if user has admin permissions or is viewing their own permissions
+    const isOwnPermissions = user.id === id;
+    
+    if (!isOwnPermissions) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-    if (!userProfile || userProfile.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Only admins can view user permissions' },
-        { status: 403 }
-      );
+      if (!userProfile || userProfile.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Only admins can view other users\' permissions' },
+          { status: 403 }
+        );
+      }
     }
 
-    // Since user_permissions table doesn't exist, return default permissions based on user role
-    const { data: targetUser } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', id)
-      .single();
+    // Get user's permissions from the database
+    const userPermissions = await getUserPermissions(id);
+    const userRole = await getUserRole(id);
 
-    if (!targetUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    // If no permissions found, return default permissions based on role
+    if (userPermissions.length === 0 && userRole) {
+      const defaultPermissions = getDefaultPermissionsForRole(userRole);
+      return NextResponse.json({
+        success: true,
+        permissions: defaultPermissions.map(perm => ({
+          permission: perm,
+          granted: true,
+        })),
+        userRole,
+      });
     }
-
-    // Return default permissions based on role
-    const defaultPermissions = getDefaultPermissionsForRole(targetUser.role);
 
     return NextResponse.json({
       success: true,
-      permissions: defaultPermissions,
-      userRole: targetUser.role,
+      permissions: userPermissions,
+      userRole,
     });
   } catch (error) {
     console.error('Error in GET /api/users/[id]/permissions:', error);
@@ -79,7 +88,7 @@ export async function POST(
     }
 
     const { data: userProfile } = await supabase
-      .from('users')
+      .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
@@ -91,18 +100,36 @@ export async function POST(
       );
     }
 
-    // For now, since user_permissions table doesn't exist, we'll just return success
-    // In a full implementation, you would update the user's role or create the user_permissions table
-    console.log(
-      'Permissions update requested for user:',
-      id,
-      'permissions:',
-      permissions
-    );
+    // Use the management API to assign permissions
+    const serviceClient = getServiceRoleClient();
+    const response = await fetch(`${request.nextUrl.origin}/api/users/management`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': request.headers.get('Cookie') || '',
+      },
+      body: JSON.stringify({
+        action: 'assign_permissions',
+        userId: id,
+        permissions: Array.isArray(permissions)
+          ? permissions.map((p: any) => typeof p === 'string' ? p : p.permission)
+          : [],
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || 'Failed to update permissions' },
+        { status: response.status }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Permissions updated successfully (role-based system)',
+      message: 'Permissions updated successfully',
+      permissions: data.permissions || permissions,
     });
   } catch (error) {
     console.error('Error in POST /api/users/[id]/permissions:', error);
@@ -113,73 +140,4 @@ export async function POST(
   }
 }
 
-// Helper function to get default permissions for each role
-function getDefaultPermissionsForRole(role: string) {
-  const allPermissions = [
-    'users.view',
-    'users.create',
-    'users.edit',
-    'users.delete',
-    'contracts.view',
-    'contracts.create',
-    'contracts.edit',
-    'contracts.delete',
-    'contracts.approve',
-    'promoters.view',
-    'promoters.create',
-    'promoters.edit',
-    'promoters.delete',
-    'parties.view',
-    'parties.create',
-    'parties.edit',
-    'parties.delete',
-    'dashboard.view',
-    'analytics.view',
-    'reports.generate',
-    'settings.view',
-    'settings.edit',
-    'logs.view',
-    'backups.create',
-  ];
-
-  const rolePermissions: Record<string, string[]> = {
-    admin: allPermissions,
-    manager: [
-      'users.view',
-      'users.create',
-      'users.edit',
-      'contracts.view',
-      'contracts.create',
-      'contracts.edit',
-      'contracts.approve',
-      'promoters.view',
-      'promoters.create',
-      'promoters.edit',
-      'parties.view',
-      'parties.create',
-      'parties.edit',
-      'dashboard.view',
-      'analytics.view',
-      'reports.generate',
-    ],
-    user: [
-      'contracts.view',
-      'contracts.create',
-      'contracts.edit',
-      'promoters.view',
-      'parties.view',
-      'dashboard.view',
-    ],
-    viewer: [
-      'contracts.view',
-      'promoters.view',
-      'parties.view',
-      'dashboard.view',
-    ],
-  };
-
-  return allPermissions.map(permission => ({
-    permission,
-    granted: rolePermissions[role]?.includes(permission) || false,
-  }));
-}
+// Note: getDefaultPermissionsForRole is now imported from permission-service
