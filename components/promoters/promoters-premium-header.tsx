@@ -139,8 +139,8 @@ export function PromotersPremiumHeader({
                 <div className='absolute -top-1 -right-1 h-4 w-4 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full border-2 border-slate-900 animate-pulse shadow-lg' />
               </div>
               <div className='flex-1 min-w-0'>
-                <div className='flex items-center gap-3 flex-wrap'>
-                  <CardTitle className='text-5xl font-black tracking-tight lg:text-6xl break-words bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent drop-shadow-2xl'>
+                <div className='flex items-center gap-2 sm:gap-3 flex-wrap'>
+                  <CardTitle className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight break-words bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent drop-shadow-2xl'>
                     Promoter Intelligence Hub
                   </CardTitle>
                   <Badge variant='outline' className='bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-100 border-emerald-400/40 text-xs font-bold px-3 py-1 shadow-lg'>

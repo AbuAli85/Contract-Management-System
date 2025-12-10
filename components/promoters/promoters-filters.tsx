@@ -55,6 +55,7 @@ import type { OverallStatus } from './types';
 import { Badge } from '@/components/ui/badge';
 import { PromotersAdvancedSearch } from './promoters-advanced-search';
 import { PromotersSearchWithAutocomplete } from './promoters-search-with-autocomplete';
+import { PromotersAdvancedFilters } from './promoters-advanced-filters';
 
 interface SearchCriteria {
   field: string;
@@ -325,6 +326,11 @@ export function PromotersFilters({
     searchTerm,
     filterPresets,
   ]);
+
+  const handleAdvancedFiltersApply = useCallback((filters: any[]) => {
+    // Apply advanced filters - this would integrate with the main filter system
+    // For now, we'll just show them in the UI
+  }, []);
 
   return (
     <Card className='sticky top-16 z-50 shadow-2xl bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 overflow-visible border-2 border-slate-300/50 dark:border-slate-700/50 backdrop-blur-sm'>

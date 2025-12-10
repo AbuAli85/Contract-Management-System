@@ -48,6 +48,8 @@ import { PromotersSmartInsights } from './promoters-smart-insights';
 import { PromotersQuickActionsPanel } from './promoters-quick-actions-panel';
 import { PromotersAdvancedExport } from './promoters-advanced-export';
 import { PromotersErrorBoundary } from './promoters-error-boundary';
+import { PromotersAdvancedFilters } from './promoters-advanced-filters';
+import { PromotersEnhancedCharts } from './promoters-enhanced-charts';
 import { Button } from '../ui/button';
 
 interface PromotersResponse {
@@ -1782,7 +1784,7 @@ export function EnhancedPromotersViewRefactored({
 
   return (
     <PromotersErrorBoundary>
-      <main className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8' role='main' aria-label='Promoter Intelligence Hub'>
+      <main className='relative space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6 pb-6 sm:pb-8 lg:pb-10' role='main' aria-label='Promoter Intelligence Hub'>
       {/* Loading overlay */}
       {showLoadingOverlay && (
         <div
@@ -2133,6 +2135,12 @@ export function EnhancedPromotersViewRefactored({
                       else setStatusFilter('all');
                     }}
                     activeFilter={null}
+                  />
+
+                  {/* Enhanced Charts - Comprehensive Visualizations */}
+                  <PromotersEnhancedCharts
+                    promoters={allDashboardPromoters}
+                    metrics={metrics}
                   />
 
                   {/* Stats Charts - Quick Insights */}

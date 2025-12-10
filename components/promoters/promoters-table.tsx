@@ -148,6 +148,11 @@ export function PromotersTable({
   // Column customization
   const { columns, visibleColumns, setColumns, resetColumns, isColumnVisible } =
     useColumnCustomization(DEFAULT_COLUMNS);
+  
+  // Accessibility: Announce table updates
+  const tableLabel = useMemo(() => {
+    return `Promoters table with ${promoters.length} ${promoters.length === 1 ? 'promoter' : 'promoters'}. ${selectedPromoters.size > 0 ? `${selectedPromoters.size} selected.` : ''}`;
+  }, [promoters.length, selectedPromoters.size]);
 
   return (
     <Card className='shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900'>
@@ -291,7 +296,7 @@ export function PromotersTable({
                   ref={parentRef}
                   data-view-mode='table'
                 >
-                  <div className='min-w-[1200px] lg:min-w-[1300px] xl:min-w-[1400px]'>
+                  <div className='min-w-full sm:min-w-[800px] md:min-w-[1000px] lg:min-w-[1200px] xl:min-w-[1400px]'>
                     <Table className='table-fixed border-collapse'>
                       <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-lg border-b-2 border-slate-200/80 dark:border-slate-700/80'>
                         <TableRow className='hover:bg-transparent border-0'>
