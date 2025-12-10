@@ -316,7 +316,7 @@ async function fetchPromoters(
     userId?: string | null; // For employees to see only their own data
   }
 ): Promise<PromotersResponse> {
-  console.log(
+  logger.log(
     `🔄 Fetching promoters from API (page ${page}, limit ${limit}, filters:`,
     filters,
     ')...'
@@ -769,25 +769,29 @@ function EnhancedPromotersViewRefactoredContent({
 
   // Regular dashboard promoters (paginated)
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
-    logger.log('🔄 Processing promoters for dashboard...');
-    logger.log('📊 Raw promoter data sample:', promoters.slice(0, 2));
+    if (process.env.NODE_ENV === 'development') {
+      logger.log('🔄 Processing promoters for dashboard...');
+      logger.log('📊 Raw promoter data sample:', promoters.slice(0, 2));
+    }
 
     return promoters.map(promoter => {
-      // Debug logging for each promoter
-      logger.log('🔍 Processing promoter:', {
-        id: promoter.id,
-        name_en: promoter.name_en,
-        name_ar: promoter.name_ar,
-        email: promoter.email,
-        mobile_number: promoter.mobile_number,
-        phone: promoter.phone,
-        employer_id: promoter.employer_id,
-        id_card_expiry_date: promoter.id_card_expiry_date,
-        passport_expiry_date: promoter.passport_expiry_date,
-        status: promoter.status,
-        job_title: promoter.job_title,
-        work_location: null, // Column doesn't exist in database
-      });
+      // Debug logging for each promoter (development only)
+      if (process.env.NODE_ENV === 'development') {
+        logger.log('🔍 Processing promoter:', {
+          id: promoter.id,
+          name_en: promoter.name_en,
+          name_ar: promoter.name_ar,
+          email: promoter.email,
+          mobile_number: promoter.mobile_number,
+          phone: promoter.phone,
+          employer_id: promoter.employer_id,
+          id_card_expiry_date: promoter.id_card_expiry_date,
+          passport_expiry_date: promoter.passport_expiry_date,
+          status: promoter.status,
+          job_title: promoter.job_title,
+          work_location: null, // Column doesn't exist in database
+        });
+      }
 
       const idDocument = computeDocumentHealth(
         promoter.id_card_expiry_date ?? null,
@@ -892,17 +896,19 @@ function EnhancedPromotersViewRefactoredContent({
         createdLabel: formatDisplayDate(promoter.created_at),
       } as DashboardPromoter;
 
-      logger.log('✅ Processed promoter result:', {
-        id: result.id,
-        displayName: result.displayName,
-        contactEmail: result.contactEmail,
-        contactPhone: result.contactPhone,
-        assignmentStatus: result.assignmentStatus,
-        organisationLabel: result.organisationLabel,
-        overallStatus: result.overallStatus,
-        idDocumentStatus: result.idDocument.status,
-        passportDocumentStatus: result.passportDocument.status,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        logger.log('✅ Processed promoter result:', {
+          id: result.id,
+          displayName: result.displayName,
+          contactEmail: result.contactEmail,
+          contactPhone: result.contactPhone,
+          assignmentStatus: result.assignmentStatus,
+          organisationLabel: result.organisationLabel,
+          overallStatus: result.overallStatus,
+          idDocumentStatus: result.idDocument.status,
+          passportDocumentStatus: result.passportDocument.status,
+        });
+      }
 
       return result;
     });
@@ -1020,7 +1026,7 @@ function EnhancedPromotersViewRefactoredContent({
     });
   }, [allPromotersData]);
 
-  console.log(
+  logger.log(
     '📈 Dashboard promoters processed:',
     dashboardPromoters.length,
     'items'
@@ -1809,7 +1815,7 @@ function EnhancedPromotersViewRefactoredContent({
 
   return (
     <PromotersErrorBoundary>
-      <main className='relative space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6 pb-6 sm:pb-8 lg:pb-10' role='main' aria-label='Promoter Intelligence Hub'>
+      <main className='flex-1 overflow-auto p-6 relative space-y-4 sm:space-y-6' role='main' aria-label='Promoter Intelligence Hub'>
       {/* Loading overlay */}
       {showLoadingOverlay && (
         <div

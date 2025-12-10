@@ -39,6 +39,7 @@ import {
 import type { DashboardMetrics, DashboardPromoter } from './types';
 import { PromotersKeyboardShortcuts } from './promoters-keyboard-shortcuts';
 import { NotificationBadge } from './notification-badge';
+import { logger } from '@/lib/utils/logger';
 
 interface PromotersPremiumHeaderProps {
   metrics: DashboardMetrics;
@@ -78,7 +79,7 @@ export function PromotersPremiumHeader({
       router.push(`/${derivedLocale}/manage-promoters/new`);
       onAddPromoter?.();
     } catch (error) {
-      console.error('Error navigating to add promoter:', error);
+      logger.error('Error navigating to add promoter:', error);
       toast({
         variant: 'destructive',
         title: 'Navigation Error',
@@ -91,7 +92,7 @@ export function PromotersPremiumHeader({
     try {
       router.push(`/${derivedLocale}/csv-import`);
     } catch (error) {
-      console.error('Error navigating to import page:', error);
+      logger.error('Error navigating to import page:', error);
       toast({
         variant: 'destructive',
         title: 'Navigation Error',
@@ -168,7 +169,7 @@ export function PromotersPremiumHeader({
             <CardDescription className='max-w-3xl text-lg text-white/90 leading-relaxed break-words font-medium'>
               Monitor workforce readiness, document compliance, and partner
               coverage in real-time to keep every engagement on track.{' '}
-              <span className='font-bold text-white text-xl'>{metrics.total}</span> active promoters in system.
+              <span className='font-bold text-white text-xl'>{metrics.total || 0}</span> active promoter{metrics.total !== 1 ? 's' : ''} in system.
             </CardDescription>
 
             {/* Premium Metrics Badges */}
