@@ -17,6 +17,10 @@ if (typeof window !== 'undefined') {
     /Extension context invalidated/i,
     /chrome-extension:/i,
     /moz-extension:/i,
+    /Fetch failed loading.*tactiq/i,
+    /Fetch finished loading.*tactiq/i,
+    /Fetch failed loading: GET.*tactiq/i,
+    /Fetch finished loading: POST.*tactiq/i,
   ];
 
   const shouldFilter = (message: string): boolean => {
