@@ -55,6 +55,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatDateForDatabase } from '@/lib/date-utils';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import DocumentUpload from '@/components/document-upload';
+import DocumentUploadEnhanced from '@/components/document-upload-enhanced';
 import {
   validatePhoneNumber,
   validateMobileNumber,
@@ -1500,121 +1501,43 @@ export default function PromoterFormProfessional(
                     </div>
                   </div>
                 </div>
-              </CardContent>
 
                 {/* Document Upload Section */}
-                <div className='mt-6 space-y-4'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-lg font-medium'>Document Upload</h4>
+                <div className='mt-6 space-y-4 pt-6 border-t'>
+                  <div className='flex items-center justify-between mb-4'>
+                    <div className='flex items-center gap-3'>
+                      <Upload className='h-5 w-5 text-primary' />
+                      <div>
+                        <h4 className='text-lg font-semibold'>Document Upload & Management</h4>
+                        <p className='text-sm text-muted-foreground'>
+                          Upload, view, edit, replace, or delete documents
+                        </p>
+                      </div>
+                    </div>
                     <Button
                       type='button'
-                      variant='outline'
+                      variant={showDocumentUpload ? 'secondary' : 'outline'}
                       size='sm'
                       onClick={() => setShowDocumentUpload(!showDocumentUpload)}
+                      className='gap-2'
                     >
-                      <Upload className='mr-2 h-4 w-4' />
-                      {showDocumentUpload ? 'Hide Upload' : 'Upload Documents'}
+                      {showDocumentUpload ? (
+                        <>
+                          <EyeOff className='h-4 w-4' />
+                          Hide Upload
+                        </>
+                      ) : (
+                        <>
+                          <Upload className='h-4 w-4' />
+                          Show Upload
+                        </>
+                      )}
                     </Button>
                   </div>
 
-                  {/* Display current documents */}
-                  {(formData.id_card_url || formData.passport_url) && (
-                    <div className='grid grid-cols-1 gap-4 md:grid-cols-2 mb-4'>
-                      {formData.id_card_url && (
-                        <Card className='border-2 border-green-200 bg-green-50/50'>
-                          <CardContent className='p-4'>
-                            <div className='flex items-center justify-between mb-3'>
-                              <div className='flex items-center gap-2'>
-                                <FileText className='h-5 w-5 text-green-600' />
-                                <h5 className='font-semibold text-green-900'>ID Card Document</h5>
-                                <Badge variant='outline' className='bg-green-100 text-green-700 border-green-300'>
-                                  Uploaded
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className='flex gap-2 mt-3'>
-                              <Button
-                                type='button'
-                                variant='outline'
-                                size='sm'
-                                onClick={() =>
-                                  window.open(formData.id_card_url, '_blank')
-                                }
-                                className='flex-1'
-                              >
-                                <Eye className='mr-2 h-4 w-4' />
-                                View
-                              </Button>
-                              <Button
-                                type='button'
-                                variant='outline'
-                                size='sm'
-                                onClick={() => {
-                                  const link = document.createElement('a');
-                                  link.href = formData.id_card_url;
-                                  link.download = 'id_card_document';
-                                  link.click();
-                                }}
-                                className='flex-1'
-                              >
-                                <Download className='mr-2 h-4 w-4' />
-                                Download
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {formData.passport_url && (
-                        <Card className='border-2 border-blue-200 bg-blue-50/50'>
-                          <CardContent className='p-4'>
-                            <div className='flex items-center justify-between mb-3'>
-                              <div className='flex items-center gap-2'>
-                                <FileText className='h-5 w-5 text-blue-600' />
-                                <h5 className='font-semibold text-blue-900'>Passport Document</h5>
-                                <Badge variant='outline' className='bg-blue-100 text-blue-700 border-blue-300'>
-                                  Uploaded
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className='flex gap-2 mt-3'>
-                              <Button
-                                type='button'
-                                variant='outline'
-                                size='sm'
-                                onClick={() =>
-                                  window.open(formData.passport_url, '_blank')
-                                }
-                                className='flex-1'
-                              >
-                                <Eye className='mr-2 h-4 w-4' />
-                                View
-                              </Button>
-                              <Button
-                                type='button'
-                                variant='outline'
-                                size='sm'
-                                onClick={() => {
-                                  const link = document.createElement('a');
-                                  link.href = formData.passport_url;
-                                  link.download = 'passport_document';
-                                  link.click();
-                                }}
-                                className='flex-1'
-                              >
-                                <Download className='mr-2 h-4 w-4' />
-                                Download
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  )}
-
                   {showDocumentUpload && (
                     <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-                      <DocumentUpload
+                      <DocumentUploadEnhanced
                         promoterId={isEditMode ? promoterToEdit?.id : 'new'}
                         promoterName={
                           formData.full_name ||
@@ -1626,16 +1549,28 @@ export default function PromoterFormProfessional(
                         documentType='id_card'
                         currentUrl={formData.id_card_url}
                         onUploadComplete={url => {
-                          // Update the form data with the new URL
                           setFormData(prev => ({ ...prev, id_card_url: url }));
-                          setShowDocumentUpload(false);
+                          toast({
+                            title: 'Success',
+                            description: 'ID card document uploaded successfully',
+                          });
                         }}
                         onDelete={() => {
-                          // Clear the URL from form data
                           setFormData(prev => ({ ...prev, id_card_url: '' }));
+                          toast({
+                            title: 'Deleted',
+                            description: 'ID card document has been removed',
+                          });
+                        }}
+                        onReplace={(oldUrl, newUrl) => {
+                          setFormData(prev => ({ ...prev, id_card_url: newUrl }));
+                          toast({
+                            title: 'Replaced',
+                            description: 'ID card document has been replaced',
+                          });
                         }}
                       />
-                      <DocumentUpload
+                      <DocumentUploadEnhanced
                         promoterId={isEditMode ? promoterToEdit?.id : 'new'}
                         promoterName={
                           formData.full_name ||
@@ -1647,13 +1582,25 @@ export default function PromoterFormProfessional(
                         documentType='passport'
                         currentUrl={formData.passport_url}
                         onUploadComplete={url => {
-                          // Update the form data with the new URL
                           setFormData(prev => ({ ...prev, passport_url: url }));
-                          setShowDocumentUpload(false);
+                          toast({
+                            title: 'Success',
+                            description: 'Passport document uploaded successfully',
+                          });
                         }}
                         onDelete={() => {
-                          // Clear the URL from form data
                           setFormData(prev => ({ ...prev, passport_url: '' }));
+                          toast({
+                            title: 'Deleted',
+                            description: 'Passport document has been removed',
+                          });
+                        }}
+                        onReplace={(oldUrl, newUrl) => {
+                          setFormData(prev => ({ ...prev, passport_url: newUrl }));
+                          toast({
+                            title: 'Replaced',
+                            description: 'Passport document has been replaced',
+                          });
                         }}
                       />
                     </div>
