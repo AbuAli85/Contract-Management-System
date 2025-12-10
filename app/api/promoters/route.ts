@@ -211,6 +211,9 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     const assignmentFilter = url.searchParams.get('assignment') || '';
     const sortField = url.searchParams.get('sortField') || 'created_at';
     const sortOrder = url.searchParams.get('sortOrder') || 'desc';
+    // Role-based filtering
+    const employerIdFilter = url.searchParams.get('employerId') || '';
+    const userIdFilter = url.searchParams.get('userId') || '';
 
     console.log('📊 Query params:', {
       page,
@@ -243,8 +246,16 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     );
 
     // ✅ SECURITY: Scope data by user role
-    // Non-admin users only see promoters they created
-    if (!isAdmin) {
+    // Role-based filtering: Employees see only their own, Employers see only assigned, Admins see all
+    if (employerIdFilter) {
+      console.log('🔒 Filtering by employer_id:', employerIdFilter);
+      query = query.eq('employer_id', employerIdFilter);
+    } else if (userIdFilter) {
+      console.log('🔒 Filtering by user_id (employee):', userIdFilter);
+      // For employees, filter by their own promoter record ID
+      // Note: This assumes the employee has a promoter record with matching ID
+      query = query.eq('id', userIdFilter);
+    } else if (!isAdmin) {
       console.log(
         '🔒 Non-admin user: applying data scope via created_by filter'
       );

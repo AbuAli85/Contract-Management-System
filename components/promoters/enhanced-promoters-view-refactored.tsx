@@ -655,6 +655,8 @@ function EnhancedPromotersViewRefactoredContent({
       assignment?: string;
       sortField?: string;
       sortOrder?: string;
+      employerId?: string | null;
+      userId?: string | null;
     } = {};
 
     if (debouncedSearchTerm) result.search = debouncedSearchTerm;
@@ -663,6 +665,14 @@ function EnhancedPromotersViewRefactoredContent({
     if (assignmentFilter !== 'all') result.assignment = assignmentFilter;
     if (sortField) result.sortField = sortField;
     if (sortOrder) result.sortOrder = sortOrder;
+    
+    // Role-based filtering
+    if (roleContext.isEmployee && roleContext.userId) {
+      result.userId = roleContext.userId;
+    } else if (roleContext.isEmployer && roleContext.employerId && !roleContext.isAdmin) {
+      result.employerId = roleContext.employerId;
+    }
+    // Admins don't get filters - they see all
 
     return result;
   }, [
@@ -672,6 +682,11 @@ function EnhancedPromotersViewRefactoredContent({
     assignmentFilter,
     sortField,
     sortOrder,
+    roleContext.isEmployee,
+    roleContext.isEmployer,
+    roleContext.isAdmin,
+    roleContext.userId,
+    roleContext.employerId,
   ]);
 
   // Auto-refresh state - load from localStorage or default to true
@@ -699,7 +714,7 @@ function EnhancedPromotersViewRefactoredContent({
     error,
     refetch,
   } = useQuery<PromotersResponse, Error>({
-    queryKey: ['promoters', page, limit, filters, 'v5-server-filtered'],
+    queryKey: ['promoters', page, limit, filters, roleContext.employerId, roleContext.userId, roleContext.isEmployee, 'v5-server-filtered'],
     queryFn: () => fetchPromoters(page, limit, filters),
     staleTime: 2 * 60 * 1000, // 2 minutes - shorter cache for filtered results
     gcTime: 5 * 60 * 1000, // 5 minutes - keep unused data in cache
@@ -1900,8 +1915,8 @@ function EnhancedPromotersViewRefactoredContent({
         </section>
       )}
 
-      {/* Data Insights & Charts */}
-      {!isLoading && dashboardPromoters.length > 0 && (
+      {/* Data Insights & Charts - Only for Employers/Admins */}
+      {!isLoading && dashboardPromoters.length > 0 && !roleContext.isEmployee && (
         <section aria-labelledby='insights-heading' className='mt-6'>
           <h2 id='insights-heading' className='sr-only'>
             Data Insights and Analytics
@@ -1951,31 +1966,33 @@ function EnhancedPromotersViewRefactoredContent({
         </section>
       )}
 
-      {/* Enhanced Filters */}
-      <section aria-labelledby='filters-heading'>
-        <h2 id='filters-heading' className='sr-only'>
-          Search and Filter Options
-        </h2>
-        <PromotersFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          documentFilter={documentFilter}
-          onDocumentFilterChange={setDocumentFilter}
-          assignmentFilter={assignmentFilter}
-          onAssignmentFilterChange={setAssignmentFilter}
-          hasFiltersApplied={hasFiltersApplied}
-          onResetFilters={handleResetFilters}
-          onExport={handleExport}
-          onRefresh={handleRefresh}
-          isFetching={isDataFetching}
-          metrics={metrics}
-          locale={derivedLocale}
-        />
-      </section>
+      {/* Enhanced Filters - Only for Employers/Admins */}
+      {!roleContext.isEmployee && (
+        <section aria-labelledby='filters-heading'>
+          <h2 id='filters-heading' className='sr-only'>
+            Search and Filter Options
+          </h2>
+          <PromotersFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            documentFilter={documentFilter}
+            onDocumentFilterChange={setDocumentFilter}
+            assignmentFilter={assignmentFilter}
+            onAssignmentFilterChange={setAssignmentFilter}
+            hasFiltersApplied={hasFiltersApplied}
+            onResetFilters={handleResetFilters}
+            onExport={handleExport}
+            onRefresh={handleRefresh}
+            isFetching={isDataFetching}
+            metrics={metrics}
+            locale={derivedLocale}
+          />
+        </section>
+      )}
 
-          {/* Bulk Actions Bar - Only for Employers/Admins */}
+      {/* Bulk Actions Bar - Only for Employers/Admins */}
           {roleContext.canBulkActions && (
             <section aria-labelledby='bulk-actions-heading'>
               <h2 id='bulk-actions-heading' className='sr-only'>
@@ -1992,13 +2009,42 @@ function EnhancedPromotersViewRefactoredContent({
             </section>
           )}
 
-      {/* Main Content */}
+      {/* Main Content - Role-Based Rendering */}
       <section aria-labelledby='promoters-content-heading'>
         <h2 id='promoters-content-heading' className='sr-only'>
-          {viewMode === 'analytics' ? 'Promoters Analytics' : 'Promoters List'}
+          {roleContext.isEmployee 
+            ? 'My Profile' 
+            : viewMode === 'analytics' 
+            ? 'Promoters Analytics' 
+            : 'Promoters List'}
         </h2>
 
-        {viewMode === 'analytics' ? (
+        {/* Employee View - Show only their own profile */}
+        {roleContext.isEmployee ? (
+          <PromotersEmployeeView
+            promoter={dashboardPromoters.find(p => p.id === roleContext.userId) || dashboardPromoters[0] || null}
+            isLoading={isLoading}
+            onEdit={roleContext.canEdit ? () => {
+              const myPromoter = dashboardPromoters.find(p => p.id === roleContext.userId);
+              if (myPromoter) handleEditPromoter(myPromoter);
+            } : undefined}
+            onDownloadDocuments={() => {
+              toast({
+                title: 'Download Documents',
+                description: 'Document download functionality coming soon',
+              });
+            }}
+          />
+        ) : roleContext.isEmployer && !roleContext.isAdmin ? (
+          /* Employer View - Show employer dashboard */
+          <PromotersEmployerDashboard
+            promoters={dashboardPromoters}
+            metrics={metrics}
+            onAddPromoter={roleContext.canCreate ? handleAddPromoter : undefined}
+            onExport={roleContext.canExport ? handleExport : undefined}
+            onViewAnalytics={roleContext.canViewAnalytics ? () => setViewMode('analytics') : undefined}
+          />
+        ) : viewMode === 'analytics' ? (
           /* Analytics View */
           <div className='space-y-6'>
             {/* Analytics View Header with Navigation */}
