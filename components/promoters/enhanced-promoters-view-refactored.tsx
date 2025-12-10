@@ -51,6 +51,9 @@ import { PromotersErrorBoundary } from './promoters-error-boundary';
 import { PromotersAdvancedFilters } from './promoters-advanced-filters';
 import { PromotersEnhancedCharts } from './promoters-enhanced-charts';
 import { RoleContextProvider, useRoleContext } from './promoters-role-context';
+import { PromotersEmployeeView } from './promoters-employee-view';
+import { PromotersEmployerDashboard } from './promoters-employer-dashboard';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '../ui/button';
 
 interface PromotersResponse {
@@ -454,13 +457,14 @@ async function fetchPromoters(
   }
 }
 
-export function EnhancedPromotersViewRefactored({
+function EnhancedPromotersViewRefactoredContent({
   locale,
 }: PromotersViewProps) {
   // Component mounted - initialization complete
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const roleContext = useRoleContext();
 
   // Helper function to safely get search params (memoized for use in effects and callbacks)
   const getParamSafely = useCallback(

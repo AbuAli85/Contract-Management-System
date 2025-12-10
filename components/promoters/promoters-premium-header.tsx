@@ -45,7 +45,7 @@ interface PromotersPremiumHeaderProps {
   promoters: DashboardPromoter[];
   isFetching: boolean;
   onRefresh: () => void;
-  onAddPromoter: () => void;
+  onAddPromoter?: () => void;
   locale?: string;
   autoRefreshEnabled?: boolean;
   onToggleAutoRefresh?: (enabled: boolean) => void;
@@ -76,7 +76,7 @@ export function PromotersPremiumHeader({
   const handleAddPromoter = () => {
     try {
       router.push(`/${derivedLocale}/manage-promoters/new`);
-      onAddPromoter();
+      onAddPromoter?.();
     } catch (error) {
       console.error('Error navigating to add promoter:', error);
       toast({

@@ -45,10 +45,15 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
 
   const roleContext = useMemo<RoleContextType>(() => {
     // Determine user role type
-    const userRoleMetadata = user?.user_metadata || {};
-    const userRoleFromMetadata = userRoleMetadata.role as string;
-    const employerIdFromMetadata = userRoleMetadata.employer_id as string | null;
-    const companyIdFromMetadata = userRoleMetadata.company_id as string | null;
+    const userRoleMetadata = (user?.user_metadata || {}) as Record<string, any>;
+    const userRoleFromMetadata = userRoleMetadata.role as string | undefined;
+    const employerIdFromMetadata = userRoleMetadata.employer_id as string | null | undefined;
+    const companyIdFromMetadata = userRoleMetadata.company_id as string | null | undefined;
+    
+    // Also check session metadata
+    const sessionMetadata = (session?.user?.user_metadata || {}) as Record<string, any>;
+    const sessionEmployerId = sessionMetadata.employer_id as string | null | undefined;
+    const sessionCompanyId = sessionMetadata.company_id as string | null | undefined;
     
     // Determine if user is employer or employee
     // Employers typically have: employer_id, company_id, or role === 'employer' | 'manager' | 'admin'
@@ -88,7 +93,7 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
     } else if (userRoleFromMetadata === 'employer' || employerIdFromMetadata || companyIdFromMetadata || sessionEmployerId || sessionCompanyId) {
       userRoleType = 'employer';
       isEmployerUser = true;
-      employerId = employerIdFromMetadata || companyIdFromMetadata || sessionEmployerId || sessionCompanyId || null;
+      employerId = (employerIdFromMetadata || companyIdFromMetadata || sessionEmployerId || sessionCompanyId || null) as string | null;
     } else if (userRoleFromMetadata === 'promoter' || userRoleFromMetadata === 'employee' || role === 'promoter' || role === 'user') {
       userRoleType = 'employee';
       isEmployeeUser = true;
@@ -123,7 +128,7 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
       canViewAnalytics: canViewAnalyticsData,
       canBulkActions: canPerformBulkActions,
     };
-  }, [user, authLoading, role, canRead, canCreate, canUpdate, canDelete, isAdmin, isManager]);
+  }, [user, session, authLoading, role, canRead, canCreate, canUpdate, canDelete, isAdmin, isManager]);
 
   return (
     <RoleContext.Provider value={roleContext}>
