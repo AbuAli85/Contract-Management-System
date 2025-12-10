@@ -291,8 +291,8 @@ export function PromotersTable({
                   ref={parentRef}
                   data-view-mode='table'
                 >
-                  <div className='min-w-[1100px] lg:min-w-[1200px] xl:min-w-[1300px]'>
-                    <Table>
+                  <div className='min-w-[1200px] lg:min-w-[1300px] xl:min-w-[1400px]'>
+                    <Table className='table-fixed'>
                       <TableHeader className='sticky top-0 z-10 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 backdrop-blur-md shadow-sm border-b-2 border-slate-200/80 dark:border-slate-700/80'>
                         <TableRow className='hover:bg-transparent border-0'>
                           {isColumnVisible('checkbox') && (
@@ -320,12 +320,12 @@ export function PromotersTable({
                           )}
                           {isColumnVisible('name') && (
                             <TableHead
-                              className='min-w-[200px] w-[220px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              className='min-w-[220px] w-[240px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                               onClick={() => onSort('name')}
                             >
                               <div className='flex items-center gap-2 group/header px-2'>
-                                <Users className='h-4 w-4 text-indigo-500' />
-                                <span className='text-sm'>Team Member</span>
+                                <Users className='h-4 w-4 text-indigo-500 flex-shrink-0' />
+                                <span className='text-sm whitespace-nowrap'>Team Member</span>
                                 {sortField === 'name' ? (
                                   sortOrder === 'asc' ? (
                                     <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
@@ -342,22 +342,22 @@ export function PromotersTable({
                           )}
                           {isColumnVisible('documents') && (
                             <TableHead
-                              className='min-w-[180px] w-[200px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              className='min-w-[240px] w-[260px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                               onClick={() => onSort('documents')}
                             >
                               <div className='flex items-center gap-2 group/header px-2'>
-                                <Badge className='bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 p-0.5'>
+                                <Badge className='bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm'>Documentation</span>
+                                <span className='text-sm whitespace-nowrap'>Documentation</span>
                                 {sortField === 'documents' ? (
                                   sortOrder === 'asc' ? (
-                                    <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                    <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0' />
                                   ) : (
-                                    <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                                    <SortDesc className='h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0' />
                                   )
                                 ) : (
-                                  <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity'>
+                                  <div className='h-4 w-4 opacity-0 group-hover/header:opacity-60 transition-opacity flex-shrink-0'>
                                     <SortAsc className='h-4 w-4 text-slate-400' />
                                   </div>
                                 )}
@@ -365,38 +365,47 @@ export function PromotersTable({
                             </TableHead>
                           )}
                           {isColumnVisible('assignment') && (
-                            <TableHead className='min-w-[140px] w-[160px] font-bold text-slate-700 dark:text-slate-200 py-4'>
-                              <div className='flex items-center gap-2 px-2'>
-                                <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5'>
+                            <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>
+                              <div className='flex items-center gap-2 px-2 flex-wrap'>
+                                <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm'>Assignment</span>
-                                <span className='ml-1 text-xs text-muted-foreground'>
-                                  (filterable)
-                                </span>
+                                <span className='text-sm whitespace-nowrap'>Assignment</span>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className='ml-1 text-xs text-muted-foreground cursor-help whitespace-nowrap'>
+                                        (filterable)
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className='text-xs'>You can filter promoters by assignment status</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
                             </TableHead>
                           )}
                           {isColumnVisible('contact') && (
-                            <TableHead className='min-w-[160px] w-[180px] font-bold text-slate-700 dark:text-slate-200 py-4'>
+                            <TableHead className='min-w-[180px] w-[200px] font-bold text-slate-700 dark:text-slate-200 py-4'>
                               <div className='flex items-center gap-2 px-2'>
-                                <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5'>
+                                <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm'>Contact Info</span>
+                                <span className='text-sm whitespace-nowrap'>Contact Info</span>
                               </div>
                             </TableHead>
                           )}
                           {isColumnVisible('created') && (
                             <TableHead
-                              className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              className='min-w-[130px] w-[150px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                               onClick={() => onSort('created')}
                             >
                               <div className='flex items-center gap-2 group/header px-2'>
-                                <Badge className='bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 p-0.5'>
+                                <Badge className='bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm'>Joined</span>
+                                <span className='text-sm whitespace-nowrap'>Joined</span>
                                 {sortField === 'created' ? (
                                   sortOrder === 'asc' ? (
                                     <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
@@ -413,14 +422,14 @@ export function PromotersTable({
                           )}
                           {isColumnVisible('status') && (
                             <TableHead
-                              className='min-w-[120px] w-[140px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
+                              className='min-w-[130px] w-[150px] cursor-pointer hover:bg-indigo-50/80 dark:hover:bg-slate-700/50 transition-all duration-200 rounded-lg font-bold text-slate-700 dark:text-slate-200 py-4'
                               onClick={() => onSort('status')}
                             >
                               <div className='flex items-center gap-2 group/header px-2'>
-                                <Badge className='bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 p-0.5'>
+                                <Badge className='bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm'>Status</span>
+                                <span className='text-sm whitespace-nowrap'>Status</span>
                                 {sortField === 'status' ? (
                                   sortOrder === 'asc' ? (
                                     <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
@@ -436,10 +445,10 @@ export function PromotersTable({
                             </TableHead>
                           )}
                           {isColumnVisible('actions') && (
-                            <TableHead className='min-w-[100px] w-[120px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
+                            <TableHead className='min-w-[110px] w-[130px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
                               <div className='flex items-center justify-end gap-2 px-2'>
-                                <span className='text-sm'>Actions</span>
-                                <MoreHorizontal className='h-4 w-4 text-slate-400' />
+                                <span className='text-sm whitespace-nowrap'>Actions</span>
+                                <MoreHorizontal className='h-4 w-4 text-slate-400 flex-shrink-0' />
                               </div>
                             </TableHead>
                           )}

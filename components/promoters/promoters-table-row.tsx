@@ -126,11 +126,11 @@ function DocumentStatusPill({
   const Icon = DOCUMENT_STATUS_ICONS[health.status];
 
   return (
-    <div className='flex items-center gap-3'>
+    <div className='flex items-center gap-2.5 min-w-0'>
       <Badge
         variant='outline'
         className={cn(
-          'flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow-sm transition-all hover:shadow-md',
+          'flex items-center gap-1.5 rounded-full border-2 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide shadow-sm transition-all hover:shadow-md flex-shrink-0',
           health.status === 'valid' &&
             'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-300 hover:from-emerald-100 hover:to-green-100',
           health.status === 'expiring' &&
@@ -141,12 +141,38 @@ function DocumentStatusPill({
             'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-300 hover:from-slate-100 hover:to-gray-100'
         )}
       >
-        <Icon className='h-3.5 w-3.5' />
-        {label}
+        <Icon className='h-3 w-3 flex-shrink-0' />
+        <span className='whitespace-nowrap'>{label}</span>
       </Badge>
-      <span className='text-xs text-slate-500 dark:text-slate-400 font-medium min-w-0 flex-1 truncate'>
-        {health.label}
-      </span>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className='text-xs text-slate-600 dark:text-slate-400 font-medium min-w-0 flex-1 line-clamp-1 cursor-help'>
+              {health.label}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className='max-w-xs'>
+            <p className='text-xs font-medium'>{label} Document Status</p>
+            <p className='text-xs text-muted-foreground mt-1'>{health.label}</p>
+            {health.expiresOn && (
+              <p className='text-xs text-muted-foreground mt-1'>
+                Expiry Date: {new Date(health.expiresOn).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            )}
+            {health.daysRemaining !== null && (
+              <p className='text-xs text-muted-foreground mt-1'>
+                {health.daysRemaining > 0 
+                  ? `${health.daysRemaining} days remaining`
+                  : `Expired ${Math.abs(health.daysRemaining)} days ago`}
+              </p>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
@@ -541,17 +567,25 @@ export function PromotersTableRow({
                       )}
                     />
                   </div>
-                  <div className='space-y-1 min-w-0 flex-1'>
-                    <div className='font-bold text-slate-900 dark:text-slate-100 text-base leading-tight'>
+                  <div className='space-y-1.5 min-w-0 flex-1'>
+                    <div className='font-bold text-slate-900 dark:text-slate-100 text-base leading-tight break-words'>
                       {promoter.displayName}
                     </div>
-                    <div className='text-sm text-slate-600 dark:text-slate-400 font-medium'>
-                      {promoter.job_title || 'Team Member'}
+                    <div className='text-sm text-slate-600 dark:text-slate-400 font-medium capitalize'>
+                      {promoter.job_title ? (
+                        <span className='inline-flex items-center gap-1.5'>
+                          <span className='px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-xs font-semibold border border-blue-200 dark:border-blue-800'>
+                            {promoter.job_title.replace(/_/g, ' ')}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className='text-slate-500 dark:text-slate-400 italic'>Team Member</span>
+                      )}
                     </div>
                     {promoter.work_location && (
                       <div className='text-xs text-slate-500 dark:text-slate-500 flex items-center gap-1'>
-                        <MapPin className='h-3 w-3' />
-                        {promoter.work_location}
+                        <MapPin className='h-3 w-3 flex-shrink-0' />
+                        <span className='truncate'>{promoter.work_location}</span>
                       </div>
                     )}
                   </div>
@@ -581,8 +615,8 @@ export function PromotersTableRow({
         </TableCell>
       )}
       {isColumnVisible('documents') && (
-        <TableCell className='py-4'>
-          <div className='space-y-2'>
+        <TableCell className='py-4 min-w-[240px]'>
+          <div className='space-y-2.5'>
             <DocumentStatusPill label='ID' health={promoter.idDocument} />
             <DocumentStatusPill
               label='Passport'
@@ -592,9 +626,9 @@ export function PromotersTableRow({
         </TableCell>
       )}
       {isColumnVisible('assignment') && (
-        <TableCell className='py-4'>
-          <div className='space-y-2'>
-            <div className='text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight'>
+        <TableCell className='py-4 min-w-[160px]'>
+          <div className='space-y-2.5'>
+            <div className='text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight break-words'>
               {promoter.assignmentStatus === 'assigned'
                 ? promoter.organisationLabel
                 : 'Unassigned'}
@@ -602,7 +636,7 @@ export function PromotersTableRow({
             <Badge
               variant='outline'
               className={cn(
-                'w-fit rounded-full border px-3 py-1 text-xs font-bold transition-all shadow-sm',
+                'w-fit rounded-full border px-3 py-1 text-xs font-bold transition-all shadow-sm whitespace-nowrap',
                 promoter.assignmentStatus === 'assigned'
                   ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-300 hover:from-emerald-100 hover:to-green-100 hover:shadow-md'
                   : 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-300 hover:from-slate-100 hover:to-gray-100'

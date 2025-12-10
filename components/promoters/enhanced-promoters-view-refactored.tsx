@@ -656,6 +656,23 @@ export function EnhancedPromotersViewRefactored({
     sortOrder,
   ]);
 
+  // Auto-refresh state - load from localStorage or default to true
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('promoters-auto-refresh');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
+  const [autoRefreshInterval] = useState(60000); // 60 seconds default
+
+  // Save auto-refresh preference to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('promoters-auto-refresh', String(autoRefreshEnabled));
+    }
+  }, [autoRefreshEnabled]);
+
   const {
     data: response,
     isLoading,
@@ -669,9 +686,10 @@ export function EnhancedPromotersViewRefactored({
     staleTime: 2 * 60 * 1000, // 2 minutes - shorter cache for filtered results
     gcTime: 5 * 60 * 1000, // 5 minutes - keep unused data in cache
     retry: 2, // Retry failed requests twice
-    refetchOnWindowFocus: false, // Disable to prevent too many refetches with filters
+    refetchOnWindowFocus: autoRefreshEnabled, // Enable/disable based on user preference
     refetchOnMount: true, // Refetch on mount if stale
     refetchOnReconnect: true, // Refetch on reconnect
+    refetchInterval: autoRefreshEnabled ? autoRefreshInterval : false, // Auto-refresh interval
   });
 
   // Separate search-specific loading state from general data fetching
@@ -1004,15 +1022,16 @@ export function EnhancedPromotersViewRefactored({
         return createdDate && createdDate >= sevenDaysAgo;
       }).length;
 
+      // Ensure all values are numbers and handle NaN/undefined
       return {
-        total: apiMetrics.total, // ✅ System-wide
-        active: apiMetrics.active, // ✅ System-wide
-        critical: apiMetrics.critical, // ✅ System-wide
-        expiring: apiMetrics.expiring, // ✅ System-wide
-        unassigned: apiMetrics.unassigned, // ✅ System-wide
-        companies, // Page-specific (OK for this metric)
-        recentlyAdded, // Page-specific (OK for this metric)
-        complianceRate: apiMetrics.complianceRate, // ✅ System-wide
+        total: Number(apiMetrics.total) || 0,
+        active: Number(apiMetrics.active) || 0,
+        critical: Number(apiMetrics.critical) || 0,
+        expiring: Number(apiMetrics.expiring) || 0,
+        unassigned: Number(apiMetrics.unassigned) || 0,
+        companies: Number(companies) || 0,
+        recentlyAdded: Number(recentlyAdded) || 0,
+        complianceRate: Math.round(Number(apiMetrics.complianceRate) || 0), // Round to whole number
       };
     }
 
@@ -1055,15 +1074,16 @@ export function EnhancedPromotersViewRefactored({
         ? Math.round((compliant / dashboardPromoters.length) * 100)
         : 0;
 
+    // Ensure all values are numbers and handle edge cases
     return {
-      total,
-      active,
-      critical,
-      expiring,
-      unassigned,
-      companies,
-      recentlyAdded,
-      complianceRate,
+      total: Number(total) || 0,
+      active: Number(active) || 0,
+      critical: Number(critical) || 0,
+      expiring: Number(expiring) || 0,
+      unassigned: Number(unassigned) || 0,
+      companies: Number(companies) || 0,
+      recentlyAdded: Number(recentlyAdded) || 0,
+      complianceRate: Math.round(Number(complianceRate) || 0), // Round to whole number
     };
   }, [dashboardPromoters, pagination, apiMetricsData]);
 
@@ -1761,6 +1781,8 @@ export function EnhancedPromotersViewRefactored({
           onRefresh={handleRefresh}
           onAddPromoter={handleAddPromoter}
           locale={derivedLocale}
+          autoRefreshEnabled={autoRefreshEnabled}
+          onToggleAutoRefresh={setAutoRefreshEnabled}
         />
       </header>
 

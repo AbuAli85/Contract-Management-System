@@ -328,19 +328,19 @@ export function PromotersFilters({
   return (
     <Card className='sticky top-16 z-50 shadow-lg bg-white dark:bg-slate-900'>
       <CardHeader className='pb-5'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <CardTitle className='text-lg flex items-center gap-2'>
-              <Filter className='h-5 w-5 text-primary' />
-              Smart filters
+        <div className='flex items-start justify-between gap-4 flex-wrap'>
+          <div className='flex-1 min-w-0'>
+            <CardTitle className='text-lg flex items-center gap-2 flex-wrap'>
+              <Filter className='h-5 w-5 text-primary flex-shrink-0' />
+              <span className='whitespace-nowrap'>Smart Filters</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className='text-sm mt-1'>
               Refine the promoter roster by lifecycle stage, document health, or
-              assignment.
+              assignment status.
             </CardDescription>
           </div>
           {hasFiltersApplied && (
-            <Badge variant='secondary' className='bg-primary/10 text-primary'>
+            <Badge variant='secondary' className='bg-primary/10 text-primary whitespace-nowrap flex-shrink-0'>
               {Object.values({
                 search: searchTerm ? 1 : 0,
                 status: statusFilter !== 'all' ? 1 : 0,
@@ -577,8 +577,8 @@ export function PromotersFilters({
           {recentSearches.length > 0 && showAdvancedOptions && (
             <div className='space-y-2'>
               <Label className='text-xs text-muted-foreground flex items-center gap-1'>
-                <History className='h-3 w-3' />
-                Recent searches
+                <History className='h-3 w-3 flex-shrink-0' />
+                <span className='truncate'>Recent searches</span>
               </Label>
               <div className='flex flex-wrap gap-1'>
                 {recentSearches.map((search, index) => (
@@ -587,7 +587,8 @@ export function PromotersFilters({
                     variant='ghost'
                     size='sm'
                     onClick={() => onSearchChange(search)}
-                    className='h-6 px-2 text-xs text-muted-foreground hover:text-foreground'
+                    className='h-6 px-2 text-xs text-muted-foreground hover:text-foreground truncate max-w-[150px]'
+                    title={search}
                   >
                     {search}
                   </Button>
@@ -596,15 +597,17 @@ export function PromotersFilters({
             </div>
           )}
           <div className='grid gap-4 sm:grid-cols-3'>
-            <div className='space-y-2'>
-              <Label>Lifecycle</Label>
+            <div className='space-y-2 min-w-0'>
+              <Label className='text-sm font-medium whitespace-nowrap'>
+                Lifecycle Stage
+              </Label>
               <Select
                 value={statusFilter}
                 onValueChange={value =>
                   onStatusFilterChange(value as OverallStatus | 'all')
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className='w-full'>
                   <SelectValue placeholder='All statuses' />
                 </SelectTrigger>
                 <SelectContent>
@@ -616,8 +619,10 @@ export function PromotersFilters({
                 </SelectContent>
               </Select>
             </div>
-            <div className='space-y-2'>
-              <Label>Document health</Label>
+            <div className='space-y-2 min-w-0'>
+              <Label className='text-sm font-medium whitespace-nowrap'>
+                Document Health
+              </Label>
               <Select
                 value={documentFilter}
                 onValueChange={value =>
@@ -626,7 +631,7 @@ export function PromotersFilters({
                   )
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className='w-full'>
                   <SelectValue placeholder='All documents' />
                 </SelectTrigger>
                 <SelectContent>
@@ -637,8 +642,10 @@ export function PromotersFilters({
                 </SelectContent>
               </Select>
             </div>
-            <div className='space-y-2'>
-              <Label>Assignment</Label>
+            <div className='space-y-2 min-w-0'>
+              <Label className='text-sm font-medium whitespace-nowrap'>
+                Assignment Status
+              </Label>
               <Select
                 value={assignmentFilter}
                 onValueChange={value =>
@@ -647,7 +654,7 @@ export function PromotersFilters({
                   )
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className='w-full'>
                   <SelectValue placeholder='All assignments' />
                 </SelectTrigger>
                 <SelectContent>

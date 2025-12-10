@@ -40,6 +40,8 @@ interface PromotersHeaderProps {
   onRefresh: () => void;
   onAddPromoter: () => void;
   locale?: string;
+  autoRefreshEnabled?: boolean;
+  onToggleAutoRefresh?: (enabled: boolean) => void;
 }
 
 export function PromotersHeader({
@@ -49,6 +51,8 @@ export function PromotersHeader({
   onRefresh,
   onAddPromoter,
   locale,
+  autoRefreshEnabled = true,
+  onToggleAutoRefresh,
 }: PromotersHeaderProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -95,8 +99,8 @@ export function PromotersHeader({
         <div className='absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_1px)] bg-[length:40px_40px]' />
       </div>
       <CardHeader className='relative pb-6'>
-        <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
-          <div className='space-y-3'>
+        <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between'>
+          <div className='space-y-3 flex-1 min-w-0'>
             <div className='flex items-center gap-3'>
               <div className='rounded-lg bg-white/10 p-3 backdrop-blur-sm'>
                 <Users className='h-6 w-6' />
@@ -105,52 +109,98 @@ export function PromotersHeader({
                 Promoter Intelligence Hub
               </CardTitle>
             </div>
-            <CardDescription className='max-w-3xl text-base text-white/80'>
+            <CardDescription className='max-w-3xl text-base text-white/80 leading-relaxed'>
               Monitor workforce readiness, document compliance, and partner
               coverage in real-time to keep every engagement on track.{' '}
-              {metrics.total} promoters in system.
+              <span className='font-semibold text-white/90'>{metrics.total}</span> promoters in system.
             </CardDescription>
-            <div className='flex flex-wrap items-center gap-3 text-sm text-white/70 pt-2'>
+            <div className='flex flex-wrap items-center gap-2 text-sm text-white/70 pt-2'>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className='bg-white/10 text-white border-white/20 cursor-help'>
-                      <Activity className='mr-1.5 h-3 w-3' />
-                      Auto-refresh enabled
+                    <Badge 
+                      className={cn(
+                        'text-white border-white/20 cursor-pointer transition-all px-2.5 py-1',
+                        autoRefreshEnabled 
+                          ? 'bg-green-500/20 hover:bg-green-500/30' 
+                          : 'bg-white/10 hover:bg-white/20'
+                      )}
+                      onClick={() => onToggleAutoRefresh?.(!autoRefreshEnabled)}
+                    >
+                      <Activity className={cn(
+                        'mr-1.5 h-3 w-3 flex-shrink-0 transition-transform',
+                        autoRefreshEnabled && 'animate-pulse'
+                      )} />
+                      <span className='whitespace-nowrap'>
+                        {autoRefreshEnabled ? 'Auto-refresh on' : 'Auto-refresh off'}
+                      </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='max-w-xs'>
                     <p className='text-xs'>
-                      Data automatically refreshes when you return to this tab
-                      or reconnect to the internet. Use the Refresh button for
-                      immediate updates.
+                      {autoRefreshEnabled 
+                        ? 'Data automatically refreshes every 60 seconds. Click to disable.'
+                        : 'Auto-refresh is disabled. Click to enable automatic updates every 60 seconds.'}
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Badge className='bg-emerald-500/20 text-emerald-100 border-emerald-400/30'>
-                <CheckCircle className='mr-1.5 h-3 w-3' />
-                {metrics.complianceRate}% compliant
-              </Badge>
-              <Badge className='bg-amber-500/20 text-amber-100 border-amber-400/30'>
-                <AlertTriangle className='mr-1.5 h-3 w-3' />
-                {metrics.critical} critical
-              </Badge>
-              <Badge className='bg-blue-500/20 text-blue-100 border-blue-400/30'>
-                <Building2 className='mr-1.5 h-3 w-3' />
-                {metrics.companies} companies
-              </Badge>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className='bg-emerald-500/20 text-emerald-100 border-emerald-400/30 cursor-help px-2.5 py-1'>
+                      <CheckCircle className='mr-1.5 h-3 w-3 flex-shrink-0' />
+                      <span className='whitespace-nowrap'>{Math.round(metrics.complianceRate || 0)}% compliant</span>
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className='text-xs'>
+                      {Math.round(metrics.complianceRate || 0)}% of promoters have all documents valid and up to date
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className='bg-amber-500/20 text-amber-100 border-amber-400/30 cursor-help px-2.5 py-1'>
+                      <AlertTriangle className='mr-1.5 h-3 w-3 flex-shrink-0' />
+                      <span className='whitespace-nowrap'>{metrics.critical || 0} critical</span>
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className='text-xs'>
+                      {metrics.critical || 0} promoters have expired documents requiring immediate attention
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className='bg-blue-500/20 text-blue-100 border-blue-400/30 cursor-help px-2.5 py-1'>
+                      <Building2 className='mr-1.5 h-3 w-3 flex-shrink-0' />
+                      <span className='whitespace-nowrap'>{metrics.companies || 0} companies</span>
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className='text-xs'>
+                      {metrics.companies || 0} companies have assigned promoters
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
-          <div className='flex flex-wrap items-center gap-3'>
+          <div className='flex flex-wrap items-center gap-3 flex-shrink-0'>
             <Button
               onClick={handleAddPromoter}
-              className='bg-white text-slate-900 hover:bg-white/90 font-semibold shadow-lg transition-all hover:shadow-xl focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900'
+              className='bg-white text-slate-900 hover:bg-white/90 font-semibold shadow-lg transition-all hover:shadow-xl focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap'
               size='lg'
               aria-label='Add new promoter to the system'
             >
-              <Plus className='mr-2 h-5 w-5' aria-hidden='true' />
-              Add Promoter
+              <Plus className='mr-2 h-5 w-5 flex-shrink-0' aria-hidden='true' />
+              <span>Add Promoter</span>
             </Button>
             <TooltipProvider>
               <Tooltip>
@@ -158,12 +208,12 @@ export function PromotersHeader({
                   <Button
                     onClick={handleImportPromoters}
                     variant='secondary'
-                    className='bg-blue-500/20 text-white hover:bg-blue-500/30 border-blue-400/30 font-semibold shadow-lg transition-all hover:shadow-xl focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-slate-900'
+                    className='bg-blue-500/20 text-white hover:bg-blue-500/30 border-blue-400/30 font-semibold shadow-lg transition-all hover:shadow-xl focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap'
                     size='lg'
                     aria-label='Import promoters from CSV/Excel file'
                   >
-                    <Upload className='mr-2 h-5 w-5' aria-hidden='true' />
-                    Import
+                    <Upload className='mr-2 h-5 w-5 flex-shrink-0' aria-hidden='true' />
+                    <span>Import</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -178,7 +228,7 @@ export function PromotersHeader({
                 <TooltipTrigger asChild>
                   <Button
                     variant='secondary'
-                    className='bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border-white/10 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900'
+                    className='bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border-white/10 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap'
                     onClick={onRefresh}
                     disabled={isFetching}
                     aria-label={
@@ -189,12 +239,12 @@ export function PromotersHeader({
                   >
                     <RefreshCw
                       className={cn(
-                        'mr-2 h-4 w-4',
+                        'mr-2 h-4 w-4 flex-shrink-0',
                         isFetching && 'animate-spin'
                       )}
                       aria-hidden='true'
                     />
-                    {isFetching ? 'Refreshing...' : 'Refresh'}
+                    <span>{isFetching ? 'Refreshing...' : 'Refresh'}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -205,7 +255,7 @@ export function PromotersHeader({
               </Tooltip>
             </TooltipProvider>
             <NotificationBadge promoters={promoters} />
-            <div className='hidden sm:block'>
+            <div className='hidden sm:block flex-shrink-0'>
               <PromotersKeyboardShortcuts />
             </div>
           </div>

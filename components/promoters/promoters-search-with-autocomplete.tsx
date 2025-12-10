@@ -232,16 +232,21 @@ export const PromotersSearchWithAutocomplete = React.memo(
 
     return (
       <div className='space-y-3'>
-        <div className='flex items-center justify-between'>
-          <Label htmlFor='promoter-search' className='text-sm font-medium'>
+        <div className='flex items-center justify-between flex-wrap gap-2'>
+          <Label htmlFor='promoter-search' className='text-sm font-medium whitespace-nowrap'>
             Search promoters
           </Label>
-          {isSearching && localValue && (
-            <div className='flex items-center gap-2 text-xs text-blue-600'>
-              <Loader2 className='h-3 w-3 animate-spin' />
-              <span>Searching...</span>
-            </div>
-          )}
+          <div className='flex items-center gap-3 flex-wrap'>
+            {isSearching && localValue && (
+              <div className='flex items-center gap-2 text-xs text-blue-600'>
+                <Loader2 className='h-3 w-3 animate-spin flex-shrink-0' />
+                <span className='whitespace-nowrap'>Searching...</span>
+              </div>
+            )}
+            <span className='text-xs text-muted-foreground hidden sm:inline whitespace-nowrap'>
+              Press <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600'>Ctrl+K</kbd> for focus • <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600'>Esc</kbd> to clear
+            </span>
+          </div>
         </div>
         <div className='relative'>
           <Search
@@ -362,20 +367,21 @@ export const PromotersSearchWithAutocomplete = React.memo(
             </div>
           )}
         </div>
-        <div className='flex items-center justify-between'>
-          <p id='search-help' className='text-xs text-muted-foreground'>
-            Press{' '}
-            <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>
+        <div className='flex items-center justify-between flex-wrap gap-2'>
+          <p id='search-help' className='text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap'>
+            <span className='whitespace-nowrap'>Press</span>
+            <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 whitespace-nowrap'>
               Ctrl+K
-            </kbd>{' '}
-            for focus •{' '}
-            <kbd className='px-1.5 py-0.5 text-xs font-semibold bg-muted border rounded'>
+            </kbd>
+            <span className='whitespace-nowrap'>for focus</span>
+            <span className='hidden sm:inline'>•</span>
+            <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 whitespace-nowrap'>
               Esc
-            </kbd>{' '}
-            to clear
+            </kbd>
+            <span className='whitespace-nowrap'>to clear</span>
           </p>
           {localValue && !isSearching && (
-            <div className='flex items-center gap-1 text-xs'>
+            <div className='flex items-center gap-1 text-xs whitespace-nowrap'>
               <span className='text-green-600 font-medium'>✓</span>
               <span className='text-muted-foreground'>Search applied</span>
             </div>
