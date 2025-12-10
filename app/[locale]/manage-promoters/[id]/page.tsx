@@ -73,6 +73,7 @@ import PromoterFilterSection from '@/components/promoter-filter-section';
 // Import enhanced components
 import { PromoterDetailsEnhanced } from '@/components/promoters/promoter-details-enhanced';
 import { PromoterDetailsSkeleton } from '@/components/promoters/promoter-details-skeleton';
+import { logger } from '@/lib/utils/logger';
 
 // Safe date parsing functions to prevent "Invalid time value" errors
 const safeParseISO = (dateString: string | null | undefined): Date | null => {
@@ -84,7 +85,7 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
       return parsed;
     }
   } catch (error) {
-    console.warn('Invalid ISO date string:', dateString, error);
+    logger.warn('Invalid ISO date string:', dateString, error);
   }
 
   // Try alternative parsing for common formats
@@ -97,7 +98,7 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
       }
     }
   } catch (error) {
-    console.warn(
+    logger.warn(
       'Failed to parse date with alternative formats:',
       dateString,
       error
@@ -117,7 +118,7 @@ const safeFormatDate = (
   try {
     return format(date, formatStr);
   } catch (error) {
-    console.warn('Failed to format date:', date, error);
+    logger.warn('Failed to format date:', date, error);
     return 'Invalid date';
   }
 };
@@ -265,7 +266,7 @@ export default function PromoterDetailPage() {
     try {
       const supabase = createClient();
       if (!supabase) {
-        console.error('Failed to initialize Supabase client');
+        logger.error('Failed to initialize Supabase client');
         return;
       }
 
@@ -275,7 +276,7 @@ export default function PromoterDetailPage() {
         .order('first_name');
 
       if (error) {
-        console.error('Error fetching all promoters:', error);
+        logger.error('Error fetching all promoters:', error);
         return;
       }
 
@@ -287,7 +288,7 @@ export default function PromoterDetailPage() {
       setAllPromoters(normalized);
       setFilteredPromoters(normalized);
     } catch (error) {
-      console.error('Error fetching all promoters:', error);
+      logger.error('Error fetching all promoters:', error);
     }
   }, []);
 
@@ -296,7 +297,7 @@ export default function PromoterDetailPage() {
     try {
       const supabase = createClient();
       if (!supabase) {
-        console.error('Failed to initialize Supabase client');
+        logger.error('Failed to initialize Supabase client');
         setEmployersLoading(false);
         return;
       }
@@ -308,7 +309,7 @@ export default function PromoterDetailPage() {
         .order('name_en', { nullsFirst: true });
 
       if (error) {
-        console.error('Error fetching employers:', error);
+        logger.error('Error fetching employers:', error);
         return;
       }
 
@@ -318,7 +319,7 @@ export default function PromoterDetailPage() {
       }));
       setEmployers(normalized);
     } catch (error) {
-      console.error('Error fetching employers:', error);
+      logger.error('Error fetching employers:', error);
     } finally {
       setEmployersLoading(false);
     }
@@ -381,7 +382,7 @@ export default function PromoterDetailPage() {
       // Redirect to promoters list
       router.push(`/${locale}/promoters`);
     } catch (error) {
-      console.error('Error deleting promoter:', error);
+      logger.error('Error deleting promoter:', error);
       alert('Failed to delete promoter. Please try again.');
     } finally {
       setIsDeleting(false);
@@ -418,7 +419,7 @@ export default function PromoterDetailPage() {
       // Show success message
       alert(`Promoter status updated to ${newStatus}`);
     } catch (error) {
-      console.error('Error updating promoter status:', error);
+      logger.error('Error updating promoter status:', error);
       alert('Failed to update promoter status. Please try again.');
     } finally {
       setIsUpdatingStatus(false);
@@ -464,7 +465,7 @@ export default function PromoterDetailPage() {
         }
       } catch (error) {
         // If promoter_tags table doesn't exist, use empty array
-        console.log(
+        logger.log(
           'promoter_tags table not available, using empty tags array'
         );
       }
@@ -476,7 +477,7 @@ export default function PromoterDetailPage() {
         .eq('promoter_id', promoterId);
 
       if (contractsError) {
-        console.error('Error fetching contracts:', contractsError);
+        logger.error('Error fetching contracts:', contractsError);
         // Don't set error for contracts, just log it
       }
 
@@ -533,7 +534,7 @@ export default function PromoterDetailPage() {
           .then(response => (response.ok ? response.json() : null))
           .then(data => data?.skills || [])
           .catch(error => {
-            console.warn('Skills API not available:', error.message);
+            logger.warn('Skills API not available:', error.message);
             return [];
           }),
 
@@ -542,7 +543,7 @@ export default function PromoterDetailPage() {
           .then(response => (response.ok ? response.json() : null))
           .then(data => data?.experience || [])
           .catch(error => {
-            console.warn('Experience API not available:', error.message);
+            logger.warn('Experience API not available:', error.message);
             return [];
           }),
 
@@ -551,7 +552,7 @@ export default function PromoterDetailPage() {
           .then(response => (response.ok ? response.json() : null))
           .then(data => data?.education || [])
           .catch(error => {
-            console.warn('Education API not available:', error.message);
+            logger.warn('Education API not available:', error.message);
             return [];
           }),
 
@@ -560,7 +561,7 @@ export default function PromoterDetailPage() {
           .then(response => (response.ok ? response.json() : null))
           .then(data => data?.documents || [])
           .catch(error => {
-            console.warn('Documents API not available:', error.message);
+            logger.warn('Documents API not available:', error.message);
             return [];
           }),
       ];
@@ -574,14 +575,14 @@ export default function PromoterDetailPage() {
         setEducation(educationData);
         setDocuments(documentsData);
 
-        console.log('CV data loaded successfully:', {
+        logger.log('CV data loaded successfully:', {
           skills: skillsData.length,
           experience: experienceData.length,
           education: educationData.length,
           documents: documentsData.length,
         });
       } catch (error) {
-        console.warn('Some CV data could not be loaded:', error);
+        logger.warn('Some CV data could not be loaded:', error);
         // Set empty arrays as fallback
         setSkills([]);
         setExperience([]);

@@ -242,7 +242,7 @@ export default function DocumentUploadEnhanced({
               .from('promoter-documents')
               .remove([oldFilePath]);
           } catch (deleteError) {
-            console.warn('Could not delete old file:', deleteError);
+            // Could not delete old file - non-critical, continue with upload
           }
         }
 

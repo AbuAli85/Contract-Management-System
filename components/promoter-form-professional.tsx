@@ -271,7 +271,7 @@ export default function PromoterFormProfessional(
 
       setEmployers(data || []);
     } catch (error) {
-      console.error('Error fetching employers:', error);
+      // Error fetching employers - handled by toast notification
       toast({
         title: 'Error',
         description: 'Failed to load employers',
@@ -615,9 +615,7 @@ export default function PromoterFormProfessional(
     if (!formData.passport_number || !formData.passport_number.trim()) {
       // Add warning instead of error to allow submission but encourage passport
       if (!errors.passport_number) {
-        console.warn(
-          '⚠️ Promoter submitted without passport number - compliance risk!'
-        );
+      // Passport number missing - warning shown to user via validation message
       }
     }
 
@@ -845,7 +843,7 @@ export default function PromoterFormProfessional(
 
       onFormSubmit();
     } catch (error) {
-      console.error('Error saving promoter:', error);
+      // Error saving promoter - error message shown to user via toast
 
       let errorMessage = 'Failed to save promoter';
       if (error instanceof Error) {
