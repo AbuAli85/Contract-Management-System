@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { withRBAC } from '@/lib/rbac/guard';
+import { logger } from '@/lib/utils/logger';
 
 export const POST = withRBAC('file:upload:own', async (request: Request) => {
   try {
@@ -63,11 +64,12 @@ export const POST = withRBAC('file:upload:own', async (request: Request) => {
     const documentType = formData.get('documentType') as string;
 
     // Debug: Log the values being used for filename generation
-    console.log('🔍 API Upload Debug - Values for filename:');
-    console.log('- promoterName:', promoterName);
-    console.log('- idCardNumber:', idCardNumber);
-    console.log('- passportNumber:', passportNumber);
-    console.log('- documentType:', documentType);
+    logger.log('🔍 API Upload Debug - Values for filename:', {
+      promoterName,
+      idCardNumber,
+      passportNumber,
+      documentType,
+    });
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -147,7 +149,7 @@ export const POST = withRBAC('file:upload:own', async (request: Request) => {
     // For file conflicts, Supabase will handle with upsert: true
     const fileName = `${cleanPromoterName}_${documentNumber}.${fileExt}`;
 
-    console.log('🔍 API Generated filename:', fileName);
+    logger.log('🔍 API Generated filename:', fileName);
 
     // Convert file to buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer());
@@ -162,7 +164,7 @@ export const POST = withRBAC('file:upload:own', async (request: Request) => {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      logger.error('Upload error:', uploadError);
       return NextResponse.json(
         { error: `Upload failed: ${uploadError.message}` },
         { status: 500 }
@@ -175,7 +177,7 @@ export const POST = withRBAC('file:upload:own', async (request: Request) => {
       .getPublicUrl(fileName);
 
     // Log successful upload
-    console.log(`File uploaded successfully: ${fileName}`);
+    logger.log(`File uploaded successfully: ${fileName}`);
 
     return NextResponse.json({
       success: true,
@@ -186,7 +188,7 @@ export const POST = withRBAC('file:upload:own', async (request: Request) => {
       fileType: file.type,
     });
   } catch (error) {
-    console.error('Upload API error:', error);
+    logger.error('Upload API error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Upload failed' },
       { status: 500 }
@@ -258,7 +260,7 @@ export async function DELETE(request: Request) {
       .remove([fileName]);
 
     if (deleteError) {
-      console.error('Delete error:', deleteError);
+      logger.error('Delete error:', deleteError);
       return NextResponse.json(
         { error: `Delete failed: ${deleteError.message}` },
         { status: 500 }
@@ -267,7 +269,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete API error:', error);
+    logger.error('Delete API error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Delete failed' },
       { status: 500 }

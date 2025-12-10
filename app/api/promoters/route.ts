@@ -9,6 +9,7 @@ import {
   getRateLimitHeaders,
   createRateLimitResponse,
 } from '@/lib/rate-limit';
+import { logger } from '@/lib/utils/logger';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -103,7 +104,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       });
     }
 
-    console.log(
+    logger.log(
       '🔍 API /api/promoters GET called (RBAC ENABLED, Rate Limited)'
     );
 
@@ -112,7 +113,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('❌ Missing Supabase credentials:', {
+      logger.error('❌ Missing Supabase credentials:', {
         hasUrl: !!supabaseUrl,
         hasAnonKey: !!supabaseAnonKey,
         timestamp: new Date().toISOString(),
@@ -138,14 +139,16 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: any) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }: any) =>
-              cookieStore.set(name, value, options as CookieOptions)
-            );
-          } catch {}
+          setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options as CookieOptions)
+              );
+            } catch {
+              // Ignore cookie setting errors
+            }
+          },
         },
-      } as any,
     });
 
     // ✅ SECURITY: Verify authenticated user
@@ -155,7 +158,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('❌ Authentication failed:', {
+      logger.error('❌ Authentication failed:', {
         authError: authError?.message,
         hasUser: !!user,
         userId: user?.id,
@@ -188,7 +191,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 
     const isAdmin = userProfile?.role === 'admin';
 
-    console.log('🔐 User role check:', {
+    logger.log('🔐 User role check:', {
       userId: user.id,
       email: user.email,
       role: userProfile?.role,
@@ -215,7 +218,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     const employerIdFilter = url.searchParams.get('employerId') || '';
     const userIdFilter = url.searchParams.get('userId') || '';
 
-    console.log('📊 Query params:', {
+    logger.log('📊 Query params:', {
       page,
       limit,
       offset,
@@ -248,15 +251,15 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     // ✅ SECURITY: Scope data by user role
     // Role-based filtering: Employees see only their own, Employers see only assigned, Admins see all
     if (employerIdFilter) {
-      console.log('🔒 Filtering by employer_id:', employerIdFilter);
+      logger.log('🔒 Filtering by employer_id:', employerIdFilter);
       query = query.eq('employer_id', employerIdFilter);
     } else if (userIdFilter) {
-      console.log('🔒 Filtering by user_id (employee):', userIdFilter);
+      logger.log('🔒 Filtering by user_id (employee):', userIdFilter);
       // For employees, filter by their own promoter record ID
       // Note: This assumes the employee has a promoter record with matching ID
       query = query.eq('id', userIdFilter);
     } else if (!isAdmin) {
-      console.log(
+      logger.log(
         '🔒 Non-admin user: applying data scope via created_by filter'
       );
       // Uncomment when created_by column is added via scripts/add-created-by-column.sql:
@@ -346,7 +349,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     const { data: promoters, error, count } = await query;
 
     if (error) {
-      console.error('❌ Database error:', {
+      logger.error('❌ Database error:', {
         error: error.message,
         code: error.code,
         details: error.details,
@@ -369,7 +372,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       );
     }
 
-    console.log(
+    logger.log(
       `✅ Fetched ${promoters?.length || 0} promoters (total: ${count})`
     );
 
@@ -397,7 +400,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       }
     );
   } catch (error) {
-    console.error('❌ API error:', error);
+    logger.error('❌ API error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -433,7 +436,7 @@ export const POST = withRBAC(
       });
     }
 
-    console.log(
+    logger.log(
       '🔍 API /api/promoters POST called (RBAC ENABLED, Rate Limited)'
     );
     try {
@@ -451,9 +454,9 @@ export const POST = withRBAC(
           getAll() {
             return cookieStore.getAll();
           },
-          setAll(cookiesToSet: any) {
+          setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
             try {
-              cookiesToSet.forEach(({ name, value, options }: any) =>
+              cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options as CookieOptions)
               );
             } catch {
@@ -462,7 +465,7 @@ export const POST = withRBAC(
               // user sessions.
             }
           },
-        } as any,
+        },
       });
 
       // ✅ SECURITY: Verify authenticated user (required)
@@ -482,7 +485,7 @@ export const POST = withRBAC(
         );
       }
 
-      console.log('👤 Authenticated user:', user.email);
+      logger.log('👤 Authenticated user:', user.email);
 
       // Check if user is admin (for scoping data)
       let isAdmin = false;
@@ -492,7 +495,7 @@ export const POST = withRBAC(
         .eq('id', user.id)
         .single();
 
-      isAdmin = (userProfile as any)?.role === 'admin';
+      isAdmin = (userProfile as { role?: string } | null)?.role === 'admin';
 
       // Parse and validate request body
       const body = await request.json();
@@ -507,7 +510,7 @@ export const POST = withRBAC(
           .single();
 
         if (checkError && checkError.code !== 'PGRST116') {
-          console.error('Error checking ID card number:', checkError);
+          logger.error('Error checking ID card number:', checkError);
           return NextResponse.json(
             { error: 'Failed to validate ID card number' },
             { status: 500 }
@@ -528,7 +531,7 @@ export const POST = withRBAC(
         created_by: user.id, // User scoping for non-admins
       };
 
-      console.log('📝 Creating promoter with user tracking:', {
+      logger.log('📝 Creating promoter with user tracking:', {
         createdBy: user.id,
         email: user.email,
       });
@@ -541,7 +544,7 @@ export const POST = withRBAC(
         .single();
 
       if (error) {
-        console.error('Error creating promoter:', error);
+        logger.error('Error creating promoter:', error);
         return NextResponse.json(
           {
             error: 'Failed to create promoter',
@@ -562,7 +565,7 @@ export const POST = withRBAC(
           created_at: new Date().toISOString(),
         });
       } catch (auditError) {
-        console.error('Error creating audit log:', auditError);
+        logger.error('Error creating audit log:', auditError);
         // Don't fail the request if audit logging fails
       }
 
@@ -582,7 +585,7 @@ export const POST = withRBAC(
         );
       }
 
-      console.error('API error:', error);
+      logger.error('API error:', error);
       return NextResponse.json(
         {
           success: false,

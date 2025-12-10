@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -556,6 +556,36 @@ export default function PromoterFormProfessional(
         return newErrors;
       });
     }
+
+    // Real-time validation for critical fields
+    if (field === 'email' && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        setValidationErrors(prev => ({
+          ...prev,
+          email: 'Please enter a valid email address',
+        }));
+      }
+    }
+
+    if (field === 'mobile_number' && value) {
+      const mobileValidation = validateMobileNumber(value, true);
+      if (!mobileValidation.isValid) {
+        setValidationErrors(prev => ({
+          ...prev,
+          mobile_number: mobileValidation.error || 'Please enter a valid mobile number',
+        }));
+      }
+    }
+
+    if (field === 'id_number' && value) {
+      if (value.trim().length < 5) {
+        setValidationErrors(prev => ({
+          ...prev,
+          id_number: 'ID number must be at least 5 characters',
+        }));
+      }
+    }
   };
 
   const validateForm = () => {
@@ -933,9 +963,13 @@ export default function PromoterFormProfessional(
                       className={
                         validationErrors.full_name ? 'border-red-500' : ''
                       }
+                      aria-label='Full name in English'
+                      aria-required='true'
+                      aria-invalid={!!validationErrors.full_name}
+                      aria-describedby={validationErrors.full_name ? 'full_name-error' : undefined}
                     />
                     {validationErrors.full_name && (
-                      <p className='text-sm text-red-500'>
+                      <p id='full_name-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
                         {validationErrors.full_name}
                       </p>
                     )}
@@ -953,9 +987,14 @@ export default function PromoterFormProfessional(
                       className={
                         validationErrors.name_ar ? 'border-red-500' : ''
                       }
+                      aria-label='Full name in Arabic'
+                      aria-required='true'
+                      aria-invalid={!!validationErrors.name_ar}
+                      aria-describedby={validationErrors.name_ar ? 'name_ar-error' : undefined}
+                      dir='rtl'
                     />
                     {validationErrors.name_ar && (
-                      <p className='text-sm text-red-500'>
+                      <p id='name_ar-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
                         {validationErrors.name_ar}
                       </p>
                     )}
@@ -1330,9 +1369,13 @@ export default function PromoterFormProfessional(
                           validationErrors.id_number ? 'border-red-500' : ''
                         }
                         required
+                        aria-label='ID card number'
+                        aria-required='true'
+                        aria-invalid={!!validationErrors.id_number}
+                        aria-describedby={validationErrors.id_number ? 'id_number-error' : undefined}
                       />
                       {validationErrors.id_number && (
-                        <p className='text-sm text-red-500 flex items-center gap-1'>
+                        <p id='id_number-error' className='text-sm text-red-500 flex items-center gap-1' role='alert' aria-live='polite'>
                           <AlertCircle className='h-3 w-3' />
                           {validationErrors.id_number}
                         </p>
@@ -1635,9 +1678,13 @@ export default function PromoterFormProfessional(
                       placeholder='Enter email address (required)'
                       className={validationErrors.email ? 'border-red-500' : ''}
                       required
+                      aria-label='Email address'
+                      aria-required='true'
+                      aria-invalid={!!validationErrors.email}
+                      aria-describedby={validationErrors.email ? 'email-error' : undefined}
                     />
                     {validationErrors.email && (
-                      <p className='text-sm text-red-500'>
+                      <p id='email-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
                         {validationErrors.email}
                       </p>
                     )}
@@ -1701,12 +1748,17 @@ export default function PromoterFormProfessional(
                       className={
                         validationErrors.mobile_number ? 'border-red-500' : ''
                       }
+                      required
+                      aria-label='Mobile number'
+                      aria-required='true'
+                      aria-invalid={!!validationErrors.mobile_number}
+                      aria-describedby={validationErrors.mobile_number ? 'mobile_number-error' : 'mobile_number-hint'}
                     />
-                    <p className='text-xs text-muted-foreground'>
+                    <p id='mobile_number-hint' className='text-xs text-muted-foreground'>
                       Include country code (e.g., +968 9123 4567)
                     </p>
                     {validationErrors.mobile_number && (
-                      <p className='text-sm text-red-500'>
+                      <p id='mobile_number-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
                         {validationErrors.mobile_number}
                       </p>
                     )}
@@ -2647,7 +2699,13 @@ export default function PromoterFormProfessional(
             Cancel
           </Button>
 
-          <Button type='submit' disabled={isLoading} className='flex-1'>
+          <Button 
+            type='submit' 
+            disabled={isLoading || Object.keys(validationErrors).length > 0} 
+            className='flex-1'
+            aria-label={isEditMode ? 'Save promoter changes' : 'Create new promoter'}
+            aria-busy={isLoading}
+          >
             <Save className='mr-2 h-4 w-4' />
             {isLoading
               ? 'Saving...'

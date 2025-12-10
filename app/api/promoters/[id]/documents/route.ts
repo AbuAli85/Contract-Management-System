@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import type { CookieOptions } from '@supabase/ssr';
+import { logger } from '@/lib/utils/logger';
 
 // Helper function to create Supabase client
 async function createSupabaseClient() {
@@ -13,16 +15,16 @@ async function createSupabaseClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: any) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
           try {
-            cookiesToSet.forEach(({ name, value, ...options }: any) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
           } catch {
             // Ignore set errors in server components
           }
         },
-      } as any,
+      },
     }
   );
 }
@@ -37,7 +39,7 @@ export async function GET(
 
     // Validate promoter ID format (should be UUID)
     if (!id || typeof id !== 'string' || id.trim() === '') {
-      console.error('Invalid promoter ID:', id);
+      logger.error('Invalid promoter ID:', id);
       return NextResponse.json(
         { error: 'Invalid promoter ID' },
         { status: 400 }
@@ -52,11 +54,11 @@ export async function GET(
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.error('Authentication error:', authError?.message || 'No user');
+      logger.error('Authentication error:', authError?.message || 'No user');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log(`Fetching documents for promoter: ${id}, user: ${user.id}`);
+    logger.log(`Fetching documents for promoter: ${id}, user: ${user.id}`);
 
     const { data, error } = await supabase
       .from('promoter_documents')
@@ -67,9 +69,9 @@ export async function GET(
     if (error) {
       // Check if the error is due to missing table (relation does not exist)
       const errorMessage = error.message || '';
-      const errorCode = (error as any).code || '';
+      const errorCode = (error as { code?: string }).code || '';
 
-      console.error('Error fetching documents:', {
+      logger.error('Error fetching documents:', {
         message: errorMessage,
         code: errorCode,
         details: error,
@@ -83,7 +85,7 @@ export async function GET(
           errorMessage.includes('does not exist')) ||
         errorCode === '42P01' // PostgreSQL error code for "relation does not exist"
       ) {
-        console.warn(
+        logger.warn(
           'promoter_documents table does not exist - returning empty array'
         );
         return NextResponse.json({ documents: [] }, { status: 200 });
@@ -95,7 +97,7 @@ export async function GET(
         errorMessage.includes('policy') ||
         errorCode === '42501' // PostgreSQL error code for "insufficient privilege"
       ) {
-        console.warn('RLS policy blocking access - returning empty array');
+        logger.warn('RLS policy blocking access - returning empty array');
         return NextResponse.json({ documents: [] }, { status: 200 });
       }
 
@@ -110,12 +112,12 @@ export async function GET(
       );
     }
 
-    console.log(
+    logger.log(
       `Successfully fetched ${data?.length || 0} documents for promoter ${id}`
     );
     return NextResponse.json({ documents: data || [] }, { status: 200 });
   } catch (error) {
-    console.error('Documents API error:', error);
+    logger.error('Documents API error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -180,7 +182,7 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Error creating document:', error);
+      logger.error('Error creating document:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -189,7 +191,7 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error('Create document error:', error);
+    logger.error('Create document error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -226,21 +228,22 @@ export async function PATCH(
     }
 
     // Remove fields that shouldn't be updated
-    delete (updateData as any).id;
-    delete (updateData as any).promoter_id;
-    delete (updateData as any).created_at;
+    const safeUpdateData = updateData as Record<string, unknown>;
+    delete safeUpdateData.id;
+    delete safeUpdateData.promoter_id;
+    delete safeUpdateData.created_at;
 
     // Update document
     const { data, error } = await supabase
       .from('promoter_documents')
-      .update(updateData)
+      .update(safeUpdateData)
       .eq('id', documentId)
       .eq('promoter_id', promoterId) // Ensure the document belongs to this promoter
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating document:', error);
+      logger.error('Error updating document:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -256,7 +259,7 @@ export async function PATCH(
       { status: 200 }
     );
   } catch (error) {
-    console.error('Update document error:', error);
+    logger.error('Update document error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -328,7 +331,7 @@ export async function DELETE(
       .eq('promoter_id', promoterId);
 
     if (deleteError) {
-      console.error('Error deleting document:', deleteError);
+      logger.error('Error deleting document:', deleteError);
       return NextResponse.json({ error: deleteError.message }, { status: 400 });
     }
 
@@ -349,7 +352,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error('Delete document error:', error);
+    logger.error('Delete document error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

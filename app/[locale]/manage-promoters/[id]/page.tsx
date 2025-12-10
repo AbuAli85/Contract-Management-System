@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
