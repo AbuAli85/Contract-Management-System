@@ -43,6 +43,8 @@ import { WorkforceAnalyticsSummary } from './workforce-analytics-summary';
 import { AnalyticsLoadingSkeleton } from './analytics-loading-skeleton';
 import { AnalyticsToolbar } from './analytics-toolbar';
 import { AnalyticsInsightsPanel } from './analytics-insights-panel';
+import { PromotersSmartInsights } from './promoters-smart-insights';
+import { PromotersQuickActionsPanel } from './promoters-quick-actions-panel';
 import { Button } from '../ui/button';
 
 interface PromotersResponse {
@@ -1403,6 +1405,10 @@ export function EnhancedPromotersViewRefactored({
     router.push(`/${derivedLocale}/manage-promoters/new`);
   }, [router, derivedLocale]);
 
+  const handleImportPromoters = useCallback(() => {
+    router.push(`/${derivedLocale}/csv-import`);
+  }, [router, derivedLocale]);
+
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -1802,6 +1808,34 @@ export function EnhancedPromotersViewRefactored({
         )}
       </section>
 
+      {/* AI-Powered Smart Insights */}
+      {!isLoading && dashboardPromoters.length > 0 && (
+        <section aria-labelledby='smart-insights-heading' className='mt-6'>
+          <h2 id='smart-insights-heading' className='sr-only'>
+            AI-Powered Smart Insights
+          </h2>
+          <PromotersSmartInsights
+            promoters={dashboardPromoters}
+            metrics={metrics}
+            onActionClick={(action) => {
+              // Handle smart insight actions
+              if (action.startsWith('filter:')) {
+                const [, type, value] = action.split(':');
+                if (type === 'documents') {
+                  setDocumentFilter(value as 'all' | 'expired' | 'expiring' | 'missing');
+                } else if (type === 'status') {
+                  setStatusFilter(value as OverallStatus | 'all');
+                } else if (type === 'assignment') {
+                  setAssignmentFilter(value as 'all' | 'assigned' | 'unassigned');
+                }
+              } else if (action === 'view:analytics') {
+                setViewMode('analytics');
+              }
+            }}
+          />
+        </section>
+      )}
+
       {/* Data Insights & Charts */}
       {!isLoading && dashboardPromoters.length > 0 && (
         <section aria-labelledby='insights-heading' className='mt-6'>
@@ -1821,6 +1855,37 @@ export function EnhancedPromotersViewRefactored({
         isFetching={isDataFetching && !isLoading}
         showFloating={true}
       />
+
+      {/* Quick Actions Panel */}
+      {!isLoading && (
+        <section aria-labelledby='quick-actions-heading' className='mt-6'>
+          <h2 id='quick-actions-heading' className='sr-only'>
+            Quick Actions
+          </h2>
+          <PromotersQuickActionsPanel
+            onAddPromoter={handleAddPromoter}
+            onImport={handleImportPromoters}
+            onExport={handleExport}
+            onViewAnalytics={() => setViewMode('analytics')}
+            onSendNotification={() => {
+              toast({
+                title: 'Notification Sent',
+                description: `Sending notifications to ${selectedPromoters.size} selected promoters`,
+              });
+            }}
+            onScheduleMeeting={() => {
+              toast({
+                title: 'Meeting Scheduled',
+                description: 'Scheduling meeting with selected promoters',
+              });
+            }}
+            onBulkAction={(action) => {
+              handleBulkAction(action);
+            }}
+            selectedCount={selectedPromoters.size}
+          />
+        </section>
+      )}
 
       {/* Enhanced Filters */}
       <section aria-labelledby='filters-heading'>
