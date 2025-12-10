@@ -49,6 +49,7 @@ import {
   Calendar,
   UserX,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react';
 import type { OverallStatus } from './types';
 import { Badge } from '@/components/ui/badge';
