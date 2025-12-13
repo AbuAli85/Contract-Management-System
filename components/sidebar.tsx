@@ -304,13 +304,23 @@ function SidebarContent({
 
       // Add employer team management (for employers, managers, and admins)
       const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
-      const isEmployer = userProfile?.role === 'employer' || 
-                         userProfile?.role === 'manager' || 
-                         roleInfo?.canDoAdmin ||
+      const userRole = userProfile?.role || userMetadata?.role || '';
+      
+      // Check if user is admin, manager, or employer (multiple checks for reliability)
+      const isAdmin = userRole === 'admin' || 
+                      userRole === 'super_admin' || 
+                      roleInfo?.canDoAdmin === true ||
+                      (roleInfo && typeof roleInfo.canDoAdmin !== 'undefined' && roleInfo.canDoAdmin);
+      const isManager = userRole === 'manager';
+      const isEmployer = userRole === 'employer' || 
                          userMetadata?.employer_id ||
                          userMetadata?.company_id;
       
-      if (isEmployer) {
+      // Always show Team Management for admins, managers, and employers
+      // For debugging: uncomment to see why it might not show
+      // console.log('Team Management visibility check:', { userRole, isAdmin, isManager, isEmployer, canDoAdmin: roleInfo?.canDoAdmin });
+      
+      if (isAdmin || isManager || isEmployer) {
         baseItems.splice(
           -2,
           0, // Insert before Settings
