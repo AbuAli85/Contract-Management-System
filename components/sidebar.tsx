@@ -302,6 +302,28 @@ function SidebarContent({
         },
       ];
 
+      // Add employer team management (for employers, managers, and admins)
+      const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
+      const isEmployer = userProfile?.role === 'employer' || 
+                         userProfile?.role === 'manager' || 
+                         roleInfo?.canDoAdmin ||
+                         userMetadata?.employer_id ||
+                         userMetadata?.company_id;
+      
+      if (isEmployer) {
+        baseItems.splice(
+          -2,
+          0, // Insert before Settings
+          {
+            title: 'Team Management',
+            href: '/employer/team',
+            icon: Users,
+            description: 'Manage your team, attendance, tasks, and targets',
+            badge: 'New',
+          }
+        );
+      }
+
       // Add admin-only items
       if (roleInfo?.canDoAdmin) {
         baseItems.splice(
