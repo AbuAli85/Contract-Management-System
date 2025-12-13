@@ -240,8 +240,31 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
   const availableCount = filteredEmployees.filter(e => !e.isInTeam).length;
   const inTeamCount = filteredEmployees.filter(e => e.isInTeam).length;
 
+  // Reset form when dialog closes
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      // Reset all state when dialog closes
+      setSelectedEmployee(null);
+      setSearchTerm('');
+      setError('');
+      setFormData({
+        employee_code: '',
+        job_title: '',
+        department: '',
+        employment_type: 'full_time',
+        hire_date: '',
+        reporting_manager_id: '',
+        salary: '',
+        currency: 'OMR',
+        work_location: '',
+        notes: '',
+      });
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -323,30 +346,30 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
                           : 'cursor-pointer'
                       } ${isSelected ? 'bg-blue-50 border-blue-200' : ''}`}
                     >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{employee.full_name}</p>
-                          {employee.isInTeam && (
-                            <Badge variant="secondary" className="text-xs">
-                              In Team
-                            </Badge>
-                          )}
-                          {employee.role && (
-                            <Badge variant="outline" className="text-xs">
-                              {employee.role}
-                            </Badge>
-                          )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{employee.full_name}</p>
+                            {employee.isInTeam && (
+                              <Badge variant="secondary" className="text-xs">
+                                In Team
+                              </Badge>
+                            )}
+                            {employee.role && (
+                              <Badge variant="outline" className="text-xs">
+                                {employee.role}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {employee.email}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {employee.email}
-                        </p>
+                        {!employee.isInTeam && (
+                          <UserPlus className="h-5 w-5 text-gray-400" />
+                        )}
                       </div>
-                      {!employee.isInTeam && (
-                        <UserPlus className="h-5 w-5 text-gray-400" />
-                      )}
-                    </div>
-                  </button>
+                    </button>
                   );
                 })}
               </div>
