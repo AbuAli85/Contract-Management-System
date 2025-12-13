@@ -50,7 +50,6 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
   const [availableEmployees, setAvailableEmployees] = useState<AvailableEmployee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<AvailableEmployee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<AvailableEmployee | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'search'>('list');
   const [formData, setFormData] = useState({
     employee_code: '',
     job_title: '',
@@ -162,7 +161,6 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
       return;
     }
     setSelectedEmployee(employee);
-    setViewMode('search'); // Switch to form view
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
