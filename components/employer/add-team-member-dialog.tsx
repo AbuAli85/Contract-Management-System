@@ -115,25 +115,35 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
 
       const currentTeamIds = new Set((currentTeam || []).map(t => t.employee_id));
 
-      // Fetch all profiles (promoters/employees)
+      // Fetch all promoters (employees) from the promoters table
       // These are the same people from the promoters page
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, first_name, last_name, role, status')
-        .order('full_name', { ascending: true });
+      // Only fetch promoters that are not already assigned to another employer
+      // or are assigned to the current employer (so they can be re-added if needed)
+      const { data: allPromoters, error: promotersError } = await supabase
+        .from('promoters')
+        .select('id, name_en, name_ar, email, mobile_number, phone, status, employer_id')
+        .order('name_en', { ascending: true });
 
-      if (profilesError) throw profilesError;
+      if (promotersError) throw promotersError;
+
+      // Filter out inactive/terminated promoters
+      const promoters = (allPromoters || []).filter(
+        promoter => 
+          promoter.status !== 'terminated' && 
+          promoter.status !== 'suspended' &&
+          promoter.status !== 'inactive'
+      );
 
       // Map to available employees and mark if already in team
-      const employees: AvailableEmployee[] = (profiles || []).map(profile => ({
-        id: profile.id,
-        email: profile.email || '',
-        full_name: profile.full_name || profile.first_name + ' ' + profile.last_name || 'Unknown',
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        role: profile.role,
-        status: profile.status,
-        isInTeam: currentTeamIds.has(profile.id),
+      const employees: AvailableEmployee[] = (promoters || []).map(promoter => ({
+        id: promoter.id,
+        email: promoter.email || '',
+        full_name: promoter.name_en || promoter.name_ar || 'Unknown',
+        first_name: promoter.name_en?.split(' ')[0] || null,
+        last_name: promoter.name_en?.split(' ').slice(1).join(' ') || null,
+        role: 'promoter', // Promoters are employees
+        status: promoter.status || 'active',
+        isInTeam: currentTeamIds.has(promoter.id),
       }));
 
       setAvailableEmployees(employees);
