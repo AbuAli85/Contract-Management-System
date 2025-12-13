@@ -37,6 +37,7 @@ import {
   Calendar,
   Search,
 } from 'lucide-react';
+import { UserCreateForm } from '@/components/user-management/user-create-form';
 
 interface User {
   id: string;
@@ -504,9 +505,7 @@ export default function UserManagementPage() {
                 <Button variant='outline' asChild>
                   <Link href='/en/dashboard'>Dashboard</Link>
                 </Button>
-                <Button variant='secondary' asChild>
-                  <Link href='/en/dashboard/users'>Create Users</Link>
-                </Button>
+                <UserCreateForm onSuccess={() => fetchUsers()} />
                 <Button onClick={handleManualRefresh} disabled={loading}>
                   {loading || isRefreshing ? (
                     <>

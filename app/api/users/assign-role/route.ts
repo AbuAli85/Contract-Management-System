@@ -1,36 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withRBAC } from '@/lib/rbac/guard';
+import {
+  getServiceRoleClient,
+  getAuthenticatedUser,
+  ensureUserCanManageUsers,
+} from '../admin-utils';
 
-export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+async function assignRoleHandler(request: NextRequest) {
+  try {
+    const serviceClient = getServiceRoleClient();
+    const currentUser = await getAuthenticatedUser();
+    await ensureUserCanManageUsers(currentUser.id, serviceClient);
 
-  // Check if current user is admin
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  if (!profile || profile.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const { userId, newRole } = await request.json();
+    if (!userId || !newRole) {
+      return NextResponse.json(
+        { error: 'Missing parameters' },
+        { status: 400 }
+      );
+    }
+
+    // Use the management API's role assignment logic
+    const response = await fetch(
+      `${request.nextUrl.origin}/api/users/management`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: request.headers.get('Cookie') || '',
+        },
+        body: JSON.stringify({
+          action: 'update_role',
+          userId,
+          role: newRole,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error || 'Failed to assign role' },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: data.message || 'Role assigned successfully',
+    });
+  } catch (error) {
+    console.error('Error in assign-role:', error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : 'Internal server error',
+      },
+      { status: 500 }
+    );
   }
-
-  const { userId, newRole } = await request.json();
-  if (!userId || !newRole) {
-    return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
-  }
-
-  // Update the target user's role
-  const { error } = await supabase
-    .from('users')
-    .update({ role: newRole })
-    .eq('id', userId);
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
 }
+
+// Export with RBAC protection
+export const POST = withRBAC('role:assign:all', assignRoleHandler);

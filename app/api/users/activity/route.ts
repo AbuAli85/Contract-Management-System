@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withAnyRBAC } from '@/lib/rbac/guard';
 
-export async function GET(request: NextRequest) {
+async function getUserActivityHandler(request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -93,7 +94,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+// Export with RBAC protection - allow viewing own activity or admin viewing all
+export const GET = withAnyRBAC(
+  ['user:read:own', 'user:read:all'],
+  getUserActivityHandler
+);
+
+async function logUserActivityHandler(request: NextRequest) {
   try {
     const supabase = await createClient();
 
@@ -157,3 +164,9 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export with RBAC protection - users can log their own activity
+export const POST = withAnyRBAC(
+  ['user:read:own', 'user:read:all'],
+  logUserActivityHandler
+);

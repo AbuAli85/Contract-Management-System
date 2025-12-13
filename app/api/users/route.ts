@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
+import { withRBAC } from '@/lib/rbac/guard';
 
 // GET - Fetch all users
-export async function GET(request: NextRequest) {
+async function getUsersHandler(request: NextRequest) {
   try {
     console.log('🔍 API Users GET: Starting request');
 
@@ -172,7 +173,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Create new user
-export async function POST(request: NextRequest) {
+async function createUserHandler(request: NextRequest) {
   try {
     const body = await request.json();
     const {
@@ -344,3 +345,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export with RBAC protection
+export const POST = withRBAC('user:create:all', createUserHandler);

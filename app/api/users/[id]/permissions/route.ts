@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getUserPermissions, getUserRole, getDefaultPermissionsForRole } from '@/lib/services/permission-service';
+import {
+  getUserPermissions,
+  getUserRole,
+  getDefaultPermissionsForRole,
+} from '@/lib/services/permission-service';
+import { withAnyRBAC } from '@/lib/rbac/guard';
 
-export async function GET(
+async function getUserPermissionsHandler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -21,21 +26,6 @@ export async function GET(
 
     // Check if user has admin permissions or is viewing their own permissions
     const isOwnPermissions = user.id === id;
-    
-    if (!isOwnPermissions) {
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (!userProfile || userProfile.role !== 'admin') {
-        return NextResponse.json(
-          { error: 'Only admins can view other users\' permissions' },
-          { status: 403 }
-        );
-      }
-    }
 
     // Get user's permissions from the database
     const userPermissions = await getUserPermissions(id);
@@ -68,7 +58,13 @@ export async function GET(
   }
 }
 
-export async function POST(
+// Export with RBAC protection - allow viewing own permissions or admin viewing all
+export const GET = withAnyRBAC(
+  ['user:read:own', 'user:read:all'],
+  getUserPermissionsHandler
+);
+
+async function updateUserPermissionsHandler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -77,26 +73,13 @@ export async function POST(
     const { id } = await params;
     const { permissions } = await request.json();
 
-    // Check if current user is admin
+    // Get current user
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!userProfile || userProfile.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Only admins can modify user permissions' },
-        { status: 403 }
-      );
     }
 
     // Use the management API to assign permissions
@@ -138,4 +121,8 @@ export async function POST(
   }
 }
 
-// Note: getDefaultPermissionsForRole is now imported from permission-service
+// Export with RBAC protection - only admins can modify permissions
+export const POST = withAnyRBAC(
+  ['user:edit:all', 'permission:assign:all'],
+  updateUserPermissionsHandler
+);
