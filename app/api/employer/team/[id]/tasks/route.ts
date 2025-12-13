@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withAnyRBAC } from '@/lib/rbac/guard';
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
