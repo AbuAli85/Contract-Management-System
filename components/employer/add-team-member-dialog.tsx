@@ -171,6 +171,20 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
       return;
     }
     setSelectedEmployee(employee);
+    setError('');
+    // Reset form data when selecting a new employee
+    setFormData({
+      employee_code: '',
+      job_title: '',
+      department: '',
+      employment_type: 'full_time',
+      hire_date: '',
+      reporting_manager_id: '',
+      salary: '',
+      currency: 'OMR',
+      work_location: '',
+      notes: '',
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -422,7 +436,7 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
                   onChange={e =>
                     setFormData({ ...formData, employee_code: e.target.value })
                   }
-                  placeholder="EMP001"
+                  placeholder="Enter employee code (e.g., EMP001)"
                 />
               </div>
 
@@ -434,7 +448,7 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
                   onChange={e =>
                     setFormData({ ...formData, job_title: e.target.value })
                   }
-                  placeholder="Software Engineer"
+                  placeholder="Enter job title"
                 />
               </div>
 
@@ -446,7 +460,7 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
                   onChange={e =>
                     setFormData({ ...formData, department: e.target.value })
                   }
-                  placeholder="Engineering"
+                  placeholder="Enter department name"
                 />
               </div>
 
@@ -480,6 +494,7 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
                   onChange={e =>
                     setFormData({ ...formData, hire_date: e.target.value })
                   }
+                  max={new Date().toISOString().split('T')[0]}
                 />
               </div>
 
@@ -489,11 +504,12 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
                   id="salary"
                   type="number"
                   step="0.01"
+                  min="0"
                   value={formData.salary}
                   onChange={e =>
                     setFormData({ ...formData, salary: e.target.value })
                   }
-                  placeholder="0.00"
+                  placeholder="Enter salary amount"
                 />
               </div>
             </div>
@@ -506,7 +522,7 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
                 onChange={e =>
                   setFormData({ ...formData, work_location: e.target.value })
                 }
-                placeholder="Office / Remote"
+                placeholder="Enter work location (e.g., Office, Remote, Hybrid)"
               />
             </div>
 
