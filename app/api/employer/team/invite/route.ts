@@ -83,6 +83,12 @@ export async function POST(request: NextRequest) {
     if (firstUser) {
       // User exists - just add to team
       employeeUserId = firstUser.id;
+      
+      // Update their employer_id in promoters table
+      await (supabaseAdmin.from('promoters') as any).update({
+        employer_id: user.id,
+        updated_at: new Date().toISOString(),
+      }).eq('id', employeeUserId);
     } else {
       // Create new user account
       isNewUser = true;
@@ -126,7 +132,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       } as any);
 
-      // Also create a promoter record
+      // Also create a promoter record with employer_id
       await supabaseAdmin.from('promoters').upsert({
         id: employeeUserId,
         email: email.toLowerCase(),
@@ -134,6 +140,8 @@ export async function POST(request: NextRequest) {
         name_ar: full_name,
         phone: phone || null,
         status: 'active',
+        employer_id: user.id,  // Link to the employer who invited them
+        created_by: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       } as any);
