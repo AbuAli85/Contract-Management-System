@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -178,7 +177,7 @@ async function checkIsAdmin(userId: string, supabase: any): Promise<boolean> {
   return profile?.role === 'admin' || profile?.role === 'manager';
 }
 
-// Export with RBAC protection
-export const GET = withRBAC('employer:read:own', getEmployeePermissionsHandler);
-export const POST = withRBAC('employer:manage:own', assignPermissionsHandler);
+// Export handlers directly - internal authorization is already implemented
+export const GET = getEmployeePermissionsHandler;
+export const POST = assignPermissionsHandler;
 

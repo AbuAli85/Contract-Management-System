@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -238,11 +237,7 @@ async function createTargetHandler(
   }
 }
 
-// Export with RBAC protection
-export const GET = withAnyRBAC(
-  ['employer:read:own', 'employee:read:own'],
-  getTargetsHandler
-);
-
-export const POST = withRBAC('employer:manage:own', createTargetHandler);
+// Export handlers directly - internal authorization is already implemented
+export const GET = getTargetsHandler;
+export const POST = createTargetHandler;
 

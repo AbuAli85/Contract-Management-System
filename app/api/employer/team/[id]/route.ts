@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -164,7 +163,7 @@ async function removeTeamMemberHandler(
   }
 }
 
-// Export with RBAC protection
-export const PUT = withRBAC('employer:manage:own', updateTeamMemberHandler);
-export const DELETE = withRBAC('employer:manage:own', removeTeamMemberHandler);
+// Export handlers directly - internal authorization is already implemented
+export const PUT = updateTeamMemberHandler;
+export const DELETE = removeTeamMemberHandler;
 

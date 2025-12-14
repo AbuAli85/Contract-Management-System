@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -214,11 +213,8 @@ async function addTeamMemberHandler(request: NextRequest) {
   }
 }
 
-// Export with RBAC protection
-export const GET = withAnyRBAC(
-  ['employer:read:own', 'employer:read:all'],
-  getTeamHandler
-);
-
-export const POST = withRBAC('employer:manage:own', addTeamMemberHandler);
+// Export handlers directly - internal authorization is already implemented in each handler
+// The handlers check: 1) user authentication, 2) profile role (admin/manager), 3) own team access
+export const GET = getTeamHandler;
+export const POST = addTeamMemberHandler;
 
