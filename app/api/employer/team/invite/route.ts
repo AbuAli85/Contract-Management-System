@@ -85,10 +85,15 @@ export async function POST(request: NextRequest) {
       employeeUserId = firstUser.id;
       
       // Update their employer_id in promoters table
-      await (supabaseAdmin.from('promoters') as any).update({
+      const { error: updatePromoterError } = await (supabaseAdmin.from('promoters') as any).update({
         employer_id: user.id,
         updated_at: new Date().toISOString(),
       }).eq('id', employeeUserId);
+
+      if (updatePromoterError) {
+        console.error('Error updating promoter employer_id:', updatePromoterError);
+        // Continue anyway - the employer_employees link will still be created
+      }
     } else {
       // Create new user account
       isNewUser = true;
