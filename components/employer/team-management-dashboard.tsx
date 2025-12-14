@@ -4,9 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 import {
   Users,
   UserPlus,
@@ -17,6 +20,22 @@ import {
   Search,
   Filter,
   MoreVertical,
+  UserCheck,
+  UserX,
+  Calendar,
+  Mail,
+  Phone,
+  Building2,
+  Briefcase,
+  MapPin,
+  CreditCard,
+  TrendingUp,
+  Activity,
+  ClipboardList,
+  Settings,
+  ChevronRight,
+  Sparkles,
+  AlertCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TeamMemberList } from './team-member-list';
@@ -25,6 +44,7 @@ import { AttendanceView } from './attendance-view';
 import { TasksView } from './tasks-view';
 import { TargetsView } from './targets-view';
 import { PermissionsManager } from './permissions-manager';
+import { cn } from '@/lib/utils';
 
 interface TeamMember {
   id: string;
@@ -32,13 +52,22 @@ interface TeamMember {
   employee_code?: string;
   job_title?: string;
   department?: string;
+  employment_type?: string;
   employment_status: string;
+  hire_date?: string;
+  salary?: number;
+  currency?: string;
+  work_location?: string;
+  notes?: string;
   employee: {
     id: string;
     email: string;
     full_name: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
     avatar_url?: string;
-  };
+  } | null;
   permissions?: Array<{ permission_id: string; granted: boolean }>;
 }
 
@@ -48,6 +77,36 @@ interface TeamStats {
   on_leave: number;
   terminated: number;
 }
+
+const StatCard = ({ 
+  title, 
+  value, 
+  subtitle, 
+  icon: Icon, 
+  gradient,
+  iconColor 
+}: { 
+  title: string;
+  value: number;
+  subtitle: string;
+  icon: React.ElementType;
+  gradient: string;
+  iconColor: string;
+}) => (
+  <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+    <div className={cn("absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity", gradient)} />
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+      <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</CardTitle>
+      <div className={cn("p-2 rounded-lg", gradient)}>
+        <Icon className={cn("h-4 w-4", iconColor)} />
+      </div>
+    </CardHeader>
+    <CardContent className="relative z-10">
+      <div className="text-3xl font-bold tracking-tight">{value}</div>
+      <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+    </CardContent>
+  </Card>
+);
 
 export function TeamManagementDashboard() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -112,174 +171,352 @@ export function TeamManagementDashboard() {
     }
   };
 
-  const filteredMembers = teamMembers.filter(member =>
-    member.employee.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.employee_code?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredMembers = teamMembers.filter(member => {
+    const name = member.employee?.full_name || '';
+    const email = member.employee?.email || '';
+    const code = member.employee_code || '';
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const formatCurrency = (amount: number | undefined, currency: string = 'OMR') => {
+    if (!amount) return 'Not specified';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return 'Not specified';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Users className="h-8 w-8" />
-            Team Management
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Manage your team members, permissions, attendance, tasks, and targets
-          </p>
+    <div className="space-y-8">
+      {/* Premium Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-purple-600/5 rounded-2xl -z-10" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
+              <Users className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                Team Management
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
+                Manage your team members, permissions, attendance, tasks, and targets
+              </p>
+            </div>
+          </div>
+          <AddTeamMemberDialog onSuccess={handleAddMember} />
         </div>
-        <AddTeamMemberDialog onSuccess={handleAddMember} />
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Team</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">All team members</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <CheckSquare className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-            <p className="text-xs text-muted-foreground">Currently active</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">On Leave</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.on_leave}</div>
-            <p className="text-xs text-muted-foreground">On leave</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Terminated</CardTitle>
-            <Users className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.terminated}</div>
-            <p className="text-xs text-muted-foreground">Terminated</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Team"
+          value={stats.total}
+          subtitle="All team members"
+          icon={Users}
+          gradient="bg-gradient-to-br from-blue-500 to-blue-600"
+          iconColor="text-white"
+        />
+        <StatCard
+          title="Active"
+          value={stats.active}
+          subtitle="Currently active"
+          icon={UserCheck}
+          gradient="bg-gradient-to-br from-emerald-500 to-emerald-600"
+          iconColor="text-white"
+        />
+        <StatCard
+          title="On Leave"
+          value={stats.on_leave}
+          subtitle="Currently on leave"
+          icon={Clock}
+          gradient="bg-gradient-to-br from-amber-500 to-orange-500"
+          iconColor="text-white"
+        />
+        <StatCard
+          title="Terminated"
+          value={stats.terminated}
+          subtitle="No longer active"
+          icon={UserX}
+          gradient="bg-gradient-to-br from-red-500 to-rose-600"
+          iconColor="text-white"
+        />
       </div>
 
       {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="team">Team Members</TabsTrigger>
-          {selectedMember && (
-            <>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              <TabsTrigger value="targets">Targets</TabsTrigger>
-              <TabsTrigger value="permissions">Permissions</TabsTrigger>
-            </>
-          )}
-        </TabsList>
+      <Card className="border-0 shadow-xl">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="border-b px-6 pt-4">
+            <TabsList className="bg-transparent h-auto p-0 gap-6">
+              <TabsTrigger 
+                value="team" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Team Members
+              </TabsTrigger>
+              {selectedMember && (
+                <>
+                  <TabsTrigger 
+                    value="details"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                  >
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Details
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="attendance"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Attendance
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tasks"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                  >
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Tasks
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="targets"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                  >
+                    <Target className="h-4 w-4 mr-2" />
+                    Targets
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="permissions"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Permissions
+                  </TabsTrigger>
+                </>
+              )}
+            </TabsList>
+          </div>
 
-        <TabsContent value="team" className="space-y-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
+          <TabsContent value="team" className="p-6 space-y-4 mt-0">
+            {/* Search Bar */}
+            <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search team members..."
-                className="w-full pl-9 pr-4 py-2 border rounded-md"
+                className="pl-10 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-blue-500/20"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
-          </div>
 
-          <TeamMemberList
-            members={filteredMembers}
-            onMemberSelect={handleMemberSelect}
-            onRefresh={fetchTeam}
-          />
-        </TabsContent>
+            <TeamMemberList
+              members={filteredMembers}
+              onMemberSelect={handleMemberSelect}
+              onRefresh={fetchTeam}
+            />
+          </TabsContent>
 
-        {selectedMember && (
-          <>
-            <TabsContent value="details" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{selectedMember.employee.full_name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{selectedMember.employee.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Employee Code</p>
-                      <p className="font-medium">{selectedMember.employee_code || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Job Title</p>
-                      <p className="font-medium">{selectedMember.job_title || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Department</p>
-                      <p className="font-medium">{selectedMember.department || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <Badge
-                        variant={
-                          selectedMember.employment_status === 'active'
-                            ? 'default'
-                            : selectedMember.employment_status === 'on_leave'
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                      >
-                        {selectedMember.employment_status}
-                      </Badge>
+          {selectedMember && (
+            <>
+              <TabsContent value="details" className="p-6 mt-0">
+                <div className="space-y-6">
+                  {/* Employee Profile Header */}
+                  <div className="flex items-start gap-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl">
+                    <Avatar className="h-24 w-24 border-4 border-white dark:border-gray-700 shadow-xl">
+                      <AvatarImage src={selectedMember.employee?.avatar_url} />
+                      <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
+                        {getInitials(selectedMember.employee?.full_name || 'NA')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {selectedMember.employee?.full_name || 'Unknown Employee'}
+                        </h2>
+                        <Badge
+                          className={cn(
+                            "px-3 py-1 text-xs font-semibold",
+                            selectedMember.employment_status === 'active'
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              : selectedMember.employment_status === 'on_leave'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          )}
+                        >
+                          {selectedMember.employment_status.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-500 dark:text-gray-400 mt-1">
+                        {selectedMember.job_title || 'No job title assigned'} 
+                        {selectedMember.department && ` • ${selectedMember.department}`}
+                      </p>
+                      <div className="flex items-center gap-4 mt-3">
+                        {selectedMember.employee?.email && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Mail className="h-4 w-4" />
+                            {selectedMember.employee.email}
+                          </div>
+                        )}
+                        {selectedMember.employee?.phone && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Phone className="h-4 w-4" />
+                            {selectedMember.employee.phone}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
-            <TabsContent value="attendance">
-              <AttendanceView employerEmployeeId={selectedMember.id} />
-            </TabsContent>
+                  {/* Details Grid */}
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Employment Details */}
+                    <Card className="border shadow-sm">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <Briefcase className="h-4 w-4 text-blue-600" />
+                          Employment Details
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Employee Code</p>
+                          <p className="text-sm font-semibold mt-1">{selectedMember.employee_code || 'Not assigned'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Employment Type</p>
+                          <p className="text-sm font-semibold mt-1 capitalize">
+                            {selectedMember.employment_type?.replace('_', ' ') || 'Full Time'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Hire Date</p>
+                          <p className="text-sm font-semibold mt-1">{formatDate(selectedMember.hire_date)}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-            <TabsContent value="tasks">
-              <TasksView employerEmployeeId={selectedMember.id} />
-            </TabsContent>
+                    {/* Compensation */}
+                    <Card className="border shadow-sm">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <CreditCard className="h-4 w-4 text-emerald-600" />
+                          Compensation
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Salary</p>
+                          <p className="text-sm font-semibold mt-1">
+                            {formatCurrency(selectedMember.salary, selectedMember.currency)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Currency</p>
+                          <p className="text-sm font-semibold mt-1">{selectedMember.currency || 'OMR'}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-            <TabsContent value="targets">
-              <TargetsView employerEmployeeId={selectedMember.id} />
-            </TabsContent>
+                    {/* Work Location */}
+                    <Card className="border shadow-sm">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <MapPin className="h-4 w-4 text-purple-600" />
+                          Location & Notes
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Work Location</p>
+                          <p className="text-sm font-semibold mt-1">{selectedMember.work_location || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Notes</p>
+                          <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
+                            {selectedMember.notes || 'No notes added'}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
 
-            <TabsContent value="permissions">
-              <PermissionsManager employerEmployeeId={selectedMember.id} />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
+                  {/* Quick Actions */}
+                  <Card className="border shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                        <Settings className="h-4 w-4" />
+                        Quick Actions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('attendance')}>
+                          <Calendar className="h-4 w-4 mr-2" />
+                          View Attendance
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('tasks')}>
+                          <ClipboardList className="h-4 w-4 mr-2" />
+                          Manage Tasks
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('targets')}>
+                          <Target className="h-4 w-4 mr-2" />
+                          Set Targets
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('permissions')}>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Edit Permissions
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="attendance" className="p-6 mt-0">
+                <AttendanceView employerEmployeeId={selectedMember.id} />
+              </TabsContent>
+
+              <TabsContent value="tasks" className="p-6 mt-0">
+                <TasksView employerEmployeeId={selectedMember.id} />
+              </TabsContent>
+
+              <TabsContent value="targets" className="p-6 mt-0">
+                <TargetsView employerEmployeeId={selectedMember.id} />
+              </TabsContent>
+
+              <TabsContent value="permissions" className="p-6 mt-0">
+                <PermissionsManager employerEmployeeId={selectedMember.id} />
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
+      </Card>
     </div>
   );
 }
-
