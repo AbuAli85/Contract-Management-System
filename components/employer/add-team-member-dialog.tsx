@@ -173,7 +173,7 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
       // Fetch all promoters (employees) from the promoters table
       const { data: allPromoters, error: promotersError } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, email, mobile_number, phone, status, employer_id, photo_url')
+        .select('id, name_en, name_ar, email, mobile_number, phone, status, employer_id, profile_picture_url')
         .order('name_en', { ascending: true });
 
       if (promotersError) throw promotersError;
@@ -195,7 +195,7 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
         last_name: promoter.name_en?.split(' ').slice(1).join(' ') || undefined,
         role: 'promoter',
         status: promoter.status || 'active',
-        avatar_url: promoter.photo_url || undefined,
+        avatar_url: promoter.profile_picture_url || undefined,
         isInTeam: currentTeamIds.has(promoter.id),
       }));
 
