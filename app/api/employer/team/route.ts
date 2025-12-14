@@ -193,25 +193,31 @@ async function addTeamMemberHandler(request: NextRequest) {
     }
 
     // Add employee to team (use admin client to bypass RLS)
+    // Helper to convert empty strings to null for UUID fields
+    const toNullIfEmpty = (val: string | null | undefined) => 
+      val && val.trim() !== '' ? val : null;
+
     const supabaseAdmin = getSupabaseAdmin();
+    const insertData = {
+      employer_id: user.id,
+      employee_id: toNullIfEmpty(employee_id),
+      employee_code: toNullIfEmpty(employee_code),
+      job_title: toNullIfEmpty(job_title),
+      department: toNullIfEmpty(department),
+      employment_type: employment_type || 'full_time',
+      employment_status: 'active',
+      hire_date: toNullIfEmpty(hire_date),
+      reporting_manager_id: toNullIfEmpty(reporting_manager_id),
+      salary: salary ? Number(salary) : null,
+      currency: currency || 'OMR',
+      work_location: toNullIfEmpty(work_location),
+      notes: toNullIfEmpty(notes),
+      created_by: user.id,
+    };
+
     const { data: teamMember, error: insertError } = await supabaseAdmin
       .from('employer_employees')
-      .insert({
-        employer_id: user.id,
-        employee_id,
-        employee_code,
-        job_title,
-        department,
-        employment_type: employment_type || 'full_time',
-        employment_status: 'active',
-        hire_date,
-        reporting_manager_id,
-        salary,
-        currency: currency || 'OMR',
-        work_location,
-        notes,
-        created_by: user.id,
-      })
+      .insert(insertData as never)
       .select()
       .single();
 
