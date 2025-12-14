@@ -43,28 +43,10 @@ async function getTeamHandler(request: NextRequest) {
       );
     }
 
-    // Fetch team members
+    // Fetch team members (base records)
     const { data: teamMembers, error: teamError } = await supabase
       .from('employer_employees')
-      .select(
-        `
-        *,
-        employee:employee_id (
-          id,
-          email,
-          full_name,
-          first_name,
-          last_name,
-          phone,
-          avatar_url
-        ),
-        manager:reporting_manager_id (
-          id,
-          full_name,
-          email
-        )
-      `
-      )
+      .select('*')
       .eq('employer_id', employerId)
       .order('created_at', { ascending: false });
 
@@ -76,9 +58,48 @@ async function getTeamHandler(request: NextRequest) {
       );
     }
 
+    // Fetch promoter details for each team member
+    const employeeIds = (teamMembers || []).map(m => m.employee_id).filter(Boolean);
+    const { data: promoters } = await supabase
+      .from('promoters')
+      .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url')
+      .in('id', employeeIds.length > 0 ? employeeIds : ['00000000-0000-0000-0000-000000000000']);
+
+    // Create a lookup map for promoters
+    const promoterMap = new Map((promoters || []).map(p => [p.id, p]));
+
+    // Fetch manager details (from profiles since managers are system users)
+    const managerIds = (teamMembers || []).map(m => m.reporting_manager_id).filter(Boolean);
+    const { data: managers } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', managerIds.length > 0 ? managerIds : ['00000000-0000-0000-0000-000000000000']);
+
+    // Create a lookup map for managers
+    const managerMap = new Map((managers || []).map(m => [m.id, m]));
+
+    // Combine data
+    const enrichedTeamMembers = (teamMembers || []).map(member => {
+      const promoter = promoterMap.get(member.employee_id);
+      const manager = managerMap.get(member.reporting_manager_id);
+      return {
+        ...member,
+        employee: promoter ? {
+          id: promoter.id,
+          email: promoter.email,
+          full_name: promoter.name_en || promoter.name_ar || 'Unknown',
+          first_name: promoter.name_en?.split(' ')[0] || null,
+          last_name: promoter.name_en?.split(' ').slice(1).join(' ') || null,
+          phone: promoter.phone || promoter.mobile_number,
+          avatar_url: promoter.profile_picture_url,
+        } : null,
+        manager: manager || null,
+      };
+    });
+
     // Get employee permissions for each member
     const teamWithPermissions = await Promise.all(
-      (teamMembers || []).map(async member => {
+      enrichedTeamMembers.map(async member => {
         const { data: permissions } = await supabase
           .from('employee_permissions')
           .select('permission_id, granted')
@@ -140,10 +161,10 @@ async function addTeamMemberHandler(request: NextRequest) {
       );
     }
 
-    // Verify employee exists
+    // Verify employee exists in promoters table
     const { data: employee, error: employeeError } = await supabase
-      .from('profiles')
-      .select('id, email, full_name')
+      .from('promoters')
+      .select('id, email, name_en, name_ar')
       .eq('id', employee_id)
       .single();
 
