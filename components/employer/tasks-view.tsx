@@ -4,6 +4,25 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   CheckSquare, 
   Plus, 
@@ -17,7 +36,8 @@ import {
   Timer,
   CalendarClock,
   ClipboardList,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -29,6 +49,16 @@ interface TasksViewProps {
 export function TasksView({ employerEmployeeId }: TasksViewProps) {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    task_type: 'general',
+    priority: 'medium',
+    due_date: '',
+    estimated_hours: '',
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,6 +87,70 @@ export function TasksView({ employerEmployeeId }: TasksViewProps) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createTask = async () => {
+    if (!newTask.title.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Task title is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const response = await fetch(
+        `/api/employer/team/${employerEmployeeId}/tasks`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newTask.title.trim(),
+            description: newTask.description.trim() || null,
+            task_type: newTask.task_type,
+            priority: newTask.priority,
+            due_date: newTask.due_date || null,
+            estimated_hours: newTask.estimated_hours ? Number(newTask.estimated_hours) : null,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create task');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Task created successfully',
+      });
+
+      // Reset form and close dialog
+      setNewTask({
+        title: '',
+        description: '',
+        task_type: 'general',
+        priority: 'medium',
+        due_date: '',
+        estimated_hours: '',
+      });
+      setDialogOpen(false);
+      
+      // Refresh tasks
+      fetchTasks();
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create task',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -152,10 +246,128 @@ export function TasksView({ employerEmployeeId }: TasksViewProps) {
                 <CardDescription>Assigned tasks and their progress</CardDescription>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
-            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Task
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-indigo-600" />
+                    Create New Task
+                  </DialogTitle>
+                  <DialogDescription>
+                    Assign a new task to this team member
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="task-title">Task Title *</Label>
+                    <Input
+                      id="task-title"
+                      placeholder="Enter task title..."
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="task-description">Description</Label>
+                    <Textarea
+                      id="task-description"
+                      placeholder="Task details..."
+                      rows={3}
+                      value={newTask.description}
+                      onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Priority</Label>
+                      <Select
+                        value={newTask.priority}
+                        onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <Select
+                        value={newTask.task_type}
+                        onValueChange={(value) => setNewTask({ ...newTask, task_type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="project">Project</SelectItem>
+                          <SelectItem value="meeting">Meeting</SelectItem>
+                          <SelectItem value="report">Report</SelectItem>
+                          <SelectItem value="review">Review</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="due-date">Due Date</Label>
+                      <Input
+                        id="due-date"
+                        type="date"
+                        value={newTask.due_date}
+                        onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="estimated-hours">Est. Hours</Label>
+                      <Input
+                        id="estimated-hours"
+                        type="number"
+                        placeholder="e.g., 4"
+                        min="0"
+                        step="0.5"
+                        value={newTask.estimated_hours}
+                        onChange={(e) => setNewTask({ ...newTask, estimated_hours: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={createTask} 
+                    disabled={creating}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Task
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>

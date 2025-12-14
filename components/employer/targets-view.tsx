@@ -5,6 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Target, 
   Plus, 
@@ -16,7 +35,8 @@ import {
   Clock,
   Sparkles,
   Rocket,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -28,6 +48,19 @@ interface TargetsViewProps {
 export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
   const [targets, setTargets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newTarget, setNewTarget] = useState({
+    title: '',
+    description: '',
+    target_type: 'performance',
+    target_value: '',
+    unit: 'units',
+    period_type: 'monthly',
+    start_date: '',
+    end_date: '',
+    notes: '',
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,6 +89,76 @@ export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createTarget = async () => {
+    if (!newTarget.title.trim() || !newTarget.target_value || !newTarget.start_date || !newTarget.end_date) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields (title, target value, start date, end date)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const response = await fetch(
+        `/api/employer/team/${employerEmployeeId}/targets`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newTarget.title.trim(),
+            description: newTarget.description.trim() || null,
+            target_type: newTarget.target_type,
+            target_value: Number(newTarget.target_value),
+            unit: newTarget.unit,
+            period_type: newTarget.period_type,
+            start_date: newTarget.start_date,
+            end_date: newTarget.end_date,
+            notes: newTarget.notes.trim() || null,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create target');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Target created successfully',
+      });
+
+      // Reset form and close dialog
+      setNewTarget({
+        title: '',
+        description: '',
+        target_type: 'performance',
+        target_value: '',
+        unit: 'units',
+        period_type: 'monthly',
+        start_date: '',
+        end_date: '',
+        notes: '',
+      });
+      setDialogOpen(false);
+      
+      // Refresh targets
+      fetchTargets();
+    } catch (error: any) {
+      console.error('Error creating target:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create target',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -133,10 +236,168 @@ export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
                 <CardDescription>Performance targets and achievement tracking</CardDescription>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/20">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Target
-            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/20">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Target
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[550px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-purple-600" />
+                    Create New Target
+                  </DialogTitle>
+                  <DialogDescription>
+                    Set a performance target for this team member
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+                  <div className="space-y-2">
+                    <Label htmlFor="target-title">Target Title *</Label>
+                    <Input
+                      id="target-title"
+                      placeholder="e.g., Monthly Sales Goal"
+                      value={newTarget.title}
+                      onChange={(e) => setNewTarget({ ...newTarget, title: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="target-description">Description</Label>
+                    <Textarea
+                      id="target-description"
+                      placeholder="Target details..."
+                      rows={2}
+                      value={newTarget.description}
+                      onChange={(e) => setNewTarget({ ...newTarget, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="target-value">Target Value *</Label>
+                      <Input
+                        id="target-value"
+                        type="number"
+                        placeholder="e.g., 100"
+                        min="0"
+                        value={newTarget.target_value}
+                        onChange={(e) => setNewTarget({ ...newTarget, target_value: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Unit</Label>
+                      <Select
+                        value={newTarget.unit}
+                        onValueChange={(value) => setNewTarget({ ...newTarget, unit: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="units">Units</SelectItem>
+                          <SelectItem value="sales">Sales</SelectItem>
+                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="percent">Percent</SelectItem>
+                          <SelectItem value="currency">Currency</SelectItem>
+                          <SelectItem value="tasks">Tasks</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Period</Label>
+                      <Select
+                        value={newTarget.period_type}
+                        onValueChange={(value) => setNewTarget({ ...newTarget, period_type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="yearly">Yearly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <Select
+                        value={newTarget.target_type}
+                        onValueChange={(value) => setNewTarget({ ...newTarget, target_type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="performance">Performance</SelectItem>
+                          <SelectItem value="sales">Sales</SelectItem>
+                          <SelectItem value="productivity">Productivity</SelectItem>
+                          <SelectItem value="quality">Quality</SelectItem>
+                          <SelectItem value="learning">Learning</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="start-date">Start Date *</Label>
+                      <Input
+                        id="start-date"
+                        type="date"
+                        value={newTarget.start_date}
+                        onChange={(e) => setNewTarget({ ...newTarget, start_date: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="end-date">End Date *</Label>
+                      <Input
+                        id="end-date"
+                        type="date"
+                        value={newTarget.end_date}
+                        onChange={(e) => setNewTarget({ ...newTarget, end_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="target-notes">Notes</Label>
+                    <Textarea
+                      id="target-notes"
+                      placeholder="Additional notes..."
+                      rows={2}
+                      value={newTarget.notes}
+                      onChange={(e) => setNewTarget({ ...newTarget, notes: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={createTarget} 
+                    disabled={creating}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600"
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Target
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
