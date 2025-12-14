@@ -334,6 +334,22 @@ function SidebarContent({
         );
       }
 
+      // Add Employee Dashboard for promoters/employees assigned to a team
+      const isPromoter = userRole === 'promoter' || userRole === 'user';
+      if (isPromoter || isAdmin) {
+        baseItems.splice(
+          -2,
+          0, // Insert before Settings
+          {
+            title: 'My Workplace',
+            href: '/employee/dashboard',
+            icon: Briefcase,
+            description: 'View your tasks, targets, and attendance',
+            badge: undefined,
+          }
+        );
+      }
+
       // Add admin-only items
       if (roleInfo?.canDoAdmin) {
         baseItems.splice(
