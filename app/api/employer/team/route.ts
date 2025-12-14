@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -191,8 +192,9 @@ async function addTeamMemberHandler(request: NextRequest) {
       );
     }
 
-    // Add employee to team
-    const { data: teamMember, error: insertError } = await supabase
+    // Add employee to team (use admin client to bypass RLS)
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: teamMember, error: insertError } = await supabaseAdmin
       .from('employer_employees')
       .insert({
         employer_id: user.id,
@@ -201,6 +203,7 @@ async function addTeamMemberHandler(request: NextRequest) {
         job_title,
         department,
         employment_type: employment_type || 'full_time',
+        employment_status: 'active',
         hire_date,
         reporting_manager_id,
         salary,
