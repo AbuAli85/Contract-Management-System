@@ -30,6 +30,7 @@ interface UserProfile {
   full_name: string;
   role: string;
   status: string;
+  must_change_password?: boolean;
 }
 
 export default function UnifiedLoginForm() {
@@ -160,7 +161,7 @@ export default function UnifiedLoginForm() {
       // Step 2: Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('users')
-        .select('id, email, full_name, role, status')
+        .select('id, email, full_name, role, status, must_change_password')
         .eq('id', authData.user.id)
         .single();
 
@@ -193,6 +194,18 @@ export default function UnifiedLoginForm() {
           'Your account has been deactivated. Please contact an administrator.'
         );
         await supabase.auth.signOut();
+        return;
+      }
+
+      // Check if user must change password (invited employee first login)
+      const mustChangePassword = 
+        authData.user.user_metadata?.must_change_password === true ||
+        profile?.must_change_password === true;
+
+      if (mustChangePassword) {
+        setSuccess('Please set a new password...');
+        localStorage.setItem('just_logged_in', Date.now().toString());
+        router.push('/en/auth/change-password');
         return;
       }
 

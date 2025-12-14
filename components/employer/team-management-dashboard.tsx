@@ -40,6 +40,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { TeamMemberList } from './team-member-list';
 import { AddTeamMemberDialog } from './add-team-member-dialog';
+import { InviteEmployeeDialog } from './invite-employee-dialog';
 import { AttendanceView } from './attendance-view';
 import { TasksView } from './tasks-view';
 import { TargetsView } from './targets-view';
@@ -228,7 +229,10 @@ export function TeamManagementDashboard() {
               </p>
             </div>
           </div>
-          <AddTeamMemberDialog onSuccess={handleAddMember} />
+          <div className="flex gap-2">
+            <InviteEmployeeDialog onSuccess={handleAddMember} />
+            <AddTeamMemberDialog onSuccess={handleAddMember} />
+          </div>
         </div>
       </div>
 
