@@ -44,9 +44,10 @@ import { cn } from '@/lib/utils';
 
 interface TasksViewProps {
   employerEmployeeId: string;
+  isEmployeeView?: boolean; // If true, hide "Add Task" and show update controls
 }
 
-export function TasksView({ employerEmployeeId }: TasksViewProps) {
+export function TasksView({ employerEmployeeId, isEmployeeView = false }: TasksViewProps) {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -232,6 +233,40 @@ export function TasksView({ employerEmployeeId }: TasksViewProps) {
     return new Date(dueDate) < new Date();
   };
 
+  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    try {
+      const endpoint = isEmployeeView 
+        ? `/api/employee/my-tasks/${taskId}`
+        : `/api/employer/team/${employerEmployeeId}/tasks/${taskId}`;
+      
+      const response = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update task');
+      }
+
+      toast({
+        title: 'Success',
+        description: `Task marked as ${newStatus.replace('_', ' ')}`,
+      });
+
+      fetchTasks();
+    } catch (error: any) {
+      console.error('Error updating task:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update task',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-lg">
@@ -242,10 +277,11 @@ export function TasksView({ employerEmployeeId }: TasksViewProps) {
                 <ClipboardList className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <CardTitle className="text-lg">Tasks ({tasks.length})</CardTitle>
-                <CardDescription>Assigned tasks and their progress</CardDescription>
+                <CardTitle className="text-lg">{isEmployeeView ? 'My Tasks' : 'Tasks'} ({tasks.length})</CardTitle>
+                <CardDescription>{isEmployeeView ? 'Your assigned tasks' : 'Assigned tasks and their progress'}</CardDescription>
               </div>
             </div>
+            {!isEmployeeView && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20">
@@ -368,6 +404,7 @@ export function TasksView({ employerEmployeeId }: TasksViewProps) {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -457,6 +494,38 @@ export function TasksView({ employerEmployeeId }: TasksViewProps) {
                           </div>
                         </div>
                       </div>
+                      {/* Action buttons for employees to update status */}
+                      {isEmployeeView && task.status !== 'completed' && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {task.status === 'pending' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateTaskStatus(task.id, 'in_progress')}
+                              className="text-xs"
+                            >
+                              <Timer className="h-3 w-3 mr-1" />
+                              Start
+                            </Button>
+                          )}
+                          {(task.status === 'pending' || task.status === 'in_progress') && (
+                            <Button
+                              size="sm"
+                              onClick={() => updateTaskStatus(task.id, 'completed')}
+                              className="text-xs bg-emerald-600 hover:bg-emerald-700"
+                            >
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Complete
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      {task.status === 'completed' && isEmployeeView && (
+                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 flex-shrink-0">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Done
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 );

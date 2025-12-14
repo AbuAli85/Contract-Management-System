@@ -198,11 +198,11 @@ export function EmployeeDashboard() {
         </TabsContent>
 
         <TabsContent value="tasks">
-          <TasksView employerEmployeeId={employeeInfo.employer_employee_id} />
+          <TasksView employerEmployeeId={employeeInfo.employer_employee_id} isEmployeeView={true} />
         </TabsContent>
 
         <TabsContent value="targets">
-          <TargetsView employerEmployeeId={employeeInfo.employer_employee_id} />
+          <TargetsView employerEmployeeId={employeeInfo.employer_employee_id} isEmployeeView={true} />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,5 +1,8 @@
 'use client';
 
+/* eslint-disable react/forbid-dom-props */
+// Dynamic inline styles are required for progress bar widths
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,9 +46,10 @@ import { cn } from '@/lib/utils';
 
 interface TargetsViewProps {
   employerEmployeeId: string;
+  isEmployeeView?: boolean; // If true, hide "Add Target" and show update controls
 }
 
-export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
+export function TargetsView({ employerEmployeeId, isEmployeeView = false }: TargetsViewProps) {
   const [targets, setTargets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -207,6 +211,45 @@ export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
     return 'from-red-500 to-rose-400';
   };
 
+  const [updatingTargetId, setUpdatingTargetId] = useState<string | null>(null);
+
+  const updateTargetProgress = async (targetId: string, newValue: number) => {
+    try {
+      setUpdatingTargetId(targetId);
+      const endpoint = isEmployeeView 
+        ? `/api/employee/my-targets/${targetId}`
+        : `/api/employer/team/${employerEmployeeId}/targets/${targetId}`;
+      
+      const response = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current_value: newValue }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update target');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Target progress updated',
+      });
+
+      fetchTargets();
+    } catch (error: any) {
+      console.error('Error updating target:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update target',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingTargetId(null);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',
@@ -232,10 +275,11 @@ export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
                 <Target className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <CardTitle className="text-lg">Targets & Goals ({targets.length})</CardTitle>
-                <CardDescription>Performance targets and achievement tracking</CardDescription>
+                <CardTitle className="text-lg">{isEmployeeView ? 'My Targets' : 'Targets & Goals'} ({targets.length})</CardTitle>
+                <CardDescription>{isEmployeeView ? 'Your performance targets' : 'Performance targets and achievement tracking'}</CardDescription>
               </div>
             </div>
+            {!isEmployeeView && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/20">
@@ -398,6 +442,7 @@ export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -543,6 +588,46 @@ export function TargetsView({ employerEmployeeId }: TargetsViewProps) {
                             </div>
                           )}
                         </div>
+                        
+                        {/* Employee Update Progress Controls */}
+                        {isEmployeeView && target.status === 'active' && (
+                          <div className="flex items-center gap-3 pt-3 border-t border-gray-100 dark:border-gray-800 mt-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max={target.target_value * 2}
+                                  defaultValue={target.current_value || 0}
+                                  className="h-8 w-24 text-sm"
+                                  id={`progress-${target.id}`}
+                                  placeholder="Current"
+                                />
+                                <span className="text-xs text-gray-500">/ {target.target_value} {target.unit}</span>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              disabled={updatingTargetId === target.id}
+                              onClick={() => {
+                                const input = document.getElementById(`progress-${target.id}`) as HTMLInputElement;
+                                if (input) {
+                                  updateTargetProgress(target.id, Number(input.value));
+                                }
+                              }}
+                              className="h-8 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                            >
+                              {updatingTargetId === target.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <>
+                                  <ArrowUpRight className="h-3 w-3 mr-1" />
+                                  Update
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
