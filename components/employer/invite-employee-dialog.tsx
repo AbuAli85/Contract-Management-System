@@ -37,9 +37,11 @@ import {
   Copy,
   Key,
   AlertCircle,
+  MessageCircle,
+  Share2,
+  Send,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 interface InviteEmployeeDialogProps {
   onSuccess?: () => void;
@@ -57,6 +59,7 @@ export function InviteEmployeeDialog({ onSuccess }: InviteEmployeeDialogProps) {
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -69,6 +72,7 @@ export function InviteEmployeeDialog({ onSuccess }: InviteEmployeeDialogProps) {
   });
 
   const resetForm = () => {
+    setShowOptions(false);
     setFormData({
       email: '',
       full_name: '',
@@ -140,26 +144,34 @@ export function InviteEmployeeDialog({ onSuccess }: InviteEmployeeDialogProps) {
     }
   };
 
+  const getCredentialsText = () => {
+    if (!credentials) return '';
+    return `🔐 Your Login Credentials
+
+📧 Email: ${credentials.email}
+🔑 Password: ${credentials.temporary_password}
+🔗 Login: ${credentials.login_url}
+
+⚠️ Please change your password after first login!`;
+  };
+
   const copyCredentials = () => {
-    if (!credentials) return;
-    
-    const text = `
-🔐 Your Employee Login Credentials
-
-Email: ${credentials.email}
-Temporary Password: ${credentials.temporary_password}
-Login URL: ${credentials.login_url}
-
-⚠️ Please change your password after first login!
-    `.trim();
-    
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(getCredentialsText());
     setCopied(true);
-    toast({
-      title: 'Copied!',
-      description: 'Credentials copied to clipboard',
-    });
+    toast({ title: 'Copied!', description: 'Credentials copied to clipboard' });
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  const shareViaWhatsApp = () => {
+    const text = encodeURIComponent(getCredentialsText());
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
+  const shareViaEmail = () => {
+    if (!credentials) return;
+    const subject = encodeURIComponent('Your Login Credentials - SmartPro Portal');
+    const body = encodeURIComponent(getCredentialsText());
+    window.open(`mailto:${credentials.email}?subject=${subject}&body=${body}`, '_blank');
   };
 
   return (
@@ -229,22 +241,39 @@ Login URL: ${credentials.login_url}
               </AlertDescription>
             </Alert>
 
-            <Button 
-              onClick={copyCredentials} 
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600"
-            >
-              {copied ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Copied to Clipboard!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy Credentials
-                </>
-              )}
-            </Button>
+            {/* Share Options */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Share2 className="h-4 w-4" />
+                Share credentials with employee:
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <Button 
+                  onClick={shareViaWhatsApp}
+                  variant="outline"
+                  className="flex-col h-auto py-3 hover:bg-green-50 hover:border-green-500 hover:text-green-600 dark:hover:bg-green-900/20"
+                >
+                  <MessageCircle className="h-5 w-5 mb-1" />
+                  <span className="text-xs">WhatsApp</span>
+                </Button>
+                <Button 
+                  onClick={shareViaEmail}
+                  variant="outline"
+                  className="flex-col h-auto py-3 hover:bg-blue-50 hover:border-blue-500 hover:text-blue-600 dark:hover:bg-blue-900/20"
+                >
+                  <Send className="h-5 w-5 mb-1" />
+                  <span className="text-xs">Email</span>
+                </Button>
+                <Button 
+                  onClick={copyCredentials}
+                  variant="outline"
+                  className={`flex-col h-auto py-3 ${copied ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : 'hover:bg-gray-50'}`}
+                >
+                  {copied ? <CheckCircle2 className="h-5 w-5 mb-1" /> : <Copy className="h-5 w-5 mb-1" />}
+                  <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+                </Button>
+              </div>
+            </div>
           </div>
         ) : (
           // Show form for creating employee
@@ -277,65 +306,78 @@ Login URL: ${credentials.login_url}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="flex items-center gap-1">
-                <Phone className="h-3 w-3" />
-                Phone (Optional)
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+968 9123 4567"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
+            {/* Toggle for optional fields */}
+            <button
+              type="button"
+              onClick={() => setShowOptions(!showOptions)}
+              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            >
+              {showOptions ? '− Hide' : '+ Add'} optional details (phone, job title, etc.)
+            </button>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="job_title" className="flex items-center gap-1">
-                  <Briefcase className="h-3 w-3" />
-                  Job Title
-                </Label>
-                <Input
-                  id="job_title"
-                  placeholder="Sales Representative"
-                  value={formData.job_title}
-                  onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department" className="flex items-center gap-1">
-                  <Building2 className="h-3 w-3" />
-                  Department
-                </Label>
-                <Input
-                  id="department"
-                  placeholder="Sales"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                />
-              </div>
-            </div>
+            {showOptions && (
+              <div className="space-y-4 pt-2 border-t">
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    Phone
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+968 9123 4567"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>Employment Type</Label>
-              <Select
-                value={formData.employment_type}
-                onValueChange={(value) => setFormData({ ...formData, employment_type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="full_time">Full Time</SelectItem>
-                  <SelectItem value="part_time">Part Time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="temporary">Temporary</SelectItem>
-                  <SelectItem value="intern">Intern</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="job_title" className="flex items-center gap-1">
+                      <Briefcase className="h-3 w-3" />
+                      Job Title
+                    </Label>
+                    <Input
+                      id="job_title"
+                      placeholder="Sales Representative"
+                      value={formData.job_title}
+                      onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="department" className="flex items-center gap-1">
+                      <Building2 className="h-3 w-3" />
+                      Department
+                    </Label>
+                    <Input
+                      id="department"
+                      placeholder="Sales"
+                      value={formData.department}
+                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Employment Type</Label>
+                  <Select
+                    value={formData.employment_type}
+                    onValueChange={(value) => setFormData({ ...formData, employment_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full_time">Full Time</SelectItem>
+                      <SelectItem value="part_time">Part Time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="temporary">Temporary</SelectItem>
+                      <SelectItem value="intern">Intern</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
