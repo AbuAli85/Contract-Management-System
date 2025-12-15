@@ -12,7 +12,7 @@ interface DropdownMenuTriggerProps {
   children: React.ReactNode;
   className?: string;
   asChild?: boolean;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
 }
 
 interface DropdownMenuContentProps {
@@ -26,7 +26,7 @@ interface DropdownMenuItemProps {
   children: React.ReactNode;
   className?: string;
   inset?: boolean;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent | React.KeyboardEvent) => void;
   disabled?: boolean;
 }
 
@@ -129,7 +129,7 @@ const DropdownMenuTrigger = React.forwardRef<
     e.preventDefault();
     e.stopPropagation();
     setIsOpen(!isOpen);
-    onClick?.();
+    onClick?.(e);
   };
 
   // If asChild is true, clone the child element with our props
@@ -213,7 +213,7 @@ const DropdownMenuItem = React.forwardRef<
     e.preventDefault();
     e.stopPropagation();
     if (!disabled) {
-      onClick?.();
+      onClick?.(e);
       closeDropdown();
     }
   };
@@ -235,7 +235,7 @@ const DropdownMenuItem = React.forwardRef<
         if ((e.key === 'Enter' || e.key === ' ') && !disabled) {
           e.preventDefault();
           e.stopPropagation();
-          onClick?.();
+          onClick?.(e);
           closeDropdown();
         }
       }}
