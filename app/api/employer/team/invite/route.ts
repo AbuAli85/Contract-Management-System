@@ -85,12 +85,13 @@ export async function POST(request: NextRequest) {
       employeeUserId = firstUser.id;
       
       // Upsert promoter record (in case user exists in profiles but not in promoters)
+      // Note: employer_id references parties table, so we don't set it here
+      // The employer-employee link is managed via employer_employees table
       const { error: upsertPromoterError } = await supabaseAdmin.from('promoters').upsert({
         id: employeeUserId,
         email: email.toLowerCase(),
         name_en: full_name,
         name_ar: full_name,
-        employer_id: user.id,
         status: 'active',
         updated_at: new Date().toISOString(),
       } as any, { onConflict: 'id' });
@@ -145,7 +146,9 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       } as any);
 
-      // Also create a promoter record with employer_id
+      // Also create a promoter record
+      // Note: employer_id references parties table, not profiles
+      // The employer-employee link is managed via employer_employees table
       const { error: promoterError } = await supabaseAdmin.from('promoters').upsert({
         id: employeeUserId,
         email: email.toLowerCase(),
@@ -153,7 +156,6 @@ export async function POST(request: NextRequest) {
         name_ar: full_name,
         phone: phone || null,
         status: 'active',
-        employer_id: user.id,  // Link to the employer who invited them
         created_by: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
