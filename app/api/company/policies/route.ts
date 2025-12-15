@@ -6,6 +6,37 @@ export const dynamic = 'force-dynamic';
 // Company policies are stored in company.settings.policies
 // This provides a focused API for managing policies
 
+// Default policies when no company is selected
+const DEFAULT_POLICIES = {
+  leave: {
+    annual_leave_days: 21,
+    sick_leave_days: 10,
+    carry_over_days: 5,
+    notice_days_required: 3,
+    approval_required: true,
+  },
+  attendance: {
+    work_start_time: '09:00',
+    work_end_time: '18:00',
+    grace_period_minutes: 15,
+    overtime_multiplier: 1.5,
+    weekend_days: ['friday', 'saturday'],
+  },
+  expenses: {
+    daily_limit: 100,
+    monthly_limit: 1000,
+    currency: 'OMR',
+    requires_receipt_above: 10,
+    auto_approve_below: 25,
+  },
+  performance: {
+    review_frequency: 'annual',
+    rating_scale: 5,
+    self_assessment: true,
+    goal_tracking: true,
+  },
+};
+
 // GET: Fetch company policies
 export async function GET() {
   const supabase = await createClient();
@@ -23,8 +54,14 @@ export async function GET() {
       .eq('id', user.id)
       .single();
 
+    // If no active company, return default policies (not an error)
     if (!profile?.active_company_id) {
-      return NextResponse.json({ error: 'No active company selected' }, { status: 400 });
+      return NextResponse.json({
+        success: true,
+        policies: DEFAULT_POLICIES,
+        is_default: true,
+        message: 'Using default policies. Set up a company to customize.',
+      });
     }
 
     // Get company settings
@@ -38,35 +75,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch policies' }, { status: 500 });
     }
 
-    const policies = company?.settings?.policies || {
-      leave: {
-        annual_leave_days: 21,
-        sick_leave_days: 10,
-        carry_over_days: 5,
-        notice_days_required: 3,
-        approval_required: true,
-      },
-      attendance: {
-        work_start_time: '09:00',
-        work_end_time: '18:00',
-        grace_period_minutes: 15,
-        overtime_multiplier: 1.5,
-        weekend_days: ['friday', 'saturday'],
-      },
-      expenses: {
-        daily_limit: 100,
-        monthly_limit: 1000,
-        currency: 'OMR',
-        requires_receipt_above: 10,
-        auto_approve_below: 25,
-      },
-      performance: {
-        review_frequency: 'annual',
-        rating_scale: 5,
-        self_assessment: true,
-        goal_tracking: true,
-      },
-    };
+    const policies = company?.settings?.policies || DEFAULT_POLICIES;
 
     return NextResponse.json({
       success: true,

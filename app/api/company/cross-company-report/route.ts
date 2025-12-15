@@ -58,100 +58,144 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get all companies user is a member of
-    const { data: memberships, error: memberError } = await supabase
-      .from('company_members')
-      .select(`
-        company_id,
-        role,
-        company:companies (
-          id,
-          name,
-          logo_url,
-          is_active,
-          group:company_groups (
+    // Try to get companies - handle case where company_members table doesn't exist yet
+    let memberships: CompanyMembership[] | null = null;
+    
+    try {
+      const { data, error: memberError } = await supabase
+        .from('company_members')
+        .select(`
+          company_id,
+          role,
+          company:companies (
             id,
-            name
+            name,
+            logo_url,
+            is_active,
+            group:company_groups (
+              id,
+              name
+            )
           )
-        )
-      `)
-      .eq('user_id', user.id)
-      .eq('status', 'active');
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'active');
 
-    if (memberError) {
-      console.error('Error fetching memberships:', memberError);
-      return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 });
+      if (memberError) {
+        // Table might not exist yet - return empty state
+        console.warn('company_members query error (table may not exist):', memberError.message);
+        memberships = null;
+      } else {
+        memberships = data as unknown as CompanyMembership[];
+      }
+    } catch (e) {
+      console.warn('company_members table may not exist:', e);
+      memberships = null;
     }
 
+    // Return empty state if no memberships or table doesn't exist
     if (!memberships || memberships.length === 0) {
       return NextResponse.json({
         success: true,
         companies: [],
+        grouped: {},
         summary: {
           total_companies: 0,
           total_employees: 0,
           total_pending_leaves: 0,
           total_pending_expenses: 0,
+          total_contracts: 0,
+          total_open_tasks: 0,
+          total_checked_in: 0,
         },
+        message: 'No companies configured yet. Set up multi-company management to see analytics here.',
       });
     }
 
+    // Helper function to safely query counts (handles missing company_id columns)
+    const safeCount = async (table: string, conditions: Record<string, unknown>): Promise<number> => {
+      try {
+        let query = supabase.from(table).select('id', { count: 'exact', head: true });
+        for (const [key, value] of Object.entries(conditions)) {
+          if (Array.isArray(value)) {
+            query = query.in(key, value);
+          } else if (value === null) {
+            // Skip null conditions
+          } else {
+            query = query.eq(key, value);
+          }
+        }
+        const { count } = await query;
+        return count || 0;
+      } catch (e) {
+        // Column may not exist, return 0
+        return 0;
+      }
+    };
+
     // Fetch stats for each company
     const companiesWithStats: CompanyWithStats[] = await Promise.all(
-      (memberships as unknown as CompanyMembership[]).map(async (membership) => {
+      memberships.map(async (membership) => {
         const companyId = membership.company_id;
         const company = membership.company;
 
-        // Get employee count
-        const { count: employeeCount } = await supabase
-          .from('employer_employees')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId)
-          .eq('employment_status', 'active');
+        // Get employee count (may not have company_id column yet)
+        let employeeCount = 0;
+        try {
+          const { count } = await supabase
+            .from('employer_employees')
+            .select('id', { count: 'exact', head: true })
+            .eq('company_id', companyId)
+            .eq('employment_status', 'active');
+          employeeCount = count || 0;
+        } catch (e) {
+          employeeCount = 0;
+        }
 
         // Get pending leave requests
-        const { count: pendingLeaves } = await supabase
-          .from('employee_leave_requests')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId)
-          .eq('status', 'pending');
+        const pendingLeaves = await safeCount('employee_leave_requests', {
+          company_id: companyId,
+          status: 'pending',
+        });
 
         // Get pending expenses
-        const { count: pendingExpenses } = await supabase
-          .from('employee_expenses')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId)
-          .eq('status', 'pending');
+        const pendingExpenses = await safeCount('employee_expenses', {
+          company_id: companyId,
+          status: 'pending',
+        });
 
         // Get active contracts count
-        const { count: activeContracts } = await supabase
-          .from('contracts')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId)
-          .eq('status', 'active');
+        const activeContracts = await safeCount('contracts', {
+          company_id: companyId,
+          status: 'active',
+        });
 
         // Get today's attendance
         const today = new Date().toISOString().split('T')[0];
-        const { count: checkedInToday } = await supabase
-          .from('employee_attendance')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId)
-          .eq('date', today)
-          .not('check_in', 'is', null);
+        let checkedInToday = 0;
+        try {
+          const { count } = await supabase
+            .from('employee_attendance')
+            .select('id', { count: 'exact', head: true })
+            .eq('company_id', companyId)
+            .eq('date', today)
+            .not('check_in', 'is', null);
+          checkedInToday = count || 0;
+        } catch (e) {
+          checkedInToday = 0;
+        }
 
         // Get open tasks
-        const { count: openTasks } = await supabase
-          .from('employee_tasks')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId)
-          .in('status', ['pending', 'in_progress']);
+        const openTasks = await safeCount('employee_tasks', {
+          company_id: companyId,
+          status: ['pending', 'in_progress'],
+        });
 
         // Get pending reviews
-        const { count: pendingReviews } = await supabase
-          .from('performance_reviews')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId)
-          .in('status', ['draft', 'submitted']);
+        const pendingReviews = await safeCount('performance_reviews', {
+          company_id: companyId,
+          status: ['draft', 'submitted'],
+        });
 
         return {
           id: companyId,
@@ -161,13 +205,13 @@ export async function GET() {
           group_name: company?.group?.name ?? null,
           user_role: membership.role,
           stats: {
-            employees: employeeCount || 0,
-            pending_leaves: pendingLeaves || 0,
-            pending_expenses: pendingExpenses || 0,
-            active_contracts: activeContracts || 0,
-            checked_in_today: checkedInToday || 0,
-            open_tasks: openTasks || 0,
-            pending_reviews: pendingReviews || 0,
+            employees: employeeCount,
+            pending_leaves: pendingLeaves,
+            pending_expenses: pendingExpenses,
+            active_contracts: activeContracts,
+            checked_in_today: checkedInToday,
+            open_tasks: openTasks,
+            pending_reviews: pendingReviews,
           },
         };
       })

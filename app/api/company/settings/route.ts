@@ -20,8 +20,15 @@ export async function GET() {
       .eq('id', user.id)
       .single();
 
+    // If no active company, return empty state (not an error)
     if (!profile?.active_company_id) {
-      return NextResponse.json({ error: 'No active company selected' }, { status: 400 });
+      return NextResponse.json({
+        success: true,
+        company: null,
+        user_role: null,
+        can_edit: false,
+        message: 'No active company selected. Please set up or select a company.',
+      });
     }
 
     // Verify user has access and get role
