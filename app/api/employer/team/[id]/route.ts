@@ -112,8 +112,7 @@ export async function PATCH(
       if (last_name) profileUpdate.last_name = last_name;
       if (phone) profileUpdate.phone = phone;
 
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles' as any)
+      const { error: profileError } = await (supabaseAdmin.from('profiles') as any)
         .update(profileUpdate)
         .eq('id', employeeRecord.employee_id);
 
@@ -154,8 +153,7 @@ export async function PATCH(
       }
       if (phone) promoterUpdate.phone = phone;
 
-      await supabaseAdmin
-        .from('promoters' as any)
+      await (supabaseAdmin.from('promoters') as any)
         .update(promoterUpdate)
         .eq('id', employeeRecord.employee_id);
     }
