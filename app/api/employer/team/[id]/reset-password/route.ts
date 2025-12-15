@@ -42,20 +42,20 @@ export async function POST(
     
     // Try profiles table first
     const { data: profile } = await supabaseAdmin
-      .from('profiles')
+      .from('profiles' as any)
       .select('email, full_name')
       .eq('id', employeeRecord.employee_id)
       .single();
 
     // Try promoters table as fallback
     const { data: promoter } = await supabaseAdmin
-      .from('promoters')
+      .from('promoters' as any)
       .select('email, name_en')
       .eq('id', employeeRecord.employee_id)
       .single();
 
-    const employeeEmail = profile?.email || promoter?.email;
-    const employeeName = profile?.full_name || promoter?.name_en;
+    const employeeEmail = (profile as any)?.email || (promoter as any)?.email;
+    const employeeName = (profile as any)?.full_name || (promoter as any)?.name_en;
 
     if (!employeeEmail) {
       return NextResponse.json(
@@ -87,10 +87,11 @@ export async function POST(
     }
 
     // Update profile to require password change
-    await supabaseAdmin.from('profiles').update({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabaseAdmin.from('profiles') as any).update({
       must_change_password: true,
       updated_at: new Date().toISOString(),
-    } as any).eq('id', employeeRecord.employee_id);
+    }).eq('id', employeeRecord.employee_id);
 
     return NextResponse.json({
       success: true,
