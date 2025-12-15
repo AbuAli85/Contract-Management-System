@@ -1,10 +1,24 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   MoreVertical, 
   User, 
@@ -14,9 +28,16 @@ import {
   Briefcase,
   Building2,
   UserPlus,
-  Sparkles 
+  Sparkles,
+  Key,
+  Copy,
+  MessageCircle,
+  Send,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface TeamMember {
   id: string;
@@ -39,10 +60,82 @@ interface TeamMemberListProps {
   onRefresh: () => void;
 }
 
+interface Credentials {
+  email: string;
+  employee_name: string;
+  temporary_password: string;
+  login_url: string;
+}
+
 export function TeamMemberList({
   members,
   onMemberSelect,
 }: TeamMemberListProps) {
+  const [resettingId, setResettingId] = useState<string | null>(null);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+
+  const handleResetPassword = async (e: React.MouseEvent, member: TeamMember) => {
+    e.stopPropagation();
+    setResettingId(member.id);
+
+    try {
+      const response = await fetch(`/api/employer/team/${member.id}/reset-password`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+
+      setCredentials(data.credentials);
+      setShowCredentials(true);
+      toast({
+        title: 'Password Reset!',
+        description: 'Share the new credentials with your employee.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setResettingId(null);
+    }
+  };
+
+  const getCredentialsText = () => {
+    if (!credentials) return '';
+    return `🔐 Your New Login Credentials
+
+📧 Email: ${credentials.email}
+🔑 Password: ${credentials.temporary_password}
+🔗 Login: ${credentials.login_url}
+
+⚠️ Please change your password after login!`;
+  };
+
+  const copyCredentials = () => {
+    navigator.clipboard.writeText(getCredentialsText());
+    setCopied(true);
+    toast({ title: 'Copied!' });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const shareViaWhatsApp = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(getCredentialsText())}`, '_blank');
+  };
+
+  const shareViaEmail = () => {
+    if (!credentials) return;
+    const subject = encodeURIComponent('Your Login Credentials - SmartPro Portal');
+    window.open(`mailto:${credentials.email}?subject=${subject}&body=${encodeURIComponent(getCredentialsText())}`, '_blank');
+  };
+
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'active':
@@ -174,8 +267,8 @@ export function TeamMemberList({
                   </div>
                 </div>
 
-                {/* Status Badge & Arrow */}
-                <div className="flex items-center gap-3">
+                {/* Status Badge & Actions */}
+                <div className="flex items-center gap-2">
                   <Badge 
                     variant="outline"
                     className={cn(
@@ -187,6 +280,34 @@ export function TeamMemberList({
                     <span className={cn("h-1.5 w-1.5 rounded-full mr-2", statusConfig.dot)} />
                     {statusConfig.label}
                   </Badge>
+                  
+                  {/* Actions Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMemberSelect(member); }}>
+                        <User className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={(e) => handleResetPassword(e, member)}
+                        disabled={resettingId === member.id}
+                      >
+                        {resettingId === member.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Key className="h-4 w-4 mr-2" />
+                        )}
+                        Reset Password
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                   <ChevronRight className="h-5 w-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
               </div>
             </div>
@@ -194,6 +315,65 @@ export function TeamMemberList({
         </Card>
         );
       })}
+
+      {/* Password Reset Credentials Dialog */}
+      <Dialog open={showCredentials} onOpenChange={setShowCredentials}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-emerald-600" />
+              Password Reset Successful
+            </DialogTitle>
+            <DialogDescription>
+              Share these new credentials with {credentials?.employee_name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Email:</span>
+                <span className="font-mono font-medium">{credentials?.email}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">New Password:</span>
+                <span className="font-mono font-medium text-emerald-600">{credentials?.temporary_password}</span>
+              </div>
+            </div>
+
+            <p className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+              ⚠️ Employee must change password on first login
+            </p>
+
+            <div className="grid grid-cols-3 gap-2">
+              <Button 
+                onClick={shareViaWhatsApp}
+                variant="outline"
+                className="flex-col h-auto py-3"
+              >
+                <MessageCircle className="h-5 w-5 mb-1" />
+                <span className="text-xs">WhatsApp</span>
+              </Button>
+              <Button 
+                onClick={shareViaEmail}
+                variant="outline"
+                className="flex-col h-auto py-3"
+              >
+                <Send className="h-5 w-5 mb-1" />
+                <span className="text-xs">Email</span>
+              </Button>
+              <Button 
+                onClick={copyCredentials}
+                variant="outline"
+                className={`flex-col h-auto py-3 ${copied ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : ''}`}
+              >
+                {copied ? <CheckCircle2 className="h-5 w-5 mb-1" /> : <Copy className="h-5 w-5 mb-1" />}
+                <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
