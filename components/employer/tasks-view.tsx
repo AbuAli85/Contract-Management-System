@@ -285,9 +285,9 @@ export function TasksView({ employerEmployeeId, isEmployeeView = false }: TasksV
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Task
-                </Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Task
+            </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
@@ -438,8 +438,8 @@ export function TasksView({ employerEmployeeId, isEmployeeView = false }: TasksV
                 const overdue = task.due_date && task.status !== 'completed' && isOverdue(task.due_date);
                 
                 return (
-                  <div
-                    key={task.id}
+                <div
+                  key={task.id}
                     className={cn(
                       "p-4 rounded-xl border transition-all hover:shadow-md",
                       overdue 
@@ -456,11 +456,11 @@ export function TasksView({ employerEmployeeId, isEmployeeView = false }: TasksV
                           <h4 className="font-semibold text-gray-900 dark:text-white">
                             {task.title}
                           </h4>
-                          {task.description && (
+                    {task.description && (
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                              {task.description}
-                            </p>
-                          )}
+                        {task.description}
+                      </p>
+                    )}
                           <div className="flex flex-wrap items-center gap-2 mt-3">
                             <Badge 
                               variant="outline"
@@ -468,14 +468,14 @@ export function TasksView({ employerEmployeeId, isEmployeeView = false }: TasksV
                             >
                               <PriorityIcon className="h-3 w-3 mr-1" />
                               {priorityConfig.label}
-                            </Badge>
+                      </Badge>
                             <Badge 
                               variant="outline"
                               className={cn("font-medium border-0 text-xs", statusConfig.bg, statusConfig.text)}
                             >
                               {statusConfig.label}
-                            </Badge>
-                            {task.due_date && (
+                      </Badge>
+                      {task.due_date && (
                               <div className={cn(
                                 "flex items-center gap-1 text-xs",
                                 overdue ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"
@@ -488,7 +488,7 @@ export function TasksView({ employerEmployeeId, isEmployeeView = false }: TasksV
                                     day: 'numeric',
                                     year: 'numeric'
                                   })}
-                                </span>
+                        </span>
                               </div>
                             )}
                           </div>

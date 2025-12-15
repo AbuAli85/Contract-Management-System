@@ -115,16 +115,16 @@ export function TeamMemberList({
         const employeeEmail = member.employee?.email || 'No email';
         
         return (
-          <Card
-            key={member.id}
+        <Card
+          key={member.id}
             className={cn(
               "cursor-pointer border transition-all duration-200",
               "hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800",
               "hover:translate-x-1 group"
             )}
-            onClick={() => onMemberSelect(member)}
-          >
-            <CardContent className="p-4">
+          onClick={() => onMemberSelect(member)}
+        >
+          <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 {/* Avatar with Status Indicator */}
                 <div className="relative">
@@ -159,12 +159,12 @@ export function TeamMemberList({
                       <Mail className="h-3.5 w-3.5 flex-shrink-0" />
                       <span className="truncate">{employeeEmail}</span>
                     </div>
-                    {member.job_title && (
+                  {member.job_title && (
                       <div className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                         <Briefcase className="h-3.5 w-3.5 flex-shrink-0" />
                         <span className="truncate">{member.job_title}</span>
                       </div>
-                    )}
+                  )}
                     {member.department && (
                       <div className="hidden md:flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                         <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
@@ -188,10 +188,10 @@ export function TeamMemberList({
                     {statusConfig.label}
                   </Badge>
                   <ChevronRight className="h-5 w-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
-                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
         );
       })}
     </div>

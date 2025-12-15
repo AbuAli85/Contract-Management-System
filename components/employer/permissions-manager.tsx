@@ -295,8 +295,8 @@ export function PermissionsManager({
                       <Icon className={cn("h-4 w-4", colors.text)} />
                     </div>
                     <h4 className="font-semibold text-sm uppercase tracking-wide text-gray-700 dark:text-gray-300">
-                      {category.replace(/_/g, ' ')}
-                    </h4>
+                  {category.replace(/_/g, ' ')}
+                </h4>
                     <Badge variant="outline" className="text-xs ml-2">
                       {(perms as any[]).length}
                     </Badge>
@@ -306,20 +306,20 @@ export function PermissionsManager({
                       const isSelected = selectedPermissions.has(perm.name);
                       
                       return (
-                        <label
-                          key={perm.id}
+                    <label
+                      key={perm.id}
                           className={cn(
                             "flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all",
                             isSelected 
                               ? cn("bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/10 dark:to-purple-900/10", colors.border)
                               : "border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900"
                           )}
-                        >
-                          <Checkbox
+                    >
+                      <Checkbox
                             checked={isSelected}
-                            onCheckedChange={() => togglePermission(perm.name)}
+                        onCheckedChange={() => togglePermission(perm.name)}
                             className="mt-0.5"
-                          />
+                      />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <p className="font-medium text-gray-900 dark:text-white">
@@ -329,13 +329,13 @@ export function PermissionsManager({
                                 <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                               )}
                             </div>
-                            {perm.description && (
+                        {perm.description && (
                               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                                {perm.description}
-                              </p>
-                            )}
-                          </div>
-                        </label>
+                            {perm.description}
+                          </p>
+                        )}
+                      </div>
+                    </label>
                       );
                     })}
                   </div>

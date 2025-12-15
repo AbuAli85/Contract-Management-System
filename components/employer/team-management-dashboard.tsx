@@ -180,7 +180,7 @@ export function TeamManagementDashboard() {
       name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  );
   });
 
   const getInitials = (name: string) => {
@@ -220,18 +220,18 @@ export function TeamManagementDashboard() {
             <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
               <Users className="h-8 w-8 text-white" />
             </div>
-            <div>
+        <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                Team Management
-              </h1>
+            Team Management
+          </h1>
               <p className="text-gray-500 dark:text-gray-400 mt-1">
-                Manage your team members, permissions, attendance, tasks, and targets
-              </p>
-            </div>
+            Manage your team members, permissions, attendance, tasks, and targets
+          </p>
+        </div>
           </div>
           <div className="flex gap-2">
             <InviteEmployeeDialog onSuccess={handleAddMember} />
-            <AddTeamMemberDialog onSuccess={handleAddMember} />
+        <AddTeamMemberDialog onSuccess={handleAddMember} />
           </div>
         </div>
       </div>
@@ -284,8 +284,8 @@ export function TeamManagementDashboard() {
                 <Users className="h-4 w-4 mr-2" />
                 Team Members
               </TabsTrigger>
-              {selectedMember && (
-                <>
+          {selectedMember && (
+            <>
                   <TabsTrigger 
                     value="details"
                     className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
@@ -321,9 +321,9 @@ export function TeamManagementDashboard() {
                     <Shield className="h-4 w-4 mr-2" />
                     Permissions
                   </TabsTrigger>
-                </>
-              )}
-            </TabsList>
+            </>
+          )}
+        </TabsList>
           </div>
 
           <TabsContent value="team" className="p-6 space-y-4 mt-0">
@@ -337,17 +337,17 @@ export function TeamManagementDashboard() {
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
-            </div>
+          </div>
 
-            <TeamMemberList
-              members={filteredMembers}
-              onMemberSelect={handleMemberSelect}
-              onRefresh={fetchTeam}
-            />
-          </TabsContent>
+          <TeamMemberList
+            members={filteredMembers}
+            onMemberSelect={handleMemberSelect}
+            onRefresh={fetchTeam}
+          />
+        </TabsContent>
 
-          {selectedMember && (
-            <>
+        {selectedMember && (
+          <>
               <TabsContent value="details" className="p-6 mt-0">
                 <div className="space-y-6">
                   {/* Employee Profile Header */}
@@ -406,19 +406,19 @@ export function TeamManagementDashboard() {
                           <Briefcase className="h-4 w-4 text-blue-600" />
                           Employment Details
                         </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Employee Code</p>
                           <p className="text-sm font-semibold mt-1">{selectedMember.employee_code || 'Not assigned'}</p>
-                        </div>
-                        <div>
+                    </div>
+                    <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Employment Type</p>
                           <p className="text-sm font-semibold mt-1 capitalize">
                             {selectedMember.employment_type?.replace('_', ' ') || 'Full Time'}
                           </p>
-                        </div>
-                        <div>
+                    </div>
+                    <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Hire Date</p>
                           <p className="text-sm font-semibold mt-1">{formatDate(selectedMember.hire_date)}</p>
                         </div>
@@ -439,8 +439,8 @@ export function TeamManagementDashboard() {
                           <p className="text-sm font-semibold mt-1">
                             {formatCurrency(selectedMember.salary, selectedMember.currency)}
                           </p>
-                        </div>
-                        <div>
+                    </div>
+                    <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Currency</p>
                           <p className="text-sm font-semibold mt-1">{selectedMember.currency || 'OMR'}</p>
                         </div>
@@ -459,13 +459,13 @@ export function TeamManagementDashboard() {
                         <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Work Location</p>
                           <p className="text-sm font-semibold mt-1">{selectedMember.work_location || 'Not specified'}</p>
-                        </div>
-                        <div>
+                    </div>
+                    <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Notes</p>
                           <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
                             {selectedMember.notes || 'No notes added'}
                           </p>
-                        </div>
+                    </div>
                       </CardContent>
                     </Card>
                   </div>
@@ -496,30 +496,30 @@ export function TeamManagementDashboard() {
                           <Shield className="h-4 w-4 mr-2" />
                           Edit Permissions
                         </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  </div>
+                </CardContent>
+              </Card>
                 </div>
-              </TabsContent>
+            </TabsContent>
 
               <TabsContent value="attendance" className="p-6 mt-0">
-                <AttendanceView employerEmployeeId={selectedMember.id} />
-              </TabsContent>
+              <AttendanceView employerEmployeeId={selectedMember.id} />
+            </TabsContent>
 
               <TabsContent value="tasks" className="p-6 mt-0">
-                <TasksView employerEmployeeId={selectedMember.id} />
-              </TabsContent>
+              <TasksView employerEmployeeId={selectedMember.id} />
+            </TabsContent>
 
               <TabsContent value="targets" className="p-6 mt-0">
-                <TargetsView employerEmployeeId={selectedMember.id} />
-              </TabsContent>
+              <TargetsView employerEmployeeId={selectedMember.id} />
+            </TabsContent>
 
               <TabsContent value="permissions" className="p-6 mt-0">
-                <PermissionsManager employerEmployeeId={selectedMember.id} />
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
+              <PermissionsManager employerEmployeeId={selectedMember.id} />
+            </TabsContent>
+          </>
+        )}
+      </Tabs>
       </Card>
     </div>
   );

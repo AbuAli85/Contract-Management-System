@@ -234,15 +234,15 @@ export function AttendanceView({ employerEmployeeId }: AttendanceViewProps) {
                 const StatusIcon = statusConfig.icon;
                 
                 return (
-                  <div
-                    key={record.id}
+                <div
+                  key={record.id}
                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
+                >
+                  <div className="flex items-center gap-4">
                       <div className={cn("p-2 rounded-lg", statusConfig.bg)}>
                         <StatusIcon className={cn("h-5 w-5", statusConfig.iconColor)} />
                       </div>
-                      <div>
+                    <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {new Date(record.attendance_date).toLocaleDateString('en-US', {
                             weekday: 'long',
@@ -250,8 +250,8 @@ export function AttendanceView({ employerEmployeeId }: AttendanceViewProps) {
                             month: 'short',
                             day: 'numeric'
                           })}
-                        </p>
-                        {record.check_in && (
+                      </p>
+                      {record.check_in && (
                           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                             <span className="text-emerald-600">In:</span>{' '}
                             {new Date(record.check_in).toLocaleTimeString('en-US', { 

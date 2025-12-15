@@ -283,9 +283,9 @@ export function TargetsView({ employerEmployeeId, isEmployeeView = false }: Targ
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/20">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Target
-                </Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Target
+            </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[550px]">
                 <DialogHeader>
@@ -497,7 +497,7 @@ export function TargetsView({ employerEmployeeId, isEmployeeView = false }: Targ
                     </div>
                     
                     <CardContent className="p-5">
-                      <div className="space-y-4">
+            <div className="space-y-4">
                         {/* Header */}
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-start gap-3">
@@ -515,22 +515,22 @@ export function TargetsView({ employerEmployeeId, isEmployeeView = false }: Targ
                               )}
                             </div>
                           </div>
-                          <Badge 
+                        <Badge
                             variant="outline"
                             className={cn("font-medium border-0", statusConfig.bg, statusConfig.text)}
-                          >
+                        >
                             {statusConfig.label}
-                          </Badge>
-                        </div>
+                        </Badge>
+                      </div>
 
                         {/* Progress */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
                             <div className="flex items-center gap-2">
                               <TrendingUp className="h-4 w-4 text-gray-400" />
                               <span className="text-gray-600 dark:text-gray-400">
                                 {target.current_value || 0} / {target.target_value} {target.unit}
-                              </span>
+                          </span>
                             </div>
                             <div className="flex items-center gap-1">
                               <span className={cn(
@@ -542,7 +542,7 @@ export function TargetsView({ employerEmployeeId, isEmployeeView = false }: Targ
                                     : "text-gray-900 dark:text-white"
                               )}>
                                 {progressPercent}%
-                              </span>
+                          </span>
                               {progressPercent >= 100 && (
                                 <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                               )}
@@ -626,11 +626,11 @@ export function TargetsView({ employerEmployeeId, isEmployeeView = false }: Targ
                                 </>
                               )}
                             </Button>
-                          </div>
-                        )}
                       </div>
-                    </CardContent>
-                  </Card>
+                        )}
+                    </div>
+                  </CardContent>
+                </Card>
                 );
               })}
             </div>

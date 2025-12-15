@@ -84,15 +84,23 @@ export async function POST(request: NextRequest) {
       // User exists - just add to team
       employeeUserId = firstUser.id;
       
-      // Update their employer_id in promoters table
-      const { error: updatePromoterError } = await (supabaseAdmin.from('promoters') as any).update({
+      // Upsert promoter record (in case user exists in profiles but not in promoters)
+      const { error: upsertPromoterError } = await supabaseAdmin.from('promoters').upsert({
+        id: employeeUserId,
+        email: email.toLowerCase(),
+        name_en: full_name,
+        name_ar: full_name,
         employer_id: user.id,
+        status: 'active',
         updated_at: new Date().toISOString(),
-      }).eq('id', employeeUserId);
+      } as any, { onConflict: 'id' });
 
-      if (updatePromoterError) {
-        console.error('Error updating promoter employer_id:', updatePromoterError);
-        // Continue anyway - the employer_employees link will still be created
+      if (upsertPromoterError) {
+        console.error('Error upserting promoter:', upsertPromoterError);
+        return NextResponse.json(
+          { error: 'Failed to link employee record', details: upsertPromoterError.message },
+          { status: 500 }
+        );
       }
     } else {
       // Create new user account
@@ -138,7 +146,7 @@ export async function POST(request: NextRequest) {
       } as any);
 
       // Also create a promoter record with employer_id
-      await supabaseAdmin.from('promoters').upsert({
+      const { error: promoterError } = await supabaseAdmin.from('promoters').upsert({
         id: employeeUserId,
         email: email.toLowerCase(),
         name_en: full_name,
@@ -150,6 +158,14 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       } as any);
+
+      if (promoterError) {
+        console.error('Error creating promoter record:', promoterError);
+        return NextResponse.json(
+          { error: 'Failed to create employee record', details: promoterError.message },
+          { status: 500 }
+        );
+      }
     }
 
     // Check if already in team
