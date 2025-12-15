@@ -18,12 +18,16 @@ import {
   Phone,
   ChevronRight,
   Loader2,
+  CalendarDays,
+  Megaphone,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceCard } from '@/components/employee/attendance-card';
 import { TasksCard } from '@/components/employee/tasks-card';
 import { TargetsCard } from '@/components/employee/targets-card';
 import { ContractsCard } from '@/components/employee/contracts-card';
+import { LeaveRequestsCard } from '@/components/employee/leave-requests-card';
+import { AnnouncementsCard } from '@/components/employee/announcements-card';
 import { cn } from '@/lib/utils';
 
 interface EmployeeInfo {
@@ -48,7 +52,7 @@ interface EmployeeInfo {
 export function EmployeeDashboard() {
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'targets' | 'contracts'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'targets' | 'contracts' | 'leave' | 'announcements'>('overview');
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
@@ -312,13 +316,43 @@ export function EmployeeDashboard() {
             <Briefcase className="h-4 w-4" />
             Contracts
           </button>
+          <button
+            onClick={() => setActiveTab('leave')}
+            className={cn(
+              "px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
+              activeTab === 'leave'
+                ? "bg-white dark:bg-gray-700 shadow text-primary"
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            )}
+          >
+            <CalendarDays className="h-4 w-4" />
+            Leave
+          </button>
+          <button
+            onClick={() => setActiveTab('announcements')}
+            className={cn(
+              "px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
+              activeTab === 'announcements'
+                ? "bg-white dark:bg-gray-700 shadow text-primary"
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            )}
+          >
+            <Megaphone className="h-4 w-4" />
+            News
+          </button>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AttendanceCard />
-            <TasksCard />
+          <div className="space-y-6">
+            {/* Announcements Preview */}
+            <AnnouncementsCard />
+            
+            {/* Main Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AttendanceCard />
+              <TasksCard />
+            </div>
           </div>
         )}
 
@@ -337,6 +371,18 @@ export function EmployeeDashboard() {
         {activeTab === 'contracts' && (
           <div className="max-w-4xl">
             <ContractsCard />
+          </div>
+        )}
+
+        {activeTab === 'leave' && (
+          <div className="max-w-4xl">
+            <LeaveRequestsCard />
+          </div>
+        )}
+
+        {activeTab === 'announcements' && (
+          <div className="max-w-4xl">
+            <AnnouncementsCard />
           </div>
         )}
       </div>

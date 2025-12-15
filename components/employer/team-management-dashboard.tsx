@@ -46,6 +46,8 @@ import { TasksView } from './tasks-view';
 import { TargetsView } from './targets-view';
 import { PermissionsManager } from './permissions-manager';
 import { AnalyticsOverview } from './analytics-overview';
+import { LeaveRequestsManagement } from './leave-requests-management';
+import { AnnouncementsManagement } from './announcements-management';
 import { cn } from '@/lib/utils';
 
 interface TeamMember {
@@ -292,6 +294,20 @@ export function TeamManagementDashboard() {
                 <Users className="h-4 w-4 mr-2" />
                 Team Members
               </TabsTrigger>
+              <TabsTrigger 
+                value="leave-requests" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Leave Requests
+              </TabsTrigger>
+              <TabsTrigger 
+                value="announcements" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Announcements
+              </TabsTrigger>
           {selectedMember && (
             <>
                   <TabsTrigger 
@@ -357,6 +373,14 @@ export function TeamManagementDashboard() {
             onRefresh={fetchTeam}
           />
         </TabsContent>
+
+          <TabsContent value="leave-requests" className="p-6 mt-0">
+            <LeaveRequestsManagement />
+          </TabsContent>
+
+          <TabsContent value="announcements" className="p-6 mt-0">
+            <AnnouncementsManagement />
+          </TabsContent>
 
         {selectedMember && (
           <>
