@@ -37,17 +37,29 @@ export async function POST(
       );
     }
 
-    // Get employee email from promoters
+    // Get employee email - check profiles first, then promoters
     const supabaseAdmin = getSupabaseAdmin();
+    
+    // Try profiles table first
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', employeeRecord.employee_id)
+      .single();
+
+    // Try promoters table as fallback
     const { data: promoter } = await supabaseAdmin
       .from('promoters')
       .select('email, name_en')
       .eq('id', employeeRecord.employee_id)
       .single();
 
-    if (!promoter?.email) {
+    const employeeEmail = profile?.email || promoter?.email;
+    const employeeName = profile?.full_name || promoter?.name_en;
+
+    if (!employeeEmail) {
       return NextResponse.json(
-        { error: 'Employee email not found' },
+        { error: 'Employee email not found. Please add an email for this employee first.' },
         { status: 400 }
       );
     }
@@ -84,8 +96,8 @@ export async function POST(
       success: true,
       message: 'Password reset successfully',
       credentials: {
-        email: promoter.email,
-        employee_name: promoter.name_en,
+        email: employeeEmail,
+        employee_name: employeeName,
         temporary_password: newPassword,
         login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`,
         note: 'Employee must change password on first login',
