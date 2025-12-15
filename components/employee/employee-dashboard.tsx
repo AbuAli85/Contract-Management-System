@@ -93,7 +93,7 @@ export function EmployeeDashboard() {
         .eq('id', user.id)
         .single();
 
-      // Find employee record
+      // Find employee record - use maybeSingle to handle 0 or multiple records
       const { data: employeeRecord, error } = await supabase
         .from('employer_employees')
         .select(
@@ -111,9 +111,17 @@ export function EmployeeDashboard() {
         )
         .eq('employee_id', user.id)
         .eq('employment_status', 'active')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (error || !employeeRecord) {
+      if (error) {
+        console.error('Error fetching employee record:', error);
+        setEmployeeInfo(null);
+        return;
+      }
+
+      if (!employeeRecord) {
         setEmployeeInfo(null);
         return;
       }
