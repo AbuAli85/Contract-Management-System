@@ -35,9 +35,11 @@ import {
   Send,
   Loader2,
   CheckCircle2,
+  Edit,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { EditEmployeeDialog } from './edit-employee-dialog';
 
 interface TeamMember {
   id: string;
@@ -70,11 +72,14 @@ interface Credentials {
 export function TeamMemberList({
   members,
   onMemberSelect,
+  onRefresh,
 }: TeamMemberListProps) {
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [showCredentials, setShowCredentials] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
 
   const handleResetPassword = async (e: React.MouseEvent, member: TeamMember) => {
@@ -289,13 +294,21 @@ export function TeamMemberList({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMemberSelect(member); }}>
+                      <DropdownMenuItem onClick={(e) => { e?.stopPropagation(); onMemberSelect(member); }}>
                         <User className="h-4 w-4 mr-2" />
                         View Details
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => { 
+                        e?.stopPropagation(); 
+                        setEditingMember(member);
+                        setShowEditDialog(true);
+                      }}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Employee
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
-                        onClick={(e) => handleResetPassword(e, member)}
+                        onClick={(e) => handleResetPassword(e as React.MouseEvent, member)}
                         disabled={resettingId === member.id}
                       >
                         {resettingId === member.id ? (
@@ -374,6 +387,14 @@ export function TeamMemberList({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <EditEmployeeDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        member={editingMember}
+        onSuccess={onRefresh}
+      />
     </div>
   );
 }
