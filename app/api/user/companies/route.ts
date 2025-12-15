@@ -1,0 +1,163 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
+
+// GET: Fetch user's companies
+export async function GET() {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user's companies via the function
+    const { data: companies, error } = await supabase.rpc('get_user_companies', {
+      p_user_id: user.id
+    });
+
+    if (error) {
+      // Fallback: direct query if function doesn't exist yet
+      const { data: fallbackCompanies, error: fallbackError } = await supabase
+        .from('company_members')
+        .select(`
+          company_id,
+          role,
+          is_primary,
+          company:companies (
+            id,
+            name,
+            logo_url,
+            group:company_groups (
+              name
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('is_primary', { ascending: false });
+
+      if (fallbackError) {
+        console.error('Error fetching companies:', fallbackError);
+        return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 });
+      }
+
+      // Transform fallback data
+      const transformedCompanies = (fallbackCompanies || []).map((cm: any) => ({
+        company_id: cm.company?.id,
+        company_name: cm.company?.name,
+        company_logo: cm.company?.logo_url,
+        user_role: cm.role,
+        is_primary: cm.is_primary,
+        group_name: cm.company?.group?.name || null,
+      }));
+
+      // Get active company
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_company_id')
+        .eq('id', user.id)
+        .single();
+
+      return NextResponse.json({
+        success: true,
+        companies: transformedCompanies,
+        active_company_id: profile?.active_company_id || transformedCompanies[0]?.company_id || null,
+      });
+    }
+
+    // Get active company
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    return NextResponse.json({
+      success: true,
+      companies: companies || [],
+      active_company_id: profile?.active_company_id || companies?.[0]?.company_id || null,
+    });
+  } catch (error: any) {
+    console.error('Error in companies endpoint:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// POST: Create a new company
+export async function POST(request: Request) {
+  const supabase = await createClient();
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { name, description, logo_url, business_type, group_id } = body;
+
+    if (!name) {
+      return NextResponse.json({ error: 'Company name is required' }, { status: 400 });
+    }
+
+    // Create slug from name
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    // Create the company
+    const { data: company, error: createError } = await supabase
+      .from('companies')
+      .insert({
+        name,
+        slug,
+        description,
+        logo_url,
+        business_type,
+        group_id,
+        owner_id: user.id,
+        is_active: true,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Error creating company:', createError);
+      return NextResponse.json({ error: 'Failed to create company' }, { status: 500 });
+    }
+
+    // The trigger will auto-create company_members entry
+    // But let's ensure it happened
+    const { data: membership } = await supabase
+      .from('company_members')
+      .select('id')
+      .eq('company_id', company.id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (!membership) {
+      // Create membership manually if trigger didn't fire
+      await supabase
+        .from('company_members')
+        .insert({
+          company_id: company.id,
+          user_id: user.id,
+          role: 'owner',
+          is_primary: true,
+          status: 'active',
+        });
+    }
+
+    return NextResponse.json({
+      success: true,
+      company,
+      message: 'Company created successfully',
+    });
+  } catch (error: any) {
+    console.error('Error creating company:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

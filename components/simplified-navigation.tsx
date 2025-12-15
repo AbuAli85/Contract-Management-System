@@ -25,6 +25,10 @@ import {
   UserPlus,
   ChevronRight,
   Upload,
+  BarChart3,
+  Briefcase,
+  Shield,
+  Calendar,
 } from 'lucide-react';
 
 interface SimplifiedNavigationProps {
@@ -136,6 +140,47 @@ export function SimplifiedNavigation({
           label: 'Manage Parties',
           labelAr: 'إدارة الأطراف',
           icon: Building2,
+        },
+      ],
+    },
+    {
+      title: 'Company & Team',
+      titleAr: 'الشركة والفريق',
+      items: [
+        {
+          href: `/${locale}/dashboard/companies`,
+          label: 'All Companies',
+          labelAr: 'جميع الشركات',
+          icon: BarChart3,
+          description: 'Cross-company dashboard',
+        },
+        {
+          href: `/${locale}/employer/team`,
+          label: 'Team Management',
+          labelAr: 'إدارة الفريق',
+          icon: Users,
+          description: 'Manage employees, attendance, tasks',
+        },
+        {
+          href: `/${locale}/employee/dashboard`,
+          label: 'My Workplace',
+          labelAr: 'مكان عملي',
+          icon: Briefcase,
+          description: 'Employee self-service',
+        },
+        {
+          href: `/${locale}/settings/company`,
+          label: 'Company Settings',
+          labelAr: 'إعدادات الشركة',
+          icon: Settings,
+          description: 'Logo, policies, branding',
+        },
+        {
+          href: `/${locale}/settings/company/members`,
+          label: 'Company Members',
+          labelAr: 'أعضاء الشركة',
+          icon: Shield,
+          description: 'Manage admins and access',
         },
       ],
     },

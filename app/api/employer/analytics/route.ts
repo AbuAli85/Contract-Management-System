@@ -25,11 +25,24 @@ export async function GET(request: NextRequest) {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
     const today = now.toISOString().slice(0, 10);
 
-    // 1. Get all team members
-    const { data: teamMembers, error: teamError } = await supabase
+    // Get user's active company
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    // 1. Get all team members (company-scoped if available)
+    let teamQuery = supabase
       .from('employer_employees')
       .select('id, employee_id, employment_status, hire_date')
       .eq('employer_id', user.id);
+
+    if (profile?.active_company_id) {
+      teamQuery = teamQuery.eq('company_id', profile.active_company_id);
+    }
+
+    const { data: teamMembers, error: teamError } = await teamQuery;
 
     if (teamError) {
       console.error('Error fetching team:', teamError);

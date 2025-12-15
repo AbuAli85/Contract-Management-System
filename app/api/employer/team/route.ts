@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// GET - List all employees for an employer
+// GET - List all employees for an employer (company-scoped)
 async function getTeamHandler(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -26,7 +26,7 @@ async function getTeamHandler(request: NextRequest) {
     // Verify user is the employer or admin
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, id')
+      .select('role, id, active_company_id')
       .eq('id', user.id)
       .single();
 
@@ -44,12 +44,20 @@ async function getTeamHandler(request: NextRequest) {
       );
     }
 
-    // Fetch team members (base records)
-    const { data: teamMembers, error: teamError } = await supabase
+    // Build query - filter by company if available
+    let query = supabase
       .from('employer_employees')
       .select('*')
       .eq('employer_id', employerId)
       .order('created_at', { ascending: false });
+
+    // If user has an active company, filter by it
+    if (profile.active_company_id) {
+      query = query.eq('company_id', profile.active_company_id);
+    }
+
+    // Fetch team members (base records)
+    const { data: teamMembers, error: teamError } = await query;
 
     if (teamError) {
       console.error('Error fetching team:', teamError);
@@ -192,6 +200,13 @@ async function addTeamMemberHandler(request: NextRequest) {
       );
     }
 
+    // Get user's active company
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
     // Add employee to team (use admin client to bypass RLS)
     // Helper to convert empty strings to null for UUID fields
     const toNullIfEmpty = (val: string | null | undefined) => 
@@ -213,6 +228,7 @@ async function addTeamMemberHandler(request: NextRequest) {
       work_location: toNullIfEmpty(work_location),
       notes: toNullIfEmpty(notes),
       created_by: user.id,
+      company_id: profile?.active_company_id || null, // Associate with active company
     };
 
     const { data: teamMember, error: insertError } = await supabaseAdmin

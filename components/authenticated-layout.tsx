@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
+import { CompanySwitcher } from '@/components/layout/company-switcher';
 
 // Pages that don't need authentication or sidebar
 const PUBLIC_PAGES = [
@@ -254,8 +255,11 @@ export function AuthenticatedLayout({
                   )}
                 </div>
 
-                {/* Right side - Theme, Notifications, User */}
+                {/* Right side - Company, Theme, Notifications, User */}
                 <div className='flex items-center space-x-2'>
+                  {/* Company Switcher */}
+                  <CompanySwitcher />
+
                   {/* Theme Toggle */}
                   <Button variant='ghost' size='sm' onClick={toggleTheme}>
                     <Sun className='h-4 w-4' />
