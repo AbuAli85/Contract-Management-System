@@ -216,6 +216,25 @@ export default function UnifiedLoginForm() {
         profile?.role || authData.user.user_metadata?.role || 'user';
       let redirectPath = '/en/dashboard';
 
+      // Check if this user is an employee (assigned to an employer)
+      const { data: employeeRecord } = await supabase
+        .from('employer_employees')
+        .select('id')
+        .eq('employee_id', authData.user.id)
+        .eq('employment_status', 'active')
+        .maybeSingle();
+      
+      const isEmployee = !!employeeRecord;
+      
+      // Check if this user is an employer (has team members)
+      const { data: employerRecord } = await supabase
+        .from('employer_employees')
+        .select('id')
+        .eq('employer_id', authData.user.id)
+        .maybeSingle();
+      
+      const isEmployer = !!employerRecord || userRole === 'employer';
+
       switch (userRole) {
         case 'provider':
           redirectPath = '/en/dashboard/provider-comprehensive';
@@ -231,8 +250,29 @@ export default function UnifiedLoginForm() {
         case 'hr_staff':
           redirectPath = '/en/hr';
           break;
+        case 'employer':
+          redirectPath = '/en/employer/team';
+          break;
+        case 'promoter':
+        case 'user':
+          // Check if user is an employee first
+          if (isEmployee) {
+            redirectPath = '/en/employee/dashboard';
+          } else if (isEmployer) {
+            redirectPath = '/en/employer/team';
+          } else {
+            redirectPath = '/en/dashboard';
+          }
+          break;
         default:
-          redirectPath = '/en/dashboard';
+          // For any unrecognized role, check relationships
+          if (isEmployee) {
+            redirectPath = '/en/employee/dashboard';
+          } else if (isEmployer) {
+            redirectPath = '/en/employer/team';
+          } else {
+            redirectPath = '/en/dashboard';
+          }
       }
 
       console.log('🔐 Unified Login - Redirecting to:', redirectPath);

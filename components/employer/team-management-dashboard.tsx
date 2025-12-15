@@ -45,6 +45,7 @@ import { AttendanceView } from './attendance-view';
 import { TasksView } from './tasks-view';
 import { TargetsView } from './targets-view';
 import { PermissionsManager } from './permissions-manager';
+import { AnalyticsOverview } from './analytics-overview';
 import { cn } from '@/lib/utils';
 
 interface TeamMember {
@@ -119,7 +120,7 @@ export function TeamManagementDashboard() {
     terminated: 0,
   });
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [activeTab, setActiveTab] = useState('team');
+  const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const { toast } = useToast();
@@ -278,6 +279,13 @@ export function TeamManagementDashboard() {
           <div className="border-b px-6 pt-4">
             <TabsList className="bg-transparent h-auto p-0 gap-6">
               <TabsTrigger 
+                value="overview" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
                 value="team" 
                 className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
               >
@@ -325,6 +333,10 @@ export function TeamManagementDashboard() {
           )}
         </TabsList>
           </div>
+
+          <TabsContent value="overview" className="p-6 mt-0">
+            <AnalyticsOverview />
+          </TabsContent>
 
           <TabsContent value="team" className="p-6 space-y-4 mt-0">
             {/* Search Bar */}
