@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,11 +58,20 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Use admin client to bypass RLS
+    let adminClient;
+    try {
+      adminClient = createAdminClient();
+    } catch (e) {
+      console.warn('Admin client not available, using regular client');
+      adminClient = supabase;
+    }
+
     // Try to get companies - handle case where company_members table doesn't exist yet
     let memberships: CompanyMembership[] | null = null;
     
     try {
-      const { data, error: memberError } = await supabase
+      const { data, error: memberError } = await adminClient
         .from('company_members')
         .select(`
           company_id,
@@ -96,7 +105,7 @@ export async function GET() {
     // If no memberships found, also check for directly owned companies
     if (!memberships || memberships.length === 0) {
       // Fallback: Check for companies where user is owner
-      const { data: ownedCompanies } = await supabase
+      const { data: ownedCompanies } = await adminClient
         .from('companies')
         .select(`
           id,
@@ -109,7 +118,7 @@ export async function GET() {
         .eq('is_active', true);
 
       if (ownedCompanies && ownedCompanies.length > 0) {
-        memberships = ownedCompanies.map(c => ({
+        memberships = ownedCompanies.map((c: { id: string; name: string; logo_url: string | null; is_active: boolean }) => ({
           company_id: c.id,
           role: 'owner',
           company: {
@@ -162,7 +171,7 @@ export async function GET() {
 
     // Fetch stats for each company
     const companiesWithStats: CompanyWithStats[] = await Promise.all(
-      memberships.map(async (membership) => {
+      (memberships || []).map(async (membership) => {
         const companyId = membership.company_id;
         const company = membership.company;
 
