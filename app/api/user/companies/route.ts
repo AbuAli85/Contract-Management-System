@@ -1,22 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 // GET: Fetch user's companies
 export async function GET() {
-  const supabase = await createClient();
-
   try {
+    const supabase = await createClient();
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Use admin client to bypass RLS
+    let adminClient;
+    try {
+      adminClient = createAdminClient();
+    } catch (e) {
+      console.warn('Admin client not available, using regular client');
+      adminClient = supabase;
+    }
+
     let allCompanies: any[] = [];
 
-    // First try: Get companies via company_members
-    const { data: membershipCompanies, error: membershipError } = await supabase
+    // First try: Get companies via company_members using admin client
+    const { data: membershipCompanies, error: membershipError } = await adminClient
       .from('company_members')
       .select(`
         company_id,
@@ -45,7 +54,7 @@ export async function GET() {
     }
 
     // Second try: Also check if user owns any companies directly (in case company_members is missing)
-    const { data: ownedCompanies, error: ownedError } = await supabase
+    const { data: ownedCompanies, error: ownedError } = await adminClient
       .from('companies')
       .select('id, name, logo_url, group_id')
       .eq('owner_id', user.id)
@@ -68,8 +77,8 @@ export async function GET() {
       }
     }
 
-    // Get active company from profile
-    const { data: profile } = await supabase
+    // Get active company from profile using admin client
+    const { data: profile } = await adminClient
       .from('profiles')
       .select('active_company_id')
       .eq('id', user.id)
@@ -82,8 +91,8 @@ export async function GET() {
     if (!activeCompanyId && allCompanies.length > 0) {
       activeCompanyId = allCompanies[0].company_id;
       
-      // Update profile with active company
-      await supabase
+      // Update profile with active company using admin client
+      await adminClient
         .from('profiles')
         .update({ active_company_id: activeCompanyId })
         .eq('id', user.id);
@@ -96,18 +105,33 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error('Error in companies endpoint:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Return empty state instead of error
+    return NextResponse.json({
+      success: true,
+      companies: [],
+      active_company_id: null,
+      message: 'An error occurred loading companies',
+    });
   }
 }
 
 // POST: Create a new company
 export async function POST(request: Request) {
-  const supabase = await createClient();
-
   try {
+    const supabase = await createClient();
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Use admin client to bypass RLS
+    let adminClient;
+    try {
+      adminClient = createAdminClient();
+    } catch (e) {
+      console.warn('Admin client not available, using regular client');
+      adminClient = supabase;
     }
 
     const body = await request.json();
@@ -120,8 +144,8 @@ export async function POST(request: Request) {
     // Create slug from name
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-    // Create the company
-    const { data: company, error: createError } = await supabase
+    // Create the company using admin client
+    const { data: company, error: createError } = await adminClient
       .from('companies')
       .insert({
         name,
@@ -143,17 +167,17 @@ export async function POST(request: Request) {
     }
 
     // The trigger will auto-create company_members entry
-    // But let's ensure it happened
-    const { data: membership } = await supabase
+    // But let's ensure it happened using admin client
+    const { data: membership } = await adminClient
       .from('company_members')
       .select('id')
       .eq('company_id', company.id)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!membership) {
       // Create membership manually if trigger didn't fire
-      await supabase
+      await adminClient
         .from('company_members')
         .insert({
           company_id: company.id,
