@@ -13,72 +13,86 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's companies via the function
-    const { data: companies, error } = await supabase.rpc('get_user_companies', {
-      p_user_id: user.id
-    });
+    let allCompanies: any[] = [];
 
-    if (error) {
-      // Fallback: direct query if function doesn't exist yet
-      const { data: fallbackCompanies, error: fallbackError } = await supabase
-        .from('company_members')
-        .select(`
-          company_id,
-          role,
-          is_primary,
-          company:companies (
-            id,
-            name,
-            logo_url,
-            group:company_groups (
-              name
-            )
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('is_primary', { ascending: false });
+    // First try: Get companies via company_members
+    const { data: membershipCompanies, error: membershipError } = await supabase
+      .from('company_members')
+      .select(`
+        company_id,
+        role,
+        is_primary,
+        company:companies (
+          id,
+          name,
+          logo_url,
+          group_id
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .order('is_primary', { ascending: false });
 
-      if (fallbackError) {
-        console.error('Error fetching companies:', fallbackError);
-        return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 });
-      }
-
-      // Transform fallback data
-      const transformedCompanies = (fallbackCompanies || []).map((cm: any) => ({
+    if (!membershipError && membershipCompanies) {
+      allCompanies = membershipCompanies.map((cm: any) => ({
         company_id: cm.company?.id,
         company_name: cm.company?.name,
         company_logo: cm.company?.logo_url,
         user_role: cm.role,
         is_primary: cm.is_primary,
-        group_name: cm.company?.group?.name || null,
+        group_name: null, // Will fetch group names separately if needed
       }));
-
-      // Get active company
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('active_company_id')
-        .eq('id', user.id)
-        .single();
-
-      return NextResponse.json({
-        success: true,
-        companies: transformedCompanies,
-        active_company_id: profile?.active_company_id || transformedCompanies[0]?.company_id || null,
-      });
     }
 
-    // Get active company
+    // Second try: Also check if user owns any companies directly (in case company_members is missing)
+    const { data: ownedCompanies, error: ownedError } = await supabase
+      .from('companies')
+      .select('id, name, logo_url, group_id')
+      .eq('owner_id', user.id)
+      .eq('is_active', true);
+
+    if (!ownedError && ownedCompanies) {
+      // Add owned companies that aren't already in the list
+      const existingIds = new Set(allCompanies.map(c => c.company_id));
+      for (const company of ownedCompanies) {
+        if (!existingIds.has(company.id)) {
+          allCompanies.push({
+            company_id: company.id,
+            company_name: company.name,
+            company_logo: company.logo_url,
+            user_role: 'owner',
+            is_primary: allCompanies.length === 0,
+            group_name: null,
+          });
+        }
+      }
+    }
+
+    // Get active company from profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('active_company_id')
       .eq('id', user.id)
       .single();
 
+    // Determine active_company_id
+    let activeCompanyId = profile?.active_company_id;
+    
+    // If no active company set but user has companies, set the first one
+    if (!activeCompanyId && allCompanies.length > 0) {
+      activeCompanyId = allCompanies[0].company_id;
+      
+      // Update profile with active company
+      await supabase
+        .from('profiles')
+        .update({ active_company_id: activeCompanyId })
+        .eq('id', user.id);
+    }
+
     return NextResponse.json({
       success: true,
-      companies: companies || [],
-      active_company_id: profile?.active_company_id || companies?.[0]?.company_id || null,
+      companies: allCompanies,
+      active_company_id: activeCompanyId,
     });
   } catch (error: any) {
     console.error('Error in companies endpoint:', error);

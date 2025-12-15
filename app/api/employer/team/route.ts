@@ -52,8 +52,9 @@ async function getTeamHandler(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     // If user has an active company, filter by it
+    // But also include employees with null company_id for backwards compatibility
     if (profile.active_company_id) {
-      query = query.eq('company_id', profile.active_company_id);
+      query = query.or(`company_id.eq.${profile.active_company_id},company_id.is.null`);
     }
 
     // Fetch team members (base records)
