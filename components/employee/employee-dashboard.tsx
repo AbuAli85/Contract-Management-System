@@ -20,6 +20,7 @@ import {
   Loader2,
   CalendarDays,
   Megaphone,
+  Receipt,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AttendanceCard } from '@/components/employee/attendance-card';
@@ -28,6 +29,8 @@ import { TargetsCard } from '@/components/employee/targets-card';
 import { ContractsCard } from '@/components/employee/contracts-card';
 import { LeaveRequestsCard } from '@/components/employee/leave-requests-card';
 import { AnnouncementsCard } from '@/components/employee/announcements-card';
+import { ExpensesCard } from '@/components/employee/expenses-card';
+import { PerformanceReviewsCard } from '@/components/employee/performance-reviews-card';
 import { cn } from '@/lib/utils';
 
 interface EmployeeInfo {
@@ -52,7 +55,7 @@ interface EmployeeInfo {
 export function EmployeeDashboard() {
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'targets' | 'contracts' | 'leave' | 'announcements'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'targets' | 'contracts' | 'leave' | 'expenses' | 'announcements' | 'reviews'>('overview');
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
@@ -329,6 +332,18 @@ export function EmployeeDashboard() {
             Leave
           </button>
           <button
+            onClick={() => setActiveTab('expenses')}
+            className={cn(
+              "px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
+              activeTab === 'expenses'
+                ? "bg-white dark:bg-gray-700 shadow text-primary"
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            )}
+          >
+            <Receipt className="h-4 w-4" />
+            Expenses
+          </button>
+          <button
             onClick={() => setActiveTab('announcements')}
             className={cn(
               "px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
@@ -339,6 +354,18 @@ export function EmployeeDashboard() {
           >
             <Megaphone className="h-4 w-4" />
             News
+          </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={cn(
+              "px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
+              activeTab === 'reviews'
+                ? "bg-white dark:bg-gray-700 shadow text-primary"
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            )}
+          >
+            <Target className="h-4 w-4" />
+            Reviews
           </button>
         </div>
 
@@ -380,9 +407,21 @@ export function EmployeeDashboard() {
           </div>
         )}
 
+        {activeTab === 'expenses' && (
+          <div className="max-w-4xl">
+            <ExpensesCard />
+          </div>
+        )}
+
         {activeTab === 'announcements' && (
           <div className="max-w-4xl">
             <AnnouncementsCard />
+          </div>
+        )}
+
+        {activeTab === 'reviews' && employeeInfo && (
+          <div className="max-w-4xl">
+            <PerformanceReviewsCard employerEmployeeId={employeeInfo.employer_employee_id} />
           </div>
         )}
       </div>

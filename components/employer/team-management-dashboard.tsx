@@ -47,7 +47,10 @@ import { TargetsView } from './targets-view';
 import { PermissionsManager } from './permissions-manager';
 import { AnalyticsOverview } from './analytics-overview';
 import { LeaveRequestsManagement } from './leave-requests-management';
+import { LeaveCalendar } from './leave-calendar';
 import { AnnouncementsManagement } from './announcements-management';
+import { ExpensesManagement } from './expenses-management';
+import { PerformanceReviewsManagement } from './performance-reviews-management';
 import { cn } from '@/lib/utils';
 
 interface TeamMember {
@@ -302,11 +305,32 @@ export function TeamManagementDashboard() {
                 Leave Requests
               </TabsTrigger>
               <TabsTrigger 
+                value="leave-calendar" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Leave Calendar
+              </TabsTrigger>
+              <TabsTrigger 
+                value="expenses" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Expenses
+              </TabsTrigger>
+              <TabsTrigger 
                 value="announcements" 
                 className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Announcements
+              </TabsTrigger>
+              <TabsTrigger 
+                value="performance" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Reviews
               </TabsTrigger>
           {selectedMember && (
             <>
@@ -378,8 +402,20 @@ export function TeamManagementDashboard() {
             <LeaveRequestsManagement />
           </TabsContent>
 
+          <TabsContent value="leave-calendar" className="p-6 mt-0">
+            <LeaveCalendar />
+          </TabsContent>
+
+          <TabsContent value="expenses" className="p-6 mt-0">
+            <ExpensesManagement />
+          </TabsContent>
+
           <TabsContent value="announcements" className="p-6 mt-0">
             <AnnouncementsManagement />
+          </TabsContent>
+
+          <TabsContent value="performance" className="p-6 mt-0">
+            <PerformanceReviewsManagement />
           </TabsContent>
 
         {selectedMember && (
