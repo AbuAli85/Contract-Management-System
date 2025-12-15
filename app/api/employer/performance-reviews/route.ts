@@ -34,65 +34,85 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         reviews: [],
-        stats: { draft: 0, submitted: 0, completed: 0 },
+        stats: { draft: 0, submitted: 0, acknowledged: 0, completed: 0 },
       });
     }
 
     const employerEmployeeIds = teamMembers.map(m => m.id);
 
-    // Get reviews
-    let query = (supabaseAdmin.from('employee_performance_reviews') as any)
-      .select(`
-        *,
-        employer_employee:employer_employee_id (
-          employee:employee_id (
-            id,
-            full_name,
-            email,
-            avatar_url
+    // Try to get reviews - handle case where table doesn't exist
+    try {
+      let query = (supabaseAdmin.from('employee_performance_reviews') as any)
+        .select(`
+          *,
+          employer_employee:employer_employee_id (
+            employee:employee_id (
+              id,
+              full_name,
+              email,
+              avatar_url
+            ),
+            job_title,
+            department
           ),
-          job_title,
-          department
-        ),
-        reviewed_by_user:reviewed_by (
-          full_name
-        )
-      `)
-      .in('employer_employee_id', employerEmployeeIds)
-      .order('created_at', { ascending: false });
+          reviewed_by_user:reviewed_by (
+            full_name
+          )
+        `)
+        .in('employer_employee_id', employerEmployeeIds)
+        .order('created_at', { ascending: false });
 
-    if (status) {
-      query = query.eq('status', status);
-    }
-
-    if (employeeId) {
-      const empRecord = teamMembers.find(m => m.employee_id === employeeId);
-      if (empRecord) {
-        query = query.eq('employer_employee_id', empRecord.id);
+      if (status) {
+        query = query.eq('status', status);
       }
+
+      if (employeeId) {
+        const empRecord = teamMembers.find(m => m.employee_id === employeeId);
+        if (empRecord) {
+          query = query.eq('employer_employee_id', empRecord.id);
+        }
+      }
+
+      const { data: reviews, error } = await query;
+
+      if (error) {
+        // If table doesn't exist, return empty state
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          return NextResponse.json({
+            success: true,
+            reviews: [],
+            stats: { draft: 0, submitted: 0, acknowledged: 0, completed: 0 },
+            message: 'Performance reviews feature not yet configured',
+          });
+        }
+        console.error('Error fetching reviews:', error);
+        return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+      }
+
+      // Calculate stats
+      const allReviews = reviews || [];
+      const stats = {
+        draft: allReviews.filter((r: any) => r.status === 'draft').length,
+        submitted: allReviews.filter((r: any) => r.status === 'submitted').length,
+        acknowledged: allReviews.filter((r: any) => r.status === 'acknowledged').length,
+        completed: allReviews.filter((r: any) => r.status === 'completed').length,
+      };
+
+      return NextResponse.json({
+        success: true,
+        reviews: allReviews,
+        stats,
+      });
+    } catch (tableError: any) {
+      // Handle case where employee_performance_reviews table doesn't exist
+      console.error('Performance reviews table error:', tableError);
+      return NextResponse.json({
+        success: true,
+        reviews: [],
+        stats: { draft: 0, submitted: 0, acknowledged: 0, completed: 0 },
+        message: 'Performance reviews feature not yet configured',
+      });
     }
-
-    const { data: reviews, error } = await query;
-
-    if (error) {
-      console.error('Error fetching reviews:', error);
-      return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
-    }
-
-    // Calculate stats
-    const allReviews = reviews || [];
-    const stats = {
-      draft: allReviews.filter((r: any) => r.status === 'draft').length,
-      submitted: allReviews.filter((r: any) => r.status === 'submitted').length,
-      acknowledged: allReviews.filter((r: any) => r.status === 'acknowledged').length,
-      completed: allReviews.filter((r: any) => r.status === 'completed').length,
-    };
-
-    return NextResponse.json({
-      success: true,
-      reviews: allReviews,
-      stats,
-    });
   } catch (error) {
     console.error('Error in performance reviews GET:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

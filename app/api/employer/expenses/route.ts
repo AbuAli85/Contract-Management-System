@@ -32,63 +32,83 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         expenses: [],
-        stats: { pending: 0, approved: 0, paid: 0, total: 0 },
+        stats: { pending: 0, approved: 0, paid: 0, total: 0, pendingCount: 0, approvedCount: 0 },
       });
     }
 
     const employerEmployeeIds = teamMembers.map(m => m.id);
 
-    // Get expenses
-    let query = (supabaseAdmin.from('employee_expenses') as any)
-      .select(`
-        *,
-        category:category_id (
-          id,
-          name
-        ),
-        employer_employee:employer_employee_id (
-          employee:employee_id (
-            full_name,
-            email,
-            avatar_url
+    // Try to get expenses - handle case where table doesn't exist
+    try {
+      let query = (supabaseAdmin.from('employee_expenses') as any)
+        .select(`
+          *,
+          category:category_id (
+            id,
+            name
           ),
-          job_title,
-          department
-        ),
-        reviewed_by_user:reviewed_by (
-          full_name
-        )
-      `)
-      .in('employer_employee_id', employerEmployeeIds)
-      .order('created_at', { ascending: false });
+          employer_employee:employer_employee_id (
+            employee:employee_id (
+              full_name,
+              email,
+              avatar_url
+            ),
+            job_title,
+            department
+          ),
+          reviewed_by_user:reviewed_by (
+            full_name
+          )
+        `)
+        .in('employer_employee_id', employerEmployeeIds)
+        .order('created_at', { ascending: false });
 
-    if (status) {
-      query = query.eq('status', status);
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data: expenses, error } = await query;
+
+      if (error) {
+        // If table doesn't exist, return empty state
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          return NextResponse.json({
+            success: true,
+            expenses: [],
+            stats: { pending: 0, approved: 0, paid: 0, total: 0, pendingCount: 0, approvedCount: 0 },
+            message: 'Expenses feature not yet configured',
+          });
+        }
+        console.error('Error fetching expenses:', error);
+        return NextResponse.json({ error: 'Failed to fetch expenses' }, { status: 500 });
+      }
+
+      // Calculate stats
+      const allExpenses = expenses || [];
+      const stats = {
+        pending: allExpenses.filter((e: any) => e.status === 'pending').reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
+        approved: allExpenses.filter((e: any) => e.status === 'approved').reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
+        paid: allExpenses.filter((e: any) => e.status === 'paid').reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
+        total: allExpenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
+        pendingCount: allExpenses.filter((e: any) => e.status === 'pending').length,
+        approvedCount: allExpenses.filter((e: any) => e.status === 'approved').length,
+      };
+
+      return NextResponse.json({
+        success: true,
+        expenses: allExpenses,
+        stats,
+      });
+    } catch (tableError: any) {
+      // Handle case where employee_expenses table doesn't exist
+      console.error('Expenses table error:', tableError);
+      return NextResponse.json({
+        success: true,
+        expenses: [],
+        stats: { pending: 0, approved: 0, paid: 0, total: 0, pendingCount: 0, approvedCount: 0 },
+        message: 'Expenses feature not yet configured',
+      });
     }
-
-    const { data: expenses, error } = await query;
-
-    if (error) {
-      console.error('Error fetching expenses:', error);
-      return NextResponse.json({ error: 'Failed to fetch expenses' }, { status: 500 });
-    }
-
-    // Calculate stats
-    const allExpenses = expenses || [];
-    const stats = {
-      pending: allExpenses.filter((e: any) => e.status === 'pending').reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0),
-      approved: allExpenses.filter((e: any) => e.status === 'approved').reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0),
-      paid: allExpenses.filter((e: any) => e.status === 'paid').reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0),
-      total: allExpenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0),
-      pendingCount: allExpenses.filter((e: any) => e.status === 'pending').length,
-      approvedCount: allExpenses.filter((e: any) => e.status === 'approved').length,
-    };
-
-    return NextResponse.json({
-      success: true,
-      expenses: allExpenses,
-      stats,
-    });
   } catch (error) {
     console.error('Error in employer expenses GET:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
