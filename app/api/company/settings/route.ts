@@ -32,15 +32,34 @@ export async function GET() {
     }
 
     // Verify user has access and get role
+    let userRole = null;
+    
+    // Check company_members first
     const { data: membership } = await supabase
       .from('company_members')
       .select('role')
       .eq('company_id', profile.active_company_id)
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    if (!membership) {
+    if (membership) {
+      userRole = membership.role;
+    } else {
+      // Fallback: Check if user owns the company directly
+      const { data: ownedCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('id', profile.active_company_id)
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      
+      if (ownedCompany) {
+        userRole = 'owner';
+      }
+    }
+
+    if (!userRole) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
@@ -66,8 +85,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       company,
-      user_role: membership.role,
-      can_edit: ['owner', 'admin'].includes(membership.role),
+      user_role: userRole,
+      can_edit: ['owner', 'admin'].includes(userRole),
     });
   } catch (error: any) {
     console.error('Error:', error);
@@ -99,15 +118,34 @@ export async function PUT(request: Request) {
     }
 
     // Verify user has admin access
+    let canEdit = false;
+    
+    // Check company_members first
     const { data: membership } = await supabase
       .from('company_members')
       .select('role')
       .eq('company_id', profile.active_company_id)
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    if (membership && ['owner', 'admin'].includes(membership.role)) {
+      canEdit = true;
+    } else {
+      // Fallback: Check if user owns the company directly
+      const { data: ownedCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('id', profile.active_company_id)
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      
+      if (ownedCompany) {
+        canEdit = true;
+      }
+    }
+
+    if (!canEdit) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 

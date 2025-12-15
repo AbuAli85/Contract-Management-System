@@ -111,15 +111,34 @@ export async function PUT(request: Request) {
     }
 
     // Verify user has admin access
+    let canEdit = false;
+    
+    // Check company_members first
     const { data: membership } = await supabase
       .from('company_members')
       .select('role')
       .eq('company_id', profile.active_company_id)
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    if (!membership || !['owner', 'admin', 'hr'].includes(membership.role)) {
+    if (membership && ['owner', 'admin', 'hr'].includes(membership.role)) {
+      canEdit = true;
+    } else {
+      // Fallback: Check if user owns the company directly
+      const { data: ownedCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('id', profile.active_company_id)
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      
+      if (ownedCompany) {
+        canEdit = true;
+      }
+    }
+
+    if (!canEdit) {
       return NextResponse.json({ error: 'Admin or HR access required' }, { status: 403 });
     }
 

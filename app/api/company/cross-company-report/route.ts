@@ -93,23 +93,50 @@ export async function GET() {
       memberships = null;
     }
 
-    // Return empty state if no memberships or table doesn't exist
+    // If no memberships found, also check for directly owned companies
     if (!memberships || memberships.length === 0) {
-      return NextResponse.json({
-        success: true,
-        companies: [],
-        grouped: {},
-        summary: {
-          total_companies: 0,
-          total_employees: 0,
-          total_pending_leaves: 0,
-          total_pending_expenses: 0,
-          total_contracts: 0,
-          total_open_tasks: 0,
-          total_checked_in: 0,
-        },
-        message: 'No companies configured yet. Set up multi-company management to see analytics here.',
-      });
+      // Fallback: Check for companies where user is owner
+      const { data: ownedCompanies } = await supabase
+        .from('companies')
+        .select(`
+          id,
+          name,
+          logo_url,
+          is_active,
+          group_id
+        `)
+        .eq('owner_id', user.id)
+        .eq('is_active', true);
+
+      if (ownedCompanies && ownedCompanies.length > 0) {
+        memberships = ownedCompanies.map(c => ({
+          company_id: c.id,
+          role: 'owner',
+          company: {
+            id: c.id,
+            name: c.name,
+            logo_url: c.logo_url,
+            is_active: c.is_active,
+            group: null,
+          }
+        }));
+      } else {
+        return NextResponse.json({
+          success: true,
+          companies: [],
+          grouped: {},
+          summary: {
+            total_companies: 0,
+            total_employees: 0,
+            total_pending_leaves: 0,
+            total_pending_expenses: 0,
+            total_contracts: 0,
+            total_open_tasks: 0,
+            total_checked_in: 0,
+          },
+          message: 'No companies configured yet. Set up multi-company management to see analytics here.',
+        });
+      }
     }
 
     // Helper function to safely query counts (handles missing company_id columns)
