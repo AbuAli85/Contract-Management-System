@@ -96,19 +96,7 @@ export function EmployeeDashboard() {
       // Find employee record - use maybeSingle to handle 0 or multiple records
       const { data: employeeRecord, error } = await supabase
         .from('employer_employees')
-        .select(
-          `
-          id,
-          job_title,
-          department,
-          hire_date,
-          employer:employer_id (
-            id,
-            full_name,
-            email
-          )
-        `
-        )
+        .select('id, employer_id, job_title, department, hire_date')
         .eq('employee_id', user.id)
         .eq('employment_status', 'active')
         .order('created_at', { ascending: false })
@@ -121,19 +109,72 @@ export function EmployeeDashboard() {
         return;
       }
 
-      if (!employeeRecord) {
+      if (!employeeRecord || !employeeRecord.employer_id) {
         setEmployeeInfo(null);
         return;
       }
 
-      // Handle employer - Supabase relational queries return arrays
-      const employerRaw = employeeRecord.employer;
-      const employerData = Array.isArray(employerRaw) 
-        ? employerRaw[0] 
-        : employerRaw;
+      // Fetch employer data from parties table (where type = 'Employer')
+      // Note: employer_employees.employer_id references profiles(id), but we need to fetch from parties
+      // We match by getting the employer profile first, then finding the corresponding party
       
-      if (!employerData || typeof employerData !== 'object' || Array.isArray(employerData)) {
-        setEmployeeInfo(null);
+      // First, get employer profile to help with matching
+      const { data: employerProfile } = await supabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .eq('id', employeeRecord.employer_id)
+        .single();
+
+      // Query parties table for the employer
+      // Matching strategy: Try email first, then name, then fallback
+      let employerParty = null;
+      
+      if (employerProfile?.email) {
+        // Try to match by contact_email in parties (most reliable)
+        const { data: partyByEmail } = await supabase
+          .from('parties')
+          .select('id, name_en, name_ar, contact_email, contact_phone')
+          .eq('type', 'Employer')
+          .eq('contact_email', employerProfile.email)
+          .maybeSingle();
+        
+        if (partyByEmail) {
+          employerParty = partyByEmail;
+        }
+      }
+
+      // If not found by email, try to match by name (fuzzy match)
+      if (!employerParty && employerProfile?.full_name) {
+        const { data: partyByName } = await supabase
+          .from('parties')
+          .select('id, name_en, name_ar, contact_email, contact_phone')
+          .eq('type', 'Employer')
+          .or(`name_en.ilike.%${employerProfile.full_name}%,name_ar.ilike.%${employerProfile.full_name}%`)
+          .maybeSingle();
+        
+        if (partyByName) {
+          employerParty = partyByName;
+        }
+      }
+
+      // If no party found, use profile data as fallback but log warning
+      if (!employerParty) {
+        console.warn('No matching employer party found in parties table for employer_id:', employeeRecord.employer_id);
+        console.warn('Using profile data as fallback. Please review and align employer data in parties table.');
+        // Use profile data as fallback
+        setEmployeeInfo({
+          id: user.id,
+          employer_employee_id: employeeRecord.id,
+          employer: {
+            id: employeeRecord.employer_id,
+            full_name: employerProfile?.full_name || 'Unknown Employer',
+            email: employerProfile?.email || '',
+          },
+          profile: profile || null,
+          job_title: employeeRecord.job_title,
+          department: employeeRecord.department,
+          hire_date: employeeRecord.hire_date,
+        });
         return;
       }
 
@@ -141,9 +182,9 @@ export function EmployeeDashboard() {
         id: user.id,
         employer_employee_id: employeeRecord.id,
         employer: {
-          id: String(employerData.id ?? ''),
-          full_name: String(employerData.full_name ?? ''),
-          email: String(employerData.email ?? ''),
+          id: employerParty.id,
+          full_name: employerParty.name_en || employerParty.name_ar || 'Unknown Employer',
+          email: employerParty.contact_email || employerProfile?.email || '',
         },
         profile: profile || null,
         job_title: employeeRecord.job_title,
