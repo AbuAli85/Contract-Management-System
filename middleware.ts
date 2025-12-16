@@ -16,10 +16,13 @@ const RATE_LIMIT_CONFIG = {
 // CORS Configuration - Define allowed origins
 function getAllowedOrigins(): string[] {
   const envOrigins =
-    process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+    process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim().replace(/\/$/, '')) || [];
   const defaultOrigins = [
     'https://portal.thesmartpro.io',
     'https://www.thesmartpro.io',
+    'https://thesmartpro.io',
+    // Vercel preview deployments
+    'https://contract-management-system.vercel.app',
   ];
 
   // Add localhost in development
@@ -28,6 +31,31 @@ function getAllowedOrigins(): string[] {
   }
 
   return envOrigins.length > 0 ? envOrigins : defaultOrigins;
+}
+
+// Check if origin matches allowed patterns (including Vercel preview URLs)
+function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boolean {
+  if (!origin) return true; // Same-origin requests don't include origin header
+  
+  // Normalize origin (remove trailing slash)
+  const normalizedOrigin = origin.replace(/\/$/, '').toLowerCase();
+  
+  // Check exact match
+  if (allowedOrigins.some(allowed => allowed.toLowerCase() === normalizedOrigin)) {
+    return true;
+  }
+  
+  // Allow Vercel preview deployments (*.vercel.app)
+  if (normalizedOrigin.endsWith('.vercel.app')) {
+    return true;
+  }
+  
+  // Allow any thesmartpro.io subdomain
+  if (normalizedOrigin.endsWith('.thesmartpro.io') || normalizedOrigin === 'https://thesmartpro.io') {
+    return true;
+  }
+  
+  return false;
 }
 
 function isRateLimited(path: string, ip: string): boolean {
@@ -70,12 +98,17 @@ export function middleware(request: NextRequest) {
     const origin = request.headers.get('origin');
     const allowedOrigins = getAllowedOrigins();
 
-    // Validate origin for cross-origin requests
-    if (origin && !allowedOrigins.includes(origin)) {
+    // Determine the CORS origin to use in response headers
+    const corsOrigin = origin && isOriginAllowed(origin, allowedOrigins) 
+      ? origin 
+      : allowedOrigins[0] || 'https://portal.thesmartpro.io';
+
+    // Validate origin for cross-origin requests using flexible matching
+    if (!isOriginAllowed(origin, allowedOrigins)) {
       console.warn(
         `🚫 CORS: Blocked request from unauthorized origin: ${origin}`
       );
-      return new NextResponse('Forbidden: Origin not allowed', {
+      return new NextResponse(JSON.stringify({ error: 'Origin not allowed' }), {
         status: 403,
         headers: {
           'Content-Type': 'application/json',
@@ -109,10 +142,12 @@ export function middleware(request: NextRequest) {
         csrfToken !== sessionToken
       ) {
         console.warn(`🚫 CSRF: Invalid token for ${pathname} from IP: ${ip}`);
-        return new NextResponse('Forbidden: Invalid CSRF token', {
+        return new NextResponse(JSON.stringify({ error: 'Invalid CSRF token' }), {
           status: 403,
           headers: {
             'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': corsOrigin,
+            'Access-Control-Allow-Credentials': 'true',
           },
         });
       }
@@ -123,9 +158,8 @@ export function middleware(request: NextRequest) {
       return new NextResponse(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin':
-            origin || allowedOrigins[0] || 'https://portal.thesmartpro.io',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Origin': corsOrigin,
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
           'Access-Control-Allow-Headers':
             'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
           'Access-Control-Allow-Credentials': 'true',
@@ -133,52 +167,51 @@ export function middleware(request: NextRequest) {
         },
       });
     }
-  }
 
-  // Only apply rate limiting to specific paths
-  if (pathname === '/api/auth/check-session') {
-    // Check rate limiting first
-    if (isRateLimited(pathname, ip)) {
-      // Log rate limiting only once per window to reduce spam
-      const key = `${ip}:${pathname}`;
-      const requestData = rateLimitStore.get(key);
+    // Rate limiting for specific paths (before returning response)
+    if (pathname === '/api/auth/check-session') {
+      if (isRateLimited(pathname, ip)) {
+        const key = `${ip}:${pathname}`;
+        const requestData = rateLimitStore.get(key);
 
-      if (requestData && requestData.count === 1) {
-        console.log(
-          `🚫 Middleware: Rate limit exceeded for ${pathname} from IP: ${ip}`
+        if (requestData && requestData.count === 1) {
+          console.log(
+            `🚫 Middleware: Rate limit exceeded for ${pathname} from IP: ${ip}`
+          );
+        }
+
+        return new NextResponse(
+          JSON.stringify({
+            error: 'Rate limit exceeded',
+            message: 'Too many requests. Please wait 1 minute and try again.',
+            retryAfter: 60,
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': '60',
+              'X-RateLimit-Limit': '5',
+              'X-RateLimit-Window': '60',
+              'Access-Control-Allow-Origin': corsOrigin,
+              'Access-Control-Allow-Credentials': 'true',
+            },
+          }
         );
       }
-
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          message: 'Too many requests. Please wait 1 minute and try again.',
-          retryAfter: 60,
-        },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': '60',
-            'X-RateLimit-Limit': '5',
-            'X-RateLimit-Window': '60',
-          },
-        }
-      );
     }
 
-    // Log successful processing (but not every request to reduce spam)
-    const key = `${ip}:${pathname}`;
-    const requestData = rateLimitStore.get(key);
-
-    if (!requestData || requestData.count === 1) {
-      console.log(`🔐 Middleware: Processing request for path: ${pathname}`);
-    }
-
-    // Continue with the request
-    return NextResponse.next();
+    // For regular API requests, add CORS headers to the response
+    const response = NextResponse.next();
+    response.headers.set('Access-Control-Allow-Origin', corsOrigin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token, X-Requested-With');
+    
+    return response;
   }
 
-  // For non-rate-limited paths, just continue
+  // For non-API paths, just continue without CORS headers
   // NOTE: We do NOT enforce httpOnly on Supabase cookies because:
   // 1. Supabase's client-side JS library needs to read auth cookies
   // 2. Setting httpOnly breaks client-side authentication state
