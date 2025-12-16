@@ -175,16 +175,45 @@ export async function GET() {
         const companyId = membership.company_id;
         const company = membership.company;
 
-        // Get employee count (may not have company_id column yet)
+        // ✅ FIX: Get employee count from both employer_employees and promoters
+        // Promoters are the main source, but we also count employer_employees for completeness
         let employeeCount = 0;
+        
         try {
-          const { count } = await supabase
+          // Get company's party_id first
+          const { data: companyData } = await adminClient
+            .from('companies')
+            .select('party_id')
+            .eq('id', companyId)
+            .single();
+
+          // 1. Count promoters (main employees) by party_id
+          if (companyData?.party_id) {
+            const { count: promotersCount } = await adminClient
+              .from('promoters')
+              .select('id', { count: 'exact', head: true })
+              .eq('employer_id', companyData.party_id)
+              .eq('status', 'active');
+            
+            employeeCount = promotersCount || 0;
+          }
+
+          // 2. Also count from employer_employees (formal employment records)
+          // These might include employees not in promoters table
+          const { count: employerEmployeesCount } = await adminClient
             .from('employer_employees')
             .select('id', { count: 'exact', head: true })
             .eq('company_id', companyId)
             .eq('employment_status', 'active');
-          employeeCount = count || 0;
+          
+          const employerEmployeesCountValue = employerEmployeesCount || 0;
+          
+          // Use the maximum count (to include all employees)
+          // Note: There might be some overlap, but this ensures we count all employees
+          employeeCount = Math.max(employeeCount, employerEmployeesCountValue);
+          
         } catch (e) {
+          console.warn('Error counting employees:', e);
           employeeCount = 0;
         }
 
@@ -206,26 +235,56 @@ export async function GET() {
           status: 'active',
         });
 
-        // Get today's attendance
+        // ✅ FIX: Get today's attendance from employee_attendance
+        // Note: attendance is linked via employer_employee_id, not directly by company_id
         const today = new Date().toISOString().split('T')[0];
         let checkedInToday = 0;
         try {
-          const { count } = await supabase
-            .from('employee_attendance')
-            .select('id', { count: 'exact', head: true })
+          // First, get all employer_employee_ids for this company
+          const { data: employerEmployees } = await adminClient
+            .from('employer_employees')
+            .select('id')
             .eq('company_id', companyId)
-            .eq('date', today)
-            .not('check_in', 'is', null);
-          checkedInToday = count || 0;
+            .eq('employment_status', 'active');
+
+          if (employerEmployees && employerEmployees.length > 0) {
+            const employeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
+            const { count } = await adminClient
+              .from('employee_attendance')
+              .select('id', { count: 'exact', head: true })
+              .in('employer_employee_id', employeeIds)
+              .eq('attendance_date', today)
+              .not('check_in', 'is', null);
+            checkedInToday = count || 0;
+          }
         } catch (e) {
+          console.warn('Error counting attendance:', e);
           checkedInToday = 0;
         }
 
-        // Get open tasks
-        const openTasks = await safeCount('employee_tasks', {
-          company_id: companyId,
-          status: ['pending', 'in_progress'],
-        });
+        // ✅ FIX: Get open tasks - tasks are linked via employer_employee_id
+        let openTasks = 0;
+        try {
+          // Get all employer_employee_ids for this company
+          const { data: employerEmployees } = await adminClient
+            .from('employer_employees')
+            .select('id')
+            .eq('company_id', companyId)
+            .eq('employment_status', 'active');
+
+          if (employerEmployees && employerEmployees.length > 0) {
+            const employeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
+            const { count } = await adminClient
+              .from('employee_tasks')
+              .select('id', { count: 'exact', head: true })
+              .in('employer_employee_id', employeeIds)
+              .in('status', ['pending', 'in_progress']);
+            openTasks = count || 0;
+          }
+        } catch (e) {
+          console.warn('Error counting tasks:', e);
+          openTasks = 0;
+        }
 
         // Get pending reviews
         const pendingReviews = await safeCount('performance_reviews', {
