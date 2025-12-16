@@ -52,8 +52,8 @@ export async function GET(request: NextRequest) {
           id,
           name_en,
           name_ar,
-          email,
-          phone
+          contact_email,
+          contact_phone
         ),
         deployment_letter:deployment_letter_id (
           id,

@@ -44,9 +44,9 @@ export async function GET(
           id,
           name_en,
           name_ar,
-          email,
-          phone,
-          address
+          contact_email,
+          contact_phone,
+          address_en
         ),
         deployment_letter:deployment_letter_id (
           id,
