@@ -55,6 +55,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { useParams } from 'next/navigation';
 import { EnhancedDashboardCharts } from '@/components/dashboard/enhanced-dashboard-charts';
 import { DashboardActivityFeed } from '@/components/dashboard/dashboard-activity-feed';
+import { ActionItemsSection } from '@/components/dashboard/action-items-section';
 import {
   calculateGrowthPercentage,
   determineGrowthTrend,
@@ -574,6 +575,11 @@ function DashboardContent() {
               </Tooltip>
             </TooltipProvider>
           </div>
+        </div>
+
+        {/* Action Required Section - Prominently Displayed */}
+        <div className='mb-8'>
+          <ActionItemsSection locale={validLocale} maxItems={3} />
         </div>
 
         {/* Quick Stats Grid */}
