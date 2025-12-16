@@ -176,7 +176,7 @@ export async function GET() {
         const company = membership.company;
 
         // ✅ FIX: Get employee count from both employer_employees and promoters
-        // Promoters are the main source, but we also count employer_employees for completeness
+        // Need to count unique employees, avoiding double-counting
         let employeeCount = 0;
         
         try {
@@ -187,30 +187,35 @@ export async function GET() {
             .eq('id', companyId)
             .single();
 
-          // 1. Count promoters (main employees) by party_id
+          // 1. Get all unique employee IDs from employer_employees
+          const { data: employerEmployees } = await adminClient
+            .from('employer_employees')
+            .select('employee_id')
+            .eq('company_id', companyId)
+            .eq('employment_status', 'active')
+            .not('employee_id', 'is', null);
+
+          const employerEmployeeIds = new Set(
+            (employerEmployees || []).map((ee: any) => ee.employee_id).filter(Boolean)
+          );
+
+          // 2. Get all promoter IDs for this company's party
+          let promoterIds = new Set<string>();
           if (companyData?.party_id) {
-            const { count: promotersCount } = await adminClient
+            const { data: promoters } = await adminClient
               .from('promoters')
-              .select('id', { count: 'exact', head: true })
+              .select('id')
               .eq('employer_id', companyData.party_id)
               .eq('status', 'active');
             
-            employeeCount = promotersCount || 0;
+            if (promoters) {
+              promoterIds = new Set(promoters.map((p: any) => p.id));
+            }
           }
 
-          // 2. Also count from employer_employees (formal employment records)
-          // These might include employees not in promoters table
-          const { count: employerEmployeesCount } = await adminClient
-            .from('employer_employees')
-            .select('id', { count: 'exact', head: true })
-            .eq('company_id', companyId)
-            .eq('employment_status', 'active');
-          
-          const employerEmployeesCountValue = employerEmployeesCount || 0;
-          
-          // Use the maximum count (to include all employees)
-          // Note: There might be some overlap, but this ensures we count all employees
-          employeeCount = Math.max(employeeCount, employerEmployeesCountValue);
+          // 3. Combine both sets to get unique employee count (avoid double-counting)
+          const allEmployeeIds = new Set([...employerEmployeeIds, ...promoterIds]);
+          employeeCount = allEmployeeIds.size;
           
         } catch (e) {
           console.warn('Error counting employees:', e);
@@ -236,25 +241,28 @@ export async function GET() {
         });
 
         // ✅ FIX: Get today's attendance from employee_attendance
-        // Note: attendance is linked via employer_employee_id, not directly by company_id
+        // Attendance is linked via employer_employee_id, so we need to get all employer_employee_ids for this company
         const today = new Date().toISOString().split('T')[0];
         let checkedInToday = 0;
         try {
-          // First, get all employer_employee_ids for this company
+          // Get all employer_employee_ids for this company
           const { data: employerEmployees } = await adminClient
             .from('employer_employees')
-            .select('id')
+            .select('id, employee_id')
             .eq('company_id', companyId)
             .eq('employment_status', 'active');
 
           if (employerEmployees && employerEmployees.length > 0) {
-            const employeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
+            const employerEmployeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
+            
+            // Count attendance records for today
             const { count } = await adminClient
               .from('employee_attendance')
               .select('id', { count: 'exact', head: true })
-              .in('employer_employee_id', employeeIds)
+              .in('employer_employee_id', employerEmployeeIds)
               .eq('attendance_date', today)
               .not('check_in', 'is', null);
+            
             checkedInToday = count || 0;
           }
         } catch (e) {
@@ -273,12 +281,15 @@ export async function GET() {
             .eq('employment_status', 'active');
 
           if (employerEmployees && employerEmployees.length > 0) {
-            const employeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
+            const employerEmployeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
+            
+            // Count open tasks (pending or in_progress)
             const { count } = await adminClient
               .from('employee_tasks')
               .select('id', { count: 'exact', head: true })
-              .in('employer_employee_id', employeeIds)
+              .in('employer_employee_id', employerEmployeeIds)
               .in('status', ['pending', 'in_progress']);
+            
             openTasks = count || 0;
           }
         } catch (e) {
