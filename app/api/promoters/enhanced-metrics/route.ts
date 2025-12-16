@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedPromoterMetrics } from '@/lib/services/promoter-metrics.service';
 import { validatePromoterMetrics } from '@/lib/validation/metrics-validation';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
