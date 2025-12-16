@@ -59,14 +59,57 @@ export async function GET(request: NextRequest) {
       isAdmin: userRole === 'admin',
     });
 
+    // ✅ COMPANY SCOPE: Get active company's party_id
+    let partyId: string | null = null;
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.active_company_id) {
+        const { createAdminClient } = await import('@/lib/supabase/server');
+        let adminClient;
+        try {
+          adminClient = createAdminClient();
+        } catch (e) {
+          adminClient = supabase;
+        }
+
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('party_id')
+          .eq('id', profile.active_company_id)
+          .single();
+
+        if (company?.party_id) {
+          partyId = company.party_id;
+        }
+      }
+    }
+
     // Get force refresh from query params
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
+
+    // Get companyId
+    let companyId: string | null = null;
+    if (user && !partyId) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_company_id')
+        .eq('id', user.id)
+        .single();
+      companyId = profile?.active_company_id || null;
+    }
 
     // Calculate metrics using centralized service with caching
     const metrics = await getContractMetrics({
       ...(user?.id && { userId: user.id }),
       userRole,
+      companyId,
+      partyId,
       includeExpiringSoon: true,
       expiryDaysThreshold: 30,
       forceRefresh,

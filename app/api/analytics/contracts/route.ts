@@ -28,11 +28,45 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Fetch contracts in date range
-    const { data: contracts } = await supabase
+    // ✅ COMPANY SCOPE: Get active company's party_id
+    let activePartyId: string | null = null;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.active_company_id) {
+      const { createAdminClient } = await import('@/lib/supabase/server');
+      let adminClient;
+      try {
+        adminClient = createAdminClient();
+      } catch (e) {
+        adminClient = supabase;
+      }
+
+      const { data: company } = await adminClient
+        .from('companies')
+        .select('party_id')
+        .eq('id', profile.active_company_id)
+        .single();
+
+      if (company?.party_id) {
+        activePartyId = company.party_id;
+      }
+    }
+
+    // Fetch contracts in date range - filter by company if available
+    let contractsQuery = supabase
       .from('contracts')
       .select('*')
       .gte('created_at', startDate.toISOString());
+
+    if (activePartyId) {
+      contractsQuery = contractsQuery.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+    }
+
+    const { data: contracts } = await contractsQuery;
 
     // Calculate overview metrics
     const total_contracts = contracts?.length || 0;
@@ -41,11 +75,24 @@ export async function GET(request: NextRequest) {
     const total_value =
       contracts?.reduce((sum, c) => sum + (c.value || 0), 0) || 0;
 
-    // Get approval stats
-    const { data: approvals } = await supabase
+    // Get approval stats - filter by company contracts if available
+    let approvalsQuery = supabase
       .from('contract_approvals')
       .select('*')
       .gte('created_at', startDate.toISOString());
+
+    // Filter approvals by company's contracts
+    if (activePartyId && contracts) {
+      const contractIds = contracts.map(c => c.id);
+      if (contractIds.length > 0) {
+        approvalsQuery = approvalsQuery.in('contract_id', contractIds);
+      } else {
+        // No contracts for this company, return empty
+        approvalsQuery = approvalsQuery.eq('contract_id', '00000000-0000-0000-0000-000000000000');
+      }
+    }
+
+    const { data: approvals } = await approvalsQuery;
 
     const approvedApprovals =
       approvals?.filter(a => a.status === 'approved' && a.approved_at) || [];
@@ -58,15 +105,21 @@ export async function GET(request: NextRequest) {
           }, 0) / approvedApprovals.length
         : 0;
 
-    // Get expiring contracts
+    // Get expiring contracts - filter by company if available
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const { data: expiringContracts } = await supabase
+    let expiringQuery = supabase
       .from('contracts')
       .select('id')
       .lte('end_date', thirtyDaysFromNow.toISOString())
       .gte('end_date', new Date().toISOString())
       .in('status', ['active', 'signed']);
+
+    if (activePartyId) {
+      expiringQuery = expiringQuery.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+    }
+
+    const { data: expiringContracts } = await expiringQuery;
     const expiring_soon = expiringContracts?.length || 0;
 
     // Get pending obligations

@@ -78,7 +78,8 @@ function getDateThresholds() {
  * This is the SINGLE SOURCE OF TRUTH for promoter statistics
  */
 export async function getEnhancedPromoterMetrics(
-  forceRefresh = false
+  forceRefresh = false,
+  partyId: string | null = null
 ): Promise<EnhancedPromoterMetrics> {
   // Check cache first
   if (!forceRefresh) {
@@ -95,6 +96,26 @@ export async function getEnhancedPromoterMetrics(
   const { now, thirtyDaysFromNow } = getDateThresholds();
 
   try {
+    // ✅ COMPANY SCOPE: Build queries with company filter if available
+    let totalQuery = supabase.from('promoters').select('*', { count: 'exact', head: true });
+    let statusQuery = supabase.from('promoters').select('status, status_enum');
+    let documentQuery = supabase.from('promoters').select('id_card_expiry_date, passport_expiry_date, status, status_enum');
+    let contractsQuery = supabase
+      .from('contracts')
+      .select('promoter_id')
+      .eq('status', 'active')
+      .not('promoter_id', 'is', null);
+
+    if (partyId) {
+      // Filter promoters by employer_id (party_id)
+      totalQuery = totalQuery.eq('employer_id', partyId);
+      statusQuery = statusQuery.eq('employer_id', partyId);
+      documentQuery = documentQuery.eq('employer_id', partyId);
+      // Filter contracts by company's party_id
+      contractsQuery = contractsQuery.or(`second_party_id.eq.${partyId},first_party_id.eq.${partyId}`);
+      console.log('📊 Promoter Metrics: Filtering by company party_id:', partyId);
+    }
+
     // Execute all queries in parallel for performance
     const [
       totalResult,
@@ -103,24 +124,16 @@ export async function getEnhancedPromoterMetrics(
       documentComplianceResult,
     ] = await Promise.all([
       // Total promoters count
-      supabase.from('promoters').select('*', { count: 'exact', head: true }),
+      totalQuery,
 
       // Count by status (using status_enum if available, fallback to status)
-      supabase.from('promoters').select('status, status_enum'),
+      statusQuery,
 
       // Count promoters with active contracts
-      supabase
-        .from('contracts')
-        .select('promoter_id')
-        .eq('status', 'active')
-        .not('promoter_id', 'is', null),
+      contractsQuery,
 
       // Document compliance data
-      supabase
-        .from('promoters')
-        .select(
-          'id_card_expiry_date, passport_expiry_date, status, status_enum'
-        ),
+      documentQuery,
     ]);
 
     // Handle errors

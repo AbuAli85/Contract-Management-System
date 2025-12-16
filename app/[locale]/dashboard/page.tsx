@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { useAuth } from '@/lib/auth-service';
+import { useCompany } from '@/components/providers/company-provider';
 import { Progress } from '@/components/ui/progress';
 import {
   Tooltip,
@@ -170,6 +171,9 @@ function DashboardContent() {
   };
 
   // Fetch dashboard statistics with React Query for real-time updates
+  // ✅ COMPANY SCOPE: Get company context
+  const { company, companyId } = useCompany();
+
   const {
     data: statsData,
     isLoading: statsLoading,
@@ -177,7 +181,7 @@ function DashboardContent() {
     error: statsErrorDetails,
     refetch: refetchStats,
   } = useQuery({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', companyId], // Include companyId in query key for proper caching
     queryFn: async () => {
       try {
         const [contractsRes, promotersRes] = await Promise.all([

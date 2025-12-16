@@ -8,12 +8,51 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // Fetch all employers (parties with type='Employer')
-    const { data: employers, error: employersError } = await supabase
+    // ✅ COMPANY SCOPE: Get active company's party_id
+    const { data: { user } } = await supabase.auth.getUser();
+    let activePartyId: string | null = null;
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.active_company_id) {
+        const { createAdminClient } = await import('@/lib/supabase/server');
+        let adminClient;
+        try {
+          adminClient = createAdminClient();
+        } catch (e) {
+          adminClient = supabase;
+        }
+
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('party_id')
+          .eq('id', profile.active_company_id)
+          .single();
+
+        if (company?.party_id) {
+          activePartyId = company.party_id;
+        }
+      }
+    }
+
+    // Fetch employers - filter by active company if available
+    let employersQuery = supabase
       .from('parties')
       .select('*')
       .eq('type', 'Employer')
       .order('name_en');
+
+    if (activePartyId) {
+      // Only show the active company's employer party
+      employersQuery = employersQuery.eq('id', activePartyId);
+    }
+
+    const { data: employers, error: employersError } = await employersQuery;
 
     if (employersError) {
       console.error('Error fetching employers:', employersError);
@@ -23,11 +62,17 @@ export async function GET() {
       );
     }
 
-    // Fetch all promoters
-    const { data: allPromoters, error: promotersError } = await supabase
+    // Fetch promoters - filter by active company's party_id
+    let promotersQuery = supabase
       .from('promoters')
       .select('*')
       .order('name_en');
+
+    if (activePartyId) {
+      promotersQuery = promotersQuery.eq('employer_id', activePartyId);
+    }
+
+    const { data: allPromoters, error: promotersError } = await promotersQuery;
 
     if (promotersError) {
       console.error('Error fetching promoters:', promotersError);

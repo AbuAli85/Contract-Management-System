@@ -248,9 +248,46 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       { count: 'exact' }
     );
 
-    // ✅ SECURITY: Scope data by user role
-    // Role-based filtering: Employees see only their own, Employers see only assigned, Admins see all
-    if (employerIdFilter) {
+    // ✅ COMPANY SCOPE: Get active company's party_id
+    let activePartyId: string | null = null;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.active_company_id) {
+      // Get company's party_id
+      const { createAdminClient } = await import('@/lib/supabase/server');
+      let adminClient;
+      try {
+        adminClient = createAdminClient();
+      } catch (e) {
+        adminClient = supabase;
+      }
+
+      const { data: company } = await adminClient
+        .from('companies')
+        .select('party_id')
+        .eq('id', profile.active_company_id)
+        .single();
+
+      if (company?.party_id) {
+        activePartyId = company.party_id;
+        logger.log('Using company party_id for promoter filtering', {
+          companyId: profile.active_company_id,
+          partyId: activePartyId,
+        });
+      }
+    }
+
+    // ✅ COMPANY SCOPE: Filter by active company's party_id (if available)
+    if (activePartyId) {
+      logger.log('🔒 Filtering promoters by company party_id:', activePartyId);
+      query = query.eq('employer_id', activePartyId);
+    } else if (employerIdFilter) {
+      // ✅ SECURITY: Scope data by user role
+      // Role-based filtering: Employees see only their own, Employers see only assigned, Admins see all
       logger.log('🔒 Filtering by employer_id:', employerIdFilter);
       query = query.eq('employer_id', employerIdFilter);
     } else if (userIdFilter) {

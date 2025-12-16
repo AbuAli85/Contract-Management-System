@@ -157,6 +157,42 @@ async function handleContractsRequest(
     throw new Error('Unauthorized: ' + (userError?.message || 'No user found'));
   }
 
+  // ✅ COMPANY SCOPE: Get active company's party_id
+  let activePartyId: string | null = partyId; // Use provided partyId if available
+  if (!activePartyId) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.active_company_id) {
+      // Get company's party_id
+      const { createAdminClient } = await import('@/lib/supabase/server');
+      let adminClient;
+      try {
+        adminClient = createAdminClient();
+      } catch (e) {
+        adminClient = supabase;
+      }
+
+      const { data: company } = await adminClient
+        .from('companies')
+        .select('party_id')
+        .eq('id', profile.active_company_id)
+        .single();
+
+      if (company?.party_id) {
+        activePartyId = company.party_id;
+        logger.debug(
+          'Using company party_id for contract filtering',
+          { companyId: profile.active_company_id, partyId: activePartyId, requestId },
+          'ContractsAPI'
+        );
+      }
+    }
+  }
+
   // ✅ OPTIMIZED: Check cache first before querying database
   const cacheKey = permissionCache.getUserRoleKey(user.id);
   let isAdmin = permissionCache.get<boolean>(cacheKey);

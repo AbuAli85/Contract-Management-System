@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { toTitleCase, formatJobTitle } from '@/lib/utils/text-formatting';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import { useToast } from '@/hooks/use-toast';
+import { useCompany } from '@/components/providers/company-provider';
 // import { useVirtualizer } from '@tanstack/react-virtual'; // Removed for compatibility
 import type { Promoter } from '@/lib/types';
 
@@ -475,6 +476,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   console.log('🚀 Enhanced PromotersView component mounted');
   const router = useRouter();
   const { toast } = useToast();
+  const { companyId } = useCompany(); // ✅ COMPANY SCOPE: Get active company
 
   // State management
   const [page, setPage] = useState(1);
@@ -519,7 +521,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     error,
     refetch,
   } = useQuery<PromotersResponse, Error>({
-    queryKey: ['promoters', page, limit],
+    queryKey: ['promoters', page, limit, companyId], // ✅ Include companyId for proper caching
     queryFn: () => fetchPromoters(page, limit),
     staleTime: 30_000,
     gcTime: 5 * 60 * 1000,

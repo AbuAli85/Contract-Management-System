@@ -14,12 +14,46 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    
+    // ✅ COMPANY SCOPE: Get active company's party_id
+    const { data: { user } } = await supabase.auth.getUser();
+    let partyId: string | null = null;
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.active_company_id) {
+        const { createAdminClient } = await import('@/lib/supabase/server');
+        let adminClient;
+        try {
+          adminClient = createAdminClient();
+        } catch (e) {
+          adminClient = supabase;
+        }
+
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('party_id')
+          .eq('id', profile.active_company_id)
+          .single();
+
+        if (company?.party_id) {
+          partyId = company.party_id;
+        }
+      }
+    }
+
     // Get force refresh from query params
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
 
-    // Get enhanced metrics
-    const metrics = await getEnhancedPromoterMetrics(forceRefresh);
+    // Get enhanced metrics (will be filtered by partyId in the service)
+    const metrics = await getEnhancedPromoterMetrics(forceRefresh, partyId);
 
     // Validate metrics before returning
     const validation = validatePromoterMetrics(metrics);

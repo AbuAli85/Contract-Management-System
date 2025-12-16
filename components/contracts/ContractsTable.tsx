@@ -64,6 +64,7 @@ import {
 } from '@/components/ui/tooltip';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useCompany } from '@/components/providers/company-provider';
 import { cn } from '@/lib/utils';
 
 type Contract = {
@@ -425,6 +426,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     return filtered;
   }, [contracts, searchTerm, statusFilter, sortField, sortDirection]);
 
+  // ✅ COMPANY SCOPE: Get company context for refresh on company change
+  const { companyId, refreshCompany } = useCompany();
+
   // Memoized fetch function
   const fetchContracts = useCallback(async () => {
     setLoading(true);
@@ -432,6 +436,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
 
     try {
       // Use the API endpoint that includes proper promoter relationships
+      // API automatically filters by active company
       const response = await fetch('/api/contracts');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

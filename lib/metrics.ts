@@ -85,6 +85,8 @@ export interface DashboardMetrics {
 export interface MetricsOptions {
   userId?: string;
   userRole?: string;
+  companyId?: string | null;
+  partyId?: string | null;
   includeExpiringSoon?: boolean;
   expiryDaysThreshold?: number;
   forceRefresh?: boolean;
@@ -270,7 +272,10 @@ export async function getContractMetrics(
       .from('contracts')
       .select('*', { count: 'exact', head: true });
 
-    if (userRole !== 'admin' && userId) {
+    // ✅ COMPANY SCOPE: Apply same filter to count query
+    if (partyId) {
+      countQuery = countQuery.or(`second_party_id.eq.${partyId},first_party_id.eq.${partyId}`);
+    } else if (userRole !== 'admin' && userId) {
       countQuery = countQuery.or(
         `first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`
       );
