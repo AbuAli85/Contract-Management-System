@@ -636,10 +636,10 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     'items'
   );
 
-  // 🎯 FIX for Issue #3: Fetch system-wide metrics from dedicated API
-  // This ensures all metrics are calculated from the entire database, not just current page
+  // ✅ COMPANY SCOPE: Fetch company-scoped metrics from dedicated API
+  // This ensures all metrics are calculated for the selected company only
   const { data: apiMetricsData, isLoading: metricsLoading } = useQuery({
-    queryKey: ['promoter-metrics'],
+    queryKey: ['promoter-metrics', companyId], // ✅ Include companyId for proper caching
     queryFn: async () => {
       const res = await fetch('/api/dashboard/promoter-metrics');
       if (!res.ok) throw new Error('Failed to fetch metrics');
@@ -647,6 +647,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     },
     refetchInterval: 60000, // Refresh every minute
     staleTime: 30000, // Consider data fresh for 30 seconds
+    enabled: !!companyId, // Only fetch if company is selected
   });
 
   const metrics = useMemo<DashboardMetrics>(() => {
@@ -1310,7 +1311,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
         <EnhancedStatCard
           title='Compliance rate'
           value={`${metrics.complianceRate}%`}
-          helper={`${metrics.total} total promoters (system-wide)`}
+          helper={`${metrics.total} total promoters (company-scoped)`}
           icon={CheckCircle}
           variant={metrics.complianceRate >= 90 ? 'success' : 'warning'}
         />

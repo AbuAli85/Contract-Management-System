@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPromoterMetrics } from '@/lib/metrics';
-import { createClient } from '@/lib/supabase/server';
+import { getEnhancedPromoterMetrics } from '@/lib/services/promoter-metrics.service';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/dashboard/promoter-metrics
- * Returns promoter metrics using centralized service
+ * Returns promoter metrics using centralized service (company-scoped)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -18,21 +18,39 @@ export async function GET(request: NextRequest) {
       error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError) {
-      console.warn('Promoter metrics: User error:', userError.message);
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    // Get user role
-    let userRole = 'user';
-    if (user) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
+    // ✅ COMPANY SCOPE: Get active company's party_id
+    let partyId: string | null = null;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.active_company_id) {
+      // Get company's party_id
+      let adminClient;
+      try {
+        adminClient = createAdminClient();
+      } catch (e) {
+        adminClient = supabase;
+      }
+
+      const { data: company } = await adminClient
+        .from('companies')
+        .select('party_id')
+        .eq('id', profile.active_company_id)
         .single();
 
-      if (userData?.role) {
-        userRole = userData.role;
+      if (company?.party_id) {
+        partyId = company.party_id;
+        console.log('📊 Promoter Metrics: Filtering by company party_id:', partyId);
       }
     }
 
@@ -40,12 +58,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
 
-    // Get promoter metrics
-    const metrics = await getPromoterMetrics({
-      ...(user?.id && { userId: user.id }),
-      userRole,
-      forceRefresh,
-    });
+    // ✅ COMPANY SCOPE: Get promoter metrics filtered by company
+    const enhancedMetrics = await getEnhancedPromoterMetrics(forceRefresh, partyId);
+
+    // Transform to match expected format
+    // active = activeOnContracts + availableForWork (all active promoters)
+    const activeCount = (enhancedMetrics.activeOnContracts || 0) + (enhancedMetrics.availableForWork || 0);
+    
+    const metrics = {
+      total: enhancedMetrics.totalWorkforce || 0,
+      active: activeCount,
+      critical: enhancedMetrics.expiredDocuments || 0,
+      expiring: enhancedMetrics.expiringDocuments || 0,
+      unassigned: enhancedMetrics.availableForWork || 0, // Available = unassigned
+      complianceRate: enhancedMetrics.complianceRate || 0,
+    };
 
     return NextResponse.json({
       success: true,
