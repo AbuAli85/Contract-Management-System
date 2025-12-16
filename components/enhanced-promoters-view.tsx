@@ -531,6 +531,14 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     refetchInterval: false,
   });
 
+  // ✅ COMPANY SCOPE: Refetch when company changes
+  useEffect(() => {
+    if (companyId) {
+      console.log('🔄 Company changed, refetching promoters:', companyId);
+      refetch();
+    }
+  }, [companyId, refetch]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading && !response) {
