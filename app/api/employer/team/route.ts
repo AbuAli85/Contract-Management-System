@@ -26,7 +26,7 @@ async function getTeamHandler(request: NextRequest) {
     // Verify user is the employer or admin
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, id, active_company_id')
+      .select('role, id, active_company_id, email')
       .eq('id', user.id)
       .single();
 
@@ -44,8 +44,10 @@ async function getTeamHandler(request: NextRequest) {
       );
     }
 
-    // Get company's party_id if active company exists
+    // ✅ COMPANY SCOPE: Get company's party_id if active company exists
     let partyId: string | null = null;
+    let employerProfileId: string | null = null; // Profile ID that corresponds to the party
+    
     if (profile.active_company_id) {
       const { data: company } = await supabase
         .from('companies')
@@ -55,14 +57,39 @@ async function getTeamHandler(request: NextRequest) {
       
       if (company?.party_id) {
         partyId = company.party_id;
+        
+        // ✅ LINKING FIX: Find the profile ID that corresponds to this party
+        // employer_employees.employer_id uses profile.id, not party.id
+        // So we need to find the profile whose email matches the party's contact_email
+        const { data: party } = await supabase
+          .from('parties')
+          .select('contact_email')
+          .eq('id', partyId)
+          .single();
+        
+        if (party?.contact_email) {
+          const { data: employerProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', party.contact_email)
+            .single();
+          
+          if (employerProfile) {
+            employerProfileId = employerProfile.id;
+          }
+        }
       }
     }
 
+    // ✅ LINKING FIX: Use employerProfileId if available, otherwise fallback to employerId
+    const effectiveEmployerId = employerProfileId || employerId;
+
     // Build query - filter by company if available
+    // employer_employees.employer_id references profiles.id, not parties.id
     let query = supabase
       .from('employer_employees')
       .select('*')
-      .eq('employer_id', employerId)
+      .eq('employer_id', effectiveEmployerId)
       .order('created_at', { ascending: false });
 
     // If user has an active company, filter by it
@@ -82,13 +109,14 @@ async function getTeamHandler(request: NextRequest) {
       );
     }
 
-    // Also fetch promoters directly from parties if company has party_id
+    // ✅ LINKING FIX: Fetch promoters directly from parties if company has party_id
+    // promoters.employer_id references parties.id (not profiles.id)
     let promotersFromParty: any[] = [];
     if (partyId) {
       const { data: partyPromoters, error: partyPromotersError } = await supabase
         .from('promoters')
         .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url, status, created_at')
-        .eq('employer_id', partyId)
+        .eq('employer_id', partyId) // ✅ Correct: promoters.employer_id = parties.id
         .order('name_en', { ascending: true });
 
       if (!partyPromotersError && partyPromoters) {
@@ -143,7 +171,7 @@ async function getTeamHandler(request: NextRequest) {
         // Use promoter.id as the record ID since there's no employer_employee record yet
         // Prefix with 'promoter_' to distinguish from employer_employee IDs
         id: `promoter_${promoter.id}`,
-        employer_id: employerId,
+        employer_id: effectiveEmployerId, // ✅ Use effective employer ID (profile.id)
         employee_id: promoter.id,
         employee_code: null,
         job_title: null,
@@ -248,7 +276,7 @@ async function addTeamMemberHandler(request: NextRequest) {
       );
     }
 
-    // Verify employee exists in promoters table
+    // ✅ LINKING FIX: Verify employee exists in promoters table
     const { data: employee, error: employeeError } = await supabase
       .from('promoters')
       .select('id, email, name_en, name_ar')
@@ -262,11 +290,50 @@ async function addTeamMemberHandler(request: NextRequest) {
       );
     }
 
-    // Check if already assigned
+    // ✅ LINKING FIX: Get the effective employer ID (profile ID that corresponds to party)
+    // Get user's active company and find the corresponding employer profile
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('active_company_id, email')
+      .eq('id', user.id)
+      .single();
+
+    let effectiveEmployerId = user.id; // Default to user.id
+
+    if (userProfile?.active_company_id) {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('party_id')
+        .eq('id', userProfile.active_company_id)
+        .single();
+
+      if (company?.party_id) {
+        // Find the profile ID that corresponds to this party
+        const { data: party } = await supabase
+          .from('parties')
+          .select('contact_email')
+          .eq('id', company.party_id)
+          .single();
+
+        if (party?.contact_email) {
+          const { data: employerProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', party.contact_email)
+            .single();
+
+          if (employerProfile) {
+            effectiveEmployerId = employerProfile.id;
+          }
+        }
+      }
+    }
+
+    // Check if already assigned (using effective employer ID)
     const { data: existing } = await supabase
       .from('employer_employees')
       .select('id')
-      .eq('employer_id', user.id)
+      .eq('employer_id', effectiveEmployerId) // ✅ Use effective employer ID
       .eq('employee_id', employee_id)
       .eq('employment_status', 'active')
       .single();
@@ -292,7 +359,7 @@ async function addTeamMemberHandler(request: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
     const insertData = {
-      employer_id: user.id,
+      employer_id: effectiveEmployerId, // ✅ Use effective employer ID (profile.id that matches party)
       employee_id: toNullIfEmpty(employee_id),
       employee_code: toNullIfEmpty(employee_code),
       job_title: toNullIfEmpty(job_title),
