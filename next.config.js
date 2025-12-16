@@ -168,10 +168,19 @@ const nextConfig = {
     };
 
     // Fix for Supabase ESM/CommonJS module resolution
-    config.resolve.extensionAlias = {
-      '.js': ['.ts', '.tsx', '.js', '.jsx'],
-      '.mjs': ['.mts', '.mjs'],
-    };
+    // Handle .mjs files properly
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    
+    // Add rule to handle .mjs files
+    config.module.rules.push({
+      test: /\.mjs$/,
+      include: /node_modules/,
+      type: 'javascript/auto',
+      resolve: {
+        fullySpecified: false,
+      },
+    });
 
     // Ensure path aliases work correctly in Docker builds
     const path = require('path');
@@ -187,23 +196,20 @@ const nextConfig = {
       '@/styles': path.resolve(__dirname, 'styles'),
     };
 
-    // Ensure extensions are resolved
+    // Ensure extensions are resolved (mjs first for ESM modules)
     config.resolve.extensions = [
+      '.mjs',
+      '.mts',
       '.js',
       '.jsx',
       '.ts',
       '.tsx',
       '.json',
-      '.mjs',
-      '.mts',
       ...(config.resolve.extensions || []),
     ];
 
     return config;
   },
-
-  // Transpile Supabase packages to fix ESM issues
-  transpilePackages: ['@supabase/supabase-js', '@supabase/ssr'],
 
   // Experimental features for performance
   experimental: {
