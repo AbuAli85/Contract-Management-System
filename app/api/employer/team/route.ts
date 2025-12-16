@@ -44,6 +44,20 @@ async function getTeamHandler(request: NextRequest) {
       );
     }
 
+    // Get company's party_id if active company exists
+    let partyId: string | null = null;
+    if (profile.active_company_id) {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('party_id')
+        .eq('id', profile.active_company_id)
+        .single();
+      
+      if (company?.party_id) {
+        partyId = company.party_id;
+      }
+    }
+
     // Build query - filter by company if available
     let query = supabase
       .from('employer_employees')
@@ -68,7 +82,21 @@ async function getTeamHandler(request: NextRequest) {
       );
     }
 
-    // Fetch promoter details for each team member
+    // Also fetch promoters directly from parties if company has party_id
+    let promotersFromParty: any[] = [];
+    if (partyId) {
+      const { data: partyPromoters, error: partyPromotersError } = await supabase
+        .from('promoters')
+        .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url, status, created_at')
+        .eq('employer_id', partyId)
+        .order('name_en', { ascending: true });
+
+      if (!partyPromotersError && partyPromoters) {
+        promotersFromParty = partyPromoters;
+      }
+    }
+
+    // Fetch promoter details for each team member from employer_employees
     const employeeIds = (teamMembers || []).map(m => m.employee_id).filter(Boolean);
     const { data: promoters } = await supabase
       .from('promoters')
@@ -88,7 +116,7 @@ async function getTeamHandler(request: NextRequest) {
     // Create a lookup map for managers
     const managerMap = new Map((managers || []).map(m => [m.id, m]));
 
-    // Combine data
+    // Combine data from employer_employees
     const enrichedTeamMembers = (teamMembers || []).map(member => {
       const promoter = promoterMap.get(member.employee_id);
       const manager = managerMap.get(member.reporting_manager_id);
@@ -107,17 +135,66 @@ async function getTeamHandler(request: NextRequest) {
       };
     });
 
+    // Add promoters from party that aren't already in employer_employees
+    const existingEmployeeIds = new Set((teamMembers || []).map(m => m.employee_id).filter(Boolean));
+    const additionalPromoters = promotersFromParty
+      .filter(p => !existingEmployeeIds.has(p.id))
+      .map(promoter => ({
+        // Use promoter.id as the record ID since there's no employer_employee record yet
+        // Prefix with 'promoter_' to distinguish from employer_employee IDs
+        id: `promoter_${promoter.id}`,
+        employer_id: employerId,
+        employee_id: promoter.id,
+        employee_code: null,
+        job_title: null,
+        department: null,
+        employment_type: 'full_time' as const,
+        employment_status: (promoter.status === 'active' ? 'active' : 'inactive') as string,
+        hire_date: null,
+        termination_date: null,
+        reporting_manager_id: null,
+        salary: null,
+        currency: 'OMR',
+        work_location: null,
+        notes: null,
+        created_at: promoter.created_at,
+        updated_at: promoter.created_at,
+        created_by: null,
+        company_id: profile.active_company_id || null,
+        employee: {
+          id: promoter.id,
+          email: promoter.email || '',
+          full_name: promoter.name_en || promoter.name_ar || 'Unknown',
+          first_name: promoter.name_en?.split(' ')[0] || null,
+          last_name: promoter.name_en?.split(' ').slice(1).join(' ') || null,
+          phone: promoter.phone || promoter.mobile_number || null,
+          avatar_url: promoter.profile_picture_url || null,
+        },
+        manager: null,
+      }));
+
+    // Merge both lists
+    const allTeamMembers = [...enrichedTeamMembers, ...additionalPromoters];
+
     // Get employee permissions for each member
+    type Permission = { permission_id: string; granted: boolean };
     const teamWithPermissions = await Promise.all(
-      enrichedTeamMembers.map(async member => {
-        const { data: permissions } = await supabase
-          .from('employee_permissions')
-          .select('permission_id, granted')
-          .eq('employer_employee_id', member.id);
+      allTeamMembers.map(async (member): Promise<any> => {
+        // Only fetch permissions if member has an employer_employee record (not a promoter-only record)
+        const permissions: Permission[] = [];
+        if (member.id && !member.id.startsWith('promoter_')) {
+          const { data: perms } = await supabase
+            .from('employee_permissions')
+            .select('permission_id, granted')
+            .eq('employer_employee_id', member.id);
+          if (perms) {
+            permissions.push(...(perms as Permission[]));
+          }
+        }
 
         return {
           ...member,
-          permissions: permissions || [],
+          permissions: permissions,
         };
       })
     );
