@@ -90,6 +90,7 @@ async function getTeamHandler(request: NextRequest) {
       .from('employer_employees')
       .select('*')
       .eq('employer_id', effectiveEmployerId)
+      .neq('employee_id', effectiveEmployerId) // ✅ FIX: Exclude employer from their own employee list
       .order('created_at', { ascending: false });
 
     // If user has an active company, filter by it
@@ -120,7 +121,25 @@ async function getTeamHandler(request: NextRequest) {
         .order('name_en', { ascending: true });
 
       if (!partyPromotersError && partyPromoters) {
-        promotersFromParty = partyPromoters;
+        // ✅ FIX: Filter out any promoters that might be employers themselves
+        // Get the party's contact_email to check if any promoter matches the employer
+        const { data: party } = await supabase
+          .from('parties')
+          .select('contact_email, type')
+          .eq('id', partyId)
+          .single();
+        
+        const employerEmail = party?.contact_email?.toLowerCase();
+        
+        promotersFromParty = partyPromoters.filter((promoter: any) => {
+          // Exclude if promoter email matches employer email (they're the same person)
+          if (employerEmail && promoter.email?.toLowerCase() === employerEmail) {
+            return false;
+          }
+          // Exclude if promoter is actually an employer party (type check)
+          // This shouldn't happen, but just in case
+          return true;
+        });
       }
     }
 

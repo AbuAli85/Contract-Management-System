@@ -170,20 +170,67 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
 
       const currentTeamIds = new Set((currentTeam || []).map(t => t.employee_id));
 
+      // ✅ COMPANY SCOPE: Get company's party_id to filter promoters
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('active_company_id, email')
+        .eq('id', user.id)
+        .single();
+
+      let employerEmail: string | null = null;
+      let companyPartyId: string | null = null;
+
+      if (userProfile?.active_company_id) {
+        const { data: company } = await supabase
+          .from('companies')
+          .select('party_id')
+          .eq('id', userProfile.active_company_id)
+          .single();
+
+        if (company?.party_id) {
+          companyPartyId = company.party_id;
+          const { data: party } = await supabase
+            .from('parties')
+            .select('contact_email')
+            .eq('id', companyPartyId)
+            .single();
+          
+          employerEmail = party?.contact_email?.toLowerCase() || userProfile.email?.toLowerCase() || null;
+        }
+      }
+
       // Fetch all promoters (employees) from the promoters table
-      const { data: allPromoters, error: promotersError } = await supabase
+      // ✅ COMPANY SCOPE: Filter by company's party_id if available
+      let promotersQuery = supabase
         .from('promoters')
         .select('id, name_en, name_ar, email, mobile_number, phone, status, employer_id, profile_picture_url')
         .order('name_en', { ascending: true });
 
+      if (companyPartyId) {
+        promotersQuery = promotersQuery.eq('employer_id', companyPartyId);
+      }
+
+      const { data: allPromoters, error: promotersError } = await promotersQuery;
+
       if (promotersError) throw promotersError;
 
-      // Filter out inactive/terminated promoters
+      // Filter out inactive/terminated promoters AND employer themselves
       const promoters = (allPromoters || []).filter(
-        promoter => 
-          promoter.status !== 'terminated' && 
-          promoter.status !== 'suspended' &&
-          promoter.status !== 'inactive'
+        promoter => {
+          // Exclude inactive/terminated
+          if (promoter.status === 'terminated' || 
+              promoter.status === 'suspended' ||
+              promoter.status === 'inactive') {
+            return false;
+          }
+          
+          // ✅ FIX: Exclude employer themselves from employee list
+          if (employerEmail && promoter.email?.toLowerCase() === employerEmail) {
+            return false;
+          }
+          
+          return true;
+        }
       );
 
       // Map to available employees and mark if already in team

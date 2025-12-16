@@ -82,7 +82,8 @@ export async function GET(request: NextRequest) {
     let teamQuery = supabase
       .from('employer_employees')
       .select('id, employee_id, employment_status, hire_date')
-      .eq('employer_id', effectiveEmployerId);
+      .eq('employer_id', effectiveEmployerId)
+      .neq('employee_id', effectiveEmployerId); // ✅ FIX: Exclude employer from their own employee list
 
     if (profile?.active_company_id) {
       teamQuery = teamQuery.or(`company_id.eq.${profile.active_company_id},company_id.is.null`);
@@ -98,14 +99,30 @@ export async function GET(request: NextRequest) {
     // ✅ FIX: Also get promoters from parties (they're also employees)
     let promotersFromParty: any[] = [];
     if (partyId) {
+      // Get party's contact_email to exclude employer from employee list
+      const { data: party } = await supabase
+        .from('parties')
+        .select('contact_email, type')
+        .eq('id', partyId)
+        .single();
+      
+      const employerEmail = party?.contact_email?.toLowerCase();
+      
       const { data: partyPromoters } = await supabase
         .from('promoters')
-        .select('id, status, created_at')
+        .select('id, status, created_at, email')
         .eq('employer_id', partyId)
         .eq('status', 'active');
 
       if (partyPromoters) {
-        promotersFromParty = partyPromoters;
+        // ✅ FIX: Filter out employer themselves from employee list
+        promotersFromParty = partyPromoters.filter((promoter: any) => {
+          // Exclude if promoter email matches employer email
+          if (employerEmail && promoter.email?.toLowerCase() === employerEmail) {
+            return false;
+          }
+          return true;
+        });
       }
     }
 
