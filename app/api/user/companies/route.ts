@@ -56,7 +56,7 @@ export async function GET() {
     // Second try: Also check if user owns any companies directly (in case company_members is missing)
     const { data: ownedCompanies, error: ownedError } = await adminClient
       .from('companies')
-      .select('id, name, logo_url, group_id')
+      .select('id, name, logo_url, group_id, party_id')
       .eq('owner_id', user.id)
       .eq('is_active', true);
 
@@ -72,8 +72,66 @@ export async function GET() {
             user_role: 'owner',
             is_primary: allCompanies.length === 0,
             group_name: null,
+            party_id: company.party_id,
           });
         }
+      }
+    }
+
+    // Third try: Get companies linked to parties where user's email matches party contact_email
+    // This helps include parties that are linked to companies via party_id
+    if (user.email) {
+      try {
+        const { data: partyLinkedCompanies, error: partyError } = await adminClient
+          .from('companies')
+          .select(`
+            id,
+            name,
+            logo_url,
+            group_id,
+            party_id,
+            party:parties!companies_party_id_fkey (
+              id,
+              name_en,
+              contact_email,
+              role
+            )
+          `)
+          .not('party_id', 'is', null)
+          .eq('is_active', true);
+
+        if (!partyError && partyLinkedCompanies) {
+          const existingIds = new Set(allCompanies.map(c => c.company_id));
+          for (const company of partyLinkedCompanies) {
+            const party = company.party as any;
+            // Check if user's email matches party contact_email
+            if (party?.contact_email && 
+                party.contact_email.toLowerCase() === user.email.toLowerCase() &&
+                !existingIds.has(company.id)) {
+              
+              // Determine role from party role
+              let userRole = 'member';
+              if (party.role && ['ceo', 'chairman', 'owner'].includes(party.role.toLowerCase())) {
+                userRole = 'owner';
+              } else if (party.role && ['admin', 'manager'].includes(party.role.toLowerCase())) {
+                userRole = 'admin';
+              }
+
+              allCompanies.push({
+                company_id: company.id,
+                company_name: company.name || party?.name_en,
+                company_logo: company.logo_url,
+                user_role: userRole,
+                is_primary: allCompanies.length === 0,
+                group_name: null,
+                party_id: company.party_id,
+                source: 'party_linked',
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching party-linked companies:', e);
       }
     }
 

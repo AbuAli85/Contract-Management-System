@@ -88,9 +88,28 @@ interface Policies {
   };
 }
 
+interface TeamMember {
+  id: string;
+  name: string;
+  name_en: string | null;
+  name_ar: string | null;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  avatar_url: string | null;
+  type: 'promoter' | 'employee' | 'member';
+  role: string | null;
+  job_title?: string | null;
+  department?: string | null;
+  hire_date?: string | null;
+  created_at: string | null;
+}
+
 export default function CompanySettingsPage() {
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [policies, setPolicies] = useState<Policies | null>(null);
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [teamLoading, setTeamLoading] = useState(false);
   const [userRole, setUserRole] = useState<string>('member');
   const [canEdit, setCanEdit] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -102,6 +121,12 @@ export default function CompanySettingsPage() {
     fetchCompanyData();
     fetchPolicies();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'team' && company) {
+      fetchTeam();
+    }
+  }, [activeTab, company]);
 
   const fetchCompanyData = async () => {
     try {
@@ -136,6 +161,33 @@ export default function CompanySettingsPage() {
       }
     } catch (error) {
       console.error('Error fetching policies:', error);
+    }
+  };
+
+  const fetchTeam = async () => {
+    setTeamLoading(true);
+    try {
+      const response = await fetch('/api/company/team');
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setTeam(data.team || []);
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to load team members',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching team:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load team members',
+        variant: 'destructive',
+      });
+    } finally {
+      setTeamLoading(false);
     }
   };
 
@@ -259,10 +311,14 @@ export default function CompanySettingsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="general" className="gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">General</span>
+          </TabsTrigger>
+          <TabsTrigger value="team" className="gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Team</span>
           </TabsTrigger>
           <TabsTrigger value="branding" className="gap-2">
             <Palette className="h-4 w-4" />
@@ -520,6 +576,134 @@ export default function CompanySettingsPage() {
                     <Save className="h-4 w-4 mr-2" />
                     Save Branding
                   </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Team Members */}
+        <TabsContent value="team" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Company Team
+              </CardTitle>
+              <CardDescription>
+                View employees, promoters, and candidates associated with this company
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {teamLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : team.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Team Members</h3>
+                  <p className="text-gray-500">
+                    No employees, promoters, or candidates are currently associated with this company.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-sm text-gray-500">
+                      {team.length} {team.length === 1 ? 'member' : 'members'} total
+                    </div>
+                  </div>
+                  <div className="grid gap-4">
+                    {team.map((member: TeamMember) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                          {member.avatar_url ? (
+                            <img
+                              src={member.avatar_url}
+                              alt={member.name}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            member.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2)
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-lg">{member.name}</h4>
+                            <Badge
+                              variant={
+                                member.type === 'promoter'
+                                  ? 'default'
+                                  : member.type === 'employee'
+                                  ? 'secondary'
+                                  : 'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {member.type === 'promoter'
+                                ? 'Promoter'
+                                : member.type === 'employee'
+                                ? 'Employee'
+                                : 'Member'}
+                            </Badge>
+                            {member.role && (
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {member.role}
+                              </Badge>
+                            )}
+                            <Badge
+                              variant={
+                                member.status === 'active'
+                                  ? 'default'
+                                  : member.status === 'terminated'
+                                  ? 'destructive'
+                                  : 'secondary'
+                              }
+                              className="text-xs"
+                            >
+                              {member.status || 'active'}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                            {member.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                <span className="truncate">{member.email}</span>
+                              </div>
+                            )}
+                            {member.phone && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                <span>{member.phone}</span>
+                              </div>
+                            )}
+                            {member.job_title && (
+                              <div className="flex items-center gap-1">
+                                <FileText className="h-3 w-3" />
+                                <span>{member.job_title}</span>
+                                {member.department && <span> • {member.department}</span>}
+                              </div>
+                            )}
+                            {member.hire_date && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>Hired: {new Date(member.hire_date).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>

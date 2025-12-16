@@ -102,7 +102,7 @@
     "@react-email/render": "^1.4.0",
     "@sentry/nextjs": "^7.0.0",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.38.4",
+    "@supabase/supabase-js": "^2.45.4",
     "@tanstack/react-query": "^5.8.4",
     "@tanstack/react-query-devtools": "^5.8.4",
     "@tanstack/react-table": "^8.21.3",

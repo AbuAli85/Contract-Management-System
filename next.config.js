@@ -167,6 +167,12 @@ const nextConfig = {
       tls: false,
     };
 
+    // Fix for Supabase ESM/CommonJS module resolution
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js', '.jsx'],
+      '.mjs': ['.mts', '.mjs'],
+    };
+
     // Ensure path aliases work correctly in Docker builds
     const path = require('path');
     config.resolve.alias = {
@@ -188,11 +194,16 @@ const nextConfig = {
       '.ts',
       '.tsx',
       '.json',
+      '.mjs',
+      '.mts',
       ...(config.resolve.extensions || []),
     ];
 
     return config;
   },
+
+  // Transpile Supabase packages to fix ESM issues
+  transpilePackages: ['@supabase/supabase-js', '@supabase/ssr'],
 
   // Experimental features for performance
   experimental: {
