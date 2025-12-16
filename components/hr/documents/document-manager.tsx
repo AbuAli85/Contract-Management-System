@@ -42,8 +42,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { DocumentUploadDialog } from './document-upload-dialog';
-import { DocumentViewDialog } from './document-view-dialog';
+import { DocumentUploadDialog } from '@/components/hr/documents/document-upload-dialog';
+import { DocumentViewDialog } from '@/components/hr/documents/document-view-dialog';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useCompany } from '@/components/providers/company-provider';
