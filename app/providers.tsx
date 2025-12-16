@@ -16,6 +16,7 @@ import { EnhancedRBACProvider } from '@/components/auth/enhanced-rbac-provider';
 import { createClient } from '@/lib/supabase/client';
 import { Toaster } from 'sonner';
 import { FormContextProvider } from '@/hooks/use-form-context';
+import { CompanyProvider } from '@/components/providers/company-provider';
 
 // Types
 interface User {
@@ -530,8 +531,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <RBACProvider>
             <EnhancedRBACProvider>
-              <FormContextProvider>
-                {children}
+              <CompanyProvider>
+                <FormContextProvider>
+                  {children}
                 <Toaster
                   position='top-right'
                   expand={false}
@@ -546,7 +548,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     },
                   }}
                 />
-              </FormContextProvider>
+                </FormContextProvider>
+              </CompanyProvider>
             </EnhancedRBACProvider>
           </RBACProvider>
         </AuthProvider>
