@@ -27,10 +27,16 @@ async function getAttendanceHandler(
     const endDate = searchParams.get('end_date');
     const month = searchParams.get('month'); // YYYY-MM format
 
-    // Verify access
+    // ✅ COMPANY SCOPE: Verify access and check company scope
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
     const { data: teamMember } = await supabase
       .from('employer_employees')
-      .select('employer_id, employee_id')
+      .select('employer_id, employee_id, company_id')
       .eq('id', id)
       .single();
 
@@ -38,6 +44,14 @@ async function getAttendanceHandler(
       return NextResponse.json(
         { error: 'Team member not found' },
         { status: 404 }
+      );
+    }
+
+    // ✅ COMPANY SCOPE: Verify team member belongs to active company
+    if (profile?.active_company_id && teamMember.company_id !== profile.active_company_id) {
+      return NextResponse.json(
+        { error: 'Team member does not belong to your active company' },
+        { status: 403 }
       );
     }
 
@@ -134,10 +148,16 @@ async function recordAttendanceHandler(
       );
     }
 
-    // Verify access
+    // ✅ COMPANY SCOPE: Verify access and check company scope
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
     const { data: teamMember } = await supabase
       .from('employer_employees')
-      .select('employer_id, employee_id')
+      .select('employer_id, employee_id, company_id')
       .eq('id', id)
       .single();
 
@@ -145,6 +165,14 @@ async function recordAttendanceHandler(
       return NextResponse.json(
         { error: 'Team member not found' },
         { status: 404 }
+      );
+    }
+
+    // ✅ COMPANY SCOPE: Verify team member belongs to active company
+    if (userProfile?.active_company_id && teamMember.company_id !== userProfile.active_company_id) {
+      return NextResponse.json(
+        { error: 'Team member does not belong to your active company' },
+        { status: 403 }
       );
     }
 

@@ -26,10 +26,16 @@ async function getTargetsHandler(
     const status = searchParams.get('status');
     const period = searchParams.get('period'); // current, upcoming, past
 
-    // Verify access
+    // ✅ COMPANY SCOPE: Verify access and check company scope
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
     const { data: teamMember } = await supabase
       .from('employer_employees')
-      .select('employer_id, employee_id')
+      .select('employer_id, employee_id, company_id')
       .eq('id', id)
       .single();
 
@@ -37,6 +43,14 @@ async function getTargetsHandler(
       return NextResponse.json(
         { error: 'Team member not found' },
         { status: 404 }
+      );
+    }
+
+    // ✅ COMPANY SCOPE: Verify team member belongs to active company
+    if (profile?.active_company_id && teamMember.company_id !== profile.active_company_id) {
+      return NextResponse.json(
+        { error: 'Team member does not belong to your active company' },
+        { status: 403 }
       );
     }
 
@@ -164,10 +178,16 @@ async function createTargetHandler(
       );
     }
 
-    // Verify user is the employer
+    // ✅ COMPANY SCOPE: Verify user is the employer and check company scope
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('active_company_id, role')
+      .eq('id', user.id)
+      .single();
+
     const { data: teamMember } = await supabase
       .from('employer_employees')
-      .select('employer_id')
+      .select('employer_id, company_id')
       .eq('id', id)
       .single();
 
@@ -178,14 +198,16 @@ async function createTargetHandler(
       );
     }
 
-    if (teamMember.employer_id !== user.id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+    // ✅ COMPANY SCOPE: Verify team member belongs to active company
+    if (userProfile?.active_company_id && teamMember.company_id !== userProfile.active_company_id) {
+      return NextResponse.json(
+        { error: 'Team member does not belong to your active company' },
+        { status: 403 }
+      );
+    }
 
-      if (profile?.role !== 'admin') {
+    if (teamMember.employer_id !== user.id) {
+      if (userProfile?.role !== 'admin') {
         return NextResponse.json(
           { error: 'Only employer can create targets' },
           { status: 403 }
