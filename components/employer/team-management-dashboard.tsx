@@ -38,6 +38,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCompany } from '@/components/providers/company-provider';
 import { TeamMemberList } from './team-member-list';
 import { AddTeamMemberDialog } from './add-team-member-dialog';
 import { InviteEmployeeDialog } from './invite-employee-dialog';
@@ -130,9 +131,12 @@ export function TeamManagementDashboard() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // ✅ COMPANY SCOPE: Get company context
+  const { companyId } = useCompany();
+
   useEffect(() => {
     fetchTeam();
-  }, []);
+  }, [companyId]); // ✅ COMPANY SCOPE: Refetch when company changes
 
   const fetchTeam = async () => {
     try {

@@ -19,6 +19,7 @@ import {
 } from '@/hooks/use-contracts-query';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useAuth } from '@/lib/auth-service';
+import { useCompany } from '@/components/providers/company-provider';
 import { Button } from '@/components/ui/button';
 import { CurrencyDisplay } from '@/components/ui/currency-display';
 import { CurrencyIndicator } from '@/components/ui/currency-indicator';
@@ -360,6 +361,9 @@ function ContractsContent() {
   const currentPage = parseInt(searchParams?.get('page') || '1', 10);
   const pageSize = parseInt(searchParams?.get('limit') || '20', 10);
 
+  // ✅ COMPANY SCOPE: Get company context
+  const { companyId } = useCompany();
+
   // Use React Query for data fetching with automatic caching and refetching
   const {
     data: contractsData,
@@ -367,7 +371,7 @@ function ContractsContent() {
     isFetching,
     error,
     refetch,
-  } = useContractsQuery(currentPage, pageSize);
+  } = useContractsQuery(currentPage, pageSize, companyId);
 
   // Extract contracts and total count from React Query response
   const contracts = contractsData?.contracts || [];

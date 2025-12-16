@@ -298,6 +298,16 @@ async function handleContractsRequest(
     // Use simple select with count option directly
     let query = supabase.from('contracts').select('*', { count: 'exact' });
 
+    // ✅ COMPANY SCOPE: Filter by active company's party_id if available
+    if (activePartyId) {
+      query = query.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+      logger.debug(
+        'Filtering contracts by company party_id',
+        { activePartyId, requestId },
+        'ContractsAPI'
+      );
+    }
+
     // ✅ FIX: Apply status filter if provided
     if (status && status !== 'all') {
       logger.debug(
@@ -320,8 +330,8 @@ async function handleContractsRequest(
       }
     }
 
-    // Non-admin users only see contracts they're involved in OR created
-    if (!isAdmin) {
+    // Non-admin users only see contracts they're involved in OR created (if no company scope)
+    if (!isAdmin && !activePartyId) {
       query = query.or(
         `first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`
       );
@@ -374,8 +384,13 @@ async function handleContractsRequest(
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
-      // Apply RBAC to fallback query too
-      if (!isAdmin) {
+      // ✅ COMPANY SCOPE: Apply company filter to fallback query too
+      if (activePartyId) {
+        fallbackQuery = fallbackQuery.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+      }
+
+      // Apply RBAC to fallback query too (only if no company scope)
+      if (!isAdmin && !activePartyId) {
         fallbackQuery = fallbackQuery.or(
           `first_party_id.eq.${user.id},second_party_id.eq.${user.id},client_id.eq.${user.id},employer_id.eq.${user.id},user_id.eq.${user.id}`
         );

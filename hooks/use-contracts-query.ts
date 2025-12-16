@@ -8,8 +8,8 @@ import type { ContractWithRelations } from './use-contracts';
 export const contractsKeys = {
   all: ['contracts'] as const,
   lists: () => [...contractsKeys.all, 'list'] as const,
-  list: (page: number, limit: number) =>
-    [...contractsKeys.lists(), { page, limit }] as const,
+  list: (page: number, limit: number, companyId?: string | null) =>
+    [...contractsKeys.lists(), { page, limit, companyId }] as const,
   details: () => [...contractsKeys.all, 'detail'] as const,
   detail: (id: string) => [...contractsKeys.details(), id] as const,
 };
@@ -157,9 +157,9 @@ async function deleteContract(id: string): Promise<void> {
 }
 
 // Hook: useContractsQuery
-export function useContractsQuery(page: number = 1, limit: number = 20) {
+export function useContractsQuery(page: number = 1, limit: number = 20, companyId?: string | null) {
   return useQuery({
-    queryKey: contractsKeys.list(page, limit),
+    queryKey: contractsKeys.list(page, limit, companyId),
     queryFn: () => fetchContracts(page, limit),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes

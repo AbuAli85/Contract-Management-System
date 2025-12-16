@@ -437,7 +437,8 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     try {
       // Use the API endpoint that includes proper promoter relationships
       // API automatically filters by active company
-      const response = await fetch('/api/contracts');
+      const url = companyId ? `/api/contracts?company_id=${companyId}` : '/api/contracts';
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -654,7 +655,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
   // Load contracts on mount
   useEffect(() => {
     fetchContracts();
-  }, [fetchContracts]);
+  }, [fetchContracts, companyId]); // ✅ COMPANY SCOPE: Refetch when company changes
 
   if (loading) {
     return (
