@@ -232,6 +232,37 @@ function SidebarContent({
           ],
         },
         {
+          title: 'HR Management',
+          icon: Users,
+          description: 'HR operations and employee management',
+          children: [
+            {
+              title: 'Documents',
+              href: '/hr/documents',
+              icon: FileText,
+              description: 'Document management & compliance',
+            },
+            {
+              title: 'Assignments',
+              href: '/hr/assignments',
+              icon: Briefcase,
+              description: 'Client assignments',
+            },
+            {
+              title: 'Deployment Letters',
+              href: '/hr/deployment-letters',
+              icon: FileEdit,
+              description: 'Generate deployment letters',
+            },
+            {
+              title: 'Team Management',
+              href: '/employer/team',
+              icon: Users,
+              description: 'Manage team members',
+            },
+          ],
+        },
+        {
           title: 'Promoters',
           href: '/promoters',
           icon: Users,
