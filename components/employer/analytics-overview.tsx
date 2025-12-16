@@ -111,14 +111,19 @@ const StatCard = ({
   </Card>
 );
 
+import { useCompany } from '@/components/providers/company-provider';
+
 export function AnalyticsOverview() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [period, setPeriod] = useState<Period | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // ✅ COMPANY SCOPE: Get company context
+  const { companyId } = useCompany();
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [companyId]); // ✅ COMPANY SCOPE: Refetch when company changes
 
   const fetchAnalytics = async () => {
     try {

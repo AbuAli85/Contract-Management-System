@@ -25,39 +25,108 @@ export async function GET(request: NextRequest) {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
     const today = now.toISOString().slice(0, 10);
 
-    // Get user's active company
+    // ✅ COMPANY SCOPE: Get user's active company and party_id
     const { data: profile } = await supabase
       .from('profiles')
       .select('active_company_id')
       .eq('id', user.id)
       .single();
 
-    // 1. Get all team members (company-scoped if available)
+    // Get company's party_id and resolve employer profile ID
+    let partyId: string | null = null;
+    let employerProfileId: string | null = null;
+    
+    if (profile?.active_company_id) {
+      const { createAdminClient } = await import('@/lib/supabase/server');
+      let adminClient;
+      try {
+        adminClient = createAdminClient();
+      } catch (e) {
+        adminClient = supabase;
+      }
+
+      const { data: company } = await adminClient
+        .from('companies')
+        .select('party_id')
+        .eq('id', profile.active_company_id)
+        .single();
+      
+      if (company?.party_id) {
+        partyId = company.party_id;
+        
+        // Find the profile ID that corresponds to this party
+        const { data: party } = await adminClient
+          .from('parties')
+          .select('contact_email')
+          .eq('id', partyId)
+          .single();
+        
+        if (party?.contact_email) {
+          const { data: employerProfile } = await adminClient
+            .from('profiles')
+            .select('id')
+            .eq('email', party.contact_email)
+            .single();
+          
+          if (employerProfile) {
+            employerProfileId = employerProfile.id;
+          }
+        }
+      }
+    }
+
+    // ✅ FIX: Get all team members from both employer_employees and promoters
+    const effectiveEmployerId = employerProfileId || user.id;
+    
+    // 1. Get team members from employer_employees
     let teamQuery = supabase
       .from('employer_employees')
       .select('id, employee_id, employment_status, hire_date')
-      .eq('employer_id', user.id);
+      .eq('employer_id', effectiveEmployerId);
 
     if (profile?.active_company_id) {
-      teamQuery = teamQuery.eq('company_id', profile.active_company_id);
+      teamQuery = teamQuery.or(`company_id.eq.${profile.active_company_id},company_id.is.null`);
     }
 
     const { data: teamMembers, error: teamError } = await teamQuery;
 
     if (teamError) {
       console.error('Error fetching team:', teamError);
-      return NextResponse.json({ error: 'Failed to fetch team' }, { status: 500 });
+      // Don't return error, continue with empty array
     }
 
-    const employerEmployeeIds = (teamMembers || []).map(m => m.id);
+    // ✅ FIX: Also get promoters from parties (they're also employees)
+    let promotersFromParty: any[] = [];
+    if (partyId) {
+      const { data: partyPromoters } = await supabase
+        .from('promoters')
+        .select('id, status, created_at')
+        .eq('employer_id', partyId)
+        .eq('status', 'active');
 
-    // Team stats
+      if (partyPromoters) {
+        promotersFromParty = partyPromoters;
+      }
+    }
+
+    // Combine both sources - use employer_employee IDs for attendance/tasks
+    const employerEmployeeIds = (teamMembers || []).map(m => m.id);
+    
+    // For promoters not in employer_employees, we can't track their attendance/tasks yet
+    // But we can count them in team stats
+    const promoterIds = promotersFromParty
+      .filter(p => !(teamMembers || []).some(tm => tm.employee_id === p.id))
+      .map(p => p.id);
+
+    // ✅ FIX: Team stats - include both employer_employees and promoters
     const teamStats = {
-      total: (teamMembers || []).length,
-      active: (teamMembers || []).filter(m => m.employment_status === 'active').length,
+      total: (teamMembers || []).length + promotersFromParty.length,
+      active: (teamMembers || []).filter(m => m.employment_status === 'active').length + promotersFromParty.length,
       onLeave: (teamMembers || []).filter(m => m.employment_status === 'on_leave').length,
       newThisMonth: (teamMembers || []).filter(m => 
         m.hire_date && m.hire_date >= startOfMonth
+      ).length + promotersFromParty.filter(p => 
+        p.created_at && p.created_at >= startOfMonth
       ).length,
     };
 
