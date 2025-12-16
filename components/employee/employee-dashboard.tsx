@@ -126,10 +126,25 @@ export function EmployeeDashboard() {
         return;
       }
 
+      // Handle employer - Supabase relational queries return arrays
+      const employerRaw = employeeRecord.employer;
+      const employerData = Array.isArray(employerRaw) 
+        ? employerRaw[0] 
+        : employerRaw;
+      
+      if (!employerData || typeof employerData !== 'object' || Array.isArray(employerData)) {
+        setEmployeeInfo(null);
+        return;
+      }
+
       setEmployeeInfo({
         id: user.id,
         employer_employee_id: employeeRecord.id,
-        employer: employeeRecord.employer as any,
+        employer: {
+          id: String(employerData.id ?? ''),
+          full_name: String(employerData.full_name ?? ''),
+          email: String(employerData.email ?? ''),
+        },
         profile: profile || null,
         job_title: employeeRecord.job_title,
         department: employeeRecord.department,

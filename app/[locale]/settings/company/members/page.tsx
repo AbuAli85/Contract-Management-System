@@ -132,7 +132,7 @@ export default function CompanyMembersPage() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const filteredMembers = members.filter(member => {
+  const filteredMembers = members.filter((member: CompanyMember) => {
     const name = member.user?.full_name || '';
     const email = member.user?.email || '';
     return (
@@ -183,14 +183,14 @@ export default function CompanyMembersPage() {
         <Input
           placeholder="Search members..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="pl-10"
         />
       </div>
 
       {/* Members Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredMembers.map(member => {
+        {filteredMembers.map((member: CompanyMember) => {
           const defaultRole = { label: 'Member', color: 'bg-gray-100 text-gray-700', icon: Users };
           const roleCfg = roleConfig[member.role] || defaultRole;
           const RoleIcon = roleCfg.icon;
