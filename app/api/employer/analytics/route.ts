@@ -108,6 +108,19 @@ export async function GET(request: NextRequest) {
       
       const employerEmail = party?.contact_email?.toLowerCase();
       
+      // ✅ FIX: Get all employer parties' emails to filter out employers
+      const { data: allEmployerParties } = await supabase
+        .from('parties')
+        .select('contact_email')
+        .eq('type', 'Employer')
+        .not('contact_email', 'is', null);
+      
+      const employerEmails = new Set(
+        (allEmployerParties || [])
+          .map((p: any) => p.contact_email?.toLowerCase())
+          .filter(Boolean)
+      );
+      
       const { data: partyPromoters } = await supabase
         .from('promoters')
         .select('id, status, created_at, email')
@@ -115,12 +128,20 @@ export async function GET(request: NextRequest) {
         .eq('status', 'active');
 
       if (partyPromoters) {
-        // ✅ FIX: Filter out employer themselves from employee list
+        // ✅ FIX: Filter out employer themselves AND any other employer parties
         promotersFromParty = partyPromoters.filter((promoter: any) => {
-          // Exclude if promoter email matches employer email
-          if (employerEmail && promoter.email?.toLowerCase() === employerEmail) {
+          const promoterEmail = promoter.email?.toLowerCase();
+          
+          // Exclude if promoter email matches current employer email
+          if (employerEmail && promoterEmail === employerEmail) {
             return false;
           }
+          
+          // Exclude if promoter email matches any employer party (they're an employer, not employee)
+          if (promoterEmail && employerEmails.has(promoterEmail)) {
+            return false;
+          }
+          
           return true;
         });
       }

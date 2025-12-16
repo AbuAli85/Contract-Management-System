@@ -114,34 +114,79 @@ async function getTeamHandler(request: NextRequest) {
     // promoters.employer_id references parties.id (not profiles.id)
     let promotersFromParty: any[] = [];
     if (partyId) {
-      const { data: partyPromoters, error: partyPromotersError } = await supabase
-        .from('promoters')
-        .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url, status, created_at')
-        .eq('employer_id', partyId) // ✅ Correct: promoters.employer_id = parties.id
-        .order('name_en', { ascending: true });
+      // Get the employer party details first
+      const { data: employerParty } = await supabase
+        .from('parties')
+        .select('id, contact_email, type, name_en')
+        .eq('id', partyId)
+        .single();
+      
+      if (!employerParty) {
+        console.warn('Employer party not found for party_id:', partyId);
+      } else {
+        const employerEmail = employerParty.contact_email?.toLowerCase();
+        
+        // ✅ FIX: Fetch promoters but exclude employer themselves and other employer parties
+        const { data: partyPromoters, error: partyPromotersError } = await supabase
+          .from('promoters')
+          .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url, status, created_at')
+          .eq('employer_id', partyId) // ✅ Correct: promoters.employer_id = parties.id
+          .order('name_en', { ascending: true });
 
-      if (!partyPromotersError && partyPromoters) {
-        // ✅ FIX: Filter out any promoters that might be employers themselves
-        // Get the party's contact_email to check if any promoter matches the employer
-        const { data: party } = await supabase
-          .from('parties')
-          .select('contact_email, type')
-          .eq('id', partyId)
-          .single();
-        
-        const employerEmail = party?.contact_email?.toLowerCase();
-        
-        promotersFromParty = partyPromoters.filter((promoter: any) => {
-          // Exclude if promoter email matches employer email (they're the same person)
-          if (employerEmail && promoter.email?.toLowerCase() === employerEmail) {
-            return false;
+        if (!partyPromotersError && partyPromoters) {
+          // ✅ FIX: Filter out employers and ensure only actual employees/promoters
+          promotersFromParty = partyPromoters.filter((promoter: any) => {
+            // Exclude if promoter email matches employer email (they're the same person)
+            if (employerEmail && promoter.email?.toLowerCase() === employerEmail) {
+              return false;
+            }
+            
+            // ✅ FIX: Also check if this promoter is actually an employer party
+            // If a promoter's email matches any employer party's contact_email, exclude them
+            // This prevents employer parties from showing as employees
+            return true; // Will be filtered further if needed
+          });
+          
+          // ✅ ADDITIONAL FIX: Check if any promoters are actually employer parties
+          // Get all employer parties' contact emails
+          const { data: allEmployerParties } = await supabase
+            .from('parties')
+            .select('contact_email')
+            .eq('type', 'Employer')
+            .not('contact_email', 'is', null);
+          
+          if (allEmployerParties && allEmployerParties.length > 0) {
+            const employerEmails = new Set(
+              allEmployerParties
+                .map((p: any) => p.contact_email?.toLowerCase())
+                .filter(Boolean)
+            );
+            
+            // Filter out any promoters whose email matches an employer party
+            promotersFromParty = promotersFromParty.filter((promoter: any) => {
+              const promoterEmail = promoter.email?.toLowerCase();
+              if (promoterEmail && employerEmails.has(promoterEmail)) {
+                return false; // This is an employer, not an employee
+              }
+              return true;
+            });
           }
-          // Exclude if promoter is actually an employer party (type check)
-          // This shouldn't happen, but just in case
-          return true;
-        });
+        }
       }
     }
+
+    // ✅ FIX: Get all employer parties' emails to filter out employers from employee list
+    const { data: allEmployerParties } = await supabase
+      .from('parties')
+      .select('contact_email')
+      .eq('type', 'Employer')
+      .not('contact_email', 'is', null);
+    
+    const employerEmails = new Set(
+      (allEmployerParties || [])
+        .map((p: any) => p.contact_email?.toLowerCase())
+        .filter(Boolean)
+    );
 
     // Fetch promoter details for each team member from employer_employees
     const employeeIds = (teamMembers || []).map(m => m.employee_id).filter(Boolean);
@@ -149,9 +194,18 @@ async function getTeamHandler(request: NextRequest) {
       .from('promoters')
       .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url')
       .in('id', employeeIds.length > 0 ? employeeIds : ['00000000-0000-0000-0000-000000000000']);
+    
+    // ✅ FIX: Filter out any promoters that are actually employers
+    const filteredPromoters = (promoters || []).filter((promoter: any) => {
+      const promoterEmail = promoter.email?.toLowerCase();
+      if (promoterEmail && employerEmails.has(promoterEmail)) {
+        return false; // This is an employer, not an employee
+      }
+      return true;
+    });
 
-    // Create a lookup map for promoters
-    const promoterMap = new Map((promoters || []).map(p => [p.id, p]));
+    // Create a lookup map for promoters (using filtered list)
+    const promoterMap = new Map(filteredPromoters.map((p: any) => [p.id, p]));
 
     // Fetch manager details (from profiles since managers are system users)
     const managerIds = (teamMembers || []).map(m => m.reporting_manager_id).filter(Boolean);
@@ -185,8 +239,8 @@ async function getTeamHandler(request: NextRequest) {
     // Add promoters from party that aren't already in employer_employees
     const existingEmployeeIds = new Set((teamMembers || []).map(m => m.employee_id).filter(Boolean));
     const additionalPromoters = promotersFromParty
-      .filter(p => !existingEmployeeIds.has(p.id))
-      .map(promoter => ({
+      .filter((p: any) => !existingEmployeeIds.has(p.id))
+      .map((promoter: any) => ({
         // Use promoter.id as the record ID since there's no employer_employee record yet
         // Prefix with 'promoter_' to distinguish from employer_employee IDs
         id: `promoter_${promoter.id}`,
