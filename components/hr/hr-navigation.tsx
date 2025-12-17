@@ -14,6 +14,11 @@ import {
   CheckCircle,
   AlertTriangle,
   Building,
+  DollarSign,
+  Mail,
+  CheckSquare,
+  Target,
+  Briefcase,
 } from 'lucide-react';
 
 interface HRNavigationProps {
@@ -35,27 +40,54 @@ export function HRNavigation({ className }: HRNavigationProps) {
       href: '/hr/employees',
       icon: Users,
       description: 'Manage employee records',
-      // Badge removed - should be dynamically populated with real data if needed
     },
     {
       title: 'Attendance',
       href: '/hr/attendance',
       icon: Clock,
       description: 'Track working hours',
-      // Badge removed - should be dynamically populated with real data if needed
     },
     {
       title: 'Leave Requests',
       href: '/hr/leave-requests',
       icon: Calendar,
       description: 'Manage leave applications',
-      // Badge removed - should be dynamically populated with real data if needed
+    },
+    {
+      title: 'Payroll',
+      href: '/hr/payroll',
+      icon: DollarSign,
+      description: 'Process salaries and payslips',
+    },
+    {
+      title: 'Letters',
+      href: '/hr/letters',
+      icon: Mail,
+      description: 'Generate official letters',
+    },
+    {
+      title: 'Tasks',
+      href: '/hr/tasks',
+      icon: CheckSquare,
+      description: 'Assign and track tasks',
+    },
+    {
+      title: 'Targets',
+      href: '/hr/targets',
+      icon: Target,
+      description: 'Set and monitor goals',
+    },
+    {
+      title: 'Assignments',
+      href: '/hr/assignments',
+      icon: Briefcase,
+      description: 'Client assignments',
     },
     {
       title: 'Documents',
       href: '/hr/documents',
       icon: FileText,
-      description: 'Generate contracts & letters',
+      description: 'Document management',
     },
     {
       title: 'Reports',
