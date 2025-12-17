@@ -31,13 +31,26 @@ export async function GET(request: NextRequest) {
     let endDate: string | null = null;
 
     if (month) {
-      const [year, monthNum] = month.split('-');
-      startDate = `${year}-${monthNum}-01`;
-      const lastDay = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
-      endDate = `${year}-${monthNum}-${lastDay}`;
+      const parts = month.split('-');
+      const year = parts[0];
+      const monthNum = parts[1];
+      
+      if (year && monthNum) {
+        const yearStr: string = year;
+        const monthStr: string = monthNum;
+        const yearNum = parseInt(yearStr, 10);
+        const monthNumParsed = parseInt(monthStr, 10);
+        
+        if (!isNaN(yearNum) && !isNaN(monthNumParsed)) {
+          startDate = `${yearStr}-${monthStr.padStart(2, '0')}-01`;
+          const lastDay = new Date(yearNum, monthNumParsed, 0).getDate();
+          endDate = `${yearStr}-${monthStr.padStart(2, '0')}-${lastDay}`;
+        }
+      }
     }
 
-    // Build query
+    // Build query - fetch attendance with employer_employee details
+    // Note: We'll fetch employee profile data separately to avoid nested relationship issues
     let query = supabase
       .from('employee_attendance')
       .select(`
@@ -48,13 +61,7 @@ export async function GET(request: NextRequest) {
           employer_id,
           job_title,
           department,
-          company_id,
-          employee:profiles!employer_employees_employee_id_fkey(
-            id,
-            name_en,
-            name_ar,
-            email
-          )
+          company_id
         )
       `)
       .order('attendance_date', { ascending: false });
@@ -87,6 +94,35 @@ export async function GET(request: NextRequest) {
         { error: 'Failed to fetch attendance', details: error.message },
         { status: 500 }
       );
+    }
+
+    // Fetch employee profile data separately for each attendance record
+    if (attendance && attendance.length > 0) {
+      const employeeIds = [...new Set(
+        attendance
+          .map((a: any) => a.employer_employee?.employee_id)
+          .filter(Boolean)
+      )];
+
+      if (employeeIds.length > 0) {
+        const { data: employeeProfiles } = await supabase
+          .from('profiles')
+          .select('id, name_en, name_ar, email')
+          .in('id', employeeIds);
+
+        // Map employee profiles to attendance records
+        const employeeMap = new Map(
+          (employeeProfiles || []).map((p: any) => [p.id, p])
+        );
+
+        attendance.forEach((record: any) => {
+          if (record.employer_employee?.employee_id) {
+            record.employer_employee.employee = employeeMap.get(
+              record.employer_employee.employee_id
+            ) || null;
+          }
+        });
+      }
     }
 
     // Calculate stats
