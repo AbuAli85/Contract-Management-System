@@ -96,19 +96,37 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Get user profile to check permissions and get active company
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, active_company_id')
       .eq('id', user.id)
       .single();
 
-    // Use active_company_id if company_id not provided
-    const targetCompanyId = company_id || profile?.active_company_id;
-
-    // Validate required fields
-    if (!targetCompanyId || !payroll_month) {
+    if (profileError || !profile) {
+      console.error('Error fetching profile:', profileError);
       return NextResponse.json(
-        { error: 'payroll_month is required and user must have an active company' },
+        { error: 'Failed to fetch user profile' },
+        { status: 500 }
+      );
+    }
+
+    // Use active_company_id if company_id not provided
+    const targetCompanyId = company_id || profile.active_company_id;
+
+    // Validate required fields with detailed error messages
+    if (!payroll_month) {
+      return NextResponse.json(
+        { error: 'payroll_month is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!targetCompanyId) {
+      return NextResponse.json(
+        { 
+          error: 'No company found. Please set an active company in your profile or provide a company_id',
+          requires_company: true
+        },
         { status: 400 }
       );
     }
