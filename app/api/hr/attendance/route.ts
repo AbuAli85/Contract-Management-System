@@ -49,6 +49,62 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Company scoping for non-admins - get employer_employee_ids first
+    let employerEmployeeIds: string[] | null = null;
+    let employerIds: string[] | null = null;
+    
+    if (profile?.role !== 'admin' && profile?.active_company_id) {
+      // Get employer profiles that belong to this company
+      const { data: employerProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('active_company_id', profile.active_company_id);
+
+      if (employerProfiles && employerProfiles.length > 0) {
+        employerIds = employerProfiles.map((p) => p.id);
+        
+        // Get employer_employee_ids for these employers
+        const { data: employerEmployees } = await supabase
+          .from('employer_employees')
+          .select('id')
+          .in('employer_id', employerIds);
+
+        if (employerEmployees && employerEmployees.length > 0) {
+          employerEmployeeIds = employerEmployees.map((ee) => ee.id);
+        } else {
+          // No employees found for this company, return empty result
+          return NextResponse.json({
+            success: true,
+            attendance: [],
+            stats: {
+              total_employees: 0,
+              present_today: 0,
+              absent_today: 0,
+              late_today: 0,
+              on_leave_today: 0,
+              average_hours: 0,
+              total_overtime: 0,
+            },
+          });
+        }
+      } else {
+        // No employers found for this company, return empty result
+        return NextResponse.json({
+          success: true,
+          attendance: [],
+          stats: {
+            total_employees: 0,
+            present_today: 0,
+            absent_today: 0,
+            late_today: 0,
+            on_leave_today: 0,
+            average_hours: 0,
+            total_overtime: 0,
+          },
+        });
+      }
+    }
+
     // Build query - fetch attendance with employer_employee details
     // Note: We'll fetch employee profile data separately to avoid nested relationship issues
     let query = supabase
@@ -60,8 +116,7 @@ export async function GET(request: NextRequest) {
           employee_id,
           employer_id,
           job_title,
-          department,
-          company_id
+          department
         )
       `)
       .order('attendance_date', { ascending: false });
@@ -81,9 +136,24 @@ export async function GET(request: NextRequest) {
       query = query.eq('employer_employee_id', employeeId);
     }
 
-    // Company scoping for non-admins
-    if (profile?.role !== 'admin' && profile?.active_company_id) {
-      query = query.eq('employer_employee.company_id', profile.active_company_id);
+    // Company scoping for non-admins - filter by employer_employee_ids
+    if (employerEmployeeIds && employerEmployeeIds.length > 0) {
+      query = query.in('employer_employee_id', employerEmployeeIds);
+    } else if (employerEmployeeIds && employerEmployeeIds.length === 0) {
+      // No matching employees, return empty
+      return NextResponse.json({
+        success: true,
+        attendance: [],
+        stats: {
+          total_employees: 0,
+          present_today: 0,
+          absent_today: 0,
+          late_today: 0,
+          on_leave_today: 0,
+          average_hours: 0,
+          total_overtime: 0,
+        },
+      });
     }
 
     const { data: attendance, error } = await query;
@@ -135,8 +205,8 @@ export async function GET(request: NextRequest) {
       .select('id', { count: 'exact', head: true })
       .eq('employment_status', 'active');
 
-    if (profile?.role !== 'admin' && profile?.active_company_id) {
-      employeesQuery = employeesQuery.eq('company_id', profile.active_company_id);
+    if (profile?.role !== 'admin' && employerIds && employerIds.length > 0) {
+      employeesQuery = employeesQuery.in('employer_id', employerIds);
     }
 
     const { count: totalEmployees } = await employeesQuery;
