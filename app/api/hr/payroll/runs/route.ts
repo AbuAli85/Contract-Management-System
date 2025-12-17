@@ -158,9 +158,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get all active employees for the company
-    const { data: employees } = await supabase
-      .from('employer_employees')
+    // Get employer_id from company (via party relationship)
+    // Company -> Party -> Party contact_email -> Profile ID (employer_id)
+    let employerProfileId: string | null = null;
+    
+    const { data: company } = await supabase
+      .from('companies')
+      .select('party_id')
+      .eq('id', targetCompanyId)
+      .single();
+
+    if (company?.party_id) {
+      const { data: party } = await supabase
+        .from('parties')
+        .select('contact_email')
+        .eq('id', company.party_id)
+        .single();
+
+      if (party?.contact_email) {
+        const { data: employerProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('email', party.contact_email)
+          .single();
+
+        if (employerProfile) {
+          employerProfileId = employerProfile.id;
+        }
+      }
+    }
+
+    // If we couldn't find employer from company, use the current user as fallback
+    const effectiveEmployerId = employerProfileId || user.id;
+
+    // Get all active employees for the employer
+    let employeesQuery = (supabaseAdmin.from('employer_employees') as any)
       .select(`
         id,
         employee_id,
@@ -172,8 +204,22 @@ export async function POST(request: NextRequest) {
           email
         )
       `)
-      .eq('company_id', targetCompanyId)
+      .eq('employer_id', effectiveEmployerId)
       .eq('employment_status', 'active');
+
+    // Also filter by company_id if it exists in the table (for backwards compatibility)
+    // This uses .or() to include employees with null company_id
+    employeesQuery = employeesQuery.or(`company_id.eq.${targetCompanyId},company_id.is.null`);
+
+    const { data: employees, error: employeesError } = await employeesQuery;
+
+    if (employeesError) {
+      console.error('Error fetching employees:', employeesError);
+      return NextResponse.json(
+        { error: 'Failed to fetch employees', details: employeesError.message },
+        { status: 500 }
+      );
+    }
 
     if (!employees || employees.length === 0) {
       return NextResponse.json(
