@@ -4,9 +4,6 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import type { Database } from '@/types';
-
-type ContractStatus = Database['public']['Enums']['contract_status'];
 
 export interface ContractMetrics {
   total: number;
@@ -27,8 +24,11 @@ export interface ContractMetrics {
 export interface MetricsOptions {
   userId?: string;
   userRole?: string;
+  companyId?: string | null;
+  partyId?: string | null;
   includeExpiringSoon?: boolean;
   expiryDaysThreshold?: number;
+  forceRefresh?: boolean;
 }
 
 /**
@@ -41,6 +41,8 @@ export async function getContractMetrics(
   const {
     userId,
     userRole,
+    companyId,
+    partyId,
     includeExpiringSoon = true,
     expiryDaysThreshold = 30,
   } = options;
@@ -48,13 +50,29 @@ export async function getContractMetrics(
   const supabase = await createClient();
 
   try {
-    // Build base query based on user role
+    // Build base query based on user role and company scope
     let query = supabase
       .from('contracts')
       .select('status, contract_value, start_date, end_date, created_at');
 
+    // Company/Party scoping: filter by party_id if provided
+    if (partyId) {
+      query = query.eq('party_id', partyId);
+    } else if (companyId) {
+      // If no partyId but companyId, we need to get party_id from company
+      const { data: company } = await supabase
+        .from('companies')
+        .select('party_id')
+        .eq('id', companyId)
+        .single();
+      
+      if (company?.party_id) {
+        query = query.eq('party_id', company.party_id);
+      }
+    }
+
     // Role-based filtering: non-admins see only their contracts
-    // Admins see all contracts
+    // Admins see all contracts (unless filtered by company/party above)
     if (userRole !== 'admin' && userId) {
       query = query.eq('created_by', userId);
     }
@@ -70,6 +88,21 @@ export async function getContractMetrics(
     let countQuery = supabase
       .from('contracts')
       .select('*', { count: 'exact', head: true });
+
+    // Apply same filters to count query
+    if (partyId) {
+      countQuery = countQuery.eq('party_id', partyId);
+    } else if (companyId) {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('party_id')
+        .eq('id', companyId)
+        .single();
+      
+      if (company?.party_id) {
+        countQuery = countQuery.eq('party_id', company.party_id);
+      }
+    }
 
     if (userRole !== 'admin' && userId) {
       countQuery = countQuery.eq('created_by', userId);
