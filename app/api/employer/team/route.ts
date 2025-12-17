@@ -84,14 +84,22 @@ async function getTeamHandler(request: NextRequest) {
     // ✅ LINKING FIX: Use employerProfileId if available, otherwise fallback to employerId
     const effectiveEmployerId = employerProfileId || employerId;
 
-    // Build query - filter by company if available
-    // employer_employees.employer_id references profiles.id, not parties.id
+    // ✅ ALIGNMENT FIX: Build query using party_id if available (better alignment)
+    // First try to use party_id for better alignment with promoters
     let query = supabase
       .from('employer_employees')
-      .select('*')
-      .eq('employer_id', effectiveEmployerId)
-      .neq('employee_id', effectiveEmployerId) // ✅ FIX: Exclude employer from their own employee list
+      .select('*, promoter:promoters(*), party:parties(*), company:companies(*)')
       .order('created_at', { ascending: false });
+
+    // ✅ ALIGNMENT FIX: Use party_id if available (better alignment with promoters)
+    if (partyId) {
+      query = query.eq('party_id', partyId);
+    } else {
+      // Fallback to employer_id (profile.id)
+      query = query.eq('employer_id', effectiveEmployerId);
+    }
+    
+    query = query.neq('employee_id', effectiveEmployerId); // ✅ FIX: Exclude employer from their own employee list
 
     // If user has an active company, filter by it
     // But also include employees with null company_id for backwards compatibility
