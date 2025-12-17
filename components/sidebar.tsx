@@ -51,6 +51,7 @@ import {
   Loader2,
   ImageOff,
   FileEdit,
+  FileText,
   FolderOpen,
   FolderPlus,
   FolderMinus,
