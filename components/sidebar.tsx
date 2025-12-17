@@ -238,6 +238,12 @@ function SidebarContent({
           description: 'HR operations and employee management',
           children: [
             {
+              title: 'Alignment Overview',
+              href: '/hr/alignment',
+              icon: Users,
+              description: 'Employer-employee alignment & overview',
+            },
+            {
               title: 'Documents',
               href: '/hr/documents',
               icon: FileText,
