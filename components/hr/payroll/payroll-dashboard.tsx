@@ -85,7 +85,7 @@ export function PayrollDashboard() {
 
   // Create payroll run mutation
   const createPayrollMutation = useMutation({
-    mutationFn: async (data: { company_id: string; payroll_month: string }) => {
+    mutationFn: async (data: { payroll_month: string; company_id?: string }) => {
       const response = await fetch('/api/hr/payroll/runs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,21 +115,8 @@ export function PayrollDashboard() {
   });
 
   const handleCreatePayroll = async () => {
-    // Get company ID from user profile
-    const response = await fetch('/api/user/profile');
-    const profile = await response.json();
-    
-    if (!profile?.active_company_id) {
-      toast({
-        title: 'Error',
-        description: 'No active company found',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    // Company ID will be automatically taken from user's active company on the server
     createPayrollMutation.mutate({
-      company_id: profile.active_company_id,
       payroll_month: selectedMonth,
     });
   };

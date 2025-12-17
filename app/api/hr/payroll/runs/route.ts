@@ -95,24 +95,28 @@ export async function POST(request: NextRequest) {
       notes,
     } = body;
 
-    // Validate required fields
-    if (!company_id || !payroll_month) {
-      return NextResponse.json(
-        { error: 'company_id and payroll_month are required' },
-        { status: 400 }
-      );
-    }
-
-    // Check permissions
+    // Get user profile to check permissions and get active company
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, active_company_id')
       .eq('id', user.id)
       .single();
 
+    // Use active_company_id if company_id not provided
+    const targetCompanyId = company_id || profile?.active_company_id;
+
+    // Validate required fields
+    if (!targetCompanyId || !payroll_month) {
+      return NextResponse.json(
+        { error: 'payroll_month is required and user must have an active company' },
+        { status: 400 }
+      );
+    }
+
+    // Check permissions
     const isAdmin = profile?.role === 'admin';
     const isHR = profile?.role === 'hr_manager' || profile?.role === 'manager';
-    const isSameCompany = profile?.active_company_id === company_id;
+    const isSameCompany = profile?.active_company_id === targetCompanyId;
 
     if (!isAdmin && !(isHR && isSameCompany)) {
       return NextResponse.json(
@@ -125,7 +129,7 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await supabase
       .from('payroll_runs')
       .select('id')
-      .eq('company_id', company_id)
+      .eq('company_id', targetCompanyId)
       .eq('payroll_month', payroll_month)
       .single();
 
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
           email
         )
       `)
-      .eq('company_id', company_id)
+      .eq('company_id', targetCompanyId)
       .eq('employment_status', 'active');
 
     if (!employees || employees.length === 0) {
@@ -163,7 +167,7 @@ export async function POST(request: NextRequest) {
     // Create payroll run
     const { data: payrollRun, error: createError } = await (supabaseAdmin.from('payroll_runs') as any)
       .insert({
-        company_id,
+        company_id: targetCompanyId,
         payroll_month,
         payroll_period,
         status: 'draft',
