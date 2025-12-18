@@ -63,9 +63,43 @@ export async function updatePromoter(
 ) {
   const supabase = await createClient();
 
+  // Convert date strings to proper format for database
+  const updateData: Record<string, any> = { ...promoterData };
+
+  // Convert ISO date strings to date format for date fields
+  const dateFields = [
+    'id_card_expiry_date',
+    'passport_expiry_date',
+    'visa_expiry_date',
+    'work_permit_expiry_date',
+    'date_of_birth',
+  ];
+
+  for (const field of dateFields) {
+    if (updateData[field]) {
+      if (typeof updateData[field] === 'string') {
+        const date = new Date(updateData[field]);
+        if (!isNaN(date.getTime())) {
+          updateData[field] = date.toISOString().split('T')[0];
+        } else {
+          delete updateData[field];
+        }
+      } else if (updateData[field] instanceof Date) {
+        updateData[field] = updateData[field].toISOString().split('T')[0];
+      }
+    }
+  }
+
+  // Remove null/undefined values to avoid constraint issues
+  Object.keys(updateData).forEach(key => {
+    if (updateData[key] === null || updateData[key] === undefined) {
+      delete updateData[key];
+    }
+  });
+
   const { data, error } = await supabase
     .from('promoters')
-    .update(promoterData)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();

@@ -312,7 +312,32 @@ export const PUT = withRBAC(
 
       // Parse and validate request body
       const body = await request.json();
-      const validatedData = promoterUpdateSchema.parse(body);
+      
+      // Log the incoming request for debugging
+      console.log('📥 PATCH /api/promoters/[id] - Incoming data:', {
+        id,
+        bodyKeys: Object.keys(body),
+        bodySample: Object.fromEntries(
+          Object.entries(body).slice(0, 10) // First 10 fields
+        ),
+      });
+      
+      let validatedData;
+      try {
+        validatedData = promoterUpdateSchema.parse(body);
+      } catch (validationError) {
+        console.error('❌ Validation error:', validationError);
+        if (validationError instanceof z.ZodError) {
+          return NextResponse.json(
+            {
+              error: 'Validation error',
+              details: validationError.issues,
+            },
+            { status: 400 }
+          );
+        }
+        throw validationError;
+      }
 
       // Check if ID card number is being updated and if it already exists
       if (validatedData.id_card_number) {
@@ -449,6 +474,10 @@ export const PATCH = withRBAC(
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params;
+      
+      // Log the incoming request for debugging
+      console.log('📥 PATCH /api/promoters/[id] - Request received for ID:', id);
+      
       const cookieStore = await cookies();
 
       const supabase = createServerClient(
@@ -497,7 +526,32 @@ export const PATCH = withRBAC(
 
       // Parse and validate request body
       const body = await request.json();
-      const validatedData = promoterUpdateSchema.parse(body);
+      
+      // Log the incoming request for debugging
+      console.log('📥 PATCH /api/promoters/[id] - Incoming data:', {
+        id,
+        bodyKeys: Object.keys(body),
+        bodySample: Object.fromEntries(
+          Object.entries(body).slice(0, 10) // First 10 fields
+        ),
+      });
+      
+      let validatedData;
+      try {
+        validatedData = promoterUpdateSchema.parse(body);
+      } catch (validationError) {
+        console.error('❌ Validation error:', validationError);
+        if (validationError instanceof z.ZodError) {
+          return NextResponse.json(
+            {
+              error: 'Validation error',
+              details: validationError.issues,
+            },
+            { status: 400 }
+          );
+        }
+        throw validationError;
+      }
 
       // Check if ID card number is being updated and if it already exists
       if (validatedData.id_card_number) {
