@@ -60,18 +60,77 @@ export async function GET(
       );
     }
 
-    // Get employee record
-    const { data: employeeLink } = await supabase
-      .from('employer_employees')
-      .select('id, employee_id, company_id')
+    // Get employee record using admin client to bypass RLS
+    const { data: employeeLink, error: employeeError } = await (supabaseAdmin.from('employer_employees') as any)
+      .select('id, employee_id, company_id, employment_status')
       .eq('employee_id', user.id)
       .eq('company_id', link.company_id)
       .eq('employment_status', 'active')
-      .single();
+      .maybeSingle();
+
+    if (employeeError) {
+      console.error('Error fetching employee record:', employeeError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to verify employee authorization',
+          details: employeeError.message 
+        },
+        { status: 500 }
+      );
+    }
 
     if (!employeeLink) {
+      // Provide more helpful error message
+      // Check if employee exists but with different company or status
+      const { data: allEmployeeRecords } = await (supabaseAdmin.from('employer_employees') as any)
+        .select('id, employee_id, company_id, employment_status')
+        .eq('employee_id', user.id)
+        .maybeSingle();
+
+      if (!allEmployeeRecords) {
+        return NextResponse.json(
+          { 
+            error: 'You are not authorized to use this check-in link',
+            details: 'No employee record found. Please contact your manager to be added to the company.',
+            diagnostic: process.env.NODE_ENV === 'development' ? {
+              user_id: user.id,
+              link_company_id: link.company_id,
+            } : undefined
+          },
+          { status: 403 }
+        );
+      }
+
+      if (allEmployeeRecords.company_id !== link.company_id) {
+        return NextResponse.json(
+          { 
+            error: 'You are not authorized to use this check-in link',
+            details: 'This link is for a different company than your current assignment.',
+            diagnostic: process.env.NODE_ENV === 'development' ? {
+              user_id: user.id,
+              employee_company_id: allEmployeeRecords.company_id,
+              link_company_id: link.company_id,
+            } : undefined
+          },
+          { status: 403 }
+        );
+      }
+
+      if (allEmployeeRecords.employment_status !== 'active') {
+        return NextResponse.json(
+          { 
+            error: 'You are not authorized to use this check-in link',
+            details: `Your employment status is "${allEmployeeRecords.employment_status}". Only active employees can check in.`,
+          },
+          { status: 403 }
+        );
+      }
+
       return NextResponse.json(
-        { error: 'You are not authorized to use this check-in link' },
+        { 
+          error: 'You are not authorized to use this check-in link',
+          details: 'Unable to verify your authorization. Please contact your manager.',
+        },
         { status: 403 }
       );
     }

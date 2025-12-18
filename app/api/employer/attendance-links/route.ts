@@ -63,8 +63,16 @@ export const POST = withRBAC('attendance:create:all', async (
 
     if (!profile?.active_company_id) {
       return NextResponse.json(
-        { error: 'No active company found' },
+        { error: 'No active company found', details: 'Please select an active company in your profile settings' },
         { status: 400 }
+      );
+    }
+
+    // Verify user has correct role
+    if (!['admin', 'employer', 'manager'].includes(profile.role || '')) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions', details: `Your role (${profile.role}) does not have permission to create attendance links. Required: admin, employer, or manager` },
+        { status: 403 }
       );
     }
 
@@ -74,7 +82,7 @@ export const POST = withRBAC('attendance:create:all', async (
     if (codeError) {
       console.error('Error generating link code:', codeError);
       return NextResponse.json(
-        { error: 'Failed to generate link code' },
+        { error: 'Failed to generate link code', details: codeError.message },
         { status: 500 }
       );
     }
@@ -82,7 +90,7 @@ export const POST = withRBAC('attendance:create:all', async (
     // Function returns the code directly
     const linkCode = codeData || generateFallbackCode();
 
-    // Create the attendance link
+    // Create the attendance link using admin client (bypasses RLS)
     const { data: link, error: createError } = await (supabaseAdmin.from('attendance_links') as any)
       .insert({
         company_id: profile.active_company_id,
@@ -103,8 +111,30 @@ export const POST = withRBAC('attendance:create:all', async (
 
     if (createError) {
       console.error('Error creating attendance link:', createError);
+      console.error('User profile:', { 
+        id: user.id, 
+        role: profile.role, 
+        active_company_id: profile.active_company_id 
+      });
+      console.error('Service role key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+      
+      // Provide more detailed error information
       return NextResponse.json(
-        { error: 'Failed to create attendance link', details: createError.message },
+        { 
+          error: 'Failed to create attendance link', 
+          details: createError.message,
+          code: createError.code,
+          hint: createError.hint,
+          // Include diagnostic info in development
+          ...(process.env.NODE_ENV === 'development' && {
+            diagnostic: {
+              user_id: user.id,
+              user_role: profile.role,
+              active_company_id: profile.active_company_id,
+              has_service_role_key: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            }
+          })
+        },
         { status: 500 }
       );
     }
