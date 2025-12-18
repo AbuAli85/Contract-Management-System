@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Users,
   Clock,
@@ -117,6 +118,7 @@ export function AnalyticsOverview() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [period, setPeriod] = useState<Period | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // ✅ COMPANY SCOPE: Get company context
   const { companyId } = useCompany();
@@ -127,15 +129,20 @@ export function AnalyticsOverview() {
 
   const fetchAnalytics = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await fetch('/api/employer/analytics');
       const data = await response.json();
 
       if (response.ok && data.success) {
         setAnalytics(data.analytics);
         setPeriod(data.period);
+      } else {
+        throw new Error(data.error || 'Failed to fetch analytics');
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load analytics');
     } finally {
       setLoading(false);
     }
@@ -143,14 +150,40 @@ export function AnalyticsOverview() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center py-16">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" />
+        <p className="text-sm text-gray-500">Loading analytics...</p>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <Card className="border-0 shadow-lg">
+        <CardContent className="py-12 text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Failed to Load Analytics
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <Button onClick={fetchAnalytics} variant="outline" size="sm">
+            <Activity className="h-4 w-4 mr-2" />
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!analytics) {
-    return null;
+    return (
+      <Card className="border-0 shadow-lg">
+        <CardContent className="py-12 text-center">
+          <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-sm text-gray-500">No analytics data available</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   const attendanceRate = analytics.team.active > 0
