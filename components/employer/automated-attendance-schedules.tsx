@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GoogleLocationPicker } from './google-location-picker';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EmployeeScheduleSelector } from './employee-schedule-selector';
 
 interface AttendanceSchedule {
   id: string;
@@ -116,9 +117,12 @@ export function AutomatedAttendanceSchedules() {
     send_check_in_link: true,
     send_check_out_link: false,
     notification_method: ['email'] as string[],
-    send_before_minutes: '15',
-    send_to_all_employees: true,
-    max_uses_per_link: '',
+      send_before_minutes: '15',
+      send_to_all_employees: true,
+      specific_employee_ids: [],
+      employee_group_ids: [],
+      assignment_type: 'all',
+      max_uses_per_link: '',
     require_photo: true,
     require_location_verification: true,
   });
@@ -262,6 +266,10 @@ export function AutomatedAttendanceSchedules() {
         link_valid_duration_hours: parseInt(formData.link_valid_duration_hours),
         send_before_minutes: parseInt(formData.send_before_minutes),
         max_uses_per_link: formData.max_uses_per_link ? parseInt(formData.max_uses_per_link) : null,
+        specific_employee_ids: formData.assignment_type === 'selected' ? formData.specific_employee_ids : [],
+        employee_group_ids: formData.assignment_type === 'groups' || formData.assignment_type === 'location_based' ? formData.employee_group_ids : [],
+        assignment_type: formData.assignment_type,
+        send_to_all_employees: formData.assignment_type === 'all',
       };
 
       const url = editingSchedule
@@ -452,6 +460,9 @@ export function AutomatedAttendanceSchedules() {
       notification_method: ['email'],
       send_before_minutes: '15',
       send_to_all_employees: true,
+      specific_employee_ids: [] as string[],
+      employee_group_ids: [] as string[],
+      assignment_type: 'all' as 'all' | 'selected' | 'groups' | 'location_based',
       max_uses_per_link: '',
       require_photo: true,
       require_location_verification: true,
@@ -789,28 +800,24 @@ export function AutomatedAttendanceSchedules() {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Send to All Employees</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Send links to all active employees in the company
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.send_to_all_employees}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, send_to_all_employees: checked }))
-                    }
+                <div className="space-y-4">
+                  <Label>Employee Assignment</Label>
+                  <EmployeeScheduleSelector
+                    selectedEmployeeIds={formData.specific_employee_ids || []}
+                    selectedGroupIds={formData.employee_group_ids || []}
+                    assignmentType={formData.assignment_type || 'all'}
+                    onSelectionChange={(data) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        specific_employee_ids: data.employeeIds,
+                        employee_group_ids: data.groupIds,
+                        assignment_type: data.assignmentType,
+                        send_to_all_employees: data.assignmentType === 'all',
+                      }));
+                    }}
+                    showLocationBased={!!formData.office_location_id}
                   />
                 </div>
-
-                {!formData.send_to_all_employees && (
-                  <Alert>
-                    <AlertDescription>
-                      Specific employee selection will be available in a future update
-                    </AlertDescription>
-                  </Alert>
-                )}
               </TabsContent>
             </Tabs>
 

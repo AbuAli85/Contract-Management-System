@@ -178,11 +178,22 @@ async function sendScheduleNotifications(scheduleId: string, supabaseAdmin: any)
 
     if (!schedule) return;
 
-    // Get employees
-    const { data: employees } = await supabaseAdmin.rpc(
-      'get_schedule_employees',
-      { p_schedule_id: scheduleId }
-    );
+    // Get employees (use enhanced function if available, otherwise fallback)
+    let employees;
+    try {
+      const { data: enhancedEmployees } = await supabaseAdmin.rpc(
+        'get_schedule_employees_enhanced',
+        { p_schedule_id: scheduleId }
+      );
+      employees = enhancedEmployees;
+    } catch (error) {
+      // Fallback to original function
+      const { data: fallbackEmployees } = await supabaseAdmin.rpc(
+        'get_schedule_employees',
+        { p_schedule_id: scheduleId }
+      );
+      employees = fallbackEmployees;
+    }
 
     if (!employees || employees.length === 0) return;
 

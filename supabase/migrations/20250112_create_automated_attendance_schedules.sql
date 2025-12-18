@@ -285,7 +285,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to get employees for a schedule
+-- Function to get employees for a schedule (legacy - kept for backward compatibility)
 CREATE OR REPLACE FUNCTION get_schedule_employees(p_schedule_id UUID)
 RETURNS TABLE(
   employee_id UUID,
@@ -300,7 +300,16 @@ BEGIN
   FROM attendance_link_schedules
   WHERE id = p_schedule_id;
   
-  IF v_schedule.send_to_all_employees THEN
+  -- Use enhanced function if assignment_type is set, otherwise use legacy logic
+  IF v_schedule.assignment_type IS NOT NULL AND v_schedule.assignment_type != 'all' THEN
+    RETURN QUERY
+    SELECT 
+      employee_id,
+      email,
+      phone,
+      full_name
+    FROM get_schedule_employees_enhanced(p_schedule_id);
+  ELSIF v_schedule.send_to_all_employees OR v_schedule.assignment_type = 'all' OR v_schedule.assignment_type IS NULL THEN
     RETURN QUERY
     SELECT 
       ee.id,
@@ -308,9 +317,16 @@ BEGIN
       p.phone,
       p.full_name
     FROM employer_employees ee
-    JOIN profiles p ON p.id = ee.user_id
-    WHERE ee.company_id = v_schedule.company_id
-      AND ee.status = 'active';
+    JOIN profiles p ON p.id = ee.employee_id
+    WHERE (
+      ee.company_id = v_schedule.company_id
+      OR EXISTS (
+        SELECT 1 FROM profiles emp_prof
+        WHERE emp_prof.id = ee.employer_id
+          AND emp_prof.active_company_id = v_schedule.company_id
+      )
+    )
+      AND ee.employment_status = 'active';
   ELSE
     -- Return specific employees
     RETURN QUERY
@@ -320,12 +336,17 @@ BEGIN
       p.phone,
       p.full_name
     FROM employer_employees ee
-    JOIN profiles p ON p.id = ee.user_id
-    WHERE ee.company_id = v_schedule.company_id
-      AND ee.status = 'active'
-      AND (ee.id = ANY(v_schedule.specific_employee_ids) OR 
-           -- Add team matching logic here if teams table exists
-           false);
+    JOIN profiles p ON p.id = ee.employee_id
+    WHERE (
+      ee.company_id = v_schedule.company_id
+      OR EXISTS (
+        SELECT 1 FROM profiles emp_prof
+        WHERE emp_prof.id = ee.employer_id
+          AND emp_prof.active_company_id = v_schedule.company_id
+      )
+    )
+      AND ee.employment_status = 'active'
+      AND (ee.id = ANY(v_schedule.specific_employee_ids) OR v_schedule.specific_employee_ids IS NULL);
   END IF;
 END;
 $$ LANGUAGE plpgsql;

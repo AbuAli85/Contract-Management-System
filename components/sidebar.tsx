@@ -313,6 +313,12 @@ function SidebarContent({
               icon: Calendar,
               description: 'Automated daily attendance link generation',
             },
+            {
+              title: 'Employee Groups',
+              href: '/employer/attendance-groups',
+              icon: Users,
+              description: 'Organize employees by location or department',
+            },
           ],
         },
         {

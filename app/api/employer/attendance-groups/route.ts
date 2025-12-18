@@ -1,0 +1,216 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { withRBAC } from '@/lib/rbac/guard';
+
+export const dynamic = 'force-dynamic';
+
+// GET - List all employee groups
+export const GET = withRBAC('attendance:read:all', async (
+  request: NextRequest
+) => {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = getSupabaseAdmin();
+    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.active_company_id) {
+      return NextResponse.json(
+        { error: 'No active company found' },
+        { status: 400 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const includeInactive = searchParams.get('include_inactive') === 'true';
+    const groupType = searchParams.get('type'); // location, department, custom, project
+
+    let query = (supabaseAdmin.from('employee_attendance_groups') as any)
+      .select(`
+        *,
+        office_location:office_location_id (
+          id,
+          name,
+          address,
+          latitude,
+          longitude
+        ),
+        employees:employee_group_assignments (
+          id,
+          employer_employee:employer_employee_id (
+            id,
+            employee_code,
+            job_title,
+            department,
+            employee:user_id (
+              id,
+              full_name,
+              email,
+              phone
+            )
+          )
+        )
+      `)
+      .eq('company_id', profile.active_company_id)
+      .order('created_at', { ascending: false });
+
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
+    }
+
+    if (groupType) {
+      query = query.eq('group_type', groupType);
+    }
+
+    const { data: groups, error } = await query;
+
+    if (error) {
+      console.error('Error fetching employee groups:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch employee groups' },
+        { status: 500 }
+      );
+    }
+
+    // Format the response
+    const formattedGroups = (groups || []).map((group: any) => ({
+      ...group,
+      employee_count: group.employees?.length || 0,
+    }));
+
+    return NextResponse.json({
+      success: true,
+      groups: formattedGroups,
+      count: formattedGroups.length,
+    });
+  } catch (error) {
+    console.error('Error in GET /api/employer/attendance-groups:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});
+
+// POST - Create a new employee group
+export const POST = withRBAC('attendance:create:all', async (
+  request: NextRequest
+) => {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = getSupabaseAdmin();
+    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      name,
+      description,
+      group_type = 'location',
+      office_location_id,
+      department_name,
+      project_name,
+      default_check_in_time,
+      default_check_out_time,
+      employee_ids = [], // Array of employer_employee IDs
+    } = body;
+
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Group name is required' },
+        { status: 400 }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.active_company_id) {
+      return NextResponse.json(
+        { error: 'No active company found' },
+        { status: 400 }
+      );
+    }
+
+    // Create the group
+    const { data: group, error: createError } = await (supabaseAdmin.from('employee_attendance_groups') as any)
+      .insert({
+        company_id: profile.active_company_id,
+        created_by: user.id,
+        name,
+        description,
+        group_type,
+        office_location_id: office_location_id || null,
+        department_name: department_name || null,
+        project_name: project_name || null,
+        default_check_in_time: default_check_in_time || null,
+        default_check_out_time: default_check_out_time || null,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Error creating employee group:', createError);
+      return NextResponse.json(
+        { error: 'Failed to create employee group', details: createError.message },
+        { status: 500 }
+      );
+    }
+
+    // Assign employees to the group
+    if (employee_ids.length > 0) {
+      const assignments = employee_ids.map((employeeId: string) => ({
+        group_id: group.id,
+        employer_employee_id: employeeId,
+        assigned_by: user.id,
+        is_primary: true,
+      }));
+
+      const { error: assignError } = await supabaseAdmin
+        .from('employee_group_assignments')
+        .insert(assignments);
+
+      if (assignError) {
+        console.error('Error assigning employees to group:', assignError);
+        // Don't fail the request, just log the error
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      group,
+    });
+  } catch (error) {
+    console.error('Error in POST /api/employer/attendance-groups:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});
+
