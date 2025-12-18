@@ -236,9 +236,10 @@ export function PromoterSmartTags({
       }
 
       // Try to fetch existing tags from database
+      // Note: Only select 'tag' as 'count' column may not exist in all schemas
       const { data, error } = await supabase
         .from('promoter_tags')
-        .select('tag, count')
+        .select('tag')
         .eq('promoter_id', promoterId);
 
       if (!error && data) {
@@ -247,7 +248,7 @@ export function PromoterSmartTags({
           label: t.tag || 'Unknown',
           color: getTagColor(t.tag || ''),
           category: 'custom' as const,
-          count: t.count || 0,
+          count: t.count || 1, // Default to 1 if count column doesn't exist
           isAIGenerated: false,
         }));
 
@@ -412,12 +413,14 @@ export function PromoterSmartTags({
         .eq('promoter_id', promoterId);
 
       // Insert new tags
+      // Note: Only insert tag and promoter_id, as count column may not exist
       if (tagsList.length > 0) {
         await supabase.from('promoter_tags').insert(
           tagsList.map(tag => ({
             promoter_id: promoterId,
             tag,
-            count: 1,
+            // Only include count if the column exists in your schema
+            // count: 1,
           }))
         );
       }
