@@ -73,6 +73,10 @@ import PromoterFilterSection from '@/components/promoter-filter-section';
 // Import enhanced components
 import { PromoterDetailsEnhanced } from '@/components/promoters/promoter-details-enhanced';
 import { PromoterDetailsSkeleton } from '@/components/promoters/promoter-details-skeleton';
+import { PromoterGoalWidget } from '@/components/promoters/promoter-goal-widget';
+import { PromoterPredictiveScore } from '@/components/promoters/promoter-predictive-score';
+import { PromoterFinancialSummary } from '@/components/promoters/promoter-financial-summary';
+import { PromoterDocumentHealth } from '@/components/promoters/promoter-document-health';
 import { logger } from '@/lib/utils/logger';
 
 // Safe date parsing functions to prevent "Invalid time value" errors
@@ -767,9 +771,6 @@ export default function PromoterDetailPage() {
             >
               {promoterDetails?.status}
             </Badge>
-            <div className='text-sm text-muted-foreground'>
-              [Placeholder: Predictive Risk Score - 85/100]
-            </div>
           </div>
         </div>
 
@@ -998,28 +999,18 @@ export default function PromoterDetailPage() {
 
             <TabsContent value='personal' className='space-y-6'>
               {/* Goal Tracking & Progress Widget */}
-              <Card className='border-2 border-indigo-100'>
-                <CardHeader>
-                  <CardTitle className='flex items-center gap-2'>
-                    <BriefcaseIcon className='h-5 w-5 text-indigo-600' />
-                    Goal Tracking & Progress
-                  </CardTitle>
-                  <CardDescription>
-                    Monitor progress towards key objectives
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-center py-8 text-gray-500'>
-                    <p>
-                      [Placeholder: Goal Tracking Widget with Circular Progress
-                      Rings]
-                    </p>
-                    <p className='text-xs mt-2'>
-                      Top 3 active goals will be displayed here
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <PromoterGoalWidget
+                promoterId={promoterId}
+                performanceMetrics={{
+                  overallScore: 75,
+                  attendanceRate: 90,
+                  taskCompletion: 80,
+                  customerSatisfaction: 85,
+                  totalTasks: 0,
+                  completedTasks: 0,
+                }}
+                isAdmin={role === 'admin'}
+              />
 
               {/* Personal Information Section */}
               <Card>
@@ -1896,89 +1887,94 @@ export default function PromoterDetailPage() {
 
         {/* RIGHT COLUMN - Fixed Sidebar (1/3 width) */}
         <aside className='lg:col-span-1 space-y-6'>
-          {/* Predictive Performance Score Placeholder */}
-          <Card className='border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50'>
-            <CardHeader>
-              <CardTitle className='text-base'>
-                Predictive Performance Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className='text-center py-4'>
-                <div className='text-4xl font-bold text-purple-900'>85</div>
-                <div className='text-sm text-purple-600 mt-1'>/ 100</div>
-                <Badge className='mt-2 bg-green-500'>Low Risk</Badge>
-                <p className='text-xs text-gray-600 mt-3'>
-                  [Placeholder: 30-day forecast and risk analysis]
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Predictive Performance Score */}
+          <PromoterPredictiveScore
+            performanceMetrics={{
+              overallScore: 75,
+              attendanceRate: 90,
+              taskCompletion: 80,
+              customerSatisfaction: 85,
+              totalTasks: 0,
+              completedTasks: 0,
+            }}
+            contracts={promoterDetails?.contracts || []}
+            documentsCompliant={
+              !!(
+                promoterDetails?.id_card_number &&
+                promoterDetails?.id_card_expiry_date &&
+                new Date(promoterDetails.id_card_expiry_date) > new Date() &&
+                promoterDetails?.passport_number &&
+                promoterDetails?.passport_expiry_date &&
+                new Date(promoterDetails.passport_expiry_date) > new Date()
+              )
+            }
+            lastActive={promoterDetails?.updated_at || promoterDetails?.created_at}
+          />
 
           {/* Financial & Payout Summary */}
-          <Card className='border-2 border-blue-100'>
-            <CardHeader>
-              <CardTitle className='text-base flex items-center gap-2'>
-                <BriefcaseIcon className='h-4 w-4' />
-                Financial & Payout Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-3'>
-              <div className='p-3 bg-green-50 rounded-lg border border-green-200'>
-                <div className='text-xs text-green-700 mb-1'>Total Earned</div>
-                <div className='text-xl font-bold text-green-900'>$28,450</div>
-              </div>
-              <div className='p-3 bg-blue-50 rounded-lg border border-blue-200'>
-                <div className='text-xs text-blue-700 mb-1'>Pending Payout</div>
-                <div className='text-xl font-bold text-blue-900'>
-                  [Placeholder: $0.00]
-                </div>
-              </div>
-              <div className='p-3 bg-purple-50 rounded-lg border border-purple-200'>
-                <div className='text-xs text-purple-700 mb-1'>
-                  Next Payout Date
-                </div>
-                <div className='text-sm font-semibold text-purple-900'>
-                  [Placeholder: Nov 15, 2025]
-                </div>
-              </div>
-              <DetailItem
-                label='Bank Name'
-                value={promoterDetails?.bank_name}
-              />
-              <DetailItem
-                label='Account Number'
-                value={promoterDetails?.account_number}
-              />
-              <DetailItem label='IBAN' value={promoterDetails?.iban} />
-            </CardContent>
-          </Card>
+          <PromoterFinancialSummary
+            promoterId={promoterId}
+            contracts={promoterDetails?.contracts || []}
+          />
 
           {/* Document Health Summary */}
-          <Card className='border-2 border-orange-100'>
-            <CardHeader>
-              <CardTitle className='text-base flex items-center gap-2'>
-                <FileTextIcon className='h-4 w-4' />
-                Document Health Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className='space-y-3'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm font-medium'>Compliance Score</span>
-                  <span className='text-lg font-bold'>75%</span>
-                </div>
-                <div className='text-xs text-orange-600 mb-2'>
-                  [Placeholder: Urgent Alerts]
-                </div>
-                <div className='p-2 bg-red-50 border border-red-200 rounded'>
-                  <p className='text-xs font-medium text-red-900'>
-                    ⚠️ ID Card expires in 15 days
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PromoterDocumentHealth
+            documents={{
+              idCard: {
+                number: promoterDetails?.id_card_number,
+                expiryDate: promoterDetails?.id_card_expiry_date,
+                url: promoterDetails?.id_card_url,
+                status: (() => {
+                  if (!promoterDetails?.id_card_expiry_date) return 'missing';
+                  const expiry = new Date(promoterDetails.id_card_expiry_date);
+                  const now = new Date();
+                  const daysUntilExpiry = Math.ceil(
+                    (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+                  );
+                  if (daysUntilExpiry < 0) return 'expired';
+                  if (daysUntilExpiry <= 30) return 'expiring';
+                  return 'valid';
+                })(),
+              },
+              passport: {
+                number: promoterDetails?.passport_number,
+                expiryDate: promoterDetails?.passport_expiry_date,
+                url: promoterDetails?.passport_url,
+                status: (() => {
+                  if (!promoterDetails?.passport_expiry_date) return 'missing';
+                  const expiry = new Date(promoterDetails.passport_expiry_date);
+                  const now = new Date();
+                  const daysUntilExpiry = Math.ceil(
+                    (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+                  );
+                  if (daysUntilExpiry < 0) return 'expired';
+                  if (daysUntilExpiry <= 30) return 'expiring';
+                  return 'valid';
+                })(),
+              },
+            }}
+            onUpload={(type) => setShowDocumentUpload(true)}
+            onView={(type) => {
+              const url =
+                type === 'id_card'
+                  ? promoterDetails?.id_card_url
+                  : promoterDetails?.passport_url;
+              if (url) window.open(url, '_blank');
+            }}
+            onDownload={(type) => {
+              const url =
+                type === 'id_card'
+                  ? promoterDetails?.id_card_url
+                  : promoterDetails?.passport_url;
+              if (url) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${type}_document`;
+                link.click();
+              }
+            }}
+            isAdmin={role === 'admin'}
+          />
 
           {/* Quick Actions - Moved from top */}
           {role === 'admin' && (

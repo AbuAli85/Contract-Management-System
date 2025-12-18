@@ -57,48 +57,151 @@ export function PromoterFinancialSummary({
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    calculateFinancials();
+    fetchFinancialData();
   }, [promoterId, contracts]);
 
-  const calculateFinancials = () => {
-    // Calculate from contracts (in production, this would come from a financial service)
-    const completedContracts = contracts.filter(c => c.status === 'completed');
-    const activeContracts = contracts.filter(c => c.status === 'active');
+  const fetchFinancialData = async () => {
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      if (!supabase) {
+        calculateFromContracts();
+        return;
+      }
 
-    // Mock calculations - replace with actual financial data
-    const totalEarned = completedContracts.length * 2500 + Math.random() * 5000;
-    const pendingPayout = activeContracts.length * 1200 + Math.random() * 2000;
-    const ytdEarnings = totalEarned * 0.7;
-    const averageMonthly = ytdEarnings / 10; // Assuming 10 months YTD
+      // Try to fetch from payroll_entries via employer_employees
+      let totalEarned = 0;
+      let pendingPayout = 0;
+      const payoutHistory: PayoutRecord[] = [];
+
+      // Get employer_employee_id for this promoter
+      const { data: employerEmployee } = await supabase
+        .from('employer_employees')
+        .select('id')
+        .eq('employee_id', promoterId)
+        .single()
+        .catch(() => ({ data: null, error: null }));
+
+      if (employerEmployee?.id) {
+        // Fetch payroll entries
+        const { data: payrollEntries } = await supabase
+          .from('payroll_entries')
+          .select('net_salary, payment_status, payment_date, payment_method, created_at')
+          .eq('employer_employee_id', employerEmployee.id)
+          .order('created_at', { ascending: false })
+          .catch(() => ({ data: [], error: null }));
+
+        if (payrollEntries && payrollEntries.length > 0) {
+          // Calculate totals from real payroll data
+          const completedPayments = payrollEntries.filter(
+            (p: any) => p.payment_status === 'paid'
+          );
+          const pendingPayments = payrollEntries.filter(
+            (p: any) => p.payment_status === 'pending'
+          );
+
+          totalEarned = completedPayments.reduce(
+            (sum: number, p: any) => sum + (Number(p.net_salary) || 0),
+            0
+          );
+          pendingPayout = pendingPayments.reduce(
+            (sum: number, p: any) => sum + (Number(p.net_salary) || 0),
+            0
+          );
+
+          // Build payout history from payroll entries
+          payrollEntries.slice(0, 10).forEach((entry: any) => {
+            if (entry.payment_status === 'paid' && entry.payment_date) {
+              payoutHistory.push({
+                id: entry.id || `payout-${payoutHistory.length}`,
+                amount: Number(entry.net_salary) || 0,
+                date: entry.payment_date,
+                status: 'completed',
+                method: entry.payment_method || 'Bank Transfer',
+              });
+            }
+          });
+        }
+      }
+
+      // Fallback to contract-based calculation if no payroll data
+      if (totalEarned === 0 && pendingPayout === 0) {
+        calculateFromContracts();
+        return;
+      }
+
+      // Calculate YTD and monthly averages
+      const now = new Date();
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      const ytdPayments = payoutHistory.filter(
+        (p) => new Date(p.date) >= yearStart
+      );
+      const ytdEarnings = ytdPayments.reduce(
+        (sum, p) => sum + p.amount,
+        0
+      );
+      const monthsElapsed = Math.max(1, now.getMonth() + 1);
+      const averageMonthly = ytdEarnings / monthsElapsed;
+
+      // Next payout is typically 15th of next month
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15);
+
+      setFinancialData({
+        totalEarned: Math.round(totalEarned * 100) / 100,
+        pendingPayout: Math.round(pendingPayout * 100) / 100,
+        nextPayoutDate: format(nextMonth, 'yyyy-MM-dd'),
+        lastPayoutAmount: payoutHistory[0]?.amount || 0,
+        lastPayoutDate: payoutHistory[0]?.date || '',
+        ytdEarnings: Math.round(ytdEarnings * 100) / 100,
+        averageMonthly: Math.round(averageMonthly * 100) / 100,
+        payoutHistory: payoutHistory.slice(0, 10),
+      });
+    } catch (error) {
+      console.error('Error fetching financial data:', error);
+      calculateFromContracts();
+    }
+  };
+
+  const calculateFromContracts = () => {
+    // Fallback calculation from contracts
+    const completedContracts = contracts.filter((c: any) => c.status === 'completed');
+    const activeContracts = contracts.filter((c: any) => c.status === 'active');
+
+    // Calculate from contract amounts
+    const totalEarned = completedContracts.reduce(
+      (sum: number, c: any) => sum + (Number(c.amount) || 0),
+      0
+    );
+    const pendingPayout = activeContracts.reduce(
+      (sum: number, c: any) => sum + (Number(c.amount) || 0) * 0.5, // Estimate 50% pending
+      0
+    );
+
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const ytdContracts = completedContracts.filter(
+      (c: any) => c.end_date && new Date(c.end_date) >= yearStart
+    );
+    const ytdEarnings = ytdContracts.reduce(
+      (sum: number, c: any) => sum + (Number(c.amount) || 0),
+      0
+    );
+    const monthsElapsed = Math.max(1, now.getMonth() + 1);
+    const averageMonthly = ytdEarnings / monthsElapsed;
 
     // Next payout is typically 15th of next month
-    const now = new Date();
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15);
 
-    // Generate mock payout history
-    const history: PayoutRecord[] = [
-      {
-        id: '1',
-        amount: 3250.0,
-        date: format(addDays(now, -30), 'yyyy-MM-dd'),
-        status: 'completed',
-        method: 'Bank Transfer',
-      },
-      {
-        id: '2',
-        amount: 2890.5,
-        date: format(addDays(now, -60), 'yyyy-MM-dd'),
-        status: 'completed',
-        method: 'Bank Transfer',
-      },
-      {
-        id: '3',
-        amount: 4125.75,
-        date: format(addDays(now, -90), 'yyyy-MM-dd'),
-        status: 'completed',
-        method: 'Bank Transfer',
-      },
-    ];
+    // Generate payout history from completed contracts
+    const history: PayoutRecord[] = completedContracts
+      .slice(0, 10)
+      .map((contract: any, index: number) => ({
+        id: contract.id || `contract-${index}`,
+        amount: Number(contract.amount) || 0,
+        date: contract.end_date || contract.updated_at || contract.created_at,
+        status: 'completed' as const,
+        method: 'Contract Payment',
+      }));
 
     setFinancialData({
       totalEarned: Math.round(totalEarned * 100) / 100,
