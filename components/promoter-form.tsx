@@ -552,10 +552,20 @@ export default function PromoterForm(props: PromoterFormProps) {
         }
         // If ID card number hasn't changed, don't include it in the update to avoid constraint issues
 
-        result = await supabase
-          .from('promoters')
-          .update(promoterData)
-          .eq('id', promoterToEdit.id);
+        // Use API route instead of direct Supabase call for better error handling
+        const response = await fetch(`/api/promoters/${promoterToEdit.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoterData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || errorData.message || `Failed to update promoter: ${response.statusText}`);
+        }
+
+        const responseData = await response.json();
+        result = { data: responseData.promoter || responseData, error: null };
       } else {
         // For new promoters, always include the ID card number
         promoterData.id_card_number = formData.id_number;
