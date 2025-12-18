@@ -79,6 +79,8 @@ import { PromoterFinancialSummary } from '@/components/promoters/promoter-financ
 import { PromoterDocumentHealth } from '@/components/promoters/promoter-document-health';
 import { EmployerEmployeeManagementPanel } from '@/components/promoters/employer-employee-management-panel';
 import { EmployeeTeamComparison } from '@/components/promoters/employee-team-comparison';
+import { EmployeeComplianceAlerts } from '@/components/promoters/employee-compliance-alerts';
+import { EmployeeWorkloadStatus } from '@/components/promoters/employee-workload-status';
 import { logger } from '@/lib/utils/logger';
 
 // Safe date parsing functions to prevent "Invalid time value" errors
@@ -2133,6 +2135,11 @@ export default function PromoterDetailPage() {
           <PromoterFinancialSummary
             promoterId={promoterId}
             contracts={promoterDetails?.contracts || []}
+            isAdmin={role === 'admin' || role === 'employer' || role === 'manager'}
+            onProcessPayment={(amount) => {
+              // TODO: Implement payment processing
+              alert(`Processing payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)}`);
+            }}
           />
 
           {/* Team Comparison - For Employers */}

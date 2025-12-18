@@ -938,9 +938,12 @@ export function PromoterRanking({ promoterId, isAdmin }: PromoterRankingProps) {
                             setFeedbackForm({ ...feedbackForm, rating: star })
                           }
                           className='focus:outline-none'
+                          aria-label={`Rate ${star} out of 5 stars`}
+                          title={`Rate ${star} out of 5 stars`}
                         >
                           <Star
                             className={`h-6 w-6 ${star <= feedbackForm.rating ? 'fill-current text-yellow-400' : 'text-gray-300'}`}
+                            aria-hidden='true'
                           />
                         </button>
                       ))}

@@ -28,6 +28,7 @@ import {
   Briefcase,
   Award,
   BarChart3,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -99,13 +100,26 @@ export function EmployerEmployeeManagementPanel({
     }
   };
 
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = async (status?: string) => {
+    const statusToUpdate = status || newStatus;
     try {
-      // TODO: Implement API call to update status
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch(`/api/promoters/${promoterId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: statusToUpdate,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
       toast({
         title: 'Status updated',
-        description: `Employee status updated to ${newStatus}.`,
+        description: `Employee status updated to ${statusToUpdate}.`,
       });
       setShowStatusDialog(false);
       window.location.reload();
@@ -118,43 +132,103 @@ export function EmployerEmployeeManagementPanel({
     }
   };
 
-  const handleExportReport = () => {
-    // TODO: Implement export functionality
-    toast({
-      title: 'Export started',
-      description: 'Employee report is being generated...',
-    });
+  const handleExportReport = async () => {
+    try {
+      toast({
+        title: 'Generating report...',
+        description: 'Employee report is being prepared for download.',
+      });
+
+      // Create report data
+      const reportData = {
+        employeeName: promoterName,
+        employeeId: promoterId,
+        status: currentStatus,
+        generatedAt: new Date().toISOString(),
+        contracts: {
+          active: activeContracts,
+          completed: completedContracts,
+          total: contracts.length,
+        },
+        summary: `Employee Report for ${promoterName}`,
+      };
+
+      // Convert to JSON and create download
+      const jsonString = JSON.stringify(reportData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `employee-report-${promoterId}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Report exported',
+        description: 'Employee report has been downloaded successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Export failed',
+        description: 'Failed to generate report. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
     <div className="space-y-4">
-      {/* Quick Actions */}
+      {/* Quick Status Updates */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
-            Quick Actions
+            <UserCheck className="h-5 w-5" />
+            Quick Status Update
           </CardTitle>
-          <CardDescription>Manage this employee quickly</CardDescription>
+          <CardDescription>Change employee status quickly</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Button
-            variant="default"
-            size="sm"
-            className="w-full justify-start"
-            onClick={() => router.push(`/${locale}/generate-contract?promoter=${promoterId}`)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Assign New Contract
-          </Button>
-          
-          <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full justify-start">
-                <UserCheck className="mr-2 h-4 w-4" />
-                Update Status
-              </Button>
-            </DialogTrigger>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant={currentStatus === 'active' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleStatusUpdate('active')}
+              disabled={currentStatus === 'active'}
+            >
+              <CheckCircle className="mr-1 h-3 w-3" />
+              Active
+            </Button>
+            <Button
+              variant={currentStatus === 'on_leave' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleStatusUpdate('on_leave')}
+              disabled={currentStatus === 'on_leave'}
+            >
+              <CalendarIcon className="mr-1 h-3 w-3" />
+              On Leave
+            </Button>
+            <Button
+              variant={currentStatus === 'inactive' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleStatusUpdate('inactive')}
+              disabled={currentStatus === 'inactive'}
+            >
+              <Clock className="mr-1 h-3 w-3" />
+              Inactive
+            </Button>
+            <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  variant={currentStatus === 'terminated' ? 'destructive' : 'outline'}
+                  size="sm"
+                  className={currentStatus === 'terminated' ? '' : 'border-red-300 text-red-600 hover:bg-red-50'}
+                >
+                  <UserX className="mr-1 h-3 w-3" />
+                  Terminate
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Update Employee Status</DialogTitle>
@@ -176,7 +250,9 @@ export function EmployerEmployeeManagementPanel({
                   </SelectContent>
                 </Select>
                 <div className="flex gap-2">
-                  <Button onClick={handleStatusUpdate} className="flex-1">
+                  <Button onClick={() => {
+                    handleStatusUpdate();
+                  }} className="flex-1">
                     Update Status
                   </Button>
                   <Button
@@ -190,6 +266,29 @@ export function EmployerEmployeeManagementPanel({
               </div>
             </DialogContent>
           </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
+            Quick Actions
+          </CardTitle>
+          <CardDescription>Manage this employee quickly</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Button
+            variant="default"
+            size="sm"
+            className="w-full justify-start"
+            onClick={() => router.push(`/${locale}/generate-contract?promoter=${promoterId}`)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Assign New Contract
+          </Button>
 
           <Button
             variant="outline"

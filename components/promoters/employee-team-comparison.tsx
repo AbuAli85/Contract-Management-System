@@ -61,12 +61,25 @@ export function EmployeeTeamComparison({
       }
 
       // Fetch all employees for this employer
-      const { data: teamMembers } = await supabase
+      const { data: teamMembers, error: teamError } = await supabase
         .from('employer_employees')
         .select('employee_id, promoters(id, contracts(status))')
         .eq('employer_id', employerId)
-        .eq('employment_status', 'active')
-        .catch(() => ({ data: [] }));
+        .eq('employment_status', 'active');
+
+      if (teamError) {
+        console.error('Error fetching team members:', teamError);
+        // Fallback to mock data on error
+        setTeamMetrics({
+          averageScore: performanceScore,
+          rank: 1,
+          totalTeamMembers: 1,
+          percentile: 100,
+          topPerformer: true,
+        });
+        setIsLoading(false);
+        return;
+      }
 
       if (teamMembers && teamMembers.length > 0) {
         // Calculate metrics for each team member

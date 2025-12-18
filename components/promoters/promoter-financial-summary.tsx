@@ -13,12 +13,16 @@ import {
   Wallet,
   CreditCard,
   AlertCircle,
+  Send,
+  CheckCircle,
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 
 interface PromoterFinancialSummaryProps {
   promoterId: string;
   contracts?: any[];
+  isAdmin?: boolean;
+  onProcessPayment?: (amount: number) => void;
 }
 
 interface FinancialData {
@@ -43,6 +47,8 @@ interface PayoutRecord {
 export function PromoterFinancialSummary({
   promoterId,
   contracts = [],
+  isAdmin = false,
+  onProcessPayment,
 }: PromoterFinancialSummaryProps) {
   const [financialData, setFinancialData] = useState<FinancialData>({
     totalEarned: 0,
