@@ -45,6 +45,15 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
       { resource: 'contract', action: 'create', scope: 'own', name: 'contract:create:own' },
       { resource: 'contract', action: 'update', scope: 'own', name: 'contract:update:own' },
       { resource: 'contract', action: 'download', scope: 'own', name: 'contract:download:own' },
+      // Profile permissions (for /api/users/profile)
+      { resource: 'profile', action: 'read', scope: 'own', name: 'profile:read:own' },
+      { resource: 'profile', action: 'view', scope: 'own', name: 'profile:view:own' },
+      { resource: 'profile', action: 'edit', scope: 'own', name: 'profile:edit:own' },
+      { resource: 'profile', action: 'update', scope: 'own', name: 'profile:update:own' },
+      // User permissions (for /api/users/activity)
+      { resource: 'user', action: 'read', scope: 'own', name: 'user:read:own' },
+      { resource: 'user', action: 'view', scope: 'own', name: 'user:view:own' },
+      { resource: 'user', action: 'edit', scope: 'own', name: 'user:edit:own' },
     ];
 
     const permissionIds: string[] = [];

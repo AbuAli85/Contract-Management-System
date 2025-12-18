@@ -230,7 +230,13 @@ export async function guardPermission(
         requiredPermission.includes('contract:') && requiredPermission.includes(':own') &&
         (request.nextUrl.pathname.includes('/api/contracts/') || request.nextUrl.pathname.includes('/api/contracts'));
 
-      if (isPromoterAccess || isContractAccess) {
+      const isProfileAccess = userId &&
+        (requiredPermission.includes('profile:') || requiredPermission.includes('user:')) && 
+        requiredPermission.includes(':own') &&
+        (request.nextUrl.pathname.includes('/api/users/profile') || 
+         request.nextUrl.pathname.includes('/api/users/activity'));
+
+      if (isPromoterAccess || isContractAccess || isProfileAccess) {
         try {
           let shouldAutoFix = false;
           let resourceType = '';
@@ -256,6 +262,11 @@ export async function guardPermission(
 
             shouldAutoFix = true; // Always allow for contract:read:own permission
             resourceType = 'contract';
+          } else if (isProfileAccess) {
+            // For profile/user access, always allow auto-fix (users should access their own profile/activity)
+            console.log(`🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`);
+            shouldAutoFix = true;
+            resourceType = 'profile';
           }
 
           if (shouldAutoFix) {
@@ -538,8 +549,13 @@ async function guardAnyPermission(
       const isContractAccess = userId &&
         requiredPermissions.some(p => p.includes('contract:') && p.includes(':own')) &&
         (request.nextUrl.pathname.includes('/api/contracts/') || request.nextUrl.pathname.includes('/api/contracts'));
+
+      const isProfileAccess = userId &&
+        (requiredPermissions.some(p => (p.includes('profile:') || p.includes('user:')) && p.includes(':own'))) &&
+        (request.nextUrl.pathname.includes('/api/users/profile') || 
+         request.nextUrl.pathname.includes('/api/users/activity'));
       
-      if (isPromoterAccess || isContractAccess) {
+      if (isPromoterAccess || isContractAccess || isProfileAccess) {
         try {
           let shouldAutoFix = false;
           let resourceType = '';
@@ -573,6 +589,11 @@ async function guardAnyPermission(
             // This ensures users have the permission, even if the specific contract check happens later
             shouldAutoFix = true; // Always allow for contract:read:own permission
             resourceType = 'contract';
+          } else if (isProfileAccess) {
+            // For profile/user access, always allow auto-fix (users should access their own profile/activity)
+            console.log(`🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`);
+            shouldAutoFix = true;
+            resourceType = 'profile';
           }
 
           if (shouldAutoFix) {

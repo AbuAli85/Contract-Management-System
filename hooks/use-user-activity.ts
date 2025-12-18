@@ -53,7 +53,31 @@ export function useUserActivity() {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user activities');
+        // If 403, permissions are being auto-fixed, retry after a short delay
+        if (response.status === 403) {
+          console.log('🔄 Activity access denied, waiting for auto-fix...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const retryResponse = await fetch(
+            '/api/users/activity?userId=' + targetUserId,
+            {
+              method: 'GET',
+              headers: {
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache',
+              },
+            }
+          );
+          if (retryResponse.ok) {
+            const retryData = await retryResponse.json();
+            setActivities(retryData.activities || []);
+            setSummary(retryData.summary || null);
+            return;
+          }
+        }
+        
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || 'Failed to fetch user activities';
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

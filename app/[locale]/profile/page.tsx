@@ -61,6 +61,7 @@ import {
   Loader2,
   Save,
   Upload,
+  RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -152,7 +153,7 @@ export default function ProfilePage() {
     try {
       setLoading(true);
 
-      // Fetch user profile
+      // Fetch user profile with retry logic for 403 errors
       const profileResponse = await fetch('/api/users/profile');
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
@@ -174,13 +175,53 @@ export default function ProfilePage() {
               profileData.preferences?.sms_notifications === true,
           },
         });
+      } else if (profileResponse.status === 403) {
+        // Wait for auto-fix and retry
+        console.log('🔄 Profile access denied, waiting for auto-fix...');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const retryResponse = await fetch('/api/users/profile');
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json();
+          setProfile(retryData);
+          profileForm.reset({
+            full_name: retryData.full_name || '',
+            email: retryData.email || '',
+            phone: retryData.phone || '',
+            department: retryData.department || '',
+            position: retryData.position || '',
+            avatar_url: retryData.avatar_url || '',
+            preferences: {
+              language: retryData.preferences?.language || 'en',
+              timezone: retryData.preferences?.timezone || 'UTC',
+              email_notifications:
+                retryData.preferences?.email_notifications !== false,
+              sms_notifications:
+                retryData.preferences?.sms_notifications === true,
+            },
+          });
+        } else {
+          throw new Error('Failed to load profile data after retry');
+        }
+      } else {
+        const errorData = await profileResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to load profile data');
       }
 
-      // Fetch activity log
+      // Fetch activity log with retry logic for 403 errors
       const activityResponse = await fetch('/api/users/activity?limit=10');
       if (activityResponse.ok) {
         const activityData = await activityResponse.json();
         setActivity(activityData.activities || []);
+      } else if (activityResponse.status === 403) {
+        // Wait for auto-fix and retry
+        console.log('🔄 Activity access denied, waiting for auto-fix...');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const retryResponse = await fetch('/api/users/activity?limit=10');
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json();
+          setActivity(retryData.activities || []);
+        }
+        // Don't throw error for activity - it's not critical
       }
 
       // Fetch stats
@@ -194,9 +235,12 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load profile data';
       toast({
-        title: 'Error',
-        description: 'Failed to load profile data',
+        title: 'Unable to Load Profile',
+        description: errorMessage.includes('403') || errorMessage.includes('Forbidden')
+          ? 'Please wait a moment and refresh the page. Your permissions are being set up automatically.'
+          : errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -358,10 +402,24 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className='container mx-auto py-6'>
-        <Card>
-          <CardContent className='flex h-32 flex-col items-center justify-center'>
-            <AlertCircle className='h-8 w-8 text-red-500 mb-2' />
-            <p>Failed to load profile data</p>
+        <Card className='border-red-200'>
+          <CardContent className='flex flex-col items-center justify-center min-h-[400px] text-center px-4'>
+            <div className='rounded-full bg-red-100 p-4 mb-4'>
+              <AlertCircle className='h-12 w-12 text-red-600' />
+            </div>
+            <h3 className='text-lg font-semibold text-gray-900 mb-2'>Unable to Load Profile</h3>
+            <p className='text-gray-600 mb-6 max-w-md'>
+              We couldn't load your profile information. This might be a temporary issue. Please try again.
+            </p>
+            <div className='flex gap-3'>
+              <Button onClick={fetchProfileData} variant='default'>
+                <RefreshCw className='h-4 w-4 mr-2' />
+                Try Again
+              </Button>
+              <Button onClick={() => window.location.reload()} variant='outline'>
+                Refresh Page
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
