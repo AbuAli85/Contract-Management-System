@@ -26,6 +26,57 @@ export interface EmployeeAccountResult {
 }
 
 /**
+ * Ensure user has the 'promoter' role assigned
+ * This grants them promoter:read:own and other promoter permissions
+ */
+async function ensurePromoterRole(userId: string): Promise<void> {
+  const supabaseAdmin = getSupabaseAdmin();
+  
+  try {
+    // Get the promoter role ID
+    const { data: promoterRoleData } = await supabaseAdmin
+      .from('roles' as any)
+      .select('id')
+      .eq('name', 'promoter')
+      .single();
+
+    const promoterRole = promoterRoleData as { id: string } | null;
+
+    if (promoterRole?.id) {
+      // Check if role is already assigned
+      const { data: existingAssignmentData } = await supabaseAdmin
+        .from('user_role_assignments' as any)
+        .select('id')
+        .eq('user_id', userId)
+        .eq('role_id', promoterRole.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const existingAssignment = existingAssignmentData as { id: string } | null;
+
+      if (!existingAssignment) {
+        // Assign the role to the user
+        await supabaseAdmin.from('user_role_assignments' as any).upsert({
+          user_id: userId,
+          role_id: promoterRole.id,
+          is_active: true,
+          valid_from: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as any, { onConflict: 'user_id,role_id' });
+
+        console.log(`✅ Assigned 'promoter' role to user ${userId}`);
+      }
+    } else {
+      console.warn(`⚠️ 'promoter' role not found in roles table. User may need manual role assignment.`);
+    }
+  } catch (roleError) {
+    // Non-critical: log but don't fail
+    console.error('Error ensuring promoter role (non-critical):', roleError);
+  }
+}
+
+/**
  * Generate a secure temporary password
  */
 function generateTemporaryPassword(): string {
@@ -86,6 +137,9 @@ export async function findOrCreateEmployeeAccount(
       await supabaseAdmin.auth.admin.getUserById(employeeId);
     
     if (!getUserError && existingAuthUser?.user) {
+      // Ensure role is assigned even for existing users
+      await ensurePromoterRole(existingAuthUser.user.id);
+      
       return {
         success: true,
         authUserId: existingAuthUser.user.id,
@@ -111,6 +165,9 @@ export async function findOrCreateEmployeeAccount(
       await supabaseAdmin.auth.admin.getUserById(profileId);
     
     if (authUserByEmail?.user) {
+      // Ensure role is assigned even for existing users
+      await ensurePromoterRole(authUserByEmail.user.id);
+      
       return {
         success: true,
         authUserId: authUserByEmail.user.id,
@@ -228,6 +285,9 @@ export async function findOrCreateEmployeeAccount(
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     } as any, { onConflict: 'id' });
+
+    // Step 6: Assign 'promoter' role to grant permissions (promoter:read:own, etc.)
+    await ensurePromoterRole(authUserId);
 
     return {
       success: true,
