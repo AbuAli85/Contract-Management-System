@@ -119,6 +119,7 @@ const StatCard = ({
 export function TeamManagementDashboard() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<TeamStats>({
     total: 0,
     active: 0,
@@ -141,6 +142,7 @@ export function TeamManagementDashboard() {
   const fetchTeam = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch('/api/employer/team');
       const data = await response.json();
 
@@ -152,9 +154,11 @@ export function TeamManagementDashboard() {
       calculateStats(data.team || []);
     } catch (error) {
       console.error('Error fetching team:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load team members';
+      setError(errorMessage);
       toast({
         title: 'Error',
-        description: 'Failed to load team members',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -220,6 +224,77 @@ export function TeamManagementDashboard() {
     });
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-purple-600/5 rounded-2xl -z-10" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
+                <Users className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                  Team Management
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  Manage your team members, permissions, attendance, tasks, and targets
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Card className="border-0 shadow-xl">
+          <CardContent className="py-16 text-center">
+            <Activity className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading team members...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && teamMembers.length === 0) {
+    return (
+      <div className="space-y-8">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-purple-600/5 rounded-2xl -z-10" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
+                <Users className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                  Team Management
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  Manage your team members, permissions, attendance, tasks, and targets
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Card className="border-0 shadow-xl">
+          <CardContent className="py-16 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Failed to Load Team
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+            <Button onClick={fetchTeam} variant="outline">
+              <Activity className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Premium Header */}
@@ -230,18 +305,18 @@ export function TeamManagementDashboard() {
             <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
               <Users className="h-8 w-8 text-white" />
             </div>
-        <div>
+            <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-            Team Management
-          </h1>
+                Team Management
+              </h1>
               <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Manage your team members, permissions, attendance, tasks, and targets
-          </p>
-        </div>
+                Manage your team members, permissions, attendance, tasks, and targets
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <InviteEmployeeDialog onSuccess={handleAddMember} />
-        <AddTeamMemberDialog onSuccess={handleAddMember} />
+            <AddTeamMemberDialog onSuccess={handleAddMember} />
           </div>
         </div>
       </div>
@@ -285,93 +360,105 @@ export function TeamManagementDashboard() {
       {/* Main Content */}
       <Card className="border-0 shadow-xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b px-6 pt-4">
-            <TabsList className="bg-transparent h-auto p-0 gap-6">
+          <div className="border-b px-4 sm:px-6 pt-4 overflow-x-auto">
+            <TabsList className="bg-transparent h-auto p-0 gap-2 sm:gap-6 min-w-max">
               <TabsTrigger 
                 value="overview" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
               >
                 <TrendingUp className="h-4 w-4 mr-2" />
-                Overview
+                <span className="hidden sm:inline">Overview</span>
+                <span className="sm:hidden">Overview</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="team" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
               >
                 <Users className="h-4 w-4 mr-2" />
-                Team Members
+                <span className="hidden sm:inline">Team Members</span>
+                <span className="sm:hidden">Team</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="leave-requests" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
               >
                 <Calendar className="h-4 w-4 mr-2" />
-                Leave Requests
+                <span className="hidden sm:inline">Leave Requests</span>
+                <span className="sm:hidden">Leave</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="leave-calendar" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
               >
                 <Calendar className="h-4 w-4 mr-2" />
-                Leave Calendar
+                <span className="hidden sm:inline">Leave Calendar</span>
+                <span className="sm:hidden">Calendar</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="expenses" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
               >
                 <CreditCard className="h-4 w-4 mr-2" />
-                Expenses
+                <span className="hidden sm:inline">Expenses</span>
+                <span className="sm:hidden">Expenses</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="announcements" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
-                Announcements
+                <span className="hidden sm:inline">Announcements</span>
+                <span className="sm:hidden">News</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="performance" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                Reviews
+                <span className="hidden sm:inline">Reviews</span>
+                <span className="sm:hidden">Reviews</span>
               </TabsTrigger>
           {selectedMember && (
             <>
                   <TabsTrigger 
                     value="details"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
                   >
                     <Briefcase className="h-4 w-4 mr-2" />
-                    Details
+                    <span className="hidden sm:inline">Details</span>
+                    <span className="sm:hidden">Details</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="attendance"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
                   >
                     <Calendar className="h-4 w-4 mr-2" />
-                    Attendance
+                    <span className="hidden sm:inline">Attendance</span>
+                    <span className="sm:hidden">Time</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="tasks"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
                   >
                     <ClipboardList className="h-4 w-4 mr-2" />
-                    Tasks
+                    <span className="hidden sm:inline">Tasks</span>
+                    <span className="sm:hidden">Tasks</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="targets"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
                   >
                     <Target className="h-4 w-4 mr-2" />
-                    Targets
+                    <span className="hidden sm:inline">Targets</span>
+                    <span className="sm:hidden">Goals</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="permissions"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1"
+                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none pb-3 px-1 whitespace-nowrap"
                   >
                     <Shield className="h-4 w-4 mr-2" />
-                    Permissions
+                    <span className="hidden sm:inline">Permissions</span>
+                    <span className="sm:hidden">Access</span>
                   </TabsTrigger>
             </>
           )}
