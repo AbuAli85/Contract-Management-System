@@ -19,7 +19,7 @@ const nextConfig = {
       // Allow scripts from self and necessary CDNs
       // NOTE: 'unsafe-eval' and 'unsafe-inline' are required for Next.js functionality
       // TODO: Replace with nonces for A+ security grade (see CSP_NONCE_IMPLEMENTATION_GUIDE.md)
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com https://maps.googleapis.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com https://maps.googleapis.com https://ajax.googleapis.com",
       // Allow styles from self and Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Allow images from self, data URIs, Supabase storage, analytics, and Make.com

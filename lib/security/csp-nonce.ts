@@ -74,12 +74,13 @@ export function buildCSPWithNonce(
   const evalDirective = isDevelopment ? "'unsafe-eval'" : '';
 
   // Build external sources
-  const externalScripts: string[] = ['https://vercel.live', 'https://maps.googleapis.com'];
+  const externalScripts: string[] = ['https://vercel.live', 'https://maps.googleapis.com', 'https://ajax.googleapis.com'];
   const externalConnect: string[] = [
     'https://*.supabase.co',
     'wss://*.supabase.co',
     'https://vercel.live',
     'https://maps.googleapis.com',
+    'https://ajax.googleapis.com',
   ];
   const externalImages: string[] = ['https://*.supabase.co'];
 
