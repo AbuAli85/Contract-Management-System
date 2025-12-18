@@ -72,6 +72,7 @@ import {
   ChevronDown,
   Users,
   Briefcase,
+  Clock,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
@@ -291,6 +292,12 @@ function SidebarContent({
               href: '/employer/team',
               icon: Users,
               description: 'Manage team members',
+            },
+            {
+              title: 'Attendance Approval',
+              href: '/employer/attendance-approval',
+              icon: Clock,
+              description: 'Review and approve employee attendance',
             },
           ],
         },
