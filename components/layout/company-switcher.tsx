@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-service';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -63,11 +65,18 @@ export function CompanySwitcher() {
   const [newCompany, setNewCompany] = useState({ name: '', description: '' });
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { profile: userProfile } = useUserProfile();
 
   // Determine if user can create companies (not promoters/employees)
-  const canCreateCompany = companies.length > 0 
-    ? !['promoter', 'user'].includes(companies[0]?.user_role || '')
-    : true; // If no companies, allow creation (will be checked by API)
+  const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
+  const userRole = userProfile?.role || userMetadata?.role || '';
+  const isPromoter = userRole === 'promoter' || userRole === 'user';
+  const canCreateCompany = !isPromoter && (
+    companies.length > 0 
+      ? !['promoter', 'user'].includes(companies[0]?.user_role || '')
+      : true // If no companies, allow creation (will be checked by API)
+  );
 
   useEffect(() => {
     fetchCompanies();

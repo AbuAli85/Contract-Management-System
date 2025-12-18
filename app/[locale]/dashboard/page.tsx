@@ -113,6 +113,13 @@ function DashboardContent() {
   const { toast } = useToast();
   const params = useParams();
   
+  // Get user role for filtering dashboard content
+  const userRole = user?.role || authUser?.user_metadata?.role || 'user';
+  const isPromoter = userRole === 'promoter' || userRole === 'user';
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+  const isManager = userRole === 'manager';
+  const isEmployer = userRole === 'employer';
+  
   // Safely get locale from params with fallback
   const locale = useMemo(() => {
     try {
@@ -329,48 +336,97 @@ function DashboardContent() {
     promoterStats?.previousMonth?.utilizationRate || 0
   );
 
-  const quickStats: QuickStat[] = [
-    {
-      label: validLocale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
-      value: stats?.total || 0,
-      change: totalContractsChange,
-      trend: determineGrowthTrend(totalContractsChange),
-      icon: <FileText className='h-5 w-5' aria-hidden='true' />,
-      color: 'blue',
-    },
-    {
-      label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
-      value: stats?.active || 0,
-      change: activeContractsChange,
-      trend: determineGrowthTrend(activeContractsChange),
-      icon: <Activity className='h-5 w-5' aria-hidden='true' />,
-      color: 'green',
-    },
-    {
-      label: validLocale === 'ar' ? 'القوى العاملة' : 'Workforce',
-      value: promoterStats?.totalWorkforce || 0,
-      change: workforceChange,
-      trend: determineGrowthTrend(workforceChange),
-      icon: <Users className='h-5 w-5' aria-hidden='true' />,
-      color: 'purple',
-    },
-    {
-      label: validLocale === 'ar' ? 'معدل الاستخدام' : 'Utilization',
-      value:
-        stats?.active === 0
-          ? validLocale === 'ar'
-            ? 'غير متاح'
-            : 'N/A'
-          : `${promoterStats?.utilizationRate || 0}%`,
-      change: utilizationChange,
-      trend:
-        stats?.active === 0
-          ? 'neutral'
-          : determineGrowthTrend(utilizationChange),
-      icon: <TrendingUp className='h-5 w-5' aria-hidden='true' />,
-      color: 'orange',
-    },
-  ];
+  // Get user role for filtering dashboard content
+  const userRole = user?.role || authUser?.user_metadata?.role || 'user';
+  const isPromoter = userRole === 'promoter' || userRole === 'user';
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+  const isManager = userRole === 'manager';
+  const isEmployer = userRole === 'employer';
+
+  // Build quick stats based on user role
+  const quickStats: QuickStat[] = [];
+  
+  // Promoters see their own contract stats
+  if (isPromoter) {
+    quickStats.push(
+      {
+        label: validLocale === 'ar' ? 'عقودي' : 'My Contracts',
+        value: stats?.total || 0,
+        change: totalContractsChange,
+        trend: determineGrowthTrend(totalContractsChange),
+        icon: <FileText className='h-5 w-5' aria-hidden='true' />,
+        color: 'blue',
+      },
+      {
+        label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
+        value: stats?.active || 0,
+        change: activeContractsChange,
+        trend: determineGrowthTrend(activeContractsChange),
+        icon: <Activity className='h-5 w-5' aria-hidden='true' />,
+        color: 'green',
+      },
+      {
+        label: validLocale === 'ar' ? 'الحالة' : 'Status',
+        value: validLocale === 'ar' ? 'نشط' : 'Active',
+        change: 0,
+        trend: 'neutral',
+        icon: <CheckCircle className='h-5 w-5' aria-hidden='true' />,
+        color: 'green',
+      },
+      {
+        label: validLocale === 'ar' ? 'المهام المعلقة' : 'Pending Tasks',
+        value: 0, // TODO: Fetch from tasks API
+        change: 0,
+        trend: 'neutral',
+        icon: <Clock className='h-5 w-5' aria-hidden='true' />,
+        color: 'orange',
+      }
+    );
+  } else {
+    // Admin/Manager/Employer see full stats
+    quickStats.push(
+      {
+        label: validLocale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
+        value: stats?.total || 0,
+        change: totalContractsChange,
+        trend: determineGrowthTrend(totalContractsChange),
+        icon: <FileText className='h-5 w-5' aria-hidden='true' />,
+        color: 'blue',
+      },
+      {
+        label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
+        value: stats?.active || 0,
+        change: activeContractsChange,
+        trend: determineGrowthTrend(activeContractsChange),
+        icon: <Activity className='h-5 w-5' aria-hidden='true' />,
+        color: 'green',
+      },
+      {
+        label: validLocale === 'ar' ? 'القوى العاملة' : 'Workforce',
+        value: promoterStats?.totalWorkforce || 0,
+        change: workforceChange,
+        trend: determineGrowthTrend(workforceChange),
+        icon: <Users className='h-5 w-5' aria-hidden='true' />,
+        color: 'purple',
+      },
+      {
+        label: validLocale === 'ar' ? 'معدل الاستخدام' : 'Utilization',
+        value:
+          stats?.active === 0
+            ? validLocale === 'ar'
+              ? 'غير متاح'
+              : 'N/A'
+            : `${promoterStats?.utilizationRate || 0}%`,
+        change: utilizationChange,
+        trend:
+          stats?.active === 0
+            ? 'neutral'
+            : determineGrowthTrend(utilizationChange),
+        icon: <TrendingUp className='h-5 w-5' aria-hidden='true' />,
+        color: 'orange',
+      }
+    );
+  }
 
   if (loading) {
     return (
@@ -453,7 +509,11 @@ function DashboardContent() {
               </div>
               <p className='text-gray-600 mt-1 flex items-center gap-2 flex-wrap'>
                 <span>
-                  {validLocale === 'ar'
+                  {isPromoter
+                    ? validLocale === 'ar'
+                      ? 'إليك ملخص عملك اليوم'
+                      : "Here's your work summary today"
+                    : validLocale === 'ar'
                     ? 'إليك ما يحدث في عملك اليوم'
                     : "Here's what's happening with your business today"}
                 </span>
@@ -756,10 +816,12 @@ function DashboardContent() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Main Dashboard Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
-          {/* Workforce Overview */}
+          {/* Workforce Overview - Only for Admin/Manager/Employer */}
+          {!isPromoter && (
           <Card
             className='col-span-1 lg:col-span-2 border-0 shadow-lg'
             role='region'
@@ -978,8 +1040,8 @@ function DashboardContent() {
           </Card>
         </div>
 
-        {/* Charts and Analytics */}
-        {!statsLoading && stats && promoterStats && (
+        {/* Charts and Analytics - Only for Admin/Manager/Employer */}
+        {!isPromoter && !statsLoading && stats && promoterStats && (
           <div className='mb-8'>
             <EnhancedDashboardCharts
               contractsData={{
@@ -1037,66 +1099,108 @@ function DashboardContent() {
                 <CardDescription>Common tasks and shortcuts</CardDescription>
               </CardHeader>
               <CardContent className='space-y-2'>
-                <Button
-                  className='w-full justify-start gap-2'
-                  variant='outline'
-                  asChild
-                >
-                  <Link href='/en/contracts/new'>
-                    <FileText className='h-4 w-4' />
-                    Create Contract
-                  </Link>
-                </Button>
-                <Button
-                  className='w-full justify-start gap-2'
-                  variant='outline'
-                  asChild
-                >
-                  <Link href='/en/manage-promoters/new'>
-                    <Users className='h-4 w-4' />
-                    Add Promoter
-                  </Link>
-                </Button>
-                <Button
-                  className='w-full justify-start gap-2'
-                  variant='outline'
-                  asChild
-                >
-                  <Link href='/en/promoters'>
-                    <Eye className='h-4 w-4' />
-                    View Promoters
-                  </Link>
-                </Button>
-                <Button
-                  className='w-full justify-start gap-2'
-                  variant='outline'
-                  asChild
-                >
-                  <Link href='/en/analytics'>
-                    <BarChart3 className='h-4 w-4' />
-                    Analytics
-                  </Link>
-                </Button>
-                <Button
-                  className='w-full justify-start gap-2'
-                  variant='outline'
-                  asChild
-                >
-                  <Link href='/en/contracts'>
-                    <FileText className='h-4 w-4' />
-                    All Contracts
-                  </Link>
-                </Button>
-                <Button
-                  className='w-full justify-start gap-2'
-                  variant='outline'
-                  asChild
-                >
-                  <Link href='/en/manage-parties'>
-                    <Building2 className='h-4 w-4' />
-                    Manage Parties
-                  </Link>
-                </Button>
+                {!isPromoter && (
+                  <Button
+                    className='w-full justify-start gap-2'
+                    variant='outline'
+                    asChild
+                  >
+                    <Link href='/en/contracts/new'>
+                      <FileText className='h-4 w-4' />
+                      Create Contract
+                    </Link>
+                  </Button>
+                )}
+                {!isPromoter && (
+                  <>
+                    <Button
+                      className='w-full justify-start gap-2'
+                      variant='outline'
+                      asChild
+                    >
+                      <Link href='/en/manage-promoters/new'>
+                        <Users className='h-4 w-4' />
+                        Add Promoter
+                      </Link>
+                    </Button>
+                    <Button
+                      className='w-full justify-start gap-2'
+                      variant='outline'
+                      asChild
+                    >
+                      <Link href='/en/promoters'>
+                        <Eye className='h-4 w-4' />
+                        View Promoters
+                      </Link>
+                    </Button>
+                    <Button
+                      className='w-full justify-start gap-2'
+                      variant='outline'
+                      asChild
+                    >
+                      <Link href='/en/analytics'>
+                        <BarChart3 className='h-4 w-4' />
+                        Analytics
+                      </Link>
+                    </Button>
+                    <Button
+                      className='w-full justify-start gap-2'
+                      variant='outline'
+                      asChild
+                    >
+                      <Link href='/en/contracts'>
+                        <FileText className='h-4 w-4' />
+                        All Contracts
+                      </Link>
+                    </Button>
+                  </>
+                )}
+                {isPromoter && (
+                  <>
+                    <Button
+                      className='w-full justify-start gap-2'
+                      variant='outline'
+                      asChild
+                    >
+                      <Link href={`/${locale}/manage-promoters/${user?.id || authUser?.id}`}>
+                        <User className='h-4 w-4' />
+                        {validLocale === 'ar' ? 'ملفي الشخصي' : 'My Profile'}
+                      </Link>
+                    </Button>
+                    <Button
+                      className='w-full justify-start gap-2'
+                      variant='outline'
+                      asChild
+                    >
+                      <Link href={`/${locale}/contracts`}>
+                        <FileText className='h-4 w-4' />
+                        {validLocale === 'ar' ? 'عقودي' : 'My Contracts'}
+                      </Link>
+                    </Button>
+                    <Button
+                      className='w-full justify-start gap-2'
+                      variant='outline'
+                      asChild
+                    >
+                      <Link href={`/${locale}/employee/dashboard`}>
+                        <Briefcase className='h-4 w-4' />
+                        {validLocale === 'ar' ? 'مكان عملي' : 'My Workplace'}
+                      </Link>
+                    </Button>
+                  </>
+                )}
+                {!isPromoter && (
+                  <Button
+                    className='w-full justify-start gap-2'
+                    variant='outline'
+                    asChild
+                  >
+                    <Link href='/en/manage-parties'>
+                      <Building2 className='h-4 w-4' />
+                      Manage Parties
+                    </Link>
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
