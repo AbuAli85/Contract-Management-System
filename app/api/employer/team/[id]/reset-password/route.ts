@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { 
+  findOrCreateEmployeeAccount, 
+  resetEmployeePassword 
+} from '@/lib/services/employee-account-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +27,7 @@ export async function POST(
     }
 
     const supabaseAdmin = getSupabaseAdmin();
-    let employeeId: string;
+    let employeeId: string = '';
     let employeeEmail: string | null = null;
     let employeeName: string | null = null;
 
@@ -110,32 +114,35 @@ export async function POST(
         .eq('employer_id', user.id)
         .single();
 
-      if (fetchError || !employeeRecord) {
+      if (fetchError || !employeeRecord || !employeeRecord.employee_id) {
         return NextResponse.json(
           { error: 'Employee not found or access denied' },
           { status: 404 }
         );
       }
 
-      employeeId = employeeRecord.employee_id;
+      // TypeScript: employee_id is guaranteed to exist after the check above
+      const recordEmployeeId: string = employeeRecord.employee_id as string;
+      employeeId = recordEmployeeId;
 
       // Get employee email - check profiles first, then promoters
       const { data: profile } = await supabaseAdmin
         .from('profiles' as any)
         .select('email, full_name')
-        .eq('id', employeeId)
+        .eq('id', recordEmployeeId)
         .single();
 
       const { data: promoter } = await supabaseAdmin
         .from('promoters' as any)
         .select('email, name_en')
-        .eq('id', employeeId)
+        .eq('id', recordEmployeeId)
         .single();
 
       employeeEmail = (profile as any)?.email || (promoter as any)?.email;
       employeeName = (profile as any)?.full_name || (promoter as any)?.name_en;
     }
 
+    // Validate required fields
     if (!employeeEmail) {
       return NextResponse.json(
         { error: 'Employee email not found. Please add an email for this employee first.' },
@@ -143,162 +150,59 @@ export async function POST(
       );
     }
 
-    // Generate new temporary password
-    const newPassword = generateTemporaryPassword();
-
-    // ✅ FIX: Find or create auth user, handling email already registered case
-    let authUserId: string | null = null;
-    
-    // Step 1: Try to get auth user by employee ID
-    const { data: existingAuthUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(employeeId);
-    
-    if (!getUserError && existingAuthUser?.user) {
-      // Auth user exists with this ID
-      authUserId = existingAuthUser.user.id;
-      console.log(`✅ Found existing auth user by ID: ${authUserId}`);
-    } else {
-      // Step 2: Auth user doesn't exist by ID, check if email is registered
-      // Find profile by email (profile.id should match auth user id)
-      const { data: profileByEmailData } = await supabaseAdmin
-        .from('profiles' as any)
-        .select('id')
-        .eq('email', employeeEmail.toLowerCase())
-        .single();
-
-      const profileByEmail = profileByEmailData as { id: string } | null;
-
-      if (profileByEmail?.id) {
-        // Profile exists, try to get auth user with profile's ID
-        const { data: authUserByProfileId } = await supabaseAdmin.auth.admin.getUserById(profileByEmail.id);
-        
-        if (authUserByProfileId?.user) {
-          authUserId = authUserByProfileId.user.id;
-          console.log(`✅ Found existing auth user by email's profile ID: ${authUserId}`);
-        }
-      }
-
-      // Step 3: If still not found, try to create new auth user
-      if (!authUserId) {
-        console.log(`Creating auth account for employee ${employeeId} (${employeeEmail})`);
-        
-        const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          id: employeeId, // Try to use the same ID as profile/promoter
-          email: employeeEmail.toLowerCase(),
-          password: newPassword,
-          email_confirm: true,
-          user_metadata: {
-            full_name: employeeName || employeeEmail.split('@')[0],
-            role: 'promoter',
-            must_change_password: true,
-            created_by: user.id,
-            created_at: new Date().toISOString(),
-          },
-        });
-
-        if (createError) {
-          // Handle "email already registered" error
-          if (createError.message?.includes('already been registered') || 
-              createError.message?.includes('already registered') ||
-              createError.message?.includes('duplicate key')) {
-            
-            console.log(`Email ${employeeEmail} already registered, finding correct auth user...`);
-            
-            // Try to find profile by email and get its auth user
-            const { data: existingProfileData } = await supabaseAdmin
-              .from('profiles' as any)
-              .select('id')
-              .eq('email', employeeEmail.toLowerCase())
-              .single();
-            
-            const existingProfile = existingProfileData as { id: string } | null;
-            
-            if (existingProfile?.id) {
-              const { data: foundAuthUser } = await supabaseAdmin.auth.admin.getUserById(existingProfile.id);
-              if (foundAuthUser?.user) {
-                authUserId = foundAuthUser.user.id;
-                console.log(`✅ Found existing auth user: ${authUserId}`);
-              } else {
-                return NextResponse.json(
-                  { 
-                    error: 'Email already registered', 
-                    details: 'This email is already registered but the authentication account could not be found. Please contact support.' 
-                  },
-                  { status: 400 }
-                );
-              }
-            } else {
-              return NextResponse.json(
-                { 
-                  error: 'Email already registered', 
-                  details: 'This email is already registered with a different account. Please use the "Invite Employee" feature to properly link the account.' 
-                },
-                { status: 400 }
-              );
-            }
-          } else {
-            // Other creation error
-            console.error('Error creating auth user:', createError);
-            return NextResponse.json(
-              { 
-                error: 'Failed to create employee account', 
-                details: createError?.message || 'Could not create authentication account.' 
-              },
-              { status: 500 }
-            );
-          }
-        } else if (newAuthUser?.user) {
-          // Successfully created new auth user
-          authUserId = newAuthUser.user.id;
-          
-          // Ensure profile exists and is linked
-          await supabaseAdmin.from('profiles').upsert({
-            id: authUserId,
-            email: employeeEmail.toLowerCase(),
-            full_name: employeeName || employeeEmail.split('@')[0],
-            role: 'promoter',
-            must_change_password: true,
-            updated_at: new Date().toISOString(),
-          } as any, { onConflict: 'id' });
-
-          console.log(`✅ Auth account created for employee ${authUserId}`);
-        }
-      }
-    }
-
-    // Step 4: Reset password for the found/created auth user
-    if (!authUserId) {
+    // At this point, employeeId is guaranteed to be set (either from promoter or employer_employee)
+    // TypeScript doesn't narrow properly, so we validate and use type assertion
+    if (!employeeId || employeeId === '') {
       return NextResponse.json(
-        { error: 'Could not find or create authentication account' },
-        { status: 500 }
+        { error: 'Employee ID not found' },
+        { status: 400 }
       );
     }
 
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      authUserId,
-      {
-        password: newPassword,
-        user_metadata: {
-          must_change_password: true,
+    // Type assertion: employeeId is guaranteed to be a non-empty string at this point
+    // After the check above, TypeScript should know it's a string, but we assert to be safe
+    const finalEmployeeId = employeeId as string;
+
+    // ✅ EASY WAY: Use the employee account service to find or create account
+    // employeeEmail is guaranteed to be non-null after the check above
+    const emailParts = employeeEmail!.split('@');
+    const defaultName = emailParts[0] || 'Employee';
+    const finalEmployeeName: string = employeeName || defaultName;
+    const accountResult = await findOrCreateEmployeeAccount({
+      email: employeeEmail, // TypeScript knows it's non-null after the check
+      fullName: finalEmployeeName,
+      phone: null,
+      employeeId: finalEmployeeId,
+      invitedBy: user.id,
+      role: 'promoter',
+    });
+
+    if (!accountResult.success || !accountResult.authUserId) {
+      return NextResponse.json(
+        { 
+          error: accountResult.error || 'Failed to find or create employee account',
+          details: accountResult.errorDetails 
         },
-      }
-    );
+        { status: accountResult.error === 'Email already registered' ? 400 : 500 }
+      );
+    }
 
-    if (updateError) {
-      console.error('Error resetting password:', updateError);
+    const authUserId = accountResult.authUserId;
+
+    // Reset password for the account
+    const passwordResult = await resetEmployeePassword(authUserId);
+
+    if (!passwordResult.success || !passwordResult.password) {
       return NextResponse.json(
-        { error: 'Failed to reset password', details: updateError.message },
+        { 
+          error: passwordResult.error || 'Failed to reset password',
+          details: 'Could not reset the password for this account.'
+        },
         { status: 500 }
       );
     }
 
-    console.log(`✅ Password reset for auth user ${authUserId}`);
-
-    // Update profile to require password change
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabaseAdmin.from('profiles') as any).update({
-      must_change_password: true,
-      updated_at: new Date().toISOString(),
-    }).eq('id', authUserId);
+    const newPassword = passwordResult.password!; // Password is guaranteed to exist if success is true
 
     return NextResponse.json({
       success: true,
@@ -320,25 +224,4 @@ export async function POST(
   }
 }
 
-function generateTemporaryPassword(): string {
-  const length = 12;
-  const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const lowercase = 'abcdefghjkmnpqrstuvwxyz';
-  const numbers = '23456789';
-  const special = '!@#$%';
-  
-  const allChars = uppercase + lowercase + numbers + special;
-  
-  let password = '';
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += special[Math.floor(Math.random() * special.length)];
-  
-  for (let i = password.length; i < length; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)];
-  }
-  
-  return password.split('').sort(() => Math.random() - 0.5).join('');
-}
 
