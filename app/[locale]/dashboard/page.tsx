@@ -47,6 +47,7 @@ import {
   Shield,
   Zap,
   Eye,
+  Briefcase,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -336,14 +337,7 @@ function DashboardContent() {
     promoterStats?.previousMonth?.utilizationRate || 0
   );
 
-  // Get user role for filtering dashboard content
-  const userRole = user?.role || authUser?.user_metadata?.role || 'user';
-  const isPromoter = userRole === 'promoter' || userRole === 'user';
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
-  const isManager = userRole === 'manager';
-  const isEmployer = userRole === 'employer';
-
-  // Build quick stats based on user role
+  // Build quick stats based on user role (userRole, isPromoter, etc. are already defined above)
   const quickStats: QuickStat[] = [];
   
   // Promoters see their own contract stats

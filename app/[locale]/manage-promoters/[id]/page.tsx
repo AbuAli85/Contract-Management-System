@@ -437,82 +437,105 @@ export default function PromoterDetailPage() {
       setIsLoading(true);
       setError(null);
 
-      const supabase = createClient();
-      if (!supabase) {
-        setError('Failed to initialize database connection');
-        setIsLoading(false);
-        return;
-      }
-
-      const { data: promoterData, error: promoterError } = await supabase
-        .from('promoters')
-        .select('*')
-        .eq('id', promoterId)
-        .single();
-
-      if (promoterError || !promoterData) {
-        setError(promoterError?.message || 'Promoter not found.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Get tags from promoter_tags table if it exists
-      let tags: string[] = [];
       try {
-        const { data: tagsData, error: tagsError } = await supabase
-          .from('promoter_tags')
-          .select('tag')
-          .eq('promoter_id', promoterId);
+        // Use API route instead of direct Supabase call for proper RBAC and error handling
+        const response = await fetch(`/api/promoters/${promoterId}`, {
+          credentials: 'include',
+          cache: 'no-store',
+        });
 
-        if (!tagsError && tagsData) {
-          tags = tagsData.map((t: any) => t.tag).filter(Boolean);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          
+          // Handle 404 - promoter not found
+          if (response.status === 404) {
+            setError('Promoter not found. The record may not exist or you may not have permission to view it.');
+            setIsLoading(false);
+            return;
+          }
+          
+          // Handle 401/403 - unauthorized
+          if (response.status === 401 || response.status === 403) {
+            setError('You do not have permission to view this promoter.');
+            setIsLoading(false);
+            return;
+          }
+          
+          setError(errorData.error || 'Failed to fetch promoter details.');
+          setIsLoading(false);
+          return;
         }
-      } catch (error) {
-        // If promoter_tags table doesn't exist, use empty array
-        logger.log(
-          'promoter_tags table not available, using empty tags array'
-        );
-      }
 
-      // Fetch contracts without complex joins to avoid relationship issues
-      const { data: contractsData, error: contractsError } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('promoter_id', promoterId);
+        const data = await response.json();
+        const promoterData = data.promoter || data;
 
-      if (contractsError) {
-        logger.error('Error fetching contracts:', contractsError);
-        // Don't set error for contracts, just log it
-      }
-
-      // Fetch employer information if employer_id exists
-      let employerInfo = null;
-      if (promoterData.employer_id) {
-        const { data: employer, error: employerError } = await supabase
-          .from('parties')
-          .select('id, name_en, name_ar, type')
-          .eq('id', promoterData.employer_id)
-          .single();
-
-        if (!employerError && employer) {
-          employerInfo = employer;
+        if (!promoterData) {
+          setError('Promoter not found.');
+          setIsLoading(false);
+          return;
         }
-      }
 
-      setPromoterDetails({
-        ...promoterData,
-        contracts: (contractsData as any) || [],
-        employer: employerInfo,
-        name_en:
-          promoterData.name_en ||
-          [promoterData.first_name, promoterData.last_name]
-            .filter(Boolean)
-            .join(' '),
-        name_ar: promoterData.name_ar || '',
-        id_card_number: promoterData.id_card_number || '',
-        tags,
-      });
-      setIsLoading(false);
+        // Get tags from promoter_tags table if it exists
+        const supabase = createClient();
+        let tags: string[] = [];
+        try {
+          if (supabase) {
+            const { data: tagsData, error: tagsError } = await supabase
+              .from('promoter_tags')
+              .select('tag')
+              .eq('promoter_id', promoterId);
+
+            if (!tagsError && tagsData) {
+              tags = tagsData.map((t: any) => t.tag).filter(Boolean);
+            }
+          }
+        } catch (error) {
+          // If promoter_tags table doesn't exist, use empty array
+          logger.log(
+            'promoter_tags table not available, using empty tags array'
+          );
+        }
+
+        // Fetch contracts using API or direct call
+        let contracts: any[] = [];
+        try {
+          if (supabase) {
+            const { data: contractsData, error: contractsError } = await supabase
+              .from('contracts')
+              .select('*')
+              .eq('promoter_id', promoterId);
+
+            if (!contractsError && contractsData) {
+              contracts = contractsData;
+            }
+          }
+        } catch (error) {
+          logger.error('Error fetching contracts:', error);
+          // Don't set error for contracts, just log it
+        }
+
+        // Employer info is already included in API response
+        const employerInfo = data.employer || promoterData.employer || null;
+
+        setPromoterDetails({
+          ...promoterData,
+          contracts: contracts || [],
+          employer: employerInfo,
+          name_en:
+            promoterData.name_en ||
+            [promoterData.first_name, promoterData.last_name]
+              .filter(Boolean)
+              .join(' '),
+          name_ar: promoterData.name_ar || '',
+          id_card_number: promoterData.id_card_number || '',
+          tags,
+        });
+        setIsLoading(false);
+      } catch (fetchError) {
+        console.error('Error fetching promoter details:', fetchError);
+        setError('Failed to load promoter details. Please try again.');
+        setIsLoading(false);
+      }
     }
 
     async function fetchAuditLogs() {

@@ -170,19 +170,20 @@ export const GET = withAnyRBAC(
         promoterQuery = promoterQuery.like('id', `${searchId}%`);
       }
 
-      const { data: promoter, error } = await promoterQuery.single();
+      const { data: promoter, error } = await promoterQuery.maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return NextResponse.json(
-            { error: 'Promoter not found' },
-            { status: 404 }
-          );
-        }
         console.error('Error fetching promoter:', error);
         return NextResponse.json(
           { error: 'Failed to fetch promoter' },
           { status: 500 }
+        );
+      }
+
+      if (!promoter) {
+        return NextResponse.json(
+          { error: 'Promoter not found' },
+          { status: 404 }
         );
       }
 
