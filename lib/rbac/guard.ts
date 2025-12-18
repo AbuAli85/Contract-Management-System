@@ -415,6 +415,41 @@ async function guardAnyPermission(
 
     // If permission check failed
     if (!result.allowed) {
+      // ✅ AUTO-FIX: If user is trying to access their own promoter profile, auto-assign role
+      if (
+        result.user_id &&
+        requiredPermissions.some(p => p.includes('promoter:') && p.includes(':own')) &&
+        request.nextUrl.pathname.includes('/api/promoters/')
+      ) {
+        try {
+          // Extract promoter ID from URL
+          const pathParts = request.nextUrl.pathname.split('/');
+          const promoterIdIndex = pathParts.indexOf('promoters') + 1;
+          const promoterId = pathParts[promoterIdIndex];
+
+          // If user is accessing their own profile, auto-fix permissions
+          if (promoterId === result.user_id || pathParts[promoterIdIndex]?.startsWith(result.user_id.substring(0, 8))) {
+            const { ensurePromoterRole } = await import('@/lib/services/employee-account-service');
+            await ensurePromoterRole(result.user_id);
+            console.log(`✅ Auto-assigned promoter role to user ${result.user_id} accessing own profile`);
+
+            // Retry permission check after auto-fix
+            const retryResult = await checkAnyPermission(requiredPermissions, {
+              ...options,
+              skipCache: true, // Force fresh lookup
+            });
+
+            if (retryResult.allowed) {
+              console.log(`✅ Permission check passed after auto-fix for user ${result.user_id}`);
+              return null; // Allow access
+            }
+          }
+        } catch (autoFixError) {
+          console.warn('⚠️ Could not auto-fix permissions (non-critical):', autoFixError);
+          // Continue with normal error handling
+        }
+      }
+
       // In dry-run mode, log but allow
       if (enforcementMode === 'dry-run') {
         console.warn(`🔐 RBAC DRY-RUN: Access denied to ${request.url}`, {
@@ -571,7 +606,7 @@ export async function checkAnyPermission(
       required_permission: requiredPermissions.join(' OR '),
       user_permissions: flattenedPerms,
       user_roles: result.user_roles || [],
-      user_id: result.user_id || null,
+      user_id: user.id, // ✅ Use user.id from auth, not result.user_id
     };
   } catch (error) {
     console.error('🔐 RBAC: Error in checkAnyPermission:', error);

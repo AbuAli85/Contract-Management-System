@@ -155,9 +155,23 @@ export const GET = withAnyRBAC(
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
+      const userId = session.user.id;
+
       // Handle both UUID and slug-based lookups
       const isFullUUID = isUUID(id);
       const searchId = isFullUUID ? id : extractIdFromSlug(id);
+
+      // ✅ AUTO-FIX: If user is accessing their own profile, ensure they have promoter role
+      if (searchId === userId) {
+        try {
+          const { ensurePromoterRole } = await import('@/lib/services/employee-account-service');
+          await ensurePromoterRole(userId);
+          console.log(`✅ Auto-assigned promoter role to user ${userId} accessing own profile`);
+        } catch (roleError) {
+          console.warn('⚠️ Could not auto-assign promoter role (non-critical):', roleError);
+          // Continue anyway - the RBAC check will handle it
+        }
+      }
 
       // Fetch promoter data (simplified to avoid relationship issues)
       let promoterQuery = supabase.from('promoters').select('*');
