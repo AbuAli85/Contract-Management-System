@@ -146,76 +146,152 @@ export async function POST(
     // Generate new temporary password
     const newPassword = generateTemporaryPassword();
 
-    // ✅ FIX: Check if auth user exists, create if not
-    let authUserId = employeeId;
+    // ✅ FIX: Find or create auth user, handling email already registered case
+    let authUserId: string | null = null;
     
-    // First, try to get the auth user to see if they exist
+    // Step 1: Try to get auth user by employee ID
     const { data: existingAuthUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(employeeId);
     
-    if (getUserError || !existingAuthUser?.user) {
-      // Auth user doesn't exist, create one
-      console.log(`Creating auth account for employee ${employeeId} (${employeeEmail})`);
-      
-      const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        id: employeeId, // Use the same ID as the profile/promoter
-        email: employeeEmail.toLowerCase(),
-        password: newPassword,
-        email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          full_name: employeeName || employeeEmail.split('@')[0],
-          role: 'promoter',
-          must_change_password: true,
-          created_by: user.id,
-          created_at: new Date().toISOString(),
-        },
-      });
-
-      if (createError || !newAuthUser?.user) {
-        console.error('Error creating auth user:', createError);
-        return NextResponse.json(
-          { 
-            error: 'Failed to create employee account', 
-            details: createError?.message || 'Could not create authentication account. The employee may need to be invited first.' 
-          },
-          { status: 500 }
-        );
-      }
-
-      authUserId = newAuthUser.user.id;
-      
-      // Ensure profile exists and is linked
-      await supabaseAdmin.from('profiles').upsert({
-        id: authUserId,
-        email: employeeEmail.toLowerCase(),
-        full_name: employeeName || employeeEmail.split('@')[0],
-        role: 'promoter',
-        must_change_password: true,
-        updated_at: new Date().toISOString(),
-      } as any, { onConflict: 'id' });
-
-      console.log(`✅ Auth account created for employee ${authUserId}`);
+    if (!getUserError && existingAuthUser?.user) {
+      // Auth user exists with this ID
+      authUserId = existingAuthUser.user.id;
+      console.log(`✅ Found existing auth user by ID: ${authUserId}`);
     } else {
-      // Auth user exists, update password
-      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-        authUserId,
-        {
-          password: newPassword,
-          user_metadata: {
-            must_change_password: true,
-          },
-        }
-      );
+      // Step 2: Auth user doesn't exist by ID, check if email is registered
+      // Find profile by email (profile.id should match auth user id)
+      const { data: profileByEmailData } = await supabaseAdmin
+        .from('profiles' as any)
+        .select('id')
+        .eq('email', employeeEmail.toLowerCase())
+        .single();
 
-      if (updateError) {
-        console.error('Error resetting password:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to reset password', details: updateError.message },
-          { status: 500 }
-        );
+      const profileByEmail = profileByEmailData as { id: string } | null;
+
+      if (profileByEmail?.id) {
+        // Profile exists, try to get auth user with profile's ID
+        const { data: authUserByProfileId } = await supabaseAdmin.auth.admin.getUserById(profileByEmail.id);
+        
+        if (authUserByProfileId?.user) {
+          authUserId = authUserByProfileId.user.id;
+          console.log(`✅ Found existing auth user by email's profile ID: ${authUserId}`);
+        }
       }
 
-      console.log(`✅ Password reset for existing auth user ${authUserId}`);
+      // Step 3: If still not found, try to create new auth user
+      if (!authUserId) {
+        console.log(`Creating auth account for employee ${employeeId} (${employeeEmail})`);
+        
+        const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          id: employeeId, // Try to use the same ID as profile/promoter
+          email: employeeEmail.toLowerCase(),
+          password: newPassword,
+          email_confirm: true,
+          user_metadata: {
+            full_name: employeeName || employeeEmail.split('@')[0],
+            role: 'promoter',
+            must_change_password: true,
+            created_by: user.id,
+            created_at: new Date().toISOString(),
+          },
+        });
+
+        if (createError) {
+          // Handle "email already registered" error
+          if (createError.message?.includes('already been registered') || 
+              createError.message?.includes('already registered') ||
+              createError.message?.includes('duplicate key')) {
+            
+            console.log(`Email ${employeeEmail} already registered, finding correct auth user...`);
+            
+            // Try to find profile by email and get its auth user
+            const { data: existingProfileData } = await supabaseAdmin
+              .from('profiles' as any)
+              .select('id')
+              .eq('email', employeeEmail.toLowerCase())
+              .single();
+            
+            const existingProfile = existingProfileData as { id: string } | null;
+            
+            if (existingProfile?.id) {
+              const { data: foundAuthUser } = await supabaseAdmin.auth.admin.getUserById(existingProfile.id);
+              if (foundAuthUser?.user) {
+                authUserId = foundAuthUser.user.id;
+                console.log(`✅ Found existing auth user: ${authUserId}`);
+              } else {
+                return NextResponse.json(
+                  { 
+                    error: 'Email already registered', 
+                    details: 'This email is already registered but the authentication account could not be found. Please contact support.' 
+                  },
+                  { status: 400 }
+                );
+              }
+            } else {
+              return NextResponse.json(
+                { 
+                  error: 'Email already registered', 
+                  details: 'This email is already registered with a different account. Please use the "Invite Employee" feature to properly link the account.' 
+                },
+                { status: 400 }
+              );
+            }
+          } else {
+            // Other creation error
+            console.error('Error creating auth user:', createError);
+            return NextResponse.json(
+              { 
+                error: 'Failed to create employee account', 
+                details: createError?.message || 'Could not create authentication account.' 
+              },
+              { status: 500 }
+            );
+          }
+        } else if (newAuthUser?.user) {
+          // Successfully created new auth user
+          authUserId = newAuthUser.user.id;
+          
+          // Ensure profile exists and is linked
+          await supabaseAdmin.from('profiles').upsert({
+            id: authUserId,
+            email: employeeEmail.toLowerCase(),
+            full_name: employeeName || employeeEmail.split('@')[0],
+            role: 'promoter',
+            must_change_password: true,
+            updated_at: new Date().toISOString(),
+          } as any, { onConflict: 'id' });
+
+          console.log(`✅ Auth account created for employee ${authUserId}`);
+        }
+      }
     }
+
+    // Step 4: Reset password for the found/created auth user
+    if (!authUserId) {
+      return NextResponse.json(
+        { error: 'Could not find or create authentication account' },
+        { status: 500 }
+      );
+    }
+
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      authUserId,
+      {
+        password: newPassword,
+        user_metadata: {
+          must_change_password: true,
+        },
+      }
+    );
+
+    if (updateError) {
+      console.error('Error resetting password:', updateError);
+      return NextResponse.json(
+        { error: 'Failed to reset password', details: updateError.message },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Password reset for auth user ${authUserId}`);
 
     // Update profile to require password change
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
