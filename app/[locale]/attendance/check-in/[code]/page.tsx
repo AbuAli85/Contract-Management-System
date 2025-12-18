@@ -48,6 +48,15 @@ export default function AttendanceCheckInPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
+  // Handle missing code parameter
+  useEffect(() => {
+    if (!code) {
+      setError('Invalid check-in link. Missing attendance code.');
+      setLoading(false);
+      return;
+    }
+  }, [code]);
+
   useEffect(() => {
     if (code) {
       fetchLinkData();
@@ -102,11 +111,23 @@ export default function AttendanceCheckInPage() {
   const capturePhoto = async (): Promise<string> => {
     return new Promise((resolve, reject) => {
       try {
+        // Add null checks to prevent parentNode errors
+        if (typeof window === 'undefined') {
+          reject(new Error('Cannot capture photo on server'));
+          return;
+        }
+
         const video = videoRef.current;
         const canvas = canvasRef.current;
         
         if (!video || !canvas) {
           reject(new Error('Video or canvas not available'));
+          return;
+        }
+
+        // Ensure video is ready
+        if (video.readyState < 2) {
+          reject(new Error('Video not ready'));
           return;
         }
 
@@ -129,16 +150,35 @@ export default function AttendanceCheckInPage() {
 
   const startCamera = async () => {
     try {
+      // Check if we're in browser environment
+      if (typeof window === 'undefined' || !navigator.mediaDevices) {
+        toast({
+          title: 'Camera Not Available',
+          description: 'Camera access is not available in this environment',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
         audio: false,
       });
       
       streamRef.current = stream;
-      if (videoRef.current) {
+      // Add null check before accessing video element to prevent parentNode errors
+      if (videoRef.current && videoRef.current.parentNode) {
         videoRef.current.srcObject = stream;
+        setShowPhotoDialog(true);
+      } else {
+        // Clean up stream if video element is not available
+        stream.getTracks().forEach(track => track.stop());
+        toast({
+          title: 'Camera Error',
+          description: 'Video element is not ready',
+          variant: 'destructive',
+        });
       }
-      setShowPhotoDialog(true);
     } catch (error: any) {
       toast({
         title: 'Camera Access Denied',
@@ -153,7 +193,8 @@ export default function AttendanceCheckInPage() {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
-    if (videoRef.current) {
+    // Add null check to prevent parentNode errors
+    if (videoRef.current && videoRef.current.parentNode) {
       videoRef.current.srcObject = null;
     }
   };

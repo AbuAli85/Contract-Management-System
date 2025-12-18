@@ -183,7 +183,6 @@ export const PUT = withRBAC('attendance:create:all', async (
 
         // @ts-ignore - Supabase type inference issue with admin client
         const assignmentsTable = supabaseAdmin.from('employee_group_assignments') as any;
-        // @ts-expect-error - Supabase type inference issue with admin client insert
         const { error: assignError } = await assignmentsTable.insert(assignments);
 
         if (assignError) {
