@@ -338,89 +338,93 @@ function DashboardContent() {
   const isEmployer = userRole === 'employer';
 
   // Build quick stats based on user role
-  const quickStats: QuickStat[] = [];
-  
-  // Promoters see their own contract stats
-  if (isPromoter) {
-    quickStats.push(
-      {
-        label: validLocale === 'ar' ? 'عقودي' : 'My Contracts',
-        value: stats?.total || 0,
-        change: totalContractsChange,
-        trend: determineGrowthTrend(totalContractsChange),
-        icon: <FileText className='h-5 w-5' aria-hidden='true' />,
-        color: 'blue',
-      },
-      {
-        label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
-        value: stats?.active || 0,
-        change: activeContractsChange,
-        trend: determineGrowthTrend(activeContractsChange),
-        icon: <Activity className='h-5 w-5' aria-hidden='true' />,
-        color: 'green',
-      },
-      {
-        label: validLocale === 'ar' ? 'الحالة' : 'Status',
-        value: validLocale === 'ar' ? 'نشط' : 'Active',
-        change: 0,
-        trend: 'neutral',
-        icon: <CheckCircle className='h-5 w-5' aria-hidden='true' />,
-        color: 'green',
-      },
-      {
-        label: validLocale === 'ar' ? 'المهام المعلقة' : 'Pending Tasks',
-        value: 0, // TODO: Fetch from tasks API
-        change: 0,
-        trend: 'neutral',
-        icon: <Clock className='h-5 w-5' aria-hidden='true' />,
-        color: 'orange',
-      }
-    );
-  } else {
-    // Admin/Manager/Employer see full stats
-    quickStats.push(
-      {
-        label: validLocale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
-        value: stats?.total || 0,
-        change: totalContractsChange,
-        trend: determineGrowthTrend(totalContractsChange),
-        icon: <FileText className='h-5 w-5' aria-hidden='true' />,
-        color: 'blue',
-      },
-      {
-        label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
-        value: stats?.active || 0,
-        change: activeContractsChange,
-        trend: determineGrowthTrend(activeContractsChange),
-        icon: <Activity className='h-5 w-5' aria-hidden='true' />,
-        color: 'green',
-      },
-      {
-        label: validLocale === 'ar' ? 'القوى العاملة' : 'Workforce',
-        value: promoterStats?.totalWorkforce || 0,
-        change: workforceChange,
-        trend: determineGrowthTrend(workforceChange),
-        icon: <Users className='h-5 w-5' aria-hidden='true' />,
-        color: 'purple',
-      },
-      {
-        label: validLocale === 'ar' ? 'معدل الاستخدام' : 'Utilization',
-        value:
-          stats?.active === 0
-            ? validLocale === 'ar'
-              ? 'غير متاح'
-              : 'N/A'
-            : `${promoterStats?.utilizationRate || 0}%`,
-        change: utilizationChange,
-        trend:
-          stats?.active === 0
-            ? 'neutral'
-            : determineGrowthTrend(utilizationChange),
-        icon: <TrendingUp className='h-5 w-5' aria-hidden='true' />,
-        color: 'orange',
-      }
-    );
-  }
+  const quickStats: QuickStat[] = useMemo(() => {
+    const statsArray: QuickStat[] = [];
+    
+    // Promoters see their own contract stats
+    if (isPromoter) {
+      statsArray.push(
+        {
+          label: validLocale === 'ar' ? 'عقودي' : 'My Contracts',
+          value: stats?.total || 0,
+          change: totalContractsChange,
+          trend: determineGrowthTrend(totalContractsChange),
+          icon: <FileText className='h-5 w-5' aria-hidden='true' />,
+          color: 'blue',
+        },
+        {
+          label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
+          value: stats?.active || 0,
+          change: activeContractsChange,
+          trend: determineGrowthTrend(activeContractsChange),
+          icon: <Activity className='h-5 w-5' aria-hidden='true' />,
+          color: 'green',
+        },
+        {
+          label: validLocale === 'ar' ? 'الحالة' : 'Status',
+          value: validLocale === 'ar' ? 'نشط' : 'Active',
+          change: 0,
+          trend: 'neutral',
+          icon: <CheckCircle className='h-5 w-5' aria-hidden='true' />,
+          color: 'green',
+        },
+        {
+          label: validLocale === 'ar' ? 'المهام المعلقة' : 'Pending Tasks',
+          value: 0, // TODO: Fetch from tasks API
+          change: 0,
+          trend: 'neutral',
+          icon: <Clock className='h-5 w-5' aria-hidden='true' />,
+          color: 'orange',
+        }
+      );
+    } else {
+      // Admin/Manager/Employer see full stats
+      statsArray.push(
+        {
+          label: validLocale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
+          value: stats?.total || 0,
+          change: totalContractsChange,
+          trend: determineGrowthTrend(totalContractsChange),
+          icon: <FileText className='h-5 w-5' aria-hidden='true' />,
+          color: 'blue',
+        },
+        {
+          label: validLocale === 'ar' ? 'العقود النشطة' : 'Active Contracts',
+          value: stats?.active || 0,
+          change: activeContractsChange,
+          trend: determineGrowthTrend(activeContractsChange),
+          icon: <Activity className='h-5 w-5' aria-hidden='true' />,
+          color: 'green',
+        },
+        {
+          label: validLocale === 'ar' ? 'القوى العاملة' : 'Workforce',
+          value: promoterStats?.totalWorkforce || 0,
+          change: workforceChange,
+          trend: determineGrowthTrend(workforceChange),
+          icon: <Users className='h-5 w-5' aria-hidden='true' />,
+          color: 'purple',
+        },
+        {
+          label: validLocale === 'ar' ? 'معدل الاستخدام' : 'Utilization',
+          value:
+            stats?.active === 0
+              ? validLocale === 'ar'
+                ? 'غير متاح'
+                : 'N/A'
+              : `${promoterStats?.utilizationRate || 0}%`,
+          change: utilizationChange,
+          trend:
+            stats?.active === 0
+              ? 'neutral'
+              : determineGrowthTrend(utilizationChange),
+          icon: <TrendingUp className='h-5 w-5' aria-hidden='true' />,
+          color: 'orange',
+        }
+      );
+    }
+    
+    return statsArray;
+  }, [isPromoter, validLocale, stats, promoterStats, totalContractsChange, activeContractsChange, workforceChange, utilizationChange]);
 
   if (loading) {
     return (
