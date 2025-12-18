@@ -81,12 +81,16 @@ const api = {
 
   updatePromoter: async (id: string, data: any) => {
     const response = await fetch('/api/promoters/' + id, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Failed to update promoter');
-    return response.json();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || errorData.message || 'Failed to update promoter');
+    }
+    const responseData = await response.json();
+    return responseData.promoter || responseData;
   },
 
   deletePromoter: async (id: string): Promise<void> => {

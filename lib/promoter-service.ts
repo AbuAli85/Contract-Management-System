@@ -261,20 +261,20 @@ export async function updatePromoter(
   updates: Partial<Promoter>
 ): Promise<Promoter | null> {
   try {
-    const supabase = createSupabaseClient();
+    // Use API route instead of direct Supabase call for better validation and error handling
+    const response = await fetch(`/api/promoters/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
 
-    const { data, error } = await supabase
-      .from('promoters')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || errorData.message || 'Failed to update promoter');
     }
 
-    return data;
+    const responseData = await response.json();
+    return responseData.promoter || responseData;
   } catch (error) {
     console.error(`Error updating promoter ${id}:`, error);
     return null;
