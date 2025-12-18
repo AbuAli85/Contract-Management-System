@@ -26,6 +26,7 @@ import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GoogleLocationPicker } from './google-location-picker';
 
 interface AttendanceLink {
   id: string;
@@ -74,6 +75,13 @@ export function AttendanceLinkManager() {
   const [selectedOfficeLocation, setSelectedOfficeLocation] = useState<string>('');
   const [customLatitude, setCustomLatitude] = useState('');
   const [customLongitude, setCustomLongitude] = useState('');
+  const [googleLocation, setGoogleLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    address: string;
+    name?: string;
+  } | null>(null);
+  const [locationSource, setLocationSource] = useState<'office' | 'google' | 'custom'>('google');
   const [allowedRadius, setAllowedRadius] = useState('50');
   const [validUntil, setValidUntil] = useState('');
   const [maxUses, setMaxUses] = useState('');
@@ -127,7 +135,7 @@ export function AttendanceLinkManager() {
       let longitude: number;
       let officeLocationId: string | null = null;
 
-      if (selectedOfficeLocation) {
+      if (locationSource === 'office' && selectedOfficeLocation) {
         // Use office location coordinates
         const office = officeLocations.find(loc => loc.id === selectedOfficeLocation);
         if (!office) {
@@ -136,7 +144,11 @@ export function AttendanceLinkManager() {
         latitude = office.latitude;
         longitude = office.longitude;
         officeLocationId = office.id;
-      } else {
+      } else if (locationSource === 'google' && googleLocation) {
+        // Use Google Maps location
+        latitude = googleLocation.latitude;
+        longitude = googleLocation.longitude;
+      } else if (locationSource === 'custom') {
         // Use custom coordinates
         latitude = parseFloat(customLatitude);
         longitude = parseFloat(customLongitude);
@@ -144,6 +156,8 @@ export function AttendanceLinkManager() {
         if (isNaN(latitude) || isNaN(longitude)) {
           throw new Error('Please provide valid coordinates');
         }
+      } else {
+        throw new Error('Please select a location');
       }
 
       if (!validUntil) {
@@ -181,6 +195,8 @@ export function AttendanceLinkManager() {
       setSelectedOfficeLocation('');
       setCustomLatitude('');
       setCustomLongitude('');
+      setGoogleLocation(null);
+      setLocationSource('google');
       setAllowedRadius('50');
       setValidUntil('');
       setMaxUses('');
@@ -266,30 +282,75 @@ export function AttendanceLinkManager() {
               </div>
 
               <div>
-                <Label htmlFor="location">Location Source</Label>
-                <Select value={selectedOfficeLocation} onValueChange={setSelectedOfficeLocation}>
+                <Label htmlFor="location-source">Location Source</Label>
+                <Select 
+                  value={locationSource} 
+                  onValueChange={(value: 'office' | 'google' | 'custom') => {
+                    setLocationSource(value);
+                    if (value !== 'google') {
+                      setGoogleLocation(null);
+                    }
+                    if (value !== 'office') {
+                      setSelectedOfficeLocation('');
+                    }
+                    if (value !== 'custom') {
+                      setCustomLatitude('');
+                      setCustomLongitude('');
+                    }
+                  }}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select office location or use custom" />
+                    <SelectValue placeholder="Select location source" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Custom Coordinates</SelectItem>
-                    {officeLocations.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id}>
-                        {loc.name} - {loc.address}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="google">Google Maps Search</SelectItem>
+                    <SelectItem value="office">Office Location</SelectItem>
+                    <SelectItem value="custom">Custom Coordinates</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {selectedOfficeLocation ? (
-                <Alert>
-                  <MapPin className="h-4 w-4" />
-                  <AlertDescription>
-                    Using coordinates from selected office location
-                  </AlertDescription>
-                </Alert>
-              ) : (
+              {locationSource === 'google' && (
+                <GoogleLocationPicker
+                  onLocationSelect={(location) => {
+                    setGoogleLocation(location);
+                    if (location.name && !title) {
+                      setTitle(location.name);
+                    }
+                  }}
+                />
+              )}
+
+              {locationSource === 'office' && (
+                <div>
+                  <Label htmlFor="office-location">Select Office Location</Label>
+                  <Select 
+                    value={selectedOfficeLocation} 
+                    onValueChange={setSelectedOfficeLocation}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an office location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {officeLocations.map((loc) => (
+                        <SelectItem key={loc.id} value={loc.id}>
+                          {loc.name} - {loc.address}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedOfficeLocation && (
+                    <Alert className="mt-2">
+                      <MapPin className="h-4 w-4" />
+                      <AlertDescription>
+                        Using coordinates from selected office location
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
+
+              {locationSource === 'custom' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="latitude">Latitude</Label>
@@ -299,7 +360,7 @@ export function AttendanceLinkManager() {
                       step="any"
                       value={customLatitude}
                       onChange={(e) => setCustomLatitude(e.target.value)}
-                      placeholder="24.7136"
+                      placeholder="23.5859"
                     />
                   </div>
                   <div>
@@ -310,7 +371,7 @@ export function AttendanceLinkManager() {
                       step="any"
                       value={customLongitude}
                       onChange={(e) => setCustomLongitude(e.target.value)}
-                      placeholder="46.6753"
+                      placeholder="58.4059"
                     />
                   </div>
                 </div>
