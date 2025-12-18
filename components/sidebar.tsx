@@ -74,6 +74,7 @@ import {
   Briefcase,
   Clock,
   Link as LinkIcon,
+  Calendar,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
@@ -305,6 +306,12 @@ function SidebarContent({
               href: '/employer/attendance-links',
               icon: LinkIcon,
               description: 'Create location-restricted check-in links',
+            },
+            {
+              title: 'Automated Schedules',
+              href: '/employer/attendance-schedules',
+              icon: Calendar,
+              description: 'Automated daily attendance link generation',
             },
           ],
         },

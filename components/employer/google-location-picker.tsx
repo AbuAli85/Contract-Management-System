@@ -50,6 +50,18 @@ declare global {
       'gmpx-place-picker': React.DetailedHTMLProps<any, HTMLElement>;
     }
   }
+  
+  interface Window {
+    google?: {
+      maps?: {
+        places?: {
+          PlacesService?: any;
+          AutocompleteService?: any;
+        };
+        Geocoder?: any;
+      };
+    };
+  }
 }
 
 const STORAGE_KEY = 'google_location_picker_recent';
@@ -203,6 +215,16 @@ export function GoogleLocationPicker({
     }
   }, [recentLocations]);
 
+  // Set API key on API loader element
+  useEffect(() => {
+    if (apiKey && apiLoaderRef.current) {
+      const loader = apiLoaderRef.current as any;
+      if (loader && !loader.getAttribute('key')) {
+        loader.setAttribute('key', apiKey);
+      }
+    }
+  }, [apiKey]);
+
   // Load Extended Component Library
   useEffect(() => {
     if (!apiKey) {
@@ -226,6 +248,11 @@ export function GoogleLocationPicker({
     script.src = 'https://ajax.googleapis.com/ajax/libs/@googlemaps/extended-component-library/0.6.11/index.min.js';
     script.onload = () => {
       setMapsLoaded(true);
+      // Ensure API loader has the key
+      const loader = document.querySelector('gmpx-api-loader') as any;
+      if (loader && apiKey) {
+        loader.setAttribute('key', apiKey);
+      }
       customElements.whenDefined('gmpx-place-picker').then(() => {
         setTimeout(() => {
           initializePlacePicker();
@@ -521,13 +548,11 @@ export function GoogleLocationPicker({
       {/* API Loader */}
       {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment, react/no-unknown-property */}
       <gmpx-api-loader
-        key={apiKey}
+        ref={apiLoaderRef}
         solution-channel="GMP_GE_mapsandplacesautocomplete_v2"
         // @ts-ignore - Web component requires inline style
         style={{ display: 'none' }}
-      >
-        {apiKey}
-      </gmpx-api-loader>
+      />
 
       <div className="relative">
         <div className="relative">
