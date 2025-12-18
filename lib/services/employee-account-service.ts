@@ -37,8 +37,14 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
   try {
     // Step 1: Ensure permissions exist (try both rbac_* and legacy tables)
     const requiredPermissions = [
+      // Promoter permissions
       { resource: 'promoter', action: 'read', scope: 'own', name: 'promoter:read:own' },
       { resource: 'promoter', action: 'manage', scope: 'own', name: 'promoter:manage:own' },
+      // Contract permissions (employees need to view/manage their own contracts)
+      { resource: 'contract', action: 'read', scope: 'own', name: 'contract:read:own' },
+      { resource: 'contract', action: 'create', scope: 'own', name: 'contract:create:own' },
+      { resource: 'contract', action: 'update', scope: 'own', name: 'contract:update:own' },
+      { resource: 'contract', action: 'download', scope: 'own', name: 'contract:download:own' },
     ];
 
     const permissionIds: string[] = [];

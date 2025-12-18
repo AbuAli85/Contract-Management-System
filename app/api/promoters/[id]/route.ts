@@ -184,7 +184,7 @@ export const GET = withAnyRBAC(
         promoterQuery = promoterQuery.like('id', `${searchId}%`);
       }
 
-      const { data: promoter, error } = await promoterQuery.maybeSingle();
+      let { data: promoter, error } = await promoterQuery.maybeSingle();
 
       if (error) {
         console.error('Error fetching promoter:', error);
@@ -192,6 +192,77 @@ export const GET = withAnyRBAC(
           { error: 'Failed to fetch promoter' },
           { status: 500 }
         );
+      }
+
+      // ✅ AUTO-FIX: If user is accessing their own profile and promoter record doesn't exist, create it
+      if (!promoter && searchId === userId) {
+        console.log(`🔧 AUTO-FIX: Creating missing promoter record for user ${userId}`);
+        
+        try {
+          // Get user profile to populate promoter data
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name, phone')
+            .eq('id', userId)
+            .single();
+
+          if (userProfile) {
+            // Create promoter record using admin client to bypass RLS
+            const { getSupabaseAdmin } = await import('@/lib/supabase/admin');
+            const supabaseAdmin = getSupabaseAdmin();
+
+            const { data: newPromoter, error: createError } = await supabaseAdmin
+              .from('promoters')
+              .insert({
+                id: userId,
+                email: userProfile.email || session.user.email || '',
+                name_en: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
+                name_ar: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
+                phone: userProfile.phone || null,
+                status: 'active',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              } as any)
+              .select()
+              .single();
+
+            if (createError || !newPromoter) {
+              console.error('❌ Error auto-creating promoter record:', createError);
+              return NextResponse.json(
+                { error: 'Failed to create promoter record' },
+                { status: 500 }
+              );
+            }
+
+            console.log(`✅ Successfully auto-created promoter record for user ${userId}`);
+            
+            // Re-fetch the promoter with the same query to get it in the expected format
+            const { data: refetchedPromoter } = await promoterQuery.maybeSingle();
+            
+            if (!refetchedPromoter) {
+              return NextResponse.json(
+                { error: 'Failed to fetch newly created promoter' },
+                { status: 500 }
+              );
+            }
+            
+            // Continue with normal flow below (will fetch employer and contracts)
+            // Set promoter to the refetched one so the code below handles it
+            promoter = refetchedPromoter;
+          } else {
+            console.error('❌ User profile not found for auto-creation');
+            return NextResponse.json(
+              { error: 'User profile not found' },
+              { status: 404 }
+            );
+          }
+        } catch (autoFixError) {
+          console.error('❌ Error in auto-fix for promoter record:', autoFixError);
+          return NextResponse.json(
+            { error: 'Failed to create promoter record' },
+            { status: 500 }
+          );
+        }
       }
 
       if (!promoter) {

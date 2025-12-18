@@ -426,34 +426,58 @@ async function guardAnyPermission(
 
     // If permission check failed
     if (!result.allowed) {
-      // ✅ AUTO-FIX: If user is trying to access their own promoter profile, auto-assign role
+      // ✅ AUTO-FIX: If user is trying to access their own promoter profile or contracts, auto-assign role
       const userId = sessionUserId || result.user_id;
-      if (
-        userId &&
+      const isPromoterAccess = userId &&
         requiredPermissions.some(p => p.includes('promoter:') && p.includes(':own')) &&
-        request.nextUrl.pathname.includes('/api/promoters/')
-      ) {
+        request.nextUrl.pathname.includes('/api/promoters/');
+      
+      const isContractAccess = userId &&
+        requiredPermissions.some(p => p.includes('contract:') && p.includes(':own')) &&
+        (request.nextUrl.pathname.includes('/api/contracts/') || request.nextUrl.pathname.includes('/api/contracts'));
+      
+      if (isPromoterAccess || isContractAccess) {
         try {
-          // Extract promoter ID from URL
-          const pathParts = request.nextUrl.pathname.split('/');
-          const promoterIdIndex = pathParts.indexOf('promoters') + 1;
-          const promoterId = pathParts[promoterIdIndex];
+          let shouldAutoFix = false;
+          let resourceType = '';
 
-          console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing own profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`);
+          if (isPromoterAccess) {
+            // Extract promoter ID from URL
+            const pathParts = request.nextUrl.pathname.split('/');
+            const promoterIdIndex = pathParts.indexOf('promoters') + 1;
+            const promoterId = pathParts[promoterIdIndex];
 
-          // If user is accessing their own profile, auto-fix permissions
-          // Check both full UUID match and partial match (for slug-based IDs)
-          const isOwnProfile = 
-            promoterId === userId || 
-            (promoterId && userId && promoterId.startsWith(userId.substring(0, 8))) ||
-            (promoterId && userId && userId.startsWith(promoterId));
+            console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing own promoter profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`);
 
-          if (isOwnProfile) {
-            console.log(`✅ AUTO-FIX: User ${userId} is accessing own profile, fixing permissions...`);
+            // If user is accessing their own profile, auto-fix permissions
+            // Check both full UUID match and partial match (for slug-based IDs)
+            shouldAutoFix = 
+              promoterId === userId || 
+              (promoterId && userId && promoterId.startsWith(userId.substring(0, 8))) ||
+              (promoterId && userId && userId.startsWith(promoterId));
+            resourceType = 'promoter';
+          } else if (isContractAccess) {
+            // For contract access, we allow auto-fix for:
+            // 1. List view (/api/contracts) - user will see their own contracts via RLS
+            // 2. Specific contract (/api/contracts/[id]) - will be checked in the route handler
+            const pathParts = request.nextUrl.pathname.split('/');
+            const contractIdIndex = pathParts.indexOf('contracts') + 1;
+            const contractId = pathParts[contractIdIndex];
+
+            console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing contracts (contractId: ${contractId || 'list'}, path: ${request.nextUrl.pathname})`);
+
+            // Allow auto-fix for contract access (the route handler will verify ownership)
+            // This ensures users have the permission, even if the specific contract check happens later
+            shouldAutoFix = true; // Always allow for contract:read:own permission
+            resourceType = 'contract';
+          }
+
+          if (shouldAutoFix) {
+            console.log(`✅ AUTO-FIX: User ${userId} is accessing own ${resourceType} resource, fixing permissions...`);
             
             const { ensurePromoterRole } = await import('@/lib/services/employee-account-service');
             await ensurePromoterRole(userId);
-            console.log(`✅ Auto-assigned promoter role to user ${userId}`);
+            console.log(`✅ Auto-assigned promoter role (with contract permissions) to user ${userId}`);
 
             // Clear permission cache for this user
             try {
