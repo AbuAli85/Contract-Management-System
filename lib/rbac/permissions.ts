@@ -39,7 +39,10 @@ export type PermissionResource =
   | 'permission'
   | 'promoter'
   | 'party'
-  | 'company';
+  | 'company'
+  | 'attendance'
+  | 'employer'
+  | 'employee';
 
 export type PermissionAction =
   | 'view'
@@ -119,6 +122,9 @@ export const VALID_RESOURCES: PermissionResource[] = [
   'promoter',
   'party',
   'company',
+  'attendance',
+  'employer',
+  'employee',
 ];
 
 // Valid permission actions

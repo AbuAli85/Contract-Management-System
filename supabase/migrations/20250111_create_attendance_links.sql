@@ -36,16 +36,31 @@ CREATE TABLE IF NOT EXISTS attendance_link_usage (
   employer_employee_id UUID REFERENCES employer_employees(id) ON DELETE CASCADE,
   attendance_id UUID REFERENCES employee_attendance(id) ON DELETE SET NULL,
   used_at TIMESTAMPTZ DEFAULT NOW(),
+  used_date DATE DEFAULT CURRENT_DATE, -- Date column for unique constraint
   latitude DECIMAL(10, 8), -- Location where link was used
   longitude DECIMAL(11, 8),
   distance_from_target DECIMAL(10, 2), -- Distance from target location
   location_verified BOOLEAN DEFAULT false,
-  CONSTRAINT attendance_link_usage_unique UNIQUE (attendance_link_id, employer_employee_id, DATE(used_at))
+  CONSTRAINT attendance_link_usage_unique UNIQUE (attendance_link_id, employer_employee_id, used_date)
 );
+
+-- Trigger to automatically set used_date when used_at changes
+CREATE OR REPLACE FUNCTION set_attendance_link_usage_date()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.used_date := DATE(NEW.used_at);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_attendance_link_usage_date
+  BEFORE INSERT OR UPDATE OF used_at ON attendance_link_usage
+  FOR EACH ROW
+  EXECUTE FUNCTION set_attendance_link_usage_date();
 
 CREATE INDEX IF NOT EXISTS idx_attendance_link_usage_link_id ON attendance_link_usage(attendance_link_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_link_usage_employee_id ON attendance_link_usage(employer_employee_id);
-CREATE INDEX IF NOT EXISTS idx_attendance_link_usage_date ON attendance_link_usage(DATE(used_at));
+CREATE INDEX IF NOT EXISTS idx_attendance_link_usage_date ON attendance_link_usage(used_date);
 
 -- Function to generate unique link code
 CREATE OR REPLACE FUNCTION generate_attendance_link_code()
