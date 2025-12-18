@@ -60,7 +60,15 @@ export async function GET(
       );
     }
 
+    // Get user's profile to check active_company_id
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('active_company_id, full_name, email')
+      .eq('id', user.id)
+      .single();
+
     // Get employee record using admin client to bypass RLS
+    // First try with the link's company_id
     const { data: employeeLink, error: employeeError } = await (supabaseAdmin.from('employer_employees') as any)
       .select('id, employee_id, company_id, employment_status')
       .eq('employee_id', user.id)
@@ -87,13 +95,22 @@ export async function GET(
         .eq('employee_id', user.id)
         .maybeSingle();
 
+      // Check if employee has any active records for the link's company
+      const { data: linkCompanyRecords } = await (supabaseAdmin.from('employer_employees') as any)
+        .select('id, employee_id, company_id, employment_status')
+        .eq('employee_id', user.id)
+        .eq('company_id', link.company_id)
+        .maybeSingle();
+
       // Enhanced logging for debugging
       console.error('Employee authorization failed:', {
         user_id: user.id,
         user_email: user.email,
+        user_active_company_id: userProfile?.active_company_id,
         link_code: code,
         link_company_id: link.company_id,
         employee_record: allEmployeeRecords || null,
+        link_company_record: linkCompanyRecords || null,
       });
 
       if (!allEmployeeRecords) {
@@ -104,6 +121,7 @@ export async function GET(
             diagnostic: {
               user_id: user.id,
               link_company_id: link.company_id,
+              user_active_company_id: userProfile?.active_company_id,
               issue: 'no_employee_record'
             }
           },
@@ -112,14 +130,26 @@ export async function GET(
       }
 
       if (allEmployeeRecords.company_id !== link.company_id) {
+        // Check if user's active company matches the link's company
+        const activeCompanyMatches = userProfile?.active_company_id === link.company_id;
+        const hasLinkCompanyRecord = !!linkCompanyRecords;
+        
         return NextResponse.json(
           { 
             error: 'You are not authorized to use this check-in link',
-            details: 'This link is for a different company than your current assignment.',
+            details: activeCompanyMatches 
+              ? 'Your employee record is assigned to a different company. Please contact your manager to update your company assignment.'
+              : hasLinkCompanyRecord && linkCompanyRecords.employment_status !== 'active'
+              ? `You have a record for this company, but your employment status is "${linkCompanyRecords.employment_status}". Only active employees can check in.`
+              : 'This link is for a different company than your current assignment. Please use a check-in link for your assigned company or contact your manager.',
             diagnostic: {
               user_id: user.id,
               employee_company_id: allEmployeeRecords.company_id,
               link_company_id: link.company_id,
+              user_active_company_id: userProfile?.active_company_id,
+              active_company_matches: activeCompanyMatches,
+              has_link_company_record: hasLinkCompanyRecord,
+              link_company_status: linkCompanyRecords?.employment_status,
               issue: 'company_mismatch'
             }
           },
