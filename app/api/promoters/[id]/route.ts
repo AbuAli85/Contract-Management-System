@@ -258,10 +258,15 @@ export const GET = withAnyRBAC(
 
             console.log(`✅ Successfully auto-created promoter record for user ${userId}`);
             
-            // Re-fetch the promoter with the same query to get it in the expected format
-            const { data: refetchedPromoter } = await promoterQuery.maybeSingle();
+            // Re-fetch the promoter using admin client to ensure we can read it
+            const { data: refetchedPromoter } = await supabaseAdmin
+              .from('promoters')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
             
             if (!refetchedPromoter) {
+              console.error('❌ Failed to refetch newly created promoter');
               return NextResponse.json(
                 { error: 'Failed to fetch newly created promoter' },
                 { status: 500 }
