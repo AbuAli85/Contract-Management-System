@@ -146,23 +146,75 @@ export async function POST(
     // Generate new temporary password
     const newPassword = generateTemporaryPassword();
 
-    // Update the user's password
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      employeeId,
-      {
+    // ✅ FIX: Check if auth user exists, create if not
+    let authUserId = employeeId;
+    
+    // First, try to get the auth user to see if they exist
+    const { data: existingAuthUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(employeeId);
+    
+    if (getUserError || !existingAuthUser?.user) {
+      // Auth user doesn't exist, create one
+      console.log(`Creating auth account for employee ${employeeId} (${employeeEmail})`);
+      
+      const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        id: employeeId, // Use the same ID as the profile/promoter
+        email: employeeEmail.toLowerCase(),
         password: newPassword,
+        email_confirm: true, // Auto-confirm email
         user_metadata: {
+          full_name: employeeName || employeeEmail.split('@')[0],
+          role: 'promoter',
           must_change_password: true,
+          created_by: user.id,
+          created_at: new Date().toISOString(),
         },
-      }
-    );
+      });
 
-    if (updateError) {
-      console.error('Error resetting password:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to reset password', details: updateError.message },
-        { status: 500 }
+      if (createError || !newAuthUser?.user) {
+        console.error('Error creating auth user:', createError);
+        return NextResponse.json(
+          { 
+            error: 'Failed to create employee account', 
+            details: createError?.message || 'Could not create authentication account. The employee may need to be invited first.' 
+          },
+          { status: 500 }
+        );
+      }
+
+      authUserId = newAuthUser.user.id;
+      
+      // Ensure profile exists and is linked
+      await supabaseAdmin.from('profiles').upsert({
+        id: authUserId,
+        email: employeeEmail.toLowerCase(),
+        full_name: employeeName || employeeEmail.split('@')[0],
+        role: 'promoter',
+        must_change_password: true,
+        updated_at: new Date().toISOString(),
+      } as any, { onConflict: 'id' });
+
+      console.log(`✅ Auth account created for employee ${authUserId}`);
+    } else {
+      // Auth user exists, update password
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        authUserId,
+        {
+          password: newPassword,
+          user_metadata: {
+            must_change_password: true,
+          },
+        }
       );
+
+      if (updateError) {
+        console.error('Error resetting password:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to reset password', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      console.log(`✅ Password reset for existing auth user ${authUserId}`);
     }
 
     // Update profile to require password change
@@ -170,7 +222,7 @@ export async function POST(
     await (supabaseAdmin.from('profiles') as any).update({
       must_change_password: true,
       updated_at: new Date().toISOString(),
-    }).eq('id', employeeId);
+    }).eq('id', authUserId);
 
     return NextResponse.json({
       success: true,
