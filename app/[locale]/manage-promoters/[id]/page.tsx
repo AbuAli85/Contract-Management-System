@@ -924,41 +924,49 @@ export default function PromoterDetailPage() {
 
   // Use enhanced view if enabled
   if (useEnhancedView) {
+    // For employees viewing their own profile, show only the employee portal
+    if (isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails) {
+      return (
+        <div className="container mx-auto py-6">
+          <EmployeeSelfServicePortal
+            promoterId={promoterId}
+            promoterDetails={promoterDetails}
+            locale={locale}
+          />
+        </div>
+      );
+    }
+    
+    // For employers/admins, show the full enhanced view
     return (
-      <>
-        {/* Employee Self-Service Portal - Show when employee views own profile */}
-        {isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails && (
-          <div className="container mx-auto py-6">
-            <EmployeeSelfServicePortal
-              promoterId={promoterId}
-              promoterDetails={promoterDetails}
-              locale={locale}
-            />
-          </div>
-        )}
-        <PromoterDetailsEnhanced
-          promoterDetails={promoterDetails}
-          isLoading={isLoading}
-          isRefreshing={isRefreshing}
-          error={error}
-          onRefresh={handleRefresh}
-        />
-      </>
+      <PromoterDetailsEnhanced
+        promoterDetails={promoterDetails}
+        isLoading={isLoading}
+        isRefreshing={isRefreshing}
+        error={error}
+        onRefresh={handleRefresh}
+      />
     );
   }
 
-  return (
-    <div
-      className={`container mx-auto space-y-6 py-6 ${viewMode === 'mobile' ? 'px-4' : ''}`}
-    >
-      {/* Employee Self-Service Portal - Show when employee views own profile */}
-      {isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails && (
+  // For employees viewing their own profile, show only the employee portal
+  if (isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails) {
+    return (
+      <div className="container mx-auto py-6">
         <EmployeeSelfServicePortal
           promoterId={promoterId}
           promoterDetails={promoterDetails}
           locale={locale}
         />
-      )}
+      </div>
+    );
+  }
+
+  // For employers/admins, show the full detailed view
+  return (
+    <div
+      className={`container mx-auto space-y-6 py-6 ${viewMode === 'mobile' ? 'px-4' : ''}`}
+    >
       {/* Enhanced Header with Predictive Score */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div className='flex-1 min-w-0'>
