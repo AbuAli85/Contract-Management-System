@@ -167,20 +167,21 @@ function SidebarContent({
   const showEmergencyNavigation =
     pathname?.includes('/dashboard') && !user && authMounted && !loading;
 
+  // Get user role information (defined at component level for use in JSX)
+  const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
+  const userRole = userProfile?.role || userMetadata?.role || '';
+  const isAdmin = userRole === 'admin' || 
+                  userRole === 'super_admin' || 
+                  roleInfo?.canDoAdmin === true;
+  const isManager = userRole === 'manager';
+  const isEmployer = userRole === 'employer' || 
+                     userMetadata?.employer_id ||
+                     userMetadata?.company_id;
+  const isPromoter = userRole === 'promoter' || userRole === 'user';
+
   // Safe navigation items with error handling
   const createNavigationItems = () => {
     try {
-      // Get user role information
-      const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
-      const userRole = userProfile?.role || userMetadata?.role || '';
-      const isAdmin = userRole === 'admin' || 
-                      userRole === 'super_admin' || 
-                      roleInfo?.canDoAdmin === true;
-      const isManager = userRole === 'manager';
-      const isEmployer = userRole === 'employer' || 
-                         userMetadata?.employer_id ||
-                         userMetadata?.company_id;
-      const isPromoter = userRole === 'promoter' || userRole === 'user';
 
       // Base items that everyone can see
       const baseItems: any[] = [
