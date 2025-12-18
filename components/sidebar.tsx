@@ -193,119 +193,119 @@ function SidebarContent({
       // Admin/Manager/Employer only items
       if (isAdmin || isManager || isEmployer) {
         baseItems.push(
-          {
-            title: 'eXtra Contracts',
-            href: '/generate-contract',
-            icon: FilePlus,
-            description: 'Employment contracts',
+        {
+          title: 'eXtra Contracts',
+          href: '/generate-contract',
+          icon: FilePlus,
+          description: 'Employment contracts',
             roles: ['admin', 'manager', 'employer'],
-          },
-          {
-            title: 'General Contracts',
-            href: '/contracts/general',
-            icon: FileEdit,
-            description: 'Business contracts',
-            badge: 'New',
+        },
+        {
+          title: 'General Contracts',
+          href: '/contracts/general',
+          icon: FileEdit,
+          description: 'Business contracts',
+          badge: 'New',
             roles: ['admin', 'manager', 'employer'],
-          },
-          {
-            title: 'Sharaf DG Deployment',
-            href: '/contracts/sharaf-dg',
-            icon: Building2,
-            description: 'Deployment letters with PDF',
-            badge: 'PDF',
+        },
+        {
+          title: 'Sharaf DG Deployment',
+          href: '/contracts/sharaf-dg',
+          icon: Building2,
+          description: 'Deployment letters with PDF',
+          badge: 'PDF',
             roles: ['admin', 'manager', 'employer'],
-          },
-          {
-            title: 'View Contracts',
-            href: '/contracts',
-            icon: FolderOpen,
-            description: 'Browse existing contracts',
-            badge: 'Active',
+        },
+        {
+          title: 'View Contracts',
+          href: '/contracts',
+          icon: FolderOpen,
+          description: 'Browse existing contracts',
+          badge: 'Active',
             roles: ['admin', 'manager', 'employer'],
-          },
-          {
-            title: 'Parties & Employers',
-            icon: Building2,
-            description: 'Manage parties and employers',
+        },
+        {
+          title: 'Parties & Employers',
+          icon: Building2,
+          description: 'Manage parties and employers',
             roles: ['admin', 'manager', 'employer'],
-            children: [
-              {
-                title: 'Manage Parties',
-                href: '/manage-parties',
-                icon: FilePlus,
-                description: 'Add or edit parties',
-              },
-              {
-                title: 'Employers',
-                href: '/manage-parties/employers',
-                icon: Building2,
-                description: 'View all employers',
-              },
-              {
-                title: 'Clients',
-                href: '/manage-parties/clients',
-                icon: Users,
-                description: 'View all clients',
-              },
-              {
-                title: 'Generic Parties',
-                href: '/manage-parties/generic',
-                icon: Briefcase,
-                description: 'View generic parties',
-              },
-            ],
-          },
-          {
-            title: 'HR Management',
-            icon: Users,
-            description: 'HR operations and employee management',
+          children: [
+            {
+              title: 'Manage Parties',
+              href: '/manage-parties',
+              icon: FilePlus,
+              description: 'Add or edit parties',
+            },
+            {
+              title: 'Employers',
+              href: '/manage-parties/employers',
+              icon: Building2,
+              description: 'View all employers',
+            },
+            {
+              title: 'Clients',
+              href: '/manage-parties/clients',
+              icon: Users,
+              description: 'View all clients',
+            },
+            {
+              title: 'Generic Parties',
+              href: '/manage-parties/generic',
+              icon: Briefcase,
+              description: 'View generic parties',
+            },
+          ],
+        },
+        {
+          title: 'HR Management',
+          icon: Users,
+          description: 'HR operations and employee management',
             roles: ['admin', 'manager', 'employer'],
-            children: [
-              {
-                title: 'Alignment Overview',
-                href: '/hr/alignment',
-                icon: Users,
-                description: 'Employer-employee alignment & overview',
-              },
-              {
-                title: 'Documents',
-                href: '/hr/documents',
-                icon: FileText,
-                description: 'Document management & compliance',
-              },
-              {
-                title: 'Assignments',
-                href: '/hr/assignments',
-                icon: Briefcase,
-                description: 'Client assignments',
-              },
-              {
-                title: 'Deployment Letters',
-                href: '/hr/deployment-letters',
-                icon: FileEdit,
-                description: 'Generate deployment letters',
-              },
-              {
-                title: 'Team Management',
-                href: '/employer/team',
-                icon: Users,
-                description: 'Manage team members',
-              },
-            ],
-          },
-          {
-            title: 'Promoters',
-            href: '/promoters',
-            icon: Users,
-            description: 'View and manage all promoters',
+          children: [
+            {
+              title: 'Alignment Overview',
+              href: '/hr/alignment',
+              icon: Users,
+              description: 'Employer-employee alignment & overview',
+            },
+            {
+              title: 'Documents',
+              href: '/hr/documents',
+              icon: FileText,
+              description: 'Document management & compliance',
+            },
+            {
+              title: 'Assignments',
+              href: '/hr/assignments',
+              icon: Briefcase,
+              description: 'Client assignments',
+            },
+            {
+              title: 'Deployment Letters',
+              href: '/hr/deployment-letters',
+              icon: FileEdit,
+              description: 'Generate deployment letters',
+            },
+            {
+              title: 'Team Management',
+              href: '/employer/team',
+              icon: Users,
+              description: 'Manage team members',
+            },
+          ],
+        },
+        {
+          title: 'Promoters',
+          href: '/promoters',
+          icon: Users,
+          description: 'View and manage all promoters',
             roles: ['admin', 'manager', 'employer'],
-          },
-          {
-            title: 'Promoter Analysis',
-            href: '/promoter-analysis',
-            icon: FolderSearch,
-            description: 'Performance analytics',
+        },
+        {
+          title: 'Promoter Analysis',
+          href: '/promoter-analysis',
+          icon: FolderSearch,
+          description: 'Performance analytics',
             roles: ['admin', 'manager', 'employer'],
           }
         );
@@ -334,46 +334,46 @@ function SidebarContent({
       // Admin only items
       if (isAdmin) {
         baseItems.push(
-          {
-            title: 'User Management',
-            href: '/dashboard/users',
-            icon: UserCheck,
-            description: 'Manage system users',
+        {
+          title: 'User Management',
+          href: '/dashboard/users',
+          icon: UserCheck,
+          description: 'Manage system users',
             roles: ['admin'],
-          },
-          {
-            title: 'User Approvals',
-            href: '/dashboard/user-approvals',
-            icon: UserPlus,
-            description: 'Approve pending users',
+        },
+        {
+          title: 'User Approvals',
+          href: '/dashboard/user-approvals',
+          icon: UserPlus,
+          description: 'Approve pending users',
             roles: ['admin'],
-          },
-          {
-            title: 'CRM',
-            href: '/crm',
-            icon: Building2,
-            description: 'Customer relationship management',
+        },
+        {
+          title: 'CRM',
+          href: '/crm',
+          icon: Building2,
+          description: 'Customer relationship management',
             roles: ['admin'],
-          },
-          {
-            title: 'Analytics',
-            href: '/dashboard/analytics',
-            icon: FolderEdit,
-            description: 'Detailed analytics',
+        },
+        {
+          title: 'Analytics',
+          href: '/dashboard/analytics',
+          icon: FolderEdit,
+          description: 'Detailed analytics',
             roles: ['admin'],
-          },
-          {
-            title: 'Reports',
-            href: '/dashboard/reports',
-            icon: FolderCheck,
-            description: 'Generate reports',
+        },
+        {
+          title: 'Reports',
+          href: '/dashboard/reports',
+          icon: FolderCheck,
+          description: 'Generate reports',
             roles: ['admin'],
-          },
-          {
-            title: 'Audit Logs',
-            href: '/dashboard/audit',
-            icon: Shield,
-            description: 'System audit trails',
+        },
+        {
+          title: 'Audit Logs',
+          href: '/dashboard/audit',
+          icon: Shield,
+          description: 'System audit trails',
             roles: ['admin'],
           }
         );
@@ -382,11 +382,11 @@ function SidebarContent({
       // Add Team Management for employers, managers, and admins
       if (isAdmin || isManager || isEmployer) {
         baseItems.push({
-          title: 'Team Management',
-          href: '/employer/team',
-          icon: Users,
-          description: 'Manage your team, attendance, tasks, and targets',
-          badge: 'New',
+            title: 'Team Management',
+            href: '/employer/team',
+            icon: Users,
+            description: 'Manage your team, attendance, tasks, and targets',
+            badge: 'New',
           roles: ['admin', 'manager', 'employer'],
         });
       }
@@ -394,10 +394,10 @@ function SidebarContent({
       // Add Employee Dashboard for promoters/employees
       if (isPromoter) {
         baseItems.push({
-          title: 'My Workplace',
-          href: '/employee/dashboard',
-          icon: Briefcase,
-          description: 'View your tasks, targets, and attendance',
+            title: 'My Workplace',
+            href: '/employee/dashboard',
+            icon: Briefcase,
+            description: 'View your tasks, targets, and attendance',
           roles: ['promoter', 'user'],
         });
       }

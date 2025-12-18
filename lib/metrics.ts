@@ -252,7 +252,7 @@ export async function getContractMetrics(
     if (partyId) {
       query = query.or(`second_party_id.eq.${partyId},first_party_id.eq.${partyId}`);
     } else if (userRole !== 'admin' && userId) {
-      // RBAC: Non-admins see only their contracts
+    // RBAC: Non-admins see only their contracts
       query = query.or(
         `first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`
       );

@@ -305,18 +305,18 @@ export function TeamManagementDashboard() {
             <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/20">
               <Users className="h-8 w-8 text-white" />
             </div>
-            <div>
+        <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-                Team Management
-              </h1>
+            Team Management
+          </h1>
               <p className="text-gray-500 dark:text-gray-400 mt-1">
-                Manage your team members, permissions, attendance, tasks, and targets
-              </p>
-            </div>
+            Manage your team members, permissions, attendance, tasks, and targets
+          </p>
+        </div>
           </div>
           <div className="flex gap-2">
             <InviteEmployeeDialog onSuccess={handleAddMember} />
-            <AddTeamMemberDialog onSuccess={handleAddMember} />
+        <AddTeamMemberDialog onSuccess={handleAddMember} />
           </div>
         </div>
       </div>

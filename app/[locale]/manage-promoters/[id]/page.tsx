@@ -81,6 +81,7 @@ import { EmployerEmployeeManagementPanel } from '@/components/promoters/employer
 import { EmployeeTeamComparison } from '@/components/promoters/employee-team-comparison';
 import { EmployeeComplianceAlerts } from '@/components/promoters/employee-compliance-alerts';
 import { EmployeeWorkloadStatus } from '@/components/promoters/employee-workload-status';
+import { EmployeeSelfServicePortal } from '@/components/promoters/employee-self-service-portal';
 import { logger } from '@/lib/utils/logger';
 
 // Safe date parsing functions to prevent "Invalid time value" errors
@@ -238,6 +239,8 @@ export default function PromoterDetailPage() {
     'desktop'
   );
   const role = useUserRole();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isViewingOwnProfile, setIsViewingOwnProfile] = useState(false);
 
   // Filter section state
   const [searchTerm, setSearchTerm] = useState('');
@@ -250,6 +253,28 @@ export default function PromoterDetailPage() {
     { id: string; name_en?: string; name_ar?: string }[]
   >([]);
   const [employersLoading, setEmployersLoading] = useState(true);
+
+  // Get current user ID and check if viewing own profile
+  useEffect(() => {
+    async function getCurrentUser() {
+      const supabase = createClient();
+      if (!supabase) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+        // Check if user is viewing their own profile
+        const isOwnProfile = 
+          user.id === promoterId || 
+          (promoterId && user.id && promoterId.startsWith(user.id.substring(0, 8))) ||
+          (promoterId && user.id && user.id.startsWith(promoterId));
+        setIsViewingOwnProfile(!!isOwnProfile);
+      }
+    }
+    if (promoterId) {
+      getCurrentUser();
+    }
+  }, [promoterId]);
 
   // Detect viewport size for responsive design
   useEffect(() => {
@@ -454,10 +479,10 @@ export default function PromoterDetailPage() {
           // Handle 404 - promoter not found
           if (response.status === 404) {
             setError('Promoter not found. The record may not exist or you may not have permission to view it.');
-            setIsLoading(false);
-            return;
-          }
-          
+        setIsLoading(false);
+        return;
+      }
+
           // Handle 401/403 - unauthorized
           if (response.status === 401 || response.status === 403) {
             setError('You do not have permission to view this promoter.');
@@ -475,39 +500,39 @@ export default function PromoterDetailPage() {
 
         if (!promoterData) {
           setError('Promoter not found.');
-          setIsLoading(false);
-          return;
-        }
+        setIsLoading(false);
+        return;
+      }
 
-        // Get tags from promoter_tags table if it exists
+      // Get tags from promoter_tags table if it exists
         const supabase = createClient();
-        let tags: string[] = [];
-        try {
+      let tags: string[] = [];
+      try {
           if (supabase) {
-            const { data: tagsData, error: tagsError } = await supabase
-              .from('promoter_tags')
-              .select('tag')
-              .eq('promoter_id', promoterId);
+        const { data: tagsData, error: tagsError } = await supabase
+          .from('promoter_tags')
+          .select('tag')
+          .eq('promoter_id', promoterId);
 
-            if (!tagsError && tagsData) {
-              tags = tagsData.map((t: any) => t.tag).filter(Boolean);
+        if (!tagsError && tagsData) {
+          tags = tagsData.map((t: any) => t.tag).filter(Boolean);
             }
-          }
-        } catch (error) {
-          // If promoter_tags table doesn't exist, use empty array
-          logger.log(
-            'promoter_tags table not available, using empty tags array'
-          );
         }
+      } catch (error) {
+        // If promoter_tags table doesn't exist, use empty array
+        logger.log(
+          'promoter_tags table not available, using empty tags array'
+        );
+      }
 
         // Fetch contracts using API or direct call
         let contracts: any[] = [];
         try {
           if (supabase) {
-            const { data: contractsData, error: contractsError } = await supabase
-              .from('contracts')
-              .select('*')
-              .eq('promoter_id', promoterId);
+      const { data: contractsData, error: contractsError } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('promoter_id', promoterId);
 
             if (!contractsError && contractsData) {
               contracts = contractsData;
@@ -515,26 +540,26 @@ export default function PromoterDetailPage() {
           }
         } catch (error) {
           logger.error('Error fetching contracts:', error);
-          // Don't set error for contracts, just log it
-        }
+        // Don't set error for contracts, just log it
+      }
 
         // Employer info is already included in API response
         const employerInfo = data.employer || promoterData.employer || null;
 
-        setPromoterDetails({
-          ...promoterData,
+      setPromoterDetails({
+        ...promoterData,
           contracts: contracts || [],
-          employer: employerInfo,
-          name_en:
-            promoterData.name_en ||
-            [promoterData.first_name, promoterData.last_name]
-              .filter(Boolean)
-              .join(' '),
-          name_ar: promoterData.name_ar || '',
-          id_card_number: promoterData.id_card_number || '',
-          tags,
-        });
-        setIsLoading(false);
+        employer: employerInfo,
+        name_en:
+          promoterData.name_en ||
+          [promoterData.first_name, promoterData.last_name]
+            .filter(Boolean)
+            .join(' '),
+        name_ar: promoterData.name_ar || '',
+        id_card_number: promoterData.id_card_number || '',
+        tags,
+      });
+      setIsLoading(false);
       } catch (fetchError) {
         console.error('Error fetching promoter details:', fetchError);
         setError('Failed to load promoter details. Please try again.');
@@ -900,13 +925,25 @@ export default function PromoterDetailPage() {
   // Use enhanced view if enabled
   if (useEnhancedView) {
     return (
-      <PromoterDetailsEnhanced
-        promoterDetails={promoterDetails}
-        isLoading={isLoading}
-        isRefreshing={isRefreshing}
-        error={error}
-        onRefresh={handleRefresh}
-      />
+      <>
+        {/* Employee Self-Service Portal - Show when employee views own profile */}
+        {isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails && (
+          <div className="container mx-auto py-6">
+            <EmployeeSelfServicePortal
+              promoterId={promoterId}
+              promoterDetails={promoterDetails}
+              locale={locale}
+            />
+          </div>
+        )}
+        <PromoterDetailsEnhanced
+          promoterDetails={promoterDetails}
+          isLoading={isLoading}
+          isRefreshing={isRefreshing}
+          error={error}
+          onRefresh={handleRefresh}
+        />
+      </>
     );
   }
 
@@ -914,6 +951,14 @@ export default function PromoterDetailPage() {
     <div
       className={`container mx-auto space-y-6 py-6 ${viewMode === 'mobile' ? 'px-4' : ''}`}
     >
+      {/* Employee Self-Service Portal - Show when employee views own profile */}
+      {isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails && (
+        <EmployeeSelfServicePortal
+          promoterId={promoterId}
+          promoterDetails={promoterDetails}
+          locale={locale}
+        />
+      )}
       {/* Enhanced Header with Predictive Score */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div className='flex-1 min-w-0'>

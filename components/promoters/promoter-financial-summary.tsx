@@ -149,7 +149,7 @@ export function PromoterFinancialSummary({
       const monthsElapsed = Math.max(1, now.getMonth() + 1);
       const averageMonthly = ytdEarnings / monthsElapsed;
 
-      // Next payout is typically 15th of next month
+    // Next payout is typically 15th of next month
       const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15);
 
       setFinancialData({
