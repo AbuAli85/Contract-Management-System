@@ -64,6 +64,11 @@ export function CompanySwitcher() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Determine if user can create companies (not promoters/employees)
+  const canCreateCompany = companies.length > 0 
+    ? !['promoter', 'user'].includes(companies[0]?.user_role || '')
+    : true; // If no companies, allow creation (will be checked by API)
+
   useEffect(() => {
     fetchCompanies();
   }, []);
@@ -176,8 +181,8 @@ export function CompanySwitcher() {
     );
   }
 
-  // If no companies, show create button
-  if (companies.length === 0) {
+  // If no companies, show create button (only for admins, managers, employers)
+  if (companies.length === 0 && canCreateCompany) {
     return (
       <>
         <Button variant="outline" onClick={() => setCreateDialogOpen(true)} className="gap-2">
@@ -265,17 +270,20 @@ export function CompanySwitcher() {
             </DropdownMenuItem>
           ))}
 
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem 
-            onClick={() => setCreateDialogOpen(true)}
-            className="flex items-center gap-2 p-3 cursor-pointer"
-          >
-            <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <Plus className="h-4 w-4" />
-            </div>
-            <span>Create New Company</span>
-          </DropdownMenuItem>
+          {canCreateCompany && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setCreateDialogOpen(true)}
+                className="flex items-center gap-2 p-3 cursor-pointer"
+              >
+                <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Plus className="h-4 w-4" />
+                </div>
+                <span>Create New Company</span>
+              </DropdownMenuItem>
+            </>
+          )}
 
           {activeCompany && (
             <DropdownMenuItem 
