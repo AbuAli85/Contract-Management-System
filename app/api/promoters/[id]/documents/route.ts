@@ -80,11 +80,14 @@ export async function GET(
       // Check if the error is due to missing table (relation does not exist)
       const errorMessage = error.message || '';
       const errorCode = (error as { code?: string }).code || '';
+      const errorDetails = error as { details?: string; hint?: string };
 
       logger.error('Error fetching documents:', {
         message: errorMessage,
         code: errorCode,
-        details: error,
+        details: errorDetails.details,
+        hint: errorDetails.hint,
+        fullError: error,
         promoterId: id,
         userId: user.id,
       });
@@ -111,15 +114,21 @@ export async function GET(
         return NextResponse.json({ documents: [] }, { status: 200 });
       }
 
-      // For other errors, return the error but with more context
-      return NextResponse.json(
-        {
-          error: error.message || 'Failed to fetch documents',
-          code: errorCode,
-          details: process.env.NODE_ENV === 'development' ? error : undefined,
-        },
-        { status: 400 }
-      );
+      // For other errors, log the full error for debugging
+      // But return empty array gracefully to prevent UI breakage
+      logger.error('Database error fetching documents:', {
+        errorMessage,
+        errorCode,
+        errorDetails: errorDetails.details,
+        errorHint: errorDetails.hint,
+        promoterId: id,
+        userId: user.id,
+        fullError: error,
+      });
+
+      // Return empty array gracefully - this prevents the UI from breaking
+      // The error is logged for debugging purposes
+      return NextResponse.json({ documents: [] }, { status: 200 });
     }
 
     logger.log(
