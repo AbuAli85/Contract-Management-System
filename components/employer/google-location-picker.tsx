@@ -41,9 +41,12 @@ export function GoogleLocationPicker({
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mapsLoaded, setMapsLoaded] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const autocompleteService = useRef<any>(null);
   const placesService = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Load Google Maps script
   useEffect(() => {
@@ -90,46 +93,86 @@ export function GoogleLocationPicker({
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    setShowSuggestions(query.length > 2);
+    
+    // Clear previous debounce timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
 
-    if (!query || query.length < 3) {
+    // If query is too short, clear suggestions but keep dropdown open if focused
+    if (!query || query.length < 2) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
-    if (!autocompleteService.current) {
-      if (window.google?.maps?.places) {
-        initializeServices();
-      } else {
-        return;
-      }
-    }
-
-    try {
-      autocompleteService.current.getPlacePredictions(
-        {
-          input: query,
-          types: ['establishment', 'geocode'],
-          componentRestrictions: { country: ['om'] }, // Restrict to Oman
-        },
-        (predictions: any[], status: string) => {
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-            setSuggestions(predictions);
-          } else {
-            setSuggestions([]);
-          }
+    // Debounce the API call to avoid too many requests while typing
+    debounceTimer.current = setTimeout(() => {
+      if (!autocompleteService.current) {
+        if (window.google?.maps?.places) {
+          initializeServices();
+        } else {
+          return;
         }
-      );
-    } catch (error) {
-      console.error('Error fetching suggestions:', error);
-      setSuggestions([]);
-    }
+      }
+
+      // Only search if query is at least 2 characters
+      if (query.length >= 2) {
+        try {
+          autocompleteService.current.getPlacePredictions(
+            {
+              input: query,
+              types: ['establishment', 'geocode'],
+              componentRestrictions: { country: ['om'] }, // Restrict to Oman
+            },
+            (predictions: any[], status: string) => {
+              if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+                setSuggestions(predictions);
+                setShowSuggestions(true); // Automatically show suggestions when available
+              } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+              }
+            }
+          );
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      }
+    }, 300); // 300ms debounce delay
   };
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+        setIsFocused(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   const handleSelectPlace = (placeId: string, description: string) => {
     setLoading(true);
     setSearchQuery(description);
     setShowSuggestions(false);
+    setIsFocused(false);
 
     if (!placesService.current) {
       if (window.google?.maps?.places) {
@@ -196,6 +239,7 @@ export function GoogleLocationPicker({
     setSelectedLocation(null);
     setSuggestions([]);
     setShowSuggestions(false);
+    setIsFocused(false);
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -204,7 +248,7 @@ export function GoogleLocationPicker({
   return (
     <div className={`space-y-2 ${className}`}>
       <Label htmlFor="location-search">Search Location</Label>
-      <div className="relative">
+      <div className="relative" ref={containerRef}>
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -214,11 +258,22 @@ export function GoogleLocationPicker({
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             onFocus={() => {
-              if (suggestions.length > 0) setShowSuggestions(true);
+              setIsFocused(true);
+              // Show suggestions if they exist and query is long enough
+              if (suggestions.length > 0 && searchQuery.length >= 2) {
+                setShowSuggestions(true);
+              }
+            }}
+            onBlur={() => {
+              // Delay to allow click on suggestion to register
+              setTimeout(() => {
+                setIsFocused(false);
+              }, 200);
             }}
             placeholder="Search for location (e.g., Grand Mall Muscat, City Center Muscat)"
             className="pl-10 pr-10"
             disabled={!mapsLoaded}
+            autoComplete="off"
           />
           {loading && (
             <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -237,19 +292,25 @@ export function GoogleLocationPicker({
         </div>
 
         {/* Suggestions Dropdown */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+        {showSuggestions && suggestions.length > 0 && searchQuery.length >= 2 && (
+          <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion.place_id}
                 type="button"
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                onClick={() => handleSelectPlace(suggestion.place_id, suggestion.description)}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none transition-colors"
+                onMouseDown={(e) => {
+                  // Prevent input blur when clicking suggestion
+                  e.preventDefault();
+                  handleSelectPlace(suggestion.place_id, suggestion.description);
+                }}
               >
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{suggestion.structured_formatting.main_text}</p>
+                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+                      {suggestion.structured_formatting.main_text}
+                    </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {suggestion.structured_formatting.secondary_text}
                     </p>
@@ -257,6 +318,15 @@ export function GoogleLocationPicker({
                 </div>
               </button>
             ))}
+          </div>
+        )}
+        
+        {/* Show message when typing but no results */}
+        {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && isFocused && (
+          <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-4">
+            <p className="text-sm text-muted-foreground text-center">
+              No locations found. Try a different search term.
+            </p>
           </div>
         )}
       </div>
