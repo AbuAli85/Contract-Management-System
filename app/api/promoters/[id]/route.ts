@@ -6,15 +6,70 @@ import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 import { extractIdFromSlug, isUUID } from '@/lib/utils/slug';
 
 // Validation schema for promoter updates
+// Using passthrough to allow all valid database fields while validating known ones
 const promoterUpdateSchema = z.object({
+  // Names
   name_en: z.string().min(1, 'English name is required').optional(),
   name_ar: z.string().min(1, 'Arabic name is required').optional(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  
+  // Documents
   id_card_number: z.string().min(1, 'ID card number is required').optional(),
   id_card_url: z.string().optional(),
+  id_card_expiry_date: z.string().or(z.date()).optional(),
   passport_url: z.string().optional(),
   passport_number: z.string().optional(),
+  passport_expiry_date: z.string().or(z.date()).optional(),
+  visa_number: z.string().optional(),
+  visa_expiry_date: z.string().or(z.date()).optional(),
+  work_permit_number: z.string().optional(),
+  work_permit_expiry_date: z.string().or(z.date()).optional(),
+  
+  // Contact
   mobile_number: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().refine(
+    (val) => !val || val === '' || z.string().email().safeParse(val).success,
+    { message: 'Invalid email format' }
+  ).optional(),
   profile_picture_url: z.string().optional(),
+  
+  // Personal info
+  nationality: z.string().optional(),
+  date_of_birth: z.string().or(z.date()).optional(),
+  gender: z.enum(['male', 'female', 'other']).optional(),
+  marital_status: z.string().optional(),
+  
+  // Address
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+  postal_code: z.string().optional(),
+  emergency_contact: z.string().optional(),
+  emergency_phone: z.string().optional(),
+  
+  // Professional
+  job_title: z.string().optional(),
+  company: z.string().optional(),
+  department: z.string().optional(),
+  specialization: z.string().optional(),
+  experience_years: z.number().optional(),
+  education_level: z.string().optional(),
+  university: z.string().optional(),
+  graduation_year: z.number().optional(),
+  skills: z.string().optional(),
+  certifications: z.string().optional(),
+  
+  // Financial
+  bank_name: z.string().optional(),
+  account_number: z.string().optional(),
+  iban: z.string().optional(),
+  swift_code: z.string().optional(),
+  tax_id: z.string().optional(),
+  
+  // Status & preferences
   status: z
     .enum([
       'active',
@@ -33,19 +88,21 @@ const promoterUpdateSchema = z.object({
       'other',
     ])
     .optional(),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
-  nationality: z.string().optional(),
-  date_of_birth: z.string().optional(),
-  gender: z.enum(['male', 'female', 'other']).optional(),
-  address: z.string().optional(),
-  emergency_contact: z.string().optional(),
-  emergency_phone: z.string().optional(),
+  overall_status: z.string().optional(),
+  rating: z.number().optional(),
+  availability: z.string().optional(),
+  preferred_language: z.string().optional(),
+  timezone: z.string().optional(),
+  special_requirements: z.string().optional(),
   notes: z.string().optional(),
+  
+  // Relationships
   employer_id: z.string().uuid().optional(),
+  
+  // Notifications
   notify_days_before_id_expiry: z.number().min(1).max(365).optional(),
   notify_days_before_passport_expiry: z.number().min(1).max(365).optional(),
-});
+}).passthrough(); // Allow additional fields that exist in the database but aren't explicitly listed
 
 export const GET = withAnyRBAC(
   ['promoter:read:own', 'promoter:manage:own'],
@@ -282,13 +339,50 @@ export const PUT = withRBAC(
         }
       }
 
+      // Convert date strings to proper format for database
+      const updateData: Record<string, any> = {
+        ...validatedData,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Convert ISO date strings to date format for date fields
+      const dateFields = [
+        'id_card_expiry_date',
+        'passport_expiry_date',
+        'visa_expiry_date',
+        'work_permit_expiry_date',
+        'date_of_birth',
+      ];
+
+      for (const field of dateFields) {
+        if (updateData[field]) {
+          // If it's a string, try to parse it; if it's already a Date, use it
+          if (typeof updateData[field] === 'string') {
+            const date = new Date(updateData[field]);
+            if (!isNaN(date.getTime())) {
+              // Format as YYYY-MM-DD for PostgreSQL DATE type
+              updateData[field] = date.toISOString().split('T')[0];
+            } else {
+              // Invalid date, remove it
+              delete updateData[field];
+            }
+          } else if (updateData[field] instanceof Date) {
+            updateData[field] = updateData[field].toISOString().split('T')[0];
+          }
+        }
+      }
+
+      // Remove null/undefined values to avoid constraint issues (but keep empty strings for text fields)
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === null || updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
       // Update promoter in database
       const { data: promoter, error } = await supabase
         .from('promoters')
-        .update({
-          ...validatedData,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -430,13 +524,50 @@ export const PATCH = withRBAC(
         }
       }
 
+      // Convert date strings to proper format for database
+      const updateData: Record<string, any> = {
+        ...validatedData,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Convert ISO date strings to date format for date fields
+      const dateFields = [
+        'id_card_expiry_date',
+        'passport_expiry_date',
+        'visa_expiry_date',
+        'work_permit_expiry_date',
+        'date_of_birth',
+      ];
+
+      for (const field of dateFields) {
+        if (updateData[field]) {
+          // If it's a string, try to parse it; if it's already a Date, use it
+          if (typeof updateData[field] === 'string') {
+            const date = new Date(updateData[field]);
+            if (!isNaN(date.getTime())) {
+              // Format as YYYY-MM-DD for PostgreSQL DATE type
+              updateData[field] = date.toISOString().split('T')[0];
+            } else {
+              // Invalid date, remove it
+              delete updateData[field];
+            }
+          } else if (updateData[field] instanceof Date) {
+            updateData[field] = updateData[field].toISOString().split('T')[0];
+          }
+        }
+      }
+
+      // Remove null/undefined values to avoid constraint issues (but keep empty strings for text fields)
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === null || updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
       // Update promoter in database
       const { data: promoter, error } = await supabase
         .from('promoters')
-        .update({
-          ...validatedData,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
