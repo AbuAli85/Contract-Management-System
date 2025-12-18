@@ -338,12 +338,8 @@ function DashboardContent() {
   const isEmployer = userRole === 'employer';
 
   // Build quick stats based on user role
-  const quickStats: QuickStat[] = useMemo(() => {
-    const statsArray: QuickStat[] = [];
-    
-    // Promoters see their own contract stats
-    if (isPromoter) {
-      statsArray.push(
+  const quickStats: QuickStat[] = isPromoter
+    ? [
         {
           label: validLocale === 'ar' ? 'عقودي' : 'My Contracts',
           value: stats?.total || 0,
@@ -370,16 +366,14 @@ function DashboardContent() {
         },
         {
           label: validLocale === 'ar' ? 'المهام المعلقة' : 'Pending Tasks',
-          value: 0, // TODO: Fetch from tasks API
+          value: 0,
           change: 0,
           trend: 'neutral',
           icon: <Clock className='h-5 w-5' aria-hidden='true' />,
           color: 'orange',
-        }
-      );
-    } else {
-      // Admin/Manager/Employer see full stats
-      statsArray.push(
+        },
+      ]
+    : [
         {
           label: validLocale === 'ar' ? 'إجمالي العقود' : 'Total Contracts',
           value: stats?.total || 0,
@@ -419,12 +413,8 @@ function DashboardContent() {
               : determineGrowthTrend(utilizationChange),
           icon: <TrendingUp className='h-5 w-5' aria-hidden='true' />,
           color: 'orange',
-        }
-      );
-    }
-    
-    return statsArray;
-  }, [isPromoter, validLocale, stats, promoterStats, totalContractsChange, activeContractsChange, workforceChange, utilizationChange]);
+        },
+      ];
 
   if (loading) {
     return (
@@ -716,24 +706,25 @@ function DashboardContent() {
           ))}
         </div>
 
-        {/* Assignment Status Clarity Card */}
-        <Card
-          className='border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50'
-          role='region'
-          aria-label={
-            validLocale === 'ar'
-              ? 'فهم مقاييس التعيين'
-              : 'Understanding assignment metrics'
-          }
-        >
-          <CardHeader>
-            <CardTitle className='flex items-center gap-2 text-base'>
+        {/* Assignment Status Clarity Card - Only for Admin/Manager/Employer */}
+        {!isPromoter && (
+          <Card
+            className='border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50'
+            role='region'
+            aria-label={
+              validLocale === 'ar'
+                ? 'فهم مقاييس التعيين'
+                : 'Understanding assignment metrics'
+            }
+          >
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2 text-base'>
               <Info className='h-5 w-5 text-blue-600' aria-hidden='true' />
               {validLocale === 'ar'
                 ? 'فهم مقاييس التعيين'
                 : 'Understanding Assignment Metrics'}
-            </CardTitle>
-          </CardHeader>
+              </CardTitle>
+            </CardHeader>
           <CardContent>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <TooltipProvider>
@@ -1036,6 +1027,7 @@ function DashboardContent() {
               )}
             </CardContent>
           </Card>
+          )}
         </div>
 
         {/* Charts and Analytics - Only for Admin/Manager/Employer */}
