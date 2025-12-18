@@ -53,13 +53,24 @@ export function GoogleLocationPicker({
       return;
     }
 
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.error('Google Maps API key is not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');
+      return;
+    }
+
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+    // Use loading=async for better performance (as recommended by Google)
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
       setMapsLoaded(true);
       initializeServices();
+    };
+    script.onerror = () => {
+      console.error('Failed to load Google Maps script. Check your API key and referrer restrictions.');
+      setMapsLoaded(false);
     };
     document.head.appendChild(script);
 
@@ -267,9 +278,20 @@ export function GoogleLocationPicker({
       )}
 
       {!mapsLoaded && (
-        <p className="text-xs text-muted-foreground">
-          Loading Google Maps...
-        </p>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Loading Google Maps...
+          </p>
+          {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              If loading persists, check browser console for API key errors. You may need to add your domain to the API key restrictions in Google Cloud Console.
+            </p>
+          ) : (
+            <p className="text-xs text-red-600 dark:text-red-400">
+              ⚠️ Google Maps API key not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

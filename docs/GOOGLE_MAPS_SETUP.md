@@ -48,13 +48,21 @@ For security, restrict your API key:
    - Select "HTTP referrers (web sites)"
    - Add your domain(s):
      - `localhost:3000/*` (for development)
-     - `yourdomain.com/*` (for production)
+     - `127.0.0.1:3000/*` (for local development)
+     - `https://portal.thesmartpro.io/*` (for production - **REQUIRED**)
+     - `https://*.thesmartpro.io/*` (for all subdomains, optional)
+     - `https://yourdomain.com/*` (if using a different domain)
+
+   **Important**: You must add your production domain exactly as shown above. The domain must match exactly, including the protocol (`https://`) and the trailing `/*` wildcard.
+
 3. Under "API restrictions":
    - Select "Restrict key"
    - Choose:
      - Maps JavaScript API
      - Places API
 4. Click "Save"
+
+**Note**: It may take a few minutes for API key restrictions to propagate. If you see `RefererNotAllowedMapError`, wait 2-3 minutes and refresh the page.
 
 ### 5. Add API Key to Environment Variables
 
@@ -64,7 +72,7 @@ Add the API key to your `.env.local` file:
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
 ```
 
-**Important**: 
+**Important**:
 - The variable name must start with `NEXT_PUBLIC_` to be accessible in the browser
 - Never commit your `.env.local` file to version control
 - Add `.env.local` to your `.gitignore` file
@@ -122,12 +130,33 @@ The Google Maps location picker provides:
 - Ensure billing is enabled on your GCP project
 - Check API quotas haven't been exceeded
 
+### RefererNotAllowedMapError
+
+**Error Message**: `Google Maps JavaScript API error: RefererNotAllowedMapError`
+
+**Cause**: Your API key is restricted to specific domains, and the current domain is not in the allowed list.
+
+**Solution**:
+1. Go to [Google Cloud Console > APIs & Services > Credentials](https://console.cloud.google.com/apis/credentials)
+2. Click on your API key
+3. Under "Application restrictions" > "HTTP referrers (web sites)", add:
+   - `https://portal.thesmartpro.io/*` (for production)
+   - `localhost:3000/*` (for development)
+4. Click "Save"
+5. Wait 2-3 minutes for changes to propagate
+6. Refresh your browser page
+
+**Important**:
+- The domain must match exactly (including `https://` and trailing `/*`)
+- Changes may take a few minutes to take effect
+- Clear browser cache if the error persists after 5 minutes
+
 ## Cost Considerations
 
 Google Maps API has usage-based pricing:
 
 - **Maps JavaScript API**: Free tier includes $200/month credit
-- **Places API**: 
+- **Places API**:
   - Autocomplete: $2.83 per 1,000 requests
   - Place Details: $17 per 1,000 requests
 
