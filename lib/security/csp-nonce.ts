@@ -82,7 +82,7 @@ export function buildCSPWithNonce(
     'https://maps.googleapis.com',
     'https://ajax.googleapis.com',
   ];
-  const externalImages: string[] = ['https://*.supabase.co'];
+  const externalImages: string[] = ['https://*.supabase.co', 'https://maps.gstatic.com'];
 
   if (allowGoogleAnalytics) {
     externalScripts.push(

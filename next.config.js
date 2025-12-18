@@ -22,8 +22,8 @@ const nextConfig = {
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com https://maps.googleapis.com https://ajax.googleapis.com",
       // Allow styles from self and Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      // Allow images from self, data URIs, Supabase storage, analytics, and Make.com
-      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://hook.eu2.make.com",
+      // Allow images from self, data URIs, Supabase storage, analytics, Make.com, and Google Maps
+      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://hook.eu2.make.com https://maps.gstatic.com",
       // Allow fonts from self and Google Fonts
       "font-src 'self' data: https://fonts.gstatic.com",
       // Allow connections to API, Supabase, analytics, Sentry, and Make.com webhook
