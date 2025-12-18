@@ -28,8 +28,10 @@ export interface EmployeeAccountResult {
 /**
  * Ensure user has the 'promoter' role assigned
  * This grants them promoter:read:own and other promoter permissions
+ * 
+ * @export - Export this function so it can be used in API routes
  */
-async function ensurePromoterRole(userId: string): Promise<void> {
+export async function ensurePromoterRole(userId: string): Promise<void> {
   const supabaseAdmin = getSupabaseAdmin();
   
   try {

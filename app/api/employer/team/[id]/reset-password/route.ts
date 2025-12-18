@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { 
   findOrCreateEmployeeAccount, 
-  resetEmployeePassword 
+  resetEmployeePassword,
+  ensurePromoterRole
 } from '@/lib/services/employee-account-service';
 
 export const dynamic = 'force-dynamic';
@@ -203,6 +204,9 @@ export async function POST(
     }
 
     const newPassword = passwordResult.password!; // Password is guaranteed to exist if success is true
+
+    // ✅ Ensure the user has the 'promoter' role for permissions
+    await ensurePromoterRole(authUserId);
 
     return NextResponse.json({
       success: true,
