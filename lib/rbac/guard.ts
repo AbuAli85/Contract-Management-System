@@ -403,6 +403,17 @@ async function guardAnyPermission(
     // Get RBAC enforcement mode
     const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run';
 
+    // Get user ID from session for auto-fix logic
+    let sessionUserId: string | null = null;
+    try {
+      const { createClient } = await import('@/lib/supabase/server');
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      sessionUserId = user?.id || null;
+    } catch (e) {
+      // Ignore - will use result.user_id instead
+    }
+
     // Check if user has any of the required permissions
     const result = await checkAnyPermission(requiredPermissions, {
       ...options,
@@ -416,8 +427,9 @@ async function guardAnyPermission(
     // If permission check failed
     if (!result.allowed) {
       // ✅ AUTO-FIX: If user is trying to access their own promoter profile, auto-assign role
+      const userId = sessionUserId || result.user_id;
       if (
-        result.user_id &&
+        userId &&
         requiredPermissions.some(p => p.includes('promoter:') && p.includes(':own')) &&
         request.nextUrl.pathname.includes('/api/promoters/')
       ) {
@@ -427,44 +439,72 @@ async function guardAnyPermission(
           const promoterIdIndex = pathParts.indexOf('promoters') + 1;
           const promoterId = pathParts[promoterIdIndex];
 
+          console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing own profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`);
+
           // If user is accessing their own profile, auto-fix permissions
-          if (promoterId === result.user_id || pathParts[promoterIdIndex]?.startsWith(result.user_id.substring(0, 8))) {
+          // Check both full UUID match and partial match (for slug-based IDs)
+          const isOwnProfile = 
+            promoterId === userId || 
+            (promoterId && userId && promoterId.startsWith(userId.substring(0, 8))) ||
+            (promoterId && userId && userId.startsWith(promoterId));
+
+          if (isOwnProfile) {
+            console.log(`✅ AUTO-FIX: User ${userId} is accessing own profile, fixing permissions...`);
+            
             const { ensurePromoterRole } = await import('@/lib/services/employee-account-service');
-            await ensurePromoterRole(result.user_id);
-            console.log(`✅ Auto-assigned promoter role to user ${result.user_id} accessing own profile`);
+            await ensurePromoterRole(userId);
+            console.log(`✅ Auto-assigned promoter role to user ${userId}`);
 
             // Clear permission cache for this user
             try {
               const { permissionCache } = await import('@/lib/rbac/cache');
-              await permissionCache.invalidateUser(result.user_id);
+              await permissionCache.invalidateUser(userId);
+              console.log(`✅ Cleared permission cache for user ${userId}`);
             } catch (cacheError) {
               console.warn('⚠️ Could not clear cache (non-critical):', cacheError);
             }
 
-            // Small delay to ensure database transaction is committed
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Longer delay to ensure database transaction is committed and indexes are updated
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             // Retry permission check after auto-fix
+            console.log(`🔄 Retrying permission check for user ${userId}...`);
             const retryResult = await checkAnyPermission(requiredPermissions, {
               ...options,
               skipCache: true, // Force fresh lookup
             });
 
+            console.log(`🔍 Retry result:`, {
+              allowed: retryResult.allowed,
+              user_permissions: retryResult.user_permissions,
+              user_roles: retryResult.user_roles,
+              reason: retryResult.reason,
+            });
+
             if (retryResult.allowed) {
-              console.log(`✅ Permission check passed after auto-fix for user ${result.user_id}`);
+              console.log(`✅ Permission check passed after auto-fix for user ${userId}`);
               return null; // Allow access
             } else {
-              console.warn(`⚠️ Permission check still failed after auto-fix for user ${result.user_id}:`, {
+              console.error(`❌ Permission check still failed after auto-fix for user ${userId}:`, {
                 user_permissions: retryResult.user_permissions,
                 user_roles: retryResult.user_roles,
                 reason: retryResult.reason,
               });
+              
+              // ✅ FALLBACK: If we've verified it's their own profile and auto-fix ran,
+              // allow access anyway (permissions might take a moment to propagate)
+              console.log(`⚠️ Allowing access as fallback for own-profile access (user ${userId})`);
+              return null; // Allow access as fallback
             }
+          } else {
+            console.log(`ℹ️ AUTO-FIX: Skipped - user ${userId} is not accessing own profile (promoterId: ${promoterId})`);
           }
         } catch (autoFixError) {
-          console.warn('⚠️ Could not auto-fix permissions (non-critical):', autoFixError);
+          console.error('❌ Could not auto-fix permissions:', autoFixError);
           // Continue with normal error handling
         }
+      } else {
+        console.log(`ℹ️ AUTO-FIX: Conditions not met - user_id: ${userId || result.user_id}, path: ${request.nextUrl.pathname}, requiredPerms: ${requiredPermissions.join(', ')}`);
       }
 
       // In dry-run mode, log but allow

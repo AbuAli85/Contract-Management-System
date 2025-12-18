@@ -169,6 +169,7 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
           role_id: promoterRoleId,
           is_active: true,
           valid_from: new Date().toISOString(),
+          valid_until: null, // ✅ Explicitly set to null (required for permission checks)
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -178,9 +179,15 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
           assignmentData.context = {};
         }
 
-        await supabaseAdmin
+        const { error: assignError } = await supabaseAdmin
           .from(userRoleAssignmentsTable as any)
           .upsert(assignmentData, { onConflict: 'user_id,role_id' });
+
+        if (assignError) {
+          console.error(`❌ Error assigning role to user ${userId}:`, assignError);
+        } else {
+          console.log(`✅ Successfully assigned 'promoter' role to user ${userId}`);
+        }
 
         console.log(`✅ Assigned 'promoter' role to user ${userId}`);
       }
