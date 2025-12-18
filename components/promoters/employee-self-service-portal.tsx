@@ -141,13 +141,21 @@ export function EmployeeSelfServicePortal({
     if (!supabase) return;
     try {
       const { data, error } = await supabase
-        .from('employer_employee_tasks')
+        .from('employee_tasks')
         .select('*')
         .eq('employer_employee_id', eeId)
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        setTasks(data as Task[]);
+        setTasks(data.map((task: any) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          due_date: task.due_date,
+          created_at: task.created_at,
+        })));
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -158,13 +166,22 @@ export function EmployeeSelfServicePortal({
     if (!supabase) return;
     try {
       const { data, error } = await supabase
-        .from('employer_employee_targets')
+        .from('employee_targets')
         .select('*')
         .eq('employer_employee_id', eeId)
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        setTargets(data as Target[]);
+        setTargets(data.map((target: any) => ({
+          id: target.id,
+          title: target.title,
+          description: target.description,
+          target_value: parseFloat(target.target_value) || 0,
+          current_value: parseFloat(target.current_value) || 0,
+          unit: target.unit || '',
+          deadline: target.end_date,
+          status: target.status,
+        })));
       }
     } catch (error) {
       console.error('Error fetching targets:', error);
