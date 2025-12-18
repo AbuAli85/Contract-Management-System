@@ -433,6 +433,17 @@ async function guardAnyPermission(
             await ensurePromoterRole(result.user_id);
             console.log(`✅ Auto-assigned promoter role to user ${result.user_id} accessing own profile`);
 
+            // Clear permission cache for this user
+            try {
+              const { permissionCache } = await import('@/lib/rbac/cache');
+              await permissionCache.invalidateUser(result.user_id);
+            } catch (cacheError) {
+              console.warn('⚠️ Could not clear cache (non-critical):', cacheError);
+            }
+
+            // Small delay to ensure database transaction is committed
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             // Retry permission check after auto-fix
             const retryResult = await checkAnyPermission(requiredPermissions, {
               ...options,
@@ -442,6 +453,12 @@ async function guardAnyPermission(
             if (retryResult.allowed) {
               console.log(`✅ Permission check passed after auto-fix for user ${result.user_id}`);
               return null; // Allow access
+            } else {
+              console.warn(`⚠️ Permission check still failed after auto-fix for user ${result.user_id}:`, {
+                user_permissions: retryResult.user_permissions,
+                user_roles: retryResult.user_roles,
+                reason: retryResult.reason,
+              });
             }
           }
         } catch (autoFixError) {

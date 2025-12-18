@@ -26,8 +26,8 @@ export interface EmployeeAccountResult {
 }
 
 /**
- * Ensure user has the 'promoter' role assigned
- * This grants them promoter:read:own and other promoter permissions
+ * Ensure user has the 'promoter' role assigned with required permissions
+ * This grants them promoter:read:own and promoter:manage:own permissions
  * 
  * @export - Export this function so it can be used in API routes
  */
@@ -35,42 +35,155 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
   const supabaseAdmin = getSupabaseAdmin();
   
   try {
-    // Get the promoter role ID
-    const { data: promoterRoleData } = await supabaseAdmin
-      .from('roles' as any)
+    // Step 1: Ensure permissions exist (try both rbac_* and legacy tables)
+    const requiredPermissions = [
+      { resource: 'promoter', action: 'read', scope: 'own', name: 'promoter:read:own' },
+      { resource: 'promoter', action: 'manage', scope: 'own', name: 'promoter:manage:own' },
+    ];
+
+    const permissionIds: string[] = [];
+    
+    // Try rbac_permissions first, then fallback to permissions
+    let permissionsTable = 'rbac_permissions';
+    let rolesTable = 'rbac_roles';
+    let rolePermissionsTable = 'rbac_role_permissions';
+    let userRoleAssignmentsTable = 'rbac_user_role_assignments';
+
+    // Check if rbac_* tables exist by trying a query
+    const { error: rbacCheckError } = await supabaseAdmin
+      .from('rbac_permissions' as any)
+      .select('id')
+      .limit(1);
+
+    // If rbac tables don't exist, use legacy tables
+    if (rbacCheckError) {
+      permissionsTable = 'permissions';
+      rolesTable = 'roles';
+      rolePermissionsTable = 'role_permissions';
+      userRoleAssignmentsTable = 'user_role_assignments';
+    }
+
+    for (const perm of requiredPermissions) {
+      // Try to find existing permission
+      const { data: existingPerm } = await supabaseAdmin
+        .from(permissionsTable as any)
+        .select('id')
+        .eq('name', perm.name)
+        .maybeSingle();
+
+      if (existingPerm?.id) {
+        permissionIds.push(existingPerm.id);
+      } else {
+        // Create permission if it doesn't exist
+        const { data: newPerm, error: createError } = await supabaseAdmin
+          .from(permissionsTable as any)
+          .insert({
+            resource: perm.resource,
+            action: perm.action,
+            scope: perm.scope,
+            name: perm.name,
+            description: `Allow ${perm.action} on own ${perm.resource} resources`,
+            created_at: new Date().toISOString(),
+          } as any)
+          .select('id')
+          .single();
+
+        if (newPerm?.id && !createError) {
+          permissionIds.push(newPerm.id);
+          console.log(`✅ Created permission: ${perm.name}`);
+        } else {
+          console.warn(`⚠️ Could not create permission ${perm.name}:`, createError);
+        }
+      }
+    }
+
+    // Step 2: Get or create the promoter role
+    let { data: promoterRoleData } = await supabaseAdmin
+      .from(rolesTable as any)
       .select('id')
       .eq('name', 'promoter')
-      .single();
+      .maybeSingle();
 
-    const promoterRole = promoterRoleData as { id: string } | null;
+    let promoterRoleId: string | null = null;
 
-    if (promoterRole?.id) {
-      // Check if role is already assigned
+    if (promoterRoleData?.id) {
+      promoterRoleId = promoterRoleData.id;
+    } else {
+      // Create promoter role if it doesn't exist
+      const roleData: any = {
+        name: 'promoter',
+        description: 'Promoter/Employee role with access to own profile and contracts',
+        created_at: new Date().toISOString(),
+      };
+
+      // Add category if using rbac_roles
+      if (rolesTable === 'rbac_roles') {
+        roleData.category = 'client';
+      } else {
+        roleData.category = 'client';
+        roleData.updated_at = new Date().toISOString();
+      }
+
+      const { data: newRole, error: createRoleError } = await supabaseAdmin
+        .from(rolesTable as any)
+        .insert(roleData)
+        .select('id')
+        .single();
+
+      if (newRole?.id && !createRoleError) {
+        promoterRoleId = newRole.id;
+        console.log(`✅ Created 'promoter' role`);
+      } else {
+        console.warn(`⚠️ Could not create 'promoter' role:`, createRoleError);
+        return; // Can't proceed without role
+      }
+    }
+
+    // Step 3: Link permissions to role
+    if (promoterRoleId && permissionIds.length > 0) {
+      for (const permId of permissionIds) {
+        await supabaseAdmin
+          .from(rolePermissionsTable as any)
+          .upsert({
+            role_id: promoterRoleId,
+            permission_id: permId,
+            created_at: new Date().toISOString(),
+          } as any, { onConflict: 'role_id,permission_id' });
+      }
+      console.log(`✅ Linked ${permissionIds.length} permissions to 'promoter' role`);
+    }
+
+    // Step 4: Assign role to user
+    if (promoterRoleId) {
       const { data: existingAssignmentData } = await supabaseAdmin
-        .from('user_role_assignments' as any)
+        .from(userRoleAssignmentsTable as any)
         .select('id')
         .eq('user_id', userId)
-        .eq('role_id', promoterRole.id)
+        .eq('role_id', promoterRoleId)
         .eq('is_active', true)
         .maybeSingle();
 
-      const existingAssignment = existingAssignmentData as { id: string } | null;
-
-      if (!existingAssignment) {
-        // Assign the role to the user
-        await supabaseAdmin.from('user_role_assignments' as any).upsert({
+      if (!existingAssignmentData) {
+        const assignmentData: any = {
           user_id: userId,
-          role_id: promoterRole.id,
+          role_id: promoterRoleId,
           is_active: true,
           valid_from: new Date().toISOString(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        } as any, { onConflict: 'user_id,role_id' });
+        };
+
+        // Add context if using rbac_user_role_assignments
+        if (userRoleAssignmentsTable === 'rbac_user_role_assignments') {
+          assignmentData.context = {};
+        }
+
+        await supabaseAdmin
+          .from(userRoleAssignmentsTable as any)
+          .upsert(assignmentData, { onConflict: 'user_id,role_id' });
 
         console.log(`✅ Assigned 'promoter' role to user ${userId}`);
       }
-    } else {
-      console.warn(`⚠️ 'promoter' role not found in roles table. User may need manual role assignment.`);
     }
   } catch (roleError) {
     // Non-critical: log but don't fail
