@@ -35,7 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AttendanceCard } from '@/components/employee/attendance-card';
+import { SmartAttendanceCard } from '@/components/employee/smart-attendance-card';
 
 interface EmployeeSelfServicePortalProps {
   promoterId: string;
@@ -1012,7 +1012,7 @@ export function EmployeeSelfServicePortal({
 
         {/* Attendance Tab */}
         <TabsContent value="attendance" className="space-y-4">
-          <AttendanceCard />
+          <SmartAttendanceCard />
         </TabsContent>
 
         {/* Reports Tab */}

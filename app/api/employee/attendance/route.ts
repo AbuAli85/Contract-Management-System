@@ -96,7 +96,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action, location, notes } = body; // action: 'check_in' or 'check_out'
+    const { 
+      action, 
+      location, 
+      notes,
+      latitude,
+      longitude,
+      accuracy,
+      photo,
+      device_info
+    } = body; // action: 'check_in' or 'check_out'
 
     if (!action || !['check_in', 'check_out'].includes(action)) {
       return NextResponse.json(
@@ -104,6 +113,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Get IP address from request headers
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ipAddress = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
+
+    // Generate device fingerprint
+    const deviceFingerprint = device_info 
+      ? `${device_info.userAgent || ''}-${device_info.platform || ''}-${device_info.screenWidth || ''}x${device_info.screenHeight || ''}`
+      : null;
 
     // Get employee link
     const { data: employeeLink } = await supabase
@@ -143,17 +161,78 @@ export async function POST(request: NextRequest) {
       const hour = new Date().getHours();
       const status = hour >= 9 ? 'late' : 'present';
 
+      // Verify location if GPS coordinates provided
+      let locationVerified = false;
+      let distanceFromOffice = null;
+      if (latitude && longitude && employeeLink.company_id) {
+        try {
+          const { data: locationVerification } = await supabaseAdmin.rpc('verify_attendance_location', {
+            p_attendance_id: existing?.id || null,
+            p_latitude: latitude,
+            p_longitude: longitude,
+            p_company_id: employeeLink.company_id,
+          });
+          if (locationVerification) {
+            locationVerified = locationVerification.verified || false;
+            distanceFromOffice = locationVerification.distance_meters || null;
+          }
+        } catch (error) {
+          console.warn('Location verification failed:', error);
+          // Continue without location verification if function doesn't exist yet
+        }
+      }
+
+      // Upload photo to storage if provided
+      let photoUrl = null;
+      if (photo && photo.startsWith('data:image')) {
+        try {
+          // Convert base64 to blob
+          const base64Data = photo.split(',')[1];
+          const buffer = Buffer.from(base64Data, 'base64');
+          const fileName = `attendance/${user.id}/${today}-checkin-${Date.now()}.jpg`;
+          
+          const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+            .from('attendance-photos')
+            .upload(fileName, buffer, {
+              contentType: 'image/jpeg',
+              upsert: false,
+            });
+
+          if (!uploadError && uploadData) {
+            const { data: urlData } = supabaseAdmin.storage
+              .from('attendance-photos')
+              .getPublicUrl(fileName);
+            photoUrl = urlData?.publicUrl || null;
+          }
+        } catch (error) {
+          console.warn('Photo upload failed:', error);
+        }
+      }
+
       if (existing) {
         // Update existing record
+        const updateData: any = {
+          check_in: now,
+          status,
+          location: location || existing.location,
+          notes: notes || existing.notes,
+          method: 'web',
+          updated_at: now,
+          approval_status: 'pending', // Reset to pending when updating
+        };
+
+        if (latitude !== undefined) updateData.latitude = latitude;
+        if (longitude !== undefined) updateData.longitude = longitude;
+        if (accuracy !== undefined) updateData.location_accuracy = accuracy;
+        if (photoUrl) updateData.check_in_photo = photoUrl;
+        if (ipAddress) updateData.ip_address = ipAddress;
+        if (deviceFingerprint) updateData.device_fingerprint = deviceFingerprint;
+        if (device_info) updateData.device_info = device_info;
+        if (locationVerified !== undefined) updateData.location_verified = locationVerified;
+        if (distanceFromOffice !== null) updateData.distance_from_office = distanceFromOffice;
+
         const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
-          .update({
-            check_in: now,
-            status,
-            location: location || existing.location,
-            notes: notes || existing.notes,
-            method: 'web',
-            updated_at: now,
-          })
+          .update(updateData)
           .eq('id', existing.id)
           .select()
           .single();
@@ -161,28 +240,56 @@ export async function POST(request: NextRequest) {
         if (updateError) throw updateError;
         return NextResponse.json({
           success: true,
-          message: 'Checked in successfully',
+          message: 'Checked in successfully. Pending manager approval.',
           attendance: updated,
         });
       } else {
         // Create new record
+        const insertData: any = {
+          employer_employee_id: employeeLink.id,
+          attendance_date: today,
+          check_in: now,
+          status,
+          location,
+          notes,
+          method: 'web',
+          approval_status: 'pending',
+        };
+
+        if (latitude !== undefined) insertData.latitude = latitude;
+        if (longitude !== undefined) insertData.longitude = longitude;
+        if (accuracy !== undefined) insertData.location_accuracy = accuracy;
+        if (photoUrl) insertData.check_in_photo = photoUrl;
+        if (ipAddress) insertData.ip_address = ipAddress;
+        if (deviceFingerprint) insertData.device_fingerprint = deviceFingerprint;
+        if (device_info) insertData.device_info = device_info;
+        if (locationVerified !== undefined) insertData.location_verified = locationVerified;
+        if (distanceFromOffice !== null) insertData.distance_from_office = distanceFromOffice;
+
         const { data: created, error: createError } = await (supabaseAdmin.from('employee_attendance') as any)
-          .insert({
-            employer_employee_id: employeeLink.id,
-            attendance_date: today,
-            check_in: now,
-            status,
-            location,
-            notes,
-            method: 'web',
-          })
+          .insert(insertData)
           .select()
           .single();
 
         if (createError) throw createError;
+
+        // Verify location after creation
+        if (latitude && longitude && employeeLink.company_id && created?.id) {
+          try {
+            await supabaseAdmin.rpc('verify_attendance_location', {
+              p_attendance_id: created.id,
+              p_latitude: latitude,
+              p_longitude: longitude,
+              p_company_id: employeeLink.company_id,
+            });
+          } catch (error) {
+            console.warn('Location verification failed:', error);
+          }
+        }
+
         return NextResponse.json({
           success: true,
-          message: `Checked in successfully${status === 'late' ? ' (Late)' : ''}`,
+          message: `Checked in successfully${status === 'late' ? ' (Late)' : ''}. Pending manager approval.`,
           attendance: created,
         });
       }
@@ -213,14 +320,48 @@ export async function POST(request: NextRequest) {
       // Calculate overtime (over 8 hours)
       const overtimeHours = Math.max(0, parseFloat(totalHours) - 8).toFixed(2);
 
+      // Upload check-out photo if provided
+      let checkOutPhotoUrl = null;
+      if (photo && photo.startsWith('data:image')) {
+        try {
+          const base64Data = photo.split(',')[1];
+          const buffer = Buffer.from(base64Data, 'base64');
+          const fileName = `attendance/${user.id}/${today}-checkout-${Date.now()}.jpg`;
+          
+          const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+            .from('attendance-photos')
+            .upload(fileName, buffer, {
+              contentType: 'image/jpeg',
+              upsert: false,
+            });
+
+          if (!uploadError && uploadData) {
+            const { data: urlData } = supabaseAdmin.storage
+              .from('attendance-photos')
+              .getPublicUrl(fileName);
+            checkOutPhotoUrl = urlData?.publicUrl || null;
+          }
+        } catch (error) {
+          console.warn('Check-out photo upload failed:', error);
+        }
+      }
+
+      const updateData: any = {
+        check_out: now,
+        total_hours: parseFloat(totalHours),
+        overtime_hours: parseFloat(overtimeHours),
+        notes: notes || existing.notes,
+        updated_at: now,
+      };
+
+      if (checkOutPhotoUrl) updateData.check_out_photo = checkOutPhotoUrl;
+      if (latitude !== undefined) updateData.latitude = latitude;
+      if (longitude !== undefined) updateData.longitude = longitude;
+      if (accuracy !== undefined) updateData.location_accuracy = accuracy;
+      if (ipAddress) updateData.ip_address = ipAddress;
+
       const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
-        .update({
-          check_out: now,
-          total_hours: parseFloat(totalHours),
-          overtime_hours: parseFloat(overtimeHours),
-          notes: notes || existing.notes,
-          updated_at: now,
-        })
+        .update(updateData)
         .eq('id', existing.id)
         .select()
         .single();
