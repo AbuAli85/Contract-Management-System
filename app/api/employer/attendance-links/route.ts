@@ -139,9 +139,10 @@ export const POST = withRBAC('attendance:create:all', async (
       );
     }
 
-    // Generate the full URL
+    // Generate the full URL (default to 'en' locale, can be overridden by client)
     const baseUrl = request.nextUrl.origin;
-    const linkUrl = `${baseUrl}/attendance/check-in/${linkCode}`;
+    const locale = request.headers.get('x-locale') || request.nextUrl.searchParams.get('locale') || 'en';
+    const linkUrl = `${baseUrl}/${locale}/attendance/check-in/${linkCode}`;
 
     return NextResponse.json({
       success: true,
@@ -227,12 +228,13 @@ export const GET = withRBAC('attendance:read:all', async (
       );
     }
 
-    // Generate URLs for each link
+    // Generate URLs for each link (default to 'en' locale, can be overridden by client)
     const baseUrl = request.nextUrl.origin;
+    const locale = request.headers.get('x-locale') || request.nextUrl.searchParams.get('locale') || 'en';
     const linksWithUrls = (links || []).map((link: any) => ({
       ...link,
-      url: `${baseUrl}/attendance/check-in/${link.link_code}`,
-      qr_code_data: `${baseUrl}/attendance/check-in/${link.link_code}`,
+      url: `${baseUrl}/${locale}/attendance/check-in/${link.link_code}`,
+      qr_code_data: `${baseUrl}/${locale}/attendance/check-in/${link.link_code}`,
     }));
 
     return NextResponse.json({
