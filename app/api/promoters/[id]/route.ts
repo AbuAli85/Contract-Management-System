@@ -211,25 +211,47 @@ export const GET = withAnyRBAC(
             const { getSupabaseAdmin } = await import('@/lib/supabase/admin');
             const supabaseAdmin = getSupabaseAdmin();
 
+            // Use upsert to handle case where record might already exist
+            const promoterData = {
+              id: userId,
+              email: userProfile.email || session.user.email || '',
+              name_en: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
+              name_ar: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
+              phone: userProfile.phone || null,
+              status: 'active',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+
             const { data: newPromoter, error: createError } = await supabaseAdmin
               .from('promoters')
-              .insert({
-                id: userId,
-                email: userProfile.email || session.user.email || '',
-                name_en: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
-                name_ar: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
-                phone: userProfile.phone || null,
-                status: 'active',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              } as any)
+              .upsert(promoterData, { onConflict: 'id' })
               .select()
               .single();
 
-            if (createError || !newPromoter) {
-              console.error('❌ Error auto-creating promoter record:', createError);
+            if (createError) {
+              console.error('❌ Error auto-creating promoter record:', {
+                error: createError,
+                code: createError.code,
+                message: createError.message,
+                details: createError.details,
+                hint: createError.hint,
+                promoterData,
+              });
               return NextResponse.json(
-                { error: 'Failed to create promoter record' },
+                { 
+                  error: 'Failed to create promoter record',
+                  details: createError.message,
+                  code: createError.code,
+                },
+                { status: 500 }
+              );
+            }
+
+            if (!newPromoter) {
+              console.error('❌ Promoter record creation returned no data');
+              return NextResponse.json(
+                { error: 'Failed to create promoter record - no data returned' },
                 { status: 500 }
               );
             }

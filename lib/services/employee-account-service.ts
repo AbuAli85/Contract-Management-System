@@ -147,16 +147,25 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
 
     // Step 3: Link permissions to role
     if (promoterRoleId && permissionIds.length > 0) {
+      console.log(`🔗 Linking ${permissionIds.length} permissions to 'promoter' role (${promoterRoleId})`);
       for (const permId of permissionIds) {
-        await supabaseAdmin
+        const { error: linkError } = await supabaseAdmin
           .from(rolePermissionsTable as any)
           .upsert({
             role_id: promoterRoleId,
             permission_id: permId,
             created_at: new Date().toISOString(),
           } as any, { onConflict: 'role_id,permission_id' });
+        
+        if (linkError) {
+          console.error(`❌ Error linking permission ${permId} to role ${promoterRoleId}:`, linkError);
+        } else {
+          console.log(`✅ Linked permission ${permId} to role ${promoterRoleId}`);
+        }
       }
-      console.log(`✅ Linked ${permissionIds.length} permissions to 'promoter' role`);
+      console.log(`✅ Successfully linked ${permissionIds.length} permissions to 'promoter' role`);
+    } else {
+      console.warn(`⚠️ Cannot link permissions: roleId=${promoterRoleId}, permissionIds.length=${permissionIds.length}`);
     }
 
     // Step 4: Assign role to user
@@ -196,11 +205,44 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
         }
 
         console.log(`✅ Assigned 'promoter' role to user ${userId}`);
+      } else {
+        console.log(`ℹ️ User ${userId} already has 'promoter' role assigned`);
+      }
+    }
+
+    // Step 5: Verify permissions are set up correctly
+    console.log(`🔍 Verifying permissions for user ${userId}...`);
+    const { data: userRoles } = await supabaseAdmin
+      .from(userRoleAssignmentsTable as any)
+      .select(`
+        role_id,
+        ${rolesTable === 'rbac_roles' ? 'rbac_roles!inner(name)' : 'roles!inner(name)'}
+      `)
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .is('valid_until', null);
+
+    if (userRoles && userRoles.length > 0) {
+      const roleIds = userRoles.map(ur => ur.role_id);
+      const { data: rolePerms } = await supabaseAdmin
+        .from(rolePermissionsTable as any)
+        .select(`
+          permission_id,
+          ${permissionsTable === 'rbac_permissions' ? 'rbac_permissions!inner(name)' : 'permissions!inner(name)'}
+        `)
+        .in('role_id', roleIds);
+
+      if (rolePerms) {
+        const permNames = rolePerms.map(rp => 
+          rp.rbac_permissions?.name || rp.permissions?.name
+        ).filter(Boolean);
+        console.log(`✅ Verified permissions for user ${userId}:`, permNames);
       }
     }
   } catch (roleError) {
     // Non-critical: log but don't fail
     console.error('Error ensuring promoter role (non-critical):', roleError);
+    throw roleError; // Re-throw so caller knows it failed
   }
 }
 
