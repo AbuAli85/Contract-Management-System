@@ -77,6 +77,8 @@ import { PromoterGoalWidget } from '@/components/promoters/promoter-goal-widget'
 import { PromoterPredictiveScore } from '@/components/promoters/promoter-predictive-score';
 import { PromoterFinancialSummary } from '@/components/promoters/promoter-financial-summary';
 import { PromoterDocumentHealth } from '@/components/promoters/promoter-document-health';
+import { EmployerEmployeeManagementPanel } from '@/components/promoters/employer-employee-management-panel';
+import { EmployeeTeamComparison } from '@/components/promoters/employee-team-comparison';
 import { logger } from '@/lib/utils/logger';
 
 // Safe date parsing functions to prevent "Invalid time value" errors
@@ -630,6 +632,143 @@ export default function PromoterDetailPage() {
     }, 100);
   }, [promoterId, role, fetchAllPromoters, fetchEmployers]);
 
+  // Real-time subscriptions for live updates
+  useEffect(() => {
+    if (!promoterId) return;
+
+    const supabase = createClient();
+    if (!supabase) return;
+
+    logger.log('🔔 Setting up real-time subscriptions for promoter:', promoterId);
+
+    // Subscribe to promoter updates
+    const promoterChannel = supabase
+      .channel(`promoter:${promoterId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'promoters',
+          filter: `id=eq.${promoterId}`,
+        },
+        (payload) => {
+          logger.log('📝 Promoter updated in real-time:', payload.new);
+          // Update local state with new data
+          setPromoterDetails((prev) =>
+            prev ? { ...prev, ...payload.new } : null
+          );
+          // Show toast notification
+          if (typeof window !== 'undefined' && window.dispatchEvent) {
+            const event = new CustomEvent('toast', {
+              detail: {
+                title: 'Profile Updated',
+                description: 'Promoter information has been updated',
+                variant: 'default',
+              },
+            });
+            window.dispatchEvent(event);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to contract changes for this promoter
+    const contractsChannel = supabase
+      .channel(`promoter-contracts:${promoterId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contracts',
+          filter: `promoter_id=eq.${promoterId}`,
+        },
+        (payload) => {
+          logger.log('📄 Contract changed in real-time:', payload);
+          // Refetch contracts to get updated data
+          const supabaseClient = createClient();
+          if (supabaseClient) {
+            supabaseClient
+              .from('contracts')
+              .select('*')
+              .eq('promoter_id', promoterId)
+              .then(({ data, error }) => {
+                if (!error && data) {
+                  setPromoterDetails((prev) =>
+                    prev ? { ...prev, contracts: data } : null
+                  );
+                }
+              });
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to document changes
+    const documentsChannel = supabase
+      .channel(`promoter-documents:${promoterId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'promoter_documents',
+          filter: `promoter_id=eq.${promoterId}`,
+        },
+        () => {
+          logger.log('📎 Document changed, refetching...');
+          // Refetch documents by calling the API endpoints
+          Promise.all([
+            fetch(`/api/promoters/${promoterId}/documents`).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(`/api/promoters/${promoterId}/skills`).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(`/api/promoters/${promoterId}/experience`).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(`/api/promoters/${promoterId}/education`).then(r => r.ok ? r.json() : null).catch(() => null),
+          ]).then(([docsData, skillsData, expData, eduData]) => {
+            if (docsData?.documents) setDocuments(docsData.documents);
+            if (skillsData?.skills) setSkills(skillsData.skills);
+            if (expData?.experience) setExperience(expData.experience);
+            if (eduData?.education) setEducation(eduData.education);
+          });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      logger.log('🧹 Cleaning up real-time subscriptions');
+      supabase.removeChannel(promoterChannel);
+      supabase.removeChannel(contractsChannel);
+      supabase.removeChannel(documentsChannel);
+    };
+  }, [promoterId]);
+
+  // Auto-refresh key metrics every 30 seconds
+  useEffect(() => {
+    if (!promoterId || isLoading) return;
+
+    const interval = setInterval(() => {
+      logger.log('🔄 Auto-refreshing promoter data...');
+      // Silently refresh contracts and basic info
+      const supabase = createClient();
+      if (supabase) {
+        supabase
+          .from('contracts')
+          .select('*')
+          .eq('promoter_id', promoterId)
+          .then(({ data, error }) => {
+            if (!error && data) {
+              setPromoterDetails((prev) =>
+                prev ? { ...prev, contracts: data } : null
+              );
+            }
+          });
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [promoterId, isLoading]);
+
   // Filter promoters based on search and filter criteria
   useEffect(() => {
     let filtered = allPromoters;
@@ -1024,14 +1163,44 @@ export default function PromoterDetailPage() {
               {/* Goal Tracking & Progress Widget */}
               <PromoterGoalWidget
                 promoterId={promoterId}
-                performanceMetrics={{
-                  overallScore: 75,
-                  attendanceRate: 90,
-                  taskCompletion: 80,
-                  customerSatisfaction: 85,
-                  totalTasks: 0,
-                  completedTasks: 0,
-                }}
+                performanceMetrics={useMemo(() => {
+                  // Calculate real metrics from actual data
+                  const contracts = promoterDetails?.contracts || [];
+                  const activeContracts = contracts.filter(
+                    (c: any) => c.status === 'active'
+                  ).length;
+                  const completedContracts = contracts.filter(
+                    (c: any) => c.status === 'completed'
+                  ).length;
+                  const totalContracts = contracts.length;
+                  
+                  // Calculate completion rate
+                  const contractCompletionRate =
+                    totalContracts > 0
+                      ? Math.round((completedContracts / totalContracts) * 100)
+                      : 0;
+
+                  // Calculate customer satisfaction from rating if available
+                  const rating = promoterDetails?.rating || 0;
+                  const customerSatisfaction = rating > 0 ? Math.round(rating * 20) : 85;
+
+                  // Calculate overall score based on multiple factors
+                  const overallScore = Math.round(
+                    (contractCompletionRate * 0.4) +
+                    (customerSatisfaction * 0.3) +
+                    (promoterDetails?.status === 'active' ? 30 : 0)
+                  );
+
+                  return {
+                    overallScore: Math.min(100, Math.max(0, overallScore)),
+                    attendanceRate: 90, // Would need attendance data
+                    taskCompletion: contractCompletionRate,
+                    customerSatisfaction,
+                    totalTasks: totalContracts,
+                    completedTasks: completedContracts,
+                    activeContracts,
+                  };
+                }, [promoterDetails])}
                 isAdmin={role === 'admin'}
               />
 
@@ -1912,14 +2081,40 @@ export default function PromoterDetailPage() {
         <aside className='lg:col-span-1 space-y-6'>
           {/* Predictive Performance Score */}
           <PromoterPredictiveScore
-            performanceMetrics={{
-              overallScore: 75,
-              attendanceRate: 90,
-              taskCompletion: 80,
-              customerSatisfaction: 85,
-              totalTasks: 0,
-              completedTasks: 0,
-            }}
+            performanceMetrics={useMemo(() => {
+              // Calculate real metrics from actual data
+              const contracts = promoterDetails?.contracts || [];
+              const activeContracts = contracts.filter(
+                (c: any) => c.status === 'active'
+              ).length;
+              const completedContracts = contracts.filter(
+                (c: any) => c.status === 'completed'
+              ).length;
+              const totalContracts = contracts.length;
+              
+              const contractCompletionRate =
+                totalContracts > 0
+                  ? Math.round((completedContracts / totalContracts) * 100)
+                  : 0;
+
+              const rating = promoterDetails?.rating || 0;
+              const customerSatisfaction = rating > 0 ? Math.round(rating * 20) : 85;
+
+              const overallScore = Math.round(
+                (contractCompletionRate * 0.4) +
+                (customerSatisfaction * 0.3) +
+                (promoterDetails?.status === 'active' ? 30 : 0)
+              );
+
+              return {
+                overallScore: Math.min(100, Math.max(0, overallScore)),
+                attendanceRate: 90,
+                taskCompletion: contractCompletionRate,
+                customerSatisfaction,
+                totalTasks: totalContracts,
+                completedTasks: completedContracts,
+              };
+            }, [promoterDetails])}
             contracts={promoterDetails?.contracts || []}
             documentsCompliant={
               !!(
@@ -1931,7 +2126,7 @@ export default function PromoterDetailPage() {
                 new Date(promoterDetails.passport_expiry_date) > new Date()
               )
             }
-            lastActive={promoterDetails?.updated_at || promoterDetails?.created_at}
+            lastActive={(promoterDetails?.updated_at || promoterDetails?.created_at) || undefined}
           />
 
           {/* Financial & Payout Summary */}
@@ -1940,13 +2135,28 @@ export default function PromoterDetailPage() {
             contracts={promoterDetails?.contracts || []}
           />
 
+          {/* Team Comparison - For Employers */}
+          {(role === 'admin' || role === 'employer' || role === 'manager') && (
+            <EmployeeTeamComparison
+              promoterId={promoterId}
+              employerId={promoterDetails?.employer_id || undefined}
+              contracts={promoterDetails?.contracts || []}
+              performanceScore={useMemo(() => {
+                const contracts = promoterDetails?.contracts || [];
+                const completed = contracts.filter((c: any) => c.status === 'completed').length;
+                const total = contracts.length;
+                return total > 0 ? Math.round((completed / total) * 100) : 0;
+              }, [promoterDetails?.contracts])}
+            />
+          )}
+
           {/* Document Health Summary */}
           <PromoterDocumentHealth
             documents={{
               idCard: {
-                number: promoterDetails?.id_card_number,
-                expiryDate: promoterDetails?.id_card_expiry_date,
-                url: promoterDetails?.id_card_url,
+                number: promoterDetails?.id_card_number || undefined,
+                expiryDate: promoterDetails?.id_card_expiry_date || undefined,
+                url: promoterDetails?.id_card_url || undefined,
                 status: (() => {
                   if (!promoterDetails?.id_card_expiry_date) return 'missing';
                   const expiry = new Date(promoterDetails.id_card_expiry_date);
@@ -1960,9 +2170,9 @@ export default function PromoterDetailPage() {
                 })(),
               },
               passport: {
-                number: promoterDetails?.passport_number,
-                expiryDate: promoterDetails?.passport_expiry_date,
-                url: promoterDetails?.passport_url,
+                number: promoterDetails?.passport_number || undefined,
+                expiryDate: promoterDetails?.passport_expiry_date || undefined,
+                url: promoterDetails?.passport_url || undefined,
                 status: (() => {
                   if (!promoterDetails?.passport_expiry_date) return 'missing';
                   const expiry = new Date(promoterDetails.passport_expiry_date);
@@ -1999,13 +2209,26 @@ export default function PromoterDetailPage() {
             isAdmin={role === 'admin'}
           />
 
-          {/* Quick Actions - Moved from top */}
+          {/* Employer Employee Management Panel */}
+          {(role === 'admin' || role === 'employer' || role === 'manager') && (
+            <EmployerEmployeeManagementPanel
+              promoterId={promoterId}
+              promoterName={promoterDetails?.name_en || 'Employee'}
+              currentStatus={promoterDetails?.status || 'active'}
+              employerId={promoterDetails?.employer_id || undefined}
+              contracts={promoterDetails?.contracts || []}
+              isAdmin={role === 'admin'}
+              locale={locale}
+            />
+          )}
+
+          {/* Quick Actions - For admins only */}
           {role === 'admin' && (
             <Card>
               <CardHeader>
                 <CardTitle className='text-base flex items-center gap-2'>
                   <BriefcaseIcon className='h-5 w-5' />
-                  Quick Actions
+                  Admin Actions
                 </CardTitle>
               </CardHeader>
               <CardContent className='space-y-2'>
@@ -2021,19 +2244,6 @@ export default function PromoterDetailPage() {
                 >
                   <Edit className='mr-2 h-4 w-4' />
                   Edit Profile
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='w-full justify-start'
-                  onClick={() =>
-                    router.push(
-                      `/${locale}/generate-contract?promoter=${promoterId}`
-                    )
-                  }
-                >
-                  <Plus className='mr-2 h-4 w-4' />
-                  Create Contract
                 </Button>
                 <Button
                   variant='outline'
