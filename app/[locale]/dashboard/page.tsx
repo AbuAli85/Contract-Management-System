@@ -114,13 +114,6 @@ function DashboardContent() {
   const { toast } = useToast();
   const params = useParams();
   
-  // Get user role for filtering dashboard content
-  const userRole = user?.role || authUser?.user_metadata?.role || 'user';
-  const isPromoter = userRole === 'promoter' || userRole === 'user';
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
-  const isManager = userRole === 'manager';
-  const isEmployer = userRole === 'employer';
-  
   // Safely get locale from params with fallback
   const locale = useMemo(() => {
     try {
@@ -337,7 +330,14 @@ function DashboardContent() {
     promoterStats?.previousMonth?.utilizationRate || 0
   );
 
-  // Build quick stats based on user role (userRole, isPromoter, etc. are already defined above)
+  // Get user role for filtering dashboard content
+  const userRole = user?.role || authUser?.user_metadata?.role || 'user';
+  const isPromoter = userRole === 'promoter' || userRole === 'user';
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+  const isManager = userRole === 'manager';
+  const isEmployer = userRole === 'employer';
+
+  // Build quick stats based on user role
   const quickStats: QuickStat[] = [];
   
   // Promoters see their own contract stats
