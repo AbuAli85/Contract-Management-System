@@ -45,21 +45,6 @@ export const GET = withRBAC('attendance:read:all', async (
           address,
           latitude,
           longitude
-        ),
-        employees:employee_group_assignments (
-          id,
-          employer_employee:employer_employee_id (
-            id,
-            employee_code,
-            job_title,
-            department,
-            employee:user_id (
-              id,
-              full_name,
-              email,
-              phone
-            )
-          )
         )
       `)
       .eq('id', params.id)
@@ -68,16 +53,56 @@ export const GET = withRBAC('attendance:read:all', async (
 
     if (error || !group) {
       return NextResponse.json(
-        { error: 'Group not found' },
+        { error: 'Group not found', details: error?.message },
         { status: 404 }
       );
+    }
+
+    // Fetch employee assignments separately
+    const { data: assignments, error: assignError } = await (supabaseAdmin.from('employee_group_assignments') as any)
+      .select(`
+        id,
+        group_id,
+        employer_employee_id,
+        employer_employee:employer_employee_id (
+          id,
+          employee_code,
+          job_title,
+          department,
+          employee_id
+        )
+      `)
+      .eq('group_id', params.id);
+
+    let employees = assignments || [];
+    
+    // Fetch profile data for employees
+    if (employees.length > 0) {
+      const employeeIds = [...new Set(employees.map((a: any) => a.employer_employee?.employee_id).filter(Boolean))];
+      
+      if (employeeIds.length > 0) {
+        const { data: profiles } = await supabaseAdmin
+          .from('profiles')
+          .select('id, full_name, email, phone')
+          .in('id', employeeIds);
+
+        const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
+        
+        employees = employees.map((assignment: any) => {
+          if (assignment.employer_employee?.employee_id) {
+            assignment.employer_employee.employee = profileMap.get(assignment.employer_employee.employee_id);
+          }
+          return assignment;
+        });
+      }
     }
 
     return NextResponse.json({
       success: true,
       group: {
         ...group,
-        employee_count: group.employees?.length || 0,
+        employees,
+        employee_count: employees.length,
       },
     });
   } catch (error) {
@@ -149,16 +174,22 @@ export const PUT = withRBAC('attendance:create:all', async (
 
       // Add new assignments
       if (employee_ids.length > 0) {
-        const assignments = employee_ids.map((employeeId: string) => ({
+        const assignments: any[] = employee_ids.map((employeeId: string) => ({
           group_id: params.id,
           employer_employee_id: employeeId,
           assigned_by: user.id,
           is_primary: true,
         }));
 
-        await supabaseAdmin
-          .from('employee_group_assignments')
-          .insert(assignments);
+        // @ts-ignore - Supabase type inference issue with admin client
+        const assignmentsTable = supabaseAdmin.from('employee_group_assignments') as any;
+        // @ts-expect-error - Supabase type inference issue with admin client insert
+        const { error: assignError } = await assignmentsTable.insert(assignments);
+
+        if (assignError) {
+          console.error('Error assigning employees to group:', assignError);
+          // Don't fail the request, just log the error
+        }
       }
     }
 

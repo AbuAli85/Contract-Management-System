@@ -48,21 +48,6 @@ export const GET = withRBAC('attendance:read:all', async (
           address,
           latitude,
           longitude
-        ),
-        employees:employee_group_assignments (
-          id,
-          employer_employee:employer_employee_id (
-            id,
-            employee_code,
-            job_title,
-            department,
-            employee:user_id (
-              id,
-              full_name,
-              email,
-              phone
-            )
-          )
         )
       `)
       .eq('company_id', profile.active_company_id)
@@ -81,16 +66,64 @@ export const GET = withRBAC('attendance:read:all', async (
     if (error) {
       console.error('Error fetching employee groups:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch employee groups' },
+        { error: 'Failed to fetch employee groups', details: error.message },
         { status: 500 }
       );
     }
 
+    // Fetch employee assignments separately to avoid complex nested joins
+    const groupIds = (groups || []).map((g: any) => g.id);
+    let employeeAssignments: any[] = [];
+    
+    if (groupIds.length > 0) {
+      const { data: assignments, error: assignError } = await (supabaseAdmin.from('employee_group_assignments') as any)
+        .select(`
+          id,
+          group_id,
+          employer_employee_id,
+          employer_employee:employer_employee_id (
+            id,
+            employee_code,
+            job_title,
+            department,
+            employee_id
+          )
+        `)
+        .in('group_id', groupIds);
+
+      if (!assignError && assignments) {
+        // Fetch profile data for employees
+        const employeeIds = [...new Set(assignments.map((a: any) => a.employer_employee?.employee_id).filter(Boolean))];
+        
+        if (employeeIds.length > 0) {
+          const { data: profiles } = await supabaseAdmin
+            .from('profiles')
+            .select('id, full_name, email, phone')
+            .in('id', employeeIds);
+
+          // Map profiles to assignments
+          const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
+          
+          assignments.forEach((assignment: any) => {
+            if (assignment.employer_employee?.employee_id) {
+              assignment.employer_employee.employee = profileMap.get(assignment.employer_employee.employee_id);
+            }
+          });
+        }
+        
+        employeeAssignments = assignments;
+      }
+    }
+
     // Format the response
-    const formattedGroups = (groups || []).map((group: any) => ({
-      ...group,
-      employee_count: group.employees?.length || 0,
-    }));
+    const formattedGroups = (groups || []).map((group: any) => {
+      const groupEmployees = employeeAssignments.filter((a: any) => a.group_id === group.id);
+      return {
+        ...group,
+        employees: groupEmployees,
+        employee_count: groupEmployees.length,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -191,8 +224,7 @@ export const POST = withRBAC('attendance:create:all', async (
         is_primary: true,
       }));
 
-      const { error: assignError } = await supabaseAdmin
-        .from('employee_group_assignments')
+      const { error: assignError } = await (supabaseAdmin.from('employee_group_assignments') as any)
         .insert(assignments);
 
       if (assignError) {
