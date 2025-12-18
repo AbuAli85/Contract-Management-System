@@ -32,6 +32,8 @@ import {
   Shield,
   Calendar,
   FileText,
+  Clock,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 interface SimplifiedNavigationProps {
@@ -248,6 +250,45 @@ export function SimplifiedNavigation({
             labelAr: 'أعضاء الشركة',
             icon: Shield,
             description: 'Manage admins and access',
+            roles: ['admin', 'manager', 'employer'],
+          },
+        ],
+      },
+      {
+        title: 'HR Management',
+        titleAr: 'إدارة الموارد البشرية',
+        roles: ['admin', 'manager', 'employer'],
+        items: [
+          {
+            href: `/${locale}/employer/attendance-approval`,
+            label: 'Attendance Approval',
+            labelAr: 'الموافقة على الحضور',
+            icon: Clock,
+            description: 'Review and approve employee attendance',
+            roles: ['admin', 'manager', 'employer'],
+          },
+          {
+            href: `/${locale}/employer/attendance-links`,
+            label: 'Attendance Links',
+            labelAr: 'روابط الحضور',
+            icon: LinkIcon,
+            description: 'Create location-restricted check-in links',
+            roles: ['admin', 'manager', 'employer'],
+          },
+          {
+            href: `/${locale}/employer/attendance-schedules`,
+            label: 'Automated Schedules',
+            labelAr: 'الجدولات التلقائية',
+            icon: Calendar,
+            description: 'Automated daily attendance link generation',
+            roles: ['admin', 'manager', 'employer'],
+          },
+          {
+            href: `/${locale}/employer/attendance-groups`,
+            label: 'Employee Groups',
+            labelAr: 'مجموعات الموظفين',
+            icon: Users,
+            description: 'Organize employees by location or department',
             roles: ['admin', 'manager', 'employer'],
           },
         ],
