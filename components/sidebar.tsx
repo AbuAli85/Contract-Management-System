@@ -73,6 +73,7 @@ import {
   Users,
   Briefcase,
   Clock,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
@@ -298,6 +299,12 @@ function SidebarContent({
               href: '/employer/attendance-approval',
               icon: Clock,
               description: 'Review and approve employee attendance',
+            },
+            {
+              title: 'Attendance Links',
+              href: '/employer/attendance-links',
+              icon: LinkIcon,
+              description: 'Create location-restricted check-in links',
             },
           ],
         },
