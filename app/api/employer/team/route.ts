@@ -350,9 +350,10 @@ async function addTeamMemberHandler(request: NextRequest) {
       notes,
     } = body;
 
-    if (!employee_id) {
+    // Validate employee_id is provided and not empty
+    if (!employee_id || (typeof employee_id === 'string' && employee_id.trim() === '')) {
       return NextResponse.json(
-        { error: 'Employee ID is required' },
+        { error: 'Employee ID is required and cannot be empty' },
         { status: 400 }
       );
     }
@@ -441,7 +442,7 @@ async function addTeamMemberHandler(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
     const insertData = {
       employer_id: effectiveEmployerId, // ✅ Use effective employer ID (profile.id that matches party)
-      employee_id: toNullIfEmpty(employee_id),
+      employee_id: employee_id, // Required field - must not be null
       employee_code: toNullIfEmpty(employee_code),
       job_title: toNullIfEmpty(job_title),
       department: toNullIfEmpty(department),

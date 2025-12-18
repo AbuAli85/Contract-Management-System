@@ -217,6 +217,8 @@ export async function getContractMetrics(
   const {
     userId,
     userRole,
+    companyId,
+    partyId,
     includeExpiringSoon = true,
     expiryDaysThreshold = 30,
     forceRefresh = false,
@@ -246,8 +248,11 @@ export async function getContractMetrics(
       .from('contracts')
       .select('status, contract_value, start_date, end_date, created_at');
 
-    // RBAC: Non-admins see only their contracts
-    if (userRole !== 'admin' && userId) {
+    // ✅ COMPANY SCOPE: Apply party filter first if available
+    if (partyId) {
+      query = query.or(`second_party_id.eq.${partyId},first_party_id.eq.${partyId}`);
+    } else if (userRole !== 'admin' && userId) {
+      // RBAC: Non-admins see only their contracts
       query = query.or(
         `first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`
       );

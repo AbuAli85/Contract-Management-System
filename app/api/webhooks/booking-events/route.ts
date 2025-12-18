@@ -33,6 +33,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Already processed' });
     }
 
+    if (!verification.payload) {
+      return NextResponse.json(
+        { error: 'Missing payload' },
+        { status: 400 }
+      );
+    }
+
     const bookingEvent: BookingEventPayload =
       verification.payload.record || verification.payload;
 

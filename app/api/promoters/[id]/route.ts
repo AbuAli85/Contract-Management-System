@@ -349,6 +349,154 @@ export const PUT = withRBAC(
   }
 );
 
+// PATCH method for Supabase compatibility (same as PUT but with different validation)
+export const PATCH = withRBAC(
+  'promoter:update',
+  async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
+    try {
+      const { id } = await params;
+      const cookieStore = await cookies();
+
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll();
+            },
+            setAll(cookiesToSet: any) {
+              try {
+                cookiesToSet.forEach(({ name, value, ...options }: any) => {
+                  cookieStore.set(
+                    name,
+                    value,
+                    options as {
+                      path?: string;
+                      domain?: string;
+                      maxAge?: number;
+                      secure?: boolean;
+                      httpOnly?: boolean;
+                      sameSite?: 'strict' | 'lax' | 'none';
+                    }
+                  );
+                });
+              } catch {
+                // The `setAll` method was called from a Server Component.
+                // This can be ignored if you have middleware refreshing
+                // user sessions.
+              }
+            },
+          } as any,
+        }
+      );
+
+      // Get user session
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // Parse and validate request body
+      const body = await request.json();
+      const validatedData = promoterUpdateSchema.parse(body);
+
+      // Check if ID card number is being updated and if it already exists
+      if (validatedData.id_card_number) {
+        const { data: existingPromoter, error: checkError } = await supabase
+          .from('promoters')
+          .select('id')
+          .eq('id_card_number', validatedData.id_card_number)
+          .neq('id', id)
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('Error checking ID card number:', checkError);
+          return NextResponse.json(
+            { error: 'Failed to validate ID card number' },
+            { status: 500 }
+          );
+        }
+
+        if (existingPromoter) {
+          return NextResponse.json(
+            { error: 'ID card number already exists for another promoter' },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Update promoter in database
+      const { data: promoter, error } = await supabase
+        .from('promoters')
+        .update({
+          ...validatedData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: 'Promoter not found' },
+            { status: 404 }
+          );
+        }
+        console.error('Error updating promoter:', error);
+        return NextResponse.json(
+          {
+            error: 'Failed to update promoter',
+            details: error.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      // After successful update, create audit log
+      try {
+        await supabase.from('audit_logs').insert({
+          user_id: session.user.id,
+          action: 'update',
+          table_name: 'promoters',
+          record_id: id,
+          new_values: validatedData,
+          created_at: new Date().toISOString(),
+        });
+      } catch (auditError) {
+        console.error('Error creating audit log:', auditError);
+        // Don't fail the request if audit logging fails
+      }
+
+      return NextResponse.json({
+        success: true,
+        promoter,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Validation error',
+            details: error.issues,
+          },
+          { status: 400 }
+        );
+      }
+
+      console.error('API error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+  }
+);
+
 // ✅ SECURITY FIX: Added RBAC guard for promoter deletion
 export const DELETE = withRBAC(
   'promoter:delete',

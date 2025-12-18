@@ -29,6 +29,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Already processed' });
     }
 
+    if (!verification.payload) {
+      return NextResponse.json(
+        { success: false, error: 'Missing payload' },
+        { status: 400 }
+      );
+    }
+
     const body = verification.payload;
 
     console.log('📤 Webhook payload:', body);

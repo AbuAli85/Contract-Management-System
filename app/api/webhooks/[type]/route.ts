@@ -41,6 +41,13 @@ export const POST = withRBAC(
         return NextResponse.json({ success: true });
       }
 
+      if (!verification.payload) {
+        return NextResponse.json(
+          { error: 'Missing payload' },
+          { status: 400 }
+        );
+      }
+
       const body = verification.payload;
 
       const supabase = await createClient();
