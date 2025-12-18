@@ -19,7 +19,7 @@ const nextConfig = {
       // Allow scripts from self and necessary CDNs
       // NOTE: 'unsafe-eval' and 'unsafe-inline' are required for Next.js functionality
       // TODO: Replace with nonces for A+ security grade (see CSP_NONCE_IMPLEMENTATION_GUIDE.md)
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com https://maps.googleapis.com",
       // Allow styles from self and Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Allow images from self, data URIs, Supabase storage, analytics, and Make.com
@@ -27,7 +27,7 @@ const nextConfig = {
       // Allow fonts from self and Google Fonts
       "font-src 'self' data: https://fonts.gstatic.com",
       // Allow connections to API, Supabase, analytics, Sentry, and Make.com webhook
-      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io https://hook.eu2.make.com wss://*.supabase.co https://vercel.live",
+      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io https://hook.eu2.make.com wss://*.supabase.co https://vercel.live https://maps.googleapis.com",
       // Allow frames from Vercel live preview
       "frame-src 'self' https://vercel.live",
       // Disallow frames from other origins
