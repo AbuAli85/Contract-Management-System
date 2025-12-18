@@ -112,6 +112,14 @@ export function SimplifiedNavigation({
             description: 'View tasks, targets, and attendance',
             roles: ['promoter', 'user'],
           },
+          {
+            href: `/${locale}/attendance`,
+            label: 'My Attendance',
+            labelAr: 'حضوري',
+            icon: Clock,
+            description: 'View and manage your attendance records',
+            roles: ['promoter', 'user'],
+          },
         ],
       }
     );
