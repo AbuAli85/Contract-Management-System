@@ -360,6 +360,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop trigger if exists, then create it
+DROP TRIGGER IF EXISTS attendance_schedule_updated_at ON attendance_link_schedules;
 CREATE TRIGGER attendance_schedule_updated_at
   BEFORE UPDATE ON attendance_link_schedules
   FOR EACH ROW

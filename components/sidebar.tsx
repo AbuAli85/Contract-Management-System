@@ -300,24 +300,28 @@ function SidebarContent({
               href: '/employer/attendance-approval',
               icon: Clock,
               description: 'Review and approve employee attendance',
+              roles: ['admin', 'manager', 'employer'],
             },
             {
               title: 'Attendance Links',
               href: '/employer/attendance-links',
               icon: LinkIcon,
               description: 'Create location-restricted check-in links',
+              roles: ['admin', 'manager', 'employer'],
             },
             {
               title: 'Automated Schedules',
               href: '/employer/attendance-schedules',
               icon: Calendar,
               description: 'Automated daily attendance link generation',
+              roles: ['admin', 'manager', 'employer'],
             },
             {
               title: 'Employee Groups',
               href: '/employer/attendance-groups',
               icon: Users,
               description: 'Organize employees by location or department',
+              roles: ['admin', 'manager', 'employer'],
             },
           ],
         },
@@ -729,7 +733,15 @@ function SidebarContent({
                     {/* Children items */}
                     {isExpanded && (
                       <div className='ml-4 space-y-1 border-l-2 border-muted pl-3'>
-                        {(item.children || []).map((child: any) => {
+                        {(item.children || []).filter((child: any) => {
+                          // Filter children by role if specified
+                          if (!child.roles) return true; // If no roles specified, show to everyone
+                          return child.roles.includes(userRole) || 
+                                 (isAdmin && child.roles.includes('admin')) ||
+                                 (isManager && child.roles.includes('manager')) ||
+                                 (isEmployer && child.roles.includes('employer')) ||
+                                 (isPromoter && (child.roles.includes('promoter') || child.roles.includes('user')));
+                        }).map((child: any) => {
                           const ChildIcon = child.icon;
                           const isChildActive = child.href
                             ? isActiveRoute(child.href)

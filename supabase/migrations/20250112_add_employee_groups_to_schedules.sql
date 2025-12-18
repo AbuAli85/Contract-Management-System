@@ -56,9 +56,42 @@ CREATE INDEX IF NOT EXISTS idx_group_assignments_group_id ON employee_group_assi
 CREATE INDEX IF NOT EXISTS idx_group_assignments_employee_id ON employee_group_assignments(employer_employee_id);
 
 -- Update attendance_link_schedules to support groups
-ALTER TABLE attendance_link_schedules 
-  ADD COLUMN IF NOT EXISTS employee_group_ids UUID[],
-  ADD COLUMN IF NOT EXISTS assignment_type TEXT DEFAULT 'all' CHECK (assignment_type IN ('all', 'selected', 'groups', 'location_based'));
+DO $$
+BEGIN
+  -- Add employee_group_ids column if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attendance_link_schedules'
+      AND column_name = 'employee_group_ids'
+  ) THEN
+    ALTER TABLE attendance_link_schedules 
+      ADD COLUMN employee_group_ids UUID[];
+  END IF;
+
+  -- Add assignment_type column if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'attendance_link_schedules'
+      AND column_name = 'assignment_type'
+  ) THEN
+    ALTER TABLE attendance_link_schedules 
+      ADD COLUMN assignment_type TEXT DEFAULT 'all';
+  END IF;
+  
+  -- Add check constraint if it doesn't exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.constraint_column_usage
+    WHERE table_schema = 'public'
+      AND table_name = 'attendance_link_schedules'
+      AND constraint_name = 'attendance_schedules_assignment_type_check'
+  ) THEN
+    ALTER TABLE attendance_link_schedules
+      ADD CONSTRAINT attendance_schedules_assignment_type_check 
+      CHECK (assignment_type IN ('all', 'selected', 'groups', 'location_based'));
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_schedules_group_ids ON attendance_link_schedules USING GIN (employee_group_ids);
 CREATE INDEX IF NOT EXISTS idx_schedules_assignment_type ON attendance_link_schedules(assignment_type);
@@ -231,6 +264,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop trigger if exists, then create it
+DROP TRIGGER IF EXISTS update_group_count_trigger ON employee_group_assignments;
 CREATE TRIGGER update_group_count_trigger
   AFTER INSERT OR DELETE ON employee_group_assignments
   FOR EACH ROW
