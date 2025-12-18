@@ -83,19 +83,29 @@ export async function GET(
       // Provide more helpful error message
       // Check if employee exists but with different company or status
       const { data: allEmployeeRecords } = await (supabaseAdmin.from('employer_employees') as any)
-        .select('id, employee_id, company_id, employment_status')
+        .select('id, employee_id, company_id, employment_status, employer_id')
         .eq('employee_id', user.id)
         .maybeSingle();
+
+      // Enhanced logging for debugging
+      console.error('Employee authorization failed:', {
+        user_id: user.id,
+        user_email: user.email,
+        link_code: code,
+        link_company_id: link.company_id,
+        employee_record: allEmployeeRecords || null,
+      });
 
       if (!allEmployeeRecords) {
         return NextResponse.json(
           { 
             error: 'You are not authorized to use this check-in link',
             details: 'No employee record found. Please contact your manager to be added to the company.',
-            diagnostic: process.env.NODE_ENV === 'development' ? {
+            diagnostic: {
               user_id: user.id,
               link_company_id: link.company_id,
-            } : undefined
+              issue: 'no_employee_record'
+            }
           },
           { status: 403 }
         );
@@ -106,11 +116,12 @@ export async function GET(
           { 
             error: 'You are not authorized to use this check-in link',
             details: 'This link is for a different company than your current assignment.',
-            diagnostic: process.env.NODE_ENV === 'development' ? {
+            diagnostic: {
               user_id: user.id,
               employee_company_id: allEmployeeRecords.company_id,
               link_company_id: link.company_id,
-            } : undefined
+              issue: 'company_mismatch'
+            }
           },
           { status: 403 }
         );
@@ -121,6 +132,12 @@ export async function GET(
           { 
             error: 'You are not authorized to use this check-in link',
             details: `Your employment status is "${allEmployeeRecords.employment_status}". Only active employees can check in.`,
+            diagnostic: {
+              user_id: user.id,
+              employment_status: allEmployeeRecords.employment_status,
+              link_company_id: link.company_id,
+              issue: 'inactive_status'
+            }
           },
           { status: 403 }
         );
@@ -130,6 +147,12 @@ export async function GET(
         { 
           error: 'You are not authorized to use this check-in link',
           details: 'Unable to verify your authorization. Please contact your manager.',
+          diagnostic: {
+            user_id: user.id,
+            link_company_id: link.company_id,
+            employee_record: allEmployeeRecords,
+            issue: 'unknown_authorization_failure'
+          }
         },
         { status: 403 }
       );
