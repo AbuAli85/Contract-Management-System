@@ -10,7 +10,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: employerEmployeeId } = await params;
+    const { id: inputId } = await params;
     const supabase = await createClient();
     
     const {
@@ -22,40 +22,119 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify this employer_employee belongs to the current employer
-    const { data: employeeRecord, error: fetchError } = await supabase
-      .from('employer_employees')
-      .select('id, employee_id, employer_id')
-      .eq('id', employerEmployeeId)
-      .eq('employer_id', user.id)
-      .single();
-
-    if (fetchError || !employeeRecord) {
-      return NextResponse.json(
-        { error: 'Employee not found or access denied' },
-        { status: 404 }
-      );
-    }
-
-    // Get employee email - check profiles first, then promoters
     const supabaseAdmin = getSupabaseAdmin();
-    
-    // Try profiles table first
-    const { data: profile } = await supabaseAdmin
-      .from('profiles' as any)
-      .select('email, full_name')
-      .eq('id', employeeRecord.employee_id)
-      .single();
+    let employeeId: string;
+    let employeeEmail: string | null = null;
+    let employeeName: string | null = null;
 
-    // Try promoters table as fallback
-    const { data: promoter } = await supabaseAdmin
-      .from('promoters' as any)
-      .select('email, name_en')
-      .eq('id', employeeRecord.employee_id)
-      .single();
+    // ✅ FIX: Handle both employer_employee IDs and promoter_ prefixed IDs
+    if (inputId.startsWith('promoter_')) {
+      // Extract promoter ID from the prefixed format
+      const promoterId = inputId.replace('promoter_', '');
+      
+      // Get employer's party_id to verify ownership
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_company_id, email')
+        .eq('id', user.id)
+        .single();
 
-    const employeeEmail = (profile as any)?.email || (promoter as any)?.email;
-    const employeeName = (profile as any)?.full_name || (promoter as any)?.name_en;
+      let partyId: string | null = null;
+      if (profile?.active_company_id) {
+        const { data: company } = await supabase
+          .from('companies')
+          .select('party_id')
+          .eq('id', profile.active_company_id)
+          .single();
+        partyId = company?.party_id || null;
+      }
+
+      // Verify promoter belongs to this employer
+      const { data: promoterData, error: promoterError } = await supabaseAdmin
+        .from('promoters' as any)
+        .select('id, email, name_en, name_ar, employer_id')
+        .eq('id', promoterId)
+        .single();
+
+      if (promoterError || !promoterData) {
+        return NextResponse.json(
+          { error: 'Promoter not found' },
+          { status: 404 }
+        );
+      }
+
+      // Type assertion for promoter data
+      const promoter = promoterData as {
+        id: string;
+        email: string | null;
+        name_en: string | null;
+        name_ar: string | null;
+        employer_id: string | null;
+      };
+
+      // Verify ownership: promoter.employer_id should match employer's party_id
+      if (partyId && promoter.employer_id !== partyId) {
+        return NextResponse.json(
+          { error: 'Access denied. This promoter does not belong to your company.' },
+          { status: 403 }
+        );
+      }
+
+      // Also check if employer_id matches user's profile (fallback)
+      if (!partyId) {
+        // Try to find employer_employee record to verify ownership
+        const { data: employerEmployee } = await supabase
+          .from('employer_employees')
+          .select('id, employer_id')
+          .eq('employee_id', promoterId)
+          .eq('employer_id', user.id)
+          .single();
+
+        if (!employerEmployee) {
+          return NextResponse.json(
+            { error: 'Access denied. This employee does not belong to your team.' },
+            { status: 403 }
+          );
+        }
+      }
+
+      employeeId = promoterId;
+      employeeEmail = promoter.email;
+      employeeName = promoter.name_en || promoter.name_ar || null;
+    } else {
+      // Regular employer_employee ID
+      const { data: employeeRecord, error: fetchError } = await supabase
+        .from('employer_employees')
+        .select('id, employee_id, employer_id')
+        .eq('id', inputId)
+        .eq('employer_id', user.id)
+        .single();
+
+      if (fetchError || !employeeRecord) {
+        return NextResponse.json(
+          { error: 'Employee not found or access denied' },
+          { status: 404 }
+        );
+      }
+
+      employeeId = employeeRecord.employee_id;
+
+      // Get employee email - check profiles first, then promoters
+      const { data: profile } = await supabaseAdmin
+        .from('profiles' as any)
+        .select('email, full_name')
+        .eq('id', employeeId)
+        .single();
+
+      const { data: promoter } = await supabaseAdmin
+        .from('promoters' as any)
+        .select('email, name_en')
+        .eq('id', employeeId)
+        .single();
+
+      employeeEmail = (profile as any)?.email || (promoter as any)?.email;
+      employeeName = (profile as any)?.full_name || (promoter as any)?.name_en;
+    }
 
     if (!employeeEmail) {
       return NextResponse.json(
@@ -69,7 +148,7 @@ export async function POST(
 
     // Update the user's password
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      employeeRecord.employee_id,
+      employeeId,
       {
         password: newPassword,
         user_metadata: {
@@ -91,7 +170,7 @@ export async function POST(
     await (supabaseAdmin.from('profiles') as any).update({
       must_change_password: true,
       updated_at: new Date().toISOString(),
-    }).eq('id', employeeRecord.employee_id);
+    }).eq('id', employeeId);
 
     return NextResponse.json({
       success: true,
