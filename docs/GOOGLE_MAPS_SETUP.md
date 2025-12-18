@@ -9,8 +9,10 @@ The attendance link manager now includes Google Maps integration, allowing emplo
 ## Prerequisites
 
 1. A Google Cloud Platform (GCP) account
-2. A GCP project with billing enabled
+2. A GCP project with **billing enabled** (⚠️ **REQUIRED** - The Places API requires billing to be enabled)
 3. Google Maps JavaScript API and Places API enabled
+
+> **Important**: Google Maps Places API requires billing to be enabled on your GCP project. Even if you stay within the free tier, billing must be enabled. You can enable billing at: <https://console.cloud.google.com/project/_/billing/enable>
 
 ## Setup Steps
 
@@ -73,6 +75,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
 ```
 
 **Important**:
+
 - The variable name must start with `NEXT_PUBLIC_` to be accessible in the browser
 - Never commit your `.env.local` file to version control
 - Add `.env.local` to your `.gitignore` file
@@ -123,6 +126,20 @@ The Google Maps location picker provides:
 - Ensure you're typing at least 3 characters
 - Check browser console for API errors
 
+### "BillingNotEnabledMapError" or "Billing is not enabled" error
+
+**This is the most common error!** The Google Maps Places API requires billing to be enabled on your GCP project.
+
+**Solution:**
+
+1. Go to [Google Cloud Console Billing](https://console.cloud.google.com/project/_/billing/enable)
+2. Select your project
+3. Enable billing (you can use a credit card, but Google provides $200 free credit monthly)
+4. Wait 2-3 minutes for changes to propagate
+5. Refresh your application
+
+**Note**: Even if you stay within the free tier ($200/month credit), billing must be enabled. You won't be charged unless you exceed the free tier limits.
+
 ### API Key errors in console
 
 - Verify the API key is correct
@@ -137,6 +154,7 @@ The Google Maps location picker provides:
 **Cause**: Your API key is restricted to specific domains, and the current domain is not in the allowed list.
 
 **Solution**:
+
 1. Go to [Google Cloud Console > APIs & Services > Credentials](https://console.cloud.google.com/apis/credentials)
 2. Click on your API key
 3. Under "Application restrictions" > "HTTP referrers (web sites)", add:
@@ -147,6 +165,7 @@ The Google Maps location picker provides:
 6. Refresh your browser page
 
 **Important**:
+
 - The domain must match exactly (including `https://` and trailing `/*`)
 - Changes may take a few minutes to take effect
 - Clear browser cache if the error persists after 5 minutes
@@ -180,6 +199,6 @@ If you prefer not to use Google Maps, you can:
 ## Support
 
 For issues with:
+
 - **Google Maps API**: Check [Google Maps Platform Documentation](https://developers.google.com/maps/documentation)
 - **Application Integration**: Check application logs and browser console
-

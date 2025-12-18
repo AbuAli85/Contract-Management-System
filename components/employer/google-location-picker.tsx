@@ -19,9 +19,11 @@ interface LocationPickerProps {
 }
 
 declare global {
-  interface Window {
-    google: any;
-    initGoogleMaps: () => void;
+  namespace JSX {
+    interface IntrinsicElements {
+      'gmpx-api-loader': React.DetailedHTMLProps<any, HTMLElement>;
+      'gmpx-place-picker': React.DetailedHTMLProps<any, HTMLElement>;
+    }
   }
 }
 
@@ -30,8 +32,6 @@ export function GoogleLocationPicker({
   initialAddress = '',
   className = '',
 }: LocationPickerProps) {
-  const [searchQuery, setSearchQuery] = useState(initialAddress);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -39,296 +39,228 @@ export function GoogleLocationPicker({
     name?: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [mapsLoaded, setMapsLoaded] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const autocompleteService = useRef<any>(null);
-  const placesService = useRef<any>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const placePickerRef = useRef<any>(null);
+  const apiLoaderRef = useRef<any>(null);
 
-  // Load Google Maps script
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  // Load Extended Component Library
   useEffect(() => {
-    if (window.google?.maps?.places) {
-      setMapsLoaded(true);
-      initializeServices();
-      return;
-    }
-
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
-      console.error('Google Maps API key is not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');
+      setApiError('Google Maps API key is not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');
       return;
     }
 
+    // Check if already loaded
+    const existingScript = document.querySelector('script[src*="extended-component-library"]');
+    if (existingScript) {
+      setMapsLoaded(true);
+      // Wait a bit for elements to be ready
+      setTimeout(() => {
+        initializePlacePicker();
+      }, 100);
+      return;
+    }
+
+    // Load the Extended Component Library
     const script = document.createElement('script');
-    // Use loading=async for better performance (as recommended by Google)
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
-    script.async = true;
-    script.defer = true;
+    script.type = 'module';
+    script.src = 'https://ajax.googleapis.com/ajax/libs/@googlemaps/extended-component-library/0.6.11/index.min.js';
     script.onload = () => {
       setMapsLoaded(true);
-      initializeServices();
+      // Wait for custom elements to be defined
+      customElements.whenDefined('gmpx-place-picker').then(() => {
+        setTimeout(() => {
+          initializePlacePicker();
+        }, 100);
+      }).catch((error) => {
+        console.error('Failed to define gmpx-place-picker:', error);
+        setApiError('Failed to initialize Google Maps place picker.');
+      });
     };
     script.onerror = () => {
-      console.error('Failed to load Google Maps script. Check your API key and referrer restrictions.');
+      console.error('Failed to load Google Maps Extended Component Library.');
       setMapsLoaded(false);
+      setApiError('Failed to load Google Maps. Please check your internet connection and try again.');
     };
     document.head.appendChild(script);
 
     return () => {
       // Cleanup if needed
     };
-  }, []);
+  }, [apiKey]);
 
-  const initializeServices = () => {
-    if (window.google?.maps?.places) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      placesService.current = new window.google.maps.places.PlacesService(
-        document.createElement('div')
-      );
-    }
-  };
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    
-    // Clear previous debounce timer
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-
-    // If query is too short, clear suggestions but keep dropdown open if focused
-    if (!query || query.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
+  const initializePlacePicker = () => {
+    if (!placePickerRef.current) {
+      // Retry after a short delay
+      setTimeout(() => {
+        if (placePickerRef.current) {
+          initializePlacePicker();
+        }
+      }, 200);
       return;
     }
 
-    // Debounce the API call to avoid too many requests while typing
-    debounceTimer.current = setTimeout(() => {
-      if (!autocompleteService.current) {
-        if (window.google?.maps?.places) {
-          initializeServices();
-        } else {
-          return;
-        }
-      }
+    const placePicker = placePickerRef.current as any;
 
-      // Only search if query is at least 2 characters
-      if (query.length >= 2) {
-        try {
-          autocompleteService.current.getPlacePredictions(
-            {
-              input: query,
-              types: ['establishment', 'geocode'],
-              componentRestrictions: { country: ['om'] }, // Restrict to Oman
-            },
-            (predictions: any[], status: string) => {
-              if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-                setSuggestions(predictions);
-                setShowSuggestions(true); // Automatically show suggestions when available
-              } else {
-                setSuggestions([]);
-                setShowSuggestions(false);
-              }
-            }
-          );
-        } catch (error) {
-          console.error('Error fetching suggestions:', error);
-          setSuggestions([]);
-          setShowSuggestions(false);
-        }
-      }
-    }, 300); // 300ms debounce delay
-  };
+    // Set initial value if provided
+    if (initialAddress && placePicker.value !== initialAddress) {
+      placePicker.value = initialAddress;
+    }
 
-  // Handle click outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
-        setIsFocused(false);
-      }
-    };
+    // Listen for place selection
+    const handlePlaceChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const place = customEvent.detail?.place || placePicker.value;
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Cleanup debounce timer on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-    };
-  }, []);
-
-  const handleSelectPlace = (placeId: string, description: string) => {
-    setLoading(true);
-    setSearchQuery(description);
-    setShowSuggestions(false);
-    setIsFocused(false);
-
-    if (!placesService.current) {
-      if (window.google?.maps?.places) {
-        initializeServices();
-      } else {
-        setLoading(false);
+      if (!place) {
+        setApiError('No place selected.');
         return;
       }
-    }
 
-    const request = {
-      placeId: placeId,
-      fields: ['geometry', 'name', 'formatted_address', 'address_components'],
+      if (!place.location) {
+        setApiError(`No details available for: "${place.displayName || place.name || 'selected location'}"`);
+        setSelectedLocation(null);
+        return;
+      }
+
+      setLoading(true);
+      setApiError(null);
+
+      try {
+        // Handle different location formats
+        let lat = 0;
+        let lng = 0;
+        
+        if (typeof place.location.lat === 'function') {
+          lat = place.location.lat();
+          lng = place.location.lng();
+        } else {
+          lat = place.location.lat || place.location.latitude || 0;
+          lng = place.location.lng || place.location.longitude || 0;
+        }
+
+        const location = {
+          latitude: lat,
+          longitude: lng,
+          address: place.formattedAddress || place.formatted_address || place.displayName || '',
+          name: place.displayName || place.name || (place.formattedAddress?.split(',')[0]) || '',
+        };
+
+        setSelectedLocation(location);
+        onLocationSelect(location);
+      } catch (error: any) {
+        console.error('Error processing place:', error);
+        setApiError('Failed to process selected location. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    placesService.current.getDetails(request, (place: any, status: string) => {
-      setLoading(false);
+    // Remove existing listener if any
+    placePicker.removeEventListener('gmpx-placechange', handlePlaceChange);
 
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-        const location = {
-          latitude: place.geometry.location.lat(),
-          longitude: place.geometry.location.lng(),
-          address: place.formatted_address || description,
-          name: place.name || description.split(',')[0],
-        };
+    // Listen for the placechange event
+    placePicker.addEventListener('gmpx-placechange', handlePlaceChange);
 
-        setSelectedLocation(location);
-        onLocationSelect(location);
-      } else {
-        // Fallback: try geocoding the description
-        geocodeAddress(description);
+    // Also listen for global errors
+    const handleError = (event: ErrorEvent) => {
+      const errorMessage = event.message || '';
+      if (errorMessage.includes('BillingNotEnabled') || errorMessage.includes('billing')) {
+        setApiError('Google Maps billing is not enabled. Please enable billing in Google Cloud Console.');
+      } else if (errorMessage.includes('RefererNotAllowed')) {
+        setApiError('API key is not authorized for this domain. Please add your domain to API key restrictions.');
       }
-    });
-  };
+    };
 
-  const geocodeAddress = (address: string) => {
-    if (!window.google?.maps?.Geocoder) {
-      setLoading(false);
-      return;
-    }
+    window.addEventListener('error', handleError);
 
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ address: address }, (results: any[], status: string) => {
-      setLoading(false);
-
-      if (status === 'OK' && results && results[0]) {
-        const location = {
-          latitude: results[0].geometry.location.lat(),
-          longitude: results[0].geometry.location.lng(),
-          address: results[0].formatted_address || address,
-          name: address.split(',')[0],
-        };
-
-        setSelectedLocation(location);
-        onLocationSelect(location);
-      } else {
-        console.error('Geocoding failed:', status);
+    // Cleanup function
+    return () => {
+      if (placePicker) {
+        placePicker.removeEventListener('gmpx-placechange', handlePlaceChange);
       }
-    });
+      window.removeEventListener('error', handleError);
+    };
   };
 
   const clearSelection = () => {
-    setSearchQuery('');
-    setSelectedLocation(null);
-    setSuggestions([]);
-    setShowSuggestions(false);
-    setIsFocused(false);
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (placePickerRef.current) {
+      placePickerRef.current.value = '';
     }
+    setSelectedLocation(null);
+    setApiError(null);
   };
+
+  if (!apiKey) {
+    return (
+      <div className={`space-y-2 ${className}`}>
+        <Label htmlFor="location-search">Search Location</Label>
+        <Alert variant="destructive">
+          <AlertDescription>
+            Google Maps API key is not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-2 ${className}`}>
       <Label htmlFor="location-search">Search Location</Label>
-      <div className="relative" ref={containerRef}>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            ref={inputRef}
-            id="location-search"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            onFocus={() => {
-              setIsFocused(true);
-              // Show suggestions if they exist and query is long enough
-              if (suggestions.length > 0 && searchQuery.length >= 2) {
-                setShowSuggestions(true);
-              }
-            }}
-            onBlur={() => {
-              // Delay to allow click on suggestion to register
-              setTimeout(() => {
-                setIsFocused(false);
-              }, 200);
-            }}
-            placeholder="Search for location (e.g., Grand Mall Muscat, City Center Muscat)"
-            className="pl-10 pr-10"
-            disabled={!mapsLoaded}
-            autoComplete="off"
-          />
-          {loading && (
-            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-          )}
-          {selectedLocation && !loading && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-              onClick={clearSelection}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
+      
+      {/* API Loader - must be present for components to work */}
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment, react/no-unknown-property */}
+      <gmpx-api-loader
+        key={apiKey}
+        solution-channel="GMP_GE_mapsandplacesautocomplete_v2"
+        // @ts-ignore - Web component requires inline style
+        style={{ display: 'none' }}
+      >
+        {apiKey}
+      </gmpx-api-loader>
 
-        {/* Suggestions Dropdown */}
-        {showSuggestions && suggestions.length > 0 && searchQuery.length >= 2 && (
-          <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
-            {suggestions.map((suggestion) => (
-              <button
-                key={suggestion.place_id}
+      <div className="relative">
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+          
+          {/* Place Picker Component */}
+          <div className="relative">
+            {/* eslint-disable-next-line react/no-unknown-property */}
+            <gmpx-place-picker
+              ref={placePickerRef}
+              placeholder="Search for location (e.g., Grand Mall Muscat, City Center Muscat)"
+              className="w-full pl-10 pr-10"
+              // @ts-ignore - CSS custom properties for web component theming (inline styles required)
+              // eslint-disable-next-line react/forbid-dom-props
+              style={{
+                '--gmpx-color-surface': 'hsl(var(--background))',
+                '--gmpx-color-on-surface': 'hsl(var(--foreground))',
+                '--gmpx-color-outline': 'hsl(var(--input))',
+                '--gmpx-font-family-base': 'inherit',
+                '--gmpx-font-size-base': '0.875rem',
+              } as React.CSSProperties}
+            />
+            
+            {loading && (
+              <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground pointer-events-none" />
+            )}
+            
+            {selectedLocation && !loading && (
+              <Button
                 type="button"
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none transition-colors"
-                onMouseDown={(e) => {
-                  // Prevent input blur when clicking suggestion
-                  e.preventDefault();
-                  handleSelectPlace(suggestion.place_id, suggestion.description);
-                }}
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 z-10"
+                onClick={clearSelection}
               >
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
-                      {suggestion.structured_formatting.main_text}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {suggestion.structured_formatting.secondary_text}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            ))}
+                <X className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-        )}
-        
-        {/* Show message when typing but no results */}
-        {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && isFocused && (
-          <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-4">
-            <p className="text-sm text-muted-foreground text-center">
-              No locations found. Try a different search term.
-            </p>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Selected Location Info */}
@@ -347,23 +279,37 @@ export function GoogleLocationPicker({
         </Alert>
       )}
 
+      {/* API Error Message */}
+      {apiError && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertDescription className="text-xs">
+            {apiError}
+            {apiError.includes('billing') && (
+              <div className="mt-2">
+                <a
+                  href="https://console.cloud.google.com/project/_/billing/enable"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs underline hover:no-underline"
+                >
+                  Enable Billing in Google Cloud Console →
+                </a>
+              </div>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {!mapsLoaded && (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
             Loading Google Maps...
           </p>
-          {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              If loading persists, check browser console for API key errors. You may need to add your domain to the API key restrictions in Google Cloud Console.
-            </p>
-          ) : (
-            <p className="text-xs text-red-600 dark:text-red-400">
-              ⚠️ Google Maps API key not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.
-            </p>
-          )}
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            If loading persists, check browser console for API key errors. You may need to enable billing or add your domain to the API key restrictions in Google Cloud Console.
+          </p>
         </div>
       )}
     </div>
   );
 }
-
