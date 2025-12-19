@@ -38,6 +38,7 @@ import {
   AlertCircle,
   Edit,
   Hash,
+  FileText,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompany } from '@/components/providers/company-provider';
@@ -57,6 +58,8 @@ import { AnnouncementsManagement } from './announcements-management';
 import { ExpensesManagement } from './expenses-management';
 import { PerformanceReviewsManagement } from './performance-reviews-management';
 import { BulkOperationsToolbar } from './bulk-operations-toolbar';
+import { ClientAttendanceReport } from './client-attendance-report';
+import { AttendanceSettings } from './attendance-settings';
 import { cn } from '@/lib/utils';
 
 interface TeamMember {
@@ -524,6 +527,14 @@ export function TeamManagementDashboard() {
 
           <TabsContent value="performance" className="p-6 mt-0">
             <PerformanceReviewsManagement />
+          </TabsContent>
+
+          <TabsContent value="attendance-reports" className="p-6 mt-0">
+            <ClientAttendanceReport />
+          </TabsContent>
+
+          <TabsContent value="attendance-settings" className="p-6 mt-0">
+            <AttendanceSettings />
           </TabsContent>
 
         {selectedMember && (
