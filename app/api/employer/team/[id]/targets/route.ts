@@ -62,7 +62,8 @@ async function getTargetsHandler(
     }
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
-    if (profile?.active_company_id && teamMember.company_id !== profile.active_company_id) {
+    // Allow if company_id is null (backwards compatibility) OR matches active company
+    if (profile?.active_company_id && teamMember.company_id && teamMember.company_id !== profile.active_company_id) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }
@@ -228,7 +229,8 @@ async function createTargetHandler(
     }
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
-    if (userProfile?.active_company_id && teamMember.company_id !== userProfile.active_company_id) {
+    // Allow if company_id is null (backwards compatibility) OR matches active company
+    if (userProfile?.active_company_id && teamMember.company_id && teamMember.company_id !== userProfile.active_company_id) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }

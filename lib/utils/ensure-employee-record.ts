@@ -100,23 +100,38 @@ export async function ensureEmployerEmployeeRecord(
   }
 
   // Check if employer_employee record already exists
-  const { data: existing } = await supabaseAdmin
-    .from('employer_employees')
-    .select('id')
+  const existingResult = await (supabaseAdmin.from('employer_employees') as any)
+    .select('id, company_id')
     .eq('employee_id', employeeProfile.id)
     .eq('employer_id', employerProfile.id)
     .single();
+  
+  const existing = existingResult.data as any;
 
+  // ✅ FIX: If record exists but company_id doesn't match user's active company, update it
   if (existing) {
+    // Update company_id if it doesn't match user's active company (or is null)
+    if (userProfile.active_company_id && existing.company_id !== userProfile.active_company_id) {
+      await (supabaseAdmin.from('employer_employees') as any)
+        .update({ 
+          company_id: userProfile.active_company_id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existing.id);
+    }
     return { employerEmployeeId: existing.id, isNew: false };
   }
 
-  // Get company_id from party
+  // Get company_id from party (for reference)
   const { data: company } = await supabase
     .from('companies')
     .select('id')
     .eq('party_id', promoter.employer_id)
-    .maybeSingle();
+    .maybeSingle() as any;
+
+  // ✅ FIX: Prioritize user's active_company_id when creating new record
+  // This ensures the record belongs to the user's active company
+  const finalCompanyId = userProfile.active_company_id || company?.id || null;
 
   // Auto-generate employee code
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -124,21 +139,23 @@ export async function ensureEmployerEmployeeRecord(
   const employeeCode = `EMP-${date}-${uuidSuffix}`;
 
   // Create employer_employee record
-  const { data: newRecord, error: insertError } = await supabaseAdmin
-    .from('employer_employees')
+  const insertResult = await (supabaseAdmin.from('employer_employees') as any)
     .insert({
       employer_id: employerProfile.id,
       employee_id: employeeProfile.id,
-      company_id: company?.id || userProfile.active_company_id || null,
+      company_id: finalCompanyId,
       employment_type: 'full_time',
       employment_status: promoter.status === 'active' ? 'active' : 'inactive',
       employee_code: employeeCode,
       created_by: userId,
       created_at: promoter.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    } as never)
+    })
     .select('id')
     .single();
+  
+  const newRecord = insertResult.data as any;
+  const insertError = insertResult.error;
 
   if (insertError || !newRecord) {
     console.error('Error creating employer_employee record:', insertError);
