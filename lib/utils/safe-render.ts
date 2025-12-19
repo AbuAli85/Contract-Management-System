@@ -45,6 +45,15 @@ export function safeRender(value: any): string {
 }
 
 /**
+ * Alias for safeRender - safely converts a value to a string
+ * @deprecated Use safeRender instead, but kept for backward compatibility
+ */
+export function safeString(value: any, fallback: string = ''): string {
+  const result = safeRender(value);
+  return result || fallback;
+}
+
+/**
  * Validates if a value can be safely rendered in React
  */
 export function canRender(value: any): boolean {
