@@ -82,6 +82,7 @@ export function EmployeeScheduleSelector({
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [groups, setGroups] = useState<EmployeeGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [promoterOnlyCount, setPromoterOnlyCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
@@ -108,6 +109,12 @@ export function EmployeeScheduleSelector({
         console.log('Raw team members:', teamMembers);
         console.log('Team members count:', teamMembers.length);
         
+        // Count promoter-only vs actual employees
+        const promoterOnly = teamMembers.filter((e: any) => e.id?.toString().startsWith('promoter_'));
+        const actualEmployees = teamMembers.filter((e: any) => e.id && !e.id.toString().startsWith('promoter_'));
+        console.log(`Promoter-only records: ${promoterOnly.length}, Actual employees: ${actualEmployees.length}`);
+        setPromoterOnlyCount(promoterOnly.length);
+        
         if (teamMembers.length === 0) {
           console.warn('No employees found. Response:', data);
           setEmployees([]);
@@ -119,6 +126,8 @@ export function EmployeeScheduleSelector({
           .filter((emp: any) => {
             // Filter out promoter-only records (they have IDs starting with 'promoter_')
             // Only include actual employer_employee records
+            // NOTE: Promoter-only records cannot be assigned to attendance groups
+            // because attendance_group_assignments requires employer_employee_id
             const hasValidId = emp.id && !emp.id.toString().startsWith('promoter_');
             
             // Filter by active status - be lenient (null/undefined means active)
@@ -399,9 +408,19 @@ export function EmployeeScheduleSelector({
                   <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="font-medium">No employees found</p>
                   <p className="text-sm mt-2">
-                    {searchQuery || departmentFilter !== 'all'
-                      ? 'Try adjusting your search or filters'
-                      : 'Add employees to your team first at /en/employer/team'}
+                    {searchQuery || departmentFilter !== 'all' ? (
+                      'Try adjusting your search or filters'
+                    ) : promoterOnlyCount > 0 ? (
+                      <>
+                        You have {promoterOnlyCount} promoter-only record{promoterOnlyCount !== 1 ? 's' : ''} that need to be added as employees.
+                        <br />
+                        <span className="text-xs mt-1 block">
+                          Go to <strong>Team Management</strong> and use "Add Team Member" to convert them to employees.
+                        </span>
+                      </>
+                    ) : (
+                      'Add employees to your team first at /en/employer/team'
+                    )}
                   </p>
                 </div>
               ) : (

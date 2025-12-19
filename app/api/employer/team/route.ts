@@ -358,17 +358,66 @@ async function addTeamMemberHandler(request: NextRequest) {
       );
     }
 
-    // ✅ LINKING FIX: Verify employee exists in promoters table
-    const { data: employee, error: employeeError } = await supabase
+    // ✅ LINKING FIX: Verify employee exists and get their profile ID
+    // The employee_id can be either:
+    // 1. A promoter ID (from promoters table) - need to find matching profile by email
+    // 2. A profile ID (from profiles table) - use directly
+    let profileId: string | null = null;
+    let promoterData: any = null;
+
+    // First, check if it's a promoter ID (from promoters table)
+    const { data: promoter, error: promoterError } = await supabase
       .from('promoters')
       .select('id, email, name_en, name_ar')
       .eq('id', employee_id)
       .single();
 
-    if (employeeError || !employee) {
+    if (promoter && !promoterError && promoter.email) {
+      promoterData = promoter;
+      // Find matching profile by email (case-insensitive)
+      const { data: profileByEmail, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .ilike('email', promoter.email) // Case-insensitive match
+        .maybeSingle();
+
+      if (profileByEmail && !profileError) {
+        profileId = profileByEmail.id;
+      } else {
+        // No matching profile found - return helpful error
+        return NextResponse.json(
+          { 
+            error: 'Employee profile not found',
+            details: `Promoter "${promoter.name_en || promoter.email}" exists but has no matching profile. The promoter's email (${promoter.email}) must match a profile email. Please create a profile for this person first or ensure the email matches.`
+          },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Not a promoter ID, check if it's already a profile ID
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('id', employee_id)
+        .single();
+
+      if (profile && !profileError) {
+        profileId = profile.id;
+      } else {
+        return NextResponse.json(
+          { 
+            error: 'Employee not found',
+            details: `The employee ID "${employee_id}" was not found in either the promoters table or the profiles table.`
+          },
+          { status: 404 }
+        );
+      }
+    }
+
+    if (!profileId) {
       return NextResponse.json(
-        { error: 'Employee not found' },
-        { status: 404 }
+        { error: 'Could not determine employee profile ID' },
+        { status: 400 }
       );
     }
 
@@ -411,12 +460,12 @@ async function addTeamMemberHandler(request: NextRequest) {
       }
     }
 
-    // Check if already assigned (using effective employer ID)
+    // Check if already assigned (using effective employer ID and profile ID)
     const { data: existing } = await supabase
       .from('employer_employees')
       .select('id')
       .eq('employer_id', effectiveEmployerId) // ✅ Use effective employer ID
-      .eq('employee_id', employee_id)
+      .eq('employee_id', profileId) // ✅ Use profile ID, not promoter ID
       .eq('employment_status', 'active')
       .single();
 
@@ -440,10 +489,20 @@ async function addTeamMemberHandler(request: NextRequest) {
       val && val.trim() !== '' ? val : null;
 
     const supabaseAdmin = getSupabaseAdmin();
+    
+    // Auto-generate employee code if not provided
+    let finalEmployeeCode = toNullIfEmpty(employee_code);
+    if (!finalEmployeeCode) {
+      // Generate employee code: EMP-YYYYMMDD-XXXX (last 4 digits of UUID)
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const uuidSuffix = profileId.replace(/-/g, '').slice(-4).toUpperCase();
+      finalEmployeeCode = `EMP-${date}-${uuidSuffix}`;
+    }
+
     const insertData = {
       employer_id: effectiveEmployerId, // ✅ Use effective employer ID (profile.id that matches party)
-      employee_id: employee_id, // Required field - must not be null
-      employee_code: toNullIfEmpty(employee_code),
+      employee_id: profileId, // ✅ Use profile ID, not promoter ID
+      employee_code: finalEmployeeCode,
       job_title: toNullIfEmpty(job_title),
       department: toNullIfEmpty(department),
       employment_type: employment_type || 'full_time',
