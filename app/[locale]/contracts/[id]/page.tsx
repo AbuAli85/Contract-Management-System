@@ -36,7 +36,7 @@ import {
 import { useContract } from '@/hooks/useContract';
 // StatusBadge component for displaying contract status
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { safeString } from '@/lib/utils/safe-render';
+import { safeRender } from '@/lib/utils/safe-render';
 
 // Simple StatusBadge implementation
 function StatusBadge({ status }: { status?: string | undefined }) {
@@ -851,7 +851,7 @@ export default function ContractDetailPage() {
                         </label>
                         <p className='mt-1 flex items-start gap-2 text-gray-700'>
                           <MapPinIcon className='mt-0.5 h-4 w-4 text-gray-500' />
-                          {safeString(contract.first_party.address)}
+                          {safeRender(contract.first_party.address)}
                         </p>
                       </div>
                     )}
@@ -957,7 +957,7 @@ export default function ContractDetailPage() {
                         </label>
                         <p className='mt-1 flex items-start gap-2 text-gray-700'>
                           <MapPinIcon className='mt-0.5 h-4 w-4 text-gray-500' />
-                          {safeString(contract.second_party.address)}
+                          {safeRender(contract.second_party.address)}
                         </p>
                       </div>
                     )}
