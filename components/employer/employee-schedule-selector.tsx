@@ -95,7 +95,8 @@ export function EmployeeScheduleSelector({
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/employer/team?status=active');
+      // Note: API doesn't filter by status parameter, so we filter in component
+      const response = await fetch('/api/employer/team');
       const data = await response.json();
 
       console.log('Employee fetch response:', { response: response.ok, data });
@@ -103,6 +104,9 @@ export function EmployeeScheduleSelector({
       if (response.ok) {
         // The API returns 'team' not 'employees', and also check for 'employees' for compatibility
         const teamMembers = data.team || data.employees || [];
+        
+        console.log('Raw team members:', teamMembers);
+        console.log('Team members count:', teamMembers.length);
         
         if (teamMembers.length === 0) {
           console.warn('No employees found. Response:', data);
@@ -115,28 +119,52 @@ export function EmployeeScheduleSelector({
           .filter((emp: any) => {
             // Filter out promoter-only records (they have IDs starting with 'promoter_')
             // Only include actual employer_employee records
-            return emp.id && !emp.id.toString().startsWith('promoter_') && emp.employment_status === 'active';
+            const hasValidId = emp.id && !emp.id.toString().startsWith('promoter_');
+            
+            // Filter by active status - be lenient (null/undefined means active)
+            const isActive = !emp.employment_status || 
+                           emp.employment_status === 'active';
+            
+            // Must have employee data (from promoters table)
+            const hasEmployeeData = emp.employee !== null && emp.employee !== undefined;
+            
+            const isValid = hasValidId && isActive && hasEmployeeData;
+            
+            if (!isValid && hasValidId) {
+              console.log('Filtered out employee:', {
+                id: emp.id,
+                employment_status: emp.employment_status,
+                hasEmployee: hasEmployeeData,
+                employee: emp.employee
+              });
+            }
+            
+            return isValid;
           })
           .map((emp: any) => {
             // Handle different response structures
-            const employeeProfile = emp.employee || emp.promoter || emp.profile || {};
-            const employeeId = employeeProfile?.id || emp.employee_id || emp.user_id;
+            // The API returns employee data in emp.employee (from promoters table)
+            const employeeProfile = emp.employee || {};
+            const employeeId = employeeProfile?.id || emp.employee_id;
             
-            return {
+            const mapped = {
               id: emp.id, // employer_employee.id (this is what we need for assignments)
               employee_code: emp.employee_code || null,
               job_title: emp.job_title || null,
               department: emp.department || null,
               employee: {
                 id: employeeId,
-                full_name: employeeProfile?.full_name || employeeProfile?.name_en || employeeProfile?.name || 'Unknown',
-                email: employeeProfile?.email || emp.email || '',
-                phone: employeeProfile?.phone || employeeProfile?.mobile_number || emp.phone || '',
+                full_name: employeeProfile?.full_name || employeeProfile?.name_en || employeeProfile?.name || 'Unknown Employee',
+                email: employeeProfile?.email || '',
+                phone: employeeProfile?.phone || employeeProfile?.mobile_number || '',
               },
             };
+            
+            return mapped;
           });
         
-        console.log('Mapped employees:', mappedEmployees);
+        console.log('Final mapped employees:', mappedEmployees);
+        console.log('Final count:', mappedEmployees.length);
         setEmployees(mappedEmployees);
       } else {
         console.error('Failed to fetch employees:', data.error);
