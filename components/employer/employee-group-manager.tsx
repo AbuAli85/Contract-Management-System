@@ -180,8 +180,28 @@ export function EmployeeGroupManager() {
     }
   };
 
-  const handleEdit = (group: EmployeeGroup) => {
+  const handleEdit = async (group: EmployeeGroup) => {
     setEditingGroup(group);
+    
+    // Fetch existing employee assignments for this group
+    let existingEmployeeIds: string[] = [];
+    try {
+      const response = await fetch(`/api/employer/attendance-groups/${group.id}`);
+      const data = await response.json();
+      if (response.ok && data.group?.employees) {
+        // Extract employer_employee_id from assignments
+        // The API returns: { employer_employee_id, employer_employee: { id, ... } }
+        existingEmployeeIds = (data.group.employees || []).map((assignment: any) => {
+          // Try different possible structures
+          return assignment.employer_employee_id || 
+                 assignment.employer_employee?.id || 
+                 assignment.id;
+        }).filter(Boolean);
+      }
+    } catch (error) {
+      console.error('Error fetching group employees:', error);
+    }
+    
     setFormData({
       name: group.name,
       description: group.description || '',
@@ -191,7 +211,7 @@ export function EmployeeGroupManager() {
       project_name: '',
       default_check_in_time: group.default_check_in_time || '',
       default_check_out_time: group.default_check_out_time || '',
-      employee_ids: [],
+      employee_ids: existingEmployeeIds,
     });
     setShowCreateDialog(true);
   };

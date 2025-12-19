@@ -18,6 +18,7 @@ import {
   Filter,
   Download,
   Upload,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -93,33 +94,57 @@ export function EmployeeScheduleSelector({
 
   const fetchEmployees = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/employer/team?status=active');
       const data = await response.json();
 
-      if (response.ok && data.employees) {
+      console.log('Employee fetch response:', { response: response.ok, data });
+
+      if (response.ok) {
+        // The API returns 'team' not 'employees', and also check for 'employees' for compatibility
+        const teamMembers = data.team || data.employees || [];
+        
+        if (teamMembers.length === 0) {
+          console.warn('No employees found. Response:', data);
+          setEmployees([]);
+          return;
+        }
+
         // Map the response to match our Employee interface
-        const mappedEmployees = (data.employees || []).map((emp: any) => {
-          // Handle different response structures
-          const employeeProfile = emp.employee || emp.promoter || emp.profile || {};
-          const employeeId = employeeProfile.id || emp.employee_id || emp.user_id;
-          
-          return {
-            id: emp.id, // employer_employee.id
-            employee_code: emp.employee_code,
-            job_title: emp.job_title,
-            department: emp.department,
-            employee: {
-              id: employeeId,
-              full_name: employeeProfile.full_name || employeeProfile.name_en || employeeProfile.name || 'Unknown',
-              email: employeeProfile.email || emp.email || '',
-              phone: employeeProfile.phone || employeeProfile.mobile_number || emp.phone || '',
-            },
-          };
-        });
+        const mappedEmployees = teamMembers
+          .filter((emp: any) => {
+            // Filter out promoter-only records (they have IDs starting with 'promoter_')
+            // Only include actual employer_employee records
+            return emp.id && !emp.id.toString().startsWith('promoter_') && emp.employment_status === 'active';
+          })
+          .map((emp: any) => {
+            // Handle different response structures
+            const employeeProfile = emp.employee || emp.promoter || emp.profile || {};
+            const employeeId = employeeProfile?.id || emp.employee_id || emp.user_id;
+            
+            return {
+              id: emp.id, // employer_employee.id (this is what we need for assignments)
+              employee_code: emp.employee_code || null,
+              job_title: emp.job_title || null,
+              department: emp.department || null,
+              employee: {
+                id: employeeId,
+                full_name: employeeProfile?.full_name || employeeProfile?.name_en || employeeProfile?.name || 'Unknown',
+                email: employeeProfile?.email || emp.email || '',
+                phone: employeeProfile?.phone || employeeProfile?.mobile_number || emp.phone || '',
+              },
+            };
+          });
+        
+        console.log('Mapped employees:', mappedEmployees);
         setEmployees(mappedEmployees);
+      } else {
+        console.error('Failed to fetch employees:', data.error);
+        setEmployees([]);
       }
     } catch (error) {
       console.error('Error fetching employees:', error);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
@@ -329,68 +354,85 @@ export function EmployeeScheduleSelector({
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  {filteredEmployees.length} employees found
+                  {loading ? 'Loading...' : `${filteredEmployees.length} employees found`}
                 </span>
                 <Badge variant="secondary">
                   {selectedEmployeeIds.length} selected
                 </Badge>
               </div>
 
-              <ScrollArea className="h-[400px] border rounded-md p-4">
-                <div className="space-y-2">
-                  {filteredEmployees.map((employee) => {
-                    const isSelected = selectedEmployeeIds.includes(employee.id);
-                    return (
-                      <div
-                        key={employee.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                          isSelected
-                            ? 'bg-primary/10 border-primary'
-                            : 'hover:bg-accent'
-                        }`}
-                        onClick={() => handleEmployeeToggle(employee.id)}
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() =>
-                              handleEmployeeToggle(employee.id)
-                            }
-                          />
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              {employee.employee.full_name}
-                            </div>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
-                              {employee.employee_code && (
-                                <span>#{employee.employee_code}</span>
-                              )}
-                              {employee.job_title && (
-                                <>
-                                  <span>•</span>
-                                  <span>{employee.job_title}</span>
-                                </>
-                              )}
-                              {employee.department && (
-                                <>
-                                  <span>•</span>
-                                  <span>{employee.department}</span>
-                                </>
-                              )}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {employee.employee.email}
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading employees...</span>
+                </div>
+              ) : filteredEmployees.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border rounded-md">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="font-medium">No employees found</p>
+                  <p className="text-sm mt-2">
+                    {searchQuery || departmentFilter !== 'all'
+                      ? 'Try adjusting your search or filters'
+                      : 'Add employees to your team first at /en/employer/team'}
+                  </p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[400px] border rounded-md p-4">
+                  <div className="space-y-2">
+                    {filteredEmployees.map((employee) => {
+                      const isSelected = selectedEmployeeIds.includes(employee.id);
+                      return (
+                        <div
+                          key={employee.id}
+                          className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                            isSelected
+                              ? 'bg-primary/10 border-primary'
+                              : 'hover:bg-accent'
+                          }`}
+                          onClick={() => handleEmployeeToggle(employee.id)}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() =>
+                                handleEmployeeToggle(employee.id)
+                              }
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium">
+                                {employee.employee?.full_name || 'Unknown'}
+                              </div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                {employee.employee_code && (
+                                  <span>#{employee.employee_code}</span>
+                                )}
+                                {employee.job_title && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{employee.job_title}</span>
+                                  </>
+                                )}
+                                {employee.department && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{employee.department}</span>
+                                  </>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {employee.employee?.email || 'No email'}
+                              </div>
                             </div>
                           </div>
+                          {isSelected && (
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                          )}
                         </div>
-                        {isSelected && (
-                          <CheckCircle2 className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
