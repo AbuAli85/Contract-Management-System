@@ -12,7 +12,7 @@ async function getAttendanceHandler(
 ) {
   try {
     const supabase = await createClient();
-    const { id } = await params; // employer_employee_id
+    let { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
     const {
       data: { user },
       error: authError,
@@ -20,6 +20,18 @@ async function getAttendanceHandler(
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // ✅ FIX: Handle promoter-only IDs (prefixed with 'promoter_')
+    // These are not actual employer_employee records, so we can't fetch attendance
+    if (id.startsWith('promoter_')) {
+      return NextResponse.json(
+        { 
+          error: 'Promoter-only records cannot have attendance. Please add this person to employer_employees first.',
+          details: 'This person exists in the promoters table but has no employer_employee record. Attendance tracking requires an employer_employee record.'
+        },
+        { status: 404 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -120,7 +132,7 @@ async function recordAttendanceHandler(
 ) {
   try {
     const supabase = await createClient();
-    const { id } = await params; // employer_employee_id
+    let { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
     const {
       data: { user },
       error: authError,
@@ -128,6 +140,18 @@ async function recordAttendanceHandler(
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // ✅ FIX: Handle promoter-only IDs (prefixed with 'promoter_')
+    // These are not actual employer_employee records, so we can't record attendance
+    if (id.startsWith('promoter_')) {
+      return NextResponse.json(
+        { 
+          error: 'Promoter-only records cannot have attendance. Please add this person to employer_employees first.',
+          details: 'This person exists in the promoters table but has no employer_employee record. Attendance tracking requires an employer_employee record.'
+        },
+        { status: 404 }
+      );
     }
 
     const body = await request.json();

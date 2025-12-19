@@ -666,7 +666,25 @@ export function TeamManagementDashboard() {
             </TabsContent>
 
               <TabsContent value="attendance" className="p-6 mt-0">
-              <AttendanceView employerEmployeeId={selectedMember.id} />
+              {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') ? (
+                <AttendanceView employerEmployeeId={selectedMember.id} />
+              ) : (
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="py-16 text-center">
+                    <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      Attendance Not Available
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
+                      This person exists in the promoters table but has no employer_employee record. 
+                      Attendance tracking requires an employer_employee record.
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Please add this person to your team using the "Add Team Member" button to enable attendance tracking.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
               <TabsContent value="tasks" className="p-6 mt-0">
