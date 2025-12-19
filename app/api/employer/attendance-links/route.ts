@@ -186,10 +186,49 @@ export const GET = withRBAC('attendance:read:all', async (
       .single();
 
     if (!profile?.active_company_id) {
-      return NextResponse.json(
-        { error: 'No active company found' },
-        { status: 400 }
-      );
+      // Try to find any company the user has access to
+      const { data: userCompanies } = await (supabaseAdmin.from('company_members') as any)
+        .select('company_id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .limit(1);
+      
+      if (userCompanies && userCompanies.length > 0) {
+        // Auto-set the first available company as active
+        const firstCompanyId = userCompanies[0].company_id;
+        await (supabaseAdmin.from('profiles') as any)
+          .update({ active_company_id: firstCompanyId })
+          .eq('id', user.id);
+        
+        // Retry with the auto-set company
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .select('active_company_id, role')
+          .eq('id', user.id)
+          .single();
+        
+        if (!updatedProfile?.active_company_id) {
+          return NextResponse.json(
+            { 
+              error: 'No active company found',
+              message: 'Please set your active company in profile settings.',
+            },
+            { status: 400 }
+          );
+        }
+        
+        // Continue with the updated profile
+        profile.active_company_id = updatedProfile.active_company_id;
+      } else {
+        return NextResponse.json(
+          { 
+            error: 'No active company found',
+            message: 'Please set your active company in profile settings or contact support.',
+            hint: 'You need to be a member of at least one company to view attendance links.'
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Get query params

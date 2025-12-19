@@ -375,58 +375,83 @@ export function ClientAttendanceReport() {
               </div>
             </div>
 
-            {/* Attendance Records */}
+            {/* Attendance Records - Matching Manual Format */}
             <div>
               <h3 className="font-semibold mb-4">Daily Attendance Records</h3>
-              <div className="space-y-2">
-                {reportData.records.map((record) => (
-                  <div
-                    key={record.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="font-medium">
-                          {format(new Date(record.attendance_date), 'MMM dd, yyyy')}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          {record.check_in_time && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              In: {format(new Date(record.check_in_time), 'HH:mm')}
-                            </span>
-                          )}
-                          {record.check_out_time && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              Out: {format(new Date(record.check_out_time), 'HH:mm')}
-                            </span>
-                          )}
-                          {record.total_hours && (
-                            <span>{record.total_hours.toFixed(1)}h</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          record.approval_status === 'approved'
-                            ? 'default'
-                            : record.approval_status === 'rejected'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {record.approval_status === 'approved' && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                        {record.approval_status === 'rejected' && <XCircle className="h-3 w-3 mr-1" />}
-                        {record.approval_status === 'pending' && <AlertCircle className="h-3 w-3 mr-1" />}
-                        {record.approval_status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-gray-800">
+                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">DATE</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">TIME IN</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">TIME OUT</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">WORKING HOURS</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left font-semibold">STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.records.map((record) => {
+                      const recordDate = new Date(record.attendance_date);
+                      const isWeekOff = record.status === 'week_off' || isTuesday(recordDate);
+                      
+                      return (
+                        <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                          <td className="border border-gray-300 px-4 py-2 font-medium">
+                            {format(recordDate, 'dd-MM-yyyy')}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            {isWeekOff ? (
+                              <span className="text-gray-600 dark:text-gray-400 font-medium">WEEK OFF</span>
+                            ) : record.check_in_time ? (
+                              format(new Date(record.check_in_time), 'hh:mm a')
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            {isWeekOff ? (
+                              <span className="text-gray-600 dark:text-gray-400 font-medium">WEEK OFF</span>
+                            ) : record.check_out_time ? (
+                              format(new Date(record.check_out_time), 'hh:mm a')
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            {isWeekOff ? (
+                              <span className="text-gray-600 dark:text-gray-400 font-medium">WEEK OFF</span>
+                            ) : record.total_hours ? (
+                              <span className="font-medium">{record.total_hours.toFixed(0)}</span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            {isWeekOff ? (
+                              <span className="text-gray-500 text-sm">✓</span>
+                            ) : (
+                              <Badge
+                                variant={
+                                  record.approval_status === 'approved'
+                                    ? 'default'
+                                    : record.approval_status === 'rejected'
+                                    ? 'destructive'
+                                    : 'secondary'
+                                }
+                                className="text-xs"
+                              >
+                                {record.approval_status === 'approved' && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                                {record.approval_status === 'rejected' && <XCircle className="h-3 w-3 mr-1" />}
+                                {record.approval_status === 'pending' && <AlertCircle className="h-3 w-3 mr-1" />}
+                                {record.approval_status}
+                              </Badge>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           </CardContent>

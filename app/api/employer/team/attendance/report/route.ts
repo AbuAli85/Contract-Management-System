@@ -78,15 +78,63 @@ export async function GET(request: NextRequest) {
     const records = attendanceRecords || [];
     const presentDays = records.filter(r => r.status === 'present').length;
     const absentDays = records.filter(r => r.status === 'absent').length;
-    const totalDays = Math.ceil(
-      (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)
-    ) + 1;
+    
+    // Generate all dates in range (including week offs)
+    const allDates: string[] = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const current = new Date(start);
+    
+    while (current <= end) {
+      allDates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+    
+    const totalDays = allDates.length;
     const totalHours = records.reduce((sum, r) => sum + (r.total_hours || 0), 0);
     const averageHours = presentDays > 0 ? totalHours / presentDays : 0;
     const lateCount = records.filter(r => r.status === 'present' && r.check_in_time && 
-      new Date(r.check_in_time).getHours() > 9).length;
+      new Date(r.check_in_time).getHours() >= 13).length; // Late if after 1 PM
     const approvedCount = records.filter(r => r.approval_status === 'approved').length;
     const pendingCount = records.filter(r => r.approval_status === 'pending').length;
+    
+    // Create records for all dates (fill in week offs)
+    const recordsMap = new Map(records.map((r: any) => [r.attendance_date, r]));
+    const allRecords = allDates.map(date => {
+      const record = recordsMap.get(date);
+      if (record) {
+        return record;
+      }
+      // Check if it's Tuesday (week off)
+      const dateObj = new Date(date);
+      const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 2 = Tuesday
+      if (dayOfWeek === 2) {
+        return {
+          id: `week-off-${date}`,
+          attendance_date: date,
+          check_in_time: null,
+          check_out_time: null,
+          total_hours: null,
+          status: 'week_off',
+          approval_status: 'approved',
+          latitude: null,
+          longitude: null,
+          check_in_photo: null,
+        };
+      }
+      return {
+        id: `absent-${date}`,
+        attendance_date: date,
+        check_in_time: null,
+        check_out_time: null,
+        total_hours: null,
+        status: 'absent',
+        approval_status: 'pending',
+        latitude: null,
+        longitude: null,
+        check_in_photo: null,
+      };
+    });
 
     const reportData = {
       employee: {
@@ -111,7 +159,7 @@ export async function GET(request: NextRequest) {
         approved_count: approvedCount,
         pending_count: pendingCount,
       },
-      records: records.map(r => ({
+      records: allRecords.map(r => ({
         id: r.id,
         attendance_date: r.attendance_date,
         check_in_time: r.check_in_time,
