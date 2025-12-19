@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Building2,
   Plus,
@@ -21,18 +22,40 @@ import {
   Phone,
   MapPin,
   Filter,
+  Globe,
+  Calendar,
+  ExternalLink,
+  Edit,
+  Eye,
 } from 'lucide-react';
 import { safeRender } from '@/lib/utils/safe-render';
+import { cn } from '@/lib/utils';
 
 interface Company {
   id: string;
-  company_name: string;
+  name?: string;
+  company_name?: string;
   company_number?: string;
   email?: string;
   phone?: string;
   address?: string | Record<string, any>;
+  logo_url?: string | null;
+  website?: string | null;
+  industry?: string | null;
+  business_type?: string | null;
+  cr_number?: number | null;
   promoter_id?: string;
   created_at: string;
+}
+
+// Helper function to get initials
+function getInitials(name: string): string {
+  if (!name) return '?';
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) {
+    return words[0].substring(0, 2).toUpperCase();
+  }
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
 export function CompaniesView() {
@@ -40,6 +63,12 @@ export function CompaniesView() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    withContracts: 0,
+    thisMonth: 0,
+  });
 
   useEffect(() => {
     fetchCompanies();
@@ -52,7 +81,23 @@ export function CompaniesView() {
       const data = await response.json();
 
       if (data.success) {
-        setCompanies(data.companies || []);
+        const companiesData = data.companies || [];
+        setCompanies(companiesData);
+        
+        // Calculate stats
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        setStats({
+          total: companiesData.length,
+          active: companiesData.filter((c: Company) => c.id).length,
+          withContracts: 0, // TODO: Calculate from contracts API
+          thisMonth: companiesData.filter((c: Company) => {
+            const created = new Date(c.created_at);
+            return created >= startOfMonth;
+          }).length,
+        });
+        
         setError(null);
       } else {
         setError(data.error || 'Failed to fetch companies');
@@ -66,12 +111,17 @@ export function CompaniesView() {
   };
 
   const filteredCompanies = companies.filter(
-    company =>
-      company.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.company_number
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      company.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    company => {
+      const name = company.company_name || company.name || '';
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        name.toLowerCase().includes(searchLower) ||
+        company.company_number?.toLowerCase().includes(searchLower) ||
+        company.email?.toLowerCase().includes(searchLower) ||
+        company.phone?.toLowerCase().includes(searchLower) ||
+        safeRender(company.address).toLowerCase().includes(searchLower)
+      );
+    }
   );
 
   if (loading) {
@@ -123,44 +173,48 @@ export function CompaniesView() {
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
-        <Card>
+        <Card className='border-l-4 border-l-blue-500'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
+            <CardTitle className='text-sm font-medium text-gray-600'>
               Total Companies
             </CardTitle>
-            <Building2 className='h-4 w-4 text-muted-foreground' />
+            <Building2 className='h-5 w-5 text-blue-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{companies.length}</div>
+            <div className='text-3xl font-bold text-gray-900'>{stats.total}</div>
+            <p className='text-xs text-gray-500 mt-1'>All companies</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className='border-l-4 border-l-green-500'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Active</CardTitle>
-            <Users className='h-4 w-4 text-muted-foreground' />
+            <CardTitle className='text-sm font-medium text-gray-600'>Active</CardTitle>
+            <Users className='h-5 w-5 text-green-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{companies.length}</div>
+            <div className='text-3xl font-bold text-gray-900'>{stats.active}</div>
+            <p className='text-xs text-gray-500 mt-1'>Active companies</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className='border-l-4 border-l-purple-500'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
+            <CardTitle className='text-sm font-medium text-gray-600'>
               With Contracts
             </CardTitle>
-            <FileText className='h-4 w-4 text-muted-foreground' />
+            <FileText className='h-5 w-5 text-purple-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>0</div>
+            <div className='text-3xl font-bold text-gray-900'>{stats.withContracts}</div>
+            <p className='text-xs text-gray-500 mt-1'>Has contracts</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className='border-l-4 border-l-orange-500'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>This Month</CardTitle>
-            <Plus className='h-4 w-4 text-muted-foreground' />
+            <CardTitle className='text-sm font-medium text-gray-600'>This Month</CardTitle>
+            <Calendar className='h-5 w-5 text-orange-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>0</div>
+            <div className='text-3xl font-bold text-gray-900'>{stats.thisMonth}</div>
+            <p className='text-xs text-gray-500 mt-1'>New this month</p>
           </CardContent>
         </Card>
       </div>
@@ -216,62 +270,124 @@ export function CompaniesView() {
           </CardContent>
         </Card>
       ) : (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-          {filteredCompanies.map(company => (
-            <Card
-              key={company.id}
-              className='hover:shadow-md transition-shadow'
-            >
-              <CardHeader>
-                <div className='flex items-start justify-between'>
-                  <div className='flex-1'>
-                    <CardTitle className='text-lg'>
-                      {company.company_name}
-                    </CardTitle>
-                    {company.company_number && (
-                      <CardDescription>
-                        #{company.company_number}
-                      </CardDescription>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {filteredCompanies.map(company => {
+            const companyName = company.company_name || company.name || 'Unnamed Company';
+            const addressText = safeRender(company.address);
+            const hasAddress = addressText && addressText.trim().length > 0;
+            
+            return (
+              <Card
+                key={company.id}
+                className='group hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200'
+              >
+                <CardHeader className='pb-3'>
+                  <div className='flex items-start gap-4'>
+                    <Avatar className='h-14 w-14 shadow-md ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all'>
+                      {company.logo_url ? (
+                        <AvatarImage src={company.logo_url} alt={companyName} />
+                      ) : null}
+                      <AvatarFallback className='text-lg font-bold bg-gradient-to-br from-blue-500 to-indigo-600 text-white'>
+                        {getInitials(companyName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-start justify-between gap-2'>
+                        <div className='flex-1 min-w-0'>
+                          <CardTitle className='text-lg leading-tight mb-1 truncate'>
+                            {companyName}
+                          </CardTitle>
+                          {company.cr_number && (
+                            <CardDescription className='text-xs'>
+                              CR: {company.cr_number}
+                            </CardDescription>
+                          )}
+                        </div>
+                        <Badge variant='secondary' className='shrink-0'>Active</Badge>
+                      </div>
+                      {company.industry && (
+                        <Badge variant='outline' className='mt-2 text-xs'>
+                          {company.industry}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className='space-y-3'>
+                  <div className='space-y-2'>
+                    {company.email && (
+                      <div className='flex items-center gap-2 text-sm text-gray-700'>
+                        <Mail className='h-4 w-4 text-gray-400 shrink-0' />
+                        <span className='truncate'>{company.email}</span>
+                      </div>
+                    )}
+                    {company.phone && (
+                      <div className='flex items-center gap-2 text-sm text-gray-700'>
+                        <Phone className='h-4 w-4 text-gray-400 shrink-0' />
+                        <span>{company.phone}</span>
+                      </div>
+                    )}
+                    {hasAddress && (
+                      <div className='flex items-start gap-2 text-sm text-gray-700'>
+                        <MapPin className='h-4 w-4 text-gray-400 shrink-0 mt-0.5' />
+                        <span className='line-clamp-2'>{addressText}</span>
+                      </div>
+                    )}
+                    {company.website && (
+                      <div className='flex items-center gap-2 text-sm text-gray-700'>
+                        <Globe className='h-4 w-4 text-gray-400 shrink-0' />
+                        <a
+                          href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center gap-1'
+                        >
+                          {company.website}
+                          <ExternalLink className='h-3 w-3' />
+                        </a>
+                      </div>
                     )}
                   </div>
-                  <Badge variant='secondary'>Active</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className='space-y-2'>
-                  {company.email && (
-                    <div className='flex items-center text-sm text-gray-600'>
-                      <Mail className='h-4 w-4 mr-2' />
-                      {company.email}
+                  
+                  <div className='flex items-center justify-between pt-3 border-t border-gray-100'>
+                    <div className='flex items-center gap-1 text-xs text-gray-500'>
+                      <Calendar className='h-3 w-3' />
+                      <span>{new Date(company.created_at).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}</span>
                     </div>
-                  )}
-                  {company.phone && (
-                    <div className='flex items-center text-sm text-gray-600'>
-                      <Phone className='h-4 w-4 mr-2' />
-                      {company.phone}
-                    </div>
-                  )}
-                  {company.address && (
-                    <div className='flex items-center text-sm text-gray-600'>
-                      <MapPin className='h-4 w-4 mr-2' />
-                      {safeRender(company.address)}
-                    </div>
-                  )}
-                  <div className='flex justify-between items-center pt-2'>
-                    <span className='text-sm text-gray-500'>
-                      {new Date(company.created_at).toLocaleDateString()}
-                    </span>
                     <div className='flex gap-2'>
-                      <Button size='sm' variant='outline'>
+                      <Button 
+                        size='sm' 
+                        variant='outline'
+                        className='h-8 px-3'
+                        onClick={() => {
+                          // TODO: Implement edit functionality
+                          console.log('Edit company:', company.id);
+                        }}
+                      >
+                        <Edit className='h-3 w-3 mr-1' />
                         Edit
                       </Button>
-                      <Button size='sm'>View</Button>
+                      <Button 
+                        size='sm'
+                        className='h-8 px-3'
+                        onClick={() => {
+                          // TODO: Implement view functionality
+                          console.log('View company:', company.id);
+                        }}
+                      >
+                        <Eye className='h-3 w-3 mr-1' />
+                        View
+                      </Button>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
