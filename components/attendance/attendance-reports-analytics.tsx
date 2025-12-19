@@ -66,8 +66,10 @@ export function AttendanceReportsAnalytics() {
         throw new Error(data.error || 'Failed to fetch analytics');
       }
 
-      setStats(data.stats || null);
-      setWeeklyData(data.weeklyData || []);
+      // Ensure stats is not an empty object
+      const statsData = data.stats;
+      setStats(statsData && Object.keys(statsData).length > 0 ? statsData : null);
+      setWeeklyData(Array.isArray(data.weeklyData) ? data.weeklyData : []);
     } catch (error: any) {
       toast({
         title: 'Error',

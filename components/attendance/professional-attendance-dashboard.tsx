@@ -123,7 +123,9 @@ export function ProfessionalAttendanceDashboard() {
       );
 
       setTodayAttendance(todayRecord || null);
-      setSummary(data.summary || null);
+      // Ensure summary is not an empty object
+      const summaryData = data.summary;
+      setSummary(summaryData && Object.keys(summaryData).length > 0 ? summaryData : null);
       
       // Check if on break (break_start_time exists and check_out is null)
       if (todayRecord && (todayRecord as any).break_start_time && !todayRecord.check_out) {
