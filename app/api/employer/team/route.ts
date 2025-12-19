@@ -196,8 +196,13 @@ async function getTeamHandler(request: NextRequest) {
         .filter(Boolean)
     );
 
-    // Fetch promoter details for each team member from employer_employees
+    // ✅ FIX: Fetch employee details from both promoters and profiles tables
+    // employee_id in employer_employees can be either:
+    // 1. A promoter ID (from promoters table)
+    // 2. A profile ID (from profiles table) - for employees created directly
     const employeeIds = (teamMembers || []).map(m => m.employee_id).filter(Boolean);
+    
+    // Fetch from promoters table
     const { data: promoters } = await supabase
       .from('promoters')
       .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url')
@@ -212,8 +217,15 @@ async function getTeamHandler(request: NextRequest) {
       return true;
     });
 
-    // Create a lookup map for promoters (using filtered list)
+    // ✅ FIX: Also fetch from profiles table for employees created directly (not from promoters)
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, phone, avatar_url')
+      .in('id', employeeIds.length > 0 ? employeeIds : ['00000000-0000-0000-0000-000000000000']);
+
+    // Create lookup maps
     const promoterMap = new Map(filteredPromoters.map((p: any) => [p.id, p]));
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
     // Fetch manager details (from profiles since managers are system users)
     const managerIds = (teamMembers || []).map(m => m.reporting_manager_id).filter(Boolean);
@@ -225,21 +237,34 @@ async function getTeamHandler(request: NextRequest) {
     // Create a lookup map for managers
     const managerMap = new Map((managers || []).map(m => [m.id, m]));
 
-    // Combine data from employer_employees
+    // ✅ FIX: Combine data from employer_employees, checking both promoters and profiles
     const enrichedTeamMembers = (teamMembers || []).map(member => {
       const promoter = promoterMap.get(member.employee_id);
+      const profile = profileMap.get(member.employee_id);
       const manager = managerMap.get(member.reporting_manager_id);
+      
+      // Use promoter data if available, otherwise use profile data
+      const employeeData = promoter ? {
+        id: promoter.id,
+        email: promoter.email,
+        full_name: promoter.name_en || promoter.name_ar || 'Unknown',
+        first_name: promoter.name_en?.split(' ')[0] || null,
+        last_name: promoter.name_en?.split(' ').slice(1).join(' ') || null,
+        phone: promoter.phone || promoter.mobile_number,
+        avatar_url: promoter.profile_picture_url,
+      } : profile ? {
+        id: profile.id,
+        email: profile.email || '',
+        full_name: profile.full_name || 'Unknown',
+        first_name: profile.full_name?.split(' ')[0] || null,
+        last_name: profile.full_name?.split(' ').slice(1).join(' ') || null,
+        phone: profile.phone || null,
+        avatar_url: profile.avatar_url || null,
+      } : null;
+      
       return {
         ...member,
-        employee: promoter ? {
-          id: promoter.id,
-          email: promoter.email,
-          full_name: promoter.name_en || promoter.name_ar || 'Unknown',
-          first_name: promoter.name_en?.split(' ')[0] || null,
-          last_name: promoter.name_en?.split(' ').slice(1).join(' ') || null,
-          phone: promoter.phone || promoter.mobile_number,
-          avatar_url: promoter.profile_picture_url,
-        } : null,
+        employee: employeeData,
         manager: manager || null,
       };
     });

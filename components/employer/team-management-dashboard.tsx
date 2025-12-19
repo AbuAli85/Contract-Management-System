@@ -36,12 +36,15 @@ import {
   ChevronRight,
   Sparkles,
   AlertCircle,
+  Edit,
+  Hash,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompany } from '@/components/providers/company-provider';
 import { TeamMemberList } from './team-member-list';
 import { AddTeamMemberDialog } from './add-team-member-dialog';
 import { InviteEmployeeDialog } from './invite-employee-dialog';
+import { EditEmployeeDialog } from './edit-employee-dialog';
 import { AttendanceView } from './attendance-view';
 import { TasksView } from './tasks-view';
 import { TargetsView } from './targets-view';
@@ -129,6 +132,7 @@ export function TeamManagementDashboard() {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -522,27 +526,48 @@ export function TeamManagementDashboard() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {selectedMember.employee?.full_name || 'Unknown Employee'}
-                        </h2>
-                        <Badge
-                          className={cn(
-                            "px-3 py-1 text-xs font-semibold",
-                            selectedMember.employment_status === 'active'
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                              : selectedMember.employment_status === 'on_leave'
-                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                          )}
-                        >
-                          {selectedMember.employment_status.replace('_', ' ').toUpperCase()}
-                        </Badge>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {selectedMember.employee?.full_name || 'Unknown Employee'}
+                          </h2>
+                          <Badge
+                            className={cn(
+                              "px-3 py-1 text-xs font-semibold",
+                              selectedMember.employment_status === 'active'
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                : selectedMember.employment_status === 'on_leave'
+                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            )}
+                          >
+                            {selectedMember.employment_status.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </div>
+                        {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowEditDialog(true)}
+                            className="gap-2"
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Details
+                          </Button>
+                        )}
                       </div>
                       <p className="text-gray-500 dark:text-gray-400 mt-1">
                         {selectedMember.job_title || 'No job title assigned'} 
                         {selectedMember.department && ` • ${selectedMember.department}`}
                       </p>
+                      {selectedMember.employee_code && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <Hash className="h-3 w-3 text-gray-400" />
+                          <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+                            {selectedMember.employee_code}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-4 mt-3">
                         {selectedMember.employee?.email && (
                           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -573,7 +598,16 @@ export function TeamManagementDashboard() {
                 <CardContent className="space-y-4">
                     <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Employee Code</p>
-                          <p className="text-sm font-semibold mt-1">{selectedMember.employee_code || 'Not assigned'}</p>
+                          {selectedMember.employee_code ? (
+                            <div className="flex items-center gap-2 mt-1">
+                              <Hash className="h-3 w-3 text-gray-400" />
+                              <p className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">
+                                {selectedMember.employee_code}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-semibold mt-1 text-gray-400 italic">Not assigned</p>
+                          )}
                     </div>
                     <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Employment Type</p>
@@ -583,7 +617,11 @@ export function TeamManagementDashboard() {
                     </div>
                     <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Hire Date</p>
-                          <p className="text-sm font-semibold mt-1">{formatDate(selectedMember.hire_date)}</p>
+                          {selectedMember.hire_date ? (
+                            <p className="text-sm font-semibold mt-1">{formatDate(selectedMember.hire_date)}</p>
+                          ) : (
+                            <p className="text-sm font-semibold mt-1 text-gray-400 italic">Not specified</p>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -599,9 +637,13 @@ export function TeamManagementDashboard() {
                       <CardContent className="space-y-4">
                         <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Salary</p>
-                          <p className="text-sm font-semibold mt-1">
-                            {formatCurrency(selectedMember.salary, selectedMember.currency)}
-                          </p>
+                          {selectedMember.salary ? (
+                            <p className="text-sm font-semibold mt-1 text-emerald-600 dark:text-emerald-400">
+                              {formatCurrency(selectedMember.salary, selectedMember.currency)}
+                            </p>
+                          ) : (
+                            <p className="text-sm font-semibold mt-1 text-gray-400 italic">Not specified</p>
+                          )}
                     </div>
                     <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Currency</p>
@@ -621,13 +663,21 @@ export function TeamManagementDashboard() {
                       <CardContent className="space-y-4">
                         <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Work Location</p>
-                          <p className="text-sm font-semibold mt-1">{selectedMember.work_location || 'Not specified'}</p>
+                          {selectedMember.work_location ? (
+                            <p className="text-sm font-semibold mt-1">{selectedMember.work_location}</p>
+                          ) : (
+                            <p className="text-sm font-semibold mt-1 text-gray-400 italic">Not specified</p>
+                          )}
                     </div>
                     <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wide">Notes</p>
-                          <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
-                            {selectedMember.notes || 'No notes added'}
-                          </p>
+                          {selectedMember.notes ? (
+                            <p className="text-sm mt-1 text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                              {selectedMember.notes}
+                            </p>
+                          ) : (
+                            <p className="text-sm mt-1 text-gray-400 italic">No notes added</p>
+                          )}
                     </div>
                       </CardContent>
                     </Card>
@@ -643,22 +693,46 @@ export function TeamManagementDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setActiveTab('attendance')}>
-                          <Calendar className="h-4 w-4 mr-2" />
-                          View Attendance
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => setActiveTab('tasks')}>
-                          <ClipboardList className="h-4 w-4 mr-2" />
-                          Manage Tasks
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => setActiveTab('targets')}>
-                          <Target className="h-4 w-4 mr-2" />
-                          Set Targets
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => setActiveTab('permissions')}>
-                          <Shield className="h-4 w-4 mr-2" />
-                          Edit Permissions
-                        </Button>
+                        {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') ? (
+                          <>
+                            <Button variant="outline" size="sm" onClick={() => setActiveTab('attendance')}>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              View Attendance
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setActiveTab('tasks')}>
+                              <ClipboardList className="h-4 w-4 mr-2" />
+                              Manage Tasks
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setActiveTab('targets')}>
+                              <Target className="h-4 w-4 mr-2" />
+                              Set Targets
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setActiveTab('permissions')}>
+                              <Shield className="h-4 w-4 mr-2" />
+                              Edit Permissions
+                            </Button>
+                          </>
+                        ) : (
+                          <div className="w-full text-center py-4">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                              Add this person to your team to enable these features
+                            </p>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => {
+                                // Trigger add team member dialog
+                                toast({
+                                  title: 'Add Team Member',
+                                  description: 'Use the "Add Team Member" button in the Team Members tab to add this person.',
+                                });
+                              }}
+                            >
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Add to Team
+                            </Button>
+                          </div>
+                        )}
                   </div>
                 </CardContent>
               </Card>
@@ -671,17 +745,34 @@ export function TeamManagementDashboard() {
               ) : (
                 <Card className="border-0 shadow-lg">
                   <CardContent className="py-16 text-center">
-                    <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      Attendance Not Available
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
-                      This person exists in the promoters table but has no employer_employee record. 
-                      Attendance tracking requires an employer_employee record.
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Please add this person to your team using the "Add Team Member" button to enable attendance tracking.
-                    </p>
+                    <div className="max-w-md mx-auto">
+                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Attendance Not Available
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        This person exists in the promoters table but has no employer_employee record.
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        Attendance tracking requires an employer_employee record. Add them to your team to enable this feature.
+                      </p>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setActiveTab('team');
+                          toast({
+                            title: 'Add Team Member',
+                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
+                          });
+                        }}
+                        className="gap-2"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Add to Team
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -693,17 +784,34 @@ export function TeamManagementDashboard() {
               ) : (
                 <Card className="border-0 shadow-lg">
                   <CardContent className="py-16 text-center">
-                    <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      Tasks Not Available
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
-                      This person exists in the promoters table but has no employer_employee record. 
-                      Task management requires an employer_employee record.
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Please add this person to your team using the "Add Team Member" button to enable task management.
-                    </p>
+                    <div className="max-w-md mx-auto">
+                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Tasks Not Available
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        This person exists in the promoters table but has no employer_employee record.
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        Task management requires an employer_employee record. Add them to your team to enable this feature.
+                      </p>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setActiveTab('team');
+                          toast({
+                            title: 'Add Team Member',
+                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
+                          });
+                        }}
+                        className="gap-2"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Add to Team
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -715,17 +823,34 @@ export function TeamManagementDashboard() {
               ) : (
                 <Card className="border-0 shadow-lg">
                   <CardContent className="py-16 text-center">
-                    <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      Targets Not Available
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
-                      This person exists in the promoters table but has no employer_employee record. 
-                      Target management requires an employer_employee record.
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Please add this person to your team using the "Add Team Member" button to enable target management.
-                    </p>
+                    <div className="max-w-md mx-auto">
+                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Targets Not Available
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        This person exists in the promoters table but has no employer_employee record.
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        Target management requires an employer_employee record. Add them to your team to enable this feature.
+                      </p>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setActiveTab('team');
+                          toast({
+                            title: 'Add Team Member',
+                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
+                          });
+                        }}
+                        className="gap-2"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Add to Team
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -737,17 +862,34 @@ export function TeamManagementDashboard() {
               ) : (
                 <Card className="border-0 shadow-lg">
                   <CardContent className="py-16 text-center">
-                    <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      Permissions Not Available
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
-                      This person exists in the promoters table but has no employer_employee record. 
-                      Permission management requires an employer_employee record.
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Please add this person to your team using the "Add Team Member" button to enable permission management.
-                    </p>
+                    <div className="max-w-md mx-auto">
+                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Permissions Not Available
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        This person exists in the promoters table but has no employer_employee record.
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        Permission management requires an employer_employee record. Add them to your team to enable this feature.
+                      </p>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setActiveTab('team');
+                          toast({
+                            title: 'Add Team Member',
+                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
+                          });
+                        }}
+                        className="gap-2"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Add to Team
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -756,6 +898,22 @@ export function TeamManagementDashboard() {
         )}
       </Tabs>
       </Card>
+
+      {/* Edit Employee Dialog */}
+      {selectedMember && (
+        <EditEmployeeDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          member={selectedMember}
+          onSuccess={() => {
+            fetchTeam();
+            toast({
+              title: 'Success',
+              description: 'Employee details updated successfully.',
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
