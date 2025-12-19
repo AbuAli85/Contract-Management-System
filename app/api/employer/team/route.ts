@@ -460,14 +460,57 @@ async function addTeamMemberHandler(request: NextRequest) {
       }
     }
 
-    // Check if already assigned (using effective employer ID and profile ID)
-    const { data: existing } = await supabase
+    // Check if already assigned (using effective employer ID)
+    // Check both by profile ID and by promoter ID (in case old record exists)
+    const { data: existingByProfile } = await supabase
       .from('employer_employees')
-      .select('id')
-      .eq('employer_id', effectiveEmployerId) // ✅ Use effective employer ID
-      .eq('employee_id', profileId) // ✅ Use profile ID, not promoter ID
+      .select('id, employee_id')
+      .eq('employer_id', effectiveEmployerId)
+      .eq('employee_id', profileId) // ✅ Check by profile ID
       .eq('employment_status', 'active')
-      .single();
+      .maybeSingle();
+
+    // Also check if there's an old record with promoter ID that needs fixing
+    let existing = existingByProfile;
+    if (!existing && promoterData) {
+      const { data: existingByPromoter } = await supabase
+        .from('employer_employees')
+        .select('id, employee_id')
+        .eq('employer_id', effectiveEmployerId)
+        .eq('employee_id', employee_id) // Check by original employee_id (might be promoter ID)
+        .eq('employment_status', 'active')
+        .maybeSingle();
+
+      if (existingByPromoter) {
+        // Found record with promoter ID - need to fix it
+        const supabaseAdmin = getSupabaseAdmin();
+        const { error: updateError } = await (supabaseAdmin.from('employer_employees') as any)
+          .update({ 
+            employee_id: profileId, // Fix: update to profile ID
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingByPromoter.id);
+
+        if (updateError) {
+          console.error('Error fixing employee_id:', updateError);
+          return NextResponse.json(
+            { 
+              error: 'Employee exists but has invalid employee_id. Please contact support.',
+              details: 'The employee record needs to be updated to use profile ID instead of promoter ID.'
+            },
+            { status: 500 }
+          );
+        }
+
+        // Return success - record was fixed
+        return NextResponse.json({
+          success: true,
+          message: 'Employee record has been fixed! The employee_id was updated from promoter ID to profile ID. Attendance tracking is now enabled.',
+          fixed: true,
+          employee_id: profileId,
+        });
+      }
+    }
 
     if (existing) {
       return NextResponse.json(

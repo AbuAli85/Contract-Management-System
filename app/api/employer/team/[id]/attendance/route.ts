@@ -46,6 +46,17 @@ async function getAttendanceHandler(
       .eq('id', user.id)
       .single();
 
+    // Check if ID is a promoter ID (starts with 'promoter_')
+    if (id.startsWith('promoter_')) {
+      return NextResponse.json(
+        { 
+          error: 'Promoter-only records cannot have attendance',
+          details: 'This person exists in the promoters table but has no employer_employee record. Please add this person to your team using "Add Team Member" to enable attendance tracking.'
+        },
+        { status: 404 }
+      );
+    }
+
     const { data: teamMember } = await supabase
       .from('employer_employees')
       .select('employer_id, employee_id, company_id')
@@ -57,6 +68,62 @@ async function getAttendanceHandler(
         { error: 'Team member not found' },
         { status: 404 }
       );
+    }
+
+    // ✅ FIX: Check if employee_id is valid (exists in profiles)
+    // If employee_id points to a promoter ID, try to fix it automatically
+    const { data: profileCheck } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', teamMember.employee_id)
+      .single();
+
+    if (!profileCheck) {
+      // employee_id points to invalid ID (likely promoter ID)
+      // Try to find the correct profile ID by matching promoter email
+      const { data: promoter } = await supabase
+        .from('promoters')
+        .select('id, email')
+        .eq('id', teamMember.employee_id)
+        .single();
+
+      if (promoter && promoter.email) {
+        const { data: correctProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('email', promoter.email)
+          .single();
+
+        if (correctProfile) {
+          // Fix the record automatically
+          const supabaseAdmin = getSupabaseAdmin();
+          await (supabaseAdmin.from('employer_employees') as any)
+            .update({ 
+              employee_id: correctProfile.id,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+
+          // Update teamMember for rest of function
+          teamMember.employee_id = correctProfile.id;
+        } else {
+          return NextResponse.json(
+            { 
+              error: 'Employee profile not found',
+              details: 'The employee record has an invalid employee_id. Please try adding this person to your team again using "Add Team Member" - the system will automatically fix the record.'
+            },
+            { status: 404 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { 
+            error: 'Employee profile not found',
+            details: 'The employee record has an invalid employee_id. Please try adding this person to your team again using "Add Team Member" - the system will automatically fix the record.'
+          },
+          { status: 404 }
+        );
+      }
     }
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
