@@ -36,6 +36,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AttendanceHistoryView } from './attendance-history-view';
 import { AttendanceReportsAnalytics } from './attendance-reports-analytics';
+import { AttendanceErrorBoundary } from './attendance-error-boundary';
 
 interface TodayAttendance {
   id: string;
@@ -112,22 +113,37 @@ export function ProfessionalAttendanceDashboard() {
 
       if (!response.ok) {
         if (response.status !== 404) {
-          throw new Error(data.error);
+          const errorMsg = typeof data.error === 'string' ? data.error : 'Failed to fetch attendance data';
+          throw new Error(errorMsg);
         }
         return;
       }
 
+      // Safely handle attendance array
+      const attendanceArray = Array.isArray(data.attendance) ? data.attendance : [];
+      
       const today = new Date().toISOString().slice(0, 10);
-      const todayRecord = data.attendance?.find(
+      const todayRecord = attendanceArray.find(
         (record: TodayAttendance) => record.attendance_date === today
       );
 
       setTodayAttendance(todayRecord || null);
+      
       // Ensure summary is not an empty object - safely handle API response
       const summaryData = data.summary;
       if (summaryData && typeof summaryData === 'object' && !Array.isArray(summaryData)) {
         const keys = Object.keys(summaryData);
-        setSummary(keys.length > 0 ? summaryData : null);
+        if (keys.length > 0) {
+          // Validate all values are not objects themselves
+          const isValid = keys.every(key => {
+            const value = summaryData[key];
+            return value !== null && value !== undefined && 
+                   (typeof value !== 'object' || Array.isArray(value));
+          });
+          setSummary(isValid ? summaryData : null);
+        } else {
+          setSummary(null);
+        }
       } else {
         setSummary(null);
       }
@@ -674,12 +690,15 @@ export function ProfessionalAttendanceDashboard() {
           </Card>
 
           {/* Summary Stats */}
-          {summary && (
+          {summary && typeof summary === 'object' && !Array.isArray(summary) && (
             <div className="grid grid-cols-4 gap-4">
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{summary.presentDays}</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {typeof summary.presentDays === 'number' ? summary.presentDays : 
+                       typeof summary.presentDays === 'string' ? summary.presentDays : '0'}
+                    </div>
                     <div className="text-sm text-gray-600">Present Days</div>
                   </div>
                 </CardContent>
@@ -687,7 +706,10 @@ export function ProfessionalAttendanceDashboard() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">{summary.lateDays}</div>
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {typeof summary.lateDays === 'number' ? summary.lateDays : 
+                       typeof summary.lateDays === 'string' ? summary.lateDays : '0'}
+                    </div>
                     <div className="text-sm text-gray-600">Late Days</div>
                   </div>
                 </CardContent>
@@ -695,7 +717,10 @@ export function ProfessionalAttendanceDashboard() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{summary.totalHours}</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {typeof summary.totalHours === 'number' ? summary.totalHours : 
+                       typeof summary.totalHours === 'string' ? summary.totalHours : '0'}
+                    </div>
                     <div className="text-sm text-gray-600">Total Hours</div>
                   </div>
                 </CardContent>
@@ -703,7 +728,10 @@ export function ProfessionalAttendanceDashboard() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{summary.overtimeHours}</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {typeof summary.overtimeHours === 'number' ? summary.overtimeHours : 
+                       typeof summary.overtimeHours === 'string' ? summary.overtimeHours : '0'}
+                    </div>
                     <div className="text-sm text-gray-600">Overtime</div>
                   </div>
                 </CardContent>
@@ -713,11 +741,15 @@ export function ProfessionalAttendanceDashboard() {
         </TabsContent>
 
         <TabsContent value="history">
-          <AttendanceHistoryView />
+          <AttendanceErrorBoundary>
+            <AttendanceHistoryView />
+          </AttendanceErrorBoundary>
         </TabsContent>
 
         <TabsContent value="analytics">
-          <AttendanceReportsAnalytics />
+          <AttendanceErrorBoundary>
+            <AttendanceReportsAnalytics />
+          </AttendanceErrorBoundary>
         </TabsContent>
       </Tabs>
 

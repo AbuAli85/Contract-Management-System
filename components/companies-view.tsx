@@ -22,6 +22,7 @@ import {
   MapPin,
   Filter,
 } from 'lucide-react';
+import { safeString } from '@/lib/utils/safe-render';
 
 interface Company {
   id: string;
@@ -29,7 +30,7 @@ interface Company {
   company_number?: string;
   email?: string;
   phone?: string;
-  address?: string;
+  address?: string | Record<string, any>;
   promoter_id?: string;
   created_at: string;
 }
@@ -253,7 +254,7 @@ export function CompaniesView() {
                   {company.address && (
                     <div className='flex items-center text-sm text-gray-600'>
                       <MapPin className='h-4 w-4 mr-2' />
-                      {company.address}
+                      {safeString(company.address)}
                     </div>
                   )}
                   <div className='flex justify-between items-center pt-2'>
