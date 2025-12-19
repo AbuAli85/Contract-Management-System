@@ -34,6 +34,8 @@ import { format, formatDistanceToNow, differenceInHours, differenceInMinutes, pa
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AttendanceHistoryView } from './attendance-history-view';
+import { AttendanceReportsAnalytics } from './attendance-reports-analytics';
 
 interface TodayAttendance {
   id: string;
@@ -704,15 +706,7 @@ export function ProfessionalAttendanceDashboard() {
         </TabsContent>
 
         <TabsContent value="history">
-          <Card>
-            <CardHeader>
-              <CardTitle>Attendance History</CardTitle>
-              <CardDescription>View your past attendance records</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center text-gray-500 py-8">History view coming soon...</p>
-            </CardContent>
-          </Card>
+          <AttendanceHistoryView />
         </TabsContent>
 
         <TabsContent value="analytics">

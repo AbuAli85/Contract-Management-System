@@ -23,24 +23,37 @@ export const POST = withRBAC('attendance:approve:all', async (
     }
 
     const body = await request.json();
-    const { attendance_id, action, reason } = body; // action: 'approve' or 'reject'
+    const { attendance_id, attendance_ids, action, rejection_reason, reason } = body; // action: 'approve' or 'reject'
 
-    if (!attendance_id || !action || !['approve', 'reject'].includes(action)) {
+    // Support both single and bulk operations
+    const ids = attendance_ids || (attendance_id ? [attendance_id] : []);
+    const rejectionReason = rejection_reason || reason;
+
+    if (!ids.length || !action || !['approve', 'reject'].includes(action)) {
       return NextResponse.json(
-        { error: 'Invalid request. Provide attendance_id and action (approve/reject)' },
+        { error: 'Invalid request. Provide attendance_id(s) and action (approve/reject)' },
         { status: 400 }
       );
     }
 
-    if (action === 'reject' && !reason) {
+    if (action === 'reject' && !rejectionReason) {
       return NextResponse.json(
         { error: 'Rejection reason is required' },
         { status: 400 }
       );
     }
 
-    // Get attendance record
-    const { data: attendance, error: attendanceError } = await (supabaseAdmin.from('employee_attendance') as any)
+    // Get user's profile to check permissions
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, active_company_id')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = profile?.role === 'admin';
+
+    // Get attendance records
+    const { data: attendanceRecords, error: attendanceError } = await (supabaseAdmin.from('employee_attendance') as any)
       .select(`
         *,
         employer_employee:employer_employee_id (
@@ -48,37 +61,30 @@ export const POST = withRBAC('attendance:approve:all', async (
           company_id
         )
       `)
-      .eq('id', attendance_id)
-      .single();
+      .in('id', ids);
 
-    if (attendanceError || !attendance) {
+    if (attendanceError || !attendanceRecords || attendanceRecords.length === 0) {
       return NextResponse.json(
-        { error: 'Attendance record not found' },
+        { error: 'Attendance record(s) not found' },
         { status: 404 }
       );
     }
 
-    const employerEmployee = attendance.employer_employee as any;
+    // Verify permissions for all records
+    for (const attendance of attendanceRecords) {
+      const employerEmployee = attendance.employer_employee as any;
+      const isEmployer = employerEmployee?.employer_id === user.id;
+      const isSameCompany = profile?.active_company_id === employerEmployee?.company_id;
 
-    // Verify user is the employer or admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, active_company_id')
-      .eq('id', user.id)
-      .single();
-
-    const isEmployer = employerEmployee?.employer_id === user.id;
-    const isAdmin = profile?.role === 'admin';
-    const isSameCompany = profile?.active_company_id === employerEmployee?.company_id;
-
-    if (!isEmployer && !isAdmin && !isSameCompany) {
-      return NextResponse.json(
-        { error: 'You do not have permission to approve this attendance' },
-        { status: 403 }
-      );
+      if (!isEmployer && !isAdmin && !isSameCompany) {
+        return NextResponse.json(
+          { error: 'You do not have permission to approve one or more attendance records' },
+          { status: 403 }
+        );
+      }
     }
 
-    // Update attendance record
+    // Update all attendance records
     const updateData: any = {
       approval_status: action === 'approve' ? 'approved' : 'rejected',
       approved_by: user.id,
@@ -87,14 +93,13 @@ export const POST = withRBAC('attendance:approve:all', async (
     };
 
     if (action === 'reject') {
-      updateData.rejection_reason = reason;
+      updateData.rejection_reason = rejectionReason;
     }
 
     const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
       .update(updateData)
-      .eq('id', attendance_id)
-      .select()
-      .single();
+      .in('id', ids)
+      .select();
 
     if (updateError) {
       console.error('Error updating attendance:', updateError);
@@ -106,8 +111,9 @@ export const POST = withRBAC('attendance:approve:all', async (
 
     return NextResponse.json({
       success: true,
-      message: `Attendance ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
+      message: `${updated.length} attendance record(s) ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
       attendance: updated,
+      count: updated.length,
     });
   } catch (error) {
     console.error('Error in attendance approval:', error);
