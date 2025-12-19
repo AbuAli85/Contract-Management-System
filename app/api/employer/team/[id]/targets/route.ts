@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { ensureEmployerEmployeeRecord } from '@/lib/utils/ensure-employee-record';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ async function getTargetsHandler(
 ) {
   try {
     const supabase = await createClient();
-    const { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
+    let { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
     const {
       data: { user },
       error: authError,
@@ -22,15 +23,17 @@ async function getTargetsHandler(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ✅ FIX: Handle promoter-only IDs (prefixed with 'promoter_')
-    // These are not actual employer_employee records, so we can't fetch targets
-    if (id.startsWith('promoter_')) {
+    // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
+    try {
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      id = employerEmployeeId; // Use the actual employer_employee ID
+    } catch (error: any) {
       return NextResponse.json(
         { 
-          error: 'Promoter-only records cannot have targets. Please add this person to employer_employees first.',
-          details: 'This person exists in the promoters table but has no employer_employee record. Target management requires an employer_employee record.'
+          error: 'Failed to process employee record',
+          details: error.message || 'Could not create or find employer_employee record'
         },
-        { status: 404 }
+        { status: 400 }
       );
     }
 
@@ -160,7 +163,7 @@ async function createTargetHandler(
 ) {
   try {
     const supabase = await createClient();
-    const { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
+    let { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
     const {
       data: { user },
       error: authError,
@@ -170,15 +173,17 @@ async function createTargetHandler(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ✅ FIX: Handle promoter-only IDs (prefixed with 'promoter_')
-    // These are not actual employer_employee records, so we can't create targets
-    if (id.startsWith('promoter_')) {
+    // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
+    try {
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      id = employerEmployeeId; // Use the actual employer_employee ID
+    } catch (error: any) {
       return NextResponse.json(
         { 
-          error: 'Promoter-only records cannot have targets. Please add this person to employer_employees first.',
-          details: 'This person exists in the promoters table but has no employer_employee record. Target management requires an employer_employee record.'
+          error: 'Failed to process employee record',
+          details: error.message || 'Could not create or find employer_employee record'
         },
-        { status: 404 }
+        { status: 400 }
       );
     }
 

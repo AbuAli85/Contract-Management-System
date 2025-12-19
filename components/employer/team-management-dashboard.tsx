@@ -544,17 +544,15 @@ export function TeamManagementDashboard() {
                             {selectedMember.employment_status.replace('_', ' ').toUpperCase()}
                           </Badge>
                         </div>
-                        {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowEditDialog(true)}
-                            className="gap-2"
-                          >
-                            <Edit className="h-4 w-4" />
-                            Edit Details
-                          </Button>
-                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowEditDialog(true)}
+                          className="gap-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit Details
+                        </Button>
                       </div>
                       <p className="text-gray-500 dark:text-gray-400 mt-1">
                         {selectedMember.job_title || 'No job title assigned'} 
@@ -693,46 +691,22 @@ export function TeamManagementDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
-                        {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') ? (
-                          <>
-                            <Button variant="outline" size="sm" onClick={() => setActiveTab('attendance')}>
-                              <Calendar className="h-4 w-4 mr-2" />
-                              View Attendance
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setActiveTab('tasks')}>
-                              <ClipboardList className="h-4 w-4 mr-2" />
-                              Manage Tasks
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setActiveTab('targets')}>
-                              <Target className="h-4 w-4 mr-2" />
-                              Set Targets
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setActiveTab('permissions')}>
-                              <Shield className="h-4 w-4 mr-2" />
-                              Edit Permissions
-                            </Button>
-                          </>
-                        ) : (
-                          <div className="w-full text-center py-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                              Add this person to your team to enable these features
-                            </p>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => {
-                                // Trigger add team member dialog
-                                toast({
-                                  title: 'Add Team Member',
-                                  description: 'Use the "Add Team Member" button in the Team Members tab to add this person.',
-                                });
-                              }}
-                            >
-                              <UserPlus className="h-4 w-4 mr-2" />
-                              Add to Team
-                            </Button>
-                          </div>
-                        )}
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('attendance')}>
+                          <Calendar className="h-4 w-4 mr-2" />
+                          View Attendance
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('tasks')}>
+                          <ClipboardList className="h-4 w-4 mr-2" />
+                          Manage Tasks
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('targets')}>
+                          <Target className="h-4 w-4 mr-2" />
+                          Set Targets
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('permissions')}>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Edit Permissions
+                        </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -740,159 +714,19 @@ export function TeamManagementDashboard() {
             </TabsContent>
 
               <TabsContent value="attendance" className="p-6 mt-0">
-              {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') ? (
-                <AttendanceView employerEmployeeId={selectedMember.id} />
-              ) : (
-                <Card className="border-0 shadow-lg">
-                  <CardContent className="py-16 text-center">
-                    <div className="max-w-md mx-auto">
-                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        Attendance Not Available
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        This person exists in the promoters table but has no employer_employee record.
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                        Attendance tracking requires an employer_employee record. Add them to your team to enable this feature.
-                      </p>
-                      <Button
-                        variant="default"
-                        onClick={() => {
-                          setActiveTab('team');
-                          toast({
-                            title: 'Add Team Member',
-                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
-                          });
-                        }}
-                        className="gap-2"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        Add to Team
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <AttendanceView employerEmployeeId={selectedMember.id} />
             </TabsContent>
 
               <TabsContent value="tasks" className="p-6 mt-0">
-              {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') ? (
-                <TasksView employerEmployeeId={selectedMember.id} />
-              ) : (
-                <Card className="border-0 shadow-lg">
-                  <CardContent className="py-16 text-center">
-                    <div className="max-w-md mx-auto">
-                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        Tasks Not Available
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        This person exists in the promoters table but has no employer_employee record.
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                        Task management requires an employer_employee record. Add them to your team to enable this feature.
-                      </p>
-                      <Button
-                        variant="default"
-                        onClick={() => {
-                          setActiveTab('team');
-                          toast({
-                            title: 'Add Team Member',
-                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
-                          });
-                        }}
-                        className="gap-2"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        Add to Team
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <TasksView employerEmployeeId={selectedMember.id} />
             </TabsContent>
 
               <TabsContent value="targets" className="p-6 mt-0">
-              {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') ? (
-                <TargetsView employerEmployeeId={selectedMember.id} />
-              ) : (
-                <Card className="border-0 shadow-lg">
-                  <CardContent className="py-16 text-center">
-                    <div className="max-w-md mx-auto">
-                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        Targets Not Available
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        This person exists in the promoters table but has no employer_employee record.
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                        Target management requires an employer_employee record. Add them to your team to enable this feature.
-                      </p>
-                      <Button
-                        variant="default"
-                        onClick={() => {
-                          setActiveTab('team');
-                          toast({
-                            title: 'Add Team Member',
-                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
-                          });
-                        }}
-                        className="gap-2"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        Add to Team
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <TargetsView employerEmployeeId={selectedMember.id} />
             </TabsContent>
 
               <TabsContent value="permissions" className="p-6 mt-0">
-              {selectedMember.id && !selectedMember.id.toString().startsWith('promoter_') ? (
-                <PermissionsManager employerEmployeeId={selectedMember.id} />
-              ) : (
-                <Card className="border-0 shadow-lg">
-                  <CardContent className="py-16 text-center">
-                    <div className="max-w-md mx-auto">
-                      <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                        Permissions Not Available
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        This person exists in the promoters table but has no employer_employee record.
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                        Permission management requires an employer_employee record. Add them to your team to enable this feature.
-                      </p>
-                      <Button
-                        variant="default"
-                        onClick={() => {
-                          setActiveTab('team');
-                          toast({
-                            title: 'Add Team Member',
-                            description: 'Use the "Add Team Member" button to convert this promoter to an employee.',
-                          });
-                        }}
-                        className="gap-2"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        Add to Team
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <PermissionsManager employerEmployeeId={selectedMember.id} />
             </TabsContent>
           </>
         )}

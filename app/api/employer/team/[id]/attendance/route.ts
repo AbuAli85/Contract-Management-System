@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { ensureEmployerEmployeeRecord } from '@/lib/utils/ensure-employee-record';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -22,15 +24,17 @@ async function getAttendanceHandler(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ✅ FIX: Handle promoter-only IDs (prefixed with 'promoter_')
-    // These are not actual employer_employee records, so we can't fetch attendance
-    if (id.startsWith('promoter_')) {
+    // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
+    try {
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      id = employerEmployeeId; // Use the actual employer_employee ID
+    } catch (error: any) {
       return NextResponse.json(
         { 
-          error: 'Promoter-only records cannot have attendance. Please add this person to employer_employees first.',
-          details: 'This person exists in the promoters table but has no employer_employee record. Attendance tracking requires an employer_employee record.'
+          error: 'Failed to process employee record',
+          details: error.message || 'Could not create or find employer_employee record'
         },
-        { status: 404 }
+        { status: 400 }
       );
     }
 
@@ -45,17 +49,6 @@ async function getAttendanceHandler(
       .select('active_company_id')
       .eq('id', user.id)
       .single();
-
-    // Check if ID is a promoter ID (starts with 'promoter_')
-    if (id.startsWith('promoter_')) {
-      return NextResponse.json(
-        { 
-          error: 'Promoter-only records cannot have attendance',
-          details: 'This person exists in the promoters table but has no employer_employee record. Please add this person to your team using "Add Team Member" to enable attendance tracking.'
-        },
-        { status: 404 }
-      );
-    }
 
     const { data: teamMember } = await supabase
       .from('employer_employees')
