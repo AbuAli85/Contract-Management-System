@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,23 +177,6 @@ export function AttendanceHistoryView({ employeeId }: AttendanceHistoryViewProps
     return true;
   });
 
-  // Calculate stats from attendance data
-  const stats = React.useMemo(() => {
-    const present = attendance.filter(r => r.status === 'present').length;
-    const late = attendance.filter(r => r.status === 'late').length;
-    const totalHours = attendance.reduce((sum, r) => sum + (r.total_hours || 0), 0);
-    const overtimeHours = attendance.reduce((sum, r) => sum + (r.overtime_hours || 0), 0);
-    const averageHours = attendance.length > 0 ? totalHours / attendance.length : 0;
-    
-    return {
-      present,
-      late,
-      totalHours,
-      overtimeHours,
-      averageHours,
-    };
-  }, [attendance]);
-
   const exportToCSV = () => {
     const headers = ['Date', 'Check In', 'Check Out', 'Status', 'Total Hours', 'Overtime', 'Break', 'Approval Status'];
     const rows = filteredAttendance.map(record => [
@@ -227,7 +210,7 @@ export function AttendanceHistoryView({ employeeId }: AttendanceHistoryViewProps
   };
 
   // Calculate statistics - ensure it's always a valid object
-  const stats = React.useMemo(() => {
+  const stats = useMemo(() => {
     const present = filteredAttendance.filter(r => r.status === 'present' || r.status === 'late').length;
     const late = filteredAttendance.filter(r => r.status === 'late').length;
     const absent = filteredAttendance.filter(r => r.status === 'absent').length;
