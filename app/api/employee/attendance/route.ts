@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     // Get employee link
     const { data: employeeLink } = await supabase
       .from('employer_employees')
-      .select('id')
+      .select('id, company_id')
       .eq('employee_id', user.id)
       .eq('employment_status', 'active')
       .single();
@@ -60,10 +60,12 @@ export async function GET(request: NextRequest) {
 
     // Calculate summary
     const totalDays = attendance?.length || 0;
-    const presentDays = attendance?.filter((a: any) => a.status === 'present').length || 0;
+    const presentDays = attendance?.filter((a: any) => a.status === 'present' || a.status === 'late').length || 0;
     const lateDays = attendance?.filter((a: any) => a.status === 'late').length || 0;
     const absentDays = attendance?.filter((a: any) => a.status === 'absent').length || 0;
     const totalHours = attendance?.reduce((sum: number, a: any) => sum + (parseFloat(a.total_hours) || 0), 0) || 0;
+    const overtimeHours = attendance?.reduce((sum: number, a: any) => sum + (parseFloat(a.overtime_hours) || 0), 0) || 0;
+    const averageHours = presentDays > 0 ? (totalHours / presentDays).toFixed(1) : '0.0';
 
     return NextResponse.json({
       attendance: attendance || [],
@@ -73,6 +75,8 @@ export async function GET(request: NextRequest) {
         lateDays,
         absentDays,
         totalHours: totalHours.toFixed(1),
+        averageHours,
+        overtimeHours: overtimeHours.toFixed(1),
       },
     });
   } catch (error) {
@@ -126,7 +130,7 @@ export async function POST(request: NextRequest) {
     // Get employee link
     const { data: employeeLink } = await supabase
       .from('employer_employees')
-      .select('id')
+      .select('id, company_id')
       .eq('employee_id', user.id)
       .eq('employment_status', 'active')
       .single();
@@ -166,6 +170,7 @@ export async function POST(request: NextRequest) {
       let distanceFromOffice = null;
       if (latitude && longitude && employeeLink.company_id) {
         try {
+          // @ts-ignore - Supabase RPC type inference issue
           const { data: locationVerification } = await supabaseAdmin.rpc('verify_attendance_location', {
             p_attendance_id: existing?.id || null,
             p_latitude: latitude,
@@ -173,8 +178,8 @@ export async function POST(request: NextRequest) {
             p_company_id: employeeLink.company_id,
           });
           if (locationVerification) {
-            locationVerified = locationVerification.verified || false;
-            distanceFromOffice = locationVerification.distance_meters || null;
+            locationVerified = (locationVerification as any).verified || false;
+            distanceFromOffice = (locationVerification as any).distance_meters || null;
           }
         } catch (error) {
           console.warn('Location verification failed:', error);
@@ -276,6 +281,7 @@ export async function POST(request: NextRequest) {
         // Verify location after creation
         if (latitude && longitude && employeeLink.company_id && created?.id) {
           try {
+            // @ts-ignore - Supabase RPC type inference issue
             await supabaseAdmin.rpc('verify_attendance_location', {
               p_attendance_id: created.id,
               p_latitude: latitude,
@@ -309,12 +315,21 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Handle active break if exists
+      let finalBreakMinutes = existing.break_duration_minutes || 0;
+      if (existing.break_start_time) {
+        // End the active break
+        const breakStart = new Date(existing.break_start_time);
+        const breakEnd = new Date();
+        const activeBreakMinutes = Math.round((breakEnd.getTime() - breakStart.getTime()) / 1000 / 60);
+        finalBreakMinutes = finalBreakMinutes + activeBreakMinutes;
+      }
+
       // Calculate total hours
       const checkInTime = new Date(existing.check_in);
       const checkOutTime = new Date();
       const totalMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
-      const breakMinutes = existing.break_duration_minutes || 0;
-      const netMinutes = totalMinutes - breakMinutes;
+      const netMinutes = totalMinutes - finalBreakMinutes;
       const totalHours = (netMinutes / 60).toFixed(2);
       
       // Calculate overtime (over 8 hours)
@@ -350,6 +365,8 @@ export async function POST(request: NextRequest) {
         check_out: now,
         total_hours: parseFloat(totalHours),
         overtime_hours: parseFloat(overtimeHours),
+        break_duration_minutes: finalBreakMinutes,
+        break_start_time: null, // Clear active break
         notes: notes || existing.notes,
         updated_at: now,
       };
