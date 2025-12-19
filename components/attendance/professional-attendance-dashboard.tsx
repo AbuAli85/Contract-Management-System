@@ -123,9 +123,14 @@ export function ProfessionalAttendanceDashboard() {
       );
 
       setTodayAttendance(todayRecord || null);
-      // Ensure summary is not an empty object
+      // Ensure summary is not an empty object - safely handle API response
       const summaryData = data.summary;
-      setSummary(summaryData && Object.keys(summaryData).length > 0 ? summaryData : null);
+      if (summaryData && typeof summaryData === 'object' && !Array.isArray(summaryData)) {
+        const keys = Object.keys(summaryData);
+        setSummary(keys.length > 0 ? summaryData : null);
+      } else {
+        setSummary(null);
+      }
       
       // Check if on break (break_start_time exists and check_out is null)
       if (todayRecord && (todayRecord as any).break_start_time && !todayRecord.check_out) {
@@ -712,15 +717,7 @@ export function ProfessionalAttendanceDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analytics & Reports</CardTitle>
-              <CardDescription>Detailed attendance analytics and insights</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center text-gray-500 py-8">Analytics view coming soon...</p>
-            </CardContent>
-          </Card>
+          <AttendanceReportsAnalytics />
         </TabsContent>
       </Tabs>
 

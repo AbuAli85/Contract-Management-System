@@ -66,9 +66,14 @@ export function AttendanceReportsAnalytics() {
         throw new Error(data.error || 'Failed to fetch analytics');
       }
 
-      // Ensure stats is not an empty object
+      // Ensure stats is not an empty object - safely handle API response
       const statsData = data.stats;
-      setStats(statsData && Object.keys(statsData).length > 0 ? statsData : null);
+      if (statsData && typeof statsData === 'object' && !Array.isArray(statsData)) {
+        const keys = Object.keys(statsData);
+        setStats(keys.length > 0 ? statsData : null);
+      } else {
+        setStats(null);
+      }
       setWeeklyData(Array.isArray(data.weeklyData) ? data.weeklyData : []);
     } catch (error: any) {
       toast({

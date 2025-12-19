@@ -93,7 +93,14 @@ export function AttendanceNotifications() {
       const data = await response.json();
 
       if (response.ok && data.settings) {
-        setSettings(data.settings);
+        // Ensure settings is not an empty object - safely handle API response
+        const settingsData = data.settings;
+        if (settingsData && typeof settingsData === 'object' && !Array.isArray(settingsData)) {
+          const keys = Object.keys(settingsData);
+          if (keys.length > 0) {
+            setSettings(settingsData);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
