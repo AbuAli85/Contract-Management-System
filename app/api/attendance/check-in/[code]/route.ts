@@ -87,136 +87,184 @@ export async function GET(
       );
     }
 
-    if (!employeeLink) {
-      // Provide more helpful error message
-      // Check if employee exists but with different company or status
-      const { data: allEmployeeRecords } = await (supabaseAdmin.from('employer_employees') as any)
-        .select('id, employee_id, company_id, employment_status, employer_id')
-        .eq('employee_id', user.id)
-        .maybeSingle();
+    // If user is an employee, proceed with employee check-in flow
+    if (employeeLink) {
+      // Check if already checked in today using this link
+      const { data: existingUsage } = await (supabaseAdmin.from('attendance_link_usage') as any)
+        .select('id')
+        .eq('attendance_link_id', link.id)
+        .eq('employer_employee_id', employeeLink.id)
+        .gte('used_at', new Date().toISOString().split('T')[0])
+        .single();
 
-      // Check if employee has any active records for the link's company
-      const { data: linkCompanyRecords } = await (supabaseAdmin.from('employer_employees') as any)
-        .select('id, employee_id, company_id, employment_status')
-        .eq('employee_id', user.id)
-        .eq('company_id', link.company_id)
-        .maybeSingle();
+      if (existingUsage) {
+        return NextResponse.json(
+          { error: 'You have already checked in using this link today' },
+          { status: 400 }
+        );
+      }
 
-      // Enhanced logging for debugging
-      console.error('Employee authorization failed:', {
-        user_id: user.id,
-        user_email: user.email,
-        user_active_company_id: userProfile?.active_company_id,
-        link_code: code,
-        link_company_id: link.company_id,
-        employee_record: allEmployeeRecords || null,
-        link_company_record: linkCompanyRecords || null,
+      return NextResponse.json({
+        success: true,
+        link: {
+          id: link.id,
+          title: link.title,
+          target_latitude: link.target_latitude,
+          target_longitude: link.target_longitude,
+          allowed_radius_meters: link.allowed_radius_meters,
+          valid_until: link.valid_until,
+        },
+        employee: {
+          employer_employee_id: employeeLink.id,
+        },
       });
+    }
 
-      if (!allEmployeeRecords) {
-        return NextResponse.json(
-          { 
-            error: 'You are not authorized to use this check-in link',
-            details: 'No employee record found. Please contact your manager to be added to the company.',
-            diagnostic: {
-              user_id: user.id,
-              link_company_id: link.company_id,
-              user_active_company_id: userProfile?.active_company_id,
-              issue: 'no_employee_record'
-            }
-          },
-          { status: 403 }
-        );
+    // If not an employee, check if user is admin/employer with access to the company
+    let hasCompanyAccess = false;
+    let userRole = null;
+
+    // Check company_members first
+    const { data: membership } = await (supabaseAdmin.from('company_members') as any)
+      .select('role')
+      .eq('company_id', link.company_id)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (membership) {
+      hasCompanyAccess = true;
+      userRole = membership.role;
+    } else {
+      // Fallback: Check if user owns the company directly
+      const { data: ownedCompany } = await (supabaseAdmin.from('companies') as any)
+        .select('id, owner_id')
+        .eq('id', link.company_id)
+        .single();
+      
+      if (ownedCompany && ownedCompany.owner_id === user.id) {
+        hasCompanyAccess = true;
+        userRole = 'owner';
       }
+    }
 
-      if (allEmployeeRecords.company_id !== link.company_id) {
-        // Check if user's active company matches the link's company
-        const activeCompanyMatches = userProfile?.active_company_id === link.company_id;
-        const hasLinkCompanyRecord = !!linkCompanyRecords;
-        
-        return NextResponse.json(
-          { 
-            error: 'You are not authorized to use this check-in link',
-            details: activeCompanyMatches 
-              ? 'Your employee record is assigned to a different company. Please contact your manager to update your company assignment.'
-              : hasLinkCompanyRecord && linkCompanyRecords.employment_status !== 'active'
-              ? `You have a record for this company, but your employment status is "${linkCompanyRecords.employment_status}". Only active employees can check in.`
-              : 'This link is for a different company than your current assignment. Please use a check-in link for your assigned company or contact your manager.',
-            diagnostic: {
-              user_id: user.id,
-              employee_company_id: allEmployeeRecords.company_id,
-              link_company_id: link.company_id,
-              user_active_company_id: userProfile?.active_company_id,
-              active_company_matches: activeCompanyMatches,
-              has_link_company_record: hasLinkCompanyRecord,
-              link_company_status: linkCompanyRecords?.employment_status,
-              issue: 'company_mismatch'
-            }
-          },
-          { status: 403 }
-        );
-      }
+    // If admin/employer has access, allow them to view the link (for testing/preview)
+    if (hasCompanyAccess && ['owner', 'admin', 'manager', 'hr'].includes(userRole || '')) {
+      return NextResponse.json({
+        success: true,
+        link: {
+          id: link.id,
+          title: link.title,
+          target_latitude: link.target_latitude,
+          target_longitude: link.target_longitude,
+          allowed_radius_meters: link.allowed_radius_meters,
+          valid_until: link.valid_until,
+        },
+        employee: null, // No employee record - admin/employer viewing
+        is_admin_view: true,
+        message: 'You are viewing this link as an admin/employer. Employees will need an active employee record to check in.',
+      });
+    }
 
-      if (allEmployeeRecords.employment_status !== 'active') {
-        return NextResponse.json(
-          { 
-            error: 'You are not authorized to use this check-in link',
-            details: `Your employment status is "${allEmployeeRecords.employment_status}". Only active employees can check in.`,
-            diagnostic: {
-              user_id: user.id,
-              employment_status: allEmployeeRecords.employment_status,
-              link_company_id: link.company_id,
-              issue: 'inactive_status'
-            }
-          },
-          { status: 403 }
-        );
-      }
+    // If not an employee and not an admin/employer, provide detailed error
+    const { data: allEmployeeRecords } = await (supabaseAdmin.from('employer_employees') as any)
+      .select('id, employee_id, company_id, employment_status, employer_id')
+      .eq('employee_id', user.id)
+      .maybeSingle();
 
+    // Check if employee has any active records for the link's company
+    const { data: linkCompanyRecords } = await (supabaseAdmin.from('employer_employees') as any)
+      .select('id, employee_id, company_id, employment_status')
+      .eq('employee_id', user.id)
+      .eq('company_id', link.company_id)
+      .maybeSingle();
+
+    // Enhanced logging for debugging
+    console.error('Employee authorization failed:', {
+      user_id: user.id,
+      user_email: user.email,
+      user_active_company_id: userProfile?.active_company_id,
+      link_code: code,
+      link_company_id: link.company_id,
+      employee_record: allEmployeeRecords || null,
+      link_company_record: linkCompanyRecords || null,
+      has_company_access: hasCompanyAccess,
+      user_role: userRole,
+    });
+
+    if (!allEmployeeRecords) {
       return NextResponse.json(
         { 
           error: 'You are not authorized to use this check-in link',
-          details: 'Unable to verify your authorization. Please contact your manager.',
+          details: 'No employee record found. Please contact your manager to be added to the company.',
           diagnostic: {
             user_id: user.id,
             link_company_id: link.company_id,
-            employee_record: allEmployeeRecords,
-            issue: 'unknown_authorization_failure'
+            user_active_company_id: userProfile?.active_company_id,
+            issue: 'no_employee_record'
           }
         },
         { status: 403 }
       );
     }
 
-    // Check if already checked in today using this link
-    const { data: existingUsage } = await (supabaseAdmin.from('attendance_link_usage') as any)
-      .select('id')
-      .eq('attendance_link_id', link.id)
-      .eq('employer_employee_id', employeeLink.id)
-      .gte('used_at', new Date().toISOString().split('T')[0])
-      .single();
-
-    if (existingUsage) {
+    if (allEmployeeRecords.company_id !== link.company_id) {
+      // Check if user's active company matches the link's company
+      const activeCompanyMatches = userProfile?.active_company_id === link.company_id;
+      const hasLinkCompanyRecord = !!linkCompanyRecords;
+      
       return NextResponse.json(
-        { error: 'You have already checked in using this link today' },
-        { status: 400 }
+        { 
+          error: 'You are not authorized to use this check-in link',
+          details: activeCompanyMatches 
+            ? 'Your employee record is assigned to a different company. Please contact your manager to update your company assignment.'
+            : hasLinkCompanyRecord && linkCompanyRecords.employment_status !== 'active'
+            ? `You have a record for this company, but your employment status is "${linkCompanyRecords.employment_status}". Only active employees can check in.`
+            : 'This link is for a different company than your current assignment. Please use a check-in link for your assigned company or contact your manager.',
+          diagnostic: {
+            user_id: user.id,
+            employee_company_id: allEmployeeRecords.company_id,
+            link_company_id: link.company_id,
+            user_active_company_id: userProfile?.active_company_id,
+            active_company_matches: activeCompanyMatches,
+            has_link_company_record: hasLinkCompanyRecord,
+            link_company_status: linkCompanyRecords?.employment_status,
+            issue: 'company_mismatch'
+          }
+        },
+        { status: 403 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      link: {
-        id: link.id,
-        title: link.title,
-        target_latitude: link.target_latitude,
-        target_longitude: link.target_longitude,
-        allowed_radius_meters: link.allowed_radius_meters,
-        valid_until: link.valid_until,
+    if (allEmployeeRecords.employment_status !== 'active') {
+      return NextResponse.json(
+        { 
+          error: 'You are not authorized to use this check-in link',
+          details: `Your employment status is "${allEmployeeRecords.employment_status}". Only active employees can check in.`,
+          diagnostic: {
+            user_id: user.id,
+            employment_status: allEmployeeRecords.employment_status,
+            link_company_id: link.company_id,
+            issue: 'inactive_status'
+          }
+        },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json(
+      { 
+        error: 'You are not authorized to use this check-in link',
+        details: 'Unable to verify your authorization. Please contact your manager.',
+        diagnostic: {
+          user_id: user.id,
+          link_company_id: link.company_id,
+          employee_record: allEmployeeRecords,
+          issue: 'unknown_authorization_failure'
+        }
       },
-      employee: {
-        employer_employee_id: employeeLink.id,
-      },
-    });
+      { status: 403 }
+    );
   } catch (error) {
     console.error('Error in GET /api/attendance/check-in/[code]:', error);
     return NextResponse.json(
@@ -276,7 +324,8 @@ export async function POST(
     }
 
     // Validate link and location
-    const { data: validation, error: validationError } = await supabaseAdmin.rpc(
+    // @ts-ignore - Supabase RPC type inference issue with admin client
+    const { data: validation, error: validationError } = await (supabaseAdmin.rpc as any)(
       'validate_attendance_link',
       {
         p_link_code: code,
@@ -286,19 +335,21 @@ export async function POST(
       }
     );
 
-    if (validationError || !validation || !validation.valid) {
+    const validationResult = validation as any;
+
+    if (validationError || !validationResult || !validationResult.valid) {
       return NextResponse.json(
         {
-          error: validation?.error || 'Link validation failed',
-          distance_meters: validation?.distance_meters,
-          required_radius: validation?.required_radius,
+          error: validationResult?.error || 'Link validation failed',
+          distance_meters: validationResult?.distance_meters,
+          required_radius: validationResult?.required_radius,
         },
         { status: 400 }
       );
     }
 
-    const linkId = validation.link_id;
-    const employerEmployeeId = validation.employer_employee_id;
+    const linkId = validationResult.link_id as string;
+    const employerEmployeeId = validationResult.employer_employee_id as string;
 
     // Get employee link for company info
     const { data: employeeLink } = await supabase
@@ -375,7 +426,7 @@ export async function POST(
         longitude,
         location_accuracy: accuracy,
         location_verified: true,
-        distance_from_office: validation.distance_meters,
+        distance_from_office: validationResult.distance_meters as number,
         approval_status: 'pending',
         updated_at: now,
       };
@@ -404,7 +455,7 @@ export async function POST(
         longitude,
         location_accuracy: accuracy,
         location_verified: true,
-        distance_from_office: validation.distance_meters,
+        distance_from_office: validationResult.distance_meters as number,
         approval_status: 'pending',
       };
 
@@ -430,7 +481,7 @@ export async function POST(
         attendance_id: attendanceRecord.id,
         latitude,
         longitude,
-        distance_from_target: validation.distance_meters,
+        distance_from_target: validationResult.distance_meters as number,
         location_verified: true,
       });
 
