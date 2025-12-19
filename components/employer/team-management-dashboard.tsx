@@ -50,11 +50,13 @@ import { TasksView } from './tasks-view';
 import { TargetsView } from './targets-view';
 import { PermissionsManager } from './permissions-manager';
 import { AnalyticsOverview } from './analytics-overview';
+import { AdvancedAnalyticsDashboard } from './advanced-analytics-dashboard';
 import { LeaveRequestsManagement } from './leave-requests-management';
 import { LeaveCalendar } from './leave-calendar';
 import { AnnouncementsManagement } from './announcements-management';
 import { ExpensesManagement } from './expenses-management';
 import { PerformanceReviewsManagement } from './performance-reviews-management';
+import { BulkOperationsToolbar } from './bulk-operations-toolbar';
 import { cn } from '@/lib/utils';
 
 interface TeamMember {
@@ -470,7 +472,18 @@ export function TeamManagementDashboard() {
           </div>
 
           <TabsContent value="overview" className="p-6 mt-0">
-            <AnalyticsOverview />
+            <Tabs defaultValue="basic" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="basic">Basic Analytics</TabsTrigger>
+                <TabsTrigger value="advanced">Advanced Analytics</TabsTrigger>
+              </TabsList>
+              <TabsContent value="basic" className="mt-4">
+                <AnalyticsOverview />
+              </TabsContent>
+              <TabsContent value="advanced" className="mt-4">
+                <AdvancedAnalyticsDashboard />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="team" className="p-6 space-y-4 mt-0">
