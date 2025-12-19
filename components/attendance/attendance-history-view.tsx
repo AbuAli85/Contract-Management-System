@@ -177,6 +177,23 @@ export function AttendanceHistoryView({ employeeId }: AttendanceHistoryViewProps
     return true;
   });
 
+  // Calculate stats from attendance data
+  const stats = React.useMemo(() => {
+    const present = attendance.filter(r => r.status === 'present').length;
+    const late = attendance.filter(r => r.status === 'late').length;
+    const totalHours = attendance.reduce((sum, r) => sum + (r.total_hours || 0), 0);
+    const overtimeHours = attendance.reduce((sum, r) => sum + (r.overtime_hours || 0), 0);
+    const averageHours = attendance.length > 0 ? totalHours / attendance.length : 0;
+    
+    return {
+      present,
+      late,
+      totalHours,
+      overtimeHours,
+      averageHours,
+    };
+  }, [attendance]);
+
   const exportToCSV = () => {
     const headers = ['Date', 'Check In', 'Check Out', 'Status', 'Total Hours', 'Overtime', 'Break', 'Approval Status'];
     const rows = filteredAttendance.map(record => [
@@ -209,18 +226,27 @@ export function AttendanceHistoryView({ employeeId }: AttendanceHistoryViewProps
     });
   };
 
-  // Calculate statistics
-  const stats = {
-    total: filteredAttendance.length,
-    present: filteredAttendance.filter(r => r.status === 'present' || r.status === 'late').length,
-    late: filteredAttendance.filter(r => r.status === 'late').length,
-    absent: filteredAttendance.filter(r => r.status === 'absent').length,
-    totalHours: filteredAttendance.reduce((sum, r) => sum + (r.total_hours || 0), 0),
-    overtimeHours: filteredAttendance.reduce((sum, r) => sum + (r.overtime_hours || 0), 0),
-    averageHours: filteredAttendance.length > 0 
+  // Calculate statistics - ensure it's always a valid object
+  const stats = React.useMemo(() => {
+    const present = filteredAttendance.filter(r => r.status === 'present' || r.status === 'late').length;
+    const late = filteredAttendance.filter(r => r.status === 'late').length;
+    const absent = filteredAttendance.filter(r => r.status === 'absent').length;
+    const totalHours = filteredAttendance.reduce((sum, r) => sum + (r.total_hours || 0), 0);
+    const overtimeHours = filteredAttendance.reduce((sum, r) => sum + (r.overtime_hours || 0), 0);
+    const averageHours = filteredAttendance.length > 0 
       ? filteredAttendance.reduce((sum, r) => sum + (r.total_hours || 0), 0) / filteredAttendance.length 
-      : 0,
-  };
+      : 0;
+    
+    return {
+      total: filteredAttendance.length,
+      present,
+      late,
+      absent,
+      totalHours,
+      overtimeHours,
+      averageHours,
+    };
+  }, [filteredAttendance]);
 
   if (loading) {
     return (
@@ -412,7 +438,7 @@ export function AttendanceHistoryView({ employeeId }: AttendanceHistoryViewProps
           {/* Summary */}
           <div className="text-sm text-gray-600 text-center">
             Showing {filteredAttendance.length} of {attendance.length} records
-            {stats.averageHours > 0 && (
+            {stats && typeof stats === 'object' && 'averageHours' in stats && stats.averageHours > 0 && (
               <span className="ml-4">
                 • Average: {stats.averageHours.toFixed(1)} hours/day
               </span>
