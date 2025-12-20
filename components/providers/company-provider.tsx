@@ -43,12 +43,38 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           );
 
           if (activeCompany) {
-            setCompany({
-              id: activeCompany.company_id,
-              name: activeCompany.company_name,
-              logo_url: activeCompany.company_logo,
-              role: activeCompany.user_role || 'member',
-            });
+            // Double-check: Ensure it's not an invalid company
+            const companyName = (activeCompany.company_name || '').toLowerCase().trim();
+            const isInvalidCompany = 
+              companyName === 'digital morph' ||
+              companyName === 'falcon eye group' ||
+              companyName.includes('digital morph') ||
+              companyName.includes('falcon eye group');
+            
+            if (isInvalidCompany) {
+              // Invalid company - clear it and use first valid company
+              console.warn('Active company is invalid, clearing it');
+              setCompany(null);
+              // Optionally switch to first valid company
+              const firstValidCompany = data.companies?.find((c: any) => {
+                const name = (c.company_name || '').toLowerCase().trim();
+                return name !== 'digital morph' && 
+                       name !== 'falcon eye group' &&
+                       !name.includes('digital morph') &&
+                       !name.includes('falcon eye group');
+              });
+              if (firstValidCompany) {
+                // Auto-switch to first valid company
+                switchCompany(firstValidCompany.company_id);
+              }
+            } else {
+              setCompany({
+                id: activeCompany.company_id,
+                name: activeCompany.company_name,
+                logo_url: activeCompany.company_logo,
+                role: activeCompany.user_role || 'member',
+              });
+            }
           } else {
             setCompany(null);
           }

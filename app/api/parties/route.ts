@@ -189,10 +189,12 @@ async function handleGET(request: Request) {
     // Parse pagination and filters from query params
     const url = new URL(request.url);
     const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
-    const limit = Math.min(
-      Math.max(1, parseInt(url.searchParams.get('limit') || '20')),
-      100
-    );
+    // Allow higher limits for specific use cases (e.g., fetching all employers)
+    // Default max is 100, but allow up to 1000 if explicitly requested
+    const requestedLimit = parseInt(url.searchParams.get('limit') || '20');
+    const limit = requestedLimit > 100 
+      ? Math.min(requestedLimit, 1000) // Allow up to 1000 for bulk operations
+      : Math.min(Math.max(1, requestedLimit), 100); // Default max 100
     const offset = (page - 1) * limit;
     const typeFilter = url.searchParams.get('type'); // Get type filter
 

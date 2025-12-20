@@ -55,6 +55,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Prevent switching to invalid companies (Digital Morph, Falcon Eye Group)
+    const companyName = (membership?.company?.name || ownedCompany?.name || '').toLowerCase().trim();
+    const isInvalidCompany = 
+      companyName === 'digital morph' ||
+      companyName === 'falcon eye group' ||
+      companyName.includes('digital morph') ||
+      companyName.includes('falcon eye group');
+    
+    if (isInvalidCompany) {
+      return NextResponse.json(
+        { error: 'Cannot switch to this company. It is not a valid company entity.' },
+        { status: 400 }
+      );
+    }
+
     // Update user's active company
     const { error: updateError } = await adminClient
       .from('profiles')
