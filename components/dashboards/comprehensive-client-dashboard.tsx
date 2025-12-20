@@ -164,168 +164,66 @@ export function ComprehensiveClientDashboard() {
     try {
       setLoading(true);
 
-      // Mock data - replace with actual API calls
-      const mockData: ClientDashboardData = {
+      // Fetch real data from API
+      const [contractsResponse, partiesResponse] = await Promise.all([
+        fetch('/api/contracts?limit=1000'),
+        fetch('/api/parties?type=Client&limit=1000'),
+      ]);
+
+      const contractsData = await contractsResponse.json();
+      const partiesData = await partiesResponse.json();
+
+      // Get current user's client party (if any)
+      const clientParties = partiesData.success ? (partiesData.parties || []).filter((p: any) => p.type === 'Client') : [];
+      const contracts = contractsData.success ? (contractsData.contracts || []) : [];
+
+      // Calculate overview stats
+      const activeContracts = contracts.filter((c: any) => 
+        ['active', 'pending', 'in_progress'].includes(c.status?.toLowerCase())
+      );
+      const completedContracts = contracts.filter((c: any) => 
+        ['completed', 'closed', 'finished'].includes(c.status?.toLowerCase())
+      );
+      const totalSpent = contracts.reduce((sum: number, c: any) => 
+        sum + (parseFloat(c.contract_value) || 0), 0
+      );
+
+      // Transform contracts to projects format
+      const recentProjects = activeContracts.slice(0, 10).map((contract: any, index: number) => ({
+        id: contract.id || `contract_${index}`,
+        title: contract.title || contract.contract_number || 'Untitled Contract',
+        provider: {
+          id: contract.employer_id || '',
+          name: contract.employer_name || 'Unknown Employer',
+          avatar: null,
+          rating: 0,
+        },
+        status: contract.status?.toLowerCase() || 'active',
+        progress: contract.progress || 0,
+        budget: parseFloat(contract.contract_value) || 0,
+        deadline: contract.contract_end_date || '',
+        category: contract.contract_type || 'General',
+        lastUpdate: contract.updated_at || contract.created_at,
+      }));
+
+      const dashboardData: ClientDashboardData = {
         overview: {
-          activeProjects: 8,
-          completedProjects: 24,
-          totalSpent: 15750,
-          savedProviders: 12,
-          pendingReviews: 3,
-          avgProjectRating: 4.7,
+          activeProjects: activeContracts.length,
+          completedProjects: completedContracts.length,
+          totalSpent: totalSpent,
+          savedProviders: 0, // Could be calculated from favorite employers
+          pendingReviews: 0, // Could be calculated from pending reviews
+          avgProjectRating: 0, // Could be calculated from ratings
         },
 
-        recentProjects: [
-          {
-            id: 'proj_1',
-            title: 'SEO Optimization for E-commerce Store',
-            provider: {
-              id: 'prov_1',
-              name: 'Sarah Johnson',
-              avatar:
-                'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
-              rating: 4.9,
-            },
-            status: 'active',
-            progress: 75,
-            budget: 1500,
-            deadline: '2024-02-15',
-            category: 'Digital Marketing',
-            lastUpdate: '2024-01-20T14:30:00Z',
-          },
-          {
-            id: 'proj_2',
-            title: 'Brand Identity Design Package',
-            provider: {
-              id: 'prov_2',
-              name: 'Alex Chen',
-              avatar:
-                'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-              rating: 4.8,
-            },
-            status: 'in_review',
-            progress: 100,
-            budget: 850,
-            deadline: '2024-01-25',
-            category: 'Graphic Design',
-            lastUpdate: '2024-01-19T16:45:00Z',
-          },
-          {
-            id: 'proj_3',
-            title: 'React.js Dashboard Development',
-            provider: {
-              id: 'prov_3',
-              name: 'Maria Rodriguez',
-              avatar:
-                'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
-              rating: 5.0,
-            },
-            status: 'active',
-            progress: 45,
-            budget: 3200,
-            deadline: '2024-03-01',
-            category: 'Web Development',
-            lastUpdate: '2024-01-20T10:15:00Z',
-          },
-        ],
+        recentProjects,
 
-        availableServices: [
-          {
-            id: 'serv_1',
-            title: 'Complete SEO Audit & Strategy',
-            description:
-              'Comprehensive SEO analysis with actionable recommendations to boost rankings',
-            provider: {
-              id: 'prov_4',
-              name: 'David Park',
-              avatar:
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
-              rating: 4.9,
-              responseTime: '2 hours',
-            },
-            price: 299,
-            duration: '5-7 days',
-            category: 'Digital Marketing',
-            featured: true,
-            tags: ['SEO', 'Analytics', 'Strategy'],
-          },
-          {
-            id: 'serv_2',
-            title: 'Professional Logo Design',
-            description:
-              'Custom logo design with unlimited revisions and brand guidelines',
-            provider: {
-              id: 'prov_5',
-              name: 'Lisa Wang',
-              avatar:
-                'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
-              rating: 4.7,
-              responseTime: '1 hour',
-            },
-            price: 199,
-            duration: '3-5 days',
-            category: 'Graphic Design',
-            featured: false,
-            tags: ['Logo', 'Branding', 'Design'],
-          },
-        ],
-
-        messages: [
-          {
-            id: 'msg_1',
-            providerId: 'prov_1',
-            providerName: 'Sarah Johnson',
-            providerAvatar:
-              'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
-            lastMessage:
-              "I've completed the keyword research phase. Please review the attached report.",
-            timestamp: '2024-01-20T14:30:00Z',
-            unread: true,
-            projectId: 'proj_1',
-            projectTitle: 'SEO Optimization',
-          },
-          {
-            id: 'msg_2',
-            providerId: 'prov_2',
-            providerName: 'Alex Chen',
-            providerAvatar:
-              'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-            lastMessage:
-              'The final logo designs are ready for your review. What do you think?',
-            timestamp: '2024-01-19T16:45:00Z',
-            unread: true,
-            projectId: 'proj_2',
-            projectTitle: 'Brand Identity Design',
-          },
-        ],
-
-        savedProviders: [
-          {
-            id: 'prov_1',
-            name: 'Sarah Johnson',
-            avatar:
-              'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
-            specialization: 'SEO & Digital Marketing',
-            rating: 4.9,
-            completedProjects: 127,
-            responseTime: '2 hours',
-            lastActive: '2 hours ago',
-          },
-          {
-            id: 'prov_3',
-            name: 'Maria Rodriguez',
-            avatar:
-              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
-            specialization: 'Full-Stack Development',
-            rating: 5.0,
-            completedProjects: 89,
-            responseTime: '1 hour',
-            lastActive: '30 minutes ago',
-          },
-        ],
+        availableServices: [], // Services marketplace - can be implemented later
+        messages: [], // Messages - can be implemented later
+        savedProviders: [], // Saved providers - can be implemented later
       };
 
-      setDashboardData(mockData);
+      setDashboardData(dashboardData);
       setLoading(false);
     } catch (error) {
       console.error('Error loading dashboard data:', error);

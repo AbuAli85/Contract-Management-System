@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Building2,
@@ -111,29 +112,55 @@ export function ClientManagementDashboard() {
     'overview' | 'list' | 'analytics'
   >('overview');
 
+  const router = useRouter();
+
   // Handler functions for interactivity
   const handleAddClient = () => {
-    console.log('Opening Add New Client form...');
-    // In a real app, this would open a modal or navigate to a form
-    alert('Add New Client functionality would open here!');
+    router.push('/en/manage-parties?type=Client');
   };
 
-  const handleExportReport = () => {
-    console.log('Exporting client report...');
-    // In a real app, this would generate and download a report
-    alert('Export Report functionality would download a file here!');
+  const handleExportReport = async () => {
+    try {
+      // Generate CSV report
+      const headers = ['Name (EN)', 'Name (AR)', 'CRN', 'Contact Person', 'Contact Email', 'Contact Phone', 'Status', 'Active Contracts', 'Total Spent'];
+      const rows = clients.map(client => [
+        client.name_en,
+        client.name_ar,
+        client.crn,
+        client.contact_person,
+        client.contact_email,
+        client.contact_phone,
+        client.status,
+        client.active_contracts.toString(),
+        client.total_spent.toString(),
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `clients-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('Failed to export report. Please try again.');
+    }
   };
 
   const handleViewClient = (clientId: string) => {
-    console.log(`Viewing client details for ID: ${clientId}`);
-    // In a real app, this would navigate to client detail page
-    alert(`View Client ${clientId} details would open here!`);
+    router.push(`/en/manage-parties?id=${clientId}`);
   };
 
   const handleEditClient = (clientId: string) => {
-    console.log(`Editing client with ID: ${clientId}`);
-    // In a real app, this would open edit form
-    alert(`Edit Client ${clientId} form would open here!`);
+    router.push(`/en/manage-parties?id=${clientId}`);
   };
 
   // Real-time data loading from Supabase
@@ -781,14 +808,21 @@ export function ClientManagementDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className='flex items-center gap-1'>
-                          <Button variant='ghost' size='sm'>
+                          <Button 
+                            variant='ghost' 
+                            size='sm'
+                            onClick={() => handleViewClient(client.id)}
+                            title='View client details'
+                          >
                             <Eye className='h-4 w-4' />
                           </Button>
-                          <Button variant='ghost' size='sm'>
+                          <Button 
+                            variant='ghost' 
+                            size='sm'
+                            onClick={() => handleEditClient(client.id)}
+                            title='Edit client'
+                          >
                             <Edit className='h-4 w-4' />
-                          </Button>
-                          <Button variant='ghost' size='sm'>
-                            <Trash2 className='h-4 w-4' />
                           </Button>
                         </div>
                       </TableCell>

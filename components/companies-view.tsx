@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { safeRender } from '@/lib/utils/safe-render';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface Company {
   id: string;
@@ -59,6 +60,7 @@ function getInitials(name: string): string {
 }
 
 export function CompaniesView() {
+  const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,10 +90,30 @@ export function CompaniesView() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         
+        // Fetch contract counts for companies
+        let contractCounts: Record<string, number> = {};
+        try {
+          const contractResponse = await fetch('/api/contracts?limit=1000');
+          const contractData = await contractResponse.json();
+          if (contractData.success && contractData.contracts) {
+            contractData.contracts.forEach((contract: any) => {
+              // Count contracts by employer_id (which links to companies via parties)
+              if (contract.employer_id) {
+                contractCounts[contract.employer_id] = (contractCounts[contract.employer_id] || 0) + 1;
+              }
+            });
+          }
+        } catch (err) {
+          console.warn('Could not fetch contract counts:', err);
+        }
+
         setStats({
           total: companiesData.length,
           active: companiesData.filter((c: Company) => c.id).length,
-          withContracts: 0, // TODO: Calculate from contracts API
+          withContracts: companiesData.filter((c: Company) => {
+            // Check if company has contracts (via party_id or direct link)
+            return contractCounts[c.id] > 0 || false;
+          }).length,
           thisMonth: companiesData.filter((c: Company) => {
             const created = new Date(c.created_at);
             return created >= startOfMonth;
@@ -165,7 +187,7 @@ export function CompaniesView() {
             Manage your company database ({companies.length} companies)
           </p>
         </div>
-        <Button>
+        <Button onClick={() => router.push('/en/settings/company')}>
           <Plus className='h-4 w-4 mr-2' />
           Add Company
         </Button>
@@ -262,7 +284,7 @@ export function CompaniesView() {
                   ? 'No companies match your search criteria.'
                   : 'Get started by adding your first company.'}
               </p>
-              <Button>
+              <Button onClick={() => router.push('/en/settings/company')}>
                 <Plus className='h-4 w-4 mr-2' />
                 Add Company
               </Button>
@@ -364,8 +386,7 @@ export function CompaniesView() {
                         variant='outline'
                         className='h-8 px-3'
                         onClick={() => {
-                          // TODO: Implement edit functionality
-                          console.log('Edit company:', company.id);
+                          router.push(`/en/settings/company?id=${company.id}`);
                         }}
                       >
                         <Edit className='h-3 w-3 mr-1' />
@@ -375,8 +396,7 @@ export function CompaniesView() {
                         size='sm'
                         className='h-8 px-3'
                         onClick={() => {
-                          // TODO: Implement view functionality
-                          console.log('View company:', company.id);
+                          router.push(`/en/dashboard/companies?view=${company.id}`);
                         }}
                       >
                         <Eye className='h-3 w-3 mr-1' />
