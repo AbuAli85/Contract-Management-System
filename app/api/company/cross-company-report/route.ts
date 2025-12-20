@@ -3,6 +3,26 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+// Helper function to check if a company is invalid/mock
+function isInvalidCompany(companyName: string): boolean {
+  const name = companyName.toLowerCase().trim();
+  
+  // Explicitly allow valid Falcon Eye companies
+  if (name.includes('falcon eye modern investments')) {
+    return false;
+  }
+  
+  // Filter out invalid/mock companies
+  return (
+    name === 'digital morph' ||
+    name === 'falcon eye group' ||
+    name === 'cc' ||
+    name === 'digital marketing pro' ||
+    name.includes('digital morph') ||
+    (name.includes('falcon eye group') && !name.includes('modern investments'))
+  );
+}
+
 interface CompanyMembership {
   company_id: string;
   role: string;
@@ -95,7 +115,12 @@ export async function GET() {
         console.warn('company_members query error (table may not exist):', memberError.message);
         memberships = null;
       } else {
-        memberships = data as unknown as CompanyMembership[];
+        // Filter out invalid/mock companies
+        const validMemberships = (data || []).filter((m: CompanyMembership) => {
+          const companyName = m.company?.name || '';
+          return companyName && !isInvalidCompany(companyName);
+        });
+        memberships = validMemberships as unknown as CompanyMembership[];
       }
     } catch (e) {
       console.warn('company_members table may not exist:', e);
@@ -118,7 +143,12 @@ export async function GET() {
         .eq('is_active', true);
 
       if (ownedCompanies && ownedCompanies.length > 0) {
-        memberships = ownedCompanies.map((c: { id: string; name: string; logo_url: string | null; is_active: boolean }) => ({
+        // Filter out invalid/mock companies
+        const validOwnedCompanies = ownedCompanies.filter((c: { id: string; name: string }) => 
+          c.name && !isInvalidCompany(c.name)
+        );
+        
+        memberships = validOwnedCompanies.map((c: { id: string; name: string; logo_url: string | null; is_active: boolean }) => ({
           company_id: c.id,
           role: 'owner',
           company: {
@@ -169,9 +199,15 @@ export async function GET() {
       }
     };
 
+    // Filter out invalid companies before processing
+    const validMemberships = (memberships || []).filter((membership) => {
+      const companyName = membership.company?.name || '';
+      return companyName && !isInvalidCompany(companyName);
+    });
+
     // Fetch stats for each company
     const companiesWithStats: CompanyWithStats[] = await Promise.all(
-      (memberships || []).map(async (membership) => {
+      validMemberships.map(async (membership) => {
         const companyId = membership.company_id;
         const company = membership.company;
 
