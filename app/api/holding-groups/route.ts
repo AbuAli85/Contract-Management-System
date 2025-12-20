@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC } from '@/lib/rbac';
+import { withAnyRBAC } from '@/lib/rbac/guard';
 
 // GET /api/holding-groups - List all holding groups with their members
-export const GET = withRBAC(
+export const GET = withAnyRBAC(
+  ['company:read:all', 'party:read:all'],
   async (request: NextRequest) => {
     try {
       const supabase = await createClient();
@@ -48,12 +49,12 @@ export const GET = withRBAC(
         { status: 500 }
       );
     }
-  },
-  ['company:read:all', 'party:read:all']
+  }
 );
 
 // POST /api/holding-groups - Create a new holding group
-export const POST = withRBAC(
+export const POST = withAnyRBAC(
+  ['company:manage:all', 'party:manage:all'],
   async (request: NextRequest) => {
     try {
       const supabase = await createClient();
@@ -112,7 +113,6 @@ export const POST = withRBAC(
         { status: 500 }
       );
     }
-  },
-  ['company:manage:all', 'party:manage:all']
+  }
 );
 

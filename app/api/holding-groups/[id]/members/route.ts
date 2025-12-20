@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC } from '@/lib/rbac';
+import { withAnyRBAC } from '@/lib/rbac/guard';
 
 // GET /api/holding-groups/[id]/members - Get members of a holding group
-export const GET = withRBAC(
+export const GET = withAnyRBAC(
+  ['company:read:all', 'party:read:all'],
   async (
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -31,12 +32,12 @@ export const GET = withRBAC(
         { status: 500 }
       );
     }
-  },
-  ['company:read:all', 'party:read:all']
+  }
 );
 
 // POST /api/holding-groups/[id]/members - Add members to holding group
-export const POST = withRBAC(
+export const POST = withAnyRBAC(
+  ['company:manage:all', 'party:manage:all'],
   async (
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -82,12 +83,12 @@ export const POST = withRBAC(
         { status: 500 }
       );
     }
-  },
-  ['company:manage:all', 'party:manage:all']
+  }
 );
 
 // DELETE /api/holding-groups/[id]/members - Remove members from holding group
-export const DELETE = withRBAC(
+export const DELETE = withAnyRBAC(
+  ['company:manage:all', 'party:manage:all'],
   async (
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -120,7 +121,6 @@ export const DELETE = withRBAC(
         { status: 500 }
       );
     }
-  },
-  ['company:manage:all', 'party:manage:all']
+  }
 );
 
