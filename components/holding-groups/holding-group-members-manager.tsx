@@ -118,19 +118,24 @@ export function HoldingGroupMembersManager({
   async function fetchAvailableParties() {
     setIsLoadingParties(true);
     try {
-      const response = await fetch('/api/parties?type=Employer');
+      const response = await fetch('/api/parties?type=Employer&limit=1000');
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[HoldingGroupMembers] HTTP error response:', response.status, errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const result = await response.json();
       
-      if (result.error) {
-        throw new Error(result.error);
+      console.log('[HoldingGroupMembers] API response:', result);
+      
+      if (!result.success) {
+        throw new Error(result.error || result.message || 'Failed to fetch parties');
       }
       
-      const data = result.data || [];
+      // API returns { success: true, parties: [...], ... }
+      const data = result.parties || [];
       console.log(`[HoldingGroupMembers] Fetched ${data.length} parties from API`);
       
       // Filter out parties already in the holding group
@@ -138,6 +143,8 @@ export function HoldingGroupMembersManager({
       const filtered = data.filter((p: Party) => !memberPartyIds.has(p.id));
       
       console.log(`[HoldingGroupMembers] Filtered to ${filtered.length} available parties (${memberPartyIds.size} already members)`);
+      console.log('[HoldingGroupMembers] Member party IDs:', Array.from(memberPartyIds));
+      console.log('[HoldingGroupMembers] Available parties:', filtered.map(p => ({ id: p.id, name: p.name_en })));
       
       setAvailableParties(filtered);
     } catch (error: any) {
@@ -159,16 +166,21 @@ export function HoldingGroupMembersManager({
       const response = await fetch('/api/companies');
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[HoldingGroupMembers] HTTP error response:', response.status, errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const result = await response.json();
       
-      if (result.error) {
-        throw new Error(result.error);
+      console.log('[HoldingGroupMembers] Companies API response:', result);
+      
+      if (!result.success) {
+        throw new Error(result.error || result.message || 'Failed to fetch companies');
       }
       
-      const data = result.data || [];
+      // API returns { success: true, companies: [...], ... }
+      const data = result.companies || [];
       console.log(`[HoldingGroupMembers] Fetched ${data.length} companies from API`);
       
       // Filter out companies already in the holding group
@@ -176,6 +188,8 @@ export function HoldingGroupMembersManager({
       const filtered = data.filter((c: Company) => !memberCompanyIds.has(c.id));
       
       console.log(`[HoldingGroupMembers] Filtered to ${filtered.length} available companies (${memberCompanyIds.size} already members)`);
+      console.log('[HoldingGroupMembers] Member company IDs:', Array.from(memberCompanyIds));
+      console.log('[HoldingGroupMembers] Available companies:', filtered.map(c => ({ id: c.id, name: c.name })));
       
       setAvailableCompanies(filtered);
     } catch (error: any) {
