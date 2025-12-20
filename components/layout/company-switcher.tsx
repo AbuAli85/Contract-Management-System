@@ -45,6 +45,21 @@ interface Company {
   user_role: string;
   is_primary: boolean;
   group_name: string | null;
+  stats?: {
+    employees: number;
+    attendance_today: number;
+    active_tasks: number;
+    contracts: number;
+  };
+  features?: {
+    team_management: boolean;
+    attendance: boolean;
+    tasks: boolean;
+    targets: boolean;
+    reports: boolean;
+    contracts: boolean;
+    analytics: boolean;
+  };
 }
 
 const roleColors: Record<string, string> = {
@@ -116,13 +131,24 @@ export function CompanySwitcher() {
       }
 
       setActiveCompanyId(companyId);
+      
+      // Update companies list to reflect new active company
+      await fetchCompanies();
+      
       toast({
         title: '🏢 Company Switched',
-        description: data.message,
+        description: `${data.company_name || 'Company'}. All features refreshed.`,
       });
 
       // Refresh the page to load new company context
       router.refresh();
+      
+      // Trigger custom event for client components
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('company-switched', { 
+          detail: { companyId, companyName: data.company_name } 
+        }));
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -267,14 +293,47 @@ export function CompanySwitcher() {
                     <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge className={cn('text-xs px-1.5 py-0', roleColors[company.user_role] || roleColors.member)}>
                     {company.user_role}
                   </Badge>
+                  {company.stats && (
+                    <>
+                      {company.stats.employees > 0 && (
+                        <span className="text-xs text-gray-500">
+                          {company.stats.employees} {company.stats.employees === 1 ? 'employee' : 'employees'}
+                        </span>
+                      )}
+                      {company.stats.active_tasks > 0 && (
+                        <span className="text-xs text-blue-500">
+                          {company.stats.active_tasks} tasks
+                        </span>
+                      )}
+                    </>
+                  )}
                   {company.group_name && (
                     <span className="text-xs text-gray-500 truncate">{company.group_name}</span>
                   )}
                 </div>
+                {company.features && (
+                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                    {company.features.team_management && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">Team</span>
+                    )}
+                    {company.features.attendance && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded">Attendance</span>
+                    )}
+                    {company.features.tasks && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">Tasks</span>
+                    )}
+                    {company.features.contracts && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded">Contracts</span>
+                    )}
+                    {company.features.analytics && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded">Analytics</span>
+                    )}
+                  </div>
+                )}
               </div>
             </DropdownMenuItem>
           ))}

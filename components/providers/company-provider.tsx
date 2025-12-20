@@ -103,11 +103,22 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Update company state immediately
         await fetchActiveCompany();
-        router.refresh(); // Refresh to update server components
+        
+        // Refresh router to update all server components
+        router.refresh();
+        
+        // Trigger window event for client components to refresh
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('company-switched', { 
+            detail: { companyId, companyName: data.company_name } 
+          }));
+        }
+        
         toast({
           title: 'Company Switched',
-          description: `Now viewing ${data.company_name}`,
+          description: `Now viewing ${data.company_name}. All features refreshed.`,
         });
       } else {
         throw new Error(data.error || 'Failed to switch company');

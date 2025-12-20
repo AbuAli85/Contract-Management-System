@@ -44,13 +44,15 @@ export async function GET() {
 
     if (!membershipError && membershipCompanies) {
       allCompanies = membershipCompanies
+        .filter((cm: any) => cm.company?.id && cm.company?.name) // Ensure company exists
         .map((cm: any) => ({
-          company_id: cm.company?.id,
-          company_name: cm.company?.name,
-          company_logo: cm.company?.logo_url,
+          company_id: cm.company.id,
+          company_name: cm.company.name,
+          company_logo: cm.company.logo_url,
           user_role: cm.role,
           is_primary: cm.is_primary,
           group_name: null, // Will fetch group names separately if needed
+          source: 'company_members',
         }))
         // Filter out Digital Morph and Falcon Eye Group (these are not companies)
         .filter((c: any) => {
@@ -81,7 +83,7 @@ export async function GET() {
           companyName.includes('digital morph') ||
           companyName.includes('falcon eye group');
         
-        if (!existingIds.has(company.id) && !isInvalidCompany) {
+        if (!existingIds.has(company.id) && !isInvalidCompany && company.id && company.name) {
           allCompanies.push({
             company_id: company.id,
             company_name: company.name,
@@ -90,6 +92,7 @@ export async function GET() {
             is_primary: allCompanies.length === 0,
             group_name: null,
             party_id: company.party_id,
+            source: 'owned_companies',
           });
         }
       }
@@ -162,6 +165,134 @@ export async function GET() {
       }
     }
 
+    // Fourth try: Get companies via employer_employees (if user is an employer)
+    // Find companies where user is listed as employer
+    try {
+      const { data: employerProfile } = await adminClient
+        .from('profiles')
+        .select('id, email')
+        .eq('id', user.id)
+        .single();
+
+      if (employerProfile?.email) {
+        // Find parties where user's email matches contact_email
+        const { data: employerParties, error: partiesError } = await adminClient
+          .from('parties')
+          .select('id, name_en, contact_email, type')
+          .eq('contact_email', employerProfile.email)
+          .eq('type', 'Employer')
+          .eq('status', 'Active');
+
+        if (!partiesError && employerParties && employerParties.length > 0) {
+          const partyIds = employerParties.map((p: any) => p.id);
+          
+          // Find companies linked to these parties
+          const { data: employerCompanies, error: employerCompaniesError } = await adminClient
+            .from('companies')
+            .select('id, name, logo_url, group_id, party_id')
+            .in('party_id', partyIds)
+            .eq('is_active', true);
+
+          if (!employerCompaniesError && employerCompanies) {
+            const existingIds = new Set(allCompanies.map(c => c.company_id));
+            for (const company of employerCompanies) {
+              if (!existingIds.has(company.id)) {
+                // Filter out Digital Morph and Falcon Eye Group
+                const companyName = (company.name || '').toLowerCase().trim();
+                const isInvalidCompany = 
+                  companyName === 'digital morph' ||
+                  companyName === 'falcon eye group' ||
+                  companyName.includes('digital morph') ||
+                  companyName.includes('falcon eye group');
+                
+                if (isInvalidCompany) continue;
+
+                allCompanies.push({
+                  company_id: company.id,
+                  company_name: company.name,
+                  company_logo: company.logo_url,
+                  user_role: 'owner', // User is the employer, so they're owner
+                  is_primary: allCompanies.length === 0,
+                  group_name: null,
+                  party_id: company.party_id,
+                  source: 'employer_party',
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching employer-linked companies:', e);
+    }
+
+    // Fifth try: Get companies where user's profile email matches any party contact_email
+    // This is a broader search to catch any missed relationships
+    if (user.email) {
+      try {
+        // Find all parties with matching contact_email
+        const { data: matchingParties, error: matchingPartiesError } = await adminClient
+          .from('parties')
+          .select('id, name_en, contact_email, type, status')
+          .eq('contact_email', user.email)
+          .eq('type', 'Employer')
+          .in('status', ['Active', 'active']);
+
+        if (!matchingPartiesError && matchingParties && matchingParties.length > 0) {
+          const partyIds = matchingParties.map((p: any) => p.id);
+          
+          // Find companies linked to these parties
+          const { data: profileLinkedCompanies, error: profileLinkedError } = await adminClient
+            .from('companies')
+            .select('id, name, logo_url, group_id, party_id')
+            .in('party_id', partyIds)
+            .eq('is_active', true);
+
+          if (!profileLinkedError && profileLinkedCompanies) {
+            const existingIds = new Set(allCompanies.map(c => c.company_id));
+            for (const company of profileLinkedCompanies) {
+              if (!existingIds.has(company.id)) {
+                // Filter out Digital Morph and Falcon Eye Group
+                const companyName = (company.name || '').toLowerCase().trim();
+                const isInvalidCompany = 
+                  companyName === 'digital morph' ||
+                  companyName === 'falcon eye group' ||
+                  companyName.includes('digital morph') ||
+                  companyName.includes('falcon eye group');
+                
+                if (isInvalidCompany) continue;
+
+                // Find matching party to determine role
+                const matchingParty = matchingParties.find((p: any) => p.id === company.party_id);
+                let userRole = 'owner'; // Default to owner for employer parties
+                if (matchingParty?.role) {
+                  const role = matchingParty.role.toLowerCase();
+                  if (['ceo', 'chairman', 'owner'].includes(role)) {
+                    userRole = 'owner';
+                  } else if (['admin', 'manager'].includes(role)) {
+                    userRole = 'admin';
+                  }
+                }
+
+                allCompanies.push({
+                  company_id: company.id,
+                  company_name: company.name,
+                  company_logo: company.logo_url,
+                  user_role: userRole,
+                  is_primary: allCompanies.length === 0,
+                  group_name: null,
+                  party_id: company.party_id,
+                  source: 'profile_party_match',
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching profile-party matched companies:', e);
+      }
+    }
+
     // Get active company from profile using admin client
     const { data: profile } = await adminClient
       .from('profiles')
@@ -183,9 +314,146 @@ export async function GET() {
         .eq('id', user.id);
     }
 
+    // Remove any duplicates and ensure all companies have valid data
+    const uniqueCompanies = Array.from(
+      new Map(allCompanies.map(c => [c.company_id, c])).values()
+    ).filter(c => c.company_id && c.company_name); // Ensure company has ID and name
+
+    // Enrich companies with feature statistics
+    const enrichedCompanies = await Promise.all(
+      uniqueCompanies.map(async (company) => {
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Count employees
+          let employeesCount = 0;
+          try {
+            const { count } = await adminClient
+              .from('employer_employees')
+              .select('id', { count: 'exact', head: true })
+              .eq('company_id', company.company_id)
+              .eq('employment_status', 'active');
+            employeesCount = count || 0;
+          } catch (e) {
+            // Ignore errors
+          }
+
+          // Count attendance records (today)
+          let attendanceCount = 0;
+          try {
+            const { data: employees } = await adminClient
+              .from('employer_employees')
+              .select('id')
+              .eq('company_id', company.company_id)
+              .eq('employment_status', 'active');
+            
+            if (employees && employees.length > 0) {
+              const employeeIds = employees.map((e: any) => e.id);
+              const { count } = await adminClient
+                .from('employee_attendance')
+                .select('id', { count: 'exact', head: true })
+                .in('employer_employee_id', employeeIds)
+                .eq('attendance_date', today);
+              attendanceCount = count || 0;
+            }
+          } catch (e) {
+            // Ignore errors
+          }
+
+          // Count active tasks
+          let tasksCount = 0;
+          try {
+            const { data: employees } = await adminClient
+              .from('employer_employees')
+              .select('id')
+              .eq('company_id', company.company_id)
+              .eq('employment_status', 'active');
+            
+            if (employees && employees.length > 0) {
+              const employeeIds = employees.map((e: any) => e.id);
+              const { count } = await adminClient
+                .from('employee_tasks')
+                .select('id', { count: 'exact', head: true })
+                .in('employer_employee_id', employeeIds)
+                .in('status', ['pending', 'in_progress']);
+              tasksCount = count || 0;
+            }
+          } catch (e) {
+            // Ignore errors
+          }
+
+          // Count contracts (if party_id exists)
+          let contractsCount = 0;
+          if (company.party_id) {
+            try {
+              const { count } = await adminClient
+                .from('contracts')
+                .select('id', { count: 'exact', head: true })
+                .or(`second_party_id.eq.${company.party_id},first_party_id.eq.${company.party_id}`);
+              contractsCount = count || 0;
+            } catch (e) {
+              // Ignore errors
+            }
+          }
+
+          return {
+            ...company,
+            stats: {
+              employees: employeesCount,
+              attendance_today: attendanceCount,
+              active_tasks: tasksCount,
+              contracts: contractsCount,
+            },
+            features: {
+              team_management: employeesCount > 0,
+              attendance: true, // Always available
+              tasks: tasksCount > 0 || employeesCount > 0,
+              targets: employeesCount > 0,
+              reports: true, // Always available
+              contracts: contractsCount > 0 || company.party_id !== null,
+              analytics: employeesCount > 0,
+            },
+          };
+        } catch (error) {
+          // Return company without stats if enrichment fails
+          return {
+            ...company,
+            stats: {
+              employees: 0,
+              attendance_today: 0,
+              active_tasks: 0,
+              contracts: 0,
+            },
+            features: {
+              team_management: false,
+              attendance: true,
+              tasks: false,
+              targets: false,
+              reports: true,
+              contracts: company.party_id !== null,
+              analytics: false,
+            },
+          };
+        }
+      })
+    );
+
+    // Log for debugging (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Companies API] Found ${enrichedCompanies.length} companies for user ${user.id}:`, {
+        sources: enrichedCompanies.map(c => ({ 
+          name: c.company_name, 
+          source: c.source || 'unknown',
+          employees: c.stats?.employees || 0,
+        })),
+        total_before_dedup: allCompanies.length,
+        total_after_dedup: enrichedCompanies.length,
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      companies: allCompanies,
+      companies: enrichedCompanies,
       active_company_id: activeCompanyId,
     });
   } catch (error: any) {
