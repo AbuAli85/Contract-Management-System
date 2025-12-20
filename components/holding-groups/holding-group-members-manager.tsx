@@ -71,6 +71,8 @@ export function HoldingGroupMembersManager({
   const [availableParties, setAvailableParties] = useState<Party[]>([]);
   const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingParties, setIsLoadingParties] = useState(false);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMemberType, setSelectedMemberType] = useState<'party' | 'company'>('party');
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
@@ -78,9 +80,14 @@ export function HoldingGroupMembersManager({
 
   useEffect(() => {
     fetchMembers();
-    fetchAvailableParties();
-    fetchAvailableCompanies();
   }, [holdingGroupId]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      fetchAvailableParties();
+      fetchAvailableCompanies();
+    }
+  }, [holdingGroupId, members, isLoading]);
 
   async function fetchMembers() {
     try {
@@ -101,34 +108,48 @@ export function HoldingGroupMembersManager({
   }
 
   async function fetchAvailableParties() {
+    setIsLoadingParties(true);
     try {
       const response = await fetch('/api/parties?type=Employer');
       const { data, error } = await response.json();
 
       if (error) throw new Error(error);
       // Filter out parties already in the holding group
-      const memberPartyIds = members.map(m => m.party_id).filter(Boolean);
-      setAvailableParties(
-        (data || []).filter((p: Party) => !memberPartyIds.includes(p.id))
-      );
+      const memberPartyIds = new Set(members.map(m => m.party_id).filter(Boolean));
+      const filtered = (data || []).filter((p: Party) => !memberPartyIds.has(p.id));
+      setAvailableParties(filtered);
     } catch (error: any) {
       console.error('Error fetching parties:', error);
+      toast({
+        title: 'Error fetching parties',
+        description: error.message || 'Failed to load available parties',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingParties(false);
     }
   }
 
   async function fetchAvailableCompanies() {
+    setIsLoadingCompanies(true);
     try {
       const response = await fetch('/api/companies');
       const { data, error } = await response.json();
 
       if (error) throw new Error(error);
       // Filter out companies already in the holding group
-      const memberCompanyIds = members.map(m => m.company_id).filter(Boolean);
-      setAvailableCompanies(
-        (data || []).filter((c: Company) => !memberCompanyIds.includes(c.id))
-      );
+      const memberCompanyIds = new Set(members.map(m => m.company_id).filter(Boolean));
+      const filtered = (data || []).filter((c: Company) => !memberCompanyIds.has(c.id));
+      setAvailableCompanies(filtered);
     } catch (error: any) {
       console.error('Error fetching companies:', error);
+      toast({
+        title: 'Error fetching companies',
+        description: error.message || 'Failed to load available companies',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingCompanies(false);
     }
   }
 
@@ -280,13 +301,25 @@ export function HoldingGroupMembersManager({
                       <SelectValue placeholder={`Select ${selectedMemberType === 'party' ? 'a party' : 'a company'}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableItems.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {selectedMemberType === 'party'
-                            ? (item as Party).name_en
-                            : (item as Company).name}
+                      {(selectedMemberType === 'party' ? isLoadingParties : isLoadingCompanies) ? (
+                        <SelectItem value="loading" disabled>
+                          Loading...
                         </SelectItem>
-                      ))}
+                      ) : availableItems.length === 0 ? (
+                        <SelectItem value="no-items" disabled>
+                          {selectedMemberType === 'party'
+                            ? 'No available parties (all parties are already members)'
+                            : 'No available companies (all companies are already members)'}
+                        </SelectItem>
+                      ) : (
+                        availableItems.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {selectedMemberType === 'party'
+                              ? `${(item as Party).name_en}${(item as Party).name_ar ? ` / ${(item as Party).name_ar}` : ''}`
+                              : (item as Company).name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
