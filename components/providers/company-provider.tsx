@@ -44,7 +44,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
           if (activeCompany) {
             // Double-check: Ensure it's not an invalid/mock company (but allow valid Falcon Eye companies)
-            const companyName = (activeCompany.company_name || '').toLowerCase().trim();
             const isInvalidCompany = (name: string): boolean => {
               const lower = name.toLowerCase().trim();
               if (lower.includes('falcon eye modern investments')) return false; // Allow valid Falcon Eye companies
@@ -59,31 +58,25 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
             };
             
             if (isInvalidCompany(activeCompany.company_name || '')) {
-            
-            if (isInvalidCompany) {
               // Invalid company - clear it and use first valid company
               console.warn('Active company is invalid, clearing it');
-              setCompany(null);
-              // Optionally switch to first valid company
-              const isInvalidCompany = (name: string): boolean => {
-                const lower = name.toLowerCase().trim();
-                if (lower.includes('falcon eye modern investments')) return false; // Allow valid Falcon Eye companies
-                return (
-                  lower === 'digital morph' ||
-                  lower === 'falcon eye group' ||
-                  lower === 'cc' ||
-                  lower === 'digital marketing pro' ||
-                  lower.includes('digital morph') ||
-                  (lower.includes('falcon eye group') && !lower.includes('modern investments'))
-                );
-              };
               
+              // Find first valid company and set it directly (don't trigger full switch)
               const firstValidCompany = data.companies?.find((c: any) => 
                 !isInvalidCompany(c.company_name || '')
               );
               if (firstValidCompany) {
-                // Auto-switch to first valid company
-                switchCompany(firstValidCompany.company_id);
+                // Set the company state directly without triggering switch
+                setCompany({
+                  id: firstValidCompany.company_id,
+                  name: firstValidCompany.company_name,
+                  logo_url: firstValidCompany.company_logo,
+                  role: firstValidCompany.user_role || 'member',
+                });
+                // Note: We don't update the active_company_id in the database here
+                // to avoid circular calls. The user can manually switch if needed.
+              } else {
+                setCompany(null);
               }
             } else {
               setCompany({
