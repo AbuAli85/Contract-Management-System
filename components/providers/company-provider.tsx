@@ -43,26 +43,44 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           );
 
           if (activeCompany) {
-            // Double-check: Ensure it's not an invalid company
+            // Double-check: Ensure it's not an invalid/mock company (but allow valid Falcon Eye companies)
             const companyName = (activeCompany.company_name || '').toLowerCase().trim();
-            const isInvalidCompany = 
-              companyName === 'digital morph' ||
-              companyName === 'falcon eye group' ||
-              companyName.includes('digital morph') ||
-              companyName.includes('falcon eye group');
+            const isInvalidCompany = (name: string): boolean => {
+              const lower = name.toLowerCase().trim();
+              if (lower.includes('falcon eye modern investments')) return false; // Allow valid Falcon Eye companies
+              return (
+                lower === 'digital morph' ||
+                lower === 'falcon eye group' ||
+                lower === 'cc' ||
+                lower === 'digital marketing pro' ||
+                lower.includes('digital morph') ||
+                (lower.includes('falcon eye group') && !lower.includes('modern investments'))
+              );
+            };
+            
+            if (isInvalidCompany(activeCompany.company_name || '')) {
             
             if (isInvalidCompany) {
               // Invalid company - clear it and use first valid company
               console.warn('Active company is invalid, clearing it');
               setCompany(null);
               // Optionally switch to first valid company
-              const firstValidCompany = data.companies?.find((c: any) => {
-                const name = (c.company_name || '').toLowerCase().trim();
-                return name !== 'digital morph' && 
-                       name !== 'falcon eye group' &&
-                       !name.includes('digital morph') &&
-                       !name.includes('falcon eye group');
-              });
+              const isInvalidCompany = (name: string): boolean => {
+                const lower = name.toLowerCase().trim();
+                if (lower.includes('falcon eye modern investments')) return false; // Allow valid Falcon Eye companies
+                return (
+                  lower === 'digital morph' ||
+                  lower === 'falcon eye group' ||
+                  lower === 'cc' ||
+                  lower === 'digital marketing pro' ||
+                  lower.includes('digital morph') ||
+                  (lower.includes('falcon eye group') && !lower.includes('modern investments'))
+                );
+              };
+              
+              const firstValidCompany = data.companies?.find((c: any) => 
+                !isInvalidCompany(c.company_name || '')
+              );
               if (firstValidCompany) {
                 // Auto-switch to first valid company
                 switchCompany(firstValidCompany.company_id);

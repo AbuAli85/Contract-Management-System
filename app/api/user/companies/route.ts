@@ -3,6 +3,26 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+// Helper function to check if a company is invalid/mock
+function isInvalidCompany(companyName: string): boolean {
+  const name = companyName.toLowerCase().trim();
+  
+  // Explicitly allow valid Falcon Eye companies
+  if (name.includes('falcon eye modern investments')) {
+    return false;
+  }
+  
+  // Filter out invalid/mock companies
+  return (
+    name === 'digital morph' ||
+    name === 'falcon eye group' ||
+    name === 'cc' ||
+    name === 'digital marketing pro' ||
+    name.includes('digital morph') ||
+    (name.includes('falcon eye group') && !name.includes('modern investments'))
+  );
+}
+
 // GET: Fetch user's companies
 export async function GET() {
   try {
@@ -54,14 +74,8 @@ export async function GET() {
           group_name: null, // Will fetch group names separately if needed
           source: 'company_members',
         }))
-        // Filter out Digital Morph and Falcon Eye Group (these are not companies)
-        .filter((c: any) => {
-          const name = (c.company_name || '').toLowerCase().trim();
-          return name !== 'digital morph' && 
-                 name !== 'falcon eye group' &&
-                 !name.includes('digital morph') &&
-                 !name.includes('falcon eye group');
-        });
+        // Filter out invalid/mock companies
+        .filter((c: any) => !isInvalidCompany(c.company_name || ''));
     }
 
     // Second try: Also check if user owns any companies directly (in case company_members is missing)
@@ -75,15 +89,7 @@ export async function GET() {
       // Add owned companies that aren't already in the list
       const existingIds = new Set(allCompanies.map(c => c.company_id));
       for (const company of ownedCompanies) {
-        // Filter out Digital Morph and Falcon Eye Group
-        const companyName = (company.name || '').toLowerCase().trim();
-        const isInvalidCompany = 
-          companyName === 'digital morph' ||
-          companyName === 'falcon eye group' ||
-          companyName.includes('digital morph') ||
-          companyName.includes('falcon eye group');
-        
-        if (!existingIds.has(company.id) && !isInvalidCompany && company.id && company.name) {
+        if (!existingIds.has(company.id) && !isInvalidCompany(company.name || '') && company.id && company.name) {
           allCompanies.push({
             company_id: company.id,
             company_name: company.name,
@@ -129,15 +135,8 @@ export async function GET() {
                 party.contact_email.toLowerCase() === user.email.toLowerCase() &&
                 !existingIds.has(company.id)) {
               
-              // Filter out Digital Morph and Falcon Eye Group
-              const companyName = ((company.name || party?.name_en) || '').toLowerCase().trim();
-              const isInvalidCompany = 
-                companyName === 'digital morph' ||
-                companyName === 'falcon eye group' ||
-                companyName.includes('digital morph') ||
-                companyName.includes('falcon eye group');
-              
-              if (isInvalidCompany) continue;
+              // Filter out invalid/mock companies
+              if (isInvalidCompany((company.name || party?.name_en) || '')) continue;
               
               // Determine role from party role
               let userRole = 'member';
@@ -197,15 +196,8 @@ export async function GET() {
             const existingIds = new Set(allCompanies.map(c => c.company_id));
             for (const company of employerCompanies) {
               if (!existingIds.has(company.id)) {
-                // Filter out Digital Morph and Falcon Eye Group
-                const companyName = (company.name || '').toLowerCase().trim();
-                const isInvalidCompany = 
-                  companyName === 'digital morph' ||
-                  companyName === 'falcon eye group' ||
-                  companyName.includes('digital morph') ||
-                  companyName.includes('falcon eye group');
-                
-                if (isInvalidCompany) continue;
+                // Filter out invalid/mock companies
+                if (isInvalidCompany(company.name || '')) continue;
 
                 allCompanies.push({
                   company_id: company.id,
@@ -252,15 +244,8 @@ export async function GET() {
             const existingIds = new Set(allCompanies.map(c => c.company_id));
             for (const company of profileLinkedCompanies) {
               if (!existingIds.has(company.id)) {
-                // Filter out Digital Morph and Falcon Eye Group
-                const companyName = (company.name || '').toLowerCase().trim();
-                const isInvalidCompany = 
-                  companyName === 'digital morph' ||
-                  companyName === 'falcon eye group' ||
-                  companyName.includes('digital morph') ||
-                  companyName.includes('falcon eye group');
-                
-                if (isInvalidCompany) continue;
+                // Filter out invalid/mock companies
+                if (isInvalidCompany(company.name || '')) continue;
 
                 // Find matching party to determine role
                 const matchingParty = matchingParties.find((p: any) => p.id === company.party_id);

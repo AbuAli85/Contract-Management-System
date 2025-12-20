@@ -58,15 +58,21 @@ export async function POST(request: NextRequest) {
     // Get company name for validation and response
     const companyNameOriginal = membership?.company?.name || ownedCompany?.name || '';
     
-    // Prevent switching to invalid companies (Digital Morph, Falcon Eye Group)
-    const companyNameLower = companyNameOriginal.toLowerCase().trim();
-    const isInvalidCompany = 
-      companyNameLower === 'digital morph' ||
-      companyNameLower === 'falcon eye group' ||
-      companyNameLower.includes('digital morph') ||
-      companyNameLower.includes('falcon eye group');
+    // Helper function to check if company is invalid
+    const isInvalid = (name: string): boolean => {
+      const lower = name.toLowerCase().trim();
+      if (lower.includes('falcon eye modern investments')) return false; // Allow valid Falcon Eye companies
+      return (
+        lower === 'digital morph' ||
+        lower === 'falcon eye group' ||
+        lower === 'cc' ||
+        lower === 'digital marketing pro' ||
+        lower.includes('digital morph') ||
+        (lower.includes('falcon eye group') && !lower.includes('modern investments'))
+      );
+    };
     
-    if (isInvalidCompany) {
+    if (isInvalid(companyNameOriginal)) {
       return NextResponse.json(
         { error: 'Cannot switch to this company. It is not a valid company entity.' },
         { status: 400 }

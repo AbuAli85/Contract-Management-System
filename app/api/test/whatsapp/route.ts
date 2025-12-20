@@ -106,19 +106,37 @@ export async function POST(request: NextRequest) {
     const notificationService = new UnifiedNotificationService();
 
     // Get user profile for testing
-    const { data: profile } = await supabase
+    interface ProfileData {
+      id: string;
+      email: string | null;
+      phone_number: string | null;
+      full_name: string | null;
+    }
+
+    const profileResult = await supabase
       .from('profiles')
       .select('id, email, phone_number, full_name')
       .eq('id', user.id)
       .single();
 
+    // Explicitly type the profile data to avoid 'never' type inference
+    const profileData: ProfileData | null = profileResult.data as ProfileData | null;
+    
+    // Extract email and name with proper fallbacks
+    const profileEmail: string | null | undefined = profileData?.email ?? null;
+    const profileName: string | null | undefined = profileData?.full_name ?? null;
+    const userEmail: string | undefined = (user.email as string | undefined) || undefined;
+    const metadataName = (user.user_metadata as { full_name?: string } | null)?.full_name;
+    const userName: string = profileName || metadataName || 'Test User';
+    const finalEmail: string | undefined = profileEmail || userEmail || undefined;
+
     const result = await notificationService.sendNotification({
       recipients: [
         {
           userId: user.id,
-          email: profile?.email || user.email || undefined,
+          email: finalEmail,
           phone: formattedPhone,
-          name: profile?.full_name || user.user_metadata?.full_name || 'Test User',
+          name: userName,
         },
       ],
       content: {
