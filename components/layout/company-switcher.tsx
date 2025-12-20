@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-service';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { useCompany } from '@/components/providers/company-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -72,7 +73,6 @@ const roleColors: Record<string, string> = {
 
 export function CompanySwitcher() {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [switching, setSwitching] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -82,6 +82,7 @@ export function CompanySwitcher() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile: userProfile } = useUserProfile();
+  const { company: activeCompanyFromProvider, switchCompany: switchCompanyFromProvider, isLoading: providerLoading, refreshCompany } = useCompany();
 
   // Determine if user can create companies (not promoters/employees)
   const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
@@ -97,14 +98,26 @@ export function CompanySwitcher() {
     fetchCompanies();
   }, []);
 
+  // Listen for company switch events from provider
+  useEffect(() => {
+    const handleCompanySwitched = () => {
+      fetchCompanies();
+    };
+
+    window.addEventListener('company-switched', handleCompanySwitched);
+    return () => {
+      window.removeEventListener('company-switched', handleCompanySwitched);
+    };
+  }, []);
+
   const fetchCompanies = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/user/companies');
       const data = await response.json();
 
       if (response.ok && data.success) {
         setCompanies(data.companies || []);
-        setActiveCompanyId(data.active_company_id);
       }
     } catch (error) {
       console.error('Error fetching companies:', error);
@@ -114,45 +127,22 @@ export function CompanySwitcher() {
   };
 
   const handleSwitch = async (companyId: string) => {
-    if (companyId === activeCompanyId) return;
+    const currentActiveId = activeCompanyFromProvider?.id;
+    if (companyId === currentActiveId) return;
     
     setSwitching(true);
     try {
-      const response = await fetch('/api/user/companies/switch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company_id: companyId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-
-      setActiveCompanyId(companyId);
+      // Use the provider's switchCompany function to ensure synchronization
+      await switchCompanyFromProvider(companyId);
       
-      // Update companies list to reflect new active company
+      // Refresh companies list
       await fetchCompanies();
       
-      toast({
-        title: '🏢 Company Switched',
-        description: `${data.company_name || 'Company'}. All features refreshed.`,
-      });
-
-      // Refresh the page to load new company context
-      router.refresh();
-      
-      // Trigger custom event for client components
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('company-switched', { 
-          detail: { companyId, companyName: data.company_name } 
-        }));
-      }
+      // The provider already handles router.refresh() and toast notifications
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to switch company',
         variant: 'destructive',
       });
     } finally {
@@ -201,13 +191,24 @@ export function CompanySwitcher() {
     }
   };
 
-  const activeCompany = companies.find(c => c.company_id === activeCompanyId);
+  // Use active company from provider, fallback to finding from companies list
+  const activeCompanyId = activeCompanyFromProvider?.id || null;
+  const activeCompany = activeCompanyFromProvider 
+    ? (companies.find(c => c.company_id === activeCompanyFromProvider.id) || {
+        company_id: activeCompanyFromProvider.id,
+        company_name: activeCompanyFromProvider.name,
+        company_logo: activeCompanyFromProvider.logo_url || null,
+        user_role: activeCompanyFromProvider.role,
+        is_primary: false,
+        group_name: null,
+      })
+    : (companies.length > 0 ? companies[0] : null);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  if (loading) {
+  if (loading || providerLoading) {
     return (
       <Button variant="ghost" className="gap-2" disabled>
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -440,4 +441,3 @@ function CreateCompanyDialog({
     </Dialog>
   );
 }
-
