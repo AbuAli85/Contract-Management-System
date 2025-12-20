@@ -161,13 +161,57 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Determine if late (after 9 AM)
-      const hour = new Date().getHours();
-      const status = hour >= 9 ? 'late' : 'present';
+      // Fetch company attendance settings
+      let companySettings: any = null;
+      if (employeeLink.company_id) {
+        try {
+          const { data: settingsData } = await supabaseAdmin.rpc('get_company_attendance_settings', {
+            p_company_id: employeeLink.company_id,
+          });
+          if (settingsData && settingsData.length > 0) {
+            companySettings = settingsData[0];
+          }
+        } catch (error) {
+          console.warn('Failed to fetch company settings, using defaults:', error);
+        }
+      }
+
+      // Get default check-in time from settings (default to 09:00)
+      const defaultCheckInTime = companySettings?.default_check_in_time || '09:00:00';
+      const [checkInHour, checkInMinute] = defaultCheckInTime.split(':').map(Number);
+      
+      // Determine if late based on company settings
+      const now = new Date();
+      const checkInTime = new Date(now);
+      checkInTime.setHours(checkInHour, checkInMinute || 0, 0, 0);
+      
+      const lateThresholdMinutes = companySettings?.late_threshold_minutes || 15;
+      const minutesLate = (now.getTime() - checkInTime.getTime()) / (1000 * 60);
+      const status = minutesLate > lateThresholdMinutes ? 'late' : 'present';
+
+      // Check if photo is required
+      const requirePhoto = companySettings?.require_photo ?? true;
+      if (requirePhoto && !photo) {
+        return NextResponse.json(
+          { error: 'Photo is required for check-in' },
+          { status: 400 }
+        );
+      }
+
+      // Check if location is required
+      const requireLocation = companySettings?.require_location ?? true;
+      if (requireLocation && (!latitude || !longitude)) {
+        return NextResponse.json(
+          { error: 'Location is required for check-in' },
+          { status: 400 }
+        );
+      }
 
       // Verify location if GPS coordinates provided
       let locationVerified = false;
       let distanceFromOffice = null;
+      const locationRadiusMeters = companySettings?.location_radius_meters || 50;
+      
       if (latitude && longitude && employeeLink.company_id) {
         try {
           // @ts-ignore - Supabase RPC type inference issue
@@ -176,6 +220,7 @@ export async function POST(request: NextRequest) {
             p_latitude: latitude,
             p_longitude: longitude,
             p_company_id: employeeLink.company_id,
+            p_radius_meters: locationRadiusMeters,
           });
           if (locationVerification) {
             locationVerified = (locationVerification as any).verified || false;
@@ -185,6 +230,15 @@ export async function POST(request: NextRequest) {
           console.warn('Location verification failed:', error);
           // Continue without location verification if function doesn't exist yet
         }
+      }
+
+      // Determine approval status based on settings
+      let approvalStatus = 'pending';
+      const autoApprove = companySettings?.auto_approve ?? false;
+      const autoApproveValidCheckins = companySettings?.auto_approve_valid_checkins ?? false;
+      
+      if (autoApprove || (autoApproveValidCheckins && locationVerified && status === 'present')) {
+        approvalStatus = 'approved';
       }
 
       // Upload photo to storage if provided
@@ -223,7 +277,7 @@ export async function POST(request: NextRequest) {
           notes: notes || existing.notes,
           method: 'web',
           updated_at: now,
-          approval_status: 'pending', // Reset to pending when updating
+          approval_status: approvalStatus,
         };
 
         if (latitude !== undefined) updateData.latitude = latitude;
@@ -258,7 +312,7 @@ export async function POST(request: NextRequest) {
           location,
           notes,
           method: 'web',
-          approval_status: 'pending',
+          approval_status: approvalStatus,
         };
 
         if (latitude !== undefined) insertData.latitude = latitude;
@@ -325,15 +379,33 @@ export async function POST(request: NextRequest) {
         finalBreakMinutes = finalBreakMinutes + activeBreakMinutes;
       }
 
+      // Fetch company settings for overtime calculation
+      let companySettings: any = null;
+      if (employeeLink.company_id) {
+        try {
+          const { data: settingsData } = await supabaseAdmin.rpc('get_company_attendance_settings', {
+            p_company_id: employeeLink.company_id,
+          });
+          if (settingsData && settingsData.length > 0) {
+            companySettings = settingsData[0];
+          }
+        } catch (error) {
+          console.warn('Failed to fetch company settings for checkout:', error);
+        }
+      }
+
       // Calculate total hours
       const checkInTime = new Date(existing.check_in);
       const checkOutTime = new Date();
       const totalMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
-      const netMinutes = totalMinutes - finalBreakMinutes;
+      const unpaidBreakMinutes = companySettings?.unpaid_break_minutes || 0;
+      const netMinutes = totalMinutes - finalBreakMinutes - unpaidBreakMinutes;
       const totalHours = (netMinutes / 60).toFixed(2);
       
-      // Calculate overtime (over 8 hours)
-      const overtimeHours = Math.max(0, parseFloat(totalHours) - 8).toFixed(2);
+      // Calculate overtime based on company settings
+      const standardWorkHours = parseFloat(companySettings?.standard_work_hours?.toString() || '8.0');
+      const overtimeThreshold = parseFloat(companySettings?.overtime_threshold_hours?.toString() || '8.0');
+      const overtimeHours = Math.max(0, parseFloat(totalHours) - overtimeThreshold).toFixed(2);
 
       // Upload check-out photo if provided
       let checkOutPhotoUrl = null;
