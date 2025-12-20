@@ -43,6 +43,7 @@ import {
   Users,
   TrendingUp,
   TrendingDown,
+  ExternalLink,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, differenceInDays } from 'date-fns';
@@ -224,10 +225,20 @@ export function WorkPermitDashboard() {
             Manage work permit applications and track compliance
           </p>
         </div>
-        <Button onClick={() => router.push('/en/work-permits/new')}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Application
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => window.open('https://sso.mol.gov.om/login.aspx?ReturnUrl=https://eservices.mol.gov.om/Wppa/list', '_blank')}
+            title="Open Ministry of Labour Portal"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            MOL Portal
+          </Button>
+          <Button onClick={() => router.push('/en/work-permits/new')}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Application
+          </Button>
+        </div>
       </div>
 
       {/* Compliance Summary Cards */}
@@ -431,6 +442,7 @@ export function WorkPermitDashboard() {
                             variant="ghost"
                             size="sm"
                             onClick={() => router.push(`/en/work-permits/${app.id}`)}
+                            title="View Details"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -439,8 +451,21 @@ export function WorkPermitDashboard() {
                               variant="ghost"
                               size="sm"
                               onClick={() => router.push(`/en/work-permits/${app.id}/edit`)}
+                              title="Edit Application"
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {(app.status === 'draft' || app.status === 'submitted') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                window.open(`/api/work-permits/${app.id}/export?format=json`, '_blank');
+                              }}
+                              title="Export for Ministry Submission"
+                            >
+                              <Download className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
