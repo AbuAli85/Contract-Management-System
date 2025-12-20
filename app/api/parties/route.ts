@@ -186,7 +186,7 @@ async function handleGET(request: Request) {
       );
     }
 
-    // Parse pagination from query params
+    // Parse pagination and filters from query params
     const url = new URL(request.url);
     const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
     const limit = Math.min(
@@ -194,11 +194,13 @@ async function handleGET(request: Request) {
       100
     );
     const offset = (page - 1) * limit;
+    const typeFilter = url.searchParams.get('type'); // Get type filter
 
     console.log(`[${requestId}] 📊 Query params:`, {
       page,
       limit,
       offset,
+      type: typeFilter,
       userId: user.id,
     });
 
@@ -217,9 +219,16 @@ async function handleGET(request: Request) {
           `[${requestId}] 📝 Database query attempt ${queryAttempts}`
         );
 
-        const queryResult = await supabase
+        let query = supabase
           .from('parties')
-          .select('*', { count: 'exact' })
+          .select('*', { count: 'exact' });
+
+        // Apply type filter if provided
+        if (typeFilter) {
+          query = query.eq('type', typeFilter);
+        }
+
+        const queryResult = await query
           .order('created_at', { ascending: false })
           .range(offset, offset + limit - 1);
 

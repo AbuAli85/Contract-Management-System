@@ -89,6 +89,14 @@ export function HoldingGroupMembersManager({
     }
   }, [holdingGroupId, members, isLoading]);
 
+  // Refresh available items when dialog opens
+  useEffect(() => {
+    if (isDialogOpen && !isLoading) {
+      fetchAvailableParties();
+      fetchAvailableCompanies();
+    }
+  }, [isDialogOpen]);
+
   async function fetchMembers() {
     try {
       const response = await fetch(`/api/holding-groups/${holdingGroupId}/members`);
@@ -111,18 +119,33 @@ export function HoldingGroupMembersManager({
     setIsLoadingParties(true);
     try {
       const response = await fetch('/api/parties?type=Employer');
-      const { data, error } = await response.json();
-
-      if (error) throw new Error(error);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      const data = result.data || [];
+      console.log(`[HoldingGroupMembers] Fetched ${data.length} parties from API`);
+      
       // Filter out parties already in the holding group
       const memberPartyIds = new Set(members.map(m => m.party_id).filter(Boolean));
-      const filtered = (data || []).filter((p: Party) => !memberPartyIds.has(p.id));
+      const filtered = data.filter((p: Party) => !memberPartyIds.has(p.id));
+      
+      console.log(`[HoldingGroupMembers] Filtered to ${filtered.length} available parties (${memberPartyIds.size} already members)`);
+      
       setAvailableParties(filtered);
     } catch (error: any) {
-      console.error('Error fetching parties:', error);
+      console.error('[HoldingGroupMembers] Error fetching parties:', error);
+      setAvailableParties([]);
       toast({
         title: 'Error fetching parties',
-        description: error.message || 'Failed to load available parties',
+        description: error.message || 'Failed to load available parties. Please check the console for details.',
         variant: 'destructive',
       });
     } finally {
@@ -134,18 +157,33 @@ export function HoldingGroupMembersManager({
     setIsLoadingCompanies(true);
     try {
       const response = await fetch('/api/companies');
-      const { data, error } = await response.json();
-
-      if (error) throw new Error(error);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      const data = result.data || [];
+      console.log(`[HoldingGroupMembers] Fetched ${data.length} companies from API`);
+      
       // Filter out companies already in the holding group
       const memberCompanyIds = new Set(members.map(m => m.company_id).filter(Boolean));
-      const filtered = (data || []).filter((c: Company) => !memberCompanyIds.has(c.id));
+      const filtered = data.filter((c: Company) => !memberCompanyIds.has(c.id));
+      
+      console.log(`[HoldingGroupMembers] Filtered to ${filtered.length} available companies (${memberCompanyIds.size} already members)`);
+      
       setAvailableCompanies(filtered);
     } catch (error: any) {
-      console.error('Error fetching companies:', error);
+      console.error('[HoldingGroupMembers] Error fetching companies:', error);
+      setAvailableCompanies([]);
       toast({
         title: 'Error fetching companies',
-        description: error.message || 'Failed to load available companies',
+        description: error.message || 'Failed to load available companies. Please check the console for details.',
         variant: 'destructive',
       });
     } finally {
@@ -252,7 +290,19 @@ export function HoldingGroupMembersManager({
               Companies and parties belonging to this holding group
             </CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog 
+            open={isDialogOpen} 
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (open) {
+                // Reset selections when opening and refresh data
+                setSelectedMemberIds([]);
+                setSelectedMemberType('party');
+                fetchAvailableParties();
+                fetchAvailableCompanies();
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button>
                 <PlusIcon className="mr-2 h-4 w-4" />
