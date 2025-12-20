@@ -55,13 +55,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get company name for validation and response
+    const companyNameOriginal = membership?.company?.name || ownedCompany?.name || '';
+    
     // Prevent switching to invalid companies (Digital Morph, Falcon Eye Group)
-    const companyName = (membership?.company?.name || ownedCompany?.name || '').toLowerCase().trim();
+    const companyNameLower = companyNameOriginal.toLowerCase().trim();
     const isInvalidCompany = 
-      companyName === 'digital morph' ||
-      companyName === 'falcon eye group' ||
-      companyName.includes('digital morph') ||
-      companyName.includes('falcon eye group');
+      companyNameLower === 'digital morph' ||
+      companyNameLower === 'falcon eye group' ||
+      companyNameLower.includes('digital morph') ||
+      companyNameLower.includes('falcon eye group');
     
     if (isInvalidCompany) {
       return NextResponse.json(
@@ -84,7 +87,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const companyName = membership?.company?.name || ownedCompany?.name || 'Company';
+    const companyName = companyNameOriginal || 'Company';
 
     return NextResponse.json({
       success: true,
