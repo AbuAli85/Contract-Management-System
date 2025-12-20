@@ -291,12 +291,49 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
     e.preventDefault();
     if (!selectedEmployee) {
       setError('Please select an employee');
+      toast({
+        title: 'Validation Error',
+        description: 'Please select an employee to add to your team',
+        variant: 'destructive',
+      });
       return;
     }
 
     if (selectedEmployee.isInTeam) {
       setError('This employee is already in your team');
+      toast({
+        title: 'Already in Team',
+        description: `${selectedEmployee.full_name} is already a member of your team`,
+        variant: 'default',
+      });
       return;
+    }
+
+    // Validate salary if provided
+    if (formData.salary && (isNaN(parseFloat(formData.salary)) || parseFloat(formData.salary) < 0)) {
+      setError('Salary must be a valid positive number');
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a valid salary amount',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate hire date if provided
+    if (formData.hire_date) {
+      const hireDate = new Date(formData.hire_date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      if (hireDate > today) {
+        setError('Hire date cannot be in the future');
+        toast({
+          title: 'Validation Error',
+          description: 'Hire date must be today or in the past',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     setLoading(true);

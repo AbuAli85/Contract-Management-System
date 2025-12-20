@@ -17,6 +17,9 @@ import {
   XCircle,
   Coffee,
   Loader2,
+  AlertCircle,
+  History,
+  TrendingUp,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -30,6 +33,10 @@ interface TodayAttendance {
   status: string;
   total_hours: number | null;
   location: string | null;
+  break_start_time?: string | null;
+  break_duration_minutes?: number | null;
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  rejection_reason?: string | null;
 }
 
 interface AttendanceSummary {
@@ -45,6 +52,7 @@ export function AttendanceCard() {
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [breakLoading, setBreakLoading] = useState(false);
   const [location, setLocation] = useState('');
   const { toast } = useToast();
 
@@ -166,6 +174,53 @@ export function AttendanceCard() {
     return { hours, minutes, total: (diffMs / (1000 * 60 * 60)).toFixed(1) };
   };
 
+  const handleBreakAction = async (action: 'start' | 'end') => {
+    try {
+      setBreakLoading(true);
+      const response = await fetch('/api/employee/attendance/break', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to manage break');
+      }
+
+      toast({
+        title: action === 'start' ? '✅ Break Started' : '✅ Break Ended',
+        description: data.message,
+      });
+
+      fetchAttendance();
+    } catch (error: any) {
+      toast({
+        title: 'Break Action Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setBreakLoading(false);
+    }
+  };
+
+  const getBreakDuration = () => {
+    if (!todayAttendance?.break_start_time) return null;
+    const breakStart = new Date(todayAttendance.break_start_time);
+    const now = new Date();
+    const diffMs = now.getTime() - breakStart.getTime();
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    return minutes;
+  };
+
+  const getTotalBreakMinutes = () => {
+    const activeBreak = getBreakDuration() || 0;
+    const recordedBreaks = todayAttendance?.break_duration_minutes || 0;
+    return activeBreak + recordedBreaks;
+  };
+
   const workDuration = getWorkDuration();
 
   if (loading) {
@@ -255,6 +310,73 @@ export function AttendanceCard() {
                 )}
               </div>
             </div>
+            {/* Break Information */}
+            {todayAttendance && (todayAttendance.break_start_time || (todayAttendance.break_duration_minutes && todayAttendance.break_duration_minutes > 0)) && (
+              <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <Coffee className="h-3 w-3" />
+                    {todayAttendance.break_start_time ? 'On Break' : 'Total Breaks'}
+                  </span>
+                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                    {getTotalBreakMinutes()}m
+                  </span>
+                </div>
+                {todayAttendance.break_start_time && (
+                  <p className="text-xs text-emerald-600 mt-1">
+                    Break started {formatDistanceToNow(new Date(todayAttendance.break_start_time))} ago
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Break Management */}
+        {todayAttendance?.check_in && !todayAttendance?.check_out && (
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+            {todayAttendance.break_start_time ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Coffee className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                      On Break
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
+                    {getBreakDuration()}m
+                  </span>
+                </div>
+                <Button
+                  onClick={() => handleBreakAction('end')}
+                  disabled={breakLoading}
+                  variant="outline"
+                  className="w-full border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/30"
+                >
+                  {breakLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Coffee className="h-4 w-4 mr-2" />
+                  )}
+                  End Break
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onClick={() => handleBreakAction('start')}
+                disabled={breakLoading}
+                variant="outline"
+                className="w-full border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/30"
+              >
+                {breakLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Coffee className="h-4 w-4 mr-2" />
+                )}
+                Start Break
+              </Button>
+            )}
           </div>
         )}
 
@@ -314,10 +436,61 @@ export function AttendanceCard() {
           </div>
         )}
 
-        {/* Monthly Summary */}
-        {summary && (
-          <div className="pt-4 border-t">
-            <h4 className="text-sm font-medium text-gray-600 mb-3">This Month</h4>
+        {/* Approval Status */}
+        {todayAttendance?.approval_status && (
+          <div className={cn(
+            "p-3 rounded-lg border",
+            todayAttendance.approval_status === 'approved' && "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800",
+            todayAttendance.approval_status === 'pending' && "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800",
+            todayAttendance.approval_status === 'rejected' && "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+          )}>
+            <div className="flex items-center gap-2">
+              {todayAttendance.approval_status === 'approved' && (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              )}
+              {todayAttendance.approval_status === 'pending' && (
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+              )}
+              {todayAttendance.approval_status === 'rejected' && (
+                <XCircle className="h-4 w-4 text-red-600" />
+              )}
+              <span className={cn(
+                "text-sm font-medium",
+                todayAttendance.approval_status === 'approved' && "text-emerald-700 dark:text-emerald-400",
+                todayAttendance.approval_status === 'pending' && "text-amber-700 dark:text-amber-400",
+                todayAttendance.approval_status === 'rejected' && "text-red-700 dark:text-red-400"
+              )}>
+                Status: {todayAttendance.approval_status.charAt(0).toUpperCase() + todayAttendance.approval_status.slice(1)}
+              </span>
+            </div>
+            {todayAttendance.approval_status === 'rejected' && todayAttendance.rejection_reason && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                Reason: {todayAttendance.rejection_reason}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Quick Stats */}
+        {summary && summary.totalDays > 0 && (
+          <div className="pt-4 border-t space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">This Month</h4>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    // Navigate to full attendance history
+                    window.location.href = '/employee/dashboard?tab=attendance';
+                  }}
+                  className="text-xs h-auto p-1 gap-1"
+                >
+                  <History className="h-3 w-3" />
+                  History
+                </Button>
+              </div>
+            </div>
             <div className="grid grid-cols-4 gap-2">
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <p className="text-lg font-bold text-gray-900 dark:text-white">
@@ -338,6 +511,33 @@ export function AttendanceCard() {
                 <p className="text-xs text-gray-500">Hours</p>
               </div>
             </div>
+            {/* Attendance Rate & Insights */}
+            {summary.totalDays > 0 && (
+              <div className="space-y-2">
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" />
+                      Attendance Rate
+                    </span>
+                    <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                      {((summary.presentDays / summary.totalDays) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                {/* Average Hours */}
+                {summary.averageHours && (
+                  <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Avg. Hours/Day</span>
+                      <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                        {summary.averageHours}h
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

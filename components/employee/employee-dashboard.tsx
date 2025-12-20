@@ -223,12 +223,20 @@ export function EmployeeDashboard() {
               <User className="h-12 w-12 text-gray-400" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Not Assigned to a Team</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               You are not currently assigned to any employer's team.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Please contact your employer or administrator to be added to a team.
             </p>
+            <Button
+              onClick={() => router.push('/auth/logout')}
+              variant="outline"
+              className="gap-2"
+            >
+              <User className="h-4 w-4" />
+              Switch Account
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -5,7 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Clock,
   CheckCircle,
@@ -18,6 +26,8 @@ import {
   Loader2,
   Eye,
   Download,
+  Search,
+  Filter,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
@@ -60,6 +70,10 @@ export function AttendanceApprovalDashboard() {
   const [selectedAttendance, setSelectedAttendance] = useState<PendingAttendance | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -181,6 +195,85 @@ export function AttendanceApprovalDashboard() {
     setShowRejectDialog(true);
   };
 
+  // Filter attendance
+  const filteredAttendance = pendingAttendance.filter(attendance => {
+    const matchesStatus = statusFilter === 'all' || attendance.status === statusFilter;
+    const matchesSearch = !searchTerm || 
+      attendance.employer_employee.employee.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      attendance.employer_employee.employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      new Date(attendance.attendance_date).toLocaleDateString().toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  // Toggle selection
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // Select all
+  const selectAll = () => {
+    if (selectedIds.size === filteredAttendance.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredAttendance.map(a => a.id)));
+    }
+  };
+
+  // Bulk approve
+  const handleBulkApprove = async () => {
+    if (selectedIds.size === 0) {
+      toast({
+        title: 'No Selection',
+        description: 'Please select at least one attendance record',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setApproving('bulk');
+      const ids = Array.from(selectedIds);
+      
+      // Approve all selected
+      const promises = ids.map(id =>
+        fetch('/api/employer/attendance/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            attendance_id: id,
+            action: 'approve',
+          }),
+        })
+      );
+
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      toast({
+        title: 'Bulk Approval Complete',
+        description: `Successfully approved ${successful} record(s)${failed > 0 ? `. ${failed} failed.` : ''}`,
+      });
+
+      setSelectedIds(new Set());
+      fetchPendingAttendance();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to approve attendance',
+        variant: 'destructive',
+      });
+    } finally {
+      setApproving(null);
+    }
+  };
+
   const getLocationUrl = (lat: number | null, lng: number | null) => {
     if (!lat || !lng) return null;
     return `https://www.google.com/maps?q=${lat},${lng}`;
@@ -198,32 +291,136 @@ export function AttendanceApprovalDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Attendance Approval</h2>
           <p className="text-sm text-muted-foreground">
             Review and approve employee attendance records
           </p>
         </div>
-        <Badge variant="secondary" className="text-lg px-4 py-2">
-          {pendingAttendance.length} Pending
+        <Badge variant="secondary" className="text-lg px-4 py-2 w-fit">
+          {filteredAttendance.length} Pending
         </Badge>
       </div>
 
-      {pendingAttendance.length === 0 ? (
+      {/* Filters and Bulk Actions */}
+      {pendingAttendance.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              {/* Search */}
+              <div className="relative flex-1 w-full sm:w-auto">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search by name, email, or date..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="present">Present</SelectItem>
+                  <SelectItem value="late">Late</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Bulk Actions */}
+              {selectedIds.size > 0 && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleBulkApprove}
+                    disabled={approving === 'bulk'}
+                    className="gap-2"
+                  >
+                    {approving === 'bulk' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                    Approve {selectedIds.size}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Select All */}
+            {filteredAttendance.length > 0 && (
+              <div className="mt-4 flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={selectAll}
+                  className="text-xs"
+                >
+                  {selectedIds.size === filteredAttendance.length ? 'Deselect All' : 'Select All'}
+                </Button>
+                {selectedIds.size > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {selectedIds.size} selected
+                  </span>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {filteredAttendance.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
-            <p className="text-lg font-medium">All Clear!</p>
-            <p className="text-sm text-muted-foreground">
-              No pending attendance records to review
-            </p>
+            {pendingAttendance.length === 0 ? (
+              <>
+                <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+                <p className="text-lg font-medium">All Clear!</p>
+                <p className="text-sm text-muted-foreground">
+                  No pending attendance records to review
+                </p>
+              </>
+            ) : (
+              <>
+                <Search className="h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-lg font-medium">No matching records</p>
+                <p className="text-sm text-muted-foreground">
+                  Try adjusting your filters or search term
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {pendingAttendance.map((attendance) => (
-            <Card key={attendance.id} className="overflow-hidden">
+          {filteredAttendance.map((attendance) => (
+            <Card key={attendance.id} className={cn(
+              "overflow-hidden transition-all",
+              selectedIds.has(attendance.id) && "ring-2 ring-primary border-primary"
+            )}>
+              {/* Selection Checkbox */}
+              <div className="absolute top-4 right-4 z-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(attendance.id)}
+                  onChange={() => toggleSelection(attendance.id)}
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+              </div>
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

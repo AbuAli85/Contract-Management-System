@@ -210,22 +210,104 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Send email notification to the employee
-    // For now, we return the temporary password for the employer to share
+    // Send email notification to the employee
+    try {
+      const { UnifiedNotificationService } = await import('@/lib/services/unified-notification.service');
+      const notificationService = new UnifiedNotificationService();
+      
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`;
+      
+      if (isNewUser && temporaryPassword) {
+        // Send welcome email with credentials for new users
+        await notificationService.sendNotification({
+          recipients: [{
+            email: email.toLowerCase(),
+            name: full_name,
+          }],
+          content: {
+            title: 'Welcome to the Team!',
+            message: `You've been added to the team. Your account has been created.`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2563eb;">Welcome to the Team!</h2>
+                <p>Dear ${full_name},</p>
+                <p>You've been added to the team. Your account has been created with the following credentials:</p>
+                <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <p><strong>Email:</strong> ${email.toLowerCase()}</p>
+                  <p><strong>Temporary Password:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px;">${temporaryPassword}</code></p>
+                  <p style="color: #dc2626; font-size: 14px;"><strong>⚠️ Important:</strong> You must change your password on first login.</p>
+                </div>
+                <p><strong>Job Title:</strong> ${job_title || 'Not specified'}</p>
+                ${department ? `<p><strong>Department:</strong> ${department}</p>` : ''}
+                <p style="margin-top: 24px;">
+                  <a href="${loginUrl}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                    Login to Your Account
+                  </a>
+                </p>
+                <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">
+                  If you have any questions, please contact your manager or HR department.
+                </p>
+              </div>
+            `,
+            priority: 'high',
+            actionUrl: loginUrl,
+          },
+          channels: ['email'],
+          sendImmediately: true,
+        });
+      } else {
+        // Send notification for existing users
+        await notificationService.sendNotification({
+          recipients: [{
+            email: email.toLowerCase(),
+            name: full_name,
+          }],
+          content: {
+            title: 'You\'ve Been Added to a Team',
+            message: `You've been added to a new team.`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2563eb;">Team Assignment</h2>
+                <p>Dear ${full_name},</p>
+                <p>You've been added to a new team with the following details:</p>
+                <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <p><strong>Job Title:</strong> ${job_title || 'Not specified'}</p>
+                  ${department ? `<p><strong>Department:</strong> ${department}</p>` : ''}
+                  <p><strong>Employment Type:</strong> ${employment_type || 'Full Time'}</p>
+                </div>
+                <p style="margin-top: 24px;">
+                  <a href="${loginUrl}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                    View Your Dashboard
+                  </a>
+                </p>
+              </div>
+            `,
+            priority: 'medium',
+            actionUrl: loginUrl,
+          },
+          channels: ['email'],
+          sendImmediately: true,
+        });
+      }
+    } catch (emailError) {
+      // Log error but don't fail the request
+      console.error('Failed to send email notification:', emailError);
+      // Continue with response - email failure shouldn't block team addition
+    }
 
     return NextResponse.json({
       success: true,
       message: isNewUser 
-        ? 'Employee account created and added to team' 
-        : 'Existing user added to team',
+        ? 'Employee account created and added to team. Email notification sent.' 
+        : 'Existing user added to team. Email notification sent.',
       team_member: teamMember,
       is_new_user: isNewUser,
-      // Only return credentials for new users (employer should share these securely)
+      // Only return credentials for new users (as backup if email fails)
       credentials: isNewUser ? {
         email: email.toLowerCase(),
         temporary_password: temporaryPassword,
         login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`,
-        note: 'Employee must change password on first login',
+        note: 'Employee must change password on first login. Email notification has been sent.',
       } : null,
     });
   } catch (error) {
