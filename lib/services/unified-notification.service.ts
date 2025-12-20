@@ -7,9 +7,10 @@
 
 import { sendEmail } from './email.service';
 import { sendSMS, formatPhoneNumber, isValidPhoneNumber } from './sms.service';
+import { sendWhatsApp, formatPhoneNumber as formatWhatsAppPhone, isValidPhoneNumber as isValidWhatsAppPhone, isWhatsAppConfigured } from './whatsapp.service';
 import { createClient } from '@/lib/supabase/server';
 
-export type NotificationChannel = 'email' | 'sms' | 'in_app' | 'push';
+export type NotificationChannel = 'email' | 'sms' | 'whatsapp' | 'in_app' | 'push';
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface NotificationRecipient {
@@ -45,11 +46,13 @@ export interface NotificationResult {
   sent: {
     email: number;
     sms: number;
+    whatsapp: number;
     inApp: number;
   };
   failed: {
     email: number;
     sms: number;
+    whatsapp: number;
     inApp: number;
   };
   errors: string[];
@@ -59,7 +62,9 @@ export interface NotificationResult {
  * Unified Notification Service
  */
 export class UnifiedNotificationService {
-  private supabase = createClient();
+  private async getSupabase() {
+    return await createClient();
+  }
 
   /**
    * Send notification via multiple channels
@@ -69,8 +74,8 @@ export class UnifiedNotificationService {
   ): Promise<NotificationResult> {
     const result: NotificationResult = {
       success: true,
-      sent: { email: 0, sms: 0, inApp: 0 },
-      failed: { email: 0, sms: 0, inApp: 0 },
+      sent: { email: 0, sms: 0, whatsapp: 0, inApp: 0 },
+      failed: { email: 0, sms: 0, whatsapp: 0, inApp: 0 },
       errors: [],
     };
 
@@ -129,6 +134,33 @@ export class UnifiedNotificationService {
         }
       }
 
+      // WhatsApp (for high priority or urgent, if configured)
+      if (
+        channels.includes('whatsapp') &&
+        recipient.phone &&
+        isWhatsAppConfigured() &&
+        (options.content.priority === 'high' ||
+          options.content.priority === 'urgent')
+      ) {
+        try {
+          const whatsappResult = await this.sendWhatsAppNotification(
+            recipient,
+            options.content
+          );
+          if (whatsappResult.success) {
+            result.sent.whatsapp++;
+          } else {
+            result.failed.whatsapp++;
+            result.errors.push(
+              `WhatsApp to ${recipient.phone}: ${whatsappResult.error}`
+            );
+          }
+        } catch (error: any) {
+          result.failed.whatsapp++;
+          result.errors.push(`WhatsApp error: ${error.message}`);
+        }
+      }
+
       // In-App Notification
       if (channels.includes('in_app') && recipient.userId) {
         try {
@@ -154,7 +186,7 @@ export class UnifiedNotificationService {
       }
     }
 
-    result.success = result.failed.email + result.failed.sms + result.failed.inApp === 0;
+    result.success = result.failed.email + result.failed.sms + result.failed.whatsapp + result.failed.inApp === 0;
     return result;
   }
 
@@ -181,6 +213,15 @@ export class UnifiedNotificationService {
       requestedChannels.includes('sms')
     ) {
       channels.push('sms');
+    }
+
+    // WhatsApp for high priority and urgent (if configured)
+    if (
+      (priority === 'high' || priority === 'urgent') &&
+      requestedChannels.includes('whatsapp') &&
+      isWhatsAppConfigured()
+    ) {
+      channels.push('whatsapp');
     }
 
     return channels;
@@ -239,6 +280,53 @@ export class UnifiedNotificationService {
   }
 
   /**
+   * Send WhatsApp notification
+   */
+  private async sendWhatsAppNotification(
+    recipient: NotificationRecipient,
+    content: NotificationContent
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!recipient.phone) {
+      return { success: false, error: 'No phone number' };
+    }
+
+    if (!isValidWhatsAppPhone(recipient.phone)) {
+      return { success: false, error: 'Invalid phone number format' };
+    }
+
+    const formattedPhone = formatWhatsAppPhone(recipient.phone);
+    const whatsappMessage = this.generateSMSMessage(content); // Reuse SMS message format
+
+    // Use default template if available, otherwise use free-form message
+    const templateSid = process.env.TWILIO_WHATSAPP_TEMPLATE_SID;
+    
+    const { sendWhatsApp } = await import('./whatsapp.service');
+    const result = await sendWhatsApp({
+      to: formattedPhone,
+      message: templateSid ? undefined : whatsappMessage, // Use message if no template
+      templateSid: templateSid || undefined,
+      templateVariables: templateSid ? this.generateWhatsAppTemplateVariables(content) : undefined,
+    });
+
+    return result;
+  }
+
+  /**
+   * Generate WhatsApp template variables from content
+   */
+  private generateWhatsAppTemplateVariables(
+    content: NotificationContent
+  ): Record<string, string> {
+    // Default template variables (adjust based on your Twilio template)
+    // Template: "Your appointment is coming up on {{1}} at {{2}}..."
+    // For notifications, we'll use: {{1}} = title, {{2}} = message preview
+    return {
+      '1': content.title,
+      '2': content.message.substring(0, 50) + (content.message.length > 50 ? '...' : ''),
+    };
+  }
+
+  /**
    * Create in-app notification
    */
   private async createInAppNotification(
@@ -247,7 +335,8 @@ export class UnifiedNotificationService {
   ): Promise<{ success: boolean; notificationId?: string; error?: string }> {
     try {
       // Check if notifications table exists
-      const { data, error } = await this.supabase
+      const supabase = await this.getSupabase();
+      const { data, error } = await supabase
         .from('notifications')
         .insert({
           user_id: userId,
