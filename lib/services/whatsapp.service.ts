@@ -94,7 +94,12 @@ export async function sendWhatsApp(options: WhatsAppOptions): Promise<WhatsAppRe
       }
     } else if (options.message) {
       // Free-form message (for user-initiated conversations within 24h window)
-      messageParams.body = options.message;
+      // Add business name prefix if configured
+      const businessName = process.env.WHATSAPP_BUSINESS_NAME || 'SmartPRO';
+      const messageWithBrand = options.message.includes(businessName) 
+        ? options.message 
+        : `${businessName}\n\n${options.message}`;
+      messageParams.body = messageWithBrand;
     } else {
       return {
         success: false,

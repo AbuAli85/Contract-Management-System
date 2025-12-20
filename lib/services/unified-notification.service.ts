@@ -295,7 +295,13 @@ export class UnifiedNotificationService {
     }
 
     const formattedPhone = formatWhatsAppPhone(recipient.phone);
-    const whatsappMessage = this.generateSMSMessage(content); // Reuse SMS message format
+    let whatsappMessage = this.generateSMSMessage(content); // Reuse SMS message format
+    
+    // Add business branding to message
+    const businessName = process.env.WHATSAPP_BUSINESS_NAME || 'SmartPRO Business Hub';
+    if (!whatsappMessage.includes(businessName)) {
+      whatsappMessage = `${businessName}\n\n${whatsappMessage}`;
+    }
 
     // Use default template if available, otherwise use free-form message
     const templateSid = process.env.TWILIO_WHATSAPP_TEMPLATE_SID;
