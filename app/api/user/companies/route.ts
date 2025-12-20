@@ -43,14 +43,23 @@ export async function GET() {
       .order('is_primary', { ascending: false });
 
     if (!membershipError && membershipCompanies) {
-      allCompanies = membershipCompanies.map((cm: any) => ({
-        company_id: cm.company?.id,
-        company_name: cm.company?.name,
-        company_logo: cm.company?.logo_url,
-        user_role: cm.role,
-        is_primary: cm.is_primary,
-        group_name: null, // Will fetch group names separately if needed
-      }));
+      allCompanies = membershipCompanies
+        .map((cm: any) => ({
+          company_id: cm.company?.id,
+          company_name: cm.company?.name,
+          company_logo: cm.company?.logo_url,
+          user_role: cm.role,
+          is_primary: cm.is_primary,
+          group_name: null, // Will fetch group names separately if needed
+        }))
+        // Filter out Digital Morph and Falcon Eye Group (these are not companies)
+        .filter((c: any) => {
+          const name = (c.company_name || '').toLowerCase().trim();
+          return name !== 'digital morph' && 
+                 name !== 'falcon eye group' &&
+                 !name.includes('digital morph') &&
+                 !name.includes('falcon eye group');
+        });
     }
 
     // Second try: Also check if user owns any companies directly (in case company_members is missing)
@@ -64,7 +73,15 @@ export async function GET() {
       // Add owned companies that aren't already in the list
       const existingIds = new Set(allCompanies.map(c => c.company_id));
       for (const company of ownedCompanies) {
-        if (!existingIds.has(company.id)) {
+        // Filter out Digital Morph and Falcon Eye Group
+        const companyName = (company.name || '').toLowerCase().trim();
+        const isInvalidCompany = 
+          companyName === 'digital morph' ||
+          companyName === 'falcon eye group' ||
+          companyName.includes('digital morph') ||
+          companyName.includes('falcon eye group');
+        
+        if (!existingIds.has(company.id) && !isInvalidCompany) {
           allCompanies.push({
             company_id: company.id,
             company_name: company.name,
@@ -108,6 +125,16 @@ export async function GET() {
             if (party?.contact_email && 
                 party.contact_email.toLowerCase() === user.email.toLowerCase() &&
                 !existingIds.has(company.id)) {
+              
+              // Filter out Digital Morph and Falcon Eye Group
+              const companyName = ((company.name || party?.name_en) || '').toLowerCase().trim();
+              const isInvalidCompany = 
+                companyName === 'digital morph' ||
+                companyName === 'falcon eye group' ||
+                companyName.includes('digital morph') ||
+                companyName.includes('falcon eye group');
+              
+              if (isInvalidCompany) continue;
               
               // Determine role from party role
               let userRole = 'member';

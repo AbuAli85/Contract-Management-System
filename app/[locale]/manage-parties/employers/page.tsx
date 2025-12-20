@@ -115,11 +115,12 @@ export default function EmployersPage() {
   const fetchEmployers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/parties');
+      // Fetch all employers with type filter and higher limit
+      const response = await fetch('/api/parties?type=Employer&limit=1000');
       const data = await response.json();
 
       if (data.success) {
-        // Filter only employers
+        // Filter only employers (double-check, though API should already filter)
         const employerParties = (data.parties || [])
           .filter((party: Party) => party.type === 'Employer')
           .map(enhanceParty);
