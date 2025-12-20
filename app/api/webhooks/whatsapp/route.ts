@@ -91,10 +91,14 @@ export async function POST(request: NextRequest) {
     } else if (message === 'status') {
       // Show user status
       const userName = promoter?.name_en || profile?.full_name || 'User';
-      responseMessage = `Hello ${userName}! Your account is active.`;
+      const userStatus = promoter?.status || 'active';
+      responseMessage = `Hello ${userName}! Your account is ${userStatus}.`;
+    } else if (message.startsWith('join ')) {
+      // Handle sandbox join (already handled by Twilio, but acknowledge)
+      responseMessage = 'Welcome to the WhatsApp Sandbox! You are now connected.';
     } else {
       // Default response - acknowledge receipt
-      responseMessage = `Thank you for your message. We have received: "${body}". Our team will respond shortly.`;
+      responseMessage = `Thank you for your message: "${body}". Our team will respond shortly. For help, reply HELP.`;
       
       // You can add custom logic here:
       // - Route to support team
