@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +25,7 @@ import {
   Briefcase,
   Globe,
 } from 'lucide-react';
+import { format } from 'date-fns';
 
 import {
   Form,
@@ -93,9 +94,12 @@ export function PromoterFormComprehensive({
 }: PromoterFormProps) {
   const [currentSection, setCurrentSection] = useState<FormSection>('basic');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const form = useForm<PromoterFormData>({
     resolver: zodResolver(promoterFormSchema),
+    mode: 'onChange', // Enable real-time validation
     defaultValues: {
       first_name: initialData?.first_name ?? '',
       last_name: initialData?.last_name ?? '',
@@ -162,6 +166,75 @@ export function PromoterFormComprehensive({
   const currentSectionIndex = sections.indexOf(currentSection);
   const progress = ((currentSectionIndex + 1) / sections.length) * 100;
 
+  // Track form changes
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setHasUnsavedChanges(true);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Auto-save to localStorage
+  useEffect(() => {
+    if (mode === 'edit' && promoterId) {
+      const autoSaveKey = `promoter-form-draft-${promoterId}`;
+      const autoSaveInterval = setInterval(() => {
+        const formData = form.getValues();
+        try {
+          localStorage.setItem(autoSaveKey, JSON.stringify(formData));
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error('Failed to auto-save:', error);
+        }
+      }, 30000); // Auto-save every 30 seconds
+
+      return () => clearInterval(autoSaveInterval);
+    }
+  }, [form, mode, promoterId]);
+
+  // Load draft on mount
+  useEffect(() => {
+    if (mode === 'edit' && promoterId) {
+      const autoSaveKey = `promoter-form-draft-${promoterId}`;
+      try {
+        const savedDraft = localStorage.getItem(autoSaveKey);
+        if (savedDraft) {
+          const draftData = JSON.parse(savedDraft);
+          // Only load draft if there's no initial data
+          if (!initialData || Object.keys(initialData).length === 0) {
+            Object.keys(draftData).forEach(key => {
+              form.setValue(key as any, draftData[key]);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load draft:', error);
+      }
+    }
+  }, [form, mode, promoterId, initialData]);
+
+  // Check section completion
+  const getSectionCompletion = (section: FormSection): number => {
+    const sectionFields = FORM_SECTIONS[section].fields;
+    const formValues = form.getValues();
+    let completedFields = 0;
+
+    sectionFields.forEach(field => {
+      const value = formValues[field as keyof PromoterFormData];
+      if (value !== undefined && value !== null && value !== '') {
+        completedFields++;
+      }
+    });
+
+    return sectionFields.length > 0
+      ? Math.round((completedFields / sectionFields.length) * 100)
+      : 0;
+  };
+
+  const isSectionComplete = (section: FormSection): boolean => {
+    return getSectionCompletion(section) === 100;
+  };
+
   const handleNext = () => {
     const nextIndex = currentSectionIndex + 1;
     if (nextIndex < sections.length) {
@@ -186,6 +259,14 @@ export function PromoterFormComprehensive({
     setIsSubmitting(true);
     try {
       await onSubmit(data);
+      
+      // Clear draft after successful save
+      if (mode === 'edit' && promoterId) {
+        const autoSaveKey = `promoter-form-draft-${promoterId}`;
+        localStorage.removeItem(autoSaveKey);
+      }
+      
+      setHasUnsavedChanges(false);
       toast.success(
         mode === 'create'
           ? 'Promoter created successfully!'
@@ -1402,28 +1483,54 @@ export function PromoterFormComprehensive({
           <span className='text-muted-foreground'>
             Section {currentSectionIndex + 1} of {sections.length}
           </span>
-          <span className='font-medium'>{Math.round(progress)}% Complete</span>
+          <div className='flex items-center gap-4'>
+            {hasUnsavedChanges && (
+              <span className='text-amber-600 text-xs flex items-center gap-1'>
+                <AlertCircle className='h-3 w-3' />
+                Unsaved changes
+              </span>
+            )}
+            {lastSaved && (
+              <span className='text-muted-foreground text-xs'>
+                Last saved: {format(lastSaved, 'HH:mm:ss')}
+              </span>
+            )}
+            <span className='font-medium'>{Math.round(progress)}% Complete</span>
+          </div>
         </div>
         <Progress value={progress} className='h-2' />
       </div>
 
       {/* Section Navigation */}
       <div className='flex flex-wrap gap-2'>
-        {sections.map(section => (
-          <Button
-            key={section}
-            type='button'
-            variant={currentSection === section ? 'default' : 'outline'}
-            size='sm'
-            onClick={() => setCurrentSection(section)}
-            className='flex items-center gap-2'
-          >
-            {SECTION_ICONS[section]}
-            <span className='hidden sm:inline'>
-              {FORM_SECTIONS[section].title}
-            </span>
-          </Button>
-        ))}
+        {sections.map(section => {
+          const isComplete = isSectionComplete(section);
+          const completion = getSectionCompletion(section);
+          
+          return (
+            <Button
+              key={section}
+              type='button'
+              variant={currentSection === section ? 'default' : 'outline'}
+              size='sm'
+              onClick={() => setCurrentSection(section)}
+              className='flex items-center gap-2 relative'
+            >
+              {SECTION_ICONS[section]}
+              <span className='hidden sm:inline'>
+                {FORM_SECTIONS[section].title}
+              </span>
+              {isComplete && (
+                <CheckCircle2 className='h-3 w-3 text-green-600' />
+              )}
+              {!isComplete && completion > 0 && (
+                <span className='text-xs text-muted-foreground'>
+                  {completion}%
+                </span>
+              )}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Form */}

@@ -20,6 +20,9 @@ import {
   Filter,
   Download,
   Plus,
+  Save,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -163,6 +166,14 @@ export function PromotersTable({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [deletePromoter, setDeletePromoter] = useState<Promoter | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Inline editing state
+  const [editingField, setEditingField] = useState<{
+    promoterId: string;
+    field: string;
+  } | null>(null);
+  const [editingValue, setEditingValue] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Filter promoters based on search and status
   const filteredPromoters = promoters.filter(promoter => {
@@ -195,6 +206,55 @@ export function PromotersTable({
       toast.error('Failed to delete promoter');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Inline editing handlers
+  const startEditing = (promoterId: string, field: string, currentValue: string | null) => {
+    setEditingField({ promoterId, field });
+    setEditingValue(currentValue || '');
+  };
+
+  const cancelEditing = () => {
+    setEditingField(null);
+    setEditingValue('');
+  };
+
+  const saveFieldUpdate = async () => {
+    if (!editingField) return;
+
+    setIsUpdating(true);
+    try {
+      const updateData: Record<string, any> = {
+        [editingField.field]: editingValue || null,
+      };
+
+      const response = await fetch(`/api/promoters/${editingField.promoterId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update field');
+      }
+
+      toast.success('Field updated successfully');
+      setEditingField(null);
+      setEditingValue('');
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error updating field:', error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update field. Please try again.'
+      );
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -451,22 +511,106 @@ export function PromotersTable({
                         </div>
                       </TableCell>
 
-                      {/* Contact */}
+                      {/* Contact - Inline Editable */}
                       <TableCell>
                         <div className='space-y-1'>
-                          {promoter.email && (
-                            <div className='flex items-center gap-1 text-sm'>
+                          {editingField?.promoterId === promoter.id &&
+                          editingField?.field === 'email' ? (
+                            <div className='flex items-center gap-1'>
+                              <Input
+                                type='email'
+                                value={editingValue}
+                                onChange={e => setEditingValue(e.target.value)}
+                                disabled={isUpdating}
+                                className='h-7 text-sm'
+                                placeholder='email@example.com'
+                              />
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                onClick={saveFieldUpdate}
+                                disabled={isUpdating}
+                                className='h-7 w-7 p-0'
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className='h-3 w-3 animate-spin' />
+                                ) : (
+                                  <Save className='h-3 w-3' />
+                                )}
+                              </Button>
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                onClick={cancelEditing}
+                                disabled={isUpdating}
+                                className='h-7 w-7 p-0'
+                              >
+                                <X className='h-3 w-3' />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              className='flex items-center gap-1 text-sm cursor-pointer hover:opacity-80 transition-opacity'
+                              onClick={() =>
+                                startEditing(promoter.id, 'email', promoter.email || null)
+                              }
+                              title='Click to edit email'
+                            >
                               <Mail className='h-3 w-3 text-muted-foreground' />
                               <span className='truncate max-w-[200px]'>
-                                {promoter.email}
+                                {promoter.email || 'Click to add email'}
                               </span>
                             </div>
                           )}
-                          {(promoter.phone || promoter.mobile_number) && (
-                            <div className='flex items-center gap-1 text-sm'>
+                          {editingField?.promoterId === promoter.id &&
+                          editingField?.field === 'mobile_number' ? (
+                            <div className='flex items-center gap-1'>
+                              <Input
+                                type='tel'
+                                value={editingValue}
+                                onChange={e => setEditingValue(e.target.value)}
+                                disabled={isUpdating}
+                                className='h-7 text-sm'
+                                placeholder='+968 9123 4567'
+                              />
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                onClick={saveFieldUpdate}
+                                disabled={isUpdating}
+                                className='h-7 w-7 p-0'
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className='h-3 w-3 animate-spin' />
+                                ) : (
+                                  <Save className='h-3 w-3' />
+                                )}
+                              </Button>
+                              <Button
+                                size='sm'
+                                variant='ghost'
+                                onClick={cancelEditing}
+                                disabled={isUpdating}
+                                className='h-7 w-7 p-0'
+                              >
+                                <X className='h-3 w-3' />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              className='flex items-center gap-1 text-sm cursor-pointer hover:opacity-80 transition-opacity'
+                              onClick={() =>
+                                startEditing(
+                                  promoter.id,
+                                  'mobile_number',
+                                  promoter.mobile_number || promoter.phone || null
+                                )
+                              }
+                              title='Click to edit phone'
+                            >
                               <Phone className='h-3 w-3 text-muted-foreground' />
                               <span>
-                                {promoter.phone || promoter.mobile_number}
+                                {promoter.mobile_number || promoter.phone || 'Click to add phone'}
                               </span>
                             </div>
                           )}
@@ -499,17 +643,182 @@ export function PromotersTable({
                         </div>
                       </TableCell>
 
-                      {/* Status */}
-                      <TableCell>{renderStatusBadge(promoter)}</TableCell>
-
-                      {/* Overall Status */}
+                      {/* Status - Inline Editable */}
                       <TableCell>
-                        {renderOverallStatus(promoter.overall_status)}
+                        {editingField?.promoterId === promoter.id &&
+                        editingField?.field === 'status' ? (
+                          <div className='flex items-center gap-2'>
+                            <Select
+                              value={editingValue}
+                              onValueChange={setEditingValue}
+                              disabled={isUpdating}
+                            >
+                              <SelectTrigger className='w-[140px] h-8'>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value='active'>Active</SelectItem>
+                                <SelectItem value='inactive'>Inactive</SelectItem>
+                                <SelectItem value='pending'>Pending</SelectItem>
+                                <SelectItem value='suspended'>Suspended</SelectItem>
+                                <SelectItem value='on_leave'>On Leave</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={saveFieldUpdate}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              {isUpdating ? (
+                                <Loader2 className='h-4 w-4 animate-spin' />
+                              ) : (
+                                <Save className='h-4 w-4' />
+                              )}
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={cancelEditing}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className='cursor-pointer hover:opacity-80 transition-opacity'
+                            onClick={() =>
+                              startEditing(promoter.id, 'status', promoter.status)
+                            }
+                            title='Click to edit status'
+                          >
+                            {renderStatusBadge(promoter)}
+                          </div>
+                        )}
                       </TableCell>
 
-                      {/* Availability */}
+                      {/* Overall Status - Inline Editable */}
                       <TableCell>
-                        {renderAvailability(promoter.availability)}
+                        {editingField?.promoterId === promoter.id &&
+                        editingField?.field === 'overall_status' ? (
+                          <div className='flex items-center gap-2'>
+                            <Select
+                              value={editingValue}
+                              onValueChange={setEditingValue}
+                              disabled={isUpdating}
+                            >
+                              <SelectTrigger className='w-[140px] h-8'>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value='excellent'>Excellent</SelectItem>
+                                <SelectItem value='good'>Good</SelectItem>
+                                <SelectItem value='fair'>Fair</SelectItem>
+                                <SelectItem value='warning'>Warning</SelectItem>
+                                <SelectItem value='critical'>Critical</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={saveFieldUpdate}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              {isUpdating ? (
+                                <Loader2 className='h-4 w-4 animate-spin' />
+                              ) : (
+                                <Save className='h-4 w-4' />
+                              )}
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={cancelEditing}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className='cursor-pointer hover:opacity-80 transition-opacity'
+                            onClick={() =>
+                              startEditing(
+                                promoter.id,
+                                'overall_status',
+                                promoter.overall_status || null
+                              )
+                            }
+                            title='Click to edit overall status'
+                          >
+                            {renderOverallStatus(promoter.overall_status)}
+                          </div>
+                        )}
+                      </TableCell>
+
+                      {/* Availability - Inline Editable */}
+                      <TableCell>
+                        {editingField?.promoterId === promoter.id &&
+                        editingField?.field === 'availability' ? (
+                          <div className='flex items-center gap-2'>
+                            <Select
+                              value={editingValue}
+                              onValueChange={setEditingValue}
+                              disabled={isUpdating}
+                            >
+                              <SelectTrigger className='w-[140px] h-8'>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value='available'>Available</SelectItem>
+                                <SelectItem value='busy'>Busy</SelectItem>
+                                <SelectItem value='unavailable'>Unavailable</SelectItem>
+                                <SelectItem value='part_time'>Part Time</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={saveFieldUpdate}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              {isUpdating ? (
+                                <Loader2 className='h-4 w-4 animate-spin' />
+                              ) : (
+                                <Save className='h-4 w-4' />
+                              )}
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={cancelEditing}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className='cursor-pointer hover:opacity-80 transition-opacity'
+                            onClick={() =>
+                              startEditing(
+                                promoter.id,
+                                'availability',
+                                promoter.availability || null
+                              )
+                            }
+                            title='Click to edit availability'
+                          >
+                            {renderAvailability(promoter.availability)}
+                          </div>
+                        )}
                       </TableCell>
 
                       {/* Actions */}
