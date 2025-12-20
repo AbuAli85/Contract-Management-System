@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -34,7 +34,11 @@ import {
   TrashIcon,
   BuildingIcon,
   Loader2,
+  UsersIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from 'lucide-react';
+import { HoldingGroupMembersManager } from './holding-group-members-manager';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 
@@ -74,6 +78,7 @@ export function HoldingGroupsManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<HoldingGroup | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -195,6 +200,18 @@ export function HoldingGroupsManager() {
     setEditingGroup(null);
   }
 
+  function toggleGroupExpansion(groupId: string) {
+    setExpandedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -242,49 +259,91 @@ export function HoldingGroupsManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {holdingGroups.map((group) => (
-                  <TableRow key={group.id}>
-                    <TableCell className="font-medium">
-                      {group.name_en}
-                    </TableCell>
-                    <TableCell>{group.name_ar || '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <BuildingIcon className="h-4 w-4" />
-                        <span>{group.members?.length || 0} companies</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          group.is_active
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {group.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(group)}
-                        >
-                          <EditIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(group.id, group.name_en)}
-                        >
-                          <TrashIcon className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {holdingGroups.map((group) => {
+                  const isExpanded = expandedGroups.has(group.id);
+                  return (
+                    <React.Fragment key={group.id}>
+                      <TableRow>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <span>{group.name_en}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleGroupExpansion(group.id)}
+                              className="h-6 w-6 p-0"
+                            >
+                              {isExpanded ? (
+                                <ChevronUpIcon className="h-4 w-4" />
+                              ) : (
+                                <ChevronDownIcon className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>{group.name_ar || '-'}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <BuildingIcon className="h-4 w-4" />
+                            <span>{group.members?.length || 0} companies</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              group.is_active
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {group.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleGroupExpansion(group.id)}
+                              title="Manage Members"
+                            >
+                              <UsersIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(group)}
+                              title="Edit"
+                            >
+                              <EditIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(group.id, group.name_en)}
+                              title="Delete"
+                            >
+                              <TrashIcon className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="bg-muted/30 p-0">
+                            <div className="p-4">
+                              <HoldingGroupMembersManager
+                                holdingGroupId={group.id}
+                                holdingGroupName={group.name_en}
+                                onMembersChange={fetchHoldingGroups}
+                              />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

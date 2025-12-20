@@ -42,11 +42,6 @@ CREATE TABLE IF NOT EXISTS holding_group_members (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   created_by UUID REFERENCES profiles(id),
   
-  -- Ensure a party/company can only belong to one holding group
-  CONSTRAINT holding_group_members_party_unique UNIQUE (party_id) 
-    WHERE party_id IS NOT NULL,
-  CONSTRAINT holding_group_members_company_unique UNIQUE (company_id) 
-    WHERE company_id IS NOT NULL,
   -- Ensure either party_id or company_id is set
   CONSTRAINT holding_group_members_member_check 
     CHECK ((party_id IS NOT NULL AND company_id IS NULL) OR 
@@ -56,6 +51,15 @@ CREATE TABLE IF NOT EXISTS holding_group_members (
 CREATE INDEX IF NOT EXISTS idx_holding_group_members_holding_group_id ON holding_group_members(holding_group_id);
 CREATE INDEX IF NOT EXISTS idx_holding_group_members_party_id ON holding_group_members(party_id);
 CREATE INDEX IF NOT EXISTS idx_holding_group_members_company_id ON holding_group_members(company_id);
+
+-- Ensure a party/company can only belong to one holding group (using partial unique indexes)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_holding_group_members_party_unique 
+  ON holding_group_members(party_id) 
+  WHERE party_id IS NOT NULL;
+  
+CREATE UNIQUE INDEX IF NOT EXISTS idx_holding_group_members_company_unique 
+  ON holding_group_members(company_id) 
+  WHERE company_id IS NOT NULL;
 
 -- ============================================================================
 -- 3. TRADEMARKS/BRANDS TABLE (For Digital Morph type entities)

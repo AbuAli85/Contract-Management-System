@@ -78,8 +78,7 @@ BEGIN
     AND NOT EXISTS (
       SELECT 1 FROM holding_group_members hgm
       WHERE hgm.party_id = pt.id
-    )
-  ON CONFLICT (party_id) DO NOTHING;
+    );
 
   GET DIAGNOSTICS v_members_added = ROW_COUNT;
   RAISE NOTICE 'Added % Falcon Eye companies to holding group', v_members_added;

@@ -59,11 +59,13 @@ interface Company {
 interface HoldingGroupMembersManagerProps {
   holdingGroupId: string;
   holdingGroupName: string;
+  onMembersChange?: () => void;
 }
 
 export function HoldingGroupMembersManager({
   holdingGroupId,
   holdingGroupName,
+  onMembersChange,
 }: HoldingGroupMembersManagerProps) {
   const [members, setMembers] = useState<HoldingGroupMember[]>([]);
   const [availableParties, setAvailableParties] = useState<Party[]>([]);
@@ -164,6 +166,9 @@ export function HoldingGroupMembersManager({
       fetchMembers();
       fetchAvailableParties();
       fetchAvailableCompanies();
+      if (onMembersChange) {
+        onMembersChange();
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -194,6 +199,9 @@ export function HoldingGroupMembersManager({
       fetchMembers();
       fetchAvailableParties();
       fetchAvailableCompanies();
+      if (onMembersChange) {
+        onMembersChange();
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
