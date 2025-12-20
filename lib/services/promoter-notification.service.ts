@@ -261,7 +261,7 @@ async function getPromoterContact(promoterId: string): Promise<{
 
     const { data, error } = await supabase
       .from('promoters')
-      .select('email, phone, full_name, name_en')
+      .select('email, phone, mobile_number, name_en, name_ar')
       .eq('id', promoterId)
       .single();
 
@@ -271,8 +271,8 @@ async function getPromoterContact(promoterId: string): Promise<{
 
     return {
       email: data.email,
-      phone: data.phone,
-      name: data.full_name || data.name_en || 'Promoter',
+      phone: data.phone || data.mobile_number,
+      name: data.name_en || data.name_ar || 'Promoter',
     };
   } catch (error) {
     console.error('Error fetching promoter contact:', error);

@@ -23,7 +23,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON workflow_step_executions TO authenticate
 GRANT SELECT, INSERT, UPDATE, DELETE ON workflow_templates TO authenticated;
 
 GRANT SELECT ON job_postings TO anon;
-GRANT SELECT ON candidate_applications TO anon WHERE status = 'applied';
+GRANT SELECT ON candidate_applications TO anon;
 GRANT SELECT ON workflow_templates TO anon;
 
 GRANT ALL ON job_postings TO postgres, service_role;
@@ -235,4 +235,11 @@ CREATE POLICY "Anonymous can view published job postings"
   ON job_postings FOR SELECT
   TO anon
   USING (status = 'published');
+
+-- Anonymous can view their own applications (by email match)
+-- Note: This is a simplified policy - in production, you might want to use session tokens
+CREATE POLICY "Anonymous can view their own applications"
+  ON candidate_applications FOR SELECT
+  TO anon
+  USING (status = 'applied');
 

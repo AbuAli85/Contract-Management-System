@@ -145,12 +145,18 @@ export const GET = withAnyRBAC(
       // Group by date
       const attendanceByDate = new Map<string, { present: number; absent: number; late: number }>();
       attendanceRecords?.forEach(record => {
-        const date = format(new Date(record.attendance_date), 'yyyy-MM-dd');
-        const existing = attendanceByDate.get(date) || { present: 0, absent: 0, late: 0 };
-        if (record.status === 'present') existing.present++;
-        if (record.status === 'absent') existing.absent++;
-        if (record.status === 'late') existing.late++;
-        attendanceByDate.set(date, existing);
+        if (!record.attendance_date) return;
+        try {
+          const date = format(new Date(record.attendance_date), 'yyyy-MM-dd');
+          if (date === 'Invalid Date') return;
+          const existing = attendanceByDate.get(date) || { present: 0, absent: 0, late: 0 };
+          if (record.status === 'present') existing.present++;
+          if (record.status === 'absent') existing.absent++;
+          if (record.status === 'late') existing.late++;
+          attendanceByDate.set(date, existing);
+        } catch (error) {
+          console.warn('Invalid attendance date:', record.attendance_date);
+        }
       });
 
       attendanceMetrics.dailyAttendance = Array.from(attendanceByDate.entries())

@@ -466,11 +466,29 @@ export function ComprehensiveHRAnalyticsDashboard() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="date" 
-                    tickFormatter={(value) => format(parseISO(value), 'MMM dd')}
+                    tickFormatter={(value) => {
+                      if (!value) return '';
+                      try {
+                        const date = typeof value === 'string' ? parseISO(value) : new Date(value);
+                        if (isNaN(date.getTime())) return value;
+                        return format(date, 'MMM dd');
+                      } catch {
+                        return value;
+                      }
+                    }}
                   />
                   <YAxis />
                   <Tooltip 
-                    labelFormatter={(value) => format(parseISO(value), 'MMM dd, yyyy')}
+                    labelFormatter={(value) => {
+                      if (!value) return '';
+                      try {
+                        const date = typeof value === 'string' ? parseISO(value) : new Date(value);
+                        if (isNaN(date.getTime())) return value;
+                        return format(date, 'MMM dd, yyyy');
+                      } catch {
+                        return value;
+                      }
+                    }}
                   />
                   <Legend />
                   <Area 
