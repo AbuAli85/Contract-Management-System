@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import {
@@ -23,6 +23,7 @@ import {
   Save,
   X,
   Loader2,
+  Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -71,6 +72,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+interface Employer {
+  id: string;
+  name_en?: string | null;
+  name_ar?: string | null;
+  type?: string | null;
+  status?: string | null;
+}
+
 interface Promoter {
   id: string;
   first_name: string;
@@ -92,6 +101,8 @@ interface Promoter {
   job_title?: string | null;
   department?: string | null;
   profile_picture_url?: string | null;
+  employer_id?: string | null;
+  parties?: Employer | null;
   created_at: string;
   updated_at?: string | null;
 }
@@ -174,6 +185,27 @@ export function PromotersTable({
   } | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [employers, setEmployers] = useState<Employer[]>([]);
+  const [isLoadingEmployers, setIsLoadingEmployers] = useState(false);
+
+  // Fetch employers for inline editing
+  useEffect(() => {
+    const fetchEmployers = async () => {
+      setIsLoadingEmployers(true);
+      try {
+        const response = await fetch('/api/parties?type=Employer&limit=1000');
+        const data = await response.json();
+        if (data.success && data.parties) {
+          setEmployers(data.parties);
+        }
+      } catch (error) {
+        console.error('Error fetching employers:', error);
+      } finally {
+        setIsLoadingEmployers(false);
+      }
+    };
+    fetchEmployers();
+  }, []);
 
   // Filter promoters based on search and status
   const filteredPromoters = promoters.filter(promoter => {
@@ -435,6 +467,7 @@ export function PromotersTable({
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>ID Card</TableHead>
+                  <TableHead>Employer</TableHead>
                   <TableHead>Job Title</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Overall</TableHead>
@@ -445,7 +478,7 @@ export function PromotersTable({
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className='text-center py-8'>
+                    <TableCell colSpan={10} className='text-center py-8'>
                       <div className='flex items-center justify-center gap-2'>
                         <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
                         <span className='text-muted-foreground'>
@@ -456,7 +489,7 @@ export function PromotersTable({
                   </TableRow>
                 ) : filteredPromoters.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className='text-center py-8'>
+                    <TableCell colSpan={10} className='text-center py-8'>
                       <div className='flex flex-col items-center gap-2'>
                         <User className='h-8 w-8 text-muted-foreground' />
                         <p className='text-muted-foreground'>
@@ -629,6 +662,79 @@ export function PromotersTable({
                             </div>
                           )}
                         </div>
+                      </TableCell>
+
+                      {/* Employer - Inline Editable */}
+                      <TableCell>
+                        {editingField?.promoterId === promoter.id &&
+                        editingField?.field === 'employer_id' ? (
+                          <div className='flex items-center gap-2'>
+                            <Select
+                              value={editingValue}
+                              onValueChange={setEditingValue}
+                              disabled={isUpdating || isLoadingEmployers}
+                            >
+                              <SelectTrigger className='w-[200px] h-8'>
+                                <SelectValue placeholder='Select employer' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value=''>Clear Assignment</SelectItem>
+                                {employers.map(employer => (
+                                  <SelectItem key={employer.id} value={employer.id}>
+                                    {employer.name_en || employer.name_ar || employer.id}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={saveFieldUpdate}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              {isUpdating ? (
+                                <Loader2 className='h-4 w-4 animate-spin' />
+                              ) : (
+                                <Save className='h-4 w-4' />
+                              )}
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={cancelEditing}
+                              disabled={isUpdating}
+                              className='h-8 w-8 p-0'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className='flex items-center gap-2 text-sm cursor-pointer hover:opacity-80 transition-opacity'
+                            onClick={() =>
+                              startEditing(
+                                promoter.id,
+                                'employer_id',
+                                promoter.employer_id || null
+                              )
+                            }
+                            title='Click to edit employer assignment'
+                          >
+                            {promoter.parties ? (
+                              <>
+                                <Building2 className='h-4 w-4 text-muted-foreground' />
+                                <span className='font-medium'>
+                                  {promoter.parties.name_en || promoter.parties.name_ar || 'Unknown'}
+                                </span>
+                              </>
+                            ) : (
+                              <span className='text-muted-foreground italic'>
+                                Click to assign
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </TableCell>
 
                       {/* Job Title */}

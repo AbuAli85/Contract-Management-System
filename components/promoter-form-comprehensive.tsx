@@ -96,6 +96,8 @@ export function PromoterFormComprehensive({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [employers, setEmployers] = useState<Array<{ id: string; name_en?: string | null; name_ar?: string | null }>>([]);
+  const [isLoadingEmployers, setIsLoadingEmployers] = useState(true);
 
   const form = useForm<PromoterFormData>({
     resolver: zodResolver(promoterFormSchema),
@@ -212,6 +214,25 @@ export function PromoterFormComprehensive({
       }
     }
   }, [form, mode, promoterId, initialData]);
+
+  // Fetch employers
+  useEffect(() => {
+    const fetchEmployers = async () => {
+      setIsLoadingEmployers(true);
+      try {
+        const response = await fetch('/api/parties?type=Employer&limit=1000');
+        const data = await response.json();
+        if (data.success && data.parties) {
+          setEmployers(data.parties);
+        }
+      } catch (error) {
+        console.error('Error fetching employers:', error);
+      } finally {
+        setIsLoadingEmployers(false);
+      }
+    };
+    fetchEmployers();
+  }, []);
 
   // Check section completion
   const getSectionCompletion = (section: FormSection): number => {
@@ -949,14 +970,26 @@ export function PromoterFormComprehensive({
         name='employer_id'
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Employer ID</FormLabel>
-            <FormControl>
-              <Input
-                placeholder='UUID of employer (from parties table)'
-                {...field}
-                value={field.value || ''}
-              />
-            </FormControl>
+            <FormLabel>Employer</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || ''}
+              disabled={isLoadingEmployers}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingEmployers ? 'Loading employers...' : 'Select employer (optional)'} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value=''>None (Unassigned)</SelectItem>
+                {employers.map(employer => (
+                  <SelectItem key={employer.id} value={employer.id}>
+                    {employer.name_en || employer.name_ar || employer.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormDescription>
               Link to employer from parties table (optional)
             </FormDescription>
