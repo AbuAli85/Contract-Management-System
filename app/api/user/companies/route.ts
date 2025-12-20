@@ -218,20 +218,28 @@ export async function GET() {
       console.warn('Error fetching employer-linked companies:', e);
     }
 
-    // Fifth try: Get companies where user's profile email matches any party contact_email
-    // This is a broader search to catch any missed relationships
+    // Fifth try: Get companies from parties table where type = 'Employer'
+    // This is the primary source for employer companies
     if (user.email) {
       try {
-        // Find all parties with matching contact_email
-        const { data: matchingParties, error: matchingPartiesError } = await adminClient
-          .from('parties')
-          .select('id, name_en, contact_email, type, status')
-          .eq('contact_email', user.email)
-          .eq('type', 'Employer')
-          .in('status', ['Active', 'active']);
+        // Get user profile for additional matching
+        const { data: userProfile } = await adminClient
+          .from('profiles')
+          .select('id, email, full_name')
+          .eq('id', user.id)
+          .single();
 
-        if (!matchingPartiesError && matchingParties && matchingParties.length > 0) {
-          const partyIds = matchingParties.map((p: any) => p.id);
+        // Find all parties with type 'Employer' where user is associated
+        // Match by: contact_email, contact_person, or any other relationship
+        const { data: employerParties, error: employerPartiesError } = await adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role')
+          .eq('type', 'Employer')
+          .in('overall_status', ['Active', 'active'])
+          .or(`contact_email.eq.${user.email},contact_email.eq.${userProfile?.email || ''},contact_person.ilike.%${userProfile?.full_name || ''}%`);
+
+        if (!employerPartiesError && employerParties && employerParties.length > 0) {
+          const partyIds = employerParties.map((p: any) => p.id);
           
           // Find companies linked to these parties
           const { data: profileLinkedCompanies, error: profileLinkedError } = await adminClient
@@ -248,7 +256,7 @@ export async function GET() {
                 if (isInvalidCompany(company.name || '')) continue;
 
                 // Find matching party to determine role
-                const matchingParty = matchingParties.find((p: any) => p.id === company.party_id);
+                const matchingParty = employerParties.find((p: any) => p.id === company.party_id);
                 let userRole = 'owner'; // Default to owner for employer parties
                 if (matchingParty?.role) {
                   const role = matchingParty.role.toLowerCase();
@@ -275,6 +283,129 @@ export async function GET() {
         }
       } catch (e) {
         console.warn('Error fetching profile-party matched companies:', e);
+      }
+    }
+
+    // Sixth try: Directly fetch companies from parties table where type = 'Employer'
+    // This ensures all employer parties are available in the company switcher
+    if (user.email) {
+      try {
+        // Get user profile for matching
+        const { data: userProfile } = await adminClient
+          .from('profiles')
+          .select('id, email, full_name')
+          .eq('id', user.id)
+          .single();
+
+        // Find all active employer parties
+        // Match by contact_email, or if user is associated with the party
+        const { data: allEmployerParties, error: employerPartiesError } = await adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role')
+          .eq('type', 'Employer')
+          .in('overall_status', ['Active', 'active']);
+
+        if (!employerPartiesError && allEmployerParties && allEmployerParties.length > 0) {
+          const existingIds = new Set(allCompanies.map(c => c.company_id));
+          
+          for (const party of allEmployerParties) {
+            // Skip if already in companies list
+            if (existingIds.has(party.id)) continue;
+            
+            // Filter out invalid/mock companies
+            if (isInvalidCompany(party.name_en || '')) continue;
+
+            // Check if there's a company linked to this party that user has access to
+            const { data: linkedCompany } = await adminClient
+              .from('companies')
+              .select('id, name, logo_url, owner_id')
+              .eq('party_id', party.id)
+              .eq('is_active', true)
+              .single();
+
+            // Check if user is associated with this party
+            // Match by: contact_email, contact_person name, owns linked company, or is member of linked company
+            let isAssociated = false;
+            let userRole = 'owner'; // Default to owner for employer parties
+
+            if (linkedCompany) {
+              // Check if user owns the linked company
+              if (linkedCompany.owner_id === user.id) {
+                isAssociated = true;
+                userRole = 'owner';
+              } else {
+                // Check if user is a member of the linked company
+                const { data: membership } = await adminClient
+                  .from('company_members')
+                  .select('role')
+                  .eq('company_id', linkedCompany.id)
+                  .eq('user_id', user.id)
+                  .eq('status', 'active')
+                  .single();
+                
+                if (membership) {
+                  isAssociated = true;
+                  userRole = membership.role || 'member';
+                }
+              }
+            }
+
+            // Also check direct party association
+            if (!isAssociated) {
+              isAssociated = 
+                (party.contact_email && (
+                  party.contact_email.toLowerCase() === user.email?.toLowerCase() ||
+                  (userProfile?.email && party.contact_email.toLowerCase() === userProfile.email.toLowerCase())
+                )) ||
+                (party.contact_person && userProfile?.full_name && 
+                  party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase()));
+              
+              // Determine user role from party role
+              if (isAssociated && party.role) {
+                const role = party.role.toLowerCase();
+                if (['ceo', 'chairman', 'owner'].includes(role)) {
+                  userRole = 'owner';
+                } else if (['admin', 'manager'].includes(role)) {
+                  userRole = 'admin';
+                } else {
+                  userRole = 'member';
+                }
+              }
+            }
+
+            // If user is associated, add the party as a company
+            if (isAssociated) {
+
+              // Use linked company if exists, otherwise use party data
+              if (linkedCompany && !existingIds.has(linkedCompany.id)) {
+                allCompanies.push({
+                  company_id: linkedCompany.id,
+                  company_name: linkedCompany.name || party.name_en,
+                  company_logo: linkedCompany.logo_url || party.logo_url,
+                  user_role: userRole,
+                  is_primary: allCompanies.length === 0,
+                  group_name: null,
+                  party_id: party.id,
+                  source: 'parties_employer_linked',
+                });
+              } else {
+                // Add party directly as a company (even if no company record exists)
+                allCompanies.push({
+                  company_id: party.id, // Use party ID as company ID
+                  company_name: party.name_en || party.name_ar || 'Unknown Company',
+                  company_logo: party.logo_url,
+                  user_role: userRole,
+                  is_primary: allCompanies.length === 0,
+                  group_name: null,
+                  party_id: party.id,
+                  source: 'parties_employer_direct',
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching employer parties:', e);
       }
     }
 
