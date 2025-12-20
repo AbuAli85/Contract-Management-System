@@ -136,45 +136,82 @@ export default function EnhancedCRMDashboard() {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending')) || { count: 0 };
 
-      // Mock recent activity (you can replace with real data)
-      const mockActivity: RecentActivity[] = [
-        {
-          id: '1',
-          type: 'contract',
-          title: 'Employment Contract Generated',
-          description: 'Full-time contract for Ahmed Al-Rashid',
-          timestamp: '2 hours ago',
-          status: 'completed',
-        },
-        {
-          id: '2',
-          type: 'promoter',
-          title: 'New Promoter Added',
-          description: 'Sarah Johnson registered in the system',
-          timestamp: '4 hours ago',
-          status: 'completed',
-        },
-        {
-          id: '3',
-          type: 'document',
-          title: 'Service Agreement Processing',
-          description: 'Consulting agreement being processed',
-          timestamp: '6 hours ago',
-          status: 'processing',
-        },
-      ];
+      // Calculate completed contracts this month
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const { count: completedThisMonth } = (await supabase
+        ?.from('contracts')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'completed')
+        .gte('updated_at', startOfMonth.toISOString())) || { count: 0 };
+
+      // Calculate total contract value
+      const { data: allContracts } = (await supabase
+        ?.from('contracts')
+        .select('contract_value')
+        .eq('status', 'active')) || { data: [] };
+      
+      const totalValue = (allContracts || []).reduce((sum: number, contract: any) => {
+        return sum + (parseFloat(contract.contract_value) || 0);
+      }, 0);
+
+      // Helper function to calculate time ago
+      const getTimeAgo = (date: Date): string => {
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 60) return `${diffMins} minutes ago`;
+        if (diffHours < 24) return `${diffHours} hours ago`;
+        return `${diffDays} days ago`;
+      };
+
+      // Generate real recent activity from contracts and promoters
+      const recentActivity: RecentActivity[] = [];
+      
+      // Add recent contracts
+      if (contractsData && contractsData.length > 0) {
+        contractsData.slice(0, 3).forEach((contract: any) => {
+          const timeAgo = getTimeAgo(new Date(contract.created_at));
+          recentActivity.push({
+            id: `contract_${contract.id}`,
+            type: 'contract',
+            title: contract.title || `Contract ${contract.contract_number || contract.id}`,
+            description: `${contract.contract_type || 'Contract'} - ${contract.status}`,
+            timestamp: timeAgo,
+            status: contract.status === 'completed' ? 'completed' : contract.status === 'pending' ? 'processing' : 'completed',
+          });
+        });
+      }
+
+      // Add recent promoters if available
+      if (promotersData && promotersData.length > 0 && recentActivity.length < 3) {
+        promotersData.slice(0, 3 - recentActivity.length).forEach((promoter: any) => {
+          const timeAgo = getTimeAgo(new Date(promoter.created_at));
+          recentActivity.push({
+            id: `promoter_${promoter.id}`,
+            type: 'promoter',
+            title: 'New Promoter Added',
+            description: `${promoter.name_en || promoter.name_ar || 'Promoter'} registered`,
+            timestamp: timeAgo,
+            status: 'completed',
+          });
+        });
+      }
 
       setStats({
         totalPromoters: totalPromoters || 0,
         activeContracts: activeContracts || 0,
         pendingDocuments: pendingDocuments || 0,
-        completedThisMonth: 15, // Mock data
-        totalValue: 125000, // Mock data
+        completedThisMonth: completedThisMonth || 0,
+        totalValue: totalValue,
       });
 
       setPromoters(promotersData || []);
       setContracts(contractsData || []);
-      setRecentActivity(mockActivity);
+      setRecentActivity(recentActivity);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
       toast({

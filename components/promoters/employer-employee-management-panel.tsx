@@ -82,17 +82,31 @@ export function EmployerEmployeeManagementPanel({
 
     setIsSavingNote(true);
     try {
-      // TODO: Implement API call to save note
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Save note to promoter's notes field
+      const response = await fetch(`/api/promoters/${promoterId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: note.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to save note');
+      }
+
       toast({
         title: 'Note saved',
         description: 'Internal note has been saved successfully.',
       });
       setNote('');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving note:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save note. Please try again.',
+        description: error.message || 'Failed to save note. Please try again.',
         variant: 'destructive',
       });
     } finally {

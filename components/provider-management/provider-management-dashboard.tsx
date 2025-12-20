@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Factory,
@@ -119,20 +120,52 @@ export function ProviderManagementDashboard() {
     'overview' | 'list' | 'analytics' | 'performance'
   >('overview');
 
+  const router = useRouter();
+
   // Handler functions for interactivity
   const handleAddProvider = () => {
-    console.log('Opening Add New Provider form...');
-    alert('Add New Provider functionality would open here!');
+    router.push('/en/manage-parties?type=Employer');
   };
 
-  const handleExportReport = () => {
-    console.log('Exporting provider report...');
-    alert('Export Provider Report functionality would download a file here!');
+  const handleExportReport = async () => {
+    try {
+      // Generate CSV report
+      const headers = ['Name (EN)', 'Name (AR)', 'CRN', 'Contact Person', 'Contact Email', 'Contact Phone', 'Status', 'Active Promoters', 'Active Clients', 'Total Revenue'];
+      const rows = providers.map(provider => [
+        provider.name_en,
+        provider.name_ar,
+        provider.crn,
+        provider.contact_person,
+        provider.contact_email,
+        provider.contact_phone,
+        provider.status,
+        provider.active_promoters.toString(),
+        provider.active_clients.toString(),
+        provider.total_revenue.toString(),
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `providers-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('Failed to export report. Please try again.');
+    }
   };
 
   const handleViewProvider = (providerId: string) => {
-    console.log(`Viewing provider details for ID: ${providerId}`);
-    alert(`View Provider ${providerId} details would open here!`);
+    router.push(`/en/manage-parties?id=${providerId}`);
   };
 
   // Real-time data loading from Supabase
@@ -207,7 +240,9 @@ export function ProviderManagementDashboard() {
               company_size: 'Medium', // Could be added to parties table
               service_categories: [], // Could be calculated from contract types
               certifications: [], // Could be added to parties table
-              capacity_utilization: Math.floor(Math.random() * 30) + 60, // Mock calculation
+              capacity_utilization: activePromotersCount > 0 
+                ? Math.min(100, Math.round((activeContracts.length / activePromotersCount) * 100))
+                : 0,
             };
           }
         );
