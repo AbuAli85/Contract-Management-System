@@ -28,8 +28,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+    }
+
     if (!role || !['admin', 'manager', 'hr', 'accountant', 'member', 'viewer'].includes(role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Invalid role',
+        message: 'Role must be one of: admin, manager, hr, accountant, member, viewer'
+      }, { status: 400 });
     }
 
     // Get user's active company
@@ -43,16 +52,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No active company selected' }, { status: 400 });
     }
 
-    // Verify user has owner/admin access
-    const { data: myMembership } = await supabase
-      .from('company_members')
+    // Verify user has owner/admin access using admin client
+    const { data: myMembership } = await (supabaseAdmin
+      .from('company_members') as any)
       .select('role')
       .eq('company_id', profile.active_company_id)
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    if (!myMembership || !['owner', 'admin'].includes(myMembership.role)) {
+    // Also check if user owns the company directly
+    let canInvite = false;
+    if (myMembership && ['owner', 'admin'].includes(myMembership.role)) {
+      canInvite = true;
+    } else {
+      const { data: ownedCompany } = await (supabaseAdmin
+        .from('companies') as any)
+        .select('owner_id')
+        .eq('id', profile.active_company_id)
+        .maybeSingle();
+      
+      if (ownedCompany && ownedCompany.owner_id === user.id) {
+        canInvite = true;
+      }
+    }
+
+    if (!canInvite) {
       return NextResponse.json({ error: 'Owner or Admin access required' }, { status: 403 });
     }
 
@@ -63,7 +88,8 @@ export async function POST(request: Request) {
     
     if (inviteRoleIndex < myRoleIndex) {
       return NextResponse.json({ 
-        error: 'Cannot invite someone with a higher role than yourself' 
+        error: 'Cannot invite someone with a higher role than yourself',
+        message: `Your role is ${myMembership.role}. You can only invite users with roles: ${roleHierarchy.slice(myRoleIndex + 1).join(', ')}`
       }, { status: 403 });
     }
 
@@ -89,13 +115,13 @@ export async function POST(request: Request) {
     if (existingUser) {
       targetUserId = existingUser.id;
 
-      // Check if already a member
-      const { data: existingMembership } = await supabase
-        .from('company_members')
+      // Check if already a member using admin client
+      const { data: existingMembership } = await (supabaseAdmin
+        .from('company_members') as any)
         .select('id, status')
         .eq('company_id', profile.active_company_id)
         .eq('user_id', targetUserId)
-        .single();
+        .maybeSingle();
 
       if (existingMembership?.status === 'active') {
         return NextResponse.json({ error: 'User is already a member of this company' }, { status: 400 });

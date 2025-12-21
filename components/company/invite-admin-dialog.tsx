@@ -63,12 +63,15 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error);
+        const errorMessage = data.message || data.error || 'Failed to send invitation';
+        throw new Error(errorMessage);
       }
 
       toast({
-        title: data.is_new_user ? '📧 Invitation Sent' : '✅ Admin Added',
-        description: data.message,
+        title: data.is_new_user ? '📧 Invitation Sent' : '✅ Member Added',
+        description: data.message || (data.is_new_user 
+          ? 'An invitation email has been sent to the user.'
+          : 'The member has been added to the company.'),
       });
 
       setOpen(false);
