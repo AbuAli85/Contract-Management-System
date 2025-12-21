@@ -258,6 +258,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 
     if (profile?.active_company_id) {
       // Get company's party_id
+      // Handle both regular companies and party-based companies (parties_employer_direct)
       const { createAdminClient } = await import('@/lib/supabase/server');
       let adminClient;
       try {
@@ -266,18 +267,35 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         adminClient = supabase;
       }
 
-      const { data: company } = await adminClient
-        .from('companies')
-        .select('party_id')
+      // First, check if active_company_id is actually a party_id (for parties_employer_direct)
+      const { data: partyCheck } = await adminClient
+        .from('parties')
+        .select('id, type')
         .eq('id', profile.active_company_id)
-        .single();
+        .maybeSingle();
 
-      if (company?.party_id) {
-        activePartyId = company.party_id;
-        logger.log('Using company party_id for promoter filtering', {
-          companyId: profile.active_company_id,
+      if (partyCheck && partyCheck.type === 'Employer') {
+        // active_company_id IS a party_id for party-based companies
+        activePartyId = profile.active_company_id;
+        logger.log('Using party_id directly for promoter filtering (parties_employer_direct)', {
           partyId: activePartyId,
+          companyId: profile.active_company_id,
         });
+      } else {
+        // Get company's party_id from companies table
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('party_id')
+          .eq('id', profile.active_company_id)
+          .maybeSingle();
+
+        if (company?.party_id) {
+          activePartyId = company.party_id;
+          logger.log('Using company party_id for promoter filtering', {
+            companyId: profile.active_company_id,
+            partyId: activePartyId,
+          });
+        }
       }
     }
 
