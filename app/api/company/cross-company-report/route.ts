@@ -513,9 +513,12 @@ export async function GET() {
     }
 
     // Convert to memberships format for compatibility
-    const memberships: CompanyMembership[] = allCompanies.map((c: any) => ({
+    // Preserve source and party_id information for stats calculation
+    const memberships: (CompanyMembership & { source?: string; party_id?: string })[] = allCompanies.map((c: any) => ({
       company_id: c.company_id,
       role: c.user_role,
+      source: c.source,
+      party_id: c.party_id,
       company: {
         id: c.company_id,
         name: c.company_name,
@@ -563,12 +566,23 @@ export async function GET() {
         let employeeCount = 0;
         
         try {
-          // Get company's party_id first
-          const { data: companyData } = await adminClient
-            .from('companies')
-            .select('party_id')
-            .eq('id', companyId)
-            .single();
+          // For parties_employer_direct, companyId IS the party_id
+          // For other sources, we need to get party_id from companies table
+          let partyId: string | null = null;
+          
+          if (membership.source === 'parties_employer_direct' && membership.party_id) {
+            // companyId is actually a party_id for parties_employer_direct
+            partyId = membership.party_id;
+          } else {
+            // Get company's party_id from companies table
+            const { data: companyData } = await adminClient
+              .from('companies')
+              .select('party_id')
+              .eq('id', companyId)
+              .maybeSingle();
+            
+            partyId = companyData?.party_id || null;
+          }
 
           // 1. Get all unique employee IDs from employer_employees
           const { data: employerEmployees } = await adminClient
@@ -584,11 +598,11 @@ export async function GET() {
 
           // 2. Get all promoter IDs for this company's party
           let promoterIds = new Set<string>();
-          if (companyData?.party_id) {
+          if (partyId) {
             const { data: promoters } = await adminClient
               .from('promoters')
               .select('id')
-              .eq('employer_id', companyData.party_id)
+              .eq('employer_id', partyId)
               .eq('status', 'active');
             
             if (promoters) {
@@ -618,10 +632,26 @@ export async function GET() {
         } as Record<string, unknown>);
 
         // Get active contracts count
-        const activeContracts = await safeCount('contracts', {
-          company_id: companyId,
-          status: 'active',
-        } as Record<string, unknown>);
+        // For parties_employer_direct, use party_id; for others, try company_id first
+        let activeContracts = 0;
+        if (partyId) {
+          // Contracts are linked via party_id (first_party_id or second_party_id)
+          try {
+            const { count } = await adminClient
+              .from('contracts')
+              .select('id', { count: 'exact', head: true })
+              .or(`first_party_id.eq.${partyId},second_party_id.eq.${partyId}`)
+              .eq('status', 'active');
+            activeContracts = count || 0;
+          } catch (e) {
+            console.warn('Error counting contracts:', e);
+          }
+        } else {
+          activeContracts = await safeCount('contracts', {
+            company_id: companyId,
+            status: 'active',
+          } as Record<string, unknown>);
+        }
 
         // ✅ FIX: Get today's attendance from employee_attendance
         // Attendance is linked via employer_employee_id, so we need to get all employer_employee_ids for this company
