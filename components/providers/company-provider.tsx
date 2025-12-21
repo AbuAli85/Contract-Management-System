@@ -34,14 +34,23 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       // Add cache-busting to ensure fresh data
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
-      const response = await fetch(`/api/user/companies${cacheBuster}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-        },
-      });
-      const data = await response.json();
+      
+      // Add timeout to prevent hanging (10 seconds)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      try {
+        const response = await fetch(`/api/user/companies${cacheBuster}`, {
+          cache: 'no-store',
+          signal: controller.signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+        });
+        
+        clearTimeout(timeoutId);
+        const data = await response.json();
 
       if (response.ok && data.success) {
         const activeCompanyId = data.active_company_id;
@@ -105,9 +114,20 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       } else {
         setCompany(null);
       }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.warn('Company fetch timed out after 10 seconds');
+          // Don't block rendering - set loading to false even on timeout
+          setCompany(null);
+        } else {
+          throw fetchError; // Re-throw other errors
+        }
+      }
     } catch (error) {
       console.error('Error fetching active company:', error);
       setCompany(null);
+      // Always set loading to false even on error to prevent blocking
     } finally {
       setIsLoading(false);
     }
@@ -188,7 +208,27 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchActiveCompany();
+    // Fetch company data but don't block rendering
+    // Set a timeout to ensure loading state doesn't persist too long
+    fetchActiveCompany().catch((error) => {
+      console.error('Failed to fetch active company:', error);
+      // Ensure loading is set to false even on error
+      setIsLoading(false);
+    });
+    
+    // Safety timeout: If loading takes more than 5 seconds, stop blocking
+    // Use functional setState to access current value
+    const safetyTimeout = setTimeout(() => {
+      setIsLoading((currentLoading) => {
+        if (currentLoading) {
+          console.warn('CompanyProvider: Loading timeout after 5s - allowing page to render');
+          return false;
+        }
+        return currentLoading;
+      });
+    }, 5000);
+    
+    return () => clearTimeout(safetyTimeout);
   }, []);
 
   return (
