@@ -75,12 +75,23 @@ export function createAdminClient() {
     throw new Error('Missing Supabase admin credentials');
   }
 
-  // Use the base createServerClient with no cookies for admin operations
+  // Verify service role key format
+  if (!supabaseServiceKey.startsWith('eyJ')) {
+    console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token');
+  }
+
+  // Use the base createClient from supabase-js with service role key
+  // This bypasses RLS automatically
   const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
-  return createSupabaseClient(supabaseUrl, supabaseServiceKey, {
+  const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
+    db: {
+      schema: 'public',
+    },
   });
+
+  return adminClient;
 }

@@ -29,13 +29,30 @@ export async function POST(request: Request) {
   // Use admin client to bypass RLS
   let supabaseAdmin;
   try {
-    supabaseAdmin = createAdminClient();
-    // Verify admin client is working by checking if service role key is set
+    // Verify service role key is set before creating client
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
     }
+    
+    supabaseAdmin = createAdminClient();
+    
+    // Test the admin client by making a simple query
+    // This will fail early if the client isn't configured correctly
+    const { error: testError } = await supabaseAdmin
+      .from('company_members')
+      .select('id')
+      .limit(1);
+    
+    if (testError && testError.message.includes('permission denied')) {
+      throw new Error(`Admin client does not have proper permissions. Service role key may be invalid. Error: ${testError.message}`);
+    }
   } catch (e: any) {
-    console.error('[Invite Admin] Admin client initialization failed:', e);
+    console.error('[Invite Admin] Admin client initialization failed:', {
+      message: e.message,
+      stack: e.stack,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+    });
     return NextResponse.json({ 
       error: 'Server configuration error',
       details: e.message || 'Admin client initialization failed. Please check SUPABASE_SERVICE_ROLE_KEY environment variable.',
@@ -145,8 +162,8 @@ export async function POST(request: Request) {
     }
 
     // Get company details
-    const { data: companyData, error: companyError } = await (supabaseAdmin
-      .from('companies') as any)
+    const { data: companyData, error: companyError } = await supabaseAdmin
+      .from('companies')
       .select('name')
       .eq('id', activeCompanyId)
       .maybeSingle();
@@ -155,7 +172,7 @@ export async function POST(request: Request) {
       console.warn('[Invite Admin] Could not fetch company name:', companyError);
     }
 
-    const company = (companyData as any) as Company | null;
+    const company = companyData as Company | null;
 
     // Get inviter's profile for name
     const { data: inviterProfileData } = await supabase
@@ -168,11 +185,19 @@ export async function POST(request: Request) {
     const inviterName = inviterProfile?.full_name || inviterProfile?.email || user.email || 'Admin';
 
     // Check if user exists
-    const { data: existingUserData } = await (supabaseAdmin
-      .from('profiles') as any)
+    const { data: existingUserData, error: userCheckError } = await supabaseAdmin
+      .from('profiles')
       .select('id, email, full_name')
       .eq('email', email.toLowerCase())
-      .single();
+      .maybeSingle();
+
+    if (userCheckError) {
+      console.error('[Invite Admin] Error checking for existing user:', userCheckError);
+      // Don't fail if user doesn't exist - that's expected for new users
+      if (userCheckError.code !== 'PGRST116') { // PGRST116 = no rows returned (expected)
+        throw new Error(`Failed to check user existence: ${userCheckError.message}`);
+      }
+    }
 
     const existingUser = existingUserData as ExistingUser | null;
 
@@ -226,21 +251,34 @@ export async function POST(request: Request) {
             status: 'active',
           })
           .select('id, company_id, user_id, role, status')
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single
         
         if (insertError) {
-          console.error('[Invite Admin] Error creating membership:', insertError);
+          console.error('[Invite Admin] Error creating membership:', {
+            error: insertError,
+            message: insertError.message,
+            code: insertError.code,
+            details: insertError.details,
+            hint: insertError.hint,
+            company_id: activeCompanyId,
+            user_id: targetUserId,
+            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          });
           throw new Error(`Failed to create membership: ${insertError.message}`);
         }
         
-        console.log('[Invite Admin] Created new membership:', {
-          membership_id: newMembership?.id,
-          company_id: newMembership?.company_id,
-          user_id: newMembership?.user_id,
-          role: newMembership?.role,
-          status: newMembership?.status,
-          target_email: email,
-        });
+        if (newMembership) {
+          console.log('[Invite Admin] Created new membership:', {
+            membership_id: newMembership.id,
+            company_id: newMembership.company_id,
+            user_id: newMembership.user_id,
+            role: newMembership.role,
+            status: newMembership.status,
+            target_email: email,
+          });
+        } else {
+          console.warn('[Invite Admin] Membership insert succeeded but no data returned');
+        }
       }
     } else {
       // User doesn't exist - create an invitation record
@@ -340,7 +378,24 @@ export async function POST(request: Request) {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error inviting admin:', errorMessage);
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('[Invite Admin] Error inviting admin:', {
+      message: errorMessage,
+      stack: errorStack,
+      error,
+    });
+    
+    // Provide more helpful error messages
+    let userFriendlyError = errorMessage;
+    if (errorMessage.includes('permission denied')) {
+      userFriendlyError = 'Permission denied. Please check that SUPABASE_SERVICE_ROLE_KEY is set correctly.';
+    } else if (errorMessage.includes('Failed to create membership')) {
+      userFriendlyError = 'Failed to add member to company. Please try again or contact support.';
+    }
+    
+    return NextResponse.json({ 
+      error: userFriendlyError,
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+    }, { status: 500 });
   }
 }
