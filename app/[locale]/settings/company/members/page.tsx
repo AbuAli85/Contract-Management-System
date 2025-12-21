@@ -83,8 +83,13 @@ export default function CompanyMembersPage() {
 
       setCompanyId(companyData.company.id);
 
-      // Then fetch members
-      const membersResponse = await fetch(`/api/user/companies/${companyData.company.id}/members`);
+      // Then fetch members (with cache busting to ensure fresh data)
+      const membersResponse = await fetch(`/api/user/companies/${companyData.company.id}/members?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
       const membersData = await membersResponse.json();
 
       if (membersResponse.ok && membersData.success) {

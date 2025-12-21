@@ -105,6 +105,15 @@ export async function POST(request: Request) {
       .eq('id', profile.active_company_id)
       .single();
 
+    // Get inviter's profile for name
+    const { data: inviterProfile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    const inviterName = inviterProfile?.full_name || inviterProfile?.email || user.email || 'Admin';
+
     // Check if user exists
     const { data: existingUserData } = await (supabaseAdmin
       .from('profiles') as any)
@@ -185,17 +194,46 @@ export async function POST(request: Request) {
 
     // Queue email notification
     try {
-      await (supabaseAdmin
+      // Get inviter's user_id for the email queue
+      const inviterUserId = user.id;
+      
+      // Prepare email data with invitation details
+      const emailData = {
+        company_id: profile.active_company_id,
+        company_name: company?.name || 'Company',
+        role,
+        department: normalizedDepartment,
+        job_title: normalizedJobTitle,
+        inviter_name: inviterName,
+        message: normalizedMessage,
+        is_new_user: isNewUser,
+        invitation_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/settings/company`,
+      };
+      
+      // Insert into email_queue with correct schema
+      const { error: emailQueueError } = await (supabaseAdmin
         .from('email_queue') as any)
         .insert({
-          email_address: email.toLowerCase(),
-          notification_type: isNewUser ? 'company_invitation_new_user' : 'company_invitation',
-          priority: 1,
-          scheduled_at: new Date().toISOString(),
+          user_id: existingUser?.id || null, // Use target user's ID if exists, otherwise null
+          email: email.toLowerCase(),
+          template: isNewUser ? 'company_invitation_new_user' : 'company_invitation',
+          data: emailData,
           status: 'pending',
+          scheduled_for: new Date().toISOString(), // Use scheduled_for, not scheduled_at
+          retry_count: 0,
+          max_retries: 3,
         });
+      
+      if (emailQueueError) {
+        console.error('Error queuing email:', emailQueueError);
+        // Don't fail the entire request if email queue fails
+        // The invitation is still created successfully
+      } else {
+        console.log('Email queued successfully for:', email.toLowerCase());
+      }
     } catch (e) {
-      console.log('Email queue not available');
+      console.error('Exception queuing email:', e);
+      // Don't fail the entire request if email queue fails
     }
 
     // Create in-app notification for existing users

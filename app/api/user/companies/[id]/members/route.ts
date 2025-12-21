@@ -111,7 +111,8 @@ export async function GET(
         job_title,
         is_primary,
         joined_at,
-        status
+        status,
+        permissions
       `)
       .eq('company_id', companyId)
       .neq('status', 'removed')
@@ -127,63 +128,70 @@ export async function GET(
       });
     }
 
+    // Debug logging
+    console.log(`[Members API] Found ${membersData?.length || 0} company_members records for company ${companyId}`);
+    if (membersData && membersData.length > 0) {
+      console.log('[Members API] Member statuses:', membersData.map((m: any) => ({ id: m.id, user_id: m.user_id, role: m.role, status: m.status })));
+    }
+
     // Then fetch profile data for each member
     const members: any[] = [];
     if (membersData && membersData.length > 0) {
       const userIds = membersData.map((m: any) => m.user_id).filter(Boolean);
       
+      // Fetch profiles if we have user IDs
+      let profiles: any[] = [];
       if (userIds.length > 0) {
-        const { data: profiles, error: profilesError } = await adminClient
+        const { data: profilesData, error: profilesError } = await adminClient
           .from('profiles')
           .select('id, full_name, email, avatar_url, phone')
           .in('id', userIds);
 
-        if (!profilesError && profiles) {
-          // Combine member data with profile data
-          for (const member of membersData) {
-            const profile = profiles.find((p: any) => p.id === member.user_id);
-            if (profile) {
-              members.push({
-                id: member.id,
-                user_id: member.user_id,
-                role: member.role,
-                department: member.department,
-                job_title: member.job_title,
-                is_primary: member.is_primary,
-                joined_at: member.joined_at,
-                status: member.status,
-                user: {
-                  id: profile.id,
-                  full_name: profile.full_name,
-                  email: profile.email,
-                  avatar_url: profile.avatar_url,
-                  phone: profile.phone,
-                },
-              });
-            } else {
-              // Include member even if profile not found
-              members.push({
-                id: member.id,
-                user_id: member.user_id,
-                role: member.role,
-                department: member.department,
-                job_title: member.job_title,
-                is_primary: member.is_primary,
-                joined_at: member.joined_at,
-                status: member.status,
-                user: null,
-              });
-            }
-          }
-        } else {
-          // If profiles query fails, still return members without profile data
-          members.push(...membersData.map((m: any) => ({
-            ...m,
-            user: null,
-          })));
+        if (!profilesError && profilesData) {
+          profiles = profilesData;
+        } else if (profilesError) {
+          console.warn('Error fetching profiles for members:', profilesError);
+          // Continue without profiles - we'll include members anyway
         }
       }
+
+      // Combine member data with profile data
+      // IMPORTANT: Include ALL members, even if profile lookup failed
+      for (const member of membersData) {
+        const profile = member.user_id ? profiles.find((p: any) => p.id === member.user_id) : null;
+        
+        if (!profile && member.user_id) {
+          console.warn(`[Members API] Profile not found for user_id: ${member.user_id} (member_id: ${member.id})`);
+        }
+        
+        members.push({
+          id: member.id,
+          user_id: member.user_id,
+          role: member.role,
+          department: member.department,
+          job_title: member.job_title,
+          is_primary: member.is_primary,
+          joined_at: member.joined_at,
+          status: member.status,
+          user: profile ? {
+            id: profile.id,
+            full_name: profile.full_name,
+            email: profile.email,
+            avatar_url: profile.avatar_url,
+            phone: profile.phone,
+          } : (member.user_id ? null : {
+            // For invited users without user_id, show email from metadata if available
+            id: null,
+            full_name: null,
+            email: (member as any).permissions?.pending_email || null,
+            avatar_url: null,
+            phone: null,
+          }),
+        });
+      }
     }
+
+    console.log(`[Members API] Returning ${members.length} members for company ${companyId}`);
 
     return NextResponse.json({
       success: true,
