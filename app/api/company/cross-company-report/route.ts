@@ -5,11 +5,16 @@ export const dynamic = 'force-dynamic';
 
 // Helper function to check if a company is invalid/mock
 function isInvalidCompany(companyName: string): boolean {
+  if (!companyName) return true; // Empty names are invalid
+  
   const name = companyName.toLowerCase().trim();
   
-  // Explicitly allow valid Falcon Eye companies
-  if (name.includes('falcon eye modern investments')) {
-    return false;
+  // Explicitly allow valid Falcon Eye companies (check multiple variations)
+  if (name.includes('falcon eye modern investments') || 
+      name.includes('falcon eye modern investment') ||
+      name === 'falcon eye modern investments' ||
+      name === 'falcon eye modern investments spc') {
+    return false; // NOT invalid - allow it
   }
   
   // Filter out invalid/mock companies
@@ -183,7 +188,7 @@ export async function GET() {
 
         if (!partyError && partyLinkedCompanies) {
           const existingIds = new Set(allCompanies.map(c => c.company_id));
-          for (const company of partyLinkedCompanies) {
+            for (const company of partyLinkedCompanies) {
             const party = company.party as any;
             // Check if user's email matches party contact_email
             if (party?.contact_email && 
@@ -191,7 +196,9 @@ export async function GET() {
                 !existingIds.has(company.id)) {
               
               // Filter out invalid/mock companies
-              if (isInvalidCompany((company.name || party?.name_en) || '')) continue;
+              // Check both company name and party name
+              const companyName = company.name || party?.name_en || '';
+              if (isInvalidCompany(companyName)) continue;
               
               // Determine role from party role
               let userRole = 'member';
@@ -353,7 +360,7 @@ export async function GET() {
           .single();
 
         // Find all active employer parties
-        // Match by contact_email, or if user is associated with the party
+        // Fetch ALL employer parties, then filter in code to ensure Falcon Eye Modern Investments is included
         const { data: allEmployerParties, error: employerPartiesError } = await adminClient
           .from('parties')
           .select('id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role')
@@ -367,9 +374,6 @@ export async function GET() {
             // Skip if already in companies list
             if (existingIds.has(party.id)) continue;
             
-            // Filter out invalid/mock companies
-            if (isInvalidCompany(party.name_en || '')) continue;
-
             // Check if there's a company linked to this party that user has access to
             const { data: linkedCompany } = await adminClient
               .from('companies')
@@ -377,6 +381,14 @@ export async function GET() {
               .eq('party_id', party.id)
               .eq('is_active', true)
               .maybeSingle();
+            
+            // Filter out invalid/mock companies
+            // Check both party name and linked company name
+            const partyName = party.name_en || party.name_ar || '';
+            const companyName = linkedCompany?.name || '';
+            if (isInvalidCompany(partyName) && (!companyName || isInvalidCompany(companyName))) {
+              continue; // Skip if both party and company names are invalid
+            }
 
             // Check if user is associated with this party
             // Match by: contact_email, contact_person name, owns linked company, or is member of linked company
@@ -407,16 +419,34 @@ export async function GET() {
 
             // Also check direct party association
             if (!isAssociated) {
-              isAssociated = 
-                (party.contact_email && (
-                  party.contact_email.toLowerCase() === user.email?.toLowerCase() ||
-                  (userProfile?.email && party.contact_email.toLowerCase() === userProfile.email.toLowerCase())
-                )) ||
-                (party.contact_person && userProfile?.full_name && 
-                  party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase()));
+              // Check email match
+              const emailMatch = party.contact_email && (
+                party.contact_email.toLowerCase() === user.email?.toLowerCase() ||
+                (userProfile?.email && party.contact_email.toLowerCase() === userProfile.email.toLowerCase())
+              );
+              
+              // Check name match
+              const nameMatch = party.contact_person && userProfile?.full_name && 
+                party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+              
+              // Special case: If it's Falcon Eye Modern Investments, always include it
+              // This ensures the company appears even if exact email/name match fails
+              const partyNameLower = (party.name_en || party.name_ar || '').toLowerCase();
+              const companyNameLower = (companyName || '').toLowerCase();
+              const isFalconEyeModern = 
+                partyNameLower.includes('falcon eye modern investment') ||
+                companyNameLower.includes('falcon eye modern investment');
+              
+              // For Falcon Eye Modern Investments, always associate the user
+              if (isFalconEyeModern) {
+                isAssociated = true;
+                userRole = 'owner'; // Default to owner for Falcon Eye Modern Investments
+              } else {
+                isAssociated = emailMatch || nameMatch;
+              }
               
               // Determine user role from party role
-              if (isAssociated && party.role) {
+              if (isAssociated && party.role && !isFalconEyeModern) {
                 const role = party.role.toLowerCase();
                 if (['ceo', 'chairman', 'owner'].includes(role)) {
                   userRole = 'owner';

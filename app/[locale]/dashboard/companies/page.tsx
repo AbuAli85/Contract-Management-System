@@ -43,6 +43,7 @@ import {
   Trash2,
   MoreVertical,
   Settings,
+  Shield,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -499,6 +500,12 @@ export default function CrossCompanyDashboard() {
                               <DropdownMenuItem onClick={() => router.push(`/en/settings/company`)}>
                                 <Settings className="h-4 w-4 mr-2" />
                                 Company Settings
+                              </DropdownMenuItem>
+                            )}
+                            {canEdit && (
+                              <DropdownMenuItem onClick={() => router.push(`/en/dashboard/companies/permissions?company_id=${company.id}`)}>
+                                <Shield className="h-4 w-4 mr-2" />
+                                Manage Permissions
                               </DropdownMenuItem>
                             )}
                             {canDelete && (

@@ -55,13 +55,28 @@ export const POST = withRBAC('attendance:create:all', async (
     }
 
     // Get user's company
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('active_company_id, role')
       .eq('id', user.id)
       .single();
 
-    if (!profile?.active_company_id) {
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      );
+    }
+
+    // Type guard: ensure profile has required fields
+    type ProfileWithCompany = {
+      active_company_id: string | null;
+      role: string | null;
+    };
+
+    const userProfile = profile as ProfileWithCompany;
+
+    if (!userProfile.active_company_id) {
       return NextResponse.json(
         { error: 'No active company found', details: 'Please select an active company in your profile settings' },
         { status: 400 }
@@ -69,9 +84,9 @@ export const POST = withRBAC('attendance:create:all', async (
     }
 
     // Verify user has correct role
-    if (!['admin', 'employer', 'manager'].includes(profile.role || '')) {
+    if (!['admin', 'employer', 'manager'].includes(userProfile.role || '')) {
       return NextResponse.json(
-        { error: 'Insufficient permissions', details: `Your role (${profile.role}) does not have permission to create attendance links. Required: admin, employer, or manager` },
+        { error: 'Insufficient permissions', details: `Your role (${userProfile.role}) does not have permission to create attendance links. Required: admin, employer, or manager` },
         { status: 403 }
       );
     }
@@ -93,7 +108,7 @@ export const POST = withRBAC('attendance:create:all', async (
     // Create the attendance link using admin client (bypasses RLS)
     const { data: link, error: createError } = await (supabaseAdmin.from('attendance_links') as any)
       .insert({
-        company_id: profile.active_company_id,
+        company_id: userProfile.active_company_id,
         created_by: user.id,
         link_code: linkCode,
         title: title || `Check-In Link - ${new Date().toLocaleDateString()}`,
@@ -113,8 +128,8 @@ export const POST = withRBAC('attendance:create:all', async (
       console.error('Error creating attendance link:', createError);
       console.error('User profile:', { 
         id: user.id, 
-        role: profile.role, 
-        active_company_id: profile.active_company_id 
+        role: userProfile.role, 
+        active_company_id: userProfile.active_company_id 
       });
       console.error('Service role key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
       
@@ -129,8 +144,8 @@ export const POST = withRBAC('attendance:create:all', async (
           ...(process.env.NODE_ENV === 'development' && {
             diagnostic: {
               user_id: user.id,
-              user_role: profile.role,
-              active_company_id: profile.active_company_id,
+              user_role: userProfile.role,
+              active_company_id: userProfile.active_company_id,
               has_service_role_key: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
             }
           })
@@ -179,13 +194,29 @@ export const GET = withRBAC('attendance:read:all', async (
     }
 
     // Get user's company
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('active_company_id, role')
       .eq('id', user.id)
       .single();
 
-    if (!profile?.active_company_id) {
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      );
+    }
+
+    // Type guard: ensure profile has required fields
+    type ProfileWithCompany = {
+      active_company_id: string | null;
+      role: string | null;
+    };
+
+    const userProfile = profile as ProfileWithCompany;
+    let activeCompanyId = userProfile.active_company_id;
+
+    if (!activeCompanyId) {
       // Try to find any company the user has access to
       const { data: userCompanies } = await (supabaseAdmin.from('company_members') as any)
         .select('company_id')
@@ -207,7 +238,19 @@ export const GET = withRBAC('attendance:read:all', async (
           .eq('id', user.id)
           .single();
         
-        if (!updatedProfile?.active_company_id) {
+        if (!updatedProfile) {
+          return NextResponse.json(
+            { 
+              error: 'No active company found',
+              message: 'Please set your active company in profile settings.',
+            },
+            { status: 400 }
+          );
+        }
+
+        const updatedUserProfile = updatedProfile as ProfileWithCompany;
+        
+        if (!updatedUserProfile.active_company_id) {
           return NextResponse.json(
             { 
               error: 'No active company found',
@@ -217,8 +260,8 @@ export const GET = withRBAC('attendance:read:all', async (
           );
         }
         
-        // Continue with the updated profile
-        profile.active_company_id = updatedProfile.active_company_id;
+        // Use the updated profile's company ID
+        activeCompanyId = updatedUserProfile.active_company_id;
       } else {
         return NextResponse.json(
           { 
@@ -250,7 +293,7 @@ export const GET = withRBAC('attendance:read:all', async (
           address
         )
       `)
-      .eq('company_id', profile.active_company_id)
+      .eq('company_id', activeCompanyId)
       .order('created_at', { ascending: false });
 
     if (!includeExpired) {
