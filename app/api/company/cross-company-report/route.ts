@@ -865,12 +865,17 @@ export async function GET() {
           status: ['draft', 'submitted'],
         });
 
+        // Get group_name from the original company data (allCompanies)
+        // The group_name was set earlier in the code on allCompanies
+        const originalCompany = allCompanies.find(c => c.company_id === companyId);
+        const groupName = originalCompany?.group_name || company?.group?.name || null;
+
         return {
           id: companyId,
           name: company?.name || 'Unknown',
           logo_url: company?.logo_url ?? null,
           is_active: company?.is_active ?? true,
-          group_name: company?.group?.name ?? null,
+          group_name: groupName,
           user_role: membership.role,
           stats: {
             employees: employeeCount,
