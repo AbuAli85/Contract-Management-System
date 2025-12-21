@@ -973,15 +973,45 @@ export async function GET() {
       groupedCompanies[groupKey].push(company);
     });
 
-    return NextResponse.json({
+    // Ensure all data structures are valid before returning
+    const response = {
       success: true,
-      companies: companiesWithStats,
-      grouped: groupedCompanies,
-      summary,
-    });
+      companies: Array.isArray(companiesWithStats) ? companiesWithStats : [],
+      grouped: groupedCompanies && typeof groupedCompanies === 'object' ? groupedCompanies : {},
+      summary: summary || {
+        total_companies: 0,
+        total_employees: 0,
+        total_pending_leaves: 0,
+        total_pending_expenses: 0,
+        total_contracts: 0,
+        total_open_tasks: 0,
+        total_checked_in: 0,
+      },
+    };
+
+    return NextResponse.json(response);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in cross-company report:', errorMessage);
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    
+    // Return a proper error response with valid structure
+    return NextResponse.json(
+      {
+        success: false,
+        error: errorMessage,
+        companies: [],
+        grouped: {},
+        summary: {
+          total_companies: 0,
+          total_employees: 0,
+          total_pending_leaves: 0,
+          total_pending_expenses: 0,
+          total_contracts: 0,
+          total_open_tasks: 0,
+          total_checked_in: 0,
+        },
+      },
+      { status: 500 }
+    );
   }
 }

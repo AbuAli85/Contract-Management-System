@@ -135,28 +135,55 @@ export default function CrossCompanyDashboard() {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/company/cross-company-report', {
         cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        setCompanies(data.companies);
-        setGrouped(data.grouped);
-        setSummary(data.summary);
-      } else {
-        toast({
-          title: 'Error',
-          description: data.error || 'Failed to load companies',
-          variant: 'destructive',
+      if (data.success) {
+        // Ensure we have valid data structures
+        setCompanies(Array.isArray(data.companies) ? data.companies : []);
+        setGrouped(data.grouped && typeof data.grouped === 'object' ? data.grouped : {});
+        setSummary(data.summary || {
+          total_companies: 0,
+          total_employees: 0,
+          total_pending_leaves: 0,
+          total_pending_expenses: 0,
+          total_contracts: 0,
+          total_open_tasks: 0,
+          total_checked_in: 0,
         });
+      } else {
+        throw new Error(data.error || 'Failed to load companies');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load companies',
+        description: error.message || 'Failed to load companies. Please try again.',
         variant: 'destructive',
+      });
+      // Set empty state on error
+      setCompanies([]);
+      setGrouped({});
+      setSummary({
+        total_companies: 0,
+        total_employees: 0,
+        total_pending_leaves: 0,
+        total_pending_expenses: 0,
+        total_contracts: 0,
+        total_open_tasks: 0,
+        total_checked_in: 0,
       });
     } finally {
       setLoading(false);
@@ -425,12 +452,13 @@ export default function CrossCompanyDashboard() {
       )}
 
       {/* Companies by Group */}
-      {Object.entries(grouped).map(([groupName, groupCompanies]) => (
-        <div key={groupName} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold">{groupName}</h2>
-            <Badge variant="outline">{groupCompanies.length} companies</Badge>
-          </div>
+      {Object.keys(grouped).length > 0 ? (
+        Object.entries(grouped).map(([groupName, groupCompanies]) => (
+          <div key={groupName} className="space-y-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">{groupName}</h2>
+              <Badge variant="outline">{groupCompanies.length} {groupCompanies.length === 1 ? 'company' : 'companies'}</Badge>
+            </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {groupCompanies.map((company) => {
@@ -592,7 +620,175 @@ export default function CrossCompanyDashboard() {
             })}
           </div>
         </div>
-      ))}
+        ))
+      ) : companies.length > 0 ? (
+        // If we have companies but no groups, show them all
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">All Companies</h2>
+            <Badge variant="outline">{companies.length} {companies.length === 1 ? 'company' : 'companies'}</Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {companies.map((company) => {
+              const canEdit = canEditCompany(userHighestRole, company.user_role);
+              const canDelete = canDeleteCompany(userHighestRole, company.user_role);
+
+              return (
+                <Card
+                  key={company.id}
+                  className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md relative"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-4">
+                      <Avatar 
+                        className="h-14 w-14 shadow-lg cursor-pointer"
+                        onClick={() => handleSwitchToCompany(company.id)}
+                      >
+                        {company.logo_url ? (
+                          <AvatarImage src={company.logo_url} />
+                        ) : null}
+                        <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                          {getInitials(company.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <span 
+                            className="truncate cursor-pointer"
+                            onClick={() => handleSwitchToCompany(company.id)}
+                          >
+                            {company.name}
+                          </span>
+                          <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600" />
+                        </CardTitle>
+                        <Badge className={cn('mt-1', roleColors[company.user_role] || roleColors.member)}>
+                          {company.user_role}
+                        </Badge>
+                      </div>
+                      {(canEdit || canDelete) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                if (e) {
+                                  e.stopPropagation();
+                                }
+                              }}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {canEdit && (
+                              <DropdownMenuItem onClick={(e) => {
+                                if (e && 'button' in e) {
+                                  handleEditClick(company, e as React.MouseEvent<Element, MouseEvent>);
+                                }
+                              }}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Company
+                              </DropdownMenuItem>
+                            )}
+                            {canEdit && (
+                              <DropdownMenuItem onClick={() => router.push(`/en/settings/company`)}>
+                                <Settings className="h-4 w-4 mr-2" />
+                                Company Settings
+                              </DropdownMenuItem>
+                            )}
+                            {canEdit && (
+                              <DropdownMenuItem onClick={() => router.push(`/en/dashboard/companies/permissions?company_id=${company.id}`)}>
+                                <Shield className="h-4 w-4 mr-2" />
+                                Manage Permissions
+                              </DropdownMenuItem>
+                            )}
+                            {canDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={(e) => {
+                                    if (e && 'button' in e) {
+                                      handleDeleteClick(company, e as React.MouseEvent<Element, MouseEvent>);
+                                    }
+                                  }}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete Company
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4" onClick={() => handleSwitchToCompany(company.id)}>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <Users className="h-4 w-4 mx-auto text-blue-600 mb-1" />
+                        <p className="text-lg font-bold">{company.stats.employees}</p>
+                        <p className="text-xs text-gray-500">Employees</p>
+                      </div>
+                      <div className="text-center p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                        <Clock className="h-4 w-4 mx-auto text-emerald-600 mb-1" />
+                        <p className="text-lg font-bold">{company.stats.checked_in_today}</p>
+                        <p className="text-xs text-gray-500">Present</p>
+                      </div>
+                      <div className="text-center p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        <CheckSquare className="h-4 w-4 mx-auto text-amber-600 mb-1" />
+                        <p className="text-lg font-bold">{company.stats.open_tasks}</p>
+                        <p className="text-xs text-gray-500">Tasks</p>
+                      </div>
+                    </div>
+
+                    {/* Pending Items */}
+                    {(company.stats.pending_leaves > 0 || company.stats.pending_expenses > 0 || company.stats.pending_reviews > 0) && (
+                      <div className="flex flex-wrap gap-2">
+                        {company.stats.pending_leaves > 0 && (
+                          <Badge variant="outline" className="gap-1 text-amber-600 border-amber-200 bg-amber-50">
+                            <AlertTriangle className="h-3 w-3" />
+                            {company.stats.pending_leaves} leave requests
+                          </Badge>
+                        )}
+                        {company.stats.pending_expenses > 0 && (
+                          <Badge variant="outline" className="gap-1 text-rose-600 border-rose-200 bg-rose-50">
+                            <AlertTriangle className="h-3 w-3" />
+                            {company.stats.pending_expenses} expenses
+                          </Badge>
+                        )}
+                        {company.stats.pending_reviews > 0 && (
+                          <Badge variant="outline" className="gap-1 text-purple-600 border-purple-200 bg-purple-50">
+                            <Star className="h-3 w-3" />
+                            {company.stats.pending_reviews} reviews
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Attendance Progress */}
+                    {company.stats.employees > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Today's Attendance</span>
+                          <span>{Math.round((company.stats.checked_in_today / company.stats.employees) * 100)}%</span>
+                        </div>
+                        <Progress 
+                          value={(company.stats.checked_in_today / company.stats.employees) * 100} 
+                          className="h-2"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       {/* Empty State */}
       {companies.length === 0 && (
