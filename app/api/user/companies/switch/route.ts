@@ -286,9 +286,34 @@ export async function POST(request: NextRequest) {
                 }
               } else if (emailMatch || nameMatch || isFalconEyeModern) {
                 // No linked company, but user is associated with party - allow using party as company
+                // This handles the case where company_id is actually a party_id (parties_employer_direct)
                 hasAccess = true;
                 userRole = 'owner';
                 companyName = partyAsCompany.name_en || '';
+                // Note: company_id will be the party_id, which is correct for this case
+              }
+            } else {
+              // Even if email/name don't match, check if it's Falcon Eye Modern Investments
+              const isFalconEyeModern = (partyAsCompany.name_en || '').toLowerCase().includes('falcon eye modern investment');
+              if (isFalconEyeModern) {
+                // Check if there's a company linked to this party
+                const { data: linkedCompany } = await adminClient
+                  .from('companies')
+                  .select('id, name, owner_id')
+                  .eq('party_id', company_id)
+                  .eq('is_active', true)
+                  .maybeSingle();
+
+                if (linkedCompany) {
+                  hasAccess = true;
+                  userRole = linkedCompany.owner_id === user.id ? 'owner' : 'owner';
+                  companyName = linkedCompany.name || partyAsCompany.name_en || '';
+                } else {
+                  // No linked company - use party as company (parties_employer_direct case)
+                  hasAccess = true;
+                  userRole = 'owner';
+                  companyName = partyAsCompany.name_en || '';
+                }
               }
             }
           }
