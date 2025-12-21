@@ -38,13 +38,23 @@ export async function POST(request: Request) {
     
     // Test the admin client by attempting a simple query
     // This verifies the service role key is valid and can bypass RLS
-    const { error: testError } = await supabaseAdmin
-      .from('company_members')
-      .select('id')
-      .limit(1);
-    
-    if (testError && testError.code === '42501') {
-      throw new Error(`Admin client cannot bypass RLS. Service role key may be invalid. Error: ${testError.message}`);
+    // Note: We only warn on test errors, don't fail - the actual insert will tell us if there's a real problem
+    try {
+      const { error: testError } = await supabaseAdmin
+        .from('company_members')
+        .select('id')
+        .limit(1);
+      
+      if (testError && testError.code === '42501') {
+        console.warn('[Invite Admin] Admin client test query failed with permission error. This may indicate an invalid service role key.');
+        // Don't throw - let the actual insert operation fail with a clearer error
+      } else if (testError) {
+        console.warn('[Invite Admin] Admin client test query had an error (non-permission):', testError.message);
+        // Don't throw - might be a temporary issue
+      }
+    } catch (testException: any) {
+      console.warn('[Invite Admin] Admin client test query exception:', testException.message);
+      // Don't throw - let the actual insert operation fail with a clearer error
     }
   } catch (e: any) {
     console.error('[Invite Admin] Admin client initialization or test failed:', {
@@ -241,6 +251,23 @@ export async function POST(request: Request) {
         }
       } else {
         // Create membership using admin client (bypasses RLS)
+        // First, verify admin client can read from the table (diagnostic)
+        const { error: readTestError } = await supabaseAdmin
+          .from('company_members')
+          .select('id')
+          .eq('company_id', activeCompanyId)
+          .limit(1);
+        
+        if (readTestError && (readTestError.code === '42501' || readTestError.message?.includes('permission denied'))) {
+          console.error('[Invite Admin] Admin client cannot read from company_members - service role key may be invalid:', {
+            error: readTestError.message,
+            code: readTestError.code,
+            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+          });
+          throw new Error(`Admin client permission error: Cannot access company_members table. Please verify SUPABASE_SERVICE_ROLE_KEY is set correctly in your production environment (Vercel). Error: ${readTestError.message}`);
+        }
+        
         // Use the same pattern as the working route - insert without select
         const { error: insertError } = await supabaseAdmin
           .from('company_members')
@@ -264,13 +291,13 @@ export async function POST(request: Request) {
             company_id: activeCompanyId,
             user_id: targetUserId,
             hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-            serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10) || 'NOT_SET',
+            serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
             supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
           });
           
           // Check if it's a permission error and provide more context
           if (insertError.message?.includes('permission denied') || insertError.code === '42501') {
-            throw new Error(`Permission denied when inserting into company_members. This usually means the SUPABASE_SERVICE_ROLE_KEY is invalid or the admin client is not properly configured. Original error: ${insertError.message}`);
+            throw new Error(`Permission denied when inserting into company_members. The SUPABASE_SERVICE_ROLE_KEY environment variable must be set in your Vercel project settings. Go to: Project Settings → Environment Variables → Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase dashboard. Original error: ${insertError.message}`);
           }
           
           throw new Error(`Failed to create membership: ${insertError.message}`);
