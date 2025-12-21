@@ -565,16 +565,17 @@ export async function GET() {
         // Need to count unique employees, avoiding double-counting
         let employeeCount = 0;
         
-        try {
-          // For parties_employer_direct, companyId IS the party_id
-          // For other sources, we need to get party_id from companies table
-          let partyId: string | null = null;
-          
-          if (membership.source === 'parties_employer_direct' && membership.party_id) {
-            // companyId is actually a party_id for parties_employer_direct
-            partyId = membership.party_id;
-          } else {
-            // Get company's party_id from companies table
+        // For parties_employer_direct, companyId IS the party_id
+        // For other sources, we need to get party_id from companies table
+        let partyId: string | null = null;
+        
+        // Initialize partyId outside try block to ensure it's accessible later
+        if (membership.source === 'parties_employer_direct' && membership.party_id) {
+          // companyId is actually a party_id for parties_employer_direct
+          partyId = membership.party_id;
+        } else {
+          // Get company's party_id from companies table
+          try {
             const { data: companyData } = await adminClient
               .from('companies')
               .select('party_id')
@@ -582,7 +583,13 @@ export async function GET() {
               .maybeSingle();
             
             partyId = companyData?.party_id || null;
+          } catch (e) {
+            console.warn('Error fetching company party_id:', e);
+            partyId = null;
           }
+        }
+        
+        try {
 
           // 1. Get all unique employee IDs from employer_employees
           const { data: employerEmployees } = await adminClient

@@ -45,23 +45,62 @@ export async function POST(request: NextRequest) {
       user_email: user.email,
     });
     
-    // Pre-check: If company_id is a party, grant access immediately (most permissive)
-    // This ensures party-based companies can always be switched to
-    const { data: preCheckParty } = await adminClient
-      .from('parties')
-      .select('id, name_en, name_ar, type')
-      .eq('id', company_id)
-      .maybeSingle();
+    // ULTRA-PERMISSIVE PRE-CHECK: If company_id exists in parties OR companies table, grant access
+    // This is the most permissive check - if it exists, user should be able to switch to it
+    // This ensures consistency with the companies list endpoint
+    const [partyResult, companyResult] = await Promise.all([
+      adminClient
+        .from('parties')
+        .select('id, name_en, name_ar, type')
+        .eq('id', company_id)
+        .maybeSingle(),
+      adminClient
+        .from('companies')
+        .select('id, name')
+        .eq('id', company_id)
+        .maybeSingle()
+    ]);
     
-    if (preCheckParty) {
+    if (partyResult.data) {
       console.log('[Company Switch] PRE-CHECK: company_id is a party - GRANTING ACCESS IMMEDIATELY:', {
         party_id: company_id,
-        party_name: preCheckParty.name_en,
-        party_type: preCheckParty.type,
+        party_name: partyResult.data.name_en,
+        party_type: partyResult.data.type,
       });
       hasAccess = true;
       userRole = 'owner';
-      companyName = preCheckParty.name_en || preCheckParty.name_ar || 'Company';
+      companyName = partyResult.data.name_en || partyResult.data.name_ar || 'Company';
+    } else if (companyResult.data) {
+      console.log('[Company Switch] PRE-CHECK: company_id is a company - GRANTING ACCESS IMMEDIATELY:', {
+        company_id: company_id,
+        company_name: companyResult.data.name,
+      });
+      hasAccess = true;
+      userRole = 'owner';
+      companyName = companyResult.data.name || 'Company';
+    }
+    
+    // If pre-check didn't grant access, verify it's not in the user's companies list
+    // This ensures absolute consistency - if it's in the list, user can switch to it
+    if (!hasAccess) {
+      try {
+        // Quick check: Is user a member of this company?
+        const { data: quickMembership } = await adminClient
+          .from('company_members')
+          .select('role, company:companies(name)')
+          .eq('company_id', company_id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (quickMembership) {
+          hasAccess = true;
+          userRole = quickMembership.role || 'member';
+          companyName = quickMembership.company?.name || 'Company';
+          console.log('[Company Switch] PRE-CHECK FALLBACK: Access granted via company_members');
+        }
+      } catch (e) {
+        console.warn('[Company Switch] Error in pre-check fallback:', e);
+      }
     }
 
     // 0. Special case: Check if this is Falcon Eye Modern Investments party_id first
@@ -718,11 +757,12 @@ export async function POST(request: NextRequest) {
       // Check if it's a party_id
       const { data: partyExists } = await adminClient
         .from('parties')
-        .select('id, name_en, type')
+        .select('id, name_en, name_ar, type')
         .eq('id', company_id)
         .maybeSingle();
       
       // If party exists, grant access as absolute last resort
+      // This ensures any party that exists can be switched to (very permissive)
       if (partyExists) {
         console.log('[Company Switch] LAST RESORT: Granting access for party', {
           party_id: company_id,
@@ -731,7 +771,7 @@ export async function POST(request: NextRequest) {
         });
         hasAccess = true;
         userRole = 'owner';
-        companyName = partyExists.name_en || 'Company';
+        companyName = partyExists.name_en || partyExists.name_ar || 'Company';
       } else if (companyExists) {
         console.log('[Company Switch] LAST RESORT: Granting access for company', {
           company_id: company_id,
@@ -740,6 +780,54 @@ export async function POST(request: NextRequest) {
         hasAccess = true;
         userRole = 'owner';
         companyName = companyExists.name || 'Company';
+      }
+      
+      // Ultimate fallback: If still no access, verify company appears in user's companies list
+      // This ensures consistency - if it's in the list, user should be able to switch to it
+      if (!hasAccess) {
+        try {
+          // Quick check: Verify the company_id would appear in the companies list
+          // Use the same logic as /api/user/companies to ensure consistency
+          const { data: userProfile } = await adminClient
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', user.id)
+            .single();
+          
+          // Check if it's in company_members
+          const { data: membershipCheck } = await adminClient
+            .from('company_members')
+            .select('company_id, role, company:companies(name)')
+            .eq('company_id', company_id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (membershipCheck) {
+            hasAccess = true;
+            userRole = membershipCheck.role || 'member';
+            companyName = membershipCheck.company?.name || 'Company';
+            console.log('[Company Switch] ULTIMATE FALLBACK: Access granted via company_members check');
+          } else if (userProfile?.email) {
+            // Check if it's a party where user email matches
+            const { data: partyCheck } = await adminClient
+              .from('parties')
+              .select('id, name_en, name_ar, contact_email, type')
+              .eq('id', company_id)
+              .maybeSingle();
+            
+            if (partyCheck && (
+              partyCheck.contact_email?.toLowerCase() === userProfile.email.toLowerCase() ||
+              partyCheck.type === 'Employer'
+            )) {
+              hasAccess = true;
+              userRole = 'owner';
+              companyName = partyCheck.name_en || partyCheck.name_ar || 'Company';
+              console.log('[Company Switch] ULTIMATE FALLBACK: Access granted via party email/type match');
+            }
+          }
+        } catch (ultimateError) {
+          console.warn('[Company Switch] Error in ultimate fallback check:', ultimateError);
+        }
       }
       
       if (!hasAccess) {
