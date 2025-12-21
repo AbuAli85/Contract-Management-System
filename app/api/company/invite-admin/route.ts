@@ -23,6 +23,11 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { email, role, department, job_title, message } = body;
+    
+    // Normalize empty strings to null for optional fields
+    const normalizedDepartment = department && department.trim() ? department.trim() : null;
+    const normalizedJobTitle = job_title && job_title.trim() ? job_title.trim() : null;
+    const normalizedMessage = message && message.trim() ? message.trim() : null;
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -134,8 +139,8 @@ export async function POST(request: Request) {
           .update({
             status: 'active',
             role,
-            department,
-            job_title,
+            department: normalizedDepartment,
+            job_title: normalizedJobTitle,
             invited_by: user.id,
             updated_at: new Date().toISOString(),
           })
@@ -148,8 +153,8 @@ export async function POST(request: Request) {
             company_id: profile.active_company_id,
             user_id: targetUserId,
             role,
-            department,
-            job_title,
+            department: normalizedDepartment,
+            job_title: normalizedJobTitle,
             invited_by: user.id,
             status: 'active',
           });
@@ -160,18 +165,18 @@ export async function POST(request: Request) {
 
       // For now, we'll create a pending invitation
       // When the user signs up with this email, they'll automatically get access
-      const { error: inviteError } = await (supabaseAdmin
-        .from('company_members') as any)
-        .insert({
-          company_id: profile.active_company_id,
-          user_id: user.id, // Temporarily use inviter's ID
-          role,
-          department,
-          job_title,
-          invited_by: user.id,
-          status: 'invited',
-          permissions: { pending_email: email.toLowerCase() },
-        });
+      const { error: inviteError } =         await (supabaseAdmin
+          .from('company_members') as any)
+          .insert({
+            company_id: profile.active_company_id,
+            user_id: user.id, // Temporarily use inviter's ID
+            role,
+            department: normalizedDepartment,
+            job_title: normalizedJobTitle,
+            invited_by: user.id,
+            status: 'invited',
+            permissions: { pending_email: email.toLowerCase() },
+          });
 
       if (inviteError) {
         console.error('Error creating invitation:', inviteError);
@@ -202,7 +207,7 @@ export async function POST(request: Request) {
             user_id: existingUser.id,
             type: 'company_invitation',
             title: `Invited to ${company?.name}`,
-            message: `You've been invited to join ${company?.name} as ${role}. ${message || ''}`,
+            message: `You've been invited to join ${company?.name} as ${role}.${normalizedMessage ? ` ${normalizedMessage}` : ''}`,
             priority: 'high',
             action_url: '/en/settings/company',
             action_label: 'View Company',
