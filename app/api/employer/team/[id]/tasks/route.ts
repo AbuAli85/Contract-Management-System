@@ -28,10 +28,12 @@ async function getTasksHandler(
       const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
+      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         { 
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record'
+          details: error.message || 'Could not create or find employer_employee record',
+          input_id: id
         },
         { status: 400 }
       );
@@ -160,10 +162,12 @@ async function createTaskHandler(
       const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
+      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         { 
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record'
+          details: error.message || 'Could not create or find employer_employee record',
+          input_id: id
         },
         { status: 400 }
       );

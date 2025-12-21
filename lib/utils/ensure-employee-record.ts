@@ -28,11 +28,16 @@ export async function ensureEmployerEmployeeRecord(
   // If it's not a promoter ID, assume it's already an employer_employee ID
   if (!id.startsWith('promoter_')) {
     // Verify it exists
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: existingError } = await supabaseAdmin
       .from('employer_employees')
       .select('id')
       .eq('id', id)
-      .single();
+      .maybeSingle();
+
+    if (existingError) {
+      console.error('Error checking employer_employee record:', existingError);
+      throw new Error(`Error checking employer employee record: ${existingError.message}`);
+    }
 
     if (existing) {
       return { employerEmployeeId: id, isNew: false };
@@ -67,36 +72,51 @@ export async function ensureEmployerEmployeeRecord(
   }
 
   // Get employer party details
-  const { data: party } = await supabase
+  const { data: party, error: partyError } = await supabase
     .from('parties')
     .select('id, contact_email')
     .eq('id', promoter.employer_id)
-    .single();
+    .maybeSingle();
+
+  if (partyError) {
+    console.error('Error fetching employer party:', partyError);
+    throw new Error(`Error fetching employer party: ${partyError.message}`);
+  }
 
   if (!party) {
-    throw new Error(`Employer party not found for promoter: ${promoterId}`);
+    throw new Error(`Employer party not found for promoter: ${promoterId} (employer_id: ${promoter.employer_id})`);
   }
 
   // Find employer profile (from party contact_email)
-  const { data: employerProfile } = await supabase
+  const { data: employerProfile, error: employerProfileError } = await supabase
     .from('profiles')
     .select('id')
     .ilike('email', party.contact_email || '')
-    .single();
+    .maybeSingle();
+
+  if (employerProfileError) {
+    console.error('Error fetching employer profile:', employerProfileError);
+    throw new Error(`Error fetching employer profile: ${employerProfileError.message}`);
+  }
 
   if (!employerProfile) {
-    throw new Error(`Employer profile not found for party: ${party.id}`);
+    throw new Error(`Employer profile not found for party: ${party.id} (contact_email: ${party.contact_email || 'N/A'})`);
   }
 
   // Find employee profile (from promoter email)
-  const { data: employeeProfile } = await supabase
+  const { data: employeeProfile, error: employeeProfileError } = await supabase
     .from('profiles')
     .select('id')
     .ilike('email', promoter.email || '')
-    .single();
+    .maybeSingle();
+
+  if (employeeProfileError) {
+    console.error('Error fetching employee profile:', employeeProfileError);
+    throw new Error(`Error fetching employee profile: ${employeeProfileError.message}`);
+  }
 
   if (!employeeProfile) {
-    throw new Error(`Employee profile not found for promoter email: ${promoter.email}`);
+    throw new Error(`Employee profile not found for promoter email: ${promoter.email || 'N/A'} (promoter_id: ${promoterId})`);
   }
 
   // Check if employer_employee record already exists
@@ -104,9 +124,15 @@ export async function ensureEmployerEmployeeRecord(
     .select('id, company_id')
     .eq('employee_id', employeeProfile.id)
     .eq('employer_id', employerProfile.id)
-    .single();
+    .maybeSingle();
   
   const existing = existingResult.data as any;
+  const existingError = existingResult.error;
+  
+  if (existingError && existingError.code !== 'PGRST116') { // PGRST116 is "not found" which is OK
+    console.error('Error checking existing employer_employee record:', existingError);
+    throw new Error(`Error checking existing employer_employee record: ${existingError.message}`);
+  }
 
   // ✅ FIX: If record exists but company_id doesn't match user's active company, update it
   if (existing) {
