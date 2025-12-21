@@ -252,20 +252,28 @@ export async function POST(request: Request) {
       } else {
         // Create membership using admin client (bypasses RLS)
         // First, verify admin client can read from the table (diagnostic)
-        const { error: readTestError } = await supabaseAdmin
+        // Try a simple query to verify the service role key works
+        const { error: readTestError, data: readTestData } = await supabaseAdmin
           .from('company_members')
           .select('id')
-          .eq('company_id', activeCompanyId)
           .limit(1);
         
         if (readTestError && (readTestError.code === '42501' || readTestError.message?.includes('permission denied'))) {
-          console.error('[Invite Admin] Admin client cannot read from company_members - service role key may be invalid:', {
+          console.error('[Invite Admin] Admin client cannot read from company_members - service role key may be invalid or for wrong project:', {
             error: readTestError.message,
             code: readTestError.code,
+            details: readTestError.details,
+            hint: readTestError.hint,
             hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
             serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
           });
-          throw new Error(`Admin client permission error: Cannot access company_members table. Please verify SUPABASE_SERVICE_ROLE_KEY is set correctly in your production environment (Vercel). Error: ${readTestError.message}`);
+          throw new Error(`Admin client permission error: Cannot access company_members table. The SUPABASE_SERVICE_ROLE_KEY may be invalid, expired, or for a different Supabase project. Please verify: 1) The key matches your Supabase project (Settings → API → service_role key), 2) The key is correctly set in Vercel, 3) You've redeployed after setting it. Error: ${readTestError.message}`);
+        }
+        
+        // Log successful read test for debugging
+        if (!readTestError) {
+          console.log('[Invite Admin] Admin client read test successful - service role key is working');
         }
         
         // Use the same pattern as the working route - insert without select
