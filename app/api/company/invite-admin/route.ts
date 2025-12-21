@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +25,23 @@ interface InviterProfile {
 // POST: Invite an external user as admin/manager to the company
 export async function POST(request: Request) {
   const supabase = await createClient();
-  const supabaseAdmin = getSupabaseAdmin();
+  
+  // Use admin client to bypass RLS
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = createAdminClient();
+    // Verify admin client is working by checking if service role key is set
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
+    }
+  } catch (e: any) {
+    console.error('[Invite Admin] Admin client initialization failed:', e);
+    return NextResponse.json({ 
+      error: 'Server configuration error',
+      details: e.message || 'Admin client initialization failed. Please check SUPABASE_SERVICE_ROLE_KEY environment variable.',
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    }, { status: 500 });
+  }
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -168,8 +183,8 @@ export async function POST(request: Request) {
       targetUserId = existingUser.id;
 
       // Check if already a member using admin client
-      const { data: existingMembership } = await (supabaseAdmin
-        .from('company_members') as any)
+      const { data: existingMembership } = await supabaseAdmin
+        .from('company_members')
         .select('id, status')
         .eq('company_id', activeCompanyId)
         .eq('user_id', targetUserId)
@@ -180,9 +195,9 @@ export async function POST(request: Request) {
       }
 
       if (existingMembership) {
-        // Reactivate
-        await (supabaseAdmin
-          .from('company_members') as any)
+        // Reactivate using admin client
+        const { error: updateError } = await supabaseAdmin
+          .from('company_members')
           .update({
             status: 'active',
             role,
@@ -192,10 +207,15 @@ export async function POST(request: Request) {
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingMembership.id);
+        
+        if (updateError) {
+          console.error('[Invite Admin] Error reactivating membership:', updateError);
+          throw new Error(`Failed to reactivate membership: ${updateError.message}`);
+        }
       } else {
-        // Create membership
-        const { data: newMembership, error: insertError } = await (supabaseAdmin
-          .from('company_members') as any)
+        // Create membership using admin client (bypasses RLS)
+        const { data: newMembership, error: insertError } = await supabaseAdmin
+          .from('company_members')
           .insert({
             company_id: activeCompanyId,
             user_id: targetUserId,
@@ -228,8 +248,8 @@ export async function POST(request: Request) {
 
       // For now, we'll create a pending invitation
       // When the user signs up with this email, they'll automatically get access
-      const { error: inviteError } = await (supabaseAdmin
-          .from('company_members') as any)
+      const { error: inviteError } = await supabaseAdmin
+          .from('company_members')
           .insert({
             company_id: activeCompanyId,
             user_id: user.id, // Temporarily use inviter's ID
