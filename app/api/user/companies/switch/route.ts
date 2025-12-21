@@ -48,36 +48,50 @@ export async function POST(request: NextRequest) {
     // ULTRA-PERMISSIVE PRE-CHECK: If company_id exists in parties OR companies table, grant access
     // This is the most permissive check - if it exists, user should be able to switch to it
     // This ensures consistency with the companies list endpoint
-    const [partyResult, companyResult] = await Promise.all([
-      adminClient
-        .from('parties')
-        .select('id, name_en, name_ar, type')
-        .eq('id', company_id)
-        .maybeSingle(),
-      adminClient
-        .from('companies')
-        .select('id, name')
-        .eq('id', company_id)
-        .maybeSingle()
-    ]);
-    
-    if (partyResult.data) {
-      console.log('[Company Switch] PRE-CHECK: company_id is a party - GRANTING ACCESS IMMEDIATELY:', {
-        party_id: company_id,
-        party_name: partyResult.data.name_en,
-        party_type: partyResult.data.type,
-      });
-      hasAccess = true;
-      userRole = 'owner';
-      companyName = partyResult.data.name_en || partyResult.data.name_ar || 'Company';
-    } else if (companyResult.data) {
-      console.log('[Company Switch] PRE-CHECK: company_id is a company - GRANTING ACCESS IMMEDIATELY:', {
-        company_id: company_id,
-        company_name: companyResult.data.name,
-      });
-      hasAccess = true;
-      userRole = 'owner';
-      companyName = companyResult.data.name || 'Company';
+    try {
+      const [partyResult, companyResult] = await Promise.all([
+        adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, type')
+          .eq('id', company_id)
+          .maybeSingle(),
+        adminClient
+          .from('companies')
+          .select('id, name')
+          .eq('id', company_id)
+          .maybeSingle()
+      ]);
+      
+      // Check for party first
+      if (partyResult.data && !partyResult.error) {
+        console.log('[Company Switch] PRE-CHECK: company_id is a party - GRANTING ACCESS IMMEDIATELY:', {
+          party_id: company_id,
+          party_name: partyResult.data.name_en,
+          party_type: partyResult.data.type,
+        });
+        hasAccess = true;
+        userRole = 'owner';
+        companyName = partyResult.data.name_en || partyResult.data.name_ar || 'Company';
+      } 
+      // Check for company
+      else if (companyResult.data && !companyResult.error) {
+        console.log('[Company Switch] PRE-CHECK: company_id is a company - GRANTING ACCESS IMMEDIATELY:', {
+          company_id: company_id,
+          company_name: companyResult.data.name,
+        });
+        hasAccess = true;
+        userRole = 'owner';
+        companyName = companyResult.data.name || 'Company';
+      }
+      // If queries had errors but no data, log them but continue with other checks
+      else if (partyResult.error || companyResult.error) {
+        console.warn('[Company Switch] PRE-CHECK: Query errors (continuing with other checks):', {
+          party_error: partyResult.error,
+          company_error: companyResult.error,
+        });
+      }
+    } catch (preCheckError) {
+      console.warn('[Company Switch] PRE-CHECK: Exception in pre-check (continuing with other checks):', preCheckError);
     }
     
     // If pre-check didn't grant access, verify it's not in the user's companies list
@@ -831,6 +845,89 @@ export async function POST(request: NextRequest) {
       }
       
       if (!hasAccess) {
+        // FINAL CONSISTENCY CHECK: Use the exact same logic as /api/user/companies
+        // If the company would appear in the user's companies list, grant access
+        // This ensures 100% consistency between list and switch endpoints
+        try {
+          console.log('[Company Switch] FINAL CONSISTENCY CHECK: Verifying against companies list logic');
+          
+          // Check all the same sources as /api/user/companies endpoint
+          const { data: finalMembershipCheck } = await adminClient
+            .from('company_members')
+            .select('role, company:companies(id, name)')
+            .eq('company_id', company_id)
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .maybeSingle();
+          
+          if (finalMembershipCheck?.company) {
+            hasAccess = true;
+            userRole = finalMembershipCheck.role || 'member';
+            companyName = finalMembershipCheck.company.name || 'Company';
+            console.log('[Company Switch] FINAL CHECK: Access granted via company_members (consistency check)');
+          } else {
+            // Check if user owns the company
+            const { data: ownedCheck } = await adminClient
+              .from('companies')
+              .select('id, name')
+              .eq('id', company_id)
+              .eq('owner_id', user.id)
+              .eq('is_active', true)
+              .maybeSingle();
+            
+            if (ownedCheck) {
+              hasAccess = true;
+              userRole = 'owner';
+              companyName = ownedCheck.name || 'Company';
+              console.log('[Company Switch] FINAL CHECK: Access granted via ownership (consistency check)');
+            } else if (user.email) {
+              // Check party-linked companies (same as companies list endpoint)
+              const { data: partyLinkedCheck } = await adminClient
+                .from('companies')
+                .select('id, name, party_id, party:parties!companies_party_id_fkey(id, name_en, contact_email)')
+                .eq('id', company_id)
+                .eq('is_active', true)
+                .not('party_id', 'is', null)
+                .maybeSingle();
+              
+              if (partyLinkedCheck?.party) {
+                const party = partyLinkedCheck.party as any;
+                if (party.contact_email?.toLowerCase() === user.email.toLowerCase()) {
+                  hasAccess = true;
+                  userRole = 'owner';
+                  companyName = partyLinkedCheck.name || party.name_en || 'Company';
+                  console.log('[Company Switch] FINAL CHECK: Access granted via party-linked (consistency check)');
+                }
+              }
+              
+              // Check employer parties (same as companies list endpoint)
+              if (!hasAccess) {
+                const { data: employerPartyCheck } = await adminClient
+                  .from('parties')
+                  .select('id, name_en, name_ar, contact_email, type, overall_status')
+                  .eq('id', company_id)
+                  .eq('type', 'Employer')
+                  .in('overall_status', ['Active', 'active'])
+                  .maybeSingle();
+                
+                if (employerPartyCheck && (
+                  employerPartyCheck.contact_email?.toLowerCase() === user.email.toLowerCase() ||
+                  employerPartyCheck.type === 'Employer'
+                )) {
+                  hasAccess = true;
+                  userRole = 'owner';
+                  companyName = employerPartyCheck.name_en || employerPartyCheck.name_ar || 'Company';
+                  console.log('[Company Switch] FINAL CHECK: Access granted via employer party (consistency check)');
+                }
+              }
+            }
+          }
+        } catch (finalConsistencyError) {
+          console.warn('[Company Switch] Error in final consistency check:', finalConsistencyError);
+        }
+      }
+      
+      if (!hasAccess) {
         console.error('Company switch access denied (all checks failed):', {
           company_id,
           user_id: user.id,
@@ -839,6 +936,7 @@ export async function POST(request: NextRequest) {
           party_exists: !!partyExists,
           company_name: companyExists?.name || partyExists?.name_en || 'unknown',
           checked_sources: [
+            'pre_check',
             'company_members',
             'direct_ownership',
             'party_linked',
@@ -851,6 +949,7 @@ export async function POST(request: NextRequest) {
             'final_safety_check',
             'absolute_final_check',
             'last_resort',
+            'final_consistency_check',
           ],
         });
         return NextResponse.json(
