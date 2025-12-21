@@ -36,6 +36,13 @@ export async function POST(request: NextRequest) {
     let hasAccess = false;
     let userRole = null;
     let companyName = '';
+    
+    // Log the company_id being checked for debugging
+    console.log('[Company Switch] Checking access for:', {
+      company_id,
+      user_id: user.id,
+      user_email: user.email,
+    });
 
     // 1. Check company_members table (primary source)
     const { data: membership } = await adminClient
@@ -50,6 +57,7 @@ export async function POST(request: NextRequest) {
       hasAccess = true;
       userRole = membership.role;
       companyName = membership.company?.name || '';
+      console.log('[Company Switch] Access granted via company_members:', { companyName, userRole });
     }
 
     // 2. Check if user owns the company directly
@@ -448,10 +456,27 @@ export async function POST(request: NextRequest) {
     }
 
     if (!hasAccess) {
+      // Final attempt: Check if company_id exists in companies table at all
+      const { data: companyExists } = await adminClient
+        .from('companies')
+        .select('id, name')
+        .eq('id', company_id)
+        .maybeSingle();
+      
+      // Check if it's a party_id
+      const { data: partyExists } = await adminClient
+        .from('parties')
+        .select('id, name_en')
+        .eq('id', company_id)
+        .maybeSingle();
+      
       console.error('Company switch access denied:', {
         company_id,
         user_id: user.id,
         user_email: user.email,
+        company_exists: !!companyExists,
+        party_exists: !!partyExists,
+        company_name: companyExists?.name || partyExists?.name_en || 'unknown',
         checked_sources: [
           'company_members',
           'direct_ownership',
@@ -513,16 +538,99 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Handle case where company_id is actually a party_id (parties_employer_direct)
+    // We need to find the linked company or use the party_id if no company exists
+    let activeCompanyIdToSet = company_id;
+    
+    // Check if company_id is a party_id and find linked company
+    const { data: partyCheck } = await adminClient
+      .from('parties')
+      .select('id')
+      .eq('id', company_id)
+      .maybeSingle();
+    
+    if (partyCheck) {
+      // company_id is a party_id, find linked company
+      const { data: linkedCompany } = await adminClient
+        .from('companies')
+        .select('id')
+        .eq('party_id', company_id)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      if (linkedCompany) {
+        // Use the linked company's ID
+        activeCompanyIdToSet = linkedCompany.id;
+        companyName = linkedCompany.name || companyName;
+        console.log('[Company Switch] Using linked company ID:', {
+          party_id: company_id,
+          company_id: linkedCompany.id,
+        });
+      } else {
+        // No linked company - this is a parties_employer_direct case
+        // Check if there's a company with the same ID as the party_id
+        const { data: companyWithPartyId } = await adminClient
+          .from('companies')
+          .select('id, name')
+          .eq('id', company_id)
+          .maybeSingle();
+        
+        if (companyWithPartyId) {
+          // Company exists with same ID as party_id - use it
+          activeCompanyIdToSet = companyWithPartyId.id;
+          companyName = companyWithPartyId.name || companyName;
+        } else {
+          // No company exists - create one linked to the party
+          const { data: partyData } = await adminClient
+            .from('parties')
+            .select('id, name_en, name_ar, contact_email, logo_url')
+            .eq('id', company_id)
+            .single();
+          
+          if (partyData) {
+            const { data: newCompany, error: createError } = await adminClient
+              .from('companies')
+              .insert({
+                id: company_id, // Use party_id as company_id
+                name: partyData.name_en || partyData.name_ar || 'Company',
+                party_id: company_id,
+                is_active: true,
+                owner_id: user.id,
+              })
+              .select('id, name')
+              .single();
+            
+            if (newCompany && !createError) {
+              activeCompanyIdToSet = newCompany.id;
+              companyName = newCompany.name;
+              console.log('[Company Switch] Created company for party:', {
+                party_id: company_id,
+                company_id: newCompany.id,
+              });
+            } else {
+              console.error('[Company Switch] Failed to create company for party:', createError);
+              // Fallback: try to use the party_id anyway (might work if FK allows it)
+              activeCompanyIdToSet = company_id;
+            }
+          }
+        }
+      }
+    }
+
     // Update user's active company
+    const updateData: { active_company_id: string | null } = { 
+      active_company_id: activeCompanyIdToSet 
+    };
+    
     const { error: updateError } = await adminClient
       .from('profiles')
-      .update({ active_company_id: company_id })
+      .update(updateData)
       .eq('id', user.id);
 
     if (updateError) {
       console.error('Error updating active company:', updateError);
       return NextResponse.json(
-        { error: 'Failed to switch company' },
+        { error: 'Failed to switch company', details: updateError.message },
         { status: 500 }
       );
     }
