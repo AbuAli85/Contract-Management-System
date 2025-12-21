@@ -5,7 +5,7 @@
  * Supports event-driven, scheduled, and manual workflows
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { notificationService, NotificationRecipient, NotificationContent } from './unified-notification.service';
 
 export type WorkflowTrigger = 'event' | 'schedule' | 'manual' | 'condition';
@@ -50,7 +50,7 @@ export interface StepExecutionResult {
  * Workflow Engine Service
  */
 export class WorkflowEngineService {
-  private supabase = createClient();
+  private supabase = createAdminClient();
 
   /**
    * Execute a workflow

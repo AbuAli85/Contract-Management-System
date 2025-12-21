@@ -8,7 +8,7 @@
  * - Automated renewal workflows
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { notificationService, NotificationRecipient, NotificationContent } from './unified-notification.service';
 import { differenceInDays, addDays, format } from 'date-fns';
 
@@ -55,7 +55,7 @@ export interface DocumentComplianceReport {
  * Document Expiry Automation Service
  */
 export class DocumentExpiryAutomationService {
-  private supabase = createClient();
+  private supabase = createAdminClient();
 
   /**
    * Check all documents and generate compliance report
