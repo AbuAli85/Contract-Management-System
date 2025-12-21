@@ -746,200 +746,297 @@ export async function GET() {
       return companyName && !isInvalidCompany(companyName);
     });
 
-    // Fetch stats for each company
-    const companiesWithStats: CompanyWithStats[] = await Promise.all(
-      validMemberships.map(async (membership) => {
-        const companyId = membership.company_id;
-        const company = membership.company;
-
-        // ✅ FIX: Get employee count from both employer_employees and promoters
-        // Need to count unique employees, avoiding double-counting
-        let employeeCount = 0;
+    // ✅ OPTIMIZATION: Batch fetch all data to avoid N+1 queries
+    // This reduces database queries from O(n*7) to O(7) where n is number of companies
+    const companyIds = validMemberships.map(m => m.company_id);
+    
+    // Build party_id map (for parties_employer_direct, company_id IS party_id)
+    const partyIdMap = new Map<string, string | null>();
+    for (const membership of validMemberships) {
+      if (membership.source === 'parties_employer_direct' && membership.party_id) {
+        partyIdMap.set(membership.company_id, membership.party_id);
+      } else if (membership.party_id) {
+        partyIdMap.set(membership.company_id, membership.party_id);
+      }
+    }
+    
+    // Batch fetch party_ids for companies that don't have them yet
+    const companyIdsNeedingPartyId = companyIds.filter(id => !partyIdMap.has(id));
+    if (companyIdsNeedingPartyId.length > 0) {
+      try {
+        const { data: companiesData } = await adminClient
+          .from('companies')
+          .select('id, party_id')
+          .in('id', companyIdsNeedingPartyId);
         
-        // For parties_employer_direct, companyId IS the party_id
-        // For other sources, we need to get party_id from companies table
-        let partyId: string | null = null;
-        
-        // Initialize partyId outside try block to ensure it's accessible later
-        if (membership.source === 'parties_employer_direct' && membership.party_id) {
-          // companyId is actually a party_id for parties_employer_direct
-          partyId = membership.party_id;
-        } else {
-          // Get company's party_id from companies table
-          try {
-            const { data: companyData } = await adminClient
-              .from('companies')
-              .select('party_id')
-              .eq('id', companyId)
-              .maybeSingle();
-            
-            partyId = companyData?.party_id || null;
-          } catch (e) {
-            console.warn('Error fetching company party_id:', e);
-            partyId = null;
+        if (companiesData) {
+          for (const company of companiesData) {
+            partyIdMap.set(company.id, company.party_id || null);
           }
         }
+      } catch (e) {
+        console.warn('Error batch fetching company party_ids:', e);
+      }
+    }
+    
+    // Batch fetch all employer_employees for all companies
+    const allEmployerEmployeesMap = new Map<string, any[]>();
+    if (companyIds.length > 0) {
+      try {
+        const { data: allEmployerEmployees } = await adminClient
+          .from('employer_employees')
+          .select('id, company_id, employee_id')
+          .in('company_id', companyIds)
+          .eq('employment_status', 'active')
+          .not('employee_id', 'is', null);
         
-        try {
-
-          // 1. Get all unique employee IDs from employer_employees
-          const { data: employerEmployees } = await adminClient
-            .from('employer_employees')
-            .select('employee_id')
-            .eq('company_id', companyId)
-            .eq('employment_status', 'active')
-            .not('employee_id', 'is', null);
-
-          const employerEmployeeIds = new Set(
-            (employerEmployees || []).map((ee: any) => ee.employee_id).filter(Boolean)
-          );
-
-          // 2. Get all promoter IDs for this company's party
-          let promoterIds = new Set<string>();
-          if (partyId) {
-            const { data: promoters } = await adminClient
-              .from('promoters')
-              .select('id')
-              .eq('employer_id', partyId)
-              .eq('status', 'active');
-            
-            if (promoters) {
-              promoterIds = new Set(promoters.map((p: any) => p.id));
+        if (allEmployerEmployees) {
+          for (const ee of allEmployerEmployees) {
+            if (!allEmployerEmployeesMap.has(ee.company_id)) {
+              allEmployerEmployeesMap.set(ee.company_id, []);
+            }
+            allEmployerEmployeesMap.get(ee.company_id)!.push(ee);
+          }
+        }
+      } catch (e) {
+        console.warn('Error batch fetching employer_employees:', e);
+      }
+    }
+    
+    // Batch fetch all promoters for all party_ids
+    const allPartyIds = Array.from(new Set(Array.from(partyIdMap.values()).filter(Boolean) as string[]));
+    const promotersMap = new Map<string, any[]>();
+    if (allPartyIds.length > 0) {
+      try {
+        const { data: allPromoters } = await adminClient
+          .from('promoters')
+          .select('id, employer_id')
+          .in('employer_id', allPartyIds)
+          .eq('status', 'active');
+        
+        if (allPromoters) {
+          for (const promoter of allPromoters) {
+            if (!promotersMap.has(promoter.employer_id)) {
+              promotersMap.set(promoter.employer_id, []);
+            }
+            promotersMap.get(promoter.employer_id)!.push(promoter);
+          }
+        }
+      } catch (e) {
+        console.warn('Error batch fetching promoters:', e);
+      }
+    }
+    
+    // Batch fetch all attendance for today
+    const today = new Date().toISOString().split('T')[0];
+    const allEmployerEmployeeIds = Array.from(allEmployerEmployeesMap.values()).flat().map(ee => ee.id);
+    const attendanceMap = new Map<string, number>();
+    if (allEmployerEmployeeIds.length > 0) {
+      try {
+        const { data: allAttendance } = await adminClient
+          .from('employee_attendance')
+          .select('employer_employee_id')
+          .in('employer_employee_id', allEmployerEmployeeIds)
+          .eq('attendance_date', today)
+          .not('check_in', 'is', null);
+        
+        if (allAttendance) {
+          // Count attendance per company
+          for (const attendance of allAttendance) {
+            // Find which company this attendance belongs to
+            for (const [companyId, employees] of allEmployerEmployeesMap.entries()) {
+              if (employees.some(ee => ee.id === attendance.employer_employee_id)) {
+                attendanceMap.set(companyId, (attendanceMap.get(companyId) || 0) + 1);
+                break;
+              }
             }
           }
-
-          // 3. Combine both sets to get unique employee count (avoid double-counting)
-          const allEmployeeIds = new Set([...employerEmployeeIds, ...promoterIds]);
-          employeeCount = allEmployeeIds.size;
-          
-        } catch (e) {
-          console.warn('Error counting employees:', e);
-          employeeCount = 0;
         }
-
-        // Get pending leave requests
-        const pendingLeaves = await safeCount('employee_leave_requests', {
-          company_id: companyId,
-          status: 'pending',
-        } as Record<string, unknown>);
-
-        // Get pending expenses
-        const pendingExpenses = await safeCount('employee_expenses', {
-          company_id: companyId,
-          status: 'pending',
-        } as Record<string, unknown>);
-
-        // Get active contracts count
-        // For parties_employer_direct, use party_id; for others, try company_id first
-        let activeContracts = 0;
-        if (partyId) {
-          // Contracts are linked via party_id (first_party_id or second_party_id)
-          try {
-            const { count } = await adminClient
-              .from('contracts')
-              .select('id', { count: 'exact', head: true })
-              .or(`first_party_id.eq.${partyId},second_party_id.eq.${partyId}`)
-              .eq('status', 'active');
-            activeContracts = count || 0;
-          } catch (e) {
-            console.warn('Error counting contracts:', e);
+      } catch (e) {
+        console.warn('Error batch fetching attendance:', e);
+      }
+    }
+    
+    // Batch fetch all tasks
+    const tasksMap = new Map<string, number>();
+    if (allEmployerEmployeeIds.length > 0) {
+      try {
+        const { data: allTasks } = await adminClient
+          .from('employee_tasks')
+          .select('employer_employee_id')
+          .in('employer_employee_id', allEmployerEmployeeIds)
+          .in('status', ['pending', 'in_progress']);
+        
+        if (allTasks) {
+          // Count tasks per company
+          for (const task of allTasks) {
+            for (const [companyId, employees] of allEmployerEmployeesMap.entries()) {
+              if (employees.some(ee => ee.id === task.employer_employee_id)) {
+                tasksMap.set(companyId, (tasksMap.get(companyId) || 0) + 1);
+                break;
+              }
+            }
           }
-        } else {
-          activeContracts = await safeCount('contracts', {
-            company_id: companyId,
-            status: 'active',
-          } as Record<string, unknown>);
         }
-
-        // ✅ FIX: Get today's attendance from employee_attendance
-        // Attendance is linked via employer_employee_id, so we need to get all employer_employee_ids for this company
-        const today = new Date().toISOString().split('T')[0];
-        let checkedInToday = 0;
-        try {
-          // Get all employer_employee_ids for this company
-          const { data: employerEmployees } = await adminClient
-            .from('employer_employees')
-            .select('id, employee_id')
-            .eq('company_id', companyId)
-            .eq('employment_status', 'active');
-
-          if (employerEmployees && employerEmployees.length > 0) {
-            const employerEmployeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
-            
-            // Count attendance records for today
-            const { count } = await adminClient
-              .from('employee_attendance')
-              .select('id', { count: 'exact', head: true })
-              .in('employer_employee_id', employerEmployeeIds)
-              .eq('attendance_date', today)
-              .not('check_in', 'is', null);
-            
-            checkedInToday = count || 0;
+      } catch (e) {
+        console.warn('Error batch fetching tasks:', e);
+      }
+    }
+    
+    // Batch fetch all pending leaves
+    const leavesMap = new Map<string, number>();
+    if (companyIds.length > 0) {
+      try {
+        const { data: allLeaves } = await adminClient
+          .from('employee_leave_requests')
+          .select('company_id')
+          .in('company_id', companyIds)
+          .eq('status', 'pending');
+        
+        if (allLeaves) {
+          for (const leave of allLeaves) {
+            leavesMap.set(leave.company_id, (leavesMap.get(leave.company_id) || 0) + 1);
           }
-        } catch (e) {
-          console.warn('Error counting attendance:', e);
-          checkedInToday = 0;
         }
-
-        // ✅ FIX: Get open tasks - tasks are linked via employer_employee_id
-        let openTasks = 0;
-        try {
-          // Get all employer_employee_ids for this company
-          const { data: employerEmployees } = await adminClient
-            .from('employer_employees')
-            .select('id')
-            .eq('company_id', companyId)
-            .eq('employment_status', 'active');
-
-          if (employerEmployees && employerEmployees.length > 0) {
-            const employerEmployeeIds = employerEmployees.map((ee: { id: string }) => ee.id);
-            
-            // Count open tasks (pending or in_progress)
-            const { count } = await adminClient
-              .from('employee_tasks')
-              .select('id', { count: 'exact', head: true })
-              .in('employer_employee_id', employerEmployeeIds)
-              .in('status', ['pending', 'in_progress']);
-            
-            openTasks = count || 0;
+      } catch (e) {
+        console.warn('Error batch fetching leaves:', e);
+      }
+    }
+    
+    // Batch fetch all pending expenses
+    const expensesMap = new Map<string, number>();
+    if (companyIds.length > 0) {
+      try {
+        const { data: allExpenses } = await adminClient
+          .from('employee_expenses')
+          .select('company_id')
+          .in('company_id', companyIds)
+          .eq('status', 'pending');
+        
+        if (allExpenses) {
+          for (const expense of allExpenses) {
+            expensesMap.set(expense.company_id, (expensesMap.get(expense.company_id) || 0) + 1);
           }
-        } catch (e) {
-          console.warn('Error counting tasks:', e);
-          openTasks = 0;
         }
+      } catch (e) {
+        console.warn('Error batch fetching expenses:', e);
+      }
+    }
+    
+    // Batch fetch all contracts
+    const contractsMap = new Map<string, number>();
+    if (allPartyIds.length > 0) {
+      try {
+        // Create reverse map: party_id -> company_id for efficient lookup
+        const partyToCompanyMap = new Map<string, string[]>();
+        for (const [companyId, partyId] of partyIdMap.entries()) {
+          if (partyId) {
+            if (!partyToCompanyMap.has(partyId)) {
+              partyToCompanyMap.set(partyId, []);
+            }
+            partyToCompanyMap.get(partyId)!.push(companyId);
+          }
+        }
+        
+        // Fetch contracts where first_party_id matches
+        const { data: contractsFirstParty } = await adminClient
+          .from('contracts')
+          .select('first_party_id')
+          .eq('status', 'active')
+          .in('first_party_id', allPartyIds);
+        
+        // Fetch contracts where second_party_id matches
+        const { data: contractsSecondParty } = await adminClient
+          .from('contracts')
+          .select('second_party_id')
+          .eq('status', 'active')
+          .in('second_party_id', allPartyIds);
+        
+        // Count contracts per company
+        if (contractsFirstParty) {
+          for (const contract of contractsFirstParty) {
+            if (contract.first_party_id && partyToCompanyMap.has(contract.first_party_id)) {
+              for (const companyId of partyToCompanyMap.get(contract.first_party_id)!) {
+                contractsMap.set(companyId, (contractsMap.get(companyId) || 0) + 1);
+              }
+            }
+          }
+        }
+        
+        if (contractsSecondParty) {
+          for (const contract of contractsSecondParty) {
+            if (contract.second_party_id && partyToCompanyMap.has(contract.second_party_id)) {
+              for (const companyId of partyToCompanyMap.get(contract.second_party_id)!) {
+                contractsMap.set(companyId, (contractsMap.get(companyId) || 0) + 1);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error batch fetching contracts:', e);
+      }
+    }
+    
+    // Batch fetch all pending reviews
+    const reviewsMap = new Map<string, number>();
+    if (companyIds.length > 0) {
+      try {
+        const { data: allReviews } = await adminClient
+          .from('performance_reviews')
+          .select('company_id')
+          .in('company_id', companyIds)
+          .in('status', ['draft', 'submitted']);
+        
+        if (allReviews) {
+          for (const review of allReviews) {
+            reviewsMap.set(review.company_id, (reviewsMap.get(review.company_id) || 0) + 1);
+          }
+        }
+      } catch (e) {
+        console.warn('Error batch fetching reviews:', e);
+      }
+    }
+    
+    // Now build stats for each company using the batched data
+    const companiesWithStats: CompanyWithStats[] = validMemberships.map((membership) => {
+      const companyId = membership.company_id;
+      const company = membership.company;
+      const partyId = partyIdMap.get(companyId) || null;
+      
+      // Get employee count from batched data
+      const employerEmployees = allEmployerEmployeesMap.get(companyId) || [];
+      const employerEmployeeIds = new Set(employerEmployees.map((ee: any) => ee.employee_id).filter(Boolean));
+      
+      const promoters = partyId ? (promotersMap.get(partyId) || []) : [];
+      const promoterIds = new Set(promoters.map((p: any) => p.id));
+      
+      const allEmployeeIds = new Set([...employerEmployeeIds, ...promoterIds]);
+      const employeeCount = allEmployeeIds.size;
+      
+      // Get group_name
+      const groupName = membership.group_name || 
+                       allCompanies.find(c => c.company_id === companyId)?.group_name || 
+                       membership.company?.group?.name || 
+                       null;
 
-        // Get pending reviews
-        const pendingReviews = await safeCount('performance_reviews', {
-          company_id: companyId,
-          status: ['draft', 'submitted'],
-        });
-
-        // Get group_name - it's now preserved directly in the membership object
-        // Fallback to originalCompany or company.group.name if needed
-        const groupName = membership.group_name || 
-                         allCompanies.find(c => c.company_id === companyId)?.group_name || 
-                         membership.company?.group?.name || 
-                         null;
-
-        return {
-          id: companyId,
-          name: company?.name || 'Unknown',
-          logo_url: company?.logo_url ?? null,
-          is_active: company?.is_active ?? true,
-          group_name: groupName,
-          user_role: membership.role,
-          stats: {
-            employees: employeeCount,
-            pending_leaves: pendingLeaves,
-            pending_expenses: pendingExpenses,
-            active_contracts: activeContracts,
-            checked_in_today: checkedInToday,
-            open_tasks: openTasks,
-            pending_reviews: pendingReviews,
-          },
-        };
-      })
-    );
+      return {
+        id: companyId,
+        name: company?.name || 'Unknown',
+        logo_url: company?.logo_url ?? null,
+        is_active: company?.is_active ?? true,
+        group_name: groupName,
+        user_role: membership.role,
+        stats: {
+          employees: employeeCount,
+          pending_leaves: leavesMap.get(companyId) || 0,
+          pending_expenses: expensesMap.get(companyId) || 0,
+          active_contracts: contractsMap.get(companyId) || 0,
+          checked_in_today: attendanceMap.get(companyId) || 0,
+          open_tasks: tasksMap.get(companyId) || 0,
+          pending_reviews: reviewsMap.get(companyId) || 0,
+        },
+      };
+    });
 
     // Calculate summary
     const summary: Summary = companiesWithStats.reduce(
