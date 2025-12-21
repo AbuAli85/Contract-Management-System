@@ -43,10 +43,11 @@ export async function GET() {
     }
 
     let allCompanies: any[] = [];
+    let membershipCompanies: any[] = []; // Track for logging
 
     // First try: Get companies via company_members using admin client
     // Include both active and invited status to catch all memberships
-    const { data: membershipCompanies, error: membershipError } = await adminClient
+    const { data: membershipData, error: membershipError } = await adminClient
       .from('company_members')
       .select(`
         company_id,
@@ -65,15 +66,50 @@ export async function GET() {
       .in('status', ['active', 'invited']) // Include both active and invited
       .order('is_primary', { ascending: false });
 
-    if (!membershipError && membershipCompanies) {
-      allCompanies = membershipCompanies
+    if (!membershipError && membershipData) {
+      membershipCompanies = membershipData; // Store for logging
+      // First, identify any orphaned memberships (company_id exists but company record doesn't)
+      const orphanedMemberships = membershipData.filter((cm: any) => !cm.company?.id || !cm.company?.name);
+      
+      if (orphanedMemberships.length > 0) {
+        console.warn('[Companies API] Found orphaned company_members records (missing company data):', {
+          count: orphanedMemberships.length,
+          company_ids: orphanedMemberships.map((cm: any) => cm.company_id),
+          user_id: user.id
+        });
+        
+        // Try to fetch company data directly for orphaned memberships
+        const orphanedCompanyIds = orphanedMemberships.map((cm: any) => cm.company_id).filter(Boolean);
+        if (orphanedCompanyIds.length > 0) {
+          const { data: orphanedCompanies } = await adminClient
+            .from('companies')
+            .select('id, name, logo_url, group_id, is_active')
+            .in('id', orphanedCompanyIds);
+          
+          // Create a map for quick lookup
+          const orphanedCompanyMap = new Map(
+            (orphanedCompanies || []).map((c: any) => [c.id, c])
+          );
+          
+          // Update membershipCompanies with found company data
+          for (const cm of orphanedMemberships) {
+            const foundCompany = orphanedCompanyMap.get(cm.company_id);
+            if (foundCompany) {
+              cm.company = foundCompany;
+            }
+          }
+        }
+      }
+      
+      allCompanies = membershipData
         .filter((cm: any) => {
           // Include companies even if is_active is false (user might need to see them)
-          // Only filter if company record doesn't exist at all
+          // Only filter if company record doesn't exist at all (even after orphaned check)
           if (!cm.company?.id || !cm.company?.name) {
-            console.warn('[Companies API] Filtered out membership - missing company data:', {
+            console.warn('[Companies API] Filtered out membership - missing company data (even after orphaned check):', {
               company_id: cm.company_id,
-              membership_status: cm.status
+              membership_status: cm.status,
+              membership_id: cm.id
             });
             return false;
           }
@@ -760,6 +796,10 @@ export async function GET() {
     );
 
     // Log for debugging (always log to help diagnose missing companies)
+    const membershipCompanyIds = membershipCompanies?.map((cm: any) => cm.company_id) || [];
+    const foundCompanyIds = enrichedCompanies.map(c => c.company_id);
+    const missingCompanyIds = membershipCompanyIds.filter(id => !foundCompanyIds.includes(id));
+    
     console.log(`[Companies API] Found ${enrichedCompanies.length} companies for user ${user.id}:`, {
       sources: enrichedCompanies.map(c => ({ 
         name: c.company_name, 
@@ -772,6 +812,12 @@ export async function GET() {
       total_after_dedup: uniqueCompanies.length,
       total_after_enrichment: enrichedCompanies.length,
       filtered_out: allCompanies.length - uniqueCompanies.length,
+      membership_count: membershipCompanyIds.length,
+      missing_company_ids: missingCompanyIds.length > 0 ? {
+        count: missingCompanyIds.length,
+        ids: missingCompanyIds,
+        note: 'These company_ids from company_members were not included in the final list'
+      } : null,
     });
 
     return NextResponse.json({
