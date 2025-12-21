@@ -228,7 +228,8 @@ export async function POST(request: Request) {
         }
       } else {
         // Create membership using admin client (bypasses RLS)
-        const { data: newMembership, error: insertError } = await supabaseAdmin
+        // Use the same pattern as the working route - insert without select
+        const { error: insertError } = await supabaseAdmin
           .from('company_members')
           .insert({
             company_id: activeCompanyId,
@@ -238,9 +239,7 @@ export async function POST(request: Request) {
             job_title: normalizedJobTitle,
             invited_by: user.id,
             status: 'active',
-          })
-          .select('id, company_id, user_id, role, status')
-          .maybeSingle(); // Use maybeSingle instead of single
+          });
         
         if (insertError) {
           console.error('[Invite Admin] Error creating membership:', {
@@ -252,22 +251,24 @@ export async function POST(request: Request) {
             company_id: activeCompanyId,
             user_id: targetUserId,
             hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10) || 'NOT_SET',
+            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
           });
+          
+          // Check if it's a permission error and provide more context
+          if (insertError.message?.includes('permission denied') || insertError.code === '42501') {
+            throw new Error(`Permission denied when inserting into company_members. This usually means the SUPABASE_SERVICE_ROLE_KEY is invalid or the admin client is not properly configured. Original error: ${insertError.message}`);
+          }
+          
           throw new Error(`Failed to create membership: ${insertError.message}`);
         }
         
-        if (newMembership) {
-          console.log('[Invite Admin] Created new membership:', {
-            membership_id: newMembership.id,
-            company_id: newMembership.company_id,
-            user_id: newMembership.user_id,
-            role: newMembership.role,
-            status: newMembership.status,
-            target_email: email,
-          });
-        } else {
-          console.warn('[Invite Admin] Membership insert succeeded but no data returned');
-        }
+        console.log('[Invite Admin] Successfully created membership:', {
+          company_id: activeCompanyId,
+          user_id: targetUserId,
+          role,
+          target_email: email,
+        });
       }
     } else {
       // User doesn't exist - create an invitation record
