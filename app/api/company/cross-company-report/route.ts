@@ -720,22 +720,30 @@ export async function GET() {
     }));
 
     // Helper function to safely query counts (handles missing company_id columns)
+    // Use adminClient to bypass RLS for accurate counts
     const safeCount = async (table: string, conditions: Record<string, unknown> = {}): Promise<number> => {
       try {
-        let query = supabase.from(table).select('id', { count: 'exact', head: true });
+        let query = adminClient.from(table).select('id', { count: 'exact', head: true });
         for (const [key, value] of Object.entries(conditions || {})) {
+          if (value === undefined || value === null) {
+            // Skip null/undefined conditions
+            continue;
+          }
           if (Array.isArray(value)) {
             query = query.in(key, value);
-          } else if (value === null || value === undefined) {
-            // Skip null/undefined conditions
           } else {
             query = query.eq(key, value);
           }
         }
-        const { count } = await query;
+        const { count, error } = await query;
+        if (error) {
+          console.warn(`Error counting ${table}:`, error);
+          return 0;
+        }
         return count || 0;
       } catch (e) {
         // Column may not exist, return 0
+        console.warn(`Exception counting ${table}:`, e);
         return 0;
       }
     };
