@@ -517,6 +517,92 @@ export async function GET() {
       });
     }
 
+    // Fetch group names for all companies
+    // Companies can be linked to groups via:
+    // 1. companies.group_id (direct reference to holding_groups)
+    // 2. holding_group_members table (many-to-many relationship)
+    try {
+      const companyIds = allCompanies.map(c => c.company_id);
+      
+      // Fetch companies with their group_id
+      const { data: companiesWithGroups } = await adminClient
+        .from('companies')
+        .select('id, group_id')
+        .in('id', companyIds);
+      
+      // Get all unique group_ids (both from companies.group_id and holding_group_members)
+      const groupIdsFromCompanies = new Set(
+        (companiesWithGroups || [])
+          .map((c: any) => c.group_id)
+          .filter(Boolean)
+      );
+      
+      // Also check holding_group_members table
+      const { data: groupMembers } = await adminClient
+        .from('holding_group_members')
+        .select('company_id, holding_group_id')
+        .in('company_id', companyIds)
+        .eq('member_type', 'company');
+      
+      const groupIdsFromMembers = new Set(
+        (groupMembers || []).map((gm: any) => gm.holding_group_id).filter(Boolean)
+      );
+      
+      // Combine all group IDs
+      const allGroupIds = Array.from(new Set([...groupIdsFromCompanies, ...groupIdsFromMembers]));
+      
+      // Fetch all group names
+      const groupNameMap = new Map<string, string>();
+      if (allGroupIds.length > 0) {
+        const { data: groups } = await adminClient
+          .from('holding_groups')
+          .select('id, name_en, name_ar')
+          .in('id', allGroupIds)
+          .eq('is_active', true);
+        
+        if (groups) {
+          for (const group of groups) {
+            groupNameMap.set(group.id, group.name_en || group.name_ar || 'Unknown Group');
+          }
+        }
+      }
+      
+      // Create a map of company_id -> group_id (from both sources)
+      const companyGroupMap = new Map<string, string>();
+      
+      // From companies.group_id
+      if (companiesWithGroups) {
+        for (const company of companiesWithGroups) {
+          if (company.group_id) {
+            companyGroupMap.set(company.id, company.group_id);
+          }
+        }
+      }
+      
+      // From holding_group_members
+      if (groupMembers) {
+        for (const member of groupMembers) {
+          if (member.holding_group_id) {
+            companyGroupMap.set(member.company_id, member.holding_group_id);
+          }
+        }
+      }
+      
+      // Update companies with group names
+      for (const company of allCompanies) {
+        const groupId = companyGroupMap.get(company.company_id);
+        if (groupId) {
+          const groupName = groupNameMap.get(groupId);
+          if (groupName) {
+            company.group_name = groupName;
+          }
+        }
+      }
+    } catch (groupError) {
+      console.warn('Error fetching group names in cross-company report:', groupError);
+      // Continue without group names if there's an error
+    }
+
     // Convert to memberships format for compatibility
     // Preserve source and party_id information for stats calculation
     const memberships: (CompanyMembership & { source?: string; party_id?: string })[] = allCompanies.map((c: any) => ({
