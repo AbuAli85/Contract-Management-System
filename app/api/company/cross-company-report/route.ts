@@ -87,106 +87,180 @@ export async function GET() {
       adminClient = supabase;
     }
 
-    // Try to get companies - handle case where company_members table doesn't exist yet
-    let memberships: CompanyMembership[] | null = null;
-    
+    // ✅ FIX: Use comprehensive company fetching logic (same as /api/user/companies)
+    // This ensures we get ALL companies the user has access to, not just from company_members
+    let allCompanies: any[] = [];
+
+    // First: Get companies via company_members
     try {
-      const { data, error: memberError } = await adminClient
+      const { data: membershipCompanies, error: membershipError } = await adminClient
         .from('company_members')
         .select(`
           company_id,
           role,
+          is_primary,
           company:companies (
             id,
             name,
             logo_url,
-            is_active,
-            group:company_groups (
-              id,
-              name
-            )
+            group_id,
+            party_id
           )
         `)
         .eq('user_id', user.id)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .order('is_primary', { ascending: false });
 
-      if (memberError) {
-        // Table might not exist yet - return empty state
-        console.warn('company_members query error (table may not exist):', memberError.message);
-        memberships = null;
-      } else {
-        // Filter out invalid/mock companies
-        const validMemberships = (data || []).filter((m: CompanyMembership) => {
-          const companyName = m.company?.name || '';
-          return companyName && !isInvalidCompany(companyName);
-        });
-        memberships = validMemberships as unknown as CompanyMembership[];
+      if (!membershipError && membershipCompanies) {
+        allCompanies = membershipCompanies
+          .filter((cm: any) => cm.company?.id && cm.company?.name)
+          .map((cm: any) => ({
+            company_id: cm.company.id,
+            company_name: cm.company.name,
+            company_logo: cm.company.logo_url,
+            user_role: cm.role,
+            is_primary: cm.is_primary,
+            group_name: null,
+            party_id: cm.company.party_id,
+            source: 'company_members',
+          }))
+          .filter((c: any) => !isInvalidCompany(c.company_name || ''));
       }
     } catch (e) {
-      console.warn('company_members table may not exist:', e);
-      memberships = null;
+      console.warn('Error fetching company_members:', e);
     }
 
-    // If no memberships found, also check for directly owned companies
-    if (!memberships || memberships.length === 0) {
-      // Fallback: Check for companies where user is owner
-      const { data: ownedCompanies } = await adminClient
+    // Second: Get directly owned companies
+    try {
+      const { data: ownedCompanies, error: ownedError } = await adminClient
         .from('companies')
-        .select(`
-          id,
-          name,
-          logo_url,
-          is_active,
-          group_id
-        `)
+        .select('id, name, logo_url, group_id, party_id')
         .eq('owner_id', user.id)
         .eq('is_active', true);
 
-      if (ownedCompanies && ownedCompanies.length > 0) {
-        // Filter out invalid/mock companies
-        const validOwnedCompanies = ownedCompanies.filter((c: { id: string; name: string }) => 
-          c.name && !isInvalidCompany(c.name)
-        );
-        
-        memberships = validOwnedCompanies.map((c: { id: string; name: string; logo_url: string | null; is_active: boolean }) => ({
-          company_id: c.id,
-          role: 'owner',
-          company: {
-            id: c.id,
-            name: c.name,
-            logo_url: c.logo_url,
-            is_active: c.is_active,
-            group: null,
+      if (!ownedError && ownedCompanies) {
+        const existingIds = new Set(allCompanies.map(c => c.company_id));
+        for (const company of ownedCompanies) {
+          if (!existingIds.has(company.id) && !isInvalidCompany(company.name || '')) {
+            allCompanies.push({
+              company_id: company.id,
+              company_name: company.name,
+              company_logo: company.logo_url,
+              user_role: 'owner',
+              is_primary: allCompanies.length === 0,
+              group_name: null,
+              party_id: company.party_id,
+              source: 'owned_companies',
+            });
           }
-        }));
-      } else {
-        return NextResponse.json({
-          success: true,
-          companies: [],
-          grouped: {},
-          summary: {
-            total_companies: 0,
-            total_employees: 0,
-            total_pending_leaves: 0,
-            total_pending_expenses: 0,
-            total_contracts: 0,
-            total_open_tasks: 0,
-            total_checked_in: 0,
-          },
-          message: 'No companies configured yet. Set up multi-company management to see analytics here.',
-        });
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching owned companies:', e);
+    }
+
+    // Third: Get companies from parties (Employer type) - This is critical for showing all companies
+    if (user.email) {
+      try {
+        const { data: userProfile } = await adminClient
+          .from('profiles')
+          .select('id, email, full_name')
+          .eq('id', user.id)
+          .single();
+
+        // Find all employer parties where user is associated
+        const { data: employerParties, error: employerPartiesError } = await adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role')
+          .eq('type', 'Employer')
+          .in('overall_status', ['Active', 'active'])
+          .or(`contact_email.eq.${user.email},contact_email.eq.${userProfile?.email || ''},contact_person.ilike.%${userProfile?.full_name || ''}%`);
+
+        if (!employerPartiesError && employerParties && employerParties.length > 0) {
+          const partyIds = employerParties.map((p: any) => p.id);
+          
+          // Find companies linked to these parties
+          const { data: profileLinkedCompanies, error: profileLinkedError } = await adminClient
+            .from('companies')
+            .select('id, name, logo_url, group_id, party_id')
+            .in('party_id', partyIds)
+            .eq('is_active', true);
+
+          if (!profileLinkedError && profileLinkedCompanies) {
+            const existingIds = new Set(allCompanies.map(c => c.company_id));
+            for (const company of profileLinkedCompanies) {
+              if (!existingIds.has(company.id) && !isInvalidCompany(company.name || '')) {
+                const matchingParty = employerParties.find((p: any) => p.id === company.party_id);
+                let userRole = 'owner';
+                if (matchingParty?.role) {
+                  const role = matchingParty.role.toLowerCase();
+                  if (['ceo', 'chairman', 'owner'].includes(role)) {
+                    userRole = 'owner';
+                  } else if (['admin', 'manager'].includes(role)) {
+                    userRole = 'admin';
+                  }
+                }
+
+                allCompanies.push({
+                  company_id: company.id,
+                  company_name: company.name,
+                  company_logo: company.logo_url,
+                  user_role: userRole,
+                  is_primary: allCompanies.length === 0,
+                  group_name: null,
+                  party_id: company.party_id,
+                  source: 'profile_party_match',
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching party-linked companies:', e);
       }
     }
 
+    // If still no companies found, return empty state
+    if (allCompanies.length === 0) {
+      return NextResponse.json({
+        success: true,
+        companies: [],
+        grouped: {},
+        summary: {
+          total_companies: 0,
+          total_employees: 0,
+          total_pending_leaves: 0,
+          total_pending_expenses: 0,
+          total_contracts: 0,
+          total_open_tasks: 0,
+          total_checked_in: 0,
+        },
+        message: 'No companies configured yet. Set up multi-company management to see analytics here.',
+      });
+    }
+
+    // Convert to memberships format for compatibility
+    const memberships: CompanyMembership[] = allCompanies.map((c: any) => ({
+      company_id: c.company_id,
+      role: c.user_role,
+      company: {
+        id: c.company_id,
+        name: c.company_name,
+        logo_url: c.company_logo,
+        is_active: true,
+        group: c.group_name ? { id: '', name: c.group_name } : null,
+      }
+    }));
+
     // Helper function to safely query counts (handles missing company_id columns)
-    const safeCount = async (table: string, conditions: Record<string, unknown>): Promise<number> => {
+    const safeCount = async (table: string, conditions: Record<string, unknown> = {}): Promise<number> => {
       try {
         let query = supabase.from(table).select('id', { count: 'exact', head: true });
-        for (const [key, value] of Object.entries(conditions)) {
+        for (const [key, value] of Object.entries(conditions || {})) {
           if (Array.isArray(value)) {
             query = query.in(key, value);
-          } else if (value === null) {
-            // Skip null conditions
+          } else if (value === null || value === undefined) {
+            // Skip null/undefined conditions
           } else {
             query = query.eq(key, value);
           }
@@ -200,7 +274,7 @@ export async function GET() {
     };
 
     // Filter out invalid companies before processing
-    const validMemberships = (memberships || []).filter((membership) => {
+    const validMemberships = memberships.filter((membership) => {
       const companyName = membership.company?.name || '';
       return companyName && !isInvalidCompany(companyName);
     });
@@ -262,19 +336,19 @@ export async function GET() {
         const pendingLeaves = await safeCount('employee_leave_requests', {
           company_id: companyId,
           status: 'pending',
-        });
+        } as Record<string, unknown>);
 
         // Get pending expenses
         const pendingExpenses = await safeCount('employee_expenses', {
           company_id: companyId,
           status: 'pending',
-        });
+        } as Record<string, unknown>);
 
         // Get active contracts count
         const activeContracts = await safeCount('contracts', {
           company_id: companyId,
           status: 'active',
-        });
+        } as Record<string, unknown>);
 
         // ✅ FIX: Get today's attendance from employee_attendance
         // Attendance is linked via employer_employee_id, so we need to get all employer_employee_ids for this company
