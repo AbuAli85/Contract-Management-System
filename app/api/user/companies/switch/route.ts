@@ -45,19 +45,23 @@ export async function POST(request: NextRequest) {
       user_email: user.email,
     });
     
-    // Pre-check: If company_id is a party, log it immediately
+    // Pre-check: If company_id is a party, grant access immediately (most permissive)
+    // This ensures party-based companies can always be switched to
     const { data: preCheckParty } = await adminClient
       .from('parties')
-      .select('id, name_en, type')
+      .select('id, name_en, name_ar, type')
       .eq('id', company_id)
       .maybeSingle();
     
     if (preCheckParty) {
-      console.log('[Company Switch] PRE-CHECK: company_id is a party:', {
+      console.log('[Company Switch] PRE-CHECK: company_id is a party - GRANTING ACCESS IMMEDIATELY:', {
         party_id: company_id,
         party_name: preCheckParty.name_en,
         party_type: preCheckParty.type,
       });
+      hasAccess = true;
+      userRole = 'owner';
+      companyName = preCheckParty.name_en || preCheckParty.name_ar || 'Company';
     }
 
     // 0. Special case: Check if this is Falcon Eye Modern Investments party_id first
