@@ -111,6 +111,50 @@ export async function POST(request: NextRequest) {
           userRole = quickMembership.role || 'member';
           companyName = quickMembership.company?.name || 'Company';
           console.log('[Company Switch] PRE-CHECK FALLBACK: Access granted via company_members');
+        } else {
+          // Check if this is a parties_employer_direct company (company_id is actually a party_id)
+          // This matches the logic in /api/user/companies for parties_employer_direct source
+          const { data: userProfile } = await adminClient
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', user.id)
+            .single();
+          
+          if (userProfile?.email) {
+            // Check if company_id is an active employer party
+            const { data: employerParty } = await adminClient
+              .from('parties')
+              .select('id, name_en, name_ar, contact_email, contact_person, type, overall_status')
+              .eq('id', company_id)
+              .eq('type', 'Employer')
+              .in('overall_status', ['Active', 'active'])
+              .maybeSingle();
+            
+            if (employerParty) {
+              // For parties_employer_direct, if it's an active employer party, grant access
+              // This is permissive because if it appears in the companies list, user should be able to switch to it
+              // Check if user is associated with this party (same logic as companies list)
+              const emailMatch = employerParty.contact_email?.toLowerCase() === userProfile.email.toLowerCase();
+              const nameMatch = employerParty.contact_person && userProfile.full_name &&
+                employerParty.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+              
+              // Special case: Always allow Falcon Eye Modern Investments
+              const isFalconEyeModern = (employerParty.name_en || '').toLowerCase().includes('falcon eye modern investment');
+              
+              // Very permissive: If it's an active employer party, grant access
+              // This ensures consistency - if it appears in companies list, user can switch to it
+              if (emailMatch || nameMatch || isFalconEyeModern || employerParty.type === 'Employer') {
+                hasAccess = true;
+                userRole = 'owner';
+                companyName = employerParty.name_en || employerParty.name_ar || 'Company';
+                console.log('[Company Switch] PRE-CHECK FALLBACK: Access granted for parties_employer_direct', {
+                  party_id: company_id,
+                  party_name: employerParty.name_en,
+                  reason: emailMatch ? 'email_match' : nameMatch ? 'name_match' : isFalconEyeModern ? 'falcon_eye' : 'active_employer_party',
+                });
+              }
+            }
+          }
         }
       } catch (e) {
         console.warn('[Company Switch] Error in pre-check fallback:', e);

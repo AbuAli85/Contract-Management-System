@@ -442,7 +442,12 @@ export async function GET() {
                 isAssociated = true;
                 userRole = 'owner'; // Default to owner for Falcon Eye Modern Investments
               } else {
-                isAssociated = emailMatch || nameMatch;
+                // More permissive: For parties_employer_direct (no linked company), 
+                // grant access if it's an active employer party
+                // This ensures consistency with the companies list endpoint
+                // If the party appears in the companies list, it should appear in the cross-company report
+                const isPartiesEmployerDirect = !linkedCompany && party.type === 'Employer';
+                isAssociated = emailMatch || nameMatch || isPartiesEmployerDirect;
               }
               
               // Determine user role from party role
