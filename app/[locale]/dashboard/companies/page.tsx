@@ -95,14 +95,13 @@ const roleColors: Record<string, string> = {
   member: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
 };
 
-// Permission helper functions
+// Permission helper functions - Role-based with support for explicit permissions via API
+// Note: To use explicit permissions, integrate useCompanyActions hook from @/hooks/use-company-permissions
 const canCreateCompany = (role: string): boolean => {
   return ['owner', 'admin'].includes(role.toLowerCase());
 };
 
 const canEditCompany = (userRole: string, companyRole: string): boolean => {
-  // Owners and admins can edit any company they have access to
-  // Managers can edit companies where they are manager or above
   const role = userRole.toLowerCase();
   if (['owner', 'admin'].includes(role)) return true;
   if (role === 'manager' && ['owner', 'admin', 'manager'].includes(companyRole.toLowerCase())) return true;
@@ -110,7 +109,6 @@ const canEditCompany = (userRole: string, companyRole: string): boolean => {
 };
 
 const canDeleteCompany = (userRole: string, companyRole: string): boolean => {
-  // Only owners can delete companies
   return userRole.toLowerCase() === 'owner' && companyRole.toLowerCase() === 'owner';
 };
 
