@@ -417,15 +417,32 @@ export async function POST(request: Request) {
     
     // Provide more helpful error messages
     let userFriendlyError = errorMessage;
-    if (errorMessage.includes('permission denied')) {
-      userFriendlyError = 'Permission denied. Please check that SUPABASE_SERVICE_ROLE_KEY is set correctly.';
+    let errorDetails: any = {};
+    
+    if (errorMessage.includes('permission denied') || errorMessage.includes('Admin client permission error') || errorMessage.includes('SUPABASE_SERVICE_ROLE_KEY')) {
+      userFriendlyError = 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY environment variable is not set or invalid in your production environment.';
+      errorDetails = {
+        solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+        steps: [
+          '1. Go to your Vercel project dashboard',
+          '2. Navigate to Settings → Environment Variables',
+          '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
+          '4. Redeploy your application',
+        ],
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+      };
     } else if (errorMessage.includes('Failed to create membership')) {
       userFriendlyError = 'Failed to add member to company. Please try again or contact support.';
     }
     
     return NextResponse.json({ 
       error: userFriendlyError,
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      ...(Object.keys(errorDetails).length > 0 && { details: errorDetails }),
+      ...(process.env.NODE_ENV === 'development' && { 
+        technicalDetails: errorMessage,
+        stack: errorStack 
+      }),
     }, { status: 500 });
   }
 }
