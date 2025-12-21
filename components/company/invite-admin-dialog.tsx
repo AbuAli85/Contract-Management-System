@@ -63,7 +63,16 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMessage = data.message || data.error || 'Failed to send invitation';
+        // Build a comprehensive error message
+        let errorMessage = data.message || data.error || 'Failed to send invitation';
+        
+        // If there are details with steps, include them
+        if (data.details && data.details.steps) {
+          errorMessage += '\n\n' + data.details.steps.join('\n');
+        } else if (data.details && typeof data.details === 'string') {
+          errorMessage += '\n\n' + data.details;
+        }
+        
         throw new Error(errorMessage);
       }
 
