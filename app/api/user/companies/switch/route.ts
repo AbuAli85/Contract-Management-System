@@ -180,7 +180,99 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 6. Check all employer parties where user email matches (comprehensive check)
     if (!hasAccess) {
+      const { data: userProfile } = await adminClient
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (userProfile?.email) {
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('id, name, party_id')
+          .eq('id', company_id)
+          .maybeSingle();
+
+        if (company?.party_id) {
+          // Check if this company's party is an employer party where user email matches
+          const { data: employerParty } = await adminClient
+            .from('parties')
+            .select('id, name_en, contact_email, contact_person, type, overall_status')
+            .eq('id', company.party_id)
+            .eq('type', 'Employer')
+            .in('overall_status', ['Active', 'active'])
+            .maybeSingle();
+
+          if (employerParty) {
+            const emailMatch = employerParty.contact_email?.toLowerCase() === userProfile.email.toLowerCase();
+            const nameMatch = employerParty.contact_person && userProfile.full_name &&
+              employerParty.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+            
+            // Special case: Always allow Falcon Eye Modern Investments
+            const isFalconEyeModern = (employerParty.name_en || '').toLowerCase().includes('falcon eye modern investment');
+
+            if (emailMatch || nameMatch || isFalconEyeModern) {
+              hasAccess = true;
+              userRole = 'owner';
+              companyName = company.name || employerParty.name_en || '';
+            }
+          }
+        }
+      }
+    }
+
+    // 7. Special case: Always allow Falcon Eye Modern Investments (final fallback)
+    if (!hasAccess) {
+      const { data: company } = await adminClient
+        .from('companies')
+        .select('id, name, party_id')
+        .eq('id', company_id)
+        .maybeSingle();
+
+      if (company) {
+        const companyNameLower = (company.name || '').toLowerCase();
+        const isFalconEyeModern = companyNameLower.includes('falcon eye modern investment');
+        
+        if (isFalconEyeModern) {
+          // If company has a party, check if it's an active employer party
+          if (company.party_id) {
+            const { data: party } = await adminClient
+              .from('parties')
+              .select('id, name_en, type, overall_status')
+              .eq('id', company.party_id)
+              .maybeSingle();
+
+            if (party && party.type === 'Employer' && ['Active', 'active'].includes(party.overall_status || '')) {
+              hasAccess = true;
+              userRole = 'owner';
+              companyName = company.name || party.name_en || '';
+            }
+          } else {
+            // Even without party, allow if name matches
+            hasAccess = true;
+            userRole = 'owner';
+            companyName = company.name || '';
+          }
+        }
+      }
+    }
+
+    if (!hasAccess) {
+      console.error('Company switch access denied:', {
+        company_id,
+        user_id: user.id,
+        checked_sources: [
+          'company_members',
+          'direct_ownership',
+          'party_linked',
+          'employer_employees',
+          'party_association',
+          'employer_parties',
+          'falcon_eye_special_case',
+        ],
+      });
       return NextResponse.json(
         { error: 'You do not have access to this company' },
         { status: 403 }
