@@ -35,17 +35,6 @@ export async function POST(request: Request) {
     }
     
     supabaseAdmin = createAdminClient();
-    
-    // Test the admin client by making a simple query
-    // This will fail early if the client isn't configured correctly
-    const { error: testError } = await supabaseAdmin
-      .from('company_members')
-      .select('id')
-      .limit(1);
-    
-    if (testError && testError.message.includes('permission denied')) {
-      throw new Error(`Admin client does not have proper permissions. Service role key may be invalid. Error: ${testError.message}`);
-    }
   } catch (e: any) {
     console.error('[Invite Admin] Admin client initialization failed:', {
       message: e.message,
