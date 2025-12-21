@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Company {
   id: string;
@@ -26,11 +27,20 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchActiveCompany = async () => {
+  const fetchActiveCompany = async (forceRefresh: boolean = false) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/user/companies');
+      // Add cache-busting to ensure fresh data
+      const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
+      const response = await fetch(`/api/user/companies${cacheBuster}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      });
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -107,15 +117,31 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/api/user/companies/switch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
         body: JSON.stringify({ company_id: companyId }),
+        cache: 'no-store', // Ensure we don't use cached response
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Update company state immediately
-        await fetchActiveCompany();
+        // Immediately update state with the new company from the response
+        // This prevents the UI from being stuck with the old company
+        // We'll get full details from fetchActiveCompany, but this ensures immediate UI update
+        const tempCompany = {
+          id: companyId,
+          name: data.company_name || 'Company',
+          logo_url: null, // Will be updated by fetchActiveCompany
+          role: 'member', // Will be updated by fetchActiveCompany
+        };
+        setCompany(tempCompany);
+        
+        // Invalidate all React Query caches to force data refresh
+        queryClient.invalidateQueries();
+        queryClient.clear();
         
         // Refresh router to update all server components
         router.refresh();
@@ -127,6 +153,17 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           }));
         }
         
+        // Fetch full company details after a short delay to ensure DB update has propagated
+        // The immediate state update above ensures UI is not stuck, this gets full details
+        setTimeout(async () => {
+          try {
+            await fetchActiveCompany(true); // Force refresh with cache busting
+          } catch (error) {
+            console.error('Error fetching active company after switch:', error);
+            // If fetch fails, the temporary state above will still show the correct company
+          }
+        }, 300);
+        
         toast({
           title: 'Company Switched',
           description: `Now viewing ${data.company_name}. All features refreshed.`,
@@ -136,6 +173,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Error switching company:', error);
+      // Re-fetch to restore correct state on error
+      await fetchActiveCompany();
       toast({
         title: 'Error',
         description: error.message || 'Failed to switch company',
