@@ -35,17 +35,30 @@ export async function POST(request: Request) {
     }
     
     supabaseAdmin = createAdminClient();
+    
+    // Test the admin client by attempting a simple query
+    // This verifies the service role key is valid and can bypass RLS
+    const { error: testError } = await supabaseAdmin
+      .from('company_members')
+      .select('id')
+      .limit(1);
+    
+    if (testError && testError.code === '42501') {
+      throw new Error(`Admin client cannot bypass RLS. Service role key may be invalid. Error: ${testError.message}`);
+    }
   } catch (e: any) {
-    console.error('[Invite Admin] Admin client initialization failed:', {
+    console.error('[Invite Admin] Admin client initialization or test failed:', {
       message: e.message,
       stack: e.stack,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+      serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
     });
     return NextResponse.json({ 
       error: 'Server configuration error',
       details: e.message || 'Admin client initialization failed. Please check SUPABASE_SERVICE_ROLE_KEY environment variable.',
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hint: 'The SUPABASE_SERVICE_ROLE_KEY must be set in your production environment (Vercel, etc.) and must be a valid service role key from your Supabase dashboard.',
     }, { status: 500 });
   }
 
@@ -280,7 +293,7 @@ export async function POST(request: Request) {
           .from('company_members')
           .insert({
             company_id: activeCompanyId,
-            user_id: user.id, // Temporarily use inviter's ID
+            user_id: null, // No user_id yet, it's an invitation
             role,
             department: normalizedDepartment,
             job_title: normalizedJobTitle,
