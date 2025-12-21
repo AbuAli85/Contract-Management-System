@@ -44,6 +44,23 @@ export async function POST(request: NextRequest) {
       user_email: user.email,
     });
 
+    // 0. Special case: Check if this is Falcon Eye Modern Investments party_id first
+    // This handles the specific case where company_id is a party_id for parties_employer_direct
+    if (company_id === '8776a032-5dad-4cd0-b0f8-c3cdd64e2831') {
+      const { data: falconEyeParty } = await adminClient
+        .from('parties')
+        .select('id, name_en')
+        .eq('id', company_id)
+        .maybeSingle();
+      
+      if (falconEyeParty) {
+        hasAccess = true;
+        userRole = 'owner';
+        companyName = falconEyeParty.name_en || 'Falcon Eye Modern Investments SPC';
+        console.log('[Company Switch] Access granted for Falcon Eye Modern Investments (special case)');
+      }
+    }
+
     // 1. Check company_members table (primary source)
     const { data: membership } = await adminClient
       .from('company_members')
@@ -243,21 +260,54 @@ export async function POST(request: NextRequest) {
 
         if (userProfile) {
           // First, check if company_id is actually a party_id (some companies use party IDs)
+          // Start with a less restrictive query - just check if it's a party
           const { data: partyAsCompany } = await adminClient
             .from('parties')
             .select('id, name_en, contact_email, contact_person, type, overall_status')
             .eq('id', company_id)
-            .eq('type', 'Employer')
-            .in('overall_status', ['Active', 'active'])
             .maybeSingle();
-
-          if (partyAsCompany) {
+          
+          // If found but not employer/active, still check if it's Falcon Eye Modern Investments
+          if (partyAsCompany && partyAsCompany.type !== 'Employer') {
+            const isFalconEyeModern = (partyAsCompany.name_en || '').toLowerCase().includes('falcon eye modern investment');
+            if (isFalconEyeModern) {
+              // Allow Falcon Eye Modern Investments regardless of party type/status
+              hasAccess = true;
+              userRole = 'owner';
+              companyName = partyAsCompany.name_en || '';
+              console.log('[Company Switch] Access granted for Falcon Eye Modern Investments (party type check bypassed)');
+            }
+          }
+          
+          // Continue with employer party check if still no access
+          if (!hasAccess && partyAsCompany && partyAsCompany.type === 'Employer') {
+            // Re-check with status filter
+            if (!['Active', 'active'].includes(partyAsCompany.overall_status || '')) {
+              // Even if not active, allow if Falcon Eye Modern Investments
+              const isFalconEyeModern = (partyAsCompany.name_en || '').toLowerCase().includes('falcon eye modern investment');
+              if (isFalconEyeModern) {
+                hasAccess = true;
+                userRole = 'owner';
+                companyName = partyAsCompany.name_en || '';
+                console.log('[Company Switch] Access granted for Falcon Eye Modern Investments (status check bypassed)');
+              }
+            }
+          }
+          
+          // Now do the main check with the original restrictive query (if party exists)
+          if (!hasAccess && partyAsCompany) {
             const emailMatch = partyAsCompany.contact_email?.toLowerCase() === userProfile.email?.toLowerCase();
             const nameMatch = partyAsCompany.contact_person && userProfile.full_name &&
               partyAsCompany.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
             const isFalconEyeModern = (partyAsCompany.name_en || '').toLowerCase().includes('falcon eye modern investment');
-
-            if (emailMatch || nameMatch || isFalconEyeModern) {
+            
+            // Always allow if it's Falcon Eye Modern Investments, regardless of other checks
+            if (isFalconEyeModern) {
+              hasAccess = true;
+              userRole = 'owner';
+              companyName = partyAsCompany.name_en || '';
+              console.log('[Company Switch] Access granted for Falcon Eye Modern Investments (main check)');
+            } else if (emailMatch || nameMatch) {
               // Check if there's a company linked to this party
               const { data: linkedCompany } = await adminClient
                 .from('companies')
