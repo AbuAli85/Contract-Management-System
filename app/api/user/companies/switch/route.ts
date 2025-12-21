@@ -223,39 +223,131 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 7. Special case: Always allow Falcon Eye Modern Investments (final fallback)
+    // 7. Comprehensive check: Check all employer parties and see if company is linked to one where user is associated
+    // This mirrors the logic in /api/user/companies to ensure consistency
     if (!hasAccess) {
-      const { data: company } = await adminClient
-        .from('companies')
-        .select('id, name, party_id')
-        .eq('id', company_id)
-        .maybeSingle();
+      try {
+        const { data: userProfile } = await adminClient
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', user.id)
+          .single();
 
-      if (company) {
-        const companyNameLower = (company.name || '').toLowerCase();
-        const isFalconEyeModern = companyNameLower.includes('falcon eye modern investment');
-        
-        if (isFalconEyeModern) {
-          // If company has a party, check if it's an active employer party
-          if (company.party_id) {
-            const { data: party } = await adminClient
-              .from('parties')
-              .select('id, name_en, type, overall_status')
-              .eq('id', company.party_id)
+        if (userProfile) {
+          // First, check if company_id is actually a party_id (some companies use party IDs)
+          const { data: partyAsCompany } = await adminClient
+            .from('parties')
+            .select('id, name_en, contact_email, contact_person, type, overall_status')
+            .eq('id', company_id)
+            .eq('type', 'Employer')
+            .in('overall_status', ['Active', 'active'])
+            .maybeSingle();
+
+          if (partyAsCompany) {
+            const emailMatch = partyAsCompany.contact_email?.toLowerCase() === userProfile.email?.toLowerCase();
+            const nameMatch = partyAsCompany.contact_person && userProfile.full_name &&
+              partyAsCompany.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+            const isFalconEyeModern = (partyAsCompany.name_en || '').toLowerCase().includes('falcon eye modern investment');
+
+            if (emailMatch || nameMatch || isFalconEyeModern) {
+              // Check if there's a company linked to this party
+              const { data: linkedCompany } = await adminClient
+                .from('companies')
+                .select('id, name, owner_id')
+                .eq('party_id', company_id)
+                .eq('is_active', true)
+                .maybeSingle();
+
+              if (linkedCompany) {
+                // Check if user owns or is a member of the linked company
+                if (linkedCompany.owner_id === user.id) {
+                  hasAccess = true;
+                  userRole = 'owner';
+                  companyName = linkedCompany.name || partyAsCompany.name_en || '';
+                } else {
+                  const { data: membership } = await adminClient
+                    .from('company_members')
+                    .select('role')
+                    .eq('company_id', linkedCompany.id)
+                    .eq('user_id', user.id)
+                    .eq('status', 'active')
+                    .maybeSingle();
+
+                  if (membership) {
+                    hasAccess = true;
+                    userRole = membership.role || 'member';
+                    companyName = linkedCompany.name || partyAsCompany.name_en || '';
+                  } else if (emailMatch || nameMatch || isFalconEyeModern) {
+                    // User is associated with party but not company member - still allow
+                    hasAccess = true;
+                    userRole = 'owner';
+                    companyName = linkedCompany.name || partyAsCompany.name_en || '';
+                  }
+                }
+              } else if (emailMatch || nameMatch || isFalconEyeModern) {
+                // No linked company, but user is associated with party - allow using party as company
+                hasAccess = true;
+                userRole = 'owner';
+                companyName = partyAsCompany.name_en || '';
+              }
+            }
+          }
+
+          // If still no access, check if company_id is a company linked to an employer party
+          if (!hasAccess) {
+            const { data: company } = await adminClient
+              .from('companies')
+              .select('id, name, party_id, owner_id')
+              .eq('id', company_id)
               .maybeSingle();
 
-            if (party && party.type === 'Employer' && ['Active', 'active'].includes(party.overall_status || '')) {
-              hasAccess = true;
-              userRole = 'owner';
-              companyName = company.name || party.name_en || '';
+            if (company) {
+              // Check if company is linked to an employer party
+              if (company.party_id) {
+                const { data: party } = await adminClient
+                  .from('parties')
+                  .select('id, name_en, contact_email, contact_person, type, overall_status')
+                  .eq('id', company.party_id)
+                  .eq('type', 'Employer')
+                  .in('overall_status', ['Active', 'active'])
+                  .maybeSingle();
+
+                if (party) {
+                  // Check multiple association methods
+                  const emailMatch = party.contact_email?.toLowerCase() === userProfile.email?.toLowerCase();
+                  const nameMatch = party.contact_person && userProfile.full_name &&
+                    party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+                  
+                  // Check if user owns the company
+                  const ownsCompany = company.owner_id === user.id;
+                  
+                  // Special case: Always allow Falcon Eye Modern Investments
+                  const isFalconEyeModern = (party.name_en || '').toLowerCase().includes('falcon eye modern investment');
+
+                  if (emailMatch || nameMatch || ownsCompany || isFalconEyeModern) {
+                    hasAccess = true;
+                    userRole = ownsCompany ? 'owner' : 'owner'; // Default to owner for employer parties
+                    companyName = company.name || party.name_en || '';
+                  }
+                }
+              }
+
+              // Also check if company name itself matches Falcon Eye Modern Investments
+              if (!hasAccess) {
+                const companyNameLower = (company.name || '').toLowerCase();
+                const isFalconEyeModern = companyNameLower.includes('falcon eye modern investment');
+                
+                if (isFalconEyeModern) {
+                  hasAccess = true;
+                  userRole = 'owner';
+                  companyName = company.name || '';
+                }
+              }
             }
-          } else {
-            // Even without party, allow if name matches
-            hasAccess = true;
-            userRole = 'owner';
-            companyName = company.name || '';
           }
         }
+      } catch (e) {
+        console.warn('Error in comprehensive employer party check:', e);
       }
     }
 
