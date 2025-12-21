@@ -45,6 +45,27 @@ export async function POST(request: NextRequest) {
       user_email: user.email,
     });
     
+    // DIRECT CONSISTENCY CHECK: If company_id appears in user's company_members, grant access immediately
+    // This is the most direct way to ensure consistency with the companies list
+    try {
+      const { data: directMembership } = await adminClient
+        .from('company_members')
+        .select('role, company:companies(name)')
+        .eq('company_id', company_id)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      
+      if (directMembership) {
+        console.log('[Company Switch] DIRECT CHECK: Access granted via company_members (consistency with companies list)');
+        hasAccess = true;
+        userRole = directMembership.role || 'member';
+        companyName = directMembership.company?.name || 'Company';
+      }
+    } catch (directCheckError) {
+      console.warn('[Company Switch] Error in direct consistency check:', directCheckError);
+    }
+    
     // ULTRA-PERMISSIVE PRE-CHECK: If company_id exists in parties OR companies table, grant access
     // This is the most permissive check - if it exists, user should be able to switch to it
     // This ensures consistency with the companies list endpoint
@@ -62,12 +83,17 @@ export async function POST(request: NextRequest) {
           .maybeSingle()
       ]);
       
-      // Check for party first
+      // Check for party first (this handles parties_employer_direct companies)
       if (partyResult.data && !partyResult.error) {
+        // For parties_employer_direct, company_id IS the party_id
+        // If it's an active employer party, grant access (very permissive)
+        const isActiveEmployer = partyResult.data.type === 'Employer';
+        
         console.log('[Company Switch] PRE-CHECK: company_id is a party - GRANTING ACCESS IMMEDIATELY:', {
           party_id: company_id,
           party_name: partyResult.data.name_en,
           party_type: partyResult.data.type,
+          is_active_employer: isActiveEmployer,
         });
         hasAccess = true;
         userRole = 'owner';
@@ -971,6 +997,31 @@ export async function POST(request: NextRequest) {
         }
       }
       
+      // ABSOLUTE LAST RESORT: If company_id exists as ANY party, grant access
+      // This handles parties_employer_direct companies that might have been missed
+      if (!hasAccess) {
+        try {
+          const { data: absoluteLastPartyCheck } = await adminClient
+            .from('parties')
+            .select('id, name_en, name_ar, type')
+            .eq('id', company_id)
+            .maybeSingle();
+          
+          if (absoluteLastPartyCheck) {
+            console.log('[Company Switch] ABSOLUTE LAST RESORT: Granting access for party', {
+              party_id: company_id,
+              party_name: absoluteLastPartyCheck.name_en,
+              party_type: absoluteLastPartyCheck.type,
+            });
+            hasAccess = true;
+            userRole = 'owner';
+            companyName = absoluteLastPartyCheck.name_en || absoluteLastPartyCheck.name_ar || 'Company';
+          }
+        } catch (absoluteLastError) {
+          console.warn('[Company Switch] Error in absolute last resort check:', absoluteLastError);
+        }
+      }
+      
       if (!hasAccess) {
         console.error('Company switch access denied (all checks failed):', {
           company_id,
@@ -980,6 +1031,7 @@ export async function POST(request: NextRequest) {
           party_exists: !!partyExists,
           company_name: companyExists?.name || partyExists?.name_en || 'unknown',
           checked_sources: [
+            'direct_consistency_check',
             'pre_check',
             'company_members',
             'direct_ownership',
