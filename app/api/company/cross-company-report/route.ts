@@ -703,11 +703,13 @@ export async function GET() {
 
     // Convert to memberships format for compatibility
     // Preserve source and party_id information for stats calculation
-    const memberships: (CompanyMembership & { source?: string; party_id?: string })[] = allCompanies.map((c: any) => ({
+    // Also preserve group_name for easier access later
+    const memberships: (CompanyMembership & { source?: string; party_id?: string; group_name?: string | null })[] = allCompanies.map((c: any) => ({
       company_id: c.company_id,
       role: c.user_role,
       source: c.source,
       party_id: c.party_id,
+      group_name: c.group_name || null, // Preserve group_name directly
       company: {
         id: c.company_id,
         name: c.company_name,
@@ -912,10 +914,12 @@ export async function GET() {
           status: ['draft', 'submitted'],
         });
 
-        // Get group_name from the original company data (allCompanies)
-        // The group_name was set earlier in the code on allCompanies
-        const originalCompany = allCompanies.find(c => c.company_id === companyId);
-        const groupName = originalCompany?.group_name || company?.group?.name || null;
+        // Get group_name - it's now preserved directly in the membership object
+        // Fallback to originalCompany or company.group.name if needed
+        const groupName = membership.group_name || 
+                         allCompanies.find(c => c.company_id === companyId)?.group_name || 
+                         membership.company?.group?.name || 
+                         null;
 
         return {
           id: companyId,
