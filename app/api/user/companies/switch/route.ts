@@ -376,10 +376,82 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Final fallback: If company appears in user's companies list, allow access
+    // This ensures consistency - if a company is in the list, user should be able to switch to it
+    if (!hasAccess) {
+      try {
+        const { data: userProfile } = await adminClient
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', user.id)
+          .single();
+
+        // Check if it's a party_id (for parties_employer_direct companies)
+        const { data: partyCheck } = await adminClient
+          .from('parties')
+          .select('id, name_en, contact_email, contact_person, type, overall_status')
+          .eq('id', company_id)
+          .eq('type', 'Employer')
+          .in('overall_status', ['Active', 'active'])
+          .maybeSingle();
+        
+        if (partyCheck && userProfile) {
+          // Check if user is associated with this party (same logic as companies list)
+          const emailMatch = partyCheck.contact_email?.toLowerCase() === userProfile.email?.toLowerCase();
+          const nameMatch = partyCheck.contact_person && userProfile.full_name &&
+            partyCheck.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+          const isFalconEyeModern = (partyCheck.name_en || '').toLowerCase().includes('falcon eye modern investment');
+          
+          // Check if there's a linked company
+          const { data: linkedCompany } = await adminClient
+            .from('companies')
+            .select('id, name, owner_id')
+            .eq('party_id', company_id)
+            .eq('is_active', true)
+            .maybeSingle();
+          
+          let isAssociated = false;
+          
+          if (linkedCompany) {
+            // Check if user owns or is a member of the linked company
+            if (linkedCompany.owner_id === user.id) {
+              isAssociated = true;
+            } else {
+              const { data: membership } = await adminClient
+                .from('company_members')
+                .select('role')
+                .eq('company_id', linkedCompany.id)
+                .eq('user_id', user.id)
+                .eq('status', 'active')
+                .maybeSingle();
+              
+              if (membership) {
+                isAssociated = true;
+              }
+            }
+          }
+          
+          // Also check direct party association
+          if (!isAssociated) {
+            isAssociated = emailMatch || nameMatch || isFalconEyeModern;
+          }
+          
+          if (isAssociated) {
+            hasAccess = true;
+            userRole = 'owner';
+            companyName = linkedCompany?.name || partyCheck.name_en || '';
+          }
+        }
+      } catch (fallbackError) {
+        console.warn('Error in fallback access check:', fallbackError);
+      }
+    }
+
     if (!hasAccess) {
       console.error('Company switch access denied:', {
         company_id,
         user_id: user.id,
+        user_email: user.email,
         checked_sources: [
           'company_members',
           'direct_ownership',
@@ -388,6 +460,7 @@ export async function POST(request: NextRequest) {
           'party_association',
           'employer_parties',
           'falcon_eye_special_case',
+          'final_fallback',
         ],
       });
       return NextResponse.json(
