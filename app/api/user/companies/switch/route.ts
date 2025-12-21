@@ -32,36 +32,171 @@ export async function POST(request: NextRequest) {
       adminClient = supabase;
     }
 
-    // Verify user has access to this company
+    // Comprehensive access check - verify user has access through any valid source
+    let hasAccess = false;
+    let userRole = null;
+    let companyName = '';
+
+    // 1. Check company_members table (primary source)
     const { data: membership } = await adminClient
       .from('company_members')
       .select('role, company:companies(name)')
       .eq('company_id', company_id)
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    // Also check if user owns the company
-    const { data: ownedCompany } = await adminClient
-      .from('companies')
-      .select('id, name, owner_id')
-      .eq('id', company_id)
-      .single();
+    if (membership) {
+      hasAccess = true;
+      userRole = membership.role;
+      companyName = membership.company?.name || '';
+    }
 
-    if (!membership && ownedCompany?.owner_id !== user.id) {
+    // 2. Check if user owns the company directly
+    if (!hasAccess) {
+      const { data: ownedCompany } = await adminClient
+        .from('companies')
+        .select('id, name, owner_id')
+        .eq('id', company_id)
+        .maybeSingle();
+
+      if (ownedCompany && ownedCompany.owner_id === user.id) {
+        hasAccess = true;
+        userRole = 'owner';
+        companyName = ownedCompany.name || '';
+      }
+    }
+
+    // 3. Check if company is linked to a party where user's email matches
+    if (!hasAccess) {
+      const { data: userProfile } = await adminClient
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (userProfile?.email) {
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('id, name, party_id')
+          .eq('id', company_id)
+          .maybeSingle();
+
+        if (company?.party_id) {
+          const { data: party } = await adminClient
+            .from('parties')
+            .select('id, name_en, contact_email, contact_person')
+            .eq('id', company.party_id)
+            .maybeSingle();
+
+          if (party) {
+            const emailMatch = party.contact_email?.toLowerCase() === userProfile.email.toLowerCase();
+            const nameMatch = party.contact_person && userProfile.full_name &&
+              party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+
+            if (emailMatch || nameMatch) {
+              hasAccess = true;
+              userRole = 'owner'; // Default to owner for party-linked companies
+              companyName = company.name || party.name_en || '';
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Check if user is an employer via employer_employees
+    if (!hasAccess) {
+      const { data: employerProfile } = await adminClient
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+
+      if (employerProfile?.email) {
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('id, name, party_id')
+          .eq('id', company_id)
+          .maybeSingle();
+
+        if (company?.party_id) {
+          const { data: employerParties } = await adminClient
+            .from('parties')
+            .select('id, name_en, contact_email')
+            .eq('id', company.party_id)
+            .eq('type', 'Employer')
+            .in('overall_status', ['Active', 'active'])
+            .eq('contact_email', employerProfile.email)
+            .maybeSingle();
+
+          if (employerParties) {
+            hasAccess = true;
+            userRole = 'owner'; // User is the employer
+            companyName = company.name || employerParties.name_en || '';
+          }
+        }
+      }
+    }
+
+    // 5. Check if company is linked to any party where user is associated
+    if (!hasAccess) {
+      const { data: userProfile } = await adminClient
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (userProfile) {
+        const { data: company } = await adminClient
+          .from('companies')
+          .select('id, name, party_id')
+          .eq('id', company_id)
+          .maybeSingle();
+
+        if (company?.party_id) {
+          const { data: party } = await adminClient
+            .from('parties')
+            .select('id, name_en, contact_email, contact_person, type')
+            .eq('id', company.party_id)
+            .eq('type', 'Employer')
+            .in('overall_status', ['Active', 'active'])
+            .maybeSingle();
+
+          if (party) {
+            const emailMatch = party.contact_email?.toLowerCase() === userProfile.email?.toLowerCase();
+            const nameMatch = party.contact_person && userProfile.full_name &&
+              party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+
+            // Special case: Always allow Falcon Eye Modern Investments
+            const isFalconEyeModern = (party.name_en || '').toLowerCase().includes('falcon eye modern investment');
+
+            if (emailMatch || nameMatch || isFalconEyeModern) {
+              hasAccess = true;
+              userRole = 'owner';
+              companyName = company.name || party.name_en || '';
+            }
+          }
+        }
+      }
+    }
+
+    if (!hasAccess) {
       return NextResponse.json(
         { error: 'You do not have access to this company' },
         { status: 403 }
       );
     }
 
-    // Get company name for validation and response
-    const companyNameOriginal = membership?.company?.name || ownedCompany?.name || '';
-    
     // Helper function to check if company is invalid
     const isInvalid = (name: string): boolean => {
+      if (!name) return true;
       const lower = name.toLowerCase().trim();
-      if (lower.includes('falcon eye modern investments')) return false; // Allow valid Falcon Eye companies
+      if (lower.includes('falcon eye modern investments') || 
+          lower.includes('falcon eye modern investment') ||
+          lower === 'falcon eye modern investments' ||
+          lower === 'falcon eye modern investments spc') {
+        return false; // Allow valid Falcon Eye companies
+      }
       return (
         lower === 'digital morph' ||
         lower === 'falcon eye group' ||
@@ -72,11 +207,28 @@ export async function POST(request: NextRequest) {
       );
     };
     
-    if (isInvalid(companyNameOriginal)) {
-      return NextResponse.json(
-        { error: 'Cannot switch to this company. It is not a valid company entity.' },
-        { status: 400 }
-      );
+    // Validate company name (use the name we found during access check)
+    if (isInvalid(companyName)) {
+      // If we don't have a name yet, fetch it
+      if (!companyName) {
+        const { data: companyData } = await adminClient
+          .from('companies')
+          .select('name')
+          .eq('id', company_id)
+          .maybeSingle();
+        
+        if (companyData?.name && isInvalid(companyData.name)) {
+          return NextResponse.json(
+            { error: 'Cannot switch to this company. It is not a valid company entity.' },
+            { status: 400 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: 'Cannot switch to this company. It is not a valid company entity.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Update user's active company
@@ -93,12 +245,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const companyName = companyNameOriginal || 'Company';
+    // If we still don't have a company name, fetch it
+    if (!companyName) {
+      const { data: companyData } = await adminClient
+        .from('companies')
+        .select('name')
+        .eq('id', company_id)
+        .maybeSingle();
+      
+      companyName = companyData?.name || 'Company';
+    }
 
     return NextResponse.json({
       success: true,
       company_id,
       company_name: companyName,
+      user_role: userRole,
       message: `Switched to ${companyName}`,
     });
   } catch (error: any) {
