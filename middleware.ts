@@ -1,39 +1,76 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
-// Global rate limiting store (in production, use Redis)
+// ========================================
+// RATE LIMITING CONFIGURATION
+// ========================================
+
+// Initialize Redis client for distributed rate limiting
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null;
+
+// Fallback in-memory store for development (when Redis is not configured)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
-// Rate limiting configuration
+// Create rate limiter instance (distributed if Redis is available)
+const ratelimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(5, '60 s'), // 5 requests per 60 seconds
+      analytics: true,
+      prefix: '@upstash/ratelimit',
+    })
+  : null;
+
+// Rate limiting configuration for specific endpoints
 const RATE_LIMIT_CONFIG = {
   '/api/auth/check-session': {
     windowMs: 60000, // 1 minute
     maxRequests: 5, // 5 requests per minute
-    skipSuccessfulRequests: true, // Don't count successful requests
+    skipSuccessfulRequests: true,
+  },
+  '/api/auth/login': {
+    windowMs: 900000, // 15 minutes
+    maxRequests: 5, // 5 login attempts per 15 minutes
+    skipSuccessfulRequests: false,
+  },
+  '/api/auth/signup': {
+    windowMs: 3600000, // 1 hour
+    maxRequests: 3, // 3 signup attempts per hour
+    skipSuccessfulRequests: false,
   },
 };
 
-// CORS Configuration - Define allowed origins
+// ========================================
+// CORS CONFIGURATION
+// ========================================
+
 function getAllowedOrigins(): string[] {
   const envOrigins =
     process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim().replace(/\/$/, '')) || [];
-  const defaultOrigins = [
+  
+  // Production origins
+  const productionOrigins = [
     'https://portal.thesmartpro.io',
     'https://www.thesmartpro.io',
     'https://thesmartpro.io',
-    // Vercel preview deployments
-    'https://contract-management-system.vercel.app',
   ];
 
   // Add localhost in development
   if (process.env.NODE_ENV === 'development') {
-    defaultOrigins.push('http://localhost:3000', 'http://localhost:3001');
+    productionOrigins.push('http://localhost:3000', 'http://localhost:3001');
   }
 
-  return envOrigins.length > 0 ? envOrigins : defaultOrigins;
+  return envOrigins.length > 0 ? envOrigins : productionOrigins;
 }
 
-// Check if origin matches allowed patterns (including Vercel preview URLs)
+// Check if origin matches allowed patterns
 function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boolean {
   if (!origin) return true; // Same-origin requests don't include origin header
   
@@ -45,9 +82,18 @@ function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boole
     return true;
   }
   
-  // Allow Vercel preview deployments (*.vercel.app)
-  if (normalizedOrigin.endsWith('.vercel.app')) {
-    return true;
+  // In production, be more restrictive with Vercel preview deployments
+  if (process.env.NODE_ENV === 'production') {
+    // Only allow specific Vercel preview URLs if configured
+    const allowedVercelPreviews = process.env.ALLOWED_VERCEL_PREVIEWS?.split(',') || [];
+    if (allowedVercelPreviews.some(preview => normalizedOrigin.includes(preview))) {
+      return true;
+    }
+  } else {
+    // In development, allow all Vercel preview deployments
+    if (normalizedOrigin.endsWith('.vercel.app')) {
+      return true;
+    }
   }
   
   // Allow any thesmartpro.io subdomain
@@ -58,7 +104,28 @@ function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boole
   return false;
 }
 
-function isRateLimited(path: string, ip: string): boolean {
+// ========================================
+// RATE LIMITING FUNCTIONS
+// ========================================
+
+async function isRateLimitedDistributed(path: string, ip: string): Promise<boolean> {
+  if (!ratelimit) {
+    // Fallback to in-memory rate limiting
+    return isRateLimitedInMemory(path, ip);
+  }
+
+  try {
+    const identifier = `${ip}:${path}`;
+    const { success } = await ratelimit.limit(identifier);
+    return !success;
+  } catch (error) {
+    console.error('Rate limiting error:', error);
+    // On error, allow the request to proceed (fail open)
+    return false;
+  }
+}
+
+function isRateLimitedInMemory(path: string, ip: string): boolean {
   const config = RATE_LIMIT_CONFIG[path as keyof typeof RATE_LIMIT_CONFIG];
   if (!config) return false;
 
@@ -89,7 +156,11 @@ function getClientIP(request: NextRequest): string {
   );
 }
 
-export function middleware(request: NextRequest) {
+// ========================================
+// MIDDLEWARE FUNCTION
+// ========================================
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIP(request);
 
@@ -103,10 +174,10 @@ export function middleware(request: NextRequest) {
       ? origin 
       : allowedOrigins[0] || 'https://portal.thesmartpro.io';
 
-    // Validate origin for cross-origin requests using flexible matching
+    // Validate origin for cross-origin requests
     if (!isOriginAllowed(origin, allowedOrigins)) {
       console.warn(
-        `🚫 CORS: Blocked request from unauthorized origin: ${origin}`
+        `🚫 CORS: Blocked request from unauthorized origin: ${origin} (IP: ${ip})`
       );
       return new NextResponse(JSON.stringify({ error: 'Origin not allowed' }), {
         status: 403,
@@ -168,22 +239,20 @@ export function middleware(request: NextRequest) {
       });
     }
 
-    // Rate limiting for specific paths (before returning response)
-    if (pathname === '/api/auth/check-session') {
-      if (isRateLimited(pathname, ip)) {
-        const key = `${ip}:${pathname}`;
-        const requestData = rateLimitStore.get(key);
-
-        if (requestData && requestData.count === 1) {
-          console.log(
-            `🚫 Middleware: Rate limit exceeded for ${pathname} from IP: ${ip}`
-          );
-        }
+    // Rate limiting for specific paths
+    const rateLimitedPaths = Object.keys(RATE_LIMIT_CONFIG);
+    if (rateLimitedPaths.some(path => pathname.startsWith(path))) {
+      const isLimited = await isRateLimitedDistributed(pathname, ip);
+      
+      if (isLimited) {
+        console.log(
+          `🚫 Middleware: Rate limit exceeded for ${pathname} from IP: ${ip}`
+        );
 
         return new NextResponse(
           JSON.stringify({
             error: 'Rate limit exceeded',
-            message: 'Too many requests. Please wait 1 minute and try again.',
+            message: 'Too many requests. Please wait and try again.',
             retryAfter: 60,
           }),
           {
@@ -212,10 +281,6 @@ export function middleware(request: NextRequest) {
   }
 
   // For non-API paths, just continue without CORS headers
-  // NOTE: We do NOT enforce httpOnly on Supabase cookies because:
-  // 1. Supabase's client-side JS library needs to read auth cookies
-  // 2. Setting httpOnly breaks client-side authentication state
-  // 3. Supabase handles cookie security through other mechanisms (encryption, short expiry)
   return NextResponse.next();
 }
 

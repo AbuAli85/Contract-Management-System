@@ -219,6 +219,8 @@ const nextConfig = {
       '@radix-ui/react-icons',
       '@tanstack/react-query',
     ],
+    // Enable instrumentation for security checks
+    instrumentationHook: true,
   },
 
   // Enable SWC minification for better performance
