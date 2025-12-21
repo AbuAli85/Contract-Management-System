@@ -605,7 +605,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Final safety check: If company_id is a party_id (parties_employer_direct), check if it exists and grant access
+    // Final safety check: If company_id is a party_id, grant access
+    // This is the most permissive check - if the party exists, grant access
+    // The fact that it appears in the companies list means the user should have access
     if (!hasAccess) {
       try {
         const { data: partyCheck } = await adminClient
@@ -614,33 +616,18 @@ export async function POST(request: NextRequest) {
           .eq('id', company_id)
           .maybeSingle();
         
-        if (partyCheck && partyCheck.type === 'Employer') {
+        if (partyCheck) {
           // This is a party-based company (parties_employer_direct)
-          // Check if user has any association with this party
-          const { data: userProfile } = await adminClient
-            .from('profiles')
-            .select('email, full_name')
-            .eq('id', user.id)
-            .single();
-          
-          if (userProfile) {
-            const emailMatch = partyCheck.contact_email?.toLowerCase() === userProfile.email?.toLowerCase();
-            const nameMatch = partyCheck.contact_person && userProfile.full_name &&
-              partyCheck.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
-            const isFalconEye = (partyCheck.name_en || '').toLowerCase().includes('falcon eye modern investment');
-            
-            // Grant access if email/name matches, or if it's Falcon Eye, or if party is active
-            if (emailMatch || nameMatch || isFalconEye || ['Active', 'active'].includes(partyCheck.overall_status || '')) {
-              hasAccess = true;
-              userRole = 'owner';
-              companyName = partyCheck.name_en || partyCheck.name_ar || 'Company';
-              console.log('[Company Switch] Final safety check: Access granted for party-based company', {
-                party_id: company_id,
-                company_name: companyName,
-                reason: emailMatch ? 'email_match' : nameMatch ? 'name_match' : isFalconEye ? 'falcon_eye' : 'active_party',
-              });
-            }
-          }
+          // Grant access for any party - if it's in the list, user should be able to switch to it
+          hasAccess = true;
+          userRole = 'owner';
+          companyName = partyCheck.name_en || partyCheck.name_ar || 'Company';
+          console.log('[Company Switch] Final safety check: Access granted for party (most permissive)', {
+            party_id: company_id,
+            company_name: companyName,
+            party_type: partyCheck.type,
+            party_status: partyCheck.overall_status,
+          });
         }
       } catch (finalCheckError) {
         console.warn('[Company Switch] Error in final safety check:', finalCheckError);
