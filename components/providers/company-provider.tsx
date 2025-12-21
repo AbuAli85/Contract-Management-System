@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Company {
   id: string;
@@ -26,6 +27,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const fetchActiveCompany = async () => {
     try {
@@ -116,6 +118,10 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       if (response.ok && data.success) {
         // Update company state immediately
         await fetchActiveCompany();
+        
+        // Invalidate all React Query caches to force data refresh
+        queryClient.invalidateQueries();
+        queryClient.clear();
         
         // Refresh router to update all server components
         router.refresh();
