@@ -439,9 +439,21 @@ export async function GET() {
     // Companies can be linked to groups via:
     // 1. companies.group_id (direct reference to holding_groups)
     // 2. holding_group_members table (many-to-many relationship)
+    //    - member_type = 'company' (linked via company_id)
+    //    - member_type = 'party' (linked via party_id, for parties_employer_direct companies)
     try {
-      // First, get all company IDs
+      // First, get all company IDs and party IDs
       const companyIds = uniqueCompanies.map(c => c.company_id);
+      const partyIds = uniqueCompanies
+        .filter(c => c.party_id)
+        .map(c => c.party_id)
+        .filter(Boolean);
+      
+      // Also include company_ids that are actually party_ids (for parties_employer_direct)
+      const partyIdsFromDirect = uniqueCompanies
+        .filter(c => c.source === 'parties_employer_direct')
+        .map(c => c.company_id);
+      const allPartyIds = Array.from(new Set([...partyIds, ...partyIdsFromDirect]));
       
       // Fetch companies with their group_id
       const { data: companiesWithGroups } = await adminClient
@@ -456,19 +468,42 @@ export async function GET() {
           .filter(Boolean)
       );
       
-      // Also check holding_group_members table
-      const { data: groupMembers } = await adminClient
-        .from('holding_group_members')
-        .select('company_id, holding_group_id')
-        .in('company_id', companyIds)
-        .eq('member_type', 'company');
+      // Check holding_group_members table for both company_id and party_id
+      const [companyGroupMembers, partyGroupMembers] = await Promise.all([
+        // Companies linked via company_id
+        adminClient
+          .from('holding_group_members')
+          .select('company_id, holding_group_id')
+          .in('company_id', companyIds)
+          .eq('member_type', 'company'),
+        // Parties linked via party_id (for parties_employer_direct)
+        allPartyIds.length > 0
+          ? adminClient
+              .from('holding_group_members')
+              .select('party_id, holding_group_id')
+              .in('party_id', allPartyIds)
+              .eq('member_type', 'party')
+          : { data: null, error: null }
+      ]);
       
-      const groupIdsFromMembers = new Set(
-        (groupMembers || []).map((gm: any) => gm.holding_group_id).filter(Boolean)
+      const groupIdsFromCompanyMembers = new Set(
+        (companyGroupMembers.data || [])
+          .map((gm: any) => gm.holding_group_id)
+          .filter(Boolean)
+      );
+      
+      const groupIdsFromPartyMembers = new Set(
+        (partyGroupMembers.data || [])
+          .map((gm: any) => gm.holding_group_id)
+          .filter(Boolean)
       );
       
       // Combine all group IDs
-      const allGroupIds = Array.from(new Set([...groupIdsFromCompanies, ...groupIdsFromMembers]));
+      const allGroupIds = Array.from(new Set([
+        ...groupIdsFromCompanies,
+        ...groupIdsFromCompanyMembers,
+        ...groupIdsFromPartyMembers
+      ]));
       
       // Fetch all group names
       const groupNameMap = new Map<string, string>();
@@ -486,7 +521,7 @@ export async function GET() {
         }
       }
       
-      // Create a map of company_id -> group_id (from both sources)
+      // Create a map of company_id -> group_id (from all sources)
       const companyGroupMap = new Map<string, string>();
       
       // From companies.group_id
@@ -498,11 +533,27 @@ export async function GET() {
         }
       }
       
-      // From holding_group_members
-      if (groupMembers) {
-        for (const member of groupMembers) {
-          if (member.holding_group_id) {
+      // From holding_group_members (company-based)
+      if (companyGroupMembers.data) {
+        for (const member of companyGroupMembers.data) {
+          if (member.holding_group_id && member.company_id) {
             companyGroupMap.set(member.company_id, member.holding_group_id);
+          }
+        }
+      }
+      
+      // From holding_group_members (party-based) - for parties_employer_direct
+      if (partyGroupMembers.data) {
+        for (const member of partyGroupMembers.data) {
+          if (member.holding_group_id && member.party_id) {
+            // Find companies that use this party_id as their company_id
+            const matchingCompanies = uniqueCompanies.filter(
+              c => c.party_id === member.party_id || 
+                   (c.source === 'parties_employer_direct' && c.company_id === member.party_id)
+            );
+            for (const company of matchingCompanies) {
+              companyGroupMap.set(company.company_id, member.holding_group_id);
+            }
           }
         }
       }
