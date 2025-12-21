@@ -10,6 +10,19 @@ interface ExistingUser {
   full_name: string | null;
 }
 
+interface UserProfile {
+  active_company_id: string | null;
+}
+
+interface Company {
+  name: string;
+}
+
+interface InviterProfile {
+  full_name: string | null;
+  email: string | null;
+}
+
 // POST: Invite an external user as admin/manager to the company
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -47,34 +60,51 @@ export async function POST(request: Request) {
     }
 
     // Get user's active company
-    const { data: profile } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('active_company_id')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
+    
+    if (profileError) {
+      console.error('[Invite Admin] Error fetching profile:', profileError);
+      return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 });
+    }
+
+    const profile = (profileData as any) as UserProfile | null;
 
     if (!profile?.active_company_id) {
       return NextResponse.json({ error: 'No active company selected' }, { status: 400 });
     }
 
+    const activeCompanyId = profile.active_company_id;
+
+    console.log('[Invite Admin] Adding member to company:', {
+      company_id: activeCompanyId,
+      inviter_id: user.id,
+      inviter_email: user.email,
+      target_email: email,
+      role,
+    });
+
     // Verify user has owner/admin access using admin client
     const { data: myMembership } = await (supabaseAdmin
       .from('company_members') as any)
       .select('role')
-      .eq('company_id', profile.active_company_id)
+      .eq('company_id', activeCompanyId)
       .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
 
     // Also check if user owns the company directly
     let canInvite = false;
-    if (myMembership && ['owner', 'admin'].includes(myMembership.role)) {
+    if (myMembership && ['owner', 'admin'].includes((myMembership as any).role)) {
       canInvite = true;
     } else {
       const { data: ownedCompany } = await (supabaseAdmin
         .from('companies') as any)
         .select('owner_id')
-        .eq('id', profile.active_company_id)
+        .eq('id', activeCompanyId)
         .maybeSingle();
       
       if (ownedCompany && ownedCompany.owner_id === user.id) {
@@ -88,30 +118,38 @@ export async function POST(request: Request) {
 
     // Cannot invite higher role than yourself
     const roleHierarchy = ['owner', 'admin', 'manager', 'hr', 'accountant', 'member', 'viewer'];
-    const myRoleIndex = roleHierarchy.indexOf(myMembership.role);
+    const myRole = (myMembership as any)?.role || 'member';
+    const myRoleIndex = roleHierarchy.indexOf(myRole);
     const inviteRoleIndex = roleHierarchy.indexOf(role);
     
     if (inviteRoleIndex < myRoleIndex) {
       return NextResponse.json({ 
         error: 'Cannot invite someone with a higher role than yourself',
-        message: `Your role is ${myMembership.role}. You can only invite users with roles: ${roleHierarchy.slice(myRoleIndex + 1).join(', ')}`
+        message: `Your role is ${myRole}. You can only invite users with roles: ${roleHierarchy.slice(myRoleIndex + 1).join(', ')}`
       }, { status: 403 });
     }
 
     // Get company details
-    const { data: company } = await supabase
-      .from('companies')
+    const { data: companyData, error: companyError } = await (supabaseAdmin
+      .from('companies') as any)
       .select('name')
-      .eq('id', profile.active_company_id)
-      .single();
+      .eq('id', activeCompanyId)
+      .maybeSingle();
+    
+    if (companyError) {
+      console.warn('[Invite Admin] Could not fetch company name:', companyError);
+    }
+
+    const company = (companyData as any) as Company | null;
 
     // Get inviter's profile for name
-    const { data: inviterProfile } = await supabase
+    const { data: inviterProfileData } = await supabase
       .from('profiles')
       .select('full_name, email')
       .eq('id', user.id)
       .maybeSingle();
     
+    const inviterProfile = inviterProfileData as InviterProfile | null;
     const inviterName = inviterProfile?.full_name || inviterProfile?.email || user.email || 'Admin';
 
     // Check if user exists
@@ -133,7 +171,7 @@ export async function POST(request: Request) {
       const { data: existingMembership } = await (supabaseAdmin
         .from('company_members') as any)
         .select('id, status')
-        .eq('company_id', profile.active_company_id)
+        .eq('company_id', activeCompanyId)
         .eq('user_id', targetUserId)
         .maybeSingle();
 
@@ -156,17 +194,33 @@ export async function POST(request: Request) {
           .eq('id', existingMembership.id);
       } else {
         // Create membership
-        await (supabaseAdmin
+        const { data: newMembership, error: insertError } = await (supabaseAdmin
           .from('company_members') as any)
           .insert({
-            company_id: profile.active_company_id,
+            company_id: activeCompanyId,
             user_id: targetUserId,
             role,
             department: normalizedDepartment,
             job_title: normalizedJobTitle,
             invited_by: user.id,
             status: 'active',
-          });
+          })
+          .select('id, company_id, user_id, role, status')
+          .single();
+        
+        if (insertError) {
+          console.error('[Invite Admin] Error creating membership:', insertError);
+          throw new Error(`Failed to create membership: ${insertError.message}`);
+        }
+        
+        console.log('[Invite Admin] Created new membership:', {
+          membership_id: newMembership?.id,
+          company_id: newMembership?.company_id,
+          user_id: newMembership?.user_id,
+          role: newMembership?.role,
+          status: newMembership?.status,
+          target_email: email,
+        });
       }
     } else {
       // User doesn't exist - create an invitation record
@@ -174,10 +228,10 @@ export async function POST(request: Request) {
 
       // For now, we'll create a pending invitation
       // When the user signs up with this email, they'll automatically get access
-      const { error: inviteError } =         await (supabaseAdmin
+      const { error: inviteError } = await (supabaseAdmin
           .from('company_members') as any)
           .insert({
-            company_id: profile.active_company_id,
+            company_id: activeCompanyId,
             user_id: user.id, // Temporarily use inviter's ID
             role,
             department: normalizedDepartment,
@@ -199,8 +253,8 @@ export async function POST(request: Request) {
       
       // Prepare email data with invitation details
       const emailData = {
-        company_id: profile.active_company_id,
-        company_name: company?.name || 'Company',
+        company_id: activeCompanyId,
+        company_name: (company as any)?.name || 'Company',
         role,
         department: normalizedDepartment,
         job_title: normalizedJobTitle,
@@ -244,8 +298,8 @@ export async function POST(request: Request) {
           .insert({
             user_id: existingUser.id,
             type: 'company_invitation',
-            title: `Invited to ${company?.name}`,
-            message: `You've been invited to join ${company?.name} as ${role}.${normalizedMessage ? ` ${normalizedMessage}` : ''}`,
+            title: `Invited to ${(company as any)?.name || 'Company'}`,
+            message: `You've been invited to join ${(company as any)?.name || 'Company'} as ${role}.${normalizedMessage ? ` ${normalizedMessage}` : ''}`,
             priority: 'high',
             action_url: '/en/settings/company',
             action_label: 'View Company',
@@ -261,6 +315,8 @@ export async function POST(request: Request) {
         ? `Invitation sent to ${email}. They will get access when they sign up.`
         : `${existingUser?.full_name || email} has been added to the company as ${role}`,
       is_new_user: isNewUser,
+      company_id: activeCompanyId, // Include company_id so frontend knows which company to refresh
+      user_id: existingUser?.id || null,
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
