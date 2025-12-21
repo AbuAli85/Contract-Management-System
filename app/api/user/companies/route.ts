@@ -45,26 +45,41 @@ export async function GET() {
     let allCompanies: any[] = [];
 
     // First try: Get companies via company_members using admin client
+    // Include both active and invited status to catch all memberships
     const { data: membershipCompanies, error: membershipError } = await adminClient
       .from('company_members')
       .select(`
         company_id,
         role,
         is_primary,
+        status,
         company:companies (
           id,
           name,
           logo_url,
-          group_id
+          group_id,
+          is_active
         )
       `)
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .in('status', ['active', 'invited']) // Include both active and invited
       .order('is_primary', { ascending: false });
 
     if (!membershipError && membershipCompanies) {
       allCompanies = membershipCompanies
-        .filter((cm: any) => cm.company?.id && cm.company?.name) // Ensure company exists
+        .filter((cm: any) => {
+          // Include companies even if is_active is false (user might need to see them)
+          // Only filter if company record doesn't exist at all
+          if (!cm.company?.id || !cm.company?.name) {
+            console.warn('[Companies API] Filtered out membership - missing company data:', {
+              company_id: cm.company_id,
+              membership_status: cm.status
+            });
+            return false;
+          }
+          // Don't filter by is_active - include all companies user is a member of
+          return true;
+        })
         .map((cm: any) => ({
           company_id: cm.company.id,
           company_name: cm.company.name,
@@ -73,23 +88,36 @@ export async function GET() {
           is_primary: cm.is_primary,
           group_name: null, // Will fetch group names separately if needed
           source: 'company_members',
+          membership_status: cm.status, // Track membership status
         }))
         // Filter out invalid/mock companies
-        .filter((c: any) => !isInvalidCompany(c.company_name || ''));
+        .filter((c: any) => {
+          const isValid = !isInvalidCompany(c.company_name || '');
+          if (!isValid) {
+            console.warn('[Companies API] Filtered out invalid company:', c.company_name);
+          }
+          return isValid;
+        });
     }
 
     // Second try: Also check if user owns any companies directly (in case company_members is missing)
+    // Include inactive companies too - owner should see all their companies
     const { data: ownedCompanies, error: ownedError } = await adminClient
       .from('companies')
-      .select('id, name, logo_url, group_id, party_id')
-      .eq('owner_id', user.id)
-      .eq('is_active', true);
+      .select('id, name, logo_url, group_id, party_id, is_active')
+      .eq('owner_id', user.id);
+      // Removed .eq('is_active', true) - owners should see all their companies
 
     if (!ownedError && ownedCompanies) {
       // Add owned companies that aren't already in the list
       const existingIds = new Set(allCompanies.map(c => c.company_id));
       for (const company of ownedCompanies) {
-        if (!existingIds.has(company.id) && !isInvalidCompany(company.name || '') && company.id && company.name) {
+        if (!existingIds.has(company.id) && company.id && company.name) {
+          // Check if invalid before adding
+          if (isInvalidCompany(company.name || '')) {
+            console.warn('[Companies API] Filtered out invalid owned company:', company.name);
+            continue;
+          }
           allCompanies.push({
             company_id: company.id,
             company_name: company.name,
@@ -99,6 +127,7 @@ export async function GET() {
             group_name: null,
             party_id: company.party_id,
             source: 'owned_companies',
+            is_active: company.is_active, // Track active status
           });
         }
       }
@@ -175,22 +204,24 @@ export async function GET() {
 
       if (employerProfile?.email) {
         // Find parties where user's email matches contact_email
+        // Use case-insensitive matching and include both Active and active status
         const { data: employerParties, error: partiesError } = await adminClient
           .from('parties')
-          .select('id, name_en, contact_email, type')
-          .eq('contact_email', employerProfile.email)
+          .select('id, name_en, contact_email, type, overall_status')
+          .ilike('contact_email', employerProfile.email) // Case-insensitive
           .eq('type', 'Employer')
-          .eq('status', 'Active');
+          .in('overall_status', ['Active', 'active']); // Include both cases
 
         if (!partiesError && employerParties && employerParties.length > 0) {
           const partyIds = employerParties.map((p: any) => p.id);
           
           // Find companies linked to these parties
+          // Include inactive companies too - user should see all their employer companies
           const { data: employerCompanies, error: employerCompaniesError } = await adminClient
             .from('companies')
-            .select('id, name, logo_url, group_id, party_id')
-            .in('party_id', partyIds)
-            .eq('is_active', true);
+            .select('id, name, logo_url, group_id, party_id, is_active')
+            .in('party_id', partyIds);
+            // Removed .eq('is_active', true) - show all employer companies
 
           if (!employerCompaniesError && employerCompanies) {
             const existingIds = new Set(allCompanies.map(c => c.company_id));
@@ -728,18 +759,20 @@ export async function GET() {
       })
     );
 
-    // Log for debugging (only in development)
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Companies API] Found ${enrichedCompanies.length} companies for user ${user.id}:`, {
-        sources: enrichedCompanies.map(c => ({ 
-          name: c.company_name, 
-          source: c.source || 'unknown',
-          employees: c.stats?.employees || 0,
-        })),
-        total_before_dedup: allCompanies.length,
-        total_after_dedup: enrichedCompanies.length,
-      });
-    }
+    // Log for debugging (always log to help diagnose missing companies)
+    console.log(`[Companies API] Found ${enrichedCompanies.length} companies for user ${user.id}:`, {
+      sources: enrichedCompanies.map(c => ({ 
+        name: c.company_name, 
+        source: c.source || 'unknown',
+        role: c.user_role,
+        employees: c.stats?.employees || 0,
+        company_id: c.company_id,
+      })),
+      total_before_dedup: allCompanies.length,
+      total_after_dedup: uniqueCompanies.length,
+      total_after_enrichment: enrichedCompanies.length,
+      filtered_out: allCompanies.length - uniqueCompanies.length,
+    });
 
     return NextResponse.json({
       success: true,
