@@ -130,13 +130,39 @@ export default function CompanySettingsPage() {
 
   const fetchCompanyData = async () => {
     try {
-      const response = await fetch('/api/company/settings');
+      const response = await fetch('/api/company/settings', {
+        cache: 'no-store',
+      });
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setCompany(data.company);
-        setUserRole(data.user_role);
-        setCanEdit(data.can_edit);
+        if (data.company) {
+          // Ensure all fields are properly initialized
+          setCompany({
+            ...data.company,
+            description: data.company.description || null,
+            website: data.company.website || null,
+            email: data.company.email || null,
+            phone: data.company.phone || null,
+            location: data.company.location || null,
+            registration_number: data.company.registration_number || null,
+            vat_number: data.company.vat_number || null,
+            industry: data.company.industry || null,
+            brand_colors: data.company.brand_colors || null,
+          });
+        } else {
+          setCompany(null);
+        }
+        setUserRole(data.user_role || 'member');
+        setCanEdit(data.can_edit || false);
+        
+        if (data.message && !data.company) {
+          toast({
+            title: 'Info',
+            description: data.message,
+            variant: 'default',
+          });
+        }
       } else {
         toast({
           title: 'Error',
@@ -146,6 +172,11 @@ export default function CompanySettingsPage() {
       }
     } catch (error) {
       console.error('Error fetching company:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load company settings',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -354,9 +385,10 @@ export default function CompanySettingsPage() {
                   <Label htmlFor="name">Company Name *</Label>
                   <Input
                     id="name"
-                    value={company.name}
+                    value={company.name || ''}
                     onChange={(e) => setCompany({ ...company, name: e.target.value })}
                     disabled={!canEdit}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
