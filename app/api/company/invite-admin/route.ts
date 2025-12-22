@@ -33,42 +33,86 @@ export async function POST(request: Request) {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
     }
+
+    // Verify Supabase URL is set
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      throw new Error('NEXT_PUBLIC_SUPABASE_URL environment variable is not set');
+    }
     
     supabaseAdmin = createAdminClient();
     
     // Test the admin client by attempting a simple query
     // This verifies the service role key is valid and can bypass RLS
-    // Note: We only warn on test errors, don't fail - the actual insert will tell us if there's a real problem
-    try {
-      const { error: testError } = await supabaseAdmin
-        .from('company_members')
-        .select('id')
-        .limit(1);
-      
-      if (testError && testError.code === '42501') {
-        console.warn('[Invite Admin] Admin client test query failed with permission error. This may indicate an invalid service role key.');
-        // Don't throw - let the actual insert operation fail with a clearer error
-      } else if (testError) {
+    const { error: testError, data: testData } = await supabaseAdmin
+      .from('company_members')
+      .select('id')
+      .limit(1);
+    
+    if (testError) {
+      // If it's a permission error, the service role key is likely invalid or for wrong project
+      if (testError.code === '42501' || testError.message?.includes('permission denied')) {
+        console.error('[Invite Admin] Admin client permission error - service role key may be invalid:', {
+          error: testError.message,
+          code: testError.code,
+          details: testError.details,
+          hint: testError.hint,
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20),
+          serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+        });
+        
+        return NextResponse.json({ 
+          error: 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY environment variable is not set or invalid in your production environment.',
+          details: {
+            solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+            steps: [
+              '1. Go to your Vercel project dashboard',
+              '2. Navigate to Settings → Environment Variables',
+              '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
+              '4. Verify the key matches your Supabase project (Settings → API → service_role key)',
+              '5. Ensure NEXT_PUBLIC_SUPABASE_URL matches your Supabase project URL',
+              '6. Redeploy your application after adding the environment variable',
+            ],
+            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+            errorCode: testError.code,
+            errorMessage: testError.message,
+          },
+        }, { status: 500 });
+      } else {
         console.warn('[Invite Admin] Admin client test query had an error (non-permission):', testError.message);
-        // Don't throw - might be a temporary issue
+        // Don't throw - might be a temporary issue, let the actual operation try
       }
-    } catch (testException: any) {
-      console.warn('[Invite Admin] Admin client test query exception:', testException.message);
-      // Don't throw - let the actual insert operation fail with a clearer error
+    } else {
+      console.log('[Invite Admin] Admin client test successful - service role key is working');
     }
   } catch (e: any) {
-    console.error('[Invite Admin] Admin client initialization or test failed:', {
+    console.error('[Invite Admin] Admin client initialization failed:', {
       message: e.message,
       stack: e.stack,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
       serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     });
     return NextResponse.json({ 
       error: 'Server configuration error',
-      details: e.message || 'Admin client initialization failed. Please check SUPABASE_SERVICE_ROLE_KEY environment variable.',
-      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      hint: 'The SUPABASE_SERVICE_ROLE_KEY must be set in your production environment (Vercel, etc.) and must be a valid service role key from your Supabase dashboard.',
+      details: {
+        solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+        steps: [
+          '1. Go to your Vercel project dashboard',
+          '2. Navigate to Settings → Environment Variables',
+          '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
+          '4. Verify the key matches your Supabase project (Settings → API → service_role key)',
+          '5. Ensure NEXT_PUBLIC_SUPABASE_URL matches your Supabase project URL',
+          '6. Redeploy your application after adding the environment variable',
+        ],
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+        error: e.message || 'Admin client initialization failed. Please check SUPABASE_SERVICE_ROLE_KEY environment variable.',
+      },
     }, { status: 500 });
   }
 
@@ -268,7 +312,27 @@ export async function POST(request: Request) {
             serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
             supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
           });
-          throw new Error(`Admin client permission error: Cannot access company_members table. The SUPABASE_SERVICE_ROLE_KEY may be invalid, expired, or for a different Supabase project. Please verify: 1) The key matches your Supabase project (Settings → API → service_role key), 2) The key is correctly set in Vercel, 3) You've redeployed after setting it. Error: ${readTestError.message}`);
+          
+          // Return a detailed error response
+          return NextResponse.json({ 
+            error: 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY environment variable is not set or invalid in your production environment.',
+            details: {
+              solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+              steps: [
+                '1. Go to your Vercel project dashboard',
+                '2. Navigate to Settings → Environment Variables',
+                '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
+                '4. Verify the key matches your Supabase project (Settings → API → service_role key)',
+                '5. Ensure NEXT_PUBLIC_SUPABASE_URL matches your Supabase project URL',
+                '6. Redeploy your application after adding the environment variable',
+              ],
+              hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+              serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+              supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+              errorCode: readTestError.code,
+              errorMessage: readTestError.message,
+            },
+          }, { status: 500 });
         }
         
         // Log successful read test for debugging
@@ -305,7 +369,25 @@ export async function POST(request: Request) {
           
           // Check if it's a permission error and provide more context
           if (insertError.message?.includes('permission denied') || insertError.code === '42501') {
-            throw new Error(`Permission denied when inserting into company_members. The SUPABASE_SERVICE_ROLE_KEY environment variable must be set in your Vercel project settings. Go to: Project Settings → Environment Variables → Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase dashboard. Original error: ${insertError.message}`);
+            return NextResponse.json({ 
+              error: 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY environment variable is not set or invalid in your production environment.',
+              details: {
+                solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+                steps: [
+                  '1. Go to your Vercel project dashboard',
+                  '2. Navigate to Settings → Environment Variables',
+                  '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
+                  '4. Verify the key matches your Supabase project (Settings → API → service_role key)',
+                  '5. Ensure NEXT_PUBLIC_SUPABASE_URL matches your Supabase project URL',
+                  '6. Redeploy your application after adding the environment variable',
+                ],
+                hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+                serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
+                supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+                errorCode: insertError.code,
+                errorMessage: insertError.message,
+              },
+            }, { status: 500 });
           }
           
           throw new Error(`Failed to create membership: ${insertError.message}`);
