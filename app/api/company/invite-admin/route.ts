@@ -319,27 +319,20 @@ export async function POST(request: Request) {
         });
       }
     } else {
-      // User doesn't exist - create an invitation record
+      // User doesn't exist - this is a new user invitation
       isNewUser = true;
 
-      // For now, we'll create a pending invitation
-      // When the user signs up with this email, they'll automatically get access
-      const { error: inviteError } = await supabaseAdmin
-          .from('company_members')
-          .insert({
-            company_id: activeCompanyId,
-            user_id: null, // No user_id yet, it's an invitation
-            role,
-            department: normalizedDepartment,
-            job_title: normalizedJobTitle,
-            invited_by: user.id,
-            status: 'invited',
-            permissions: { pending_email: email.toLowerCase() },
-          });
-
-      if (inviteError) {
-        console.error('Error creating invitation:', inviteError);
-      }
+      // Note: We cannot create a company_members record with user_id = null
+      // because user_id is required (NOT NULL constraint).
+      // Instead, we'll just queue the email invitation.
+      // When the user signs up with this email, they can be added to the company
+      // through a separate process (e.g., checking for pending invitations by email).
+      
+      console.log('[Invite Admin] New user invitation - skipping membership creation, will queue email only:', {
+        email: email.toLowerCase(),
+        company_id: activeCompanyId,
+        role,
+      });
     }
 
     // Queue email notification
