@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -26,12 +27,29 @@ function isInvalidCompany(companyName: string): boolean {
 // GET: Fetch user's companies
 export async function GET() {
   try {
+    // Debug: Log all cookies to diagnose cookie naming issue
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll();
+    const supabaseCookies = allCookies.filter(c => 
+      c.name.includes('sb-') || c.name.includes('auth-token') || c.name.includes('supabase')
+    );
+    console.log('[API /user/companies] All cookies:', allCookies.map(c => c.name));
+    console.log('[API /user/companies] Supabase-related cookies:', 
+      supabaseCookies.map(c => ({ name: c.name, hasValue: !!c.value, valueLength: c.value?.length || 0 }))
+    );
+    
+    // Extract project reference from Supabase URL
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const projectRef = supabaseUrl?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+    console.log('[API /user/companies] Expected cookie prefix:', projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token');
+    
     const supabase = await createClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError) {
       console.error('[API /user/companies] Auth error:', authError.message);
+      console.error('[API /user/companies] Available cookies:', allCookies.map(c => c.name));
       return NextResponse.json(
         { error: 'Unauthorized', details: authError.message },
         { status: 401 }
@@ -40,6 +58,7 @@ export async function GET() {
     
     if (!user) {
       console.warn('[API /user/companies] No user found in session');
+      console.warn('[API /user/companies] Available cookies:', allCookies.map(c => c.name));
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
