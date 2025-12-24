@@ -30,6 +30,29 @@ function createSupabaseClient() {
     );
   }
 
+  // Extract project reference once for reuse
+  const projectRef = supabaseUrl?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+  
+  // Helper function to fix cookie names
+  const fixCookieName = (name: string): string => {
+    if (!projectRef) return name;
+    
+    // Fix old format: sb-auth-token.X → sb-{projectRef}-auth-token.X
+    if (name.startsWith('sb-auth-token') && !name.includes(projectRef)) {
+      return name.replace(/^sb-auth-token/, `sb-${projectRef}-auth-token`);
+    }
+    
+    // Fix other sb- cookies missing project ref
+    if (name.startsWith('sb-') && !name.includes(projectRef) && name !== 'sb-auth-token') {
+      const parts = name.split('-');
+      if (parts.length > 1 && parts[1] !== projectRef) {
+        return `sb-${projectRef}-${parts.slice(1).join('-')}`;
+      }
+    }
+    
+    return name;
+  };
+  
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -41,7 +64,8 @@ function createSupabaseClient() {
           if (!document || !document.cookie) {
             return [];
           }
-          return document.cookie.split(';').map(cookie => {
+          
+          const cookies = document.cookie.split(';').map(cookie => {
             const trimmedCookie = cookie.trim();
             const firstEqualsIndex = trimmedCookie.indexOf('=');
             if (firstEqualsIndex === -1) {
@@ -49,8 +73,29 @@ function createSupabaseClient() {
             }
             const name = trimmedCookie.substring(0, firstEqualsIndex);
             const value = trimmedCookie.substring(firstEqualsIndex + 1);
-            return { name, value };
+            
+            // Fix cookie names when reading (for old-format cookies)
+            const fixedName = fixCookieName(name);
+            
+            // If name was fixed, also rename the actual cookie
+            if (fixedName !== name && value) {
+              try {
+                const isProduction = window.location.protocol === 'https:';
+                const secureFlag = isProduction ? '; Secure' : '';
+                // Set new cookie with correct name
+                document.cookie = `${fixedName}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
+                // Delete old cookie
+                document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+                console.debug(`[SSO] Auto-fixed cookie on read: ${name} → ${fixedName}`);
+              } catch (e) {
+                console.debug(`[SSO] Could not auto-fix cookie ${name}:`, e);
+              }
+            }
+            
+            return { name: fixedName, value };
           });
+          
+          return cookies;
         } catch (error) {
           console.error('Error parsing cookies:', error);
           return [];
@@ -73,13 +118,9 @@ function createSupabaseClient() {
           cookiesToSet.forEach(({ name, value }) => {
             try {
               // Fix cookie names if they're missing the project reference
-              let cookieName = name;
-              if (projectRef && name.startsWith('sb-auth-token')) {
-                // Replace 'sb-auth-token.X' with 'sb-{projectRef}-auth-token.X'
-                cookieName = name.replace(/^sb-auth-token/, `sb-${projectRef}-auth-token`);
-                if (cookieName !== name) {
-                  console.debug(`[SSO] Fixed cookie name: ${name} → ${cookieName}`);
-                }
+              const cookieName = fixCookieName(name);
+              if (cookieName !== name) {
+                console.debug(`[SSO] Fixed cookie name on set: ${name} → ${cookieName}`);
               }
               
               // Build cookie string with proper flags
@@ -157,3 +198,69 @@ export const createClient = () => {
 
 // Safely export supabase instance
 export const supabase = typeof window !== 'undefined' ? createClient() : null;
+
+// Auto-fix old-format cookies on page load
+if (typeof window !== 'undefined') {
+  // Run after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      fixOldFormatCookies();
+    });
+  } else {
+    // DOM already ready, run immediately
+    fixOldFormatCookies();
+  }
+}
+
+function fixOldFormatCookies() {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) return;
+    
+    const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+    if (!projectRef) return;
+    
+    const allCookies = document.cookie.split(';').map(c => c.trim());
+    const oldFormatCookies = ['sb-auth-token.0', 'sb-auth-token.1'];
+    const newFormatCookies = [
+      `sb-${projectRef}-auth-token.0`,
+      `sb-${projectRef}-auth-token.1`
+    ];
+    
+    let fixed = false;
+    const cookieMap: Record<string, string> = {};
+    
+    // Build cookie map
+    allCookies.forEach(c => {
+      const [name, ...valueParts] = c.split('=');
+      const value = valueParts.join('=');
+      cookieMap[name] = value;
+    });
+    
+    // Check if old format exists and new format doesn't
+    for (let i = 0; i < oldFormatCookies.length; i++) {
+      const oldName = oldFormatCookies[i];
+      const newName = newFormatCookies[i];
+      
+      if (cookieMap[oldName] && !cookieMap[newName]) {
+        const value = cookieMap[oldName];
+        const isProduction = window.location.protocol === 'https:';
+        const secureFlag = isProduction ? '; Secure' : '';
+        
+        // Set new cookie
+        document.cookie = `${newName}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
+        // Delete old cookie
+        document.cookie = `${oldName}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        
+        fixed = true;
+        console.debug(`[SSO] Auto-fixed cookie on page load: ${oldName} → ${newName}`);
+      }
+    }
+    
+    if (fixed) {
+      console.log('[SSO] Fixed old-format cookies on page load');
+    }
+  } catch (error) {
+    console.debug('[SSO] Error fixing old-format cookies:', error);
+  }
+}
