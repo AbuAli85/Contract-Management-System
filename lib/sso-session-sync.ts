@@ -28,6 +28,9 @@ function setSupabaseCookie(name: string, value: string) {
  * Syncs userSession to sb-auth-token for SSO compatibility
  * Also sets cookies so API routes can read the session
  * Call this after login or on app initialization
+ * 
+ * IMPORTANT: This function first checks for session in Supabase client (cookies),
+ * then falls back to localStorage. This ensures server-side logins work correctly.
  */
 export async function syncSessionToSSO() {
   if (typeof window === 'undefined') {
@@ -35,64 +38,88 @@ export async function syncSessionToSSO() {
   }
 
   try {
-    // Get the existing userSession
-    const userSession = localStorage.getItem('userSession');
+    const supabase = createClient();
+    let supabaseSession = null;
     
-    if (userSession) {
-      // Parse the session data
-      let sessionData;
-      try {
-        sessionData = JSON.parse(userSession);
-      } catch (e) {
-        console.warn('Could not parse userSession:', e);
-        return;
+    // STEP 1: First, try to get session from Supabase client (reads from cookies)
+    // This is critical for server-side logins where session is only in cookies
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (!sessionError && session && session.user) {
+        supabaseSession = session;
+        console.log('✅ Found session in Supabase client (from cookies)');
       }
-
-      // Check if it's a valid session
-      if (sessionData && (sessionData.user || sessionData.access_token || sessionData.session)) {
-        // Extract the actual session object
-        let supabaseSession = sessionData;
-        if (sessionData.session) {
-          supabaseSession = sessionData.session;
-        } else if (sessionData.access_token) {
-          // If it has access_token directly, wrap it in session format
-          supabaseSession = {
-            access_token: sessionData.access_token,
-            refresh_token: sessionData.refresh_token,
-            expires_at: sessionData.expires_at,
-            expires_in: sessionData.expires_in,
-            token_type: sessionData.token_type || 'bearer',
-            user: sessionData.user,
-          };
-        }
-        
-        // Sync to sb-auth-token for SSO (localStorage)
-        localStorage.setItem('sb-auth-token', JSON.stringify(supabaseSession));
-        
-        // CRITICAL: Use Supabase client to set session properly
-        // This ensures cookies are set in the correct format for API routes
+    } catch (getSessionError) {
+      console.warn('Could not get session from Supabase client:', getSessionError);
+    }
+    
+    // STEP 2: If no session from cookies, check localStorage
+    if (!supabaseSession) {
+      const userSession = localStorage.getItem('userSession');
+      
+      if (userSession) {
+        // Parse the session data
+        let sessionData;
         try {
-          const supabase = createClient();
-          if (supabase && supabaseSession.access_token) {
-            // Use Supabase's setSession to properly set cookies
-            // setSession requires both access_token and refresh_token
-            if (supabaseSession.refresh_token) {
+          sessionData = JSON.parse(userSession);
+        } catch (e) {
+          console.warn('Could not parse userSession:', e);
+          return false;
+        }
+
+        // Check if it's a valid session
+        if (sessionData && (sessionData.user || sessionData.access_token || sessionData.session)) {
+          // Extract the actual session object
+          if (sessionData.session) {
+            supabaseSession = sessionData.session;
+          } else if (sessionData.access_token) {
+            // If it has access_token directly, wrap it in session format
+            supabaseSession = {
+              access_token: sessionData.access_token,
+              refresh_token: sessionData.refresh_token,
+              expires_at: sessionData.expires_at,
+              expires_in: sessionData.expires_in,
+              token_type: sessionData.token_type || 'bearer',
+              user: sessionData.user,
+            };
+          } else {
+            supabaseSession = sessionData;
+          }
+          console.log('✅ Found session in localStorage');
+        }
+      }
+    }
+    
+    // STEP 3: If we have a session, sync it to both localStorage and cookies
+    if (supabaseSession && (supabaseSession.user || supabaseSession.access_token)) {
+      // Sync to userSession (for app compatibility)
+      localStorage.setItem('userSession', JSON.stringify(supabaseSession));
+      
+      // Sync to sb-auth-token for SSO (localStorage)
+      localStorage.setItem('sb-auth-token', JSON.stringify(supabaseSession));
+      
+      // CRITICAL: Use Supabase client to set session properly
+      // This ensures cookies are set in the correct format for API routes
+      if (supabaseSession.access_token) {
+        try {
+          // Use Supabase's setSession to properly set cookies
+          // setSession requires both access_token and refresh_token
+          if (supabaseSession.refresh_token) {
+            await supabase.auth.setSession({
+              access_token: supabaseSession.access_token,
+              refresh_token: supabaseSession.refresh_token,
+            });
+            console.log('✅ Session set in Supabase client (cookies updated)');
+          } else {
+            console.warn('⚠️  No refresh_token available, cookies may not be set correctly');
+            // Try to get session from Supabase which might have refresh_token
+            const { data: { session: existingSession } } = await supabase.auth.getSession();
+            if (existingSession && existingSession.refresh_token) {
               await supabase.auth.setSession({
                 access_token: supabaseSession.access_token,
-                refresh_token: supabaseSession.refresh_token,
+                refresh_token: existingSession.refresh_token,
               });
-              console.log('✅ Session set in Supabase client (cookies updated)');
-            } else {
-              console.warn('⚠️  No refresh_token available, cookies may not be set correctly');
-              // Try to get session from Supabase which might have refresh_token
-              const { data: { session: existingSession } } = await supabase.auth.getSession();
-              if (existingSession && existingSession.refresh_token) {
-                await supabase.auth.setSession({
-                  access_token: supabaseSession.access_token,
-                  refresh_token: existingSession.refresh_token,
-                });
-                console.log('✅ Session set using existing refresh_token');
-              }
+              console.log('✅ Session set using existing refresh_token');
             }
           }
         } catch (supabaseError) {
@@ -102,17 +129,18 @@ export async function syncSessionToSSO() {
           const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1] || 'default';
           setSupabaseCookie(`sb-${projectRef}-auth-token`, sessionString);
         }
-        
-        console.log('✅ Session synced to sb-auth-token and cookies for SSO');
-        
-        return true;
       }
+      
+      console.log('✅ Session synced to sb-auth-token and cookies for SSO');
+      return true;
     }
+    
+    console.log('ℹ️ No session found to sync');
+    return false;
   } catch (error) {
     console.error('Error syncing session to SSO:', error);
+    return false;
   }
-  
-  return false;
 }
 
 /**

@@ -232,7 +232,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session);
                 setUser(session.user);
                 console.log('✅ Authenticated user found:', session.user.email);
-                // Sync session to SSO storage key
+                // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
+                // This is critical for server-side logins
                 syncSessionToSSO().catch(console.error);
               }
             } else {
@@ -286,7 +287,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session);
                 setUser(session.user);
                 console.log('✅ User signed in:', session.user.email);
-                // Sync session to SSO storage key
+                // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
                 syncSessionToSSO().catch(console.error);
               }
             }
