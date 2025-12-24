@@ -15,6 +15,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { EnhancedRBACProvider } from '@/components/auth/enhanced-rbac-provider';
 import { createClient } from '@/lib/supabase/client';
 import { Toaster } from 'sonner';
+import { syncSessionToSSO, initializeSSOSync } from '@/lib/sso-session-sync';
 import { FormContextProvider } from '@/hooks/use-form-context';
 import { CompanyProvider } from '@/components/providers/company-provider';
 
@@ -231,6 +232,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session);
                 setUser(session.user);
                 console.log('✅ Authenticated user found:', session.user.email);
+                // Sync session to SSO storage key
+                syncSessionToSSO();
               }
             } else {
               console.warn('⚠️ Invalid session data, clearing session');
@@ -283,6 +286,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session);
                 setUser(session.user);
                 console.log('✅ User signed in:', session.user.email);
+                // Sync session to SSO storage key
+                syncSessionToSSO();
               }
             }
           } else if (event === 'SIGNED_OUT') {
@@ -302,10 +307,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               } else {
                 setSession(session);
                 setUser(session.user);
+                // Sync session to SSO storage key on token refresh
+                syncSessionToSSO();
               }
             }
           }
         });
+
+        // Initialize SSO session sync
+        initializeSSOSync();
 
         setLoading(false);
         setInitialLoading(false); // Mark initial auth check as complete
