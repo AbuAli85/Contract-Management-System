@@ -184,18 +184,27 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
       },
     });
 
-    // Refresh session - this ensures cookies are set correctly
+    // Get current session
     const {
       data: { session },
+      error: sessionError,
     } = await supabase.auth.getSession();
 
-    // If session exists, refresh it to update cookies
-    if (session) {
-      await supabase.auth.refreshSession();
+    // Only refresh if we have a valid session
+    if (session && !sessionError) {
+      // Check if session is close to expiring (within 5 minutes)
+      const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+
+      if (expiresAt && (expiresAt - now) < fiveMinutes) {
+        // Session is close to expiring, refresh it
+        await supabase.auth.refreshSession();
+      }
     }
   } catch (error) {
     // Silently fail - don't break the request if session refresh fails
-    console.debug('Supabase session refresh in middleware:', error);
+    // This is expected if there's no valid session
   }
 
   return response;
