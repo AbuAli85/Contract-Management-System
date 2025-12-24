@@ -111,10 +111,6 @@ function createSupabaseClient() {
             return;
           }
           
-          // Extract project reference from Supabase URL to ensure correct cookie names
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-          const projectRef = supabaseUrl?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
-          
           cookiesToSet.forEach(({ name, value }) => {
             try {
               // Fix cookie names if they're missing the project reference
