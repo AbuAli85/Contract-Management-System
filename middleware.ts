@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 // ========================================
 // RATE LIMITING CONFIGURATION
@@ -157,12 +158,59 @@ function getClientIP(request: NextRequest): string {
 }
 
 // ========================================
+// SUPABASE SESSION REFRESH
+// ========================================
+
+async function refreshSupabaseSession(request: NextRequest, response: NextResponse) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return response; // Skip if Supabase not configured
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    });
+
+    // Refresh session - this ensures cookies are set correctly
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    // If session exists, refresh it to update cookies
+    if (session) {
+      await supabase.auth.refreshSession();
+    }
+  } catch (error) {
+    // Silently fail - don't break the request if session refresh fails
+    console.debug('Supabase session refresh in middleware:', error);
+  }
+
+  return response;
+}
+
+// ========================================
 // MIDDLEWARE FUNCTION
 // ========================================
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIP(request);
+  
+  // Create response early for Supabase session refresh
+  let response = NextResponse.next();
 
   // Apply CORS validation to all API routes
   if (pathname.startsWith('/api/')) {
@@ -271,21 +319,31 @@ export async function middleware(request: NextRequest) {
     }
 
     // For regular API requests, add CORS headers to the response
-    const response = NextResponse.next();
     response.headers.set('Access-Control-Allow-Origin', corsOrigin);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token, X-Requested-With');
     
+    // Refresh Supabase session for API routes
+    response = await refreshSupabaseSession(request, response);
+    
     return response;
   }
 
-  // For non-API paths, just continue without CORS headers
-  return NextResponse.next();
+  // For non-API paths, refresh Supabase session and continue
+  response = await refreshSupabaseSession(request, response);
+  return response;
 }
 
 export const config = {
   matcher: [
-    '/api/:path*', // Apply to all API routes for CORS and CSRF protection
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
