@@ -28,8 +28,18 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('[API /user/companies] Auth error:', authError.message);
+      return NextResponse.json(
+        { error: 'Unauthorized', details: authError.message },
+        { status: 401 }
+      );
+    }
+    
     if (!user) {
+      console.warn('[API /user/companies] No user found in session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
