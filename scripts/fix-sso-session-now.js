@@ -69,7 +69,44 @@
     
     // Store in sb-auth-token for SSO
     localStorage.setItem('sb-auth-token', JSON.stringify(supabaseSession));
-    console.log('✅ Synced to sb-auth-token');
+    console.log('✅ Synced to sb-auth-token (localStorage)');
+    
+    // CRITICAL: Also set cookies so API routes can read the session
+    // Try to use Supabase client if available
+    try {
+      // Check if Supabase client is available globally or can be imported
+      if (typeof window !== 'undefined' && window.supabase) {
+        const supabase = window.supabase;
+        if (supabase.auth && supabaseSession.access_token) {
+          await supabase.auth.setSession({
+            access_token: supabaseSession.access_token,
+            refresh_token: supabaseSession.refresh_token || '',
+          });
+          console.log('✅ Session set in Supabase client (cookies updated)');
+        }
+      } else {
+        // Fallback: manually set cookies
+        const setCookie = (name, value) => {
+          const isProduction = window.location.protocol === 'https:';
+          const secureFlag = isProduction ? '; Secure' : '';
+          document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=604800${secureFlag}; SameSite=Lax`;
+        };
+        
+        const sessionString = JSON.stringify(supabaseSession);
+        const url = window.location.href;
+        const projectMatch = url.match(/supabase\.co/);
+        if (projectMatch) {
+          // Try to extract project ref from URL or use default
+          const projectRef = 'default'; // You may need to adjust this
+          setCookie(`sb-${projectRef}-auth-token`, sessionString);
+        }
+        setCookie('sb-auth-token', sessionString);
+        console.log('✅ Cookies set manually (fallback)');
+      }
+    } catch (cookieError) {
+      console.warn('⚠️  Could not set cookies:', cookieError);
+      console.log('   Note: You may need to refresh the page for API routes to work');
+    }
     
     // Verify it was stored
     const verify = localStorage.getItem('sb-auth-token');
@@ -85,6 +122,7 @@
           console.log('\n🎉 Success! Your session is now synced for SSO.');
           console.log('   - Refresh the page to see if 401 errors are fixed');
           console.log('   - Check other platforms - they should now recognize your session');
+          console.log('   - If 401 errors persist, try logging out and back in');
         }
       } catch (e) {
         console.warn('⚠️  Stored but may not be valid JSON:', e);

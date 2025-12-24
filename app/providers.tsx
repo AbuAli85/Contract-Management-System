@@ -233,7 +233,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(session.user);
                 console.log('✅ Authenticated user found:', session.user.email);
                 // Sync session to SSO storage key
-                syncSessionToSSO();
+                syncSessionToSSO().catch(console.error);
               }
             } else {
               console.warn('⚠️ Invalid session data, clearing session');
@@ -287,7 +287,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(session.user);
                 console.log('✅ User signed in:', session.user.email);
                 // Sync session to SSO storage key
-                syncSessionToSSO();
+                syncSessionToSSO().catch(console.error);
               }
             }
           } else if (event === 'SIGNED_OUT') {
@@ -308,7 +308,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session);
                 setUser(session.user);
                 // Sync session to SSO storage key on token refresh
-                syncSessionToSSO();
+                syncSessionToSSO().catch(console.error);
               }
             }
           }
