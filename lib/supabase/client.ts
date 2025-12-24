@@ -65,17 +65,32 @@ function createSupabaseClient() {
           if (!document) {
             return;
           }
+          
+          // Extract project reference from Supabase URL to ensure correct cookie names
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+          const projectRef = supabaseUrl?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+          
           cookiesToSet.forEach(({ name, value }) => {
             try {
+              // Fix cookie names if they're missing the project reference
+              let cookieName = name;
+              if (projectRef && name.startsWith('sb-auth-token')) {
+                // Replace 'sb-auth-token.X' with 'sb-{projectRef}-auth-token.X'
+                cookieName = name.replace(/^sb-auth-token/, `sb-${projectRef}-auth-token`);
+                if (cookieName !== name) {
+                  console.debug(`[SSO] Fixed cookie name: ${name} → ${cookieName}`);
+                }
+              }
+              
               // Build cookie string with proper flags
               const isProduction = window.location.protocol === 'https:';
               const secureFlag = isProduction ? '; Secure' : '';
-              document.cookie = `${name}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
+              document.cookie = `${cookieName}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
               
               // CRITICAL: Also sync to localStorage for SSO across platforms
               // This allows login on one platform to work on all platforms
               // Supabase SSR uses cookies, but we sync to localStorage for cross-platform SSO
-              if (name.includes('auth-token') || name.includes('sb-') || name.includes('supabase')) {
+              if (cookieName.includes('auth-token') || cookieName.includes('sb-') || cookieName.includes('supabase')) {
                 try {
                   const storageKey = 'sb-auth-token';
                   if (value && value.trim()) {
