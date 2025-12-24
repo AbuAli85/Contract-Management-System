@@ -234,7 +234,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.log('✅ Authenticated user found:', session.user.email);
                 // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
                 // This is critical for server-side logins
-                syncSessionToSSO().catch(console.error);
+                try {
+                  await syncSessionToSSO();
+                  console.log('✅ Session synced to SSO storage');
+                } catch (syncError) {
+                  console.error('⚠️ Error syncing session to SSO:', syncError);
+                }
               }
             } else {
               console.warn('⚠️ Invalid session data, clearing session');
@@ -288,7 +293,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(session.user);
                 console.log('✅ User signed in:', session.user.email);
                 // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
-                syncSessionToSSO().catch(console.error);
+                // Await to ensure cookies are set before API calls
+                try {
+                  await syncSessionToSSO();
+                  console.log('✅ Session synced to SSO storage');
+                } catch (syncError) {
+                  console.error('⚠️ Error syncing session to SSO:', syncError);
+                }
               }
             }
           } else if (event === 'SIGNED_OUT') {
@@ -309,7 +320,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session);
                 setUser(session.user);
                 // Sync session to SSO storage key on token refresh
-                syncSessionToSSO().catch(console.error);
+                try {
+                  await syncSessionToSSO();
+                } catch (syncError) {
+                  console.error('⚠️ Error syncing session to SSO:', syncError);
+                }
               }
             }
           }
