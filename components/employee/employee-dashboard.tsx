@@ -91,7 +91,7 @@ export function EmployeeDashboard() {
         .from('profiles')
         .select('full_name, email, phone, avatar_url')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       // Find employee record - use maybeSingle to handle 0 or multiple records
       const { data: employeeRecord, error } = await supabase
@@ -123,7 +123,7 @@ export function EmployeeDashboard() {
         .from('profiles')
         .select('id, email, full_name')
         .eq('id', employeeRecord.employer_id)
-        .single();
+        .maybeSingle();
 
       // Query parties table for the employer
       // Matching strategy: Try email first, then name, then fallback

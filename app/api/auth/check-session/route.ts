@@ -132,10 +132,10 @@ export async function GET(request: NextRequest) {
         .from('users')
         .select('id, email, role, full_name, status')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       // If not found in 'users', try 'profiles' table as fallback
-      if (profileError && profileError.code === 'PGRST116') {
+      if (profileError || !userProfile) {
         console.log(
           '🔐 Auth Check: User not in users table, trying profiles table'
         );
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
           .from('profiles')
           .select('id, email, role, full_name')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         userProfile = profilesResult.data;
         profileError = profilesResult.error;
