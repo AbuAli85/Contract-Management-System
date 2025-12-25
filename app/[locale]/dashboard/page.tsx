@@ -1,6 +1,10 @@
 'use client';
 // Version: 2025-01-09 - Fixed useMemo import and added ErrorBoundary
 
+// Prevent RSC prefetching issues - this is a client component
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';

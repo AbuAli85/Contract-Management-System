@@ -1,5 +1,9 @@
 'use client';
 
+// Prevent RSC prefetching issues - this is a client component
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Card,
