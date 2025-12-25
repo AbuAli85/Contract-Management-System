@@ -24,11 +24,12 @@ interface InviterProfile {
 
 // POST: Invite an external user as admin/manager to the company
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  
-  // Use admin client to bypass RLS
-  let supabaseAdmin: ReturnType<typeof createAdminClient> | null = null;
   try {
+    const supabase = await createClient();
+    
+    // Use admin client to bypass RLS
+    let supabaseAdmin: ReturnType<typeof createAdminClient> | null = null;
+    try {
     // Verify service role key is set before creating client
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
@@ -469,33 +470,45 @@ export async function POST(request: Request) {
         });
       
       if (emailQueueError) {
-        console.error('Error queuing email:', emailQueueError);
+        console.error('[Invite Admin] Error queuing email:', emailQueueError);
         // Don't fail the entire request if email queue fails
         // The invitation is still created successfully
       } else {
-        console.log('Email queued successfully for:', email.toLowerCase());
+        console.log('[Invite Admin] Email queued successfully for:', email.toLowerCase());
       }
-    } catch (e) {
-      console.error('Exception queuing email:', e);
+    } catch (e: any) {
+      console.error('[Invite Admin] Exception queuing email:', {
+        message: e?.message,
+        stack: e?.stack,
+        error: e,
+      });
       // Don't fail the entire request if email queue fails
     }
 
     // Create in-app notification for existing users
     if (existingUser) {
       try {
-        await (supabaseAdmin
-          .from('notifications') as any)
-          .insert({
-            user_id: existingUser.id,
-            type: 'company_invitation',
-            title: `Invited to ${(company as any)?.name || 'Company'}`,
-            message: `You've been invited to join ${(company as any)?.name || 'Company'} as ${role}.${normalizedMessage ? ` ${normalizedMessage}` : ''}`,
-            priority: 'high',
-            action_url: '/en/settings/company',
-            action_label: 'View Company',
-          });
-      } catch (e) {
-        console.log('Notification creation failed');
+        if (!supabaseAdmin) {
+          console.warn('[Invite Admin] Admin client not available for notification, skipping...');
+        } else {
+          await (supabaseAdmin
+            .from('notifications') as any)
+            .insert({
+              user_id: existingUser.id,
+              type: 'company_invitation',
+              title: `Invited to ${(company as any)?.name || 'Company'}`,
+              message: `You've been invited to join ${(company as any)?.name || 'Company'} as ${role}.${normalizedMessage ? ` ${normalizedMessage}` : ''}`,
+              priority: 'high',
+              action_url: '/en/settings/company',
+              action_label: 'View Company',
+            });
+        }
+      } catch (e: any) {
+        console.error('[Invite Admin] Notification creation failed:', {
+          message: e?.message,
+          stack: e?.stack,
+          error: e,
+        });
       }
     }
 
