@@ -559,5 +559,19 @@ export async function POST(request: Request) {
         stack: errorStack 
       }),
     }, { status: 500 });
+  } catch (outerError: unknown) {
+    // Catch any errors from the outer try block (like createClient failing)
+    const outerErrorMessage = outerError instanceof Error ? outerError.message : 'Unknown error';
+    console.error('[Invite Admin] Outer error catch:', {
+      message: outerErrorMessage,
+      error: outerError,
+    });
+    return NextResponse.json({ 
+      error: 'Server error',
+      message: 'An unexpected error occurred. Please try again.',
+      ...(process.env.NODE_ENV === 'development' && { 
+        technicalDetails: outerErrorMessage,
+      }),
+    }, { status: 500 });
   }
 }
