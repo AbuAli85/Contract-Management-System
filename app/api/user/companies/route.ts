@@ -45,21 +45,57 @@ export async function GET() {
     
     const supabase = await createClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Try getUser() first (most reliable)
+    let user = null;
+    let authError = null;
     
-    if (authError) {
-      console.error('[API /user/companies] Auth error:', authError.message);
-      console.error('[API /user/companies] Available cookies:', allCookies.map(c => c.name));
-      return NextResponse.json(
-        { error: 'Unauthorized', details: authError.message },
-        { status: 401 }
-      );
+    try {
+      const authResult = await supabase.auth.getUser();
+      user = authResult.data?.user || null;
+      authError = authResult.error;
+    } catch (e: any) {
+      authError = e;
+      console.error('[API /user/companies] Exception getting user:', e);
     }
     
-    if (!user) {
-      console.warn('[API /user/companies] No user found in session');
-      console.warn('[API /user/companies] Available cookies:', allCookies.map(c => c.name));
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Fallback: Try getSession() if getUser() fails
+    if (!user && authError) {
+      console.log('[API /user/companies] getUser() failed, trying getSession() as fallback');
+      try {
+        const sessionResult = await supabase.auth.getSession();
+        if (sessionResult.data?.session?.user) {
+          user = sessionResult.data.session.user;
+          authError = null;
+          console.log('[API /user/companies] Fallback getSession() succeeded');
+        }
+      } catch (sessionError: any) {
+        console.error('[API /user/companies] getSession() also failed:', sessionError);
+      }
+    }
+    
+    if (authError || !user) {
+      const errorDetails = {
+        authError: authError?.message || 'No user found',
+        hasCookies: allCookies.length > 0,
+        cookieNames: allCookies.map(c => c.name),
+        supabaseCookies: supabaseCookies.map(c => c.name),
+        expectedCookiePrefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
+      };
+      
+      console.error('[API /user/companies] Authentication failed:', errorDetails);
+      
+      return NextResponse.json(
+        { 
+          error: 'Unauthorized', 
+          message: 'Please sign in to access your companies',
+          details: authError?.message || 'No active session found',
+          troubleshooting: {
+            suggestion: 'Your session may have expired. Please refresh the page or sign in again.',
+            cookieIssue: supabaseCookies.length === 0 ? 'No Supabase cookies found. This may indicate a session issue.' : undefined,
+          }
+        },
+        { status: 401 }
+      );
     }
 
     // Use admin client to bypass RLS
