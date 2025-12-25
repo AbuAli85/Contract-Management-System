@@ -51,31 +51,60 @@ export async function POST(request: Request) {
     if (testError) {
       // If it's a permission error, the service role key is likely invalid or for wrong project
       if (testError.code === '42501' || testError.message?.includes('permission denied')) {
-        console.error('[Invite Admin] Admin client permission error - service role key may be invalid:', {
+        // Extract project reference from URL for better error message
+        const urlProjectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+        
+        // Try to decode JWT to get project reference from key
+        let keyProjectRef: string | null = null;
+        try {
+          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+          const jwtParts = serviceKey.split('.');
+          if (jwtParts.length === 3) {
+            const payload = JSON.parse(Buffer.from(jwtParts[1], 'base64').toString('utf-8'));
+            keyProjectRef = payload.ref || null;
+          }
+        } catch (e) {
+          // Ignore JWT decode errors
+        }
+        
+        const isProjectMismatch = keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
+        
+        console.error('[Invite Admin] Admin client permission error - service role key may be invalid or for wrong project:', {
           error: testError.message,
           code: testError.code,
           details: testError.details,
           hint: testError.hint,
           supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          urlProjectRef,
+          keyProjectRef,
+          isProjectMismatch,
           serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20),
           serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
         });
         
         return NextResponse.json({ 
-          error: 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY environment variable is not set or invalid in your production environment.',
+          error: isProjectMismatch 
+            ? `Service role key project mismatch. The key is for project "${keyProjectRef}" but your URL is for project "${urlProjectRef}".`
+            : 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY may be invalid or for a different Supabase project.',
           details: {
-            solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+            solution: isProjectMismatch
+              ? `Please use the service_role key from the Supabase project "${urlProjectRef}" (matching your NEXT_PUBLIC_SUPABASE_URL)`
+              : 'Please verify SUPABASE_SERVICE_ROLE_KEY matches your Supabase project',
             steps: [
-              '1. Go to your Vercel project dashboard',
-              '2. Navigate to Settings → Environment Variables',
-              '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
-              '4. Verify the key matches your Supabase project (Settings → API → service_role key)',
-              '5. Ensure NEXT_PUBLIC_SUPABASE_URL matches your Supabase project URL',
-              '6. Redeploy your application after adding the environment variable',
+              '1. Go to your Supabase Dashboard: https://supabase.com/dashboard',
+              `2. Select the project: ${urlProjectRef || 'matching your NEXT_PUBLIC_SUPABASE_URL'}`,
+              '3. Navigate to Settings → API',
+              '4. Copy the service_role key (not the anon key)',
+              '5. Go to Vercel → Settings → Environment Variables',
+              '6. Update SUPABASE_SERVICE_ROLE_KEY with the correct key',
+              '7. Redeploy your application',
             ],
             hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
             serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
             supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+            urlProjectRef,
+            keyProjectRef,
+            isProjectMismatch,
             errorCode: testError.code,
             errorMessage: testError.message,
           },
@@ -322,6 +351,21 @@ export async function POST(request: Request) {
           .limit(1);
         
         if (readTestError && (readTestError.code === '42501' || readTestError.message?.includes('permission denied'))) {
+          // Extract project references for better error message
+          const urlProjectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+          let keyProjectRef: string | null = null;
+          try {
+            const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+            const jwtParts = serviceKey.split('.');
+            if (jwtParts.length === 3) {
+              const payload = JSON.parse(Buffer.from(jwtParts[1], 'base64').toString('utf-8'));
+              keyProjectRef = payload.ref || null;
+            }
+          } catch (e) {
+            // Ignore JWT decode errors
+          }
+          const isProjectMismatch = keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
+          
           console.error('[Invite Admin] Admin client cannot read from company_members - service role key may be invalid or for wrong project:', {
             error: readTestError.message,
             code: readTestError.code,
@@ -330,24 +374,35 @@ export async function POST(request: Request) {
             hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
             serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
             supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+            urlProjectRef,
+            keyProjectRef,
+            isProjectMismatch,
           });
           
           // Return a detailed error response
           return NextResponse.json({ 
-            error: 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY environment variable is not set or invalid in your production environment.',
+            error: isProjectMismatch 
+              ? `Service role key project mismatch. The key is for project "${keyProjectRef}" but your URL is for project "${urlProjectRef}".`
+              : 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY may be invalid or for a different Supabase project.',
             details: {
-              solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+              solution: isProjectMismatch
+                ? `Please use the service_role key from the Supabase project "${urlProjectRef}" (matching your NEXT_PUBLIC_SUPABASE_URL)`
+                : 'Please verify SUPABASE_SERVICE_ROLE_KEY matches your Supabase project',
               steps: [
-                '1. Go to your Vercel project dashboard',
-                '2. Navigate to Settings → Environment Variables',
-                '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
-                '4. Verify the key matches your Supabase project (Settings → API → service_role key)',
-                '5. Ensure NEXT_PUBLIC_SUPABASE_URL matches your Supabase project URL',
-                '6. Redeploy your application after adding the environment variable',
+                '1. Go to your Supabase Dashboard: https://supabase.com/dashboard',
+                `2. Select the project: ${urlProjectRef || 'matching your NEXT_PUBLIC_SUPABASE_URL'}`,
+                '3. Navigate to Settings → API',
+                '4. Copy the service_role key (not the anon key)',
+                '5. Go to Vercel → Settings → Environment Variables',
+                '6. Update SUPABASE_SERVICE_ROLE_KEY with the correct key',
+                '7. Redeploy your application',
               ],
               hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
               serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
               supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+              urlProjectRef,
+              keyProjectRef,
+              isProjectMismatch,
               errorCode: readTestError.code,
               errorMessage: readTestError.message,
             },
@@ -388,21 +443,44 @@ export async function POST(request: Request) {
           
           // Check if it's a permission error and provide more context
           if (insertError.message?.includes('permission denied') || insertError.code === '42501') {
+            // Extract project references for better error message
+            const urlProjectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+            let keyProjectRef: string | null = null;
+            try {
+              const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+              const jwtParts = serviceKey.split('.');
+              if (jwtParts.length === 3) {
+                const payload = JSON.parse(Buffer.from(jwtParts[1], 'base64').toString('utf-8'));
+                keyProjectRef = payload.ref || null;
+              }
+            } catch (e) {
+              // Ignore JWT decode errors
+            }
+            const isProjectMismatch = keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
+            
             return NextResponse.json({ 
-              error: 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY environment variable is not set or invalid in your production environment.',
+              error: isProjectMismatch 
+                ? `Service role key project mismatch. The key is for project "${keyProjectRef}" but your URL is for project "${urlProjectRef}".`
+                : 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY may be invalid or for a different Supabase project.',
               details: {
-                solution: 'Please set SUPABASE_SERVICE_ROLE_KEY in your Vercel project settings',
+                solution: isProjectMismatch
+                  ? `Please use the service_role key from the Supabase project "${urlProjectRef}" (matching your NEXT_PUBLIC_SUPABASE_URL)`
+                  : 'Please verify SUPABASE_SERVICE_ROLE_KEY matches your Supabase project',
                 steps: [
-                  '1. Go to your Vercel project dashboard',
-                  '2. Navigate to Settings → Environment Variables',
-                  '3. Add SUPABASE_SERVICE_ROLE_KEY with your service role key from Supabase',
-                  '4. Verify the key matches your Supabase project (Settings → API → service_role key)',
-                  '5. Ensure NEXT_PUBLIC_SUPABASE_URL matches your Supabase project URL',
-                  '6. Redeploy your application after adding the environment variable',
+                  '1. Go to your Supabase Dashboard: https://supabase.com/dashboard',
+                  `2. Select the project: ${urlProjectRef || 'matching your NEXT_PUBLIC_SUPABASE_URL'}`,
+                  '3. Navigate to Settings → API',
+                  '4. Copy the service_role key (not the anon key)',
+                  '5. Go to Vercel → Settings → Environment Variables',
+                  '6. Update SUPABASE_SERVICE_ROLE_KEY with the correct key',
+                  '7. Redeploy your application',
                 ],
                 hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
                 serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
                 supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+                urlProjectRef,
+                keyProjectRef,
+                isProjectMismatch,
                 errorCode: insertError.code,
                 errorMessage: insertError.message,
               },

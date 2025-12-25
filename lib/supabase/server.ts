@@ -81,19 +81,38 @@ export function createAdminClient() {
       console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token');
     }
 
-    // Use the base createClient from supabase-js with service role key
-    // This bypasses RLS automatically
-    // Use dynamic import for better Next.js compatibility
-    let createSupabaseClient: any;
+    // Extract project reference from URL to verify key matches
+    const urlProjectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+    
+    // Decode JWT to verify it matches the project (basic validation)
     try {
-      // Try ES6 import first
-      const supabaseJs = require('@supabase/supabase-js');
-      createSupabaseClient = supabaseJs.createClient;
-    } catch (importError) {
-      // Fallback: try dynamic import
-      console.error('Failed to import @supabase/supabase-js:', importError);
-      throw new Error('Failed to load Supabase client library');
+      const jwtParts = supabaseServiceKey.split('.');
+      if (jwtParts.length === 3) {
+        // Decode the payload (second part of JWT)
+        const payload = JSON.parse(Buffer.from(jwtParts[1], 'base64').toString('utf-8'));
+        const keyProjectRef = payload.ref;
+        
+        if (keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef) {
+          console.error('❌ SUPABASE_SERVICE_ROLE_KEY project mismatch:', {
+            urlProjectRef,
+            keyProjectRef,
+            supabaseUrl,
+            message: 'The service role key is for a different Supabase project. Please use the service_role key from the project matching your NEXT_PUBLIC_SUPABASE_URL.',
+          });
+          throw new Error(`Service role key project mismatch: URL project is "${urlProjectRef}" but key is for "${keyProjectRef}". Please use the correct service_role key from your Supabase project.`);
+        }
+        
+        if (keyProjectRef && urlProjectRef && keyProjectRef === urlProjectRef) {
+          console.log('✅ Service role key project matches URL:', keyProjectRef);
+        }
+      }
+    } catch (jwtError) {
+      // If JWT decoding fails, log but don't fail - might still work
+      console.warn('⚠️ Could not decode service role key JWT for validation:', (jwtError as Error).message);
     }
+
+    // Use ES6 import for better Next.js compatibility
+    const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
 
     const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -113,6 +132,7 @@ export function createAdminClient() {
       hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     });
     throw error;
   }
