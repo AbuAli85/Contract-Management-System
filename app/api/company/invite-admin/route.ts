@@ -41,88 +41,9 @@ export async function POST(request: Request) {
     
     supabaseAdmin = createAdminClient();
     
-    // Test the admin client by attempting a simple query
-    // This verifies the service role key is valid and can bypass RLS
-    const { error: testError, data: testData } = await supabaseAdmin
-      .from('company_members')
-      .select('id')
-      .limit(1);
-    
-    if (testError) {
-      // If it's a permission error, the service role key is likely invalid or for wrong project
-      if (testError.code === '42501' || testError.message?.includes('permission denied')) {
-        // Extract project reference from URL for better error message
-        const urlProjectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
-        
-        // Try to decode JWT to get project reference from key
-        let keyProjectRef: string | null = null;
-        try {
-          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-          const jwtParts = serviceKey.split('.');
-          if (jwtParts.length === 3) {
-            // JWT uses base64url encoding, need to convert to base64
-            let base64 = jwtParts[1].replace(/-/g, '+').replace(/_/g, '/');
-            // Add padding if needed
-            while (base64.length % 4) {
-              base64 += '=';
-            }
-            const payload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
-            keyProjectRef = payload.ref || null;
-          }
-        } catch (e) {
-          // Ignore JWT decode errors - will show generic error instead
-          console.warn('[Invite Admin] Could not decode JWT to verify project:', (e as Error).message);
-        }
-        
-        const isProjectMismatch = keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
-        
-        console.error('[Invite Admin] Admin client permission error - service role key may be invalid or for wrong project:', {
-          error: testError.message,
-          code: testError.code,
-          details: testError.details,
-          hint: testError.hint,
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-          urlProjectRef,
-          keyProjectRef,
-          isProjectMismatch,
-          serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20),
-          serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
-        });
-        
-        return NextResponse.json({ 
-          error: isProjectMismatch 
-            ? `Service role key project mismatch. The key is for project "${keyProjectRef}" but your URL is for project "${urlProjectRef}".`
-            : 'Permission denied. The SUPABASE_SERVICE_ROLE_KEY may be invalid or for a different Supabase project.',
-          details: {
-            solution: isProjectMismatch
-              ? `Please use the service_role key from the Supabase project "${urlProjectRef}" (matching your NEXT_PUBLIC_SUPABASE_URL)`
-              : 'Please verify SUPABASE_SERVICE_ROLE_KEY matches your Supabase project',
-            steps: [
-              '1. Go to your Supabase Dashboard: https://supabase.com/dashboard',
-              `2. Select the project: ${urlProjectRef || 'matching your NEXT_PUBLIC_SUPABASE_URL'}`,
-              '3. Navigate to Settings → API',
-              '4. Copy the service_role key (not the anon key)',
-              '5. Go to Vercel → Settings → Environment Variables',
-              '6. Update SUPABASE_SERVICE_ROLE_KEY with the correct key',
-              '7. Redeploy your application',
-            ],
-            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-            serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
-            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-            urlProjectRef,
-            keyProjectRef,
-            isProjectMismatch,
-            errorCode: testError.code,
-            errorMessage: testError.message,
-          },
-        }, { status: 500 });
-      } else {
-        console.warn('[Invite Admin] Admin client test query had an error (non-permission):', testError.message);
-        // Don't throw - might be a temporary issue, let the actual operation try
-      }
-    } else {
-      console.log('[Invite Admin] Admin client test successful - service role key is working');
-    }
+    // Note: We skip the test query here since the diagnostic endpoint confirms the admin client works.
+    // If there are permission issues, they will be caught and handled in the actual operations below.
+    console.log('[Invite Admin] Admin client created successfully');
   } catch (e: any) {
     console.error('[Invite Admin] Admin client initialization failed:', {
       message: e.message,
