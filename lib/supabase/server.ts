@@ -88,8 +88,14 @@ export function createAdminClient() {
     try {
       const jwtParts = supabaseServiceKey.split('.');
       if (jwtParts.length === 3) {
+        // JWT uses base64url encoding, need to convert to base64
+        let base64 = jwtParts[1].replace(/-/g, '+').replace(/_/g, '/');
+        // Add padding if needed
+        while (base64.length % 4) {
+          base64 += '=';
+        }
         // Decode the payload (second part of JWT)
-        const payload = JSON.parse(Buffer.from(jwtParts[1], 'base64').toString('utf-8'));
+        const payload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
         const keyProjectRef = payload.ref;
         
         if (keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef) {

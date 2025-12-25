@@ -60,11 +60,18 @@ export async function POST(request: Request) {
           const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
           const jwtParts = serviceKey.split('.');
           if (jwtParts.length === 3) {
-            const payload = JSON.parse(Buffer.from(jwtParts[1], 'base64').toString('utf-8'));
+            // JWT uses base64url encoding, need to convert to base64
+            let base64 = jwtParts[1].replace(/-/g, '+').replace(/_/g, '/');
+            // Add padding if needed
+            while (base64.length % 4) {
+              base64 += '=';
+            }
+            const payload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
             keyProjectRef = payload.ref || null;
           }
         } catch (e) {
-          // Ignore JWT decode errors
+          // Ignore JWT decode errors - will show generic error instead
+          console.warn('[Invite Admin] Could not decode JWT to verify project:', (e as Error).message);
         }
         
         const isProjectMismatch = keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
@@ -358,11 +365,18 @@ export async function POST(request: Request) {
             const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
             const jwtParts = serviceKey.split('.');
             if (jwtParts.length === 3) {
-              const payload = JSON.parse(Buffer.from(jwtParts[1], 'base64').toString('utf-8'));
+              // JWT uses base64url encoding, need to convert to base64
+              let base64 = jwtParts[1].replace(/-/g, '+').replace(/_/g, '/');
+              // Add padding if needed
+              while (base64.length % 4) {
+                base64 += '=';
+              }
+              const payload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
               keyProjectRef = payload.ref || null;
             }
           } catch (e) {
             // Ignore JWT decode errors
+            console.warn('[Invite Admin] Could not decode JWT to verify project:', (e as Error).message);
           }
           const isProjectMismatch = keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
           
