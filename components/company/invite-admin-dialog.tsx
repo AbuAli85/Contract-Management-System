@@ -63,6 +63,14 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
       const data = await response.json();
 
       if (!response.ok) {
+        // Log full error details for debugging
+        console.error('[Invite Admin Dialog] API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          data,
+          url: response.url,
+        });
+        
         // Build a comprehensive error message
         let errorMessage = data.message || data.error || 'Failed to send invitation';
         
@@ -71,6 +79,11 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
           errorMessage += '\n\n' + data.details.steps.join('\n');
         } else if (data.details && typeof data.details === 'string') {
           errorMessage += '\n\n' + data.details;
+        }
+        
+        // Include technical details in development
+        if (process.env.NODE_ENV === 'development' && data.technicalDetails) {
+          console.error('[Invite Admin Dialog] Technical Details:', data.technicalDetails);
         }
         
         throw new Error(errorMessage);
@@ -93,9 +106,15 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
       });
       onSuccess?.();
     } catch (error: any) {
+      console.error('[Invite Admin Dialog] Error:', {
+        message: error.message,
+        error,
+        stack: error.stack,
+      });
+      
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'An unexpected error occurred. Please check the console for details.',
         variant: 'destructive',
       });
     } finally {
