@@ -68,30 +68,52 @@ export async function createClientWithAuth() {
 
 // Admin client that bypasses RLS using service role key
 export function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing Supabase admin credentials');
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase admin credentials');
+    }
+
+    // Verify service role key format
+    if (!supabaseServiceKey.startsWith('eyJ')) {
+      console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token');
+    }
+
+    // Use the base createClient from supabase-js with service role key
+    // This bypasses RLS automatically
+    // Use dynamic import for better Next.js compatibility
+    let createSupabaseClient: any;
+    try {
+      // Try ES6 import first
+      const supabaseJs = require('@supabase/supabase-js');
+      createSupabaseClient = supabaseJs.createClient;
+    } catch (importError) {
+      // Fallback: try dynamic import
+      console.error('Failed to import @supabase/supabase-js:', importError);
+      throw new Error('Failed to load Supabase client library');
+    }
+
+    const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      db: {
+        schema: 'public',
+      },
+    });
+
+    return adminClient;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[createAdminClient] Failed to create admin client:', {
+      error: errorMessage,
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+    });
+    throw error;
   }
-
-  // Verify service role key format
-  if (!supabaseServiceKey.startsWith('eyJ')) {
-    console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token');
-  }
-
-  // Use the base createClient from supabase-js with service role key
-  // This bypasses RLS automatically
-  const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
-  const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    db: {
-      schema: 'public',
-    },
-  });
-
-  return adminClient;
 }

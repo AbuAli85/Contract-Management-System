@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   
   // Use admin client to bypass RLS
-  let supabaseAdmin;
+  let supabaseAdmin: ReturnType<typeof createAdminClient> | null = null;
   try {
     // Verify service role key is set before creating client
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -122,7 +122,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.error('[Invite Admin] Error parsing request body:', jsonError);
+      return NextResponse.json({ 
+        error: 'Invalid request body',
+        message: 'Request body must be valid JSON'
+      }, { status: 400 });
+    }
+
     const { email, role, department, job_title, message } = body;
     
     // Normalize empty strings to null for optional fields
@@ -174,6 +184,15 @@ export async function POST(request: Request) {
       target_email: email,
       role,
     });
+
+    // Ensure admin client is available
+    if (!supabaseAdmin) {
+      console.error('[Invite Admin] Admin client is not available');
+      return NextResponse.json({ 
+        error: 'Server configuration error',
+        message: 'Admin client is not available. Please check SUPABASE_SERVICE_ROLE_KEY environment variable.'
+      }, { status: 500 });
+    }
 
     // Verify user has owner/admin access using admin client
     const { data: myMembership } = await (supabaseAdmin
