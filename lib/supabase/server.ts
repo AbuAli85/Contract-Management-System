@@ -128,6 +128,12 @@ export function createAdminClient() {
       db: {
         schema: 'public',
       },
+      global: {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+      },
     });
 
     return adminClient;

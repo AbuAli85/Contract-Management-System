@@ -152,26 +152,63 @@ export async function POST(request: Request) {
     }
 
     // Verify user has owner/admin access using admin client
-    const { data: myMembership } = await (supabaseAdmin
-      .from('company_members') as any)
-      .select('role')
-      .eq('company_id', activeCompanyId)
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle();
-
-    // Also check if user owns the company directly
+    // First check if user owns the company directly (simpler check)
     let canInvite = false;
-    if (myMembership && ['owner', 'admin'].includes((myMembership as any).role)) {
+    const { data: ownedCompany, error: companyError } = await supabaseAdmin
+      .from('companies')
+      .select('owner_id')
+      .eq('id', activeCompanyId)
+      .maybeSingle();
+    
+    if (companyError) {
+      console.error('[Invite Admin] Error checking company ownership:', companyError);
+      return NextResponse.json({ 
+        error: 'Failed to verify company access',
+        message: companyError.message 
+      }, { status: 500 });
+    }
+    
+    if (ownedCompany && ownedCompany.owner_id === user.id) {
       canInvite = true;
     } else {
-      const { data: ownedCompany } = await (supabaseAdmin
-        .from('companies') as any)
-        .select('owner_id')
-        .eq('id', activeCompanyId)
+      // If not owner, check if user is admin/owner in company_members
+      const { data: myMembership, error: membershipError } = await supabaseAdmin
+        .from('company_members')
+        .select('role')
+        .eq('company_id', activeCompanyId)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
         .maybeSingle();
       
-      if (ownedCompany && ownedCompany.owner_id === user.id) {
+      // If there's a permission error, it's unexpected but we'll handle it gracefully
+      if (membershipError) {
+        console.error('[Invite Admin] Error checking membership:', {
+          error: membershipError.message,
+          code: membershipError.code,
+          company_id: activeCompanyId,
+          user_id: user.id,
+        });
+        
+        // If it's a permission error and user doesn't own company, deny access
+        if (membershipError.code === '42501') {
+          return NextResponse.json({ 
+            error: 'Permission denied. Unable to verify your access to this company.',
+            details: {
+              solution: 'Please ensure you are the company owner or have admin role',
+              errorCode: membershipError.code,
+              errorMessage: membershipError.message,
+            }
+          }, { status: 403 });
+        }
+        
+        // For other errors, deny access to be safe
+        return NextResponse.json({ 
+          error: 'Failed to verify company membership',
+          message: membershipError.message 
+        }, { status: 500 });
+      }
+      
+      if (myMembership && ['owner', 'admin'].includes((myMembership as any).role)) {
         canInvite = true;
       }
     }
