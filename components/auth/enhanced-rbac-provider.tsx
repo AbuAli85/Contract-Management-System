@@ -80,7 +80,7 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
         .from('profiles')
         .select('id, email, role, status, first_name, last_name')
         .eq('email', user.email || '')
-        .single();
+        .maybeSingle();
 
       if (!profilesError && profilesData?.role) {
         console.log(
@@ -103,7 +103,7 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
           .from('profiles')
           .select('id, email, role, status, first_name, last_name')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (!authIdError && authIdProfile?.role) {
           console.log(
