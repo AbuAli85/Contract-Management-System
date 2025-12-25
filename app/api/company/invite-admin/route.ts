@@ -24,8 +24,7 @@ interface InviterProfile {
 
 // POST: Invite an external user as admin/manager to the company
 export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
+  const supabase = await createClient();
     
     // Use admin client to bypass RLS
     let supabaseAdmin: ReturnType<typeof createAdminClient> | null = null;
@@ -557,20 +556,6 @@ export async function POST(request: Request) {
       ...(process.env.NODE_ENV === 'development' && { 
         technicalDetails: errorMessage,
         stack: errorStack 
-      }),
-    }, { status: 500 });
-  } catch (outerError: unknown) {
-    // Catch any errors from the outer try block (like createClient failing)
-    const outerErrorMessage = outerError instanceof Error ? outerError.message : 'Unknown error';
-    console.error('[Invite Admin] Outer error catch:', {
-      message: outerErrorMessage,
-      error: outerError,
-    });
-    return NextResponse.json({ 
-      error: 'Server error',
-      message: 'An unexpected error occurred. Please try again.',
-      ...(process.env.NODE_ENV === 'development' && { 
-        technicalDetails: outerErrorMessage,
       }),
     }, { status: 500 });
   }
