@@ -146,6 +146,12 @@ export default function SimpleContractGenerator({
 
   const loadData = async () => {
     setLoading(true);
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Data loading timeout - please try again')), 15000);
+    });
+
     try {
       const supabase = createClient();
 
@@ -153,49 +159,54 @@ export default function SimpleContractGenerator({
         throw new Error('Supabase client not available');
       }
 
-      // Load all parties first
-      const { data: partiesData, error: partiesError } = await supabase
-        .from('parties')
-        .select('id, name_en, name_ar, crn, type')
-        .order('name_en');
+      // Race between data loading and timeout
+      const loadDataPromise = async () => {
+        // Load all parties first
+        const { data: partiesData, error: partiesError } = await supabase
+          .from('parties')
+          .select('id, name_en, name_ar, crn, type')
+          .order('name_en');
 
-      if (partiesError) {
-        console.error('Error loading parties:', partiesError);
-        throw new Error(`Failed to load parties: ${partiesError.message}`);
-      }
+        if (partiesError) {
+          console.error('Error loading parties:', partiesError);
+          throw new Error(`Failed to load parties: ${partiesError.message}`);
+        }
 
-      // Filter parties by type
-      const allPartiesList = partiesData || [];
-      const clientsList = allPartiesList.filter(
-        (party: any) => party.type === 'Client'
-      );
-      const employersList = allPartiesList.filter(
-        (party: any) => party.type === 'Employer'
-      );
+        // Filter parties by type
+        const allPartiesList = partiesData || [];
+        const clientsList = allPartiesList.filter(
+          (party: any) => party.type === 'Client'
+        );
+        const employersList = allPartiesList.filter(
+          (party: any) => party.type === 'Employer'
+        );
 
-      setAllParties(allPartiesList);
-      setClients(clientsList);
-      setEmployers(employersList);
+        setAllParties(allPartiesList);
+        setClients(clientsList);
+        setEmployers(employersList);
 
-      // Load promoters
-      const { data: promotersData, error: promotersError } = await supabase
-        .from('promoters')
-        .select(
-          'id, name_en, name_ar, mobile_number, id_card_number, employer_id, status, profile_picture_url'
-        )
-        .order('name_en');
+        // Load promoters
+        const { data: promotersData, error: promotersError } = await supabase
+          .from('promoters')
+          .select(
+            'id, name_en, name_ar, mobile_number, id_card_number, employer_id, status, profile_picture_url'
+          )
+          .order('name_en');
 
-      if (promotersError) {
-        console.error('Error loading promoters:', promotersError);
-        throw new Error(`Failed to load promoters: ${promotersError.message}`);
-      }
+        if (promotersError) {
+          console.error('Error loading promoters:', promotersError);
+          throw new Error(`Failed to load promoters: ${promotersError.message}`);
+        }
 
-      setPromoters(promotersData || []);
-      setAllPromoters(promotersData || []);
+        setPromoters(promotersData || []);
+        setAllPromoters(promotersData || []);
 
-      console.log(
-        `✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers`
-      );
+        console.log(
+          `✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers`
+        );
+      };
+
+      await Promise.race([loadDataPromise(), timeoutPromise]);
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
