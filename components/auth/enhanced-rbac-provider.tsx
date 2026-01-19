@@ -54,6 +54,20 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [isCompanyMember, setIsCompanyMember] = useState(false);
 
+  // Safety timeout to prevent infinite loading
+  useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      if (isLoading) {
+        console.warn('⚠️ RBAC loading timeout - forcing completion with default role');
+        setUserRole('user');
+        setUserPermissions(getUserPermissions('user'));
+        setIsLoading(false);
+      }
+    }, 12000); // 12 second safety timeout
+
+    return () => clearTimeout(safetyTimer);
+  }, [isLoading]);
+
   const refreshRoles = useCallback(async () => {
     if (!user?.id) {
       setUserRole(null);

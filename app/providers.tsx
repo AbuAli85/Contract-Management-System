@@ -114,6 +114,19 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabase, setSupabase] = useState<any>(null);
   const [isProfileSynced, setIsProfileSynced] = useState(false);
 
+  // Safety timeout to prevent infinite loading state
+  React.useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      if (loading || initialLoading) {
+        console.warn('⚠️ Auth initialization timeout - forcing completion');
+        setLoading(false);
+        setInitialLoading(false);
+      }
+    }, 15000); // 15 second safety timeout
+
+    return () => clearTimeout(safetyTimer);
+  }, [loading, initialLoading]);
+
   // Helper function to get proper login URL with locale
   const getLoginUrl = () => {
     // Try to get locale from URL or default to 'en'
