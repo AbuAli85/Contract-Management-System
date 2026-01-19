@@ -50,9 +50,15 @@ interface Party {
   id: string;
   name_en: string;
   name_ar: string;
-  crn: string;
+  crn?: string | null;
+  type?: 'Client' | 'Employer' | 'Generic' | string;
   logo_url?: string | null;
   status?: string;
+  contact_person?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  address_en?: string | null;
+  address_ar?: string | null;
 }
 
 interface ContractFormData {
@@ -607,7 +613,17 @@ export default function SimpleContractGenerator({
                     disabled={generating}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder='Select promoter' />
+                      <SelectValue placeholder='Select promoter'>
+                        {formData.promoter_id && (() => {
+                          const promoter = allPromoters.find(p => p.id === formData.promoter_id);
+                          return (
+                            <span className='flex items-center gap-2'>
+                              <User className='h-4 w-4' />
+                              {promoter?.name_en || promoter?.name_ar || `Promoter ${formData.promoter_id.slice(0, 8)}...`}
+                            </span>
+                          );
+                        })()}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {getFilteredPromoters().map(promoter => (
@@ -673,7 +689,17 @@ export default function SimpleContractGenerator({
                   disabled={generating}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder='Select client' />
+                    <SelectValue placeholder='Select client'>
+                      {formData.first_party_id && (() => {
+                        const party = clients.find(p => p.id === formData.first_party_id) || allParties.find(p => p.id === formData.first_party_id);
+                        return (
+                          <span className='flex items-center gap-2'>
+                            <Building className='h-4 w-4' />
+                            {party?.name_en || party?.name_ar || `Party ${formData.first_party_id.slice(0, 8)}...`}
+                          </span>
+                        );
+                      })()}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map(party => (
@@ -682,9 +708,11 @@ export default function SimpleContractGenerator({
                           <Building className='h-4 w-4' />
                           <div>
                             <div className='font-medium'>{party.name_en}</div>
-                            <div className='text-sm text-muted-foreground'>
-                              CRN: {party.crn}
-                            </div>
+                            {party.crn && (
+                              <div className='text-sm text-muted-foreground'>
+                                CRN: {party.crn}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </SelectItem>
@@ -709,7 +737,17 @@ export default function SimpleContractGenerator({
                   disabled={generating}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder='Select employer' />
+                    <SelectValue placeholder='Select employer'>
+                      {formData.second_party_id && (() => {
+                        const party = employers.find(p => p.id === formData.second_party_id) || allParties.find(p => p.id === formData.second_party_id);
+                        return (
+                          <span className='flex items-center gap-2'>
+                            <Building className='h-4 w-4' />
+                            {party?.name_en || party?.name_ar || `Party ${formData.second_party_id.slice(0, 8)}...`}
+                          </span>
+                        );
+                      })()}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {employers.map(party => (
@@ -718,9 +756,11 @@ export default function SimpleContractGenerator({
                           <Building className='h-4 w-4' />
                           <div>
                             <div className='font-medium'>{party.name_en}</div>
-                            <div className='text-sm text-muted-foreground'>
-                              CRN: {party.crn}
-                            </div>
+                            {party.crn && (
+                              <div className='text-sm text-muted-foreground'>
+                                CRN: {party.crn}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </SelectItem>
