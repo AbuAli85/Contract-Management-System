@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth-service';
-import { useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import type { Database } from '@/types/supabase';
 
 export type ContractWithRelations =
@@ -73,33 +72,52 @@ const fetchContract = async (
   contractId: string
 ): Promise<ContractWithRelations | null> => {
   try {
-    const supabase = createClient();
+    console.log(`📋 Fetching contract: ${contractId}`);
+    
+    // Use API route for better reliability and server-side auth handling
+    const response = await fetch(`/api/contracts/${contractId}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-    if (!supabase) {
-      throw new Error('Failed to initialize Supabase client');
-    }
-
-    const { data, error } = await supabase
-      .from('contracts')
-      .select(
-        `*,
-        first_party:parties!contracts_employer_id_fkey(id,name_en,name_ar,crn,type),
-        second_party:parties!contracts_client_id_fkey(id,name_en,name_ar,crn,type),
-        promoter_id`
-      )
-      .eq('id', contractId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching contract:', error);
-      if (error.code === 'PGRST116') {
-        // No rows returned - contract not found
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error fetching contract:', errorData);
+      
+      if (response.status === 404) {
+        // Contract not found
         return null;
       }
-      throw new Error(error.message);
+      
+      throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
     }
 
-    return data as ContractWithRelations;
+    const result = await response.json();
+    
+    if (!result.success || !result.contract) {
+      console.warn('⚠️ Contract fetch returned no data');
+      return null;
+    }
+
+    // Transform the API response to match ContractWithRelations type
+    const contract = result.contract;
+    
+    // Handle promoter data - API returns promoters array, we need promoter object
+    const promoter = contract.promoters?.[0] || null;
+    
+    const transformed: ContractWithRelations = {
+      ...contract,
+      promoter,
+      // Ensure date fields are properly mapped
+      contract_start_date: contract.contract_start_date || contract.start_date,
+      contract_end_date: contract.contract_end_date || contract.end_date,
+      job_title: contract.job_title || contract.title,
+    };
+
+    console.log('✅ Contract fetched successfully:', transformed.id);
+    return transformed;
   } catch (error) {
     console.error('Error in fetchContract:', error);
     throw error;
@@ -109,6 +127,24 @@ const fetchContract = async (
 export function useContract(contractId: string) {
   const { user, loading: authLoading, initialLoading } = useAuth();
   const queryKey = ['contract', contractId];
+  
+  // Add timeout to prevent infinite loading if auth is stuck
+  const [authTimeout, setAuthTimeout] = useState(false);
+  
+  useEffect(() => {
+    // If auth is still loading after 10 seconds, proceed anyway
+    const timer = setTimeout(() => {
+      if (authLoading || initialLoading) {
+        console.warn('⚠️ Auth loading timeout reached in useContract, proceeding with query');
+        setAuthTimeout(true);
+      }
+    }, 10000);
+    
+    return () => clearTimeout(timer);
+  }, [authLoading, initialLoading]);
+
+  // Enable query after auth completes OR after timeout
+  const shouldEnableQuery = !!contractId && (!initialLoading && !authLoading || authTimeout);
 
   const {
     data: contract,
@@ -118,9 +154,8 @@ export function useContract(contractId: string) {
   } = useQuery<ContractWithRelations | null, Error>({
     queryKey,
     queryFn: () => fetchContract(contractId),
-    // Enable query only after auth initialization is complete
-    // Allow query to run even if user is null (to show proper error handling)
-    enabled: !!contractId && !initialLoading && !authLoading,
+    // Enable query only after auth initialization is complete OR timeout
+    enabled: shouldEnableQuery,
     retry: (failureCount, error) => {
       // Don't retry if contract is not found
       if (
@@ -133,8 +168,8 @@ export function useContract(contractId: string) {
     },
   });
 
-  // Return loading state that includes auth initialization
-  const loading = authLoading || initialLoading || queryLoading;
+  // Return loading state that includes auth initialization (but respect timeout)
+  const loading = (!authTimeout && (authLoading || initialLoading)) || queryLoading;
 
   return {
     contract,
