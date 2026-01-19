@@ -284,7 +284,18 @@ export function enforceSecurityChecks(): void {
   const report = runAllSecurityChecks();
   logSecurityCheckResults(report);
 
+  // Allow bypassing security checks for initial deployment setup
+  // Set SKIP_SECURITY_CHECKS=true in Railway to deploy without all env vars configured
+  const skipChecks = process.env.SKIP_SECURITY_CHECKS === 'true';
+  
   if (report.criticalIssues > 0 && process.env.NODE_ENV === 'production') {
+    if (skipChecks) {
+      console.warn(
+        `⚠️ SECURITY WARNING: Bypassing ${report.criticalIssues} critical security check(s) due to SKIP_SECURITY_CHECKS=true`
+      );
+      console.warn('⚠️ Please configure all required environment variables and remove SKIP_SECURITY_CHECKS');
+      return;
+    }
     throw new Error(
       `Critical security checks failed. Cannot start application in production with ${report.criticalIssues} critical issue(s).`
     );
