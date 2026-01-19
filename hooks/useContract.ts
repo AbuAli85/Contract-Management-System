@@ -107,29 +107,34 @@ const fetchContract = async (
 };
 
 export function useContract(contractId: string) {
-  const { user } = useAuth();
+  const { user, loading: authLoading, initialLoading } = useAuth();
   const queryKey = ['contract', contractId];
 
   const {
     data: contract,
-    isLoading: loading,
+    isLoading: queryLoading,
     error,
     refetch,
   } = useQuery<ContractWithRelations | null, Error>({
     queryKey,
     queryFn: () => fetchContract(contractId),
-    enabled: !!contractId && user !== null,
+    // Enable query only after auth initialization is complete
+    // Allow query to run even if user is null (to show proper error handling)
+    enabled: !!contractId && !initialLoading && !authLoading,
     retry: (failureCount, error) => {
       // Don't retry if contract is not found
       if (
-        error.message.includes('No rows returned') ||
-        error.message.includes('PGRST116')
+        error?.message?.includes('No rows returned') ||
+        error?.message?.includes('PGRST116')
       ) {
         return false;
       }
       return failureCount < 3;
     },
   });
+
+  // Return loading state that includes auth initialization
+  const loading = authLoading || initialLoading || queryLoading;
 
   return {
     contract,
