@@ -50,7 +50,18 @@ export interface StepExecutionResult {
  * Workflow Engine Service
  */
 export class WorkflowEngineService {
-  private supabase = createAdminClient();
+  private _supabase: ReturnType<typeof createAdminClient> | null = null;
+
+  /**
+   * Lazy initialization of Supabase admin client
+   * Only creates the client when first accessed (at runtime, not build time)
+   */
+  private get supabase() {
+    if (!this._supabase) {
+      this._supabase = createAdminClient();
+    }
+    return this._supabase;
+  }
 
   /**
    * Execute a workflow
