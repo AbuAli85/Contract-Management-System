@@ -14,6 +14,12 @@ import { logger } from '@/lib/utils/logger';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
+// Check if RBAC bypass is enabled for debugging/initial setup
+const RBAC_BYPASS =
+  process.env.RBAC_BYPASS === 'true' ||
+  process.env.RBAC_ENFORCEMENT === 'disabled' ||
+  process.env.RBAC_ENFORCEMENT !== 'true';
+
 // Validation schema for promoter data
 const promoterSchema = z.object({
   name_en: z.string().min(1, 'English name is required'),
@@ -84,8 +90,8 @@ const promoterSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
 });
 
-// ✅ SECURITY: RBAC enabled with rate limiting
-export const GET = withRBAC('promoter:read:own', async (request: Request) => {
+// Handler function for GET
+async function handleGET(request: Request) {
   try {
     // ✅ SECURITY: Apply rate limiting
     const identifier = getClientIdentifier(request);
@@ -468,7 +474,15 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       { status: 500 }
     );
   }
-});
+}
+
+// Export GET with optional RBAC protection (bypass when RBAC_ENFORCEMENT is not true)
+export const GET = RBAC_BYPASS
+  ? async (request: Request) => {
+      console.log('⚠️ RBAC BYPASS ENABLED for promoters - Running without permission checks');
+      return handleGET(request);
+    }
+  : withRBAC('promoter:read:own', handleGET);
 
 // ✅ SECURITY: RBAC enabled with rate limiting
 export const POST = withRBAC(

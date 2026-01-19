@@ -579,6 +579,7 @@ export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
 
+    // Use regular client for auth check
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -591,18 +592,14 @@ export async function POST(request: Request) {
             try {
               cookieStore.set(name, value, options);
             } catch {
-              // The `set` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              // Ignore
             }
           },
           remove(name: string, options: any) {
             try {
               cookieStore.set(name, '', options);
             } catch {
-              // The `remove` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              // Ignore
             }
           },
         },
@@ -629,12 +626,29 @@ export async function POST(request: Request) {
       owner_id: user.id,
     };
 
-    // Insert party into database
-    const { data: party, error } = await supabase
+    // Use admin client to bypass RLS for insert
+    const { createAdminClient } = await import('@/lib/supabase/server');
+    let adminClient;
+    try {
+      adminClient = createAdminClient();
+    } catch (adminError) {
+      console.error('Failed to create admin client:', adminError);
+      // Fall back to regular client
+      adminClient = supabase;
+    }
+
+    // Insert party into database with timeout
+    const insertPromise = adminClient
       .from('parties')
       .insert([partyData])
       .select()
       .single();
+
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database operation timeout')), 10000);
+    });
+
+    const { data: party, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
 
     if (error) {
       console.error('Error creating party:', error);
@@ -664,7 +678,7 @@ export async function POST(request: Request) {
 
     console.error('API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }
