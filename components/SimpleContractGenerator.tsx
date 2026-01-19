@@ -34,7 +34,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@/lib/supabase/client';
 
 interface Promoter {
   id: string;
@@ -153,27 +152,26 @@ export default function SimpleContractGenerator({
     });
 
     try {
-      const supabase = createClient();
-
-      if (!supabase) {
-        throw new Error('Supabase client not available');
-      }
-
       // Race between data loading and timeout
       const loadDataPromise = async () => {
-        // Load all parties first
-        const { data: partiesData, error: partiesError } = await supabase
-          .from('parties')
-          .select('id, name_en, name_ar, crn, type')
-          .order('name_en');
+        // Use API routes instead of direct Supabase queries to bypass RLS issues
+        const [partiesResponse, promotersResponse] = await Promise.all([
+          fetch('/api/parties', { credentials: 'include' }),
+          fetch('/api/promoters', { credentials: 'include' }),
+        ]);
 
-        if (partiesError) {
-          console.error('Error loading parties:', partiesError);
-          throw new Error(`Failed to load parties: ${partiesError.message}`);
+        // Handle parties response
+        if (!partiesResponse.ok) {
+          const errorData = await partiesResponse.json().catch(() => ({}));
+          console.error('Error loading parties:', errorData);
+          throw new Error(errorData.error || `Failed to load parties: ${partiesResponse.status}`);
         }
 
+        const partiesResult = await partiesResponse.json();
+        const partiesData = partiesResult.data || partiesResult.parties || partiesResult || [];
+        
         // Filter parties by type
-        const allPartiesList = partiesData || [];
+        const allPartiesList = Array.isArray(partiesData) ? partiesData : [];
         const clientsList = allPartiesList.filter(
           (party: any) => party.type === 'Client'
         );
@@ -185,24 +183,22 @@ export default function SimpleContractGenerator({
         setClients(clientsList);
         setEmployers(employersList);
 
-        // Load promoters
-        const { data: promotersData, error: promotersError } = await supabase
-          .from('promoters')
-          .select(
-            'id, name_en, name_ar, mobile_number, id_card_number, employer_id, status, profile_picture_url'
-          )
-          .order('name_en');
-
-        if (promotersError) {
-          console.error('Error loading promoters:', promotersError);
-          throw new Error(`Failed to load promoters: ${promotersError.message}`);
+        // Handle promoters response
+        if (!promotersResponse.ok) {
+          const errorData = await promotersResponse.json().catch(() => ({}));
+          console.error('Error loading promoters:', errorData);
+          throw new Error(errorData.error || `Failed to load promoters: ${promotersResponse.status}`);
         }
 
-        setPromoters(promotersData || []);
-        setAllPromoters(promotersData || []);
+        const promotersResult = await promotersResponse.json();
+        const promotersData = promotersResult.data || promotersResult.promoters || promotersResult || [];
+        const promotersList = Array.isArray(promotersData) ? promotersData : [];
+
+        setPromoters(promotersList);
+        setAllPromoters(promotersList);
 
         console.log(
-          `✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers`
+          `✅ Loaded ${promotersList.length} promoters, ${clientsList.length} clients, ${employersList.length} employers`
         );
       };
 
