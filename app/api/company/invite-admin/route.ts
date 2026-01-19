@@ -231,14 +231,14 @@ export async function POST(request: Request) {
     }
 
     // Get company details
-    const { data: companyData, error: companyError } = await supabaseAdmin
+    const { data: companyData, error: companyNameError } = await supabaseAdmin
       .from('companies')
       .select('name')
       .eq('id', activeCompanyId)
       .maybeSingle();
     
-    if (companyError) {
-      console.warn('[Invite Admin] Could not fetch company name:', companyError);
+    if (companyNameError) {
+      console.warn('[Invite Admin] Could not fetch company name:', companyNameError);
     }
 
     const company = companyData as Company | null;
