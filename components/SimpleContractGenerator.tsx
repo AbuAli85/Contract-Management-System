@@ -161,9 +161,10 @@ export default function SimpleContractGenerator({
       // Race between data loading and timeout
       const loadDataPromise = async () => {
         // Use API routes instead of direct Supabase queries to bypass RLS issues
+        // Request higher limit to get all parties/promoters for dropdown selection
         const [partiesResponse, promotersResponse] = await Promise.all([
-          fetch('/api/parties', { credentials: 'include' }),
-          fetch('/api/promoters', { credentials: 'include' }),
+          fetch('/api/parties?limit=500', { credentials: 'include' }),
+          fetch('/api/promoters?limit=500', { credentials: 'include' }),
         ]);
 
         // Handle parties response
@@ -176,14 +177,22 @@ export default function SimpleContractGenerator({
         const partiesResult = await partiesResponse.json();
         const partiesData = partiesResult.data || partiesResult.parties || partiesResult || [];
         
-        // Filter parties by type
+        // Filter parties by type (case-insensitive to handle data inconsistencies)
         const allPartiesList = Array.isArray(partiesData) ? partiesData : [];
         const clientsList = allPartiesList.filter(
-          (party: any) => party.type === 'Client'
+          (party: any) => party.type?.toLowerCase() === 'client'
         );
         const employersList = allPartiesList.filter(
-          (party: any) => party.type === 'Employer'
+          (party: any) => party.type?.toLowerCase() === 'employer'
         );
+
+        console.log('📊 Parties loaded:', {
+          total: allPartiesList.length,
+          clients: clientsList.length,
+          employers: employersList.length,
+          pagination: partiesResult.pagination,
+          sampleTypes: allPartiesList.slice(0, 5).map((p: any) => ({ name: p.name_en, type: p.type })),
+        });
 
         setAllParties(allPartiesList);
         setClients(clientsList);
