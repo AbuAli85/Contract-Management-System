@@ -64,43 +64,97 @@ export default function EnvironmentCheck() {
             <h2 className='text-lg font-semibold text-blue-800 mb-2'>
               How to Fix:
             </h2>
-            <ol className='list-decimal list-inside space-y-2 text-sm text-blue-700'>
-              <li>
-                Create a{' '}
-                <code className='bg-blue-100 px-1 py-0.5 rounded'>
-                  .env.local
-                </code>{' '}
-                file in your project root
-              </li>
-              <li>Add your Supabase credentials:</li>
-            </ol>
-            <div className='mt-3 bg-gray-100 p-3 rounded text-sm font-mono'>
-              <div>
-                NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-              </div>
-              <div>NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here</div>
-            </div>
-            <p className='text-xs text-blue-600 mt-2'>
-              You can find these values in your Supabase project dashboard under
-              Settings → API
-            </p>
+            {typeof window !== 'undefined' && 
+             (window.location.hostname.includes('vercel.app') || 
+              window.location.hostname.includes('thesmartpro.io') ||
+              window.location.hostname !== 'localhost') ? (
+              // Production environment instructions
+              <>
+                <p className='text-sm text-blue-700 mb-3'>
+                  <strong>This is a production environment.</strong> Environment variables must be set in your hosting platform (Vercel).
+                </p>
+                <ol className='list-decimal list-inside space-y-2 text-sm text-blue-700'>
+                  <li>
+                    Go to your <strong>Vercel Dashboard</strong>:{' '}
+                    <a 
+                      href='https://vercel.com/dashboard' 
+                      target='_blank' 
+                      rel='noopener noreferrer'
+                      className='text-blue-600 underline'
+                    >
+                      https://vercel.com/dashboard
+                    </a>
+                  </li>
+                  <li>Select your project</li>
+                  <li>Go to <strong>Settings</strong> → <strong>Environment Variables</strong></li>
+                  <li>Add these two variables:</li>
+                </ol>
+                <div className='mt-3 bg-gray-100 p-3 rounded text-sm font-mono'>
+                  <div>
+                    NEXT_PUBLIC_SUPABASE_URL=https://reootcngcptfogfozlmz.supabase.co
+                  </div>
+                  <div>NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here</div>
+                </div>
+                <p className='text-xs text-blue-600 mt-2'>
+                  <strong>Important:</strong> After adding variables, you MUST redeploy your application for changes to take effect.
+                </p>
+              </>
+            ) : (
+              // Local development instructions
+              <>
+                <ol className='list-decimal list-inside space-y-2 text-sm text-blue-700'>
+                  <li>
+                    Create a{' '}
+                    <code className='bg-blue-100 px-1 py-0.5 rounded'>
+                      .env.local
+                    </code>{' '}
+                    file in your project root
+                  </li>
+                  <li>Add your Supabase credentials:</li>
+                </ol>
+                <div className='mt-3 bg-gray-100 p-3 rounded text-sm font-mono'>
+                  <div>
+                    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+                  </div>
+                  <div>NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here</div>
+                </div>
+                <p className='text-xs text-blue-600 mt-2'>
+                  You can find these values in your Supabase project dashboard under
+                  Settings → API
+                </p>
+              </>
+            )}
           </div>
 
           <div className='bg-green-50 border border-green-200 rounded-lg p-4'>
             <h2 className='text-lg font-semibold text-green-800 mb-2'>
               After Setup:
             </h2>
-            <ul className='list-disc list-inside space-y-1 text-sm text-green-700'>
-              <li>
-                Save the{' '}
-                <code className='bg-green-100 px-1 py-0.5 rounded'>
-                  .env.local
-                </code>{' '}
-                file
-              </li>
-              <li>Restart your development server</li>
-              <li>Refresh this page</li>
-            </ul>
+            {typeof window !== 'undefined' && 
+             (window.location.hostname.includes('vercel.app') || 
+              window.location.hostname.includes('thesmartpro.io') ||
+              window.location.hostname !== 'localhost') ? (
+              // Production environment
+              <ul className='list-disc list-inside space-y-1 text-sm text-green-700'>
+                <li>Environment variables are set in Vercel</li>
+                <li><strong>Redeploy your application</strong> (Deployments → Latest → Redeploy)</li>
+                <li>Wait for deployment to complete</li>
+                <li>Refresh this page</li>
+              </ul>
+            ) : (
+              // Local development
+              <ul className='list-disc list-inside space-y-1 text-sm text-green-700'>
+                <li>
+                  Save the{' '}
+                  <code className='bg-green-100 px-1 py-0.5 rounded'>
+                    .env.local
+                  </code>{' '}
+                  file
+                </li>
+                <li>Restart your development server</li>
+                <li>Refresh this page</li>
+              </ul>
+            )}
           </div>
 
           <div className='text-center'>
