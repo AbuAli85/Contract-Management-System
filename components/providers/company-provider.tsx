@@ -43,6 +43,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         const response = await fetch(`/api/user/companies${cacheBuster}`, {
           cache: 'no-store',
           signal: controller.signal,
+          credentials: 'include', // Ensure cookies are sent with the request
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache',

@@ -113,7 +113,9 @@ export function CompanySwitcher() {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/user/companies');
+      const response = await fetch('/api/user/companies', {
+        credentials: 'include', // Ensure cookies are sent with the request
+      });
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -157,6 +159,7 @@ export function CompanySwitcher() {
     try {
       const response = await fetch('/api/user/companies', {
         method: 'POST',
+        credentials: 'include', // Ensure cookies are sent with the request
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCompany),
       });

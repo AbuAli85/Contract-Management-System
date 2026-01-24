@@ -176,9 +176,17 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
           return request.cookies.getAll();
         },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+          // Only set cookies on response, not request (request cookies are read-only)
           cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
+            // Ensure cookies are set with proper attributes for cross-origin support
+            const cookieOptions: CookieOptions = {
+              ...options,
+              httpOnly: options?.httpOnly ?? true,
+              sameSite: options?.sameSite ?? 'lax',
+              secure: options?.secure ?? process.env.NODE_ENV === 'production',
+              path: options?.path ?? '/',
+            };
+            response.cookies.set(name, value, cookieOptions);
           });
         },
       },
@@ -205,6 +213,10 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
   } catch (error) {
     // Silently fail - don't break the request if session refresh fails
     // This is expected if there's no valid session
+    // Only log in development for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('[Middleware] Session refresh error (expected if no session):', error);
+    }
   }
 
   return response;
