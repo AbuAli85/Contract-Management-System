@@ -184,6 +184,18 @@ export const createClient = () => {
   if (!supabaseInstance) {
     try {
       supabaseInstance = createSupabaseClient();
+      
+      // Initialize session on client creation to ensure cookies are set
+      // This is important for API routes that need to read the session
+      supabaseInstance.auth.getSession().then(({ data: { session }, error }) => {
+        if (session && !error) {
+          // Session exists, ensure it's synced to cookies
+          // The createBrowserClient should handle this, but we verify
+          console.debug('[SSO] Session initialized on client creation');
+        }
+      }).catch(() => {
+        // Silently fail - session might not exist yet
+      });
     } catch (error) {
       console.error('Failed to create Supabase client:', error);
       return null;
@@ -196,15 +208,101 @@ export const createClient = () => {
 export const supabase = typeof window !== 'undefined' ? createClient() : null;
 
 // Auto-fix old-format cookies on page load
+// Also migrate localStorage session to cookies if needed
 if (typeof window !== 'undefined') {
   // Run after DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       fixOldFormatCookies();
+      migrateLocalStorageToCookies();
     });
   } else {
     // DOM already ready, run immediately
     fixOldFormatCookies();
+    migrateLocalStorageToCookies();
+  }
+}
+
+/**
+ * Migrates session from localStorage to cookies if cookies are missing
+ * This ensures API routes can read the session
+ */
+async function migrateLocalStorageToCookies() {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) return;
+    
+    const supabase = createClient();
+    if (!supabase) return;
+    
+    // Check if we already have a session in cookies
+    const { data: { session: cookieSession } } = await supabase.auth.getSession();
+    if (cookieSession && cookieSession.user) {
+      // Already have session in cookies, no migration needed
+      return;
+    }
+    
+    // Check localStorage for session
+    const localStorageSession = localStorage.getItem('sb-auth-token');
+    if (!localStorageSession) return;
+    
+    try {
+      // Try to parse the localStorage value
+      const sessionData = JSON.parse(localStorageSession);
+      
+      // Check if it's the storage key format (with uuid, version, domain, ts)
+      // This is Supabase's internal storage format - we need to get the actual session
+      if (sessionData.uuid && sessionData.version && sessionData.domain) {
+        console.log('[SSO] Found storage key format in localStorage, attempting to retrieve session...');
+        
+        // Try to get the session using Supabase's internal storage
+        // The createBrowserClient should handle this automatically, but if cookies
+        // are missing, we need to trigger a session refresh
+        try {
+          // Force a session check - Supabase will read from its internal storage
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (session && session.user && !error) {
+            // Session retrieved successfully, it should now be in cookies
+            console.log('[SSO] Successfully retrieved session from storage key');
+            return;
+          } else {
+            // Session might be expired or invalid
+            console.warn('[SSO] Storage key found but session could not be retrieved. Session may be expired.');
+            console.warn('[SSO] Please log in again to refresh your session.');
+            // Don't clear it - let the user decide
+            return;
+          }
+        } catch (retrieveError) {
+          console.warn('[SSO] Could not retrieve session from storage key:', retrieveError);
+          return;
+        }
+      }
+      
+      // Check if it has the required session fields (standard Supabase session format)
+      if (sessionData.access_token && sessionData.refresh_token) {
+        // Set the session in Supabase client, which will sync to cookies
+        await supabase.auth.setSession({
+          access_token: sessionData.access_token,
+          refresh_token: sessionData.refresh_token,
+        });
+        console.log('[SSO] Migrated session from localStorage to cookies');
+      } else if (sessionData.user) {
+        // Has user but no tokens - might be expired, try to refresh
+        const { data: { session: refreshedSession } } = await supabase.auth.getSession();
+        if (refreshedSession) {
+          console.log('[SSO] Refreshed session from localStorage');
+        } else {
+          console.warn('[SSO] Session in localStorage appears expired. Please log in again.');
+        }
+      } else {
+        console.warn('[SSO] localStorage session format not recognized:', Object.keys(sessionData));
+      }
+    } catch (parseError) {
+      console.debug('[SSO] Could not parse localStorage session:', parseError);
+    }
+  } catch (error) {
+    console.debug('[SSO] Error migrating localStorage to cookies:', error);
   }
 }
 
