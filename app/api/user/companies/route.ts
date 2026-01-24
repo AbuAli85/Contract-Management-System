@@ -27,6 +27,35 @@ function isInvalidCompany(companyName: string): boolean {
 // GET: Fetch user's companies
 export async function GET() {
   try {
+    // CRITICAL: Check environment variables first
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('[API /user/companies] Missing environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseAnonKey,
+        nodeEnv: process.env.NODE_ENV,
+        vercelEnv: process.env.VERCEL_ENV,
+      });
+      
+      return NextResponse.json(
+        {
+          error: 'Configuration Error',
+          message: 'Supabase environment variables are not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting platform (Vercel) and redeploy.',
+          details: {
+            missingVariables: [
+              !supabaseUrl && 'NEXT_PUBLIC_SUPABASE_URL',
+              !supabaseAnonKey && 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+            ].filter(Boolean),
+            isProduction: process.env.NODE_ENV === 'production' || !!process.env.VERCEL_ENV,
+            diagnosticEndpoint: '/api/diagnostics/env-check',
+          },
+        },
+        { status: 500 }
+      );
+    }
+    
     // Debug: Log all cookies to diagnose cookie naming issue
     const cookieStore = await cookies();
     const allCookies = cookieStore.getAll();
@@ -38,9 +67,8 @@ export async function GET() {
       supabaseCookies.map(c => ({ name: c.name, hasValue: !!c.value, valueLength: c.value?.length || 0 }))
     );
     
-    // Extract project reference from Supabase URL
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const projectRef = supabaseUrl?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+    // Extract project reference from Supabase URL (already checked above)
+    const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
     console.log('[API /user/companies] Expected cookie prefix:', projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token');
     
     const supabase = await createClient();
