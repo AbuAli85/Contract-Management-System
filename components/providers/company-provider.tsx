@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { createClient } from '@/lib/supabase/client';
+import { syncSessionToSSO } from '@/lib/sso-session-sync';
 
 interface Company {
   id: string;
@@ -32,6 +34,28 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const fetchActiveCompany = async (forceRefresh: boolean = false) => {
     try {
       setIsLoading(true);
+      
+      // CRITICAL: Sync session from localStorage to cookies before making API call
+      // This ensures the API route can read the session
+      try {
+        const supabase = createClient();
+        if (supabase) {
+          // First, try to sync from localStorage
+          await syncSessionToSSO();
+          
+          // Then verify we have a session in cookies
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (!session || error) {
+            console.warn('[CompanyProvider] No session found after sync. User may need to log in again.');
+          } else {
+            console.debug('[CompanyProvider] Session verified before API call');
+          }
+        }
+      } catch (syncError) {
+        console.warn('[CompanyProvider] Error syncing session before API call:', syncError);
+        // Continue anyway - the API will return 401 if session is missing
+      }
+      
       // Add cache-busting to ensure fresh data
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
       

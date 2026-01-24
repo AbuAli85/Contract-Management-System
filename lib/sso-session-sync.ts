@@ -55,38 +55,58 @@ export async function syncSessionToSSO() {
     
     // STEP 2: If no session from cookies, check localStorage
     if (!supabaseSession) {
+      // Check both userSession and sb-auth-token
       const userSession = localStorage.getItem('userSession');
+      const sbAuthToken = localStorage.getItem('sb-auth-token');
       
+      // Try userSession first
+      let sessionData = null;
       if (userSession) {
-        // Parse the session data
-        let sessionData;
         try {
           sessionData = JSON.parse(userSession);
+          console.log('Found userSession in localStorage');
         } catch (e) {
           console.warn('Could not parse userSession:', e);
-          return false;
         }
-
-        // Check if it's a valid session
-        if (sessionData && (sessionData.user || sessionData.access_token || sessionData.session)) {
-          // Extract the actual session object
-          if (sessionData.session) {
-            supabaseSession = sessionData.session;
-          } else if (sessionData.access_token) {
-            // If it has access_token directly, wrap it in session format
-            supabaseSession = {
-              access_token: sessionData.access_token,
-              refresh_token: sessionData.refresh_token,
-              expires_at: sessionData.expires_at,
-              expires_in: sessionData.expires_in,
-              token_type: sessionData.token_type || 'bearer',
-              user: sessionData.user,
-            };
-          } else {
-            supabaseSession = sessionData;
+      }
+      
+      // If no userSession or it's invalid, try sb-auth-token
+      if (!sessionData && sbAuthToken) {
+        try {
+          sessionData = JSON.parse(sbAuthToken);
+          console.log('Found sb-auth-token in localStorage');
+          
+          // Check if it's the storage key format (uuid, version, domain, ts)
+          // This is Supabase's internal storage format - we can't use it directly
+          if (sessionData.uuid && sessionData.version && sessionData.domain) {
+            console.warn('⚠️  Found storage key format in sb-auth-token. This format cannot be used directly.');
+            console.warn('⚠️  The Supabase client should handle this automatically. If cookies are missing, the session may be expired.');
+            // Don't try to use this format - let Supabase handle it
+            sessionData = null;
           }
-          console.log('✅ Found session in localStorage');
+        } catch (e) {
+          console.warn('Could not parse sb-auth-token:', e);
         }
+      }
+      
+      if (sessionData && (sessionData.user || sessionData.access_token || sessionData.session)) {
+        // Extract the actual session object
+        if (sessionData.session) {
+          supabaseSession = sessionData.session;
+        } else if (sessionData.access_token) {
+          // If it has access_token directly, wrap it in session format
+          supabaseSession = {
+            access_token: sessionData.access_token,
+            refresh_token: sessionData.refresh_token,
+            expires_at: sessionData.expires_at,
+            expires_in: sessionData.expires_in,
+            token_type: sessionData.token_type || 'bearer',
+            user: sessionData.user,
+          };
+        } else {
+          supabaseSession = sessionData;
+        }
+        console.log('✅ Found session in localStorage');
       }
     }
     
@@ -105,21 +125,52 @@ export async function syncSessionToSSO() {
           // Use Supabase's setSession to properly set cookies
           // setSession requires both access_token and refresh_token
           if (supabaseSession.refresh_token) {
-            await supabase.auth.setSession({
+            const { data, error } = await supabase.auth.setSession({
               access_token: supabaseSession.access_token,
               refresh_token: supabaseSession.refresh_token,
             });
-            console.log('✅ Session set in Supabase client (cookies updated)');
+            
+            if (error) {
+              console.error('Error setting session:', error);
+              // If setSession fails, the session might be expired
+              // Try to refresh it
+              try {
+                const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                if (refreshError) {
+                  console.warn('⚠️  Session refresh failed. User may need to log in again:', refreshError);
+                } else if (refreshData.session) {
+                  console.log('✅ Session refreshed successfully');
+                }
+              } catch (refreshErr) {
+                console.warn('⚠️  Could not refresh session:', refreshErr);
+              }
+            } else {
+              console.log('✅ Session set in Supabase client (cookies updated)');
+              
+              // Verify cookies were set by checking session again
+              const { data: { session: verifySession } } = await supabase.auth.getSession();
+              if (verifySession && verifySession.user) {
+                console.log('✅ Session verified in cookies');
+              } else {
+                console.warn('⚠️  Session set but not found in cookies. This may cause API route issues.');
+              }
+            }
           } else {
             console.warn('⚠️  No refresh_token available, cookies may not be set correctly');
             // Try to get session from Supabase which might have refresh_token
             const { data: { session: existingSession } } = await supabase.auth.getSession();
             if (existingSession && existingSession.refresh_token) {
-              await supabase.auth.setSession({
+              const { error: setError } = await supabase.auth.setSession({
                 access_token: supabaseSession.access_token,
                 refresh_token: existingSession.refresh_token,
               });
-              console.log('✅ Session set using existing refresh_token');
+              if (!setError) {
+                console.log('✅ Session set using existing refresh_token');
+              } else {
+                console.error('Error setting session with existing refresh_token:', setError);
+              }
+            } else {
+              console.warn('⚠️  No refresh_token found. Session may be expired. User should log in again.');
             }
           }
         } catch (supabaseError) {
