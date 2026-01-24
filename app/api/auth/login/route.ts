@@ -157,7 +157,23 @@ export async function POST(request: NextRequest) {
       retryAfter: undefined,
     });
 
+    // CRITICAL: Force setSession to ensure cookies are set on the response
+    // The signInWithPassword should have set cookies, but we explicitly set them again
+    if (data.session) {
+      const { error: setError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+      
+      if (setError) {
+        console.error('🔐 Failed to set session in cookies:', setError);
+      } else {
+        console.log('🔐 Session set in cookies via setSession');
+      }
+    }
+
     // Create response with success
+    // The cookies should now be set via the Supabase client's cookie handlers
     const response = NextResponse.json(
       AuthErrorHandler.createSuccess(
         {
@@ -173,9 +189,30 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Let Supabase handle cookie management automatically
-    // The createClient() function will handle setting the appropriate cookies
-    console.log('🔐 Login completed, cookies should be set by Supabase');
+    // Verify cookies were set
+    const cookieStore = await import('next/headers').then(m => m.cookies());
+    const allCookies = cookieStore.getAll();
+    const authCookies = allCookies.filter(c => 
+      c.name.includes('sb-') && c.name.includes('auth-token')
+    );
+    
+    if (authCookies.length > 0) {
+      console.log(`🔐 Found ${authCookies.length} auth cookies after login`);
+      // Copy cookies from cookieStore to response
+      authCookies.forEach(cookie => {
+        response.cookies.set(cookie.name, cookie.value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+      });
+    } else {
+      console.warn('🔐 No auth cookies found after login. This will cause 401 errors.');
+    }
+
+    console.log('🔐 Login completed');
 
     return response;
   } catch (error) {

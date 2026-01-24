@@ -30,13 +30,22 @@ export async function createClient() {
         },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
           try {
-            cookiesToSet.forEach(({ name, value, options }: { name: string; value: string; options?: CookieOptions }) =>
-              cookieStore.set(name, value, options as CookieOptions)
-            );
-          } catch {
+            cookiesToSet.forEach(({ name, value, options }: { name: string; value: string; options?: CookieOptions }) => {
+              try {
+                cookieStore.set(name, value, options as CookieOptions);
+              } catch (setError) {
+                // Log the error instead of silently failing
+                console.warn(`[Supabase Server] Failed to set cookie ${name}:`, setError);
+                // In API routes, we might need to handle this differently
+                // But for now, log it so we can debug
+              }
+            });
+          } catch (error) {
+            // Log the error instead of silently failing
+            console.error('[Supabase Server] Error in setAll:', error);
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // user sessions, but we should log it for debugging.
           }
         },
       },
