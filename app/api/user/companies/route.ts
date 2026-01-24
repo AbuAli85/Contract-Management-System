@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { retrySupabaseOperation } from '@/lib/auth/retry';
+import { extractCorrelationId, generateCorrelationId, logWithCorrelation, withCorrelationId } from '@/lib/utils/correlation';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,14 +27,17 @@ function isInvalidCompany(companyName: string): boolean {
 }
 
 // GET: Fetch user's companies
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Extract or generate correlation ID
+  const correlationId = extractCorrelationId(request.headers) || generateCorrelationId();
+  
   try {
     // CRITICAL: Check environment variables first
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('[API /user/companies] Missing environment variables:', {
+      logWithCorrelation(correlationId, 'error', 'Missing environment variables', {
         hasUrl: !!supabaseUrl,
         hasKey: !!supabaseAnonKey,
         nodeEnv: process.env.NODE_ENV,
@@ -50,9 +55,13 @@ export async function GET() {
             ].filter(Boolean),
             isProduction: process.env.NODE_ENV === 'production' || !!process.env.VERCEL_ENV,
             diagnosticEndpoint: '/api/diagnostics/env-check',
+            correlationId,
           },
         },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: withCorrelationId({}, correlationId),
+        }
       );
     }
     
@@ -62,42 +71,76 @@ export async function GET() {
     const supabaseCookies = allCookies.filter(c => 
       c.name.includes('sb-') || c.name.includes('auth-token') || c.name.includes('supabase')
     );
-    console.log('[API /user/companies] All cookies:', allCookies.map(c => c.name));
-    console.log('[API /user/companies] Supabase-related cookies:', 
-      supabaseCookies.map(c => ({ name: c.name, hasValue: !!c.value, valueLength: c.value?.length || 0 }))
-    );
+    logWithCorrelation(correlationId, 'debug', 'Cookie check', {
+      allCookies: allCookies.map(c => c.name),
+      supabaseCookies: supabaseCookies.map(c => ({ 
+        name: c.name, 
+        hasValue: !!c.value, 
+        valueLength: c.value?.length || 0 
+      })),
+    });
     
     // Extract project reference from Supabase URL (already checked above)
     const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
-    console.log('[API /user/companies] Expected cookie prefix:', projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token');
+    logWithCorrelation(correlationId, 'debug', 'Expected cookie prefix', {
+      prefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
+    });
     
     const supabase = await createClient();
 
-    // Try getUser() first (most reliable)
+    // Try getUser() with retry logic (most reliable)
     let user = null;
     let authError = null;
     
     try {
-      const authResult = await supabase.auth.getUser();
+      const authResult = await retrySupabaseOperation(
+        () => supabase.auth.getUser(),
+        {
+          maxRetries: 2,
+          initialDelayMs: 50,
+          onRetry: (attempt, error) => {
+            logWithCorrelation(correlationId, 'warn', `getUser() retry ${attempt}`, {
+              error: error.message,
+            });
+          },
+        }
+      );
+      
       user = authResult.data?.user || null;
       authError = authResult.error;
     } catch (e: any) {
       authError = e;
-      console.error('[API /user/companies] Exception getting user:', e);
+      logWithCorrelation(correlationId, 'error', 'Exception getting user', {
+        error: e.message || String(e),
+      });
     }
     
     // Fallback: Try getSession() if getUser() fails
     if (!user && authError) {
-      console.log('[API /user/companies] getUser() failed, trying getSession() as fallback');
+      logWithCorrelation(correlationId, 'debug', 'getUser() failed, trying getSession() as fallback');
       try {
-        const sessionResult = await supabase.auth.getSession();
+        const sessionResult = await retrySupabaseOperation(
+          () => supabase.auth.getSession(),
+          {
+            maxRetries: 2,
+            initialDelayMs: 50,
+            onRetry: (attempt, error) => {
+              logWithCorrelation(correlationId, 'warn', `getSession() retry ${attempt}`, {
+                error: error.message,
+              });
+            },
+          }
+        );
+        
         if (sessionResult.data?.session?.user) {
           user = sessionResult.data.session.user;
           authError = null;
-          console.log('[API /user/companies] Fallback getSession() succeeded');
+          logWithCorrelation(correlationId, 'info', 'Fallback getSession() succeeded');
         }
       } catch (sessionError: any) {
-        console.error('[API /user/companies] getSession() also failed:', sessionError);
+        logWithCorrelation(correlationId, 'error', 'getSession() also failed', {
+          error: sessionError.message || String(sessionError),
+        });
       }
     }
     
@@ -108,9 +151,10 @@ export async function GET() {
         cookieNames: allCookies.map(c => c.name),
         supabaseCookies: supabaseCookies.map(c => c.name),
         expectedCookiePrefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
+        correlationId,
       };
       
-      console.error('[API /user/companies] Authentication failed:', errorDetails);
+      logWithCorrelation(correlationId, 'error', 'Authentication failed', errorDetails);
       
       return NextResponse.json(
         { 
@@ -120,9 +164,13 @@ export async function GET() {
           troubleshooting: {
             suggestion: 'Your session may have expired. Please refresh the page or sign in again.',
             cookieIssue: supabaseCookies.length === 0 ? 'No Supabase cookies found. This may indicate a session issue.' : undefined,
-          }
+          },
+          correlationId,
         },
-        { status: 401 }
+        { 
+          status: 401,
+          headers: withCorrelationId({}, correlationId),
+        }
       );
     }
 
@@ -893,7 +941,7 @@ export async function GET() {
     const foundCompanyIds = enrichedCompanies.map(c => c.company_id);
     const missingCompanyIds = membershipCompanyIds.filter(id => !foundCompanyIds.includes(id));
     
-    console.log(`[Companies API] Found ${enrichedCompanies.length} companies for user ${user.id}:`, {
+    logWithCorrelation(correlationId, 'info', `Found ${enrichedCompanies.length} companies for user ${user.id}`, {
       sources: enrichedCompanies.map(c => ({ 
         name: c.company_name, 
         source: c.source || 'unknown',
@@ -913,19 +961,35 @@ export async function GET() {
       } : null,
     });
 
+    logWithCorrelation(correlationId, 'info', 'Successfully fetched companies', {
+      count: enrichedCompanies.length,
+    });
+
     return NextResponse.json({
       success: true,
       companies: enrichedCompanies,
       active_company_id: activeCompanyId,
+      correlationId,
+    }, {
+      headers: withCorrelationId({}, correlationId),
     });
   } catch (error: any) {
-    console.error('Error in companies endpoint:', error);
+    // Generate correlation ID if not already set
+    const errorCorrelationId = correlationId || generateCorrelationId();
+    logWithCorrelation(errorCorrelationId, 'error', 'Error in companies endpoint', {
+      error: error.message || String(error),
+      stack: error.stack,
+    });
+    
     // Return empty state instead of error
     return NextResponse.json({
       success: true,
       companies: [],
       active_company_id: null,
       message: 'An error occurred loading companies',
+      correlationId: errorCorrelationId,
+    }, {
+      headers: withCorrelationId({}, errorCorrelationId),
     });
   }
 }

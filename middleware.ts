@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { retryWithBackoff } from '@/lib/auth/retry';
+import { extractCorrelationId, generateCorrelationId, logWithCorrelation } from '@/lib/utils/correlation';
 
 // ========================================
 // RATE LIMITING CONFIGURATION
@@ -169,6 +171,8 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
     return response; // Skip if Supabase not configured
   }
 
+  const correlationId = extractCorrelationId(request.headers) || generateCorrelationId();
+  
   try {
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
@@ -206,11 +210,25 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
       },
     });
 
-    // Get current session
+    // Get current session with retry logic
     const {
       data: { session },
       error: sessionError,
-    } = await supabase.auth.getSession();
+    } = await retryWithBackoff(
+      () => supabase.auth.getSession(),
+      {
+        maxRetries: 2,
+        initialDelayMs: 50,
+        onRetry: (attempt, error) => {
+          logWithCorrelation(
+            correlationId,
+            'warn',
+            `Session check retry ${attempt}`,
+            { error: error.message }
+          );
+        },
+      }
+    );
 
     // Only refresh if we have a valid session
     if (session && !sessionError) {
@@ -220,19 +238,38 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
       const fiveMinutes = 5 * 60 * 1000;
 
       if (expiresAt && (expiresAt - now) < fiveMinutes) {
-        // Session is close to expiring, refresh it
-        await supabase.auth.refreshSession();
+        // Session is close to expiring, refresh it with retry
+        await retryWithBackoff(
+          () => supabase.auth.refreshSession(),
+          {
+            maxRetries: 2,
+            initialDelayMs: 50,
+            onRetry: (attempt, error) => {
+              logWithCorrelation(
+                correlationId,
+                'warn',
+                `Session refresh retry ${attempt}`,
+                { error: error.message }
+              );
+            },
+          }
+        );
       }
     }
   } catch (error) {
-    // Silently fail - don't break the request if session refresh fails
+    // Log error with correlation ID but don't break the request
     // This is expected if there's no valid session
-    // Only log in development for debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.debug('[Middleware] Session refresh error (expected if no session):', error);
-    }
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logWithCorrelation(
+      correlationId,
+      'debug',
+      'Session refresh error (expected if no session)',
+      { error: errorMessage }
+    );
   }
 
+  // Add correlation ID to response headers
+  response.headers.set('X-Correlation-ID', correlationId);
   return response;
 }
 
@@ -244,8 +281,14 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIP(request);
   
+  // Extract or generate correlation ID
+  const correlationId = extractCorrelationId(request.headers) || generateCorrelationId();
+  
   // Create response early for Supabase session refresh
   let response = NextResponse.next();
+  
+  // Add correlation ID to response
+  response.headers.set('X-Correlation-ID', correlationId);
 
   // Apply CORS validation to all API routes
   if (pathname.startsWith('/api/')) {
