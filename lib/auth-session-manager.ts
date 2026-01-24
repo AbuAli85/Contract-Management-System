@@ -96,11 +96,29 @@ export class AuthSessionManager {
   }> {
     try {
       if (!this.supabase) {
-        console.error('🔐 Supabase client not initialized');
+        const hasEnvVars = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+        const isProduction = typeof window !== 'undefined' && 
+          (window.location.hostname.includes('thesmartpro.io') || window.location.hostname.includes('vercel.app'));
+        
+        console.error('🔐 Supabase client not initialized', {
+          hasEnvVars,
+          isProduction,
+          hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+        });
+        
+        const errorMessage = isProduction && !hasEnvVars
+          ? 'Environment variables are missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel and redeploy.'
+          : 'Supabase client not initialized. Please check your environment configuration.';
+        
         return {
           success: false,
-          error: 'Supabase client not initialized',
-          debug: { step: 'client_check', hasSupabase: false },
+          error: errorMessage,
+          debug: { 
+            step: 'client_check', 
+            hasSupabase: false,
+            hasEnvVars,
+            isProduction,
+          },
         };
       }
 

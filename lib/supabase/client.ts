@@ -183,6 +183,20 @@ export const createClient = () => {
 
   if (!supabaseInstance) {
     try {
+      // Check if environment variables are available
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.error('[Supabase Client] Missing environment variables:', {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseAnonKey,
+          isProduction: window.location.hostname.includes('thesmartpro.io') || window.location.hostname.includes('vercel.app'),
+        });
+        console.error('[Supabase Client] Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting platform (Vercel)');
+        return null;
+      }
+      
       supabaseInstance = createSupabaseClient();
       
       // CRITICAL: Force session initialization from localStorage
