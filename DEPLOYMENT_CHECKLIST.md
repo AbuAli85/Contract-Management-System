@@ -1,387 +1,536 @@
-# 🚀 Deployment Checklist - Contract Management System
+# Deployment Checklist & Monitoring Guide
 
-## ✅ Pre-Deployment Steps
+## Pre-Deployment Validation
 
-### 1. Add CSRF Secret to Environment Variables
-
-**In Vercel Dashboard:**
-
-1. Go to your project → Settings → Environment Variables
-2. Add new variable:
-   - **Name:** `CSRF_SECRET`
-   - **Value:** Generate using command below
-   - **Environment:** Production, Preview, Development
-
-**Generate Secret:**
+### 1. Local Testing (15 minutes)
 
 ```bash
-openssl rand -base64 32
+# Start development server
+npm run dev
+
+# Test authentication flow
+# 1. Go to http://localhost:3000/en/auth/login
+# 2. Log in with test credentials
+# 3. Navigate to dashboard
+# 4. Check browser console for correlation IDs
+# 5. Check terminal logs for retry patterns
 ```
 
-Or use this online tool: https://generate-secret.vercel.app/32
+**Expected Logs**:
+```
+[cms-1234567890-abc] Middleware: Session check succeeded
+[cms-1234567890-abc] API /user/companies: Auth succeeded
+```
 
-### 2. Create Social Media Images
+**With Retry** (simulated network issue):
+```
+[cms-1234567890-abc] Auth retry 1: Connection timeout
+[cms-1234567890-abc] Auth succeeded on attempt 2
+```
 
-Create the following images and place them in the `/public/` directory:
+---
 
-**Required:**
-
-- `/public/og-image.png`
-  - Size: 1200 x 630 pixels
-  - Format: PNG or JPG
-  - Use for: Facebook, LinkedIn, Twitter cards
-  - Should include: Logo, app name, tagline
-
-- `/public/apple-touch-icon.png`
-  - Size: 180 x 180 pixels (or 192 x 192)
-  - Format: PNG
-  - Use for: iOS home screen icon
-  - Should include: Square app icon/logo
-
-**Image Creation Tips:**
-
-- Use tools like Canva, Figma, or Photoshop
-- Keep branding consistent
-- Ensure text is readable at small sizes
-- Use high contrast for visibility
-
-### 3. Review Changes
+### 2. Build Verification (5 minutes)
 
 ```bash
-# Check git status
-git status
-
-# Review modified files
-git diff
-```
-
-**Files Modified:**
-
-- ✅ lib/supabase/server.ts
-- ✅ lib/csrf.ts (new)
-- ✅ lib/utils/calculations.ts (new)
-- ✅ app/[locale]/dashboard/page.tsx
-- ✅ app/[locale]/dashboard/settings/page.tsx
-- ✅ app/layout.tsx
-- ✅ package.json (added csrf dependency)
-
----
-
-## 📦 Commit and Deploy
-
-### Commit Changes
-
-```bash
-# Stage all changes
-git add .
-
-# Commit with comprehensive message
-git commit -m "feat: implement security, SEO, and UX improvements
-
-✨ Features:
-- Add secure cookie configuration (HttpOnly, Secure, SameSite)
-- Implement CSRF protection utilities
-- Complete Settings page (Notifications + Integrations)
-- Add JSON-LD structured data for SEO
-- Implement skip navigation for accessibility
-
-🐛 Fixes:
-- Replace hardcoded growth percentages with dynamic calculations
-- Fix NaN compliance rate displays
-- Fix utilization rate calculation
-- Remove '(Build: dev)' from meta description
-
-📈 Improvements:
-- Add comprehensive Open Graph and Twitter Card metadata
-- Add calculation utilities with edge case handling
-- Implement webhook testing in integrations
-- Add proper error handling throughout
-
-🔒 Security:
-- Force secure cookies in production
-- Add CSRF token support
-- Validate data consistency in calculations
-
-♿ Accessibility:
-- Add skip to main content link
-- Improve keyboard navigation
-- Add proper ARIA landmarks"
-
-# Push to GitHub (triggers Vercel deployment)
-git push origin main
-```
-
----
-
-## 🧪 Post-Deployment Testing
-
-### 1. Cookie Security Verification
-
-**Steps:**
-
-1. Open production site: https://portal.thesmartpro.io
-2. Open DevTools (F12) → Application → Cookies
-3. Find Supabase auth cookies (sb-\*)
-
-**Verify:**
-
-- ✅ `Secure` flag is set
-- ✅ `HttpOnly` flag is set
-- ✅ `SameSite` is `Strict`
-- ✅ `Path` is `/`
-
-**Screenshot for documentation:**
-
-```
-Cookie Name: sb-xxxxx-auth-token
-✓ Secure
-✓ HttpOnly
-✓ SameSite: Strict
-✓ Path: /
-```
-
-### 2. SEO Metadata Testing
-
-**Open Graph Validator:**
-
-- Facebook: https://developers.facebook.com/tools/debug/
-- LinkedIn: https://www.linkedin.com/post-inspector/
-- Twitter: https://cards-dev.twitter.com/validator
-
-**Steps:**
-
-1. Enter URL: `https://portal.thesmartpro.io`
-2. Click "Fetch new information"
-3. Verify all metadata displays correctly
-
-**Expected Results:**
-
-- ✅ Title: "Contract Management System | Professional CMS"
-- ✅ Description shows (not "Build: dev")
-- ✅ Image: og-image.png displays
-- ✅ No warnings about missing tags
-
-### 3. Dashboard Growth Calculations
-
-**Test:**
-
-1. Navigate to Dashboard
-2. Check "Total Contracts" card
-3. Observe growth percentage
-
-**Before:** `+12.5% from last month` (hardcoded)  
-**After:** Dynamic calculation or `+100%` if no previous data
-
-**Verify:**
-
-- ✅ No hardcoded 12.5%, 8.3%, 5.2% values
-- ✅ No JavaScript errors in console
-- ✅ Numbers update on refresh
-
-### 4. Settings Functionality
-
-**Notifications Tab:**
-
-1. Navigate to Settings → Notifications
-2. Toggle "Email Notifications" ON
-3. Click "Save Changes"
-4. Verify toast notification appears
-5. Refresh page
-6. Verify toggle is still ON
-
-**Integrations Tab:**
-
-1. Navigate to Settings → Integrations
-2. Enter a Make.com webhook URL (or test URL)
-3. Click "Test Webhook"
-4. Verify success/failure message
-5. Click "Save Settings"
-6. Refresh page
-7. Verify URL persists
-
-### 5. Accessibility Testing
-
-**Skip Navigation:**
-
-1. Open homepage
-2. Press `Tab` key once
-3. Verify "Skip to main content" link appears
-4. Press `Enter`
-5. Verify focus jumps to main content
-
-**Keyboard Navigation:**
-
-- ✅ All interactive elements reachable via Tab
-- ✅ Visible focus indicators
-- ✅ No keyboard traps
-
-### 6. Mobile Responsiveness
-
-**Test on:**
-
-- iPhone (Safari)
-- Android (Chrome)
-- iPad (Safari)
-
-**Verify:**
-
-- ✅ Layout doesn't break
-- ✅ Settings toggles work
-- ✅ Dashboard cards stack properly
-- ✅ Skip link works on mobile
-
----
-
-## 🔍 Monitoring
-
-### Check for Errors
-
-**Vercel Dashboard:**
-
-1. Go to your deployment
-2. Check "Functions" tab for errors
-3. Check "Runtime Logs" for warnings
-
-**Browser Console:**
-
-1. Open DevTools → Console
-2. Refresh page
-3. Verify no errors (red messages)
-4. Warnings (yellow) about theme-color are OK
-
-### Performance
-
-**Lighthouse Test:**
-
-1. Open DevTools → Lighthouse
-2. Run test on production URL
-3. Target scores:
-   - Performance: 90+
-   - Accessibility: 95+
-   - Best Practices: 95+
-   - SEO: 100
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: Cookies not secure in production
-
-**Solution:**
-
-```typescript
-// Verify NODE_ENV in Vercel
-// Should be 'production' automatically
-secure: process.env.NODE_ENV === 'production';
-```
-
-### Issue: Growth percentages show 100%
-
-**Expected:** This is correct if no previous month data exists yet.
-
-**Fix (Optional):** Update APIs to return historical data:
-
-- `app/api/metrics/contracts/route.ts`
-- `app/api/promoters/enhanced-metrics/route.ts`
-
-### Issue: CSRF errors on form submissions
-
-**Check:**
-
-1. CSRF_SECRET is set in Vercel environment variables
-2. Middleware is active (already confirmed)
-3. Browser cookies are enabled
-
-### Issue: Settings don't persist
-
-**Reason:** Currently using localStorage (single device only)
-
-**Future Enhancement:** Move to database user preferences table
-
-### Issue: Webhook test fails
-
-**Verify:**
-
-1. URL is valid (https://...)
-2. Endpoint accepts POST requests
-3. No CORS issues on webhook side
-4. API key (if used) is correct
-
----
-
-## 📊 Success Criteria
-
-After deployment, all should be ✅:
-
-**Security:**
-
-- ✅ All cookies have Secure, HttpOnly, SameSite flags
-- ✅ CSRF_SECRET environment variable is set
-- ✅ No security warnings in Vercel logs
-
-**Functionality:**
-
-- ✅ Dashboard shows dynamic growth calculations
-- ✅ No "NaN" values anywhere
-- ✅ Settings save and load correctly
-- ✅ Webhook test works
-
-**SEO:**
-
-- ✅ Meta description has no "(Build: dev)"
-- ✅ Open Graph tags validate successfully
-- ✅ JSON-LD structured data present
-- ✅ Lighthouse SEO score: 100
-
-**Accessibility:**
-
-- ✅ Skip navigation link works
-- ✅ Keyboard navigation functional
-- ✅ Lighthouse Accessibility score: 95+
-
-**UX:**
-
-- ✅ No console errors
-- ✅ Toast notifications work
-- ✅ Loading states display
-- ✅ Mobile layout correct
-
----
-
-## 📞 Support
-
-**If Issues Occur:**
-
-1. Check Vercel deployment logs
-2. Verify environment variables are set
-3. Test in incognito mode (clear cache)
-4. Check browser console for errors
-5. Review `IMPLEMENTATION_SUMMARY.md` for details
-
-**Common Commands:**
-
-```bash
-# Rebuild locally
+# Build production bundle
 npm run build
 
 # Check for TypeScript errors
-npm run type-check
+npm run typecheck
 
-# Run development server
-npm run dev
+# Check bundle size
+npx next info
+```
+
+**Verify**:
+- ✅ No TypeScript errors
+- ✅ No build warnings about retry/correlation modules
+- ✅ Bundle size is reasonable (should add ~2KB)
+
+---
+
+### 3. Environment Variables Check (5 minutes)
+
+Verify in Vercel/production environment:
+
+```bash
+# Required (already set)
+✅ NEXT_PUBLIC_SUPABASE_URL
+✅ NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# Optional (for enhanced retry)
+RETRY_MAX_ATTEMPTS=3          # Default: 3
+RETRY_INITIAL_DELAY_MS=100    # Default: 100
+RETRY_MAX_DELAY_MS=1000       # Default: 1000
 ```
 
 ---
 
-## 🎉 You're Done!
+## Deployment Steps
 
-Once all checkboxes above are ✅, your deployment is complete and verified.
+### Option A: Vercel (Recommended)
 
-**Next Steps:**
+```bash
+# 1. Commit changes
+git add .
+git commit -m "feat: Add retry logic and correlation IDs for auth resilience"
+git push origin main
 
-1. Monitor analytics for user behavior
-2. Collect feedback on new Settings features
-3. Consider implementing API updates for historical data
-4. Plan for database-backed settings (multi-device sync)
+# 2. Vercel will auto-deploy
+# Monitor: https://vercel.com/your-team/contract-management-system/deployments
 
-**Congratulations on a successful deployment! 🚀**
+# 3. Wait for deployment to complete (~2-3 minutes)
+```
+
+### Option B: Manual Deployment
+
+```bash
+# 1. Build
+npm run build
+
+# 2. Test production build locally
+npm start
+
+# 3. Deploy to your hosting provider
+# (Follow your specific deployment process)
+```
+
+---
+
+## Post-Deployment Validation
+
+### 1. Smoke Tests (10 minutes)
+
+**Test 1: Login Flow**
+```bash
+# 1. Go to https://portal.thesmartpro.io/en/auth/login
+# 2. Open Browser DevTools → Network tab
+# 3. Log in
+# 4. Check for X-Correlation-ID in response headers
+```
+
+**Expected**:
+```
+Response Headers:
+  X-Correlation-ID: cms-1705847321000-xyz123
+  Set-Cookie: sb-reootcngcptfogfozlmz-auth-token=...
+```
+
+---
+
+**Test 2: Protected Route Access**
+```bash
+# 1. Navigate to https://portal.thesmartpro.io/en/dashboard
+# 2. Check Network tab
+# 3. Look for correlation IDs in requests
+```
+
+**Expected**:
+```
+Request Headers:
+  X-Correlation-ID: cms-1705847321000-xyz123
+
+Response:
+  Status: 200 OK
+  X-Correlation-ID: cms-1705847321000-xyz123
+```
+
+---
+
+**Test 3: API Endpoint**
+```bash
+# Using curl
+curl -X GET https://portal.thesmartpro.io/api/user/companies \
+  -H "Cookie: sb-reootcngcptfogfozlmz-auth-token=YOUR_TOKEN" \
+  -v
+
+# Check for X-Correlation-ID in response headers
+```
+
+---
+
+### 2. Error Scenarios (5 minutes)
+
+**Test Session Expiry**:
+```bash
+# 1. Log in
+# 2. Wait for session to expire (or manually delete cookie)
+# 3. Try to access dashboard
+# 4. Should redirect to login with returnUrl
+```
+
+**Expected**:
+```
+Redirect to: /en/auth/login?returnUrl=/en/dashboard
+```
+
+---
+
+**Test Network Failure Simulation**:
+```javascript
+// In browser console (to simulate slow network)
+// Chrome DevTools → Network → Throttling → Slow 3G
+
+// Then try:
+await fetch('/api/user/companies')
+
+// Check console for retry logs
+```
+
+---
+
+### 3. Log Verification (10 minutes)
+
+**Check Vercel Logs**:
+```bash
+# View recent logs
+vercel logs production --follow
+
+# Filter for correlation IDs
+vercel logs production | grep "cms-"
+
+# Filter for retries
+vercel logs production | grep "retry"
+```
+
+**Expected Patterns**:
+```
+[cms-1705847321-abc] Middleware: Session check succeeded
+[cms-1705847322-def] API /user/companies: Auth succeeded
+[cms-1705847323-ghi] Auth retry 1: Token expired
+[cms-1705847323-ghi] Auth succeeded on attempt 2
+```
+
+---
+
+## Monitoring Setup
+
+### 1. Error Tracking
+
+Add to your monitoring service (Sentry/DataDog/etc):
+
+```typescript
+// lib/monitoring/sentry.ts (if using Sentry)
+import * as Sentry from "@sentry/nextjs";
+
+export function captureAuthError(
+  correlationId: string,
+  error: Error,
+  context?: Record<string, any>
+) {
+  Sentry.captureException(error, {
+    tags: {
+      correlationId,
+      type: "auth_error",
+    },
+    extra: context,
+  });
+}
+
+export function captureRetryEvent(
+  correlationId: string,
+  attempt: number,
+  error: Error
+) {
+  // Track retry patterns
+  Sentry.captureMessage(
+    `Auth retry ${attempt}: ${error.message}`,
+    {
+      level: "warning",
+      tags: {
+        correlationId,
+        attempt,
+        type: "auth_retry",
+      },
+    }
+  );
+}
+```
+
+---
+
+### 2. Performance Metrics
+
+Track auth performance:
+
+```typescript
+// lib/monitoring/metrics.ts
+export function trackAuthDuration(
+  correlationId: string,
+  operation: string,
+  duration: number
+) {
+  // Send to your analytics service
+  console.log(JSON.stringify({
+    type: "metric",
+    correlationId,
+    operation,
+    duration,
+    timestamp: Date.now(),
+  }));
+}
+
+// Usage in middleware
+const start = Date.now();
+const result = await retrySupabaseAuth(...);
+trackAuthDuration(correlationId, "session_check", Date.now() - start);
+```
+
+---
+
+### 3. Alert Rules
+
+Set up alerts for:
+
+**High Retry Rate** (indicates network issues):
+```
+Query: Count of "Auth retry" logs > 100 in 5 minutes
+Action: Alert team
+```
+
+**Auth Failures** (after all retries):
+```
+Query: Count of "Auth failed" logs > 50 in 5 minutes
+Action: Page on-call
+```
+
+**Session Refresh Failures**:
+```
+Query: Count of "Session refresh failed" > 20 in 5 minutes
+Action: Alert team
+```
+
+---
+
+## Debugging Guide
+
+### Common Issues & Solutions
+
+#### Issue 1: Still seeing 401 errors
+**Diagnosis**:
+```bash
+# Check correlation ID in error response
+curl -v https://portal.thesmartpro.io/api/user/companies
+
+# Find correlation ID in logs
+vercel logs production | grep "cms-CORRELATION_ID"
+```
+
+**Common Causes**:
+- Session expired (expected behavior)
+- Cookie not being sent (check SameSite/Secure flags)
+- Database RLS blocking query
+
+**Solution**:
+```typescript
+// Check RLS policies in Supabase
+-- Allow users to read their own data
+CREATE POLICY "Users can read own data"
+  ON companies
+  FOR SELECT
+  USING (auth.uid() = user_id);
+```
+
+---
+
+#### Issue 2: Retries exhausted
+**Diagnosis**:
+```bash
+# Look for "retry" patterns in logs
+vercel logs production | grep "retry"
+
+# Check for correlation ID
+vercel logs production | grep "cms-CORRELATION_ID"
+```
+
+**Common Causes**:
+- Supabase service temporarily down
+- Network partition
+- Rate limiting
+
+**Solution**:
+- Increase retry attempts (set `RETRY_MAX_ATTEMPTS=5`)
+- Check Supabase status: https://status.supabase.com
+- Verify network connectivity
+
+---
+
+#### Issue 3: Correlation IDs not appearing
+**Diagnosis**:
+```javascript
+// In browser console
+fetch('/api/user/companies').then(r => {
+  console.log('Correlation ID:', r.headers.get('X-Correlation-ID'));
+});
+```
+
+**Solution**:
+```typescript
+// Ensure middleware is running
+// Check middleware.ts config.matcher
+export const config = {
+  matcher: [
+    "/en/dashboard/:path*",
+    "/api/:path*",
+  ],
+};
+```
+
+---
+
+## Performance Benchmarks
+
+### Expected Performance
+
+**Without Retries** (baseline):
+- Auth check: 50-100ms
+- API call: 100-200ms
+- Total: 150-300ms
+
+**With Retries** (no failures):
+- Auth check: 50-100ms (same)
+- API call: 100-200ms (same)
+- Total: 150-300ms (same)
+
+**With Retries** (1 failure):
+- Retry delay: 100ms
+- Second attempt: 50-100ms
+- Total: 250-400ms
+
+**With Retries** (2 failures):
+- First retry: 100ms delay + 50-100ms
+- Second retry: 200ms delay + 50-100ms
+- Total: 500-700ms
+
+---
+
+## Success Metrics
+
+### Week 1 Goals
+- ✅ 401 errors reduced by 80%+
+- ✅ Correlation IDs in all logs
+- ✅ Retry patterns visible in logs
+- ✅ No increase in P95 latency
+
+### Week 2 Goals
+- ✅ 401 errors reduced by 95%+
+- ✅ Alert rules configured
+- ✅ Monitoring dashboard created
+- ✅ User reports of auth issues decreased
+
+---
+
+## Rollback Plan
+
+If issues arise:
+
+### Quick Rollback (2 minutes)
+```bash
+# Vercel: Instant rollback to previous deployment
+# Go to: https://vercel.com/your-team/contract-management-system/deployments
+# Click: "Promote to Production" on previous deployment
+```
+
+### Git Rollback (5 minutes)
+```bash
+# Revert the commit
+git revert HEAD
+git push origin main
+
+# Vercel will auto-deploy the reverted version
+```
+
+### Files to Revert
+If partial rollback needed:
+1. `lib/auth/retry.ts` (can remove - safe)
+2. `lib/utils/correlation.ts` (can remove - safe)
+3. `middleware.ts` (revert to previous version)
+4. `app/api/user/companies/route.ts` (revert to previous version)
+
+---
+
+## Maintenance
+
+### Weekly Tasks
+- [ ] Review correlation ID patterns in logs
+- [ ] Check retry rate trends
+- [ ] Monitor auth failure rates
+- [ ] Review alert frequency
+
+### Monthly Tasks
+- [ ] Analyze retry patterns by time of day
+- [ ] Optimize retry delays if needed
+- [ ] Review and update alert thresholds
+- [ ] Test rollback procedure
+
+---
+
+## Quick Reference
+
+### Log Search Patterns
+
+```bash
+# All auth operations
+vercel logs production | grep "cms-"
+
+# Retries only
+vercel logs production | grep "retry"
+
+# Failures only
+vercel logs production | grep "failed"
+
+# Specific correlation ID
+vercel logs production | grep "cms-1705847321000-xyz123"
+
+# Last 100 auth events
+vercel logs production --limit 100 | grep "Auth"
+```
+
+### Response Header Check
+
+```bash
+# Check correlation ID in response
+curl -I https://portal.thesmartpro.io/api/user/companies \
+  -H "Cookie: $(echo document.cookie | pbcopy)" \
+  | grep "X-Correlation-ID"
+```
+
+### Browser Console Commands
+
+```javascript
+// Get current correlation ID
+fetch('/api/user/companies')
+  .then(r => console.log('Correlation ID:', r.headers.get('X-Correlation-ID')));
+
+// Test retry behavior (with DevTools throttling)
+// 1. Chrome DevTools → Network → Throttling → Offline
+// 2. Run: fetch('/api/user/companies')
+// 3. Set to: No throttling
+// 4. Check console for retry logs
+```
+
+---
+
+## Summary
+
+### Implementation Complete ✅
+- ✅ Retry logic with exponential backoff
+- ✅ Correlation ID tracking
+- ✅ Enhanced error messages
+- ✅ Session refresh component
+- ✅ Structured logging
+
+### Deploy Now ✅
+1. Commit and push changes
+2. Wait for Vercel deployment
+3. Run smoke tests
+4. Monitor logs for 24 hours
+
+### Success Indicators
+- Correlation IDs appear in logs
+- Retry patterns visible (when needed)
+- 401 errors significantly reduced
+- Better error messages for debugging
+
+**Your authentication is now production-ready with resilience patterns from the MCP server!** 🚀
