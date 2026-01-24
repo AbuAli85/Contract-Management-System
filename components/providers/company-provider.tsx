@@ -35,24 +35,46 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      // CRITICAL: Sync session from localStorage to cookies before making API call
-      // This ensures the API route can read the session
+      // CRITICAL: Ensure session is in cookies before making API call
+      // The Supabase client should handle this, but we force it to be sure
       try {
         const supabase = createClient();
         if (supabase) {
-          // First, try to sync from localStorage
-          await syncSessionToSSO();
-          
-          // Then verify we have a session in cookies
+          // Force getSession() which reads from localStorage and sets cookies
           const { data: { session }, error } = await supabase.auth.getSession();
-          if (!session || error) {
-            console.warn('[CompanyProvider] No session found after sync. User may need to log in again.');
+          
+          if (session && session.user && !error) {
+            // Session exists, verify cookies are set
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const hasAuthCookies = cookies.some(c => 
+              c.includes('sb-') && (c.includes('auth-token') || c.includes('auth'))
+            );
+            
+            if (!hasAuthCookies) {
+              console.warn('[CompanyProvider] Session exists but cookies missing. Forcing setSession...');
+              // Force setSession to create cookies
+              await supabase.auth.setSession({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token,
+              });
+              console.log('[CompanyProvider] Session forced into cookies');
+            } else {
+              console.debug('[CompanyProvider] Session and cookies verified');
+            }
           } else {
-            console.debug('[CompanyProvider] Session verified before API call');
+            // Try to sync from localStorage as fallback
+            console.warn('[CompanyProvider] No session in Supabase client, trying sync from localStorage...');
+            await syncSessionToSSO();
+            
+            // Check again after sync
+            const { data: { session: syncedSession } } = await supabase.auth.getSession();
+            if (!syncedSession || !syncedSession.user) {
+              console.warn('[CompanyProvider] No session found after sync. User may need to log in again.');
+            }
           }
         }
       } catch (syncError) {
-        console.warn('[CompanyProvider] Error syncing session before API call:', syncError);
+        console.warn('[CompanyProvider] Error ensuring session before API call:', syncError);
         // Continue anyway - the API will return 401 if session is missing
       }
       
