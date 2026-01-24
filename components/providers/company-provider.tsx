@@ -51,6 +51,17 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         });
         
         clearTimeout(timeoutId);
+        
+        // Handle 401 Unauthorized - session might be expired
+        if (response.status === 401) {
+          const data = await response.json().catch(() => ({}));
+          console.warn('[CompanyProvider] 401 Unauthorized - session may have expired:', data);
+          setCompany(null);
+          setIsLoading(false);
+          // Don't show error toast for 401 - let the auth system handle it
+          return;
+        }
+        
         const data = await response.json();
 
       if (response.ok && data.success) {

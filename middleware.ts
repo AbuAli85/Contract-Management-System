@@ -178,6 +178,19 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
           // Only set cookies on response, not request (request cookies are read-only)
           cookiesToSet.forEach(({ name, value, options }) => {
+            // Determine domain based on request hostname
+            const hostname = request.headers.get('host') || request.nextUrl.hostname;
+            
+            // Extract root domain for production (e.g., .thesmartpro.io from portal.thesmartpro.io)
+            let domain: string | undefined = undefined;
+            if (hostname && process.env.NODE_ENV === 'production' && !hostname.includes('localhost')) {
+              const parts = hostname.split('.');
+              if (parts.length >= 2) {
+                // Use root domain (e.g., .thesmartpro.io) for subdomain support
+                domain = `.${parts.slice(-2).join('.')}`;
+              }
+            }
+            
             // Ensure cookies are set with proper attributes for cross-origin support
             const cookieOptions: CookieOptions = {
               ...options,
@@ -185,6 +198,7 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
               sameSite: options?.sameSite ?? 'lax',
               secure: options?.secure ?? process.env.NODE_ENV === 'production',
               path: options?.path ?? '/',
+              ...(domain && { domain }), // Only set domain in production
             };
             response.cookies.set(name, value, cookieOptions);
           });
