@@ -202,13 +202,24 @@ export default function DocumentUploadEnhanced({
       }
 
       setUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(5); // Start at 5% to show upload has begun
       setIsReplacing(isReplacement);
+
+      // Start progress simulation immediately to provide user feedback
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 85) {
+            return 85; // Cap at 85% until upload completes
+          }
+          return prev + 5;
+        });
+      }, 200);
 
       try {
         const supabase = createClient();
         if (!supabase) {
-          throw new Error('Failed to create Supabase client');
+          clearInterval(progressInterval);
+          throw new Error('Database connection unavailable. Please refresh the page.');
         }
 
         const {
@@ -216,22 +227,12 @@ export default function DocumentUploadEnhanced({
           error: sessionError,
         } = await supabase.auth.getSession();
         if (sessionError || !session) {
-          throw new Error('You must be logged in to upload files');
+          clearInterval(progressInterval);
+          throw new Error('Your session has expired. Please log in again to upload files.');
         }
 
         const fileName = createCleanFilename(file);
         const filePath = `${fileName}`;
-
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-          setUploadProgress(prev => {
-            if (prev >= 90) {
-              clearInterval(progressInterval);
-              return 90;
-            }
-            return prev + 10;
-          });
-        }, 100);
 
         // Delete old file if replacing
         if (isReplacement && uploadedDocument?.url) {
@@ -341,16 +342,18 @@ export default function DocumentUploadEnhanced({
           description: `${file.name} has been ${isReplacement ? 'replaced' : 'uploaded'}`,
         });
       } catch (error) {
+        clearInterval(progressInterval);
         console.error('Error uploading document:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to upload document';
         toast({
           title: 'Upload failed',
-          description:
-            error instanceof Error ? error.message : 'Failed to upload document',
+          description: errorMessage,
           variant: 'destructive',
         });
+        // Reset progress to show failure
+        setUploadProgress(0);
       } finally {
         setUploading(false);
-        setUploadProgress(0);
         setIsReplacing(false);
       }
     },

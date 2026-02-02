@@ -237,12 +237,23 @@ export default function DocumentUpload({
 
       console.log('Starting file upload:', file.name, file.type, file.size);
       setUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(5); // Start at 5% to show upload has begun
+
+      // Start progress simulation immediately for user feedback
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 85) {
+            return 85; // Cap at 85% until upload completes
+          }
+          return prev + 5;
+        });
+      }, 200);
 
       try {
         const supabase = createClient();
         if (!supabase) {
-          throw new Error('Failed to create Supabase client');
+          clearInterval(progressInterval);
+          throw new Error('Database connection unavailable. Please refresh the page.');
         }
 
         // Check if user is authenticated
@@ -251,7 +262,8 @@ export default function DocumentUpload({
           error: sessionError,
         } = await supabase.auth.getSession();
         if (sessionError || !session) {
-          throw new Error('You must be logged in to upload files');
+          clearInterval(progressInterval);
+          throw new Error('Your session has expired. Please log in again to upload files.');
         }
 
         // Create a unique filename with promoter name and ID
@@ -266,17 +278,6 @@ export default function DocumentUpload({
           file.name.split('.').pop()?.toLowerCase()
         );
         console.log('Upload path:', filePath);
-
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-          setUploadProgress(prev => {
-            if (prev >= 90) {
-              clearInterval(progressInterval);
-              return 90;
-            }
-            return prev + 10;
-          });
-        }, 100);
 
         // Upload file to Supabase Storage with explicit content type
         const { data, error } = await supabase.storage
@@ -379,6 +380,7 @@ export default function DocumentUpload({
           description: `${file.name} has been uploaded`,
         });
       } catch (error) {
+        clearInterval(progressInterval);
         console.error('Error uploading document:', error);
 
         let errorMessage = 'Failed to upload document';

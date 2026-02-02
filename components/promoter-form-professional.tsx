@@ -256,7 +256,16 @@ export default function PromoterFormProfessional(
     try {
       const supabase = createClient();
       if (!supabase) {
-        throw new Error('Failed to create Supabase client');
+        console.error('[Promoter Form] Supabase client is null - environment variables may be missing');
+        // Don't throw error - just set empty employers and continue
+        setEmployers([]);
+        return;
+      }
+
+      // Check if user is authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.warn('[Promoter Form] Session error when fetching employers:', sessionError.message);
       }
 
       const { data, error } = await supabase
@@ -266,21 +275,26 @@ export default function PromoterFormProfessional(
         .order('name_en');
 
       if (error) {
-        throw error;
+        console.error('[Promoter Form] Error fetching employers:', error.message, error.code);
+        // Check for common error types
+        if (error.code === '42501' || error.message?.includes('permission')) {
+          console.warn('[Promoter Form] RLS policy may be blocking employer query');
+        }
+        // Set empty employers instead of throwing
+        setEmployers([]);
+        return;
       }
 
+      console.log('[Promoter Form] Fetched', data?.length || 0, 'employers');
       setEmployers(data || []);
     } catch (error) {
-      // Error fetching employers - handled by toast notification
-      toast({
-        title: 'Error',
-        description: 'Failed to load employers',
-        variant: 'destructive',
-      });
+      // Error fetching employers - handled gracefully
+      console.error('[Promoter Form] Unexpected error fetching employers:', error);
+      setEmployers([]);
     } finally {
       setEmployersLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   // Initialize form data after client-side hydration
   useEffect(() => {
