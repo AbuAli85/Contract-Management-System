@@ -624,6 +624,11 @@ export default function PromoterFormProfessional(
       errors.id_number = 'ID number is required';
     }
 
+    // Employer validation - REQUIRED
+    if (!formData.employer_id || !formData.employer_id.trim()) {
+      errors.employer_id = 'Employer is required - Please select an employer';
+    }
+
     // Email validation - REQUIRED
     if (!formData.email || !formData.email.trim()) {
       errors.email = 'Email address is required';
@@ -1996,33 +2001,28 @@ export default function PromoterFormProfessional(
 
                   <div className='space-y-2'>
                     <Label htmlFor='employer_id'>
-                      Employer <span className='text-blue-600'>(Recommended)</span>
+                      Employer <span className='text-red-500'>*</span>
                     </Label>
                     <Select
                       value={formData.employer_id || ''}
                       onValueChange={value =>
                         handleInputChange(
                           'employer_id',
-                          value === 'clear' || value === 'none' ? '' : value
+                          value === 'clear' ? '' : value
                         )
                       }
-                      disabled={employersLoading}
                     >
-                      <SelectTrigger className={employersLoading ? 'opacity-70' : ''}>
+                      <SelectTrigger className={validationErrors.employer_id ? 'border-red-500' : ''}>
                         <SelectValue
                           placeholder={
                             employersLoading
                               ? 'Loading employers...'
-                              : 'Select employer (optional)'
+                              : 'Select employer'
                           }
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* Always show option to skip/clear */}
-                        <SelectItem value='none' className='text-muted-foreground'>
-                          No employer / Skip
-                        </SelectItem>
-                        {formData.employer_id && formData.employer_id !== 'none' && (
+                        {formData.employer_id && (
                           <SelectItem value='clear' className='text-red-600'>
                             Clear Selection
                           </SelectItem>
@@ -2032,8 +2032,8 @@ export default function PromoterFormProfessional(
                             <span className='animate-pulse'>Loading employers...</span>
                           </div>
                         ) : employers.length === 0 ? (
-                          <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
-                            No employers found - Add employers in Parties section
+                          <div className='px-2 py-4 text-center text-sm text-amber-600'>
+                            No employers found - Please add employers in Manage Parties first
                           </div>
                         ) : (
                           <>
