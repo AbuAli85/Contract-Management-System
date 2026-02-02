@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { UniversalLayout } from '@/components/universal-layout';
+import { HtmlDirUpdater } from '@/components/html-dir-updater';
 import { getDirection, getFontFamily } from '@/lib/i18n/rtl';
 
 export async function generateStaticParams() {
@@ -22,7 +23,7 @@ export default async function SafeLocaleLayout({
     return (
       <div className='p-4 text-red-600'>
         <h1>Invalid locale</h1>
-        <p>The requested locale "{locale}" is not supported.</p>
+        <p>The requested locale &quot;{locale}&quot; is not supported.</p>
       </div>
     );
   }
@@ -37,13 +38,15 @@ export default async function SafeLocaleLayout({
   const direction = getDirection(locale);
   const fontFamily = getFontFamily(locale);
 
+  // Note: Do NOT render <html> and <body> here - they are in the root layout
+  // The root layout provides the Providers context (AuthProvider, etc.)
+  // Rendering nested html/body tags breaks the React context tree
   return (
-    <html lang={locale} dir={direction} className={fontFamily}>
-      <body>
-        <NextIntlClientProvider messages={messages} locale={locale}>
-          <UniversalLayout locale={locale}>{children}</UniversalLayout>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <div dir={direction} className={fontFamily}>
+      <HtmlDirUpdater locale={locale} />
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <UniversalLayout locale={locale}>{children}</UniversalLayout>
+      </NextIntlClientProvider>
+    </div>
   );
 }

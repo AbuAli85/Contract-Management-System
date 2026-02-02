@@ -120,7 +120,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang='en' dir='ltr' suppressHydrationWarning>
+    <html lang='en' suppressHydrationWarning>
       <head>
         {/* Performance and SEO optimizations */}
         <link rel='manifest' href='/manifest.json' />
