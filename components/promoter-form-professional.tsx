@@ -250,22 +250,25 @@ export default function PromoterFormProfessional(
     employer_id: '',
   });
 
-  // Fetch employers for dropdown
+  // Fetch employers for dropdown with timeout
   const fetchEmployers = useCallback(async () => {
     setEmployersLoading(true);
+    
+    // Set a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.warn('[Promoter Form] Employer fetch timeout - taking too long');
+      setEmployersLoading(false);
+      setEmployers([]);
+    }, 10000); // 10 second timeout
+    
     try {
       const supabase = createClient();
       if (!supabase) {
         console.error('[Promoter Form] Supabase client is null - environment variables may be missing');
-        // Don't throw error - just set empty employers and continue
+        clearTimeout(timeoutId);
         setEmployers([]);
+        setEmployersLoading(false);
         return;
-      }
-
-      // Check if user is authenticated
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.warn('[Promoter Form] Session error when fetching employers:', sessionError.message);
       }
 
       const { data, error } = await supabase
@@ -273,6 +276,8 @@ export default function PromoterFormProfessional(
         .select('id, name_en, name_ar')
         .eq('type', 'Employer')
         .order('name_en');
+
+      clearTimeout(timeoutId);
 
       if (error) {
         console.error('[Promoter Form] Error fetching employers:', error.message, error.code);
@@ -288,6 +293,7 @@ export default function PromoterFormProfessional(
       console.log('[Promoter Form] Fetched', data?.length || 0, 'employers');
       setEmployers(data || []);
     } catch (error) {
+      clearTimeout(timeoutId);
       // Error fetching employers - handled gracefully
       console.error('[Promoter Form] Unexpected error fetching employers:', error);
       setEmployers([]);
@@ -1990,36 +1996,44 @@ export default function PromoterFormProfessional(
 
                   <div className='space-y-2'>
                     <Label htmlFor='employer_id'>
-                      Employer <span className='text-blue-600'>*</span>
+                      Employer <span className='text-blue-600'>(Recommended)</span>
                     </Label>
                     <Select
                       value={formData.employer_id || ''}
                       onValueChange={value =>
                         handleInputChange(
                           'employer_id',
-                          value === 'clear' ? '' : value
+                          value === 'clear' || value === 'none' ? '' : value
                         )
                       }
+                      disabled={employersLoading}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={employersLoading ? 'opacity-70' : ''}>
                         <SelectValue
                           placeholder={
                             employersLoading
                               ? 'Loading employers...'
-                              : 'Select employer'
+                              : 'Select employer (optional)'
                           }
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {formData.employer_id && (
+                        {/* Always show option to skip/clear */}
+                        <SelectItem value='none' className='text-muted-foreground'>
+                          No employer / Skip
+                        </SelectItem>
+                        {formData.employer_id && formData.employer_id !== 'none' && (
                           <SelectItem value='clear' className='text-red-600'>
                             Clear Selection
                           </SelectItem>
                         )}
-                        {employers.length === 0 && !employersLoading ? (
-                          <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
-                            No employers found - Add employers in Parties
-                            section
+                        {employersLoading ? (
+                          <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
+                            <span className='animate-pulse'>Loading employers...</span>
+                          </div>
+                        ) : employers.length === 0 ? (
+                          <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
+                            No employers found - Add employers in Parties section
                           </div>
                         ) : (
                           <>
