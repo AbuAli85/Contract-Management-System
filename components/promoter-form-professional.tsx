@@ -624,8 +624,9 @@ export default function PromoterFormProfessional(
       errors.id_number = 'ID number is required';
     }
 
-    // Employer validation - REQUIRED
-    if (!formData.employer_id || !formData.employer_id.trim()) {
+    // Employer validation - Required only if employers are available
+    // Skip validation if employers failed to load to allow form submission
+    if (employers.length > 0 && (!formData.employer_id || !formData.employer_id.trim())) {
       errors.employer_id = 'Employer is required - Please select an employer';
     }
 
@@ -661,23 +662,24 @@ export default function PromoterFormProfessional(
         phoneValidation.error || 'Please enter a valid phone number';
     }
 
-    // ID Card Image validation - REQUIRED for contract generation
+    // ID Card Image validation - Recommended but not blocking
+    // Documents can be uploaded later after promoter is created
     if (!formData.id_card_url || !formData.id_card_url.trim()) {
-      errors.id_card_url = 'ID card image is required for contract generation';
+      // Don't block form submission - just log warning
+      console.warn('[Promoter Form] ID card image not provided - can be added later');
     }
 
     // Passport validation - STRONGLY ENCOURAGED
     if (!formData.passport_number || !formData.passport_number.trim()) {
       // Add warning instead of error to allow submission but encourage passport
-      if (!errors.passport_number) {
-      // Passport number missing - warning shown to user via validation message
-      }
+      console.warn('[Promoter Form] Passport number not provided - recommended for contracts');
     }
 
-    // Passport Image validation - REQUIRED for contract generation
+    // Passport Image validation - Recommended but not blocking
+    // Documents can be uploaded later after promoter is created
     if (!formData.passport_url || !formData.passport_url.trim()) {
-      errors.passport_url =
-        'Passport image is required for contract generation';
+      // Don't block form submission - just log warning
+      console.warn('[Promoter Form] Passport image not provided - can be added later');
     }
 
     // Passport expiry validation - ENCOURAGE with warning
@@ -2001,7 +2003,8 @@ export default function PromoterFormProfessional(
 
                   <div className='space-y-2'>
                     <Label htmlFor='employer_id'>
-                      Employer <span className='text-red-500'>*</span>
+                      Employer {employers.length > 0 && <span className='text-red-500'>*</span>}
+                      {employers.length === 0 && !employersLoading && <span className='text-muted-foreground text-xs'>(Optional - No employers found)</span>}
                     </Label>
                     <Select
                       value={formData.employer_id || ''}
@@ -2017,7 +2020,9 @@ export default function PromoterFormProfessional(
                           placeholder={
                             employersLoading
                               ? 'Loading employers...'
-                              : 'Select employer'
+                              : employers.length > 0 
+                                ? 'Select employer'
+                                : 'No employers available'
                           }
                         />
                       </SelectTrigger>
