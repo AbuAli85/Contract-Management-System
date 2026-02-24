@@ -320,9 +320,9 @@ export default function DocumentReconciliationPage() {
                 : ({ passport_url: publicUrl } as Record<string, string>);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await supabase
+            const { error } = await (supabase as any)
               .from('promoters')
-              .update(updateData as any)
+              .update(updateData)
               .eq('id', issue.promoterId);
 
             if (!error) {
