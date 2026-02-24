@@ -15,8 +15,6 @@ export default async function PendingApprovalPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const params = useParams();
-  const locale = (params?.locale as string) || 'en';
   const { locale } = await params;
 
   return (
