@@ -118,37 +118,40 @@ export default function EmployerPromotersAnalyticsPage() {
           }
 
           // Build employer-promoter mapping
-          const employersWithPromoters: EmployerWithPromoters[] = (
-            employers || []
-          ).map(employer => {
-            const employerContracts =
-              contracts?.filter(
-                c =>
-                  c.employer_id === employer.id ||
-                  c.first_party_id === employer.id
-              ) || [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const employersWithPromoters = ((employers || []) as any[])
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((employer: any) => {
+              const employerContracts =
+                contracts?.filter(
+                  c =>
+                    c.employer_id === employer.id ||
+                    c.first_party_id === employer.id
+                ) || [];
 
-            const promoterIdsFromContracts = [
-              ...new Set(
-                employerContracts
-                  .map(c => c.promoter_id)
-                  .filter((id): id is string => id !== null && id !== undefined)
-              ),
-            ];
+              const promoterIdsFromContracts = [
+                ...new Set(
+                  employerContracts
+                    .map(c => c.promoter_id)
+                    .filter(
+                      (id): id is string => id !== null && id !== undefined
+                    )
+                ),
+              ];
 
-            const employerPromoters =
-              allPromoters?.filter(
-                p =>
-                  p.employer_id === employer.id ||
-                  promoterIdsFromContracts.includes(p.id)
-              ) || [];
+              const employerPromoters =
+                allPromoters?.filter(
+                  p =>
+                    p.employer_id === employer.id ||
+                    promoterIdsFromContracts.includes(p.id)
+                ) || [];
 
-            return {
-              ...employer,
-              promoters: employerPromoters,
-              promoterCount: employerPromoters.length,
-            };
-          });
+              return {
+                ...employer,
+                promoters: employerPromoters,
+                promoterCount: employerPromoters.length,
+              };
+            });
 
           setEmployersData(employersWithPromoters);
           setTotalEmployers(employers?.length || 0);
