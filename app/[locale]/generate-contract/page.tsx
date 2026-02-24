@@ -18,8 +18,7 @@ export default function GenerateContractPage() {
     userRole === 'admin' ||
     userRole === 'super_admin' ||
     userRole === 'manager' ||
-    hasPermission('dashboard.view') ||
-    hasPermission('contracts:create');
+    hasPermission('dashboard.view');
 
   // Add timeout to prevent infinite loading
   useEffect(() => {
