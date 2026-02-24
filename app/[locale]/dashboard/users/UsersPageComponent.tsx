@@ -65,7 +65,7 @@ function relativeTime(date: string | null) {
 
 export default function UsersPageComponent() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   // Basic state
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

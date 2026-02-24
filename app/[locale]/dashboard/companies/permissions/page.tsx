@@ -25,7 +25,7 @@ import { Label } from '@/components/ui/label';
 
 export default function CompanyPermissionsPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const router = useRouter();
   const searchParams = useSearchParams();
   const companyId = searchParams?.get('company_id') ?? null;

@@ -117,7 +117,7 @@ export default function HelpPage() {
         {
           question: 'How do I change my password?',
           answer:
-            'In your Profile page, go to the Account Settings section and click "Change Password". You\'ll need to enter your current password and choose a new one.',
+            'In your Profile page, go to the Account Settings section and click "Change Password". You'll need to enter your current password and choose a new one.',
         },
         {
           question: 'What permissions do I need to access certain features?',

@@ -7,7 +7,7 @@ import { ForcePasswordChange } from '@/components/auth/force-password-change';
 
 export default function ChangePasswordPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [email, setEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [mustChange, setMustChange] = useState(false);

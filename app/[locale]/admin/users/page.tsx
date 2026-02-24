@@ -106,7 +106,7 @@ const STATUS_OPTIONS = [
 
 export default function UserManagementPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);

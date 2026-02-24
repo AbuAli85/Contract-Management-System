@@ -45,7 +45,7 @@ interface Contract {
 
 export default function ApprovedContractsPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

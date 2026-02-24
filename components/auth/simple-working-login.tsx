@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function SimpleWorkingLogin() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

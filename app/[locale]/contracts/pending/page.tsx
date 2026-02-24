@@ -1286,7 +1286,7 @@ function PendingContractsPageContent() {
 // Wrap the entire page with error boundary
 export default function PendingContractsPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   return (
     <ContractsErrorBoundary>
       <PendingContractsPageContent />

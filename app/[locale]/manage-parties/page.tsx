@@ -31,7 +31,7 @@ import type { Party } from '@/lib/types';
  */
 export default function ManagePartiesPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();

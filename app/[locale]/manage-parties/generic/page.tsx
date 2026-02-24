@@ -66,7 +66,7 @@ interface EnhancedParty extends Party {
  */
 export default function GenericPartiesPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const router = useRouter();
   const { toast } = useToast();
 

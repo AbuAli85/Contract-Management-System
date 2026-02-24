@@ -57,7 +57,7 @@ const ROLE_OPTIONS = [
 
 export default function SimpleWorkingSignupFixed() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [formData, setFormData] = useState<SignupFormData>({
     email: '',
     password: '',

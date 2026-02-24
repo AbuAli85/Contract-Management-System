@@ -35,7 +35,7 @@ interface UserProfile {
 
 export default function UnifiedLoginForm() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',

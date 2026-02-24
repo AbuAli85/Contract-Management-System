@@ -38,7 +38,7 @@ interface FormData {
 
 export default function RegisterNewUserPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',

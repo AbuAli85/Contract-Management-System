@@ -44,7 +44,7 @@ import {
 
 export default function PreviewPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {

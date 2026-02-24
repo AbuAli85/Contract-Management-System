@@ -128,7 +128,7 @@ const canDeleteCompany = (userRole: string, companyRole: string): boolean => {
 
 export default function CrossCompanyDashboard() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   const [companies, setCompanies] = useState<CompanyData[]>([]);
   const [grouped, setGrouped] = useState<Record<string, CompanyData[]>>({});
   const [summary, setSummary] = useState<Summary | null>(null);

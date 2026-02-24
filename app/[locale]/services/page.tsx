@@ -39,7 +39,7 @@ interface Service {
 
 export default function ServicesListPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || \'en\';
+  const locale = (params?.locale as string) || 'en';
   return (
     <ErrorBoundary>
       <Suspense fallback={<ServiceCardSkeletonList />}>
