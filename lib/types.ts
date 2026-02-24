@@ -47,9 +47,9 @@ export interface Designation {
 
 export interface Promoter {
   id: string;
-  name_en: string;
-  name_ar: string;
-  id_card_number: string;
+  name_en: string | null;
+  name_ar: string | null;
+  id_card_number: string | null;
   id_card_url?: string | null;
   passport_url?: string | null;
   status?: string | null;
