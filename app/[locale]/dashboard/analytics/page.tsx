@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
           .select('id, name_en')
           .in('id', promoterIds);
         promoterNames = Object.fromEntries(
-          promoters?.map(p => [p.id, p.name_en]) || []
+          promoters?.map(p => [p.id, p.name_en || '']) || []
         );
       }
       setPromoterData(
