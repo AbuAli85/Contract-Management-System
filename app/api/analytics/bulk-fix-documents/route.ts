@@ -72,7 +72,7 @@ export async function POST() {
     for (const promoter of promoters) {
       const result: FixResult = {
         promoterId: promoter.id,
-        promoterName: promoter.name_en,
+        promoterName: promoter.name_en || '',
         fixedIdCard: false,
         fixedPassport: false,
       };
@@ -83,7 +83,7 @@ export async function POST() {
         // Fix ID Card URL if missing
         if (!promoter.id_card_url && promoter.id_card_number) {
           // Try different filename patterns
-          const normalizedName = normalizeFilename(promoter.name_en);
+          const normalizedName = normalizeFilename(promoter.name_en || '');
           const possibleIdCardNames = [
             `${normalizedName}_${promoter.id_card_number}.png`,
             `${normalizedName}_${promoter.id_card_number}.jpeg`,
@@ -114,7 +114,7 @@ export async function POST() {
 
         // Fix Passport URL if missing
         if (!promoter.passport_url && promoter.passport_number) {
-          const normalizedName = normalizeFilename(promoter.name_en);
+          const normalizedName = normalizeFilename(promoter.name_en || '');
           const possiblePassportNames = [
             `${normalizedName}_${promoter.passport_number}.png`,
             `${normalizedName}_${promoter.passport_number}.jpeg`,

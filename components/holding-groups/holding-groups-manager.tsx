@@ -321,7 +321,7 @@ export function HoldingGroupsManager() {
                               variant='ghost'
                               size='sm'
                               onClick={() =>
-                                handleDelete(group.id, group.name_en)
+                                handleDelete(group.id, group.name_en || '')
                               }
                               title='Delete'
                             >

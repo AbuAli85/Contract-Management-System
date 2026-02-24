@@ -104,7 +104,7 @@ export function PromoterDetailsHeader({
             <Avatar className='h-20 w-20'>
               <AvatarImage
                 src={promoter.profile_picture_url}
-                alt={promoter.name_en}
+                alt={promoter.name_en || ''}
                 className='object-cover'
               />
               <AvatarFallback className='text-lg font-semibold'>

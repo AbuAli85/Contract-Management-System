@@ -310,8 +310,8 @@ export default function SimpleContractGenerator({
       const searchLower = promoterSearchTerm.toLowerCase();
       filteredPromoters = filteredPromoters.filter((promoter: any) => {
         return (
-          promoter.name_en.toLowerCase().includes(searchLower) ||
-          promoter.name_ar.toLowerCase().includes(searchLower) ||
+          (promoter.name_en ?? "").toLowerCase().includes(searchLower) ||
+          (promoter.name_ar ?? "").toLowerCase().includes(searchLower) ||
           promoter.mobile_number?.toLowerCase().includes(searchLower) ||
           promoter.id_card_number.toLowerCase().includes(searchLower)
         );
@@ -663,7 +663,7 @@ export default function SimpleContractGenerator({
                               {promoter.profile_picture_url ? (
                                 <img
                                   src={promoter.profile_picture_url}
-                                  alt={promoter.name_en}
+                                  alt={promoter.name_en || ''}
                                   className='w-8 h-8 rounded-full object-cover'
                                 />
                               ) : (

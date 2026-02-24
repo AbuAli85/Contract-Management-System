@@ -247,8 +247,8 @@ export default function SharafDGDeploymentForm({
       // Find Sharaf DG in the clients list (case-insensitive search)
       const sharafDG = clients.find(
         c =>
-          c.name_en.toLowerCase().includes('sharaf') &&
-          c.name_en.toLowerCase().includes('dg')
+          (c.name_en ?? "").toLowerCase().includes('sharaf') &&
+          (c.name_en ?? "").toLowerCase().includes('dg')
       );
 
       if (sharafDG) {

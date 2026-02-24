@@ -342,7 +342,7 @@ export function ProviderManagementDashboard() {
 
   const filteredProviders = providers.filter(provider => {
     const matchesSearch =
-      provider.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (provider.name_en ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       provider.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || provider.status.toLowerCase() === statusFilter;
@@ -669,7 +669,7 @@ export function ProviderManagementDashboard() {
                         </span>
                         <Avatar>
                           <AvatarFallback className='bg-green-100 text-green-600'>
-                            {provider.name_en.charAt(0)}
+                            {(provider.name_en ?? "").charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                       </div>
@@ -878,7 +878,7 @@ export function ProviderManagementDashboard() {
                         <div className='flex items-center gap-3'>
                           <Avatar>
                             <AvatarFallback className='bg-green-100 text-green-600'>
-                              {provider.name_en.charAt(0)}
+                              {(provider.name_en ?? "").charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                           <div>

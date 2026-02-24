@@ -93,12 +93,12 @@ export default function VerifyDocumentUrlsPage() {
         // Skip if promoter is undefined (TypeScript safety check)
         if (!promoter) continue;
 
-        setCurrentPromoter(promoter.name_en);
+        setCurrentPromoter(promoter.name_en || '');
         setProgress(Math.round(((i + 1) / promoters.length) * 100));
 
         const result: VerificationResult = {
           promoterId: promoter.id,
-          promoterName: promoter.name_en,
+          promoterName: promoter.name_en || '',
           idCardExists: false,
           passportExists: false,
           idCardUrl: promoter.id_card_url,

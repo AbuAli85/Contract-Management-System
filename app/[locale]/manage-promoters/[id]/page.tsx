@@ -1400,7 +1400,7 @@ export default function PromoterDetailPage() {
                     >
                       <AvatarImage
                         src={promoterDetails?.profile_picture_url || undefined}
-                        alt={promoterDetails?.name_en}
+                        alt={promoterDetails?.name_en || ''}
                       />
                       <AvatarFallback>
                         {promoterDetails?.name_en?.charAt(0)}

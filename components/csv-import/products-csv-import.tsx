@@ -220,9 +220,9 @@ export function ProductsCSVImport() {
     const supplierMap = new Map<string, string>();
     suppliers?.forEach(supplier => {
       if (supplier.name_en)
-        supplierMap.set(supplier.name_en.toLowerCase(), supplier.id);
+        supplierMap.set((supplier.name_en ?? "").toLowerCase(), supplier.id);
       if (supplier.name_ar)
-        supplierMap.set(supplier.name_ar.toLowerCase(), supplier.id);
+        supplierMap.set((supplier.name_ar ?? "").toLowerCase(), supplier.id);
     });
 
     // Import products one by one

@@ -141,7 +141,7 @@ export default function QuickDocumentFixPage() {
 
           // Fix Passport URL if missing
           if (!promoter.passport_url && promoter.passport_number) {
-            const normalizedName = normalizeFilename(promoter.name_en);
+            const normalizedName = normalizeFilename(promoter.name_en || '');
             const possibleNames = [
               `${normalizedName}_${promoter.passport_number}.png`,
               `${normalizedName}_${promoter.passport_number}.jpeg`,

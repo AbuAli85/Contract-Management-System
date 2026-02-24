@@ -883,11 +883,11 @@ function EnhancedPromotersViewRefactoredContent({
 
         // Try English name first
         if (promoter.name_en?.trim()) {
-          rawName = promoter.name_en.trim();
+          rawName = (promoter.name_en ?? "").trim();
         }
         // Try Arabic name
         else if (promoter.name_ar?.trim()) {
-          rawName = promoter.name_ar.trim();
+          rawName = (promoter.name_ar ?? "").trim();
         }
         // Try legacy name field
         else if ((promoter as any)?.name?.trim()) {
@@ -923,10 +923,10 @@ function EnhancedPromotersViewRefactoredContent({
       const organisationLabel = (() => {
         // Try parties relationship first
         if ((promoter as any)?.parties?.name_en?.trim()) {
-          return (promoter as any).parties.name_en.trim();
+          return (promoter as any).(parties.name_en ?? "").trim();
         }
         if ((promoter as any)?.parties?.name_ar?.trim()) {
-          return (promoter as any).parties.name_ar.trim();
+          return (promoter as any).(parties.name_ar ?? "").trim();
         }
         // Try work location (column doesn't exist in database)
         // if (promoter.work_location?.trim()) {

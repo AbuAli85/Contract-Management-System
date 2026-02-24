@@ -100,9 +100,9 @@ export function RecentPromoters({ limit = 3 }: RecentPromotersProps) {
             >
               <div className='flex items-center space-x-2'>
                 <Avatar className='h-6 w-6'>
-                  <AvatarImage src={undefined} alt={promoter.name_en} />
+                  <AvatarImage src={undefined} alt={promoter.name_en || ''} />
                   <AvatarFallback className='text-xs'>
-                    {promoter.name_en.charAt(0)}
+                    {(promoter.name_en ?? "").charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className='min-w-0 flex-1'>

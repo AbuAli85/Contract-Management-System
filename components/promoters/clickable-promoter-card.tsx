@@ -302,7 +302,7 @@ export function ClickablePromoterCard({
               {promoter.profile_picture_url ? (
                 <img
                   src={promoter.profile_picture_url}
-                  alt={promoter.name_en}
+                  alt={promoter.name_en || ''}
                   className='h-12 w-12 rounded-full object-cover border-2 border-slate-200 group-hover:border-blue-300 transition-colors'
                 />
               ) : (
@@ -513,7 +513,7 @@ export function ClickablePromoterCard({
               {promoter.profile_picture_url ? (
                 <img
                   src={promoter.profile_picture_url}
-                  alt={promoter.name_en}
+                  alt={promoter.name_en || ''}
                   className='h-8 w-8 rounded-full object-cover'
                 />
               ) : (
