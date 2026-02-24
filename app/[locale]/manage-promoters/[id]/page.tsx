@@ -170,7 +170,7 @@ function DocumentStatusDisplay({
   expiryDate,
   documentUrl,
   documentNumber,
-  _documentType,
+  documentType: _documentType,
 }: {
   expiryDate: string | null | undefined;
   documentUrl: string | null | undefined;
