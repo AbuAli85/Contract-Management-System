@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -68,6 +69,8 @@ interface Contract {
 }
 
 function PendingContractsPageContent() {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
