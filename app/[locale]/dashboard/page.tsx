@@ -252,7 +252,7 @@ function DashboardContent() {
   const isPromoter = userRole === 'promoter' || userRole === 'user';
   const _isAdmin = userRole === 'admin' || userRole === 'super_admin';
   const _isManager = userRole === 'manager';
-  const _isEmployer = userRole === 'employer';
+  const _isEmployer = (userRole as string) === 'employer';
   // Build quick stats based on user role
   const quickStats: QuickStat[] = isPromoter
     ? [

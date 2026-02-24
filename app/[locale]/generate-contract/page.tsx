@@ -18,7 +18,6 @@ export default function GenerateContractPage() {
     userRole === 'admin' ||
     userRole === 'super_admin' ||
     userRole === 'manager' ||
-    userRole === 'employer' ||
     hasPermission('dashboard.view') ||
     hasPermission('contracts:create');
 
