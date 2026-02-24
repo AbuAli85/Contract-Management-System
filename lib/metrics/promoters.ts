@@ -125,7 +125,7 @@ export async function getPromoterMetrics(): Promise<PromoterMetrics> {
 
       // On assignments: Count promoters with active contracts
       // This requires checking which promoters have active contracts
-      supabase.rpc('count_promoters_with_active_contracts'),
+      (supabase as any).rpc('count_promoters_with_active_contracts'),
     ]);
 
     // Extract counts with fallbacks

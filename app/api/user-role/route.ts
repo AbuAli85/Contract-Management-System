@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // Try to get role using RPC function
     try {
-      const { data: roleData, error: roleError } = await supabase.rpc(
+      const { data: roleData, error: roleError } = await (supabase as any).rpc(
         'get_user_role',
         { uid: user.id }
       );

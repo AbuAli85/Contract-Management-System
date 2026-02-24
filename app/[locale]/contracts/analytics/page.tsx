@@ -106,25 +106,26 @@ export default function ContractAnalyticsPage() {
     setLoading(true);
     try {
       // Fetch submissions over time
-      const { data: submissionsData, error: submissionsError } =
-        await supabase.rpc('get_contract_submissions_over_time', {
-          start_date: dateRange.startDate.toISOString().split('T')[0],
-          end_date: dateRange.endDate.toISOString().split('T')[0],
-        });
+      const { data: submissionsData, error: submissionsError } = await (
+        supabase as any
+      ).rpc('get_contract_submissions_over_time', {
+        start_date: dateRange.startDate.toISOString().split('T')[0],
+        end_date: dateRange.endDate.toISOString().split('T')[0],
+      });
 
       if (submissionsError) throw submissionsError;
 
       // Fetch approval times
-      const { data: approvalData, error: approvalError } = await supabase.rpc(
-        'get_average_approval_time'
-      );
+      const { data: approvalData, error: approvalError } = await (
+        supabase as any
+      ).rpc('get_average_approval_time');
 
       if (approvalError) throw approvalError;
 
       // Fetch contracts requiring attention
-      const { data: attentionData, error: attentionError } = await supabase.rpc(
-        'get_contracts_requiring_attention'
-      );
+      const { data: attentionData, error: attentionError } = await (
+        supabase as any
+      ).rpc('get_contracts_requiring_attention');
 
       if (attentionError) throw attentionError;
 

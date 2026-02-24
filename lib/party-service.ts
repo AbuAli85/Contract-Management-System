@@ -111,12 +111,11 @@ export async function fetchPartiesWithPagination(
 
     // Apply search filter
     if (params.searchText && params.searchText.trim()) {
-      const { data: searchResults, error: searchError } = await supabase.rpc(
-        'search_parties_with_contacts',
-        {
-          search_text: params.searchText.trim(),
-        }
-      );
+      const { data: searchResults, error: searchError } = await (
+        supabase as any
+      ).rpc('search_parties_with_contacts', {
+        search_text: params.searchText.trim(),
+      });
 
       if (searchError) {
         throw new Error(`Error searching parties: ${searchError.message}`);
@@ -180,9 +179,12 @@ export async function searchParties(searchText: string): Promise<Party[]> {
   return withRetry(async () => {
     const supabase = createClient();
 
-    const { data, error } = await supabase.rpc('search_parties_with_contacts', {
-      search_text: searchText.trim(),
-    });
+    const { data, error } = await (supabase as any).rpc(
+      'search_parties_with_contacts',
+      {
+        search_text: searchText.trim(),
+      }
+    );
 
     if (error) {
       throw new Error(`Error searching parties: ${error.message}`);
@@ -496,7 +498,7 @@ export async function getPartyStatistics(): Promise<{
   return withRetry(async () => {
     const supabase = createClient();
 
-    const { data, error } = await supabase.rpc('get_party_statistics');
+    const { data, error } = await (supabase as any).rpc('get_party_statistics');
 
     if (error) {
       throw new Error(`Error fetching party statistics: ${error.message}`);

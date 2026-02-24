@@ -70,7 +70,7 @@ export default function CommunicationsTimeline({
       try {
         const supabase = createClient();
 
-        const { data, error: fetchError } = await supabase.rpc(
+        const { data, error: fetchError } = await (supabase as any).rpc(
           'get_party_communications',
           {
             p_party_id: partyId,

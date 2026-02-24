@@ -74,7 +74,7 @@ export async function PATCH(
     }
 
     // Update tracking using the database function
-    const { data: result, error: updateError } = await supabase.rpc(
+    const { data: result, error: updateError } = await (supabase as any).rpc(
       'update_tracking_status',
       {
         p_booking_id: bookingId,

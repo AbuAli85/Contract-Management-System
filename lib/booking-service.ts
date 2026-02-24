@@ -161,7 +161,7 @@ export async function getBookingsCount(
     dateTo,
   } = filters;
 
-  const { data, error } = await supabase.rpc('get_bookings_count', {
+  const { data, error } = await (supabase as any).rpc('get_bookings_count', {
     provider_name_filter: providerName || null,
     client_name_filter: clientName || null,
     only_upcoming_filter: onlyUpcoming || null,
@@ -182,7 +182,7 @@ export async function getBucketKpisWithFilters(filters?: {
   dateFrom?: string;
   dateTo?: string;
 }): Promise<BucketKPI[]> {
-  const { data, error } = await supabase.rpc('get_bucket_kpis', {
+  const { data, error } = await (supabase as any).rpc('get_bucket_kpis', {
     provider_filter: filters?.providerFilter || null,
     client_filter: filters?.clientFilter || null,
     service_filter: filters?.serviceFilter || null,
@@ -195,7 +195,9 @@ export async function getBucketKpisWithFilters(filters?: {
 }
 
 export async function refreshBucketKpis(): Promise<void> {
-  const { error } = await supabase.rpc('refresh_bucket_kpis_concurrently');
+  const { error } = await (supabase as any).rpc(
+    'refresh_bucket_kpis_concurrently'
+  );
   if (error) throw error;
 }
 
@@ -203,7 +205,7 @@ export async function refreshBucketKpis(): Promise<void> {
 
 // A) Update booking status
 export async function setBookingStatus(id: string, status: string) {
-  const { error } = await supabase.rpc('update_booking_status', {
+  const { error } = await (supabase as any).rpc('update_booking_status', {
     p_id: id,
     p_status: status,
   });
@@ -222,7 +224,7 @@ export async function createBooking(params: {
   notes?: string;
   clientNotes?: string;
 }): Promise<string> {
-  const { data, error } = await supabase.rpc('create_booking', {
+  const { data, error } = await (supabase as any).rpc('create_booking', {
     p_service_id: params.serviceId,
     p_client_id: params.clientId,
     p_scheduled_at: params.scheduledAt,

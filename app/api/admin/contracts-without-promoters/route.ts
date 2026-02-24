@@ -45,7 +45,7 @@ export const GET = withRBAC(
       }
 
       // Get statistics
-      const { data: stats, error: statsError } = await supabase.rpc(
+      const { data: stats, error: statsError } = await (supabase as any).rpc(
         'get_promoter_assignment_stats'
       );
 
@@ -179,13 +179,12 @@ export const POST = withRBAC(
       }
 
       // Call the suggest_promoters_for_contract function
-      const { data: suggestions, error: suggestError } = await supabase.rpc(
-        'suggest_promoters_for_contract',
-        {
-          p_contract_id: contractId,
-          p_max_suggestions: maxSuggestions,
-        }
-      );
+      const { data: suggestions, error: suggestError } = await (
+        supabase as any
+      ).rpc('suggest_promoters_for_contract', {
+        p_contract_id: contractId,
+        p_max_suggestions: maxSuggestions,
+      });
 
       if (suggestError) {
         console.error('Error generating suggestions:', suggestError);
@@ -290,7 +289,7 @@ export const PUT = withRBAC(
       }
 
       // Call bulk_assign_promoters function
-      const { data: results, error: assignError } = await supabase.rpc(
+      const { data: results, error: assignError } = await (supabase as any).rpc(
         'bulk_assign_promoters',
         {
           p_assignments: validAssignments,

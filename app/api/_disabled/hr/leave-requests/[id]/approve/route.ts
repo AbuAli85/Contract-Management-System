@@ -92,10 +92,13 @@ export async function POST(
 
     // For managers, check if they can approve this specific request
     if (userProfile.role === 'manager') {
-      const { data: isManagerOf } = await supabase.rpc('hr.is_manager_of', {
-        uid: user.id,
-        emp_id: leaveRequest.employee_id,
-      });
+      const { data: isManagerOf } = await (supabase as any).rpc(
+        'hr.is_manager_of',
+        {
+          uid: user.id,
+          emp_id: leaveRequest.employee_id,
+        }
+      );
 
       if (!isManagerOf) {
         return NextResponse.json(

@@ -80,7 +80,9 @@ export async function recordDailyMetrics(): Promise<{
     const supabase = await createClient();
 
     // Call the database function to record all metrics
-    const { data: _data, error } = await supabase.rpc('record_daily_metrics');
+    const { data: _data, error } = await (supabase as any).rpc(
+      'record_daily_metrics'
+    );
 
     if (error) {
       console.error('Error recording daily metrics:', error);
@@ -108,11 +110,14 @@ export async function getMetricTrend(
   try {
     const supabase = await createClient();
 
-    const { data: _data, error } = await supabase.rpc('get_metric_trend', {
-      p_metric_type: metricType,
-      p_metric_name: metricName,
-      p_days_back: daysBack,
-    });
+    const { data: _data, error } = await (supabase as any).rpc(
+      'get_metric_trend',
+      {
+        p_metric_type: metricType,
+        p_metric_name: metricName,
+        p_days_back: daysBack,
+      }
+    );
 
     if (error) {
       console.error('Error getting metric trend:', error);

@@ -277,7 +277,7 @@ export async function POST(
 
     // Refresh materialized view
     try {
-      await supabase.rpc('refresh_user_permissions');
+      await (supabase as any).rpc('refresh_user_permissions');
     } catch (refreshError) {
       console.warn(
         '🔐 RBAC: Failed to refresh materialized view:',
@@ -435,7 +435,7 @@ export async function DELETE(
 
     // Refresh materialized view
     try {
-      await supabase.rpc('refresh_user_permissions');
+      await (supabase as any).rpc('refresh_user_permissions');
     } catch (refreshError) {
       console.warn(
         '🔐 RBAC: Failed to refresh materialized view:',

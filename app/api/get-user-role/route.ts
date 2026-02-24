@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     // First, ensure the user profile exists
     try {
-      await supabase.rpc('ensure_user_profile', { user_id: user.id });
+      await (supabase as any).rpc('ensure_user_profile', { user_id: user.id });
       console.log('✅ Ensured user profile exists');
     } catch (error) {
       console.log('⚠️ Could not ensure user profile:', error);

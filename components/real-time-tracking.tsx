@@ -226,12 +226,15 @@ export function RealTimeTracking({
 
     try {
       // Call the update function
-      const { data, error } = await supabase.rpc('update_tracking_status', {
-        p_booking_id: bookingId,
-        p_new_status: newStatus,
-        p_location_address: locationInput || null,
-        p_notes: notesInput || null,
-      });
+      const { data, error } = await (supabase as any).rpc(
+        'update_tracking_status',
+        {
+          p_booking_id: bookingId,
+          p_new_status: newStatus,
+          p_location_address: locationInput || null,
+          p_notes: notesInput || null,
+        }
+      );
 
       if (error) throw error;
 
