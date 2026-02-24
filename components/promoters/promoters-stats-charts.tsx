@@ -198,7 +198,6 @@ export function PromotersStatsCharts({
                   {/* ID Cards Bar */}
                   <div className='flex-1 space-y-1'>
                     <div className='h-8 bg-orange-100 rounded-md flex items-center justify-center relative overflow-hidden'>
-                      {/* eslint-disable-next-line react/no-inline-styles */}
                       <div
                         className='absolute left-0 top-0 h-full bg-orange-500 transition-all duration-300'
                         style={
@@ -215,7 +214,6 @@ export function PromotersStatsCharts({
                   {/* Passports Bar */}
                   <div className='flex-1 space-y-1'>
                     <div className='h-8 bg-blue-100 rounded-md flex items-center justify-center relative overflow-hidden'>
-                      {/* eslint-disable-next-line react/no-inline-styles */}
                       <div
                         className='absolute left-0 top-0 h-full bg-blue-500 transition-all duration-300'
                         style={
@@ -276,7 +274,6 @@ export function PromotersStatsCharts({
                   </div>
                 </div>
                 <div className='h-2 bg-muted rounded-full overflow-hidden'>
-                  {/* eslint-disable-next-line react/no-inline-styles */}
                   <div
                     className={`h-full ${item.color} transition-all duration-300`}
                     style={
@@ -323,7 +320,6 @@ export function PromotersStatsCharts({
                 </span>
               </div>
               <div className='h-3 bg-muted rounded-full overflow-hidden'>
-                {/* eslint-disable-next-line react/no-inline-styles */}
                 <div
                   className='h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-500'
                   style={

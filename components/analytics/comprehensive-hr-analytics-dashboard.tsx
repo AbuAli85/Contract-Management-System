@@ -506,7 +506,7 @@ export function ComprehensiveHRAnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width='100%' height={400}>
-                <RechartsAreaChart data={metrics.attendance.dailyAttendance}>
+                <AreaChart data={metrics.attendance.dailyAttendance}>
                   <CartesianGrid strokeDasharray='3 3' />
                   <XAxis
                     dataKey='date'
@@ -565,7 +565,7 @@ export function ComprehensiveHRAnalyticsDashboard() {
                     fill={CHART_COLORS.warning}
                     name='Late'
                   />
-                </RechartsAreaChart>
+                </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>

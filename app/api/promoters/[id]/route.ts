@@ -195,7 +195,7 @@ export const GET = withAnyRBAC(
         promoterQuery = promoterQuery.like('id', `${searchId}%`);
       }
 
-      let { data: promoter, error } = await promoterQuery.maybeSingle();
+      const { data: promoter, error } = await promoterQuery.maybeSingle();
 
       if (error) {
         console.error('Error fetching promoter:', error);

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import {
-  extractApiKey,
-  validateApiKey,
-} from '@/lib/api-key-auth';
+import { extractApiKey, validateApiKey } from '@/lib/api-key-auth';
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
