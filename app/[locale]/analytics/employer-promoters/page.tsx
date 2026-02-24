@@ -243,7 +243,9 @@ export default function EmployerPromotersAnalyticsPage() {
                       <div className='flex items-center gap-4'>
                         <Avatar className='h-10 w-10'>
                           <AvatarFallback className='bg-blue-100 text-blue-600'>
-                            {employer.name_en.substring(0, 2).toUpperCase()}
+                            {(employer.name_en ?? '??')
+                              .substring(0, 2)
+                              .toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className='text-left'>
@@ -317,7 +319,7 @@ export default function EmployerPromotersAnalyticsPage() {
                                             }
                                           />
                                           <AvatarFallback className='bg-green-100 text-green-600'>
-                                            {promoter.name_en
+                                            {(promoter.name_en ?? '??')
                                               .substring(0, 2)
                                               .toUpperCase()}
                                           </AvatarFallback>
