@@ -89,7 +89,7 @@ function transformContractData(dbContract: DatabaseContract): ContractData {
     contract_number: dbContract.contract_number,
     first_party: dbContract.first_party
       ? {
-          name_en: dbContract.first_party.name_en,
+          name_en: dbContract.first_party.name_en || '',
           crn: dbContract.first_party.crn || undefined,
           address_en: dbContract.first_party.address_en || undefined,
           contact_person: dbContract.first_party.contact_person || undefined,
@@ -99,7 +99,7 @@ function transformContractData(dbContract: DatabaseContract): ContractData {
       : undefined,
     second_party: dbContract.second_party
       ? {
-          name_en: dbContract.second_party.name_en,
+          name_en: dbContract.second_party.name_en || '',
           contact_person: dbContract.second_party.contact_person || undefined,
           contact_email: dbContract.second_party.contact_email || undefined,
           contact_phone: dbContract.second_party.contact_phone || undefined,
@@ -107,7 +107,7 @@ function transformContractData(dbContract: DatabaseContract): ContractData {
       : undefined,
     promoter: dbContract.promoter
       ? {
-          name_en: dbContract.promoter.name_en,
+          name_en: dbContract.promoter.name_en || '',
           mobile_number: dbContract.promoter.mobile_number || undefined,
           email: dbContract.promoter.email || undefined,
         }
