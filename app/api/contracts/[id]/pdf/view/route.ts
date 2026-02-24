@@ -108,7 +108,7 @@ export const GET = withRBAC(
 
       // Find the correct PDF file in storage - MUST fetch from storage, never generate
       let pdfFileName: string | null = null;
-      const _pdfUrl: string | null = contract.pdf_url || null;
+      let _pdfUrl: string | null = contract.pdf_url || null;
 
       if (!contract.contract_number) {
         console.error('❌ Contract number missing, cannot search for PDF');
