@@ -144,7 +144,7 @@ function DashboardContent() {
 
   // Fetch dashboard statistics with React Query for real-time updates
   // ✅ COMPANY SCOPE: Get company context
-  const { _company, companyId } = useCompany();
+  const { companyId } = useCompany();
   // ✅ COMPANY SWITCH: Automatically refresh data when company switches
   useCompanyDataRefresh();
 
