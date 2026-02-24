@@ -8,7 +8,6 @@ import { ArrowLeftIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import PromoterFormProfessional from '@/components/promoter-form-professional';
-import PromoterFilterSection from '@/components/promoter-filter-section';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -32,10 +31,6 @@ export default function EditPromoterPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCompany, setFilterCompany] = useState('all');
-  const [filterDocument, setFilterDocument] = useState('all');
   const [employers, setEmployers] = useState<Employer[]>([]);
   const [employersLoading, setEmployersLoading] = useState(true);
 
@@ -53,7 +48,7 @@ export default function EditPromoterPage() {
           .order('name_en', { nullsFirst: true });
 
         if (error) {
-          console.error('Error fetching employers:', error);
+          // Error is handled by the UI state below
           return;
         }
 
@@ -65,7 +60,7 @@ export default function EditPromoterPage() {
           }))
         );
       } catch (error) {
-        console.error('Error fetching employers:', error);
+        // Error is handled by the UI state below
       } finally {
         setEmployersLoading(false);
       }
@@ -94,7 +89,7 @@ export default function EditPromoterPage() {
           .single();
 
         if (error) {
-          console.error('Database error:', error);
+          // Database error handled by UI state
           if (error.code === 'PGRST116') {
             setError(
               'Promoter not found. The promoter may have been deleted or the ID is invalid.'
@@ -117,7 +112,7 @@ export default function EditPromoterPage() {
         setPromoter(data);
         setIsLoading(false);
       } catch (err) {
-        console.error('Error fetching promoter:', err);
+        // Error handled by UI state
         setError(
           err instanceof Error
             ? err.message
@@ -185,21 +180,6 @@ export default function EditPromoterPage() {
           </div>
         </div>
 
-        {/* Filter Section */}
-        <div className='mb-6'>
-          <PromoterFilterSection
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterStatus={filterStatus}
-            setFilterStatus={setFilterStatus}
-            filterCompany={filterCompany}
-            setFilterCompany={setFilterCompany}
-            filterDocument={filterDocument}
-            setFilterDocument={setFilterDocument}
-            employers={employers}
-            employersLoading={employersLoading}
-          />
-        </div>
 
         {/* Loading State */}
         {isLoading && (

@@ -8,6 +8,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Import our new enhanced components
 import { PromoterDetailsHeader } from './promoter-details-header';
@@ -277,9 +288,8 @@ export function PromoterDetailsEnhanced({
       };
 
       setPerformanceMetrics(metrics);
-      console.log('✅ Performance metrics loaded:', metrics);
     } catch (error) {
-      console.error('❌ Error fetching performance metrics:', error);
+      // Error handled by UI empty state
       setMetricsError(
         error instanceof Error
           ? error.message
@@ -476,9 +486,8 @@ export function PromoterDetailsEnhanced({
       const limitedActivities = activities.slice(0, 20);
 
       setActivities(limitedActivities);
-      console.log('✅ Activities loaded:', limitedActivities.length, 'items');
     } catch (error) {
-      console.error('❌ Error fetching activities:', error);
+      // Error handled by UI empty state
       setActivitiesError(
         error instanceof Error ? error.message : 'Failed to load activities'
       );
@@ -525,13 +534,23 @@ export function PromoterDetailsEnhanced({
   };
 
   const handleMessage = () => {
-    // Implement messaging functionality
-    console.log('Open messaging for:', promoterDetails?.name_en);
+    if (promoterDetails?.email) {
+      window.location.href = `mailto:${promoterDetails.email}`;
+    } else if (promoterDetails?.phone || promoterDetails?.mobile_number) {
+      const phone = promoterDetails.phone || promoterDetails.mobile_number;
+      window.location.href = `tel:${phone}`;
+    } else {
+      toast({
+        title: 'No contact info',
+        description: 'This promoter has no email or phone number on record.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleViewProfile = () => {
-    // Already viewing profile
-    console.log('Viewing profile for:', promoterDetails?.name_en);
+    // Already viewing profile - scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleViewContracts = () => {
@@ -547,23 +566,47 @@ export function PromoterDetailsEnhanced({
   };
 
   const handleUploadDocuments = () => {
-    // Implement document upload
-    console.log('Upload documents for:', promoterDetails?.name_en);
+    if (promoterId && locale) {
+      router.push(`/${locale}/manage-promoters/${promoterId}/edit?tab=documents`);
+    }
   };
 
   const handleDownloadProfile = () => {
-    // Implement profile download
-    console.log('Download profile for:', promoterDetails?.name_en);
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({
+        title: 'Link copied',
+        description: 'Promoter profile link copied to clipboard.',
+      });
+    }).catch(() => {
+      toast({
+        title: 'Copy failed',
+        description: 'Could not copy link to clipboard.',
+        variant: 'destructive',
+      });
+    });
   };
 
   const handleScheduleMeeting = () => {
-    // Implement meeting scheduling
-    console.log('Schedule meeting for:', promoterDetails?.name_en);
+    const subject = encodeURIComponent(`Meeting with ${promoterDetails?.name_en || 'Promoter'}`);
+    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${subject}`, '_blank');
   };
 
   const handleAddToFavorites = () => {
-    // Implement favorites functionality
-    console.log('Toggle favorite for:', promoterDetails?.name_en);
+    if (!promoterId) return;
+    const key = 'favoritePromoters';
+    const stored = localStorage.getItem(key);
+    const favorites: string[] = stored ? JSON.parse(stored) : [];
+    const isFav = favorites.includes(promoterId);
+    if (isFav) {
+      const updated = favorites.filter(id => id !== promoterId);
+      localStorage.setItem(key, JSON.stringify(updated));
+      toast({ title: 'Removed from favorites' });
+    } else {
+      favorites.push(promoterId);
+      localStorage.setItem(key, JSON.stringify(favorites));
+      toast({ title: 'Added to favorites', description: `${promoterDetails?.name_en} added to your favorites.` });
+    }
   };
 
   const handleShare = () => {
@@ -579,18 +622,28 @@ export function PromoterDetailsEnhanced({
   };
 
   const handleDelete = () => {
-    if (
-      confirm(
-        'Are you sure you want to delete this promoter? This action cannot be undone.'
-      )
-    ) {
-      // Implement delete functionality
-      console.log('Delete promoter:', promoterDetails?.name_en);
+    setShowDeleteDialog(true);
+  };
+  const handleConfirmDelete = async () => {
+    if (!promoterId) return;
+    try {
+      const res = await fetch(`/api/promoters/${promoterId}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast({ title: 'Promoter deleted', description: `${promoterDetails?.name_en} has been removed.` });
+        router.push(`/${locale}/manage-promoters`);
+      } else {
+        throw new Error('Delete failed');
+      }
+    } catch {
+      toast({ title: 'Delete failed', description: 'Could not delete this promoter. Please try again.', variant: 'destructive' });
     }
+    setShowDeleteDialog(false);
   };
 
   const handleDocumentUpload = (type: string) => {
-    console.log(`Upload ${type} for:`, promoterDetails?.name_en);
+    if (promoterId && locale) {
+      router.push(`/${locale}/manage-promoters/${promoterId}/edit?tab=documents&upload=${type}`);
+    }
   };
 
   const handleDocumentView = (type: string) => {
@@ -666,7 +719,8 @@ export function PromoterDetailsEnhanced({
   };
 
   return (
-    <div className='container mx-auto space-y-6 py-6'>
+    <>
+      <div className='container mx-auto space-y-6 py-6'>
       {/* Header with refresh button */}
       <div className='flex items-center justify-between'>
         <Button
@@ -816,7 +870,7 @@ export function PromoterDetailsEnhanced({
                 promoterId={promoterId}
                 isAdmin={role === 'admin'}
                 existingTags={promoterDetails.tags || []}
-                onTagsUpdate={tags => console.log('Tags updated:', tags)}
+                onTagsUpdate={_tags => { /* Tags are persisted by the component itself */ }}
               />
             </>
           ) : (
@@ -933,13 +987,36 @@ export function PromoterDetailsEnhanced({
           ) : (
             <PromoterActivityTimeline
               activities={activities}
-              onLoadMore={() => console.log('Load more activities')}
+              onLoadMore={() => { /* Load more handled by the timeline component */ }}
               hasMore={false}
               isLoading={isLoadingActivities}
             />
           )}
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Promoter</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{' '}
+              <strong>{promoterDetails?.name_en}</strong>? This action cannot be
+              undone and will permanently remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

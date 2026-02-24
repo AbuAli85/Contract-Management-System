@@ -19,8 +19,11 @@ export async function GET(
   const { id: promoter_id } = await params;
   const { searchParams } = new URL(req.url);
   const metric_type = searchParams.get('metric_type');
-  // Placeholder response since promoter_performance_metrics table doesn't exist yet
-  return NextResponse.json([]);
+  // Note: promoter_performance_metrics table not yet in schema
+  // Returns empty array with metadata for graceful UI handling
+  return NextResponse.json([], {
+    headers: { 'X-Data-Source': 'pending-migration' },
+  });
 }
 
 export async function POST(

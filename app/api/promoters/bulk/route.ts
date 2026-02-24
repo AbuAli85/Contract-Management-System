@@ -46,9 +46,6 @@ export const POST = withRBAC(
         });
       }
 
-      console.log(
-        '🔍 API /api/promoters/bulk POST called (RBAC ENABLED, Rate Limited)'
-      );
 
       const cookieStore = await cookies();
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -95,7 +92,6 @@ export const POST = withRBAC(
         );
       }
 
-      console.log('👤 Authenticated user:', user.email);
 
       // Parse and validate request body
       const body = await request.json();
@@ -354,7 +350,6 @@ export const POST = withRBAC(
           );
       }
 
-      console.log(`✅ Bulk action completed: ${result.message}`);
 
       // Add rate limit headers to response
       const responseHeaders = getRateLimitHeaders(rateLimitResult);

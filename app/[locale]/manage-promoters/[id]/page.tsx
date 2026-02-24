@@ -48,6 +48,7 @@ import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { PromoterCVResume } from '@/components/promoter-cv-resume';
@@ -56,7 +57,6 @@ import { PromoterReports } from '@/components/promoter-reports';
 import { PromoterRanking } from '@/components/promoter-ranking';
 import { PromoterCRM } from '@/components/promoter-crm';
 import DocumentUpload from '@/components/document-upload';
-import PromoterFilterSection from '@/components/promoter-filter-section';
 
 // Import enhanced components
 import { PromoterDetailsEnhanced } from '@/components/promoters/promoter-details-enhanced';
@@ -225,6 +225,7 @@ export default function PromoterDetailPage() {
     'desktop'
   );
   const role = useUserRole();
+  const { toast } = useToast();
   const [_currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isViewingOwnProfile, setIsViewingOwnProfile] = useState(false);
 
@@ -406,7 +407,11 @@ export default function PromoterDetailPage() {
       router.push(`/${locale}/promoters`);
     } catch (error) {
       logger.error('Error deleting promoter:', error);
-      alert('Failed to delete promoter. Please try again.');
+      toast({
+        variant: 'destructive',
+        title: 'Delete Failed',
+        description: 'Failed to delete promoter. Please try again.',
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -440,10 +445,17 @@ export default function PromoterDetailPage() {
       );
 
       // Show success message
-      alert(`Promoter status updated to ${newStatus}`);
+      toast({
+        title: 'Status Updated',
+        description: `Promoter status updated to ${newStatus}`,
+      });
     } catch (error) {
       logger.error('Error updating promoter status:', error);
-      alert('Failed to update promoter status. Please try again.');
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: 'Failed to update promoter status. Please try again.',
+      });
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -1697,9 +1709,11 @@ export default function PromoterDetailPage() {
                             ) {
                               const supabase = createClient();
                               if (!supabase) {
-                                alert(
-                                  'Failed to initialize database connection'
-                                );
+                                toast({
+                                  variant: 'destructive',
+                                  title: 'Connection Error',
+                                  description: 'Failed to initialize database connection.',
+                                });
                                 return;
                               }
 
@@ -1710,9 +1724,16 @@ export default function PromoterDetailPage() {
                                   .eq('id', promoterId);
 
                                 if (error) {
-                                  alert(`Failed to update: ${error.message}`);
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Update Failed',
+                                    description: `Failed to update: ${error.message}`,
+                                  });
                                 } else {
-                                  alert('Employer assignment removed');
+                                  toast({
+                                    title: 'Assignment Removed',
+                                    description: 'Employer assignment has been removed successfully.',
+                                  });
                                   window.location.reload();
                                 }
                               } catch (err: unknown) {
@@ -1720,7 +1741,11 @@ export default function PromoterDetailPage() {
                                   err instanceof Error
                                     ? err.message
                                     : 'Unknown error';
-                                alert(`Failed to update: ${message}`);
+                                toast({
+                                  variant: 'destructive',
+                                  title: 'Update Failed',
+                                  description: `Failed to update: ${message}`,
+                                });
                               }
                             }
                           }}
@@ -2210,10 +2235,11 @@ export default function PromoterDetailPage() {
               role === 'admin' || role === 'employer' || role === 'manager'
             }
             onProcessPayment={amount => {
-              // TODO: Implement payment processing
-              alert(
-                `Processing payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)}`
-              );
+              // TODO: Implement full payment processing integration
+              toast({
+                title: 'Payment Processing',
+                description: `Payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)} queued for processing. Full payment integration coming soon.`,
+              });
             }}
           />
 

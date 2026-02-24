@@ -18,8 +18,10 @@ export async function GET(
   const { id: promoter_id } = await params;
   const { searchParams } = new URL(req.url);
   const visibility = searchParams.get('visibility');
-  // Placeholder response since promoter_notes table doesn't exist yet
-  return NextResponse.json([]);
+  // Note: promoter_notes table not yet in schema
+  return NextResponse.json([], {
+    headers: { 'X-Data-Source': 'pending-migration' },
+  });
 }
 
 export async function POST(

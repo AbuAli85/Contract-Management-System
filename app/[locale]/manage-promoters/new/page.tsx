@@ -22,9 +22,7 @@ export default function AddNewPromoterPage() {
   const handleFormSubmit = () => {
     setIsSubmitting(true);
     // Redirect back to promoters list after successful submission
-    setTimeout(() => {
-      router.push(`/${locale}/promoters`);
-    }, 1000);
+    router.push(`/${locale}/promoters`);
   };
 
   const handleCancel = () => {

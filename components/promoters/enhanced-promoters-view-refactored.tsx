@@ -543,6 +543,10 @@ function EnhancedPromotersViewRefactoredContent({
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [showAdvancedExport, setShowAdvancedExport] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [availableCompanies, setAvailableCompanies] = useState<Array<{id: string; name_en: string; name_ar?: string}>>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [isAssigning, setIsAssigning] = useState(false);
 
   const derivedLocale = useMemo(() => {
     if (locale && typeof locale === 'string') return locale;
@@ -805,7 +809,7 @@ function EnhancedPromotersViewRefactoredContent({
         logger.warn('⚠️ Load timeout: Data took too long to load');
         setLoadTimeout(true);
       }
-    }, 30000); // Increased to 30 second timeout to prevent premature timeouts
+    }, 8000); // 8 second timeout - show error state quickly
 
     return () => clearTimeout(timer);
   }, [isLoading, response]);
@@ -1426,6 +1430,42 @@ function EnhancedPromotersViewRefactoredContent({
     [selectedPromoters, sortedPromoters, toast, refetch]
   );
 
+  const handleConfirmAssign = useCallback(async () => {
+    if (!selectedCompanyId) return;
+    setIsAssigning(true);
+    try {
+      const company = availableCompanies.find(c => c.id === selectedCompanyId);
+      const response = await fetch('/api/promoters/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'assign',
+          promoterIds: Array.from(selectedPromoters),
+          companyId: selectedCompanyId,
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Assignment failed');
+      }
+      toast({
+        title: 'Promoters Assigned',
+        description: `Assigned ${selectedPromoters.size} promoter(s) to ${company?.name_en || 'company'}`,
+      });
+      setSelectedPromoters(new Set());
+      setShowAssignDialog(false);
+      await refetch();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Assignment Failed',
+        description: error instanceof Error ? error.message : 'Failed to assign promoters.',
+      });
+    } finally {
+      setIsAssigning(false);
+    }
+  }, [selectedCompanyId, availableCompanies, selectedPromoters, toast, refetch]);
+
   const handleResetFilters = useCallback(() => {
     setSearchTerm('');
     setStatusFilter('all');
@@ -1939,15 +1979,7 @@ function EnhancedPromotersViewRefactoredContent({
           )}
         </header>
 
-        {/* Advanced Export Dialog */}
-        <PromotersAdvancedExport
-          promoters={sortedPromoters}
-          selectedIds={selectedPromoters}
-          isOpen={showAdvancedExport}
-          onClose={() => setShowAdvancedExport(false)}
-        />
-
-        {/* Advanced Export Dialog */}
+         {/* Advanced Export Dialog */}
         <PromotersAdvancedExport
           promoters={sortedPromoters}
           selectedIds={selectedPromoters}
@@ -2022,6 +2054,58 @@ function EnhancedPromotersViewRefactoredContent({
               />
             </section>
           )}
+
+        {/* Bulk Assign Company Dialog */}
+        {showAssignDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-card border rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+              <h2 className="text-lg font-semibold mb-1">Assign to Company</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select a company to assign {selectedPromoters.size} promoter(s) to.
+              </p>
+              <div className="space-y-2 max-h-64 overflow-y-auto mb-4 border rounded-lg p-2">
+                {availableCompanies.map(company => (
+                  <button
+                    key={company.id}
+                    onClick={() => setSelectedCompanyId(company.id)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedCompanyId === company.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-muted'
+                    }`}
+                  >
+                    {company.name_en}
+                    {company.name_ar && (
+                      <span className="block text-xs opacity-70">{company.name_ar}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAssignDialog(false)}
+                  disabled={isAssigning}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmAssign}
+                  disabled={!selectedCompanyId || isAssigning}
+                >
+                  {isAssigning ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Assigning...
+                    </>
+                  ) : (
+                    'Confirm Assignment'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Refresh Indicator */}
         <RefreshIndicator
