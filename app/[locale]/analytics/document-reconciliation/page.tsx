@@ -98,7 +98,16 @@ export default function DocumentReconciliationPage() {
         return;
       }
 
-      const promotersData = promoters || [];
+      type PromoterRow = {
+        id: string;
+        name_en: string | null;
+        name_ar: string | null;
+        id_card_url: string | null;
+        passport_url: string | null;
+        id_card_number: string | null;
+        passport_number: string | null;
+      };
+      const promotersData: PromoterRow[] = (promoters as PromoterRow[] | null) || [];
 
       // Calculate basic stats
       const withIdCard = promotersData.filter(
