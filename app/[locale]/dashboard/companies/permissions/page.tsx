@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams , useParams} from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -119,7 +119,9 @@ export default function CompanyPermissionsPage() {
               You need to have access to at least one company to manage
               permissions.
             </p>
-            <Button onClick={() => router.push(`/${locale}/dashboard/companies`)}>
+            <Button
+              onClick={() => router.push(`/${locale}/dashboard/companies`)}
+            >
               <ArrowLeft className='h-4 w-4 mr-2' />
               Back to Companies
             </Button>

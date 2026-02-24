@@ -567,29 +567,39 @@ export function PromoterDetailsEnhanced({
 
   const handleUploadDocuments = () => {
     if (promoterId && locale) {
-      router.push(`/${locale}/manage-promoters/${promoterId}/edit?tab=documents`);
+      router.push(
+        `/${locale}/manage-promoters/${promoterId}/edit?tab=documents`
+      );
     }
   };
 
   const handleDownloadProfile = () => {
     const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      toast({
-        title: 'Link copied',
-        description: 'Promoter profile link copied to clipboard.',
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        toast({
+          title: 'Link copied',
+          description: 'Promoter profile link copied to clipboard.',
+        });
+      })
+      .catch(() => {
+        toast({
+          title: 'Copy failed',
+          description: 'Could not copy link to clipboard.',
+          variant: 'destructive',
+        });
       });
-    }).catch(() => {
-      toast({
-        title: 'Copy failed',
-        description: 'Could not copy link to clipboard.',
-        variant: 'destructive',
-      });
-    });
   };
 
   const handleScheduleMeeting = () => {
-    const subject = encodeURIComponent(`Meeting with ${promoterDetails?.name_en || 'Promoter'}`);
-    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${subject}`, '_blank');
+    const subject = encodeURIComponent(
+      `Meeting with ${promoterDetails?.name_en || 'Promoter'}`
+    );
+    window.open(
+      `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${subject}`,
+      '_blank'
+    );
   };
 
   const handleAddToFavorites = () => {
@@ -605,7 +615,10 @@ export function PromoterDetailsEnhanced({
     } else {
       favorites.push(promoterId);
       localStorage.setItem(key, JSON.stringify(favorites));
-      toast({ title: 'Added to favorites', description: `${promoterDetails?.name_en} added to your favorites.` });
+      toast({
+        title: 'Added to favorites',
+        description: `${promoterDetails?.name_en} added to your favorites.`,
+      });
     }
   };
 
@@ -627,22 +640,33 @@ export function PromoterDetailsEnhanced({
   const handleConfirmDelete = async () => {
     if (!promoterId) return;
     try {
-      const res = await fetch(`/api/promoters/${promoterId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/promoters/${promoterId}`, {
+        method: 'DELETE',
+      });
       if (res.ok) {
-        toast({ title: 'Promoter deleted', description: `${promoterDetails?.name_en} has been removed.` });
+        toast({
+          title: 'Promoter deleted',
+          description: `${promoterDetails?.name_en} has been removed.`,
+        });
         router.push(`/${locale}/manage-promoters`);
       } else {
         throw new Error('Delete failed');
       }
     } catch {
-      toast({ title: 'Delete failed', description: 'Could not delete this promoter. Please try again.', variant: 'destructive' });
+      toast({
+        title: 'Delete failed',
+        description: 'Could not delete this promoter. Please try again.',
+        variant: 'destructive',
+      });
     }
     setShowDeleteDialog(false);
   };
 
   const handleDocumentUpload = (type: string) => {
     if (promoterId && locale) {
-      router.push(`/${locale}/manage-promoters/${promoterId}/edit?tab=documents&upload=${type}`);
+      router.push(
+        `/${locale}/manage-promoters/${promoterId}/edit?tab=documents&upload=${type}`
+      );
     }
   };
 
@@ -721,279 +745,283 @@ export function PromoterDetailsEnhanced({
   return (
     <>
       <div className='container mx-auto space-y-6 py-6'>
-      {/* Header with refresh button */}
-      <div className='flex items-center justify-between'>
-        <Button
-          variant='outline'
-          onClick={() => router.back()}
-          className='flex items-center gap-2'
-        >
-          <ArrowLeft className='h-4 w-4' />
-          Back
-        </Button>
-        <div className='flex items-center gap-2'>
-          <Badge variant='outline' className='bg-purple-100 text-purple-700'>
-            Intelligence Hub
-          </Badge>
+        {/* Header with refresh button */}
+        <div className='flex items-center justify-between'>
           <Button
             variant='outline'
-            onClick={handleRefresh}
-            disabled={isRefreshing}
+            onClick={() => router.back()}
             className='flex items-center gap-2'
           >
-            <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-            />
-            Refresh
+            <ArrowLeft className='h-4 w-4' />
+            Back
           </Button>
-        </div>
-      </div>
-
-      {/* Enhanced Header */}
-      <PromoterDetailsHeader
-        promoter={promoterDetails}
-        onEdit={handleEdit}
-        onCall={handleCall}
-        onEmail={handleEmail}
-        onMessage={handleMessage}
-        isAdmin={role === 'admin'}
-      />
-
-      {/* Enhanced Tabs with Two-Column Layout */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className='space-y-6'
-      >
-        <TabsList className='grid w-full grid-cols-3 lg:grid-cols-10 gap-1'>
-          <TabsTrigger value='overview' className='text-xs lg:text-sm'>
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value='performance' className='text-xs lg:text-sm'>
-            Performance
-          </TabsTrigger>
-          <TabsTrigger value='analytics' className='text-xs lg:text-sm'>
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value='comparison' className='text-xs lg:text-sm'>
-            Comparison
-          </TabsTrigger>
-          <TabsTrigger value='kpi' className='text-xs lg:text-sm'>
-            KPI & Goals
-          </TabsTrigger>
-          <TabsTrigger value='documents' className='text-xs lg:text-sm'>
-            Documents
-          </TabsTrigger>
-          <TabsTrigger value='compliance' className='text-xs lg:text-sm'>
-            Compliance
-          </TabsTrigger>
-          <TabsTrigger value='contracts' className='text-xs lg:text-sm'>
-            Contracts
-          </TabsTrigger>
-          <TabsTrigger value='notes' className='text-xs lg:text-sm'>
-            Notes
-          </TabsTrigger>
-          <TabsTrigger value='activity' className='text-xs lg:text-sm'>
-            Activity
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab with Two-Column Layout */}
-        <TabsContent value='overview' className='space-y-6'>
-          <PromoterIntelligenceHubLayout
-            promoterData={promoterDetails}
-            performanceMetrics={performanceMetrics}
-            isAdmin={role === 'admin'}
-            onEdit={handleEdit}
-            onCall={handleCall}
-            onEmail={handleEmail}
-            onMessage={handleMessage}
-            onViewProfile={handleViewProfile}
-            onViewContracts={handleViewContracts}
-            onCreateContract={handleCreateContract}
-            onUploadDocuments={handleUploadDocuments}
-            onDownloadProfile={handleDownloadProfile}
-            onScheduleMeeting={handleScheduleMeeting}
-            onAddToFavorites={handleAddToFavorites}
-            onShare={handleShare}
-            onDelete={handleDelete}
-            hasDocuments={
-              !!(promoterDetails.id_card_url || promoterDetails.passport_url)
-            }
-            hasContracts={promoterDetails.contracts.length > 0}
-          >
-            {/* Main Content Area */}
-            <div className='space-y-6'>
-              {isLoadingMetrics ? (
-                <div className='flex items-center justify-center p-8'>
-                  <Loader2 className='h-6 w-6 animate-spin mr-2' />
-                  <span>Loading performance metrics...</span>
-                </div>
-              ) : metricsError ? (
-                <div className='flex items-center justify-center p-8 text-red-600'>
-                  <span>⚠️ {metricsError}</span>
-                </div>
-              ) : performanceMetrics ? (
-                <>
-                  <PromoterGoalWidget
-                    promoterId={promoterId}
-                    performanceMetrics={performanceMetrics}
-                    isAdmin={role === 'admin'}
-                  />
-                  <PromoterPerformanceMetrics metrics={performanceMetrics} />
-                  <PromoterCoachingRecommendations
-                    performanceMetrics={performanceMetrics}
-                    contracts={promoterDetails.contracts}
-                    isAdmin={role === 'admin'}
-                  />
-                </>
-              ) : null}
-            </div>
-          </PromoterIntelligenceHubLayout>
-        </TabsContent>
-
-        {/* Performance Tab */}
-        <TabsContent value='performance' className='space-y-6'>
-          {isLoadingMetrics ? (
-            <div className='flex items-center justify-center p-8'>
-              <Loader2 className='h-6 w-6 animate-spin mr-2' />
-              <span>Loading performance metrics...</span>
-            </div>
-          ) : metricsError ? (
-            <div className='flex items-center justify-center p-8 text-red-600'>
-              <span>⚠️ {metricsError}</span>
-            </div>
-          ) : performanceMetrics ? (
-            <>
-              <PromoterPerformanceMetrics metrics={performanceMetrics} />
-              <PromoterSmartTags
-                promoterId={promoterId}
-                isAdmin={role === 'admin'}
-                existingTags={promoterDetails.tags || []}
-                onTagsUpdate={_tags => { /* Tags are persisted by the component itself */ }}
+          <div className='flex items-center gap-2'>
+            <Badge variant='outline' className='bg-purple-100 text-purple-700'>
+              Intelligence Hub
+            </Badge>
+            <Button
+              variant='outline'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className='flex items-center gap-2'
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
               />
-            </>
-          ) : (
-            <div className='flex items-center justify-center p-8 text-gray-500'>
-              <span>No performance data available</span>
-            </div>
-          )}
-        </TabsContent>
+              Refresh
+            </Button>
+          </div>
+        </div>
 
-        {/* Analytics Dashboard Tab */}
-        <TabsContent value='analytics' className='space-y-6'>
-          {isLoadingMetrics ? (
-            <div className='flex items-center justify-center p-8'>
-              <Loader2 className='h-6 w-6 animate-spin mr-2' />
-              <span>Loading analytics...</span>
-            </div>
-          ) : (
-            <PromoterAnalyticsDashboard
+        {/* Enhanced Header */}
+        <PromoterDetailsHeader
+          promoter={promoterDetails}
+          onEdit={handleEdit}
+          onCall={handleCall}
+          onEmail={handleEmail}
+          onMessage={handleMessage}
+          isAdmin={role === 'admin'}
+        />
+
+        {/* Enhanced Tabs with Two-Column Layout */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className='space-y-6'
+        >
+          <TabsList className='grid w-full grid-cols-3 lg:grid-cols-10 gap-1'>
+            <TabsTrigger value='overview' className='text-xs lg:text-sm'>
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value='performance' className='text-xs lg:text-sm'>
+              Performance
+            </TabsTrigger>
+            <TabsTrigger value='analytics' className='text-xs lg:text-sm'>
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value='comparison' className='text-xs lg:text-sm'>
+              Comparison
+            </TabsTrigger>
+            <TabsTrigger value='kpi' className='text-xs lg:text-sm'>
+              KPI & Goals
+            </TabsTrigger>
+            <TabsTrigger value='documents' className='text-xs lg:text-sm'>
+              Documents
+            </TabsTrigger>
+            <TabsTrigger value='compliance' className='text-xs lg:text-sm'>
+              Compliance
+            </TabsTrigger>
+            <TabsTrigger value='contracts' className='text-xs lg:text-sm'>
+              Contracts
+            </TabsTrigger>
+            <TabsTrigger value='notes' className='text-xs lg:text-sm'>
+              Notes
+            </TabsTrigger>
+            <TabsTrigger value='activity' className='text-xs lg:text-sm'>
+              Activity
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab with Two-Column Layout */}
+          <TabsContent value='overview' className='space-y-6'>
+            <PromoterIntelligenceHubLayout
+              promoterData={promoterDetails}
+              performanceMetrics={performanceMetrics}
+              isAdmin={role === 'admin'}
+              onEdit={handleEdit}
+              onCall={handleCall}
+              onEmail={handleEmail}
+              onMessage={handleMessage}
+              onViewProfile={handleViewProfile}
+              onViewContracts={handleViewContracts}
+              onCreateContract={handleCreateContract}
+              onUploadDocuments={handleUploadDocuments}
+              onDownloadProfile={handleDownloadProfile}
+              onScheduleMeeting={handleScheduleMeeting}
+              onAddToFavorites={handleAddToFavorites}
+              onShare={handleShare}
+              onDelete={handleDelete}
+              hasDocuments={
+                !!(promoterDetails.id_card_url || promoterDetails.passport_url)
+              }
+              hasContracts={promoterDetails.contracts.length > 0}
+            >
+              {/* Main Content Area */}
+              <div className='space-y-6'>
+                {isLoadingMetrics ? (
+                  <div className='flex items-center justify-center p-8'>
+                    <Loader2 className='h-6 w-6 animate-spin mr-2' />
+                    <span>Loading performance metrics...</span>
+                  </div>
+                ) : metricsError ? (
+                  <div className='flex items-center justify-center p-8 text-red-600'>
+                    <span>⚠️ {metricsError}</span>
+                  </div>
+                ) : performanceMetrics ? (
+                  <>
+                    <PromoterGoalWidget
+                      promoterId={promoterId}
+                      performanceMetrics={performanceMetrics}
+                      isAdmin={role === 'admin'}
+                    />
+                    <PromoterPerformanceMetrics metrics={performanceMetrics} />
+                    <PromoterCoachingRecommendations
+                      performanceMetrics={performanceMetrics}
+                      contracts={promoterDetails.contracts}
+                      isAdmin={role === 'admin'}
+                    />
+                  </>
+                ) : null}
+              </div>
+            </PromoterIntelligenceHubLayout>
+          </TabsContent>
+
+          {/* Performance Tab */}
+          <TabsContent value='performance' className='space-y-6'>
+            {isLoadingMetrics ? (
+              <div className='flex items-center justify-center p-8'>
+                <Loader2 className='h-6 w-6 animate-spin mr-2' />
+                <span>Loading performance metrics...</span>
+              </div>
+            ) : metricsError ? (
+              <div className='flex items-center justify-center p-8 text-red-600'>
+                <span>⚠️ {metricsError}</span>
+              </div>
+            ) : performanceMetrics ? (
+              <>
+                <PromoterPerformanceMetrics metrics={performanceMetrics} />
+                <PromoterSmartTags
+                  promoterId={promoterId}
+                  isAdmin={role === 'admin'}
+                  existingTags={promoterDetails.tags || []}
+                  onTagsUpdate={_tags => {
+                    /* Tags are persisted by the component itself */
+                  }}
+                />
+              </>
+            ) : (
+              <div className='flex items-center justify-center p-8 text-gray-500'>
+                <span>No performance data available</span>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Analytics Dashboard Tab */}
+          <TabsContent value='analytics' className='space-y-6'>
+            {isLoadingMetrics ? (
+              <div className='flex items-center justify-center p-8'>
+                <Loader2 className='h-6 w-6 animate-spin mr-2' />
+                <span>Loading analytics...</span>
+              </div>
+            ) : (
+              <PromoterAnalyticsDashboard
+                promoterId={promoterId}
+                promoterData={promoterDetails}
+                performanceMetrics={performanceMetrics || undefined}
+              />
+            )}
+          </TabsContent>
+
+          {/* Comparison View Tab */}
+          <TabsContent value='comparison' className='space-y-6'>
+            {isLoadingMetrics ? (
+              <div className='flex items-center justify-center p-8'>
+                <Loader2 className='h-6 w-6 animate-spin mr-2' />
+                <span>Loading comparison data...</span>
+              </div>
+            ) : performanceMetrics ? (
+              <PromoterComparisonView
+                promoterMetrics={performanceMetrics}
+                promoterName={promoterDetails.name_en}
+              />
+            ) : (
+              <div className='flex items-center justify-center p-8 text-gray-500'>
+                <span>No comparison data available</span>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* KPI Tracker Tab */}
+          <TabsContent value='kpi' className='space-y-6'>
+            <PromoterKPITracker
+              promoterId={promoterId}
+              isAdmin={role === 'admin'}
+            />
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value='documents' className='space-y-6'>
+            <PromoterDocumentHealth
+              documents={documentHealth}
+              onUpload={handleDocumentUpload}
+              onView={handleDocumentView}
+              onDownload={handleDocumentDownload}
+              isAdmin={role === 'admin'}
+            />
+            <PromoterExportPrint
               promoterId={promoterId}
               promoterData={promoterDetails}
-              performanceMetrics={performanceMetrics || undefined}
+              performanceMetrics={performanceMetrics}
+              contracts={promoterDetails.contracts}
+              documents={[]}
             />
-          )}
-        </TabsContent>
+          </TabsContent>
 
-        {/* Comparison View Tab */}
-        <TabsContent value='comparison' className='space-y-6'>
-          {isLoadingMetrics ? (
-            <div className='flex items-center justify-center p-8'>
-              <Loader2 className='h-6 w-6 animate-spin mr-2' />
-              <span>Loading comparison data...</span>
-            </div>
-          ) : performanceMetrics ? (
-            <PromoterComparisonView
-              promoterMetrics={performanceMetrics}
-              promoterName={promoterDetails.name_en}
+          {/* Compliance Tab */}
+          <TabsContent value='compliance' className='space-y-6'>
+            <PromoterComplianceTracker
+              promoterId={promoterId}
+              promoterData={promoterDetails}
+              isAdmin={role === 'admin'}
+              onDocumentUpload={handleDocumentUpload}
+              onDocumentView={handleDocumentView}
             />
-          ) : (
-            <div className='flex items-center justify-center p-8 text-gray-500'>
-              <span>No comparison data available</span>
-            </div>
-          )}
-        </TabsContent>
+          </TabsContent>
 
-        {/* KPI Tracker Tab */}
-        <TabsContent value='kpi' className='space-y-6'>
-          <PromoterKPITracker
-            promoterId={promoterId}
-            isAdmin={role === 'admin'}
-          />
-        </TabsContent>
-
-        {/* Documents Tab */}
-        <TabsContent value='documents' className='space-y-6'>
-          <PromoterDocumentHealth
-            documents={documentHealth}
-            onUpload={handleDocumentUpload}
-            onView={handleDocumentView}
-            onDownload={handleDocumentDownload}
-            isAdmin={role === 'admin'}
-          />
-          <PromoterExportPrint
-            promoterId={promoterId}
-            promoterData={promoterDetails}
-            performanceMetrics={performanceMetrics}
-            contracts={promoterDetails.contracts}
-            documents={[]}
-          />
-        </TabsContent>
-
-        {/* Compliance Tab */}
-        <TabsContent value='compliance' className='space-y-6'>
-          <PromoterComplianceTracker
-            promoterId={promoterId}
-            promoterData={promoterDetails}
-            isAdmin={role === 'admin'}
-            onDocumentUpload={handleDocumentUpload}
-            onDocumentView={handleDocumentView}
-          />
-        </TabsContent>
-
-        {/* Contracts Tab */}
-        <TabsContent value='contracts' className='space-y-6'>
-          <PromoterContractSummary
-            contracts={promoterDetails.contracts}
-            onCreateContract={handleCreateContract}
-            onViewAllContracts={handleViewContracts}
-            onViewContract={handleViewContract}
-            isAdmin={role === 'admin'}
-          />
-        </TabsContent>
-
-        {/* Notes & Comments Tab */}
-        <TabsContent value='notes' className='space-y-6'>
-          <PromoterNotesComments
-            promoterId={promoterId}
-            isAdmin={role === 'admin'}
-            currentUserId='current-user-id'
-            currentUserName={role === 'admin' ? 'Admin User' : 'User'}
-          />
-        </TabsContent>
-
-        {/* Activity Tab */}
-        <TabsContent value='activity' className='space-y-6'>
-          {isLoadingActivities ? (
-            <div className='flex items-center justify-center p-8'>
-              <Loader2 className='h-6 w-6 animate-spin mr-2' />
-              <span>Loading activity timeline...</span>
-            </div>
-          ) : activitiesError ? (
-            <div className='flex items-center justify-center p-8 text-red-600'>
-              <span>⚠️ {activitiesError}</span>
-            </div>
-          ) : (
-            <PromoterActivityTimeline
-              activities={activities}
-              onLoadMore={() => { /* Load more handled by the timeline component */ }}
-              hasMore={false}
-              isLoading={isLoadingActivities}
+          {/* Contracts Tab */}
+          <TabsContent value='contracts' className='space-y-6'>
+            <PromoterContractSummary
+              contracts={promoterDetails.contracts}
+              onCreateContract={handleCreateContract}
+              onViewAllContracts={handleViewContracts}
+              onViewContract={handleViewContract}
+              isAdmin={role === 'admin'}
             />
-          )}
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+
+          {/* Notes & Comments Tab */}
+          <TabsContent value='notes' className='space-y-6'>
+            <PromoterNotesComments
+              promoterId={promoterId}
+              isAdmin={role === 'admin'}
+              currentUserId='current-user-id'
+              currentUserName={role === 'admin' ? 'Admin User' : 'User'}
+            />
+          </TabsContent>
+
+          {/* Activity Tab */}
+          <TabsContent value='activity' className='space-y-6'>
+            {isLoadingActivities ? (
+              <div className='flex items-center justify-center p-8'>
+                <Loader2 className='h-6 w-6 animate-spin mr-2' />
+                <span>Loading activity timeline...</span>
+              </div>
+            ) : activitiesError ? (
+              <div className='flex items-center justify-center p-8 text-red-600'>
+                <span>⚠️ {activitiesError}</span>
+              </div>
+            ) : (
+              <PromoterActivityTimeline
+                activities={activities}
+                onLoadMore={() => {
+                  /* Load more handled by the timeline component */
+                }}
+                hasMore={false}
+                isLoading={isLoadingActivities}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

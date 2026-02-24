@@ -78,7 +78,9 @@ export function SettingsView() {
   const locale = (params?.locale as string) || 'en';
   const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
-  const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error'>(
+    'checking'
+  );
 
   useEffect(() => {
     try {
@@ -104,7 +106,10 @@ export function SettingsView() {
     checkDb();
   }, []);
 
-  const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
+  const updateSetting = <K extends keyof SettingsState>(
+    key: K,
+    value: SettingsState[K]
+  ) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -118,12 +123,21 @@ export function SettingsView() {
       } else if (settings.theme === 'light') {
         root.classList.remove('dark');
       } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const prefersDark = window.matchMedia(
+          '(prefers-color-scheme: dark)'
+        ).matches;
         root.classList.toggle('dark', prefersDark);
       }
-      toast({ title: 'Settings Saved', description: 'Your preferences have been updated successfully.' });
+      toast({
+        title: 'Settings Saved',
+        description: 'Your preferences have been updated successfully.',
+      });
     } catch {
-      toast({ title: 'Error', description: 'Failed to save settings.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
     }
@@ -132,7 +146,10 @@ export function SettingsView() {
   const handleReset = () => {
     setSettings(DEFAULT_SETTINGS);
     localStorage.removeItem('app-settings');
-    toast({ title: 'Settings Reset', description: 'All settings restored to defaults.' });
+    toast({
+      title: 'Settings Reset',
+      description: 'All settings restored to defaults.',
+    });
   };
 
   return (
@@ -144,7 +161,9 @@ export function SettingsView() {
           </div>
           <div>
             <h1 className='text-2xl font-bold'>Settings</h1>
-            <p className='text-muted-foreground'>Manage your application settings and preferences</p>
+            <p className='text-muted-foreground'>
+              Manage your application settings and preferences
+            </p>
           </div>
         </div>
         <div className='flex items-center gap-2'>
@@ -153,7 +172,11 @@ export function SettingsView() {
             Reset
           </Button>
           <Button size='sm' onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 className='h-4 w-4 mr-2 animate-spin' /> : <Save className='h-4 w-4 mr-2' />}
+            {isSaving ? (
+              <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+            ) : (
+              <Save className='h-4 w-4 mr-2' />
+            )}
             Save Changes
           </Button>
         </div>
@@ -162,16 +185,27 @@ export function SettingsView() {
       <div className='grid gap-6 md:grid-cols-2'>
         <Card>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'><Database className='w-4 h-4' />System Status</CardTitle>
-            <CardDescription>Current system health and configuration</CardDescription>
+            <CardTitle className='flex items-center gap-2'>
+              <Database className='w-4 h-4' />
+              System Status
+            </CardTitle>
+            <CardDescription>
+              Current system health and configuration
+            </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='flex items-center justify-between'>
               <span className='text-sm'>Database</span>
               {dbStatus === 'checking' ? (
-                <Badge variant='outline' className='gap-1'><Loader2 className='h-3 w-3 animate-spin' />Checking</Badge>
+                <Badge variant='outline' className='gap-1'>
+                  <Loader2 className='h-3 w-3 animate-spin' />
+                  Checking
+                </Badge>
               ) : dbStatus === 'connected' ? (
-                <Badge className='bg-green-100 text-green-800 border-green-200 gap-1'><CheckCircle className='h-3 w-3' />Connected</Badge>
+                <Badge className='bg-green-100 text-green-800 border-green-200 gap-1'>
+                  <CheckCircle className='h-3 w-3' />
+                  Connected
+                </Badge>
               ) : (
                 <Badge variant='destructive'>Error</Badge>
               )}
@@ -182,19 +216,29 @@ export function SettingsView() {
             </div>
             <div className='flex items-center justify-between'>
               <span className='text-sm'>Logged in as</span>
-              <span className='text-sm text-muted-foreground truncate max-w-[180px]'>{user?.email || 'Unknown'}</span>
+              <span className='text-sm text-muted-foreground truncate max-w-[180px]'>
+                {user?.email || 'Unknown'}
+              </span>
             </div>
             <Separator />
             <Button variant='outline' size='sm' className='w-full' asChild>
-              <Link href={`/${locale}/dashboard/profile`}><User className='h-4 w-4 mr-2' />Manage Profile</Link>
+              <Link href={`/${locale}/dashboard/profile`}>
+                <User className='h-4 w-4 mr-2' />
+                Manage Profile
+              </Link>
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'><Shield className='w-4 h-4' />Security</CardTitle>
-            <CardDescription>Authentication and security preferences</CardDescription>
+            <CardTitle className='flex items-center gap-2'>
+              <Shield className='w-4 h-4' />
+              Security
+            </CardTitle>
+            <CardDescription>
+              Authentication and security preferences
+            </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='flex items-center justify-between'>
@@ -203,8 +247,13 @@ export function SettingsView() {
             </div>
             <div className='space-y-2'>
               <Label className='text-sm'>Session Timeout</Label>
-              <Select value={String(settings.sessionTimeout)} onValueChange={v => updateSetting('sessionTimeout', Number(v))}>
-                <SelectTrigger className='h-8'><SelectValue /></SelectTrigger>
+              <Select
+                value={String(settings.sessionTimeout)}
+                onValueChange={v => updateSetting('sessionTimeout', Number(v))}
+              >
+                <SelectTrigger className='h-8'>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='15'>15 minutes</SelectItem>
                   <SelectItem value='30'>30 minutes</SelectItem>
@@ -216,25 +265,37 @@ export function SettingsView() {
             </div>
             <Separator />
             <Button variant='outline' size='sm' className='w-full' asChild>
-              <Link href={`/${locale}/auth/change-password`}><Shield className='h-4 w-4 mr-2' />Change Password</Link>
+              <Link href={`/${locale}/auth/change-password`}>
+                <Shield className='h-4 w-4 mr-2' />
+                Change Password
+              </Link>
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'><Bell className='w-4 h-4' />Notifications</CardTitle>
-            <CardDescription>Configure notification preferences and alerts</CardDescription>
+            <CardTitle className='flex items-center gap-2'>
+              <Bell className='w-4 h-4' />
+              Notifications
+            </CardTitle>
+            <CardDescription>
+              Configure notification preferences and alerts
+            </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
-            {([
-              { id: 'emailNotifications', label: 'Email Notifications' },
-              { id: 'pushNotifications', label: 'Push Notifications' },
-              { id: 'contractAlerts', label: 'Contract Expiry Alerts' },
-              { id: 'weeklyDigest', label: 'Weekly Digest Email' },
-            ] as const).map(item => (
+            {(
+              [
+                { id: 'emailNotifications', label: 'Email Notifications' },
+                { id: 'pushNotifications', label: 'Push Notifications' },
+                { id: 'contractAlerts', label: 'Contract Expiry Alerts' },
+                { id: 'weeklyDigest', label: 'Weekly Digest Email' },
+              ] as const
+            ).map(item => (
               <div key={item.id} className='flex items-center justify-between'>
-                <Label htmlFor={item.id} className='text-sm cursor-pointer'>{item.label}</Label>
+                <Label htmlFor={item.id} className='text-sm cursor-pointer'>
+                  {item.label}
+                </Label>
                 <Switch
                   id={item.id}
                   checked={settings[item.id]}
@@ -247,14 +308,24 @@ export function SettingsView() {
 
         <Card>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'><Globe className='w-4 h-4' />Localization</CardTitle>
-            <CardDescription>Language, timezone and regional preferences</CardDescription>
+            <CardTitle className='flex items-center gap-2'>
+              <Globe className='w-4 h-4' />
+              Localization
+            </CardTitle>
+            <CardDescription>
+              Language, timezone and regional preferences
+            </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='space-y-2'>
               <Label className='text-sm'>Language</Label>
-              <Select value={settings.language} onValueChange={v => updateSetting('language', v as 'en' | 'ar')}>
-                <SelectTrigger className='h-8'><SelectValue /></SelectTrigger>
+              <Select
+                value={settings.language}
+                onValueChange={v => updateSetting('language', v as 'en' | 'ar')}
+              >
+                <SelectTrigger className='h-8'>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='en'>English</SelectItem>
                   <SelectItem value='ar'>العربية (Arabic)</SelectItem>
@@ -262,12 +333,22 @@ export function SettingsView() {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label className='text-sm flex items-center gap-1'><Clock className='h-3 w-3' />Timezone</Label>
-              <Select value={settings.timezone} onValueChange={v => updateSetting('timezone', v)}>
-                <SelectTrigger className='h-8'><SelectValue /></SelectTrigger>
+              <Label className='text-sm flex items-center gap-1'>
+                <Clock className='h-3 w-3' />
+                Timezone
+              </Label>
+              <Select
+                value={settings.timezone}
+                onValueChange={v => updateSetting('timezone', v)}
+              >
+                <SelectTrigger className='h-8'>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {TIMEZONES.map(tz => (
-                    <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -278,8 +359,13 @@ export function SettingsView() {
 
       <Card>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'><Palette className='w-4 h-4' />Appearance</CardTitle>
-          <CardDescription>Customize the look and feel of your application</CardDescription>
+          <CardTitle className='flex items-center gap-2'>
+            <Palette className='w-4 h-4' />
+            Appearance
+          </CardTitle>
+          <CardDescription>
+            Customize the look and feel of your application
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className='grid grid-cols-3 gap-4'>
@@ -301,9 +387,16 @@ export function SettingsView() {
       </Card>
 
       <div className='flex justify-end gap-2 pt-2'>
-        <Button variant='outline' onClick={handleReset}><RefreshCw className='h-4 w-4 mr-2' />Reset to Defaults</Button>
+        <Button variant='outline' onClick={handleReset}>
+          <RefreshCw className='h-4 w-4 mr-2' />
+          Reset to Defaults
+        </Button>
         <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? <Loader2 className='h-4 w-4 mr-2 animate-spin' /> : <Save className='h-4 w-4 mr-2' />}
+          {isSaving ? (
+            <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+          ) : (
+            <Save className='h-4 w-4 mr-2' />
+          )}
           Save Changes
         </Button>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter , useParams} from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 // Remove demo session dependency
 // import { demoSessionManager, type DemoUser } from '@/lib/auth/demo-session';

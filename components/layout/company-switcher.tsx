@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter , useParams} from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-service';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useCompany } from '@/components/providers/company-provider';

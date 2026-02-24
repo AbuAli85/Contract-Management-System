@@ -13,7 +13,7 @@ import { FilePlus, UserPlus, Sun, User, LogOut } from 'lucide-react';
 import GlobalSearch from '@/components/global-search';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { useRouter , useParams} from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { CompanySwitcher } from '@/components/layout/company-switcher';
 import { isRTL } from '@/lib/i18n/rtl';
 

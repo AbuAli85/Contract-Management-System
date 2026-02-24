@@ -38,7 +38,8 @@ export default function ForgotPasswordPage() {
 
   const validateEmail = (value: string): string => {
     if (!value.trim()) return 'Email address is required';
-    if (!/\S+@\S+\.\S+/.test(value)) return 'Please enter a valid email address';
+    if (!/\S+@\S+\.\S+/.test(value))
+      return 'Please enter a valid email address';
     return '';
   };
 
@@ -97,11 +98,15 @@ export default function ForgotPasswordPage() {
                   <CheckCircle className='h-8 w-8 text-green-600' />
                 </div>
               </div>
-              <h2 className='text-xl font-semibold text-slate-800 mb-2'>Check your email</h2>
+              <h2 className='text-xl font-semibold text-slate-800 mb-2'>
+                Check your email
+              </h2>
               <p className='text-slate-500 text-sm mb-2'>
                 We&apos;ve sent a password reset link to
               </p>
-              <p className='font-semibold text-slate-800 text-sm mb-6 break-all'>{email}</p>
+              <p className='font-semibold text-slate-800 text-sm mb-6 break-all'>
+                {email}
+              </p>
               <p className='text-slate-400 text-xs mb-6'>
                 Didn&apos;t receive the email? Check your spam folder, or{' '}
                 <button
@@ -138,7 +143,9 @@ export default function ForgotPasswordPage() {
             <Shield className='h-8 w-8 text-white' />
           </div>
           <h1 className='text-2xl font-bold text-white'>SmartPro CMS</h1>
-          <p className='text-slate-400 text-sm mt-1'>Contract Management System</p>
+          <p className='text-slate-400 text-sm mt-1'>
+            Contract Management System
+          </p>
         </div>
         <Card className='border-0 shadow-2xl bg-white/95 backdrop-blur-sm'>
           <CardHeader className='pb-4 pt-6 px-6'>
@@ -151,13 +158,17 @@ export default function ForgotPasswordPage() {
               Forgot your password?
             </CardTitle>
             <CardDescription className='text-center text-slate-500'>
-              Enter your email address and we&apos;ll send you a secure link to reset your password.
+              Enter your email address and we&apos;ll send you a secure link to
+              reset your password.
             </CardDescription>
           </CardHeader>
           <CardContent className='px-6 pb-6'>
             <form onSubmit={handleSubmit} className='space-y-4' noValidate>
               <div className='space-y-1.5'>
-                <Label htmlFor='email' className='text-slate-700 font-medium text-sm'>
+                <Label
+                  htmlFor='email'
+                  className='text-slate-700 font-medium text-sm'
+                >
                   Email address
                 </Label>
                 <div className='relative'>
@@ -194,9 +205,14 @@ export default function ForgotPasswordPage() {
               </div>
 
               {error && (
-                <Alert variant='destructive' className='border-red-300 bg-red-50'>
+                <Alert
+                  variant='destructive'
+                  className='border-red-300 bg-red-50'
+                >
                   <AlertCircle className='h-4 w-4' />
-                  <AlertDescription className='text-red-800'>{error}</AlertDescription>
+                  <AlertDescription className='text-red-800'>
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
 

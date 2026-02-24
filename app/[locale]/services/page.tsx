@@ -20,7 +20,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react';
-import { useRouter , useParams} from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ServiceCardSkeletonList } from '@/components/services/service-card-skeleton';
@@ -38,8 +38,6 @@ interface Service {
 }
 
 export default function ServicesListPage() {
-  const params = useParams();
-  const locale = (params?.locale as string) || 'en';
   return (
     <ErrorBoundary>
       <Suspense fallback={<ServiceCardSkeletonList />}>
@@ -59,6 +57,8 @@ function ServicesListContent() {
   const [statusFilter, setStatusFilter] = useState('');
   const router = useRouter();
   const { toast } = useToast();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
 
   const fetchServices = async () => {
     try {

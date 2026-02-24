@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams , useParams} from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import PartyForm from '@/components/party-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -141,7 +141,9 @@ export default function ManagePartiesPage() {
             <div className='text-center'>
               <p className='text-red-600 font-semibold mb-4'>{loadError}</p>
               <Button
-                onClick={() => router.push(`/${locale}/manage-parties/employers`)}
+                onClick={() =>
+                  router.push(`/${locale}/manage-parties/employers`)
+                }
               >
                 <ArrowLeft className='mr-2 h-4 w-4' />
                 Back to Parties

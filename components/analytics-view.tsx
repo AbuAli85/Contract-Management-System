@@ -82,7 +82,14 @@ const STATUS_COLORS: Record<string, string> = {
   terminated: '#6b7280',
 };
 
-const CHART_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const CHART_COLORS = [
+  '#3b82f6',
+  '#22c55e',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#06b6d4',
+];
 
 function SkeletonCard() {
   return (
@@ -106,7 +113,13 @@ interface MetricCardProps {
   color?: string;
 }
 
-function MetricCard({ title, value, subtitle, icon, color = 'text-muted-foreground' }: MetricCardProps) {
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  color = 'text-muted-foreground',
+}: MetricCardProps) {
   return (
     <Card>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -115,7 +128,9 @@ function MetricCard({ title, value, subtitle, icon, color = 'text-muted-foregrou
       </CardHeader>
       <CardContent>
         <div className='text-2xl font-bold'>{value}</div>
-        {subtitle && <p className='text-xs text-muted-foreground mt-1'>{subtitle}</p>}
+        {subtitle && (
+          <p className='text-xs text-muted-foreground mt-1'>{subtitle}</p>
+        )}
       </CardContent>
     </Card>
   );
@@ -131,13 +146,18 @@ export function AnalyticsView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/analytics/contracts?days=${days}`, { cache: 'no-store' });
+      const res = await fetch(`/api/analytics/contracts?days=${days}`, {
+        cache: 'no-store',
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const json = await res.json();
-      if (!json.success) throw new Error(json.error || 'Failed to fetch analytics');
+      if (!json.success)
+        throw new Error(json.error || 'Failed to fetch analytics');
       setData(json.data as AnalyticsData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch analytics data');
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch analytics data'
+      );
     } finally {
       setLoading(false);
     }
@@ -160,11 +180,15 @@ export function AnalyticsView() {
       <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>Analytics</h1>
-          <p className='text-muted-foreground'>Contract management insights and reports</p>
+          <p className='text-muted-foreground'>
+            Contract management insights and reports
+          </p>
         </div>
         <div className='flex items-center gap-2'>
           <Select value={days} onValueChange={setDays}>
-            <SelectTrigger className='w-36'><SelectValue /></SelectTrigger>
+            <SelectTrigger className='w-36'>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value='7'>Last 7 days</SelectItem>
               <SelectItem value='30'>Last 30 days</SelectItem>
@@ -172,11 +196,17 @@ export function AnalyticsView() {
               <SelectItem value='365'>Last 12 months</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant='outline' size='icon' onClick={fetchAnalytics} disabled={loading}>
+          <Button
+            variant='outline'
+            size='icon'
+            onClick={fetchAnalytics}
+            disabled={loading}
+          >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button variant='outline'>
-            <Download className='h-4 w-4 mr-2' />Export
+            <Download className='h-4 w-4 mr-2' />
+            Export
           </Button>
         </div>
       </div>
@@ -187,7 +217,14 @@ export function AnalyticsView() {
             <div className='flex items-center gap-2 text-destructive'>
               <AlertCircle className='h-5 w-5 flex-shrink-0' />
               <span className='text-sm'>{error}</span>
-              <Button onClick={fetchAnalytics} size='sm' variant='outline' className='ml-auto'>Retry</Button>
+              <Button
+                onClick={fetchAnalytics}
+                size='sm'
+                variant='outline'
+                className='ml-auto'
+              >
+                Retry
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -195,19 +232,57 @@ export function AnalyticsView() {
 
       {loading ? (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4'>
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : data ? (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4'>
-          <MetricCard title='Total Contracts' value={data.overview.total_contracts} subtitle='All time' icon={<FileText className='h-4 w-4' />} />
-          <MetricCard title='Active Contracts' value={data.overview.active_contracts}
+          <MetricCard
+            title='Total Contracts'
+            value={data.overview.total_contracts}
+            subtitle='All time'
+            icon={<FileText className='h-4 w-4' />}
+          />
+          <MetricCard
+            title='Active Contracts'
+            value={data.overview.active_contracts}
             subtitle={`${data.overview.total_contracts > 0 ? Math.round((data.overview.active_contracts / data.overview.total_contracts) * 100) : 0}% of total`}
-            icon={<CheckCircle className='h-4 w-4' />} color='text-green-600' />
-          <MetricCard title='Total Value' value={`$${(data.overview.total_value / 1000).toFixed(0)}K`} subtitle='Contract portfolio' icon={<DollarSign className='h-4 w-4' />} color='text-blue-600' />
-          <MetricCard title='Avg. Approval' value={`${data.overview.avg_approval_time}h`} subtitle='Hours to approve' icon={<Clock className='h-4 w-4' />} color='text-purple-600' />
-          <MetricCard title='Expiring Soon' value={data.overview.expiring_soon} subtitle='Within 30 days'
-            icon={<AlertTriangle className='h-4 w-4' />} color={data.overview.expiring_soon > 0 ? 'text-orange-500' : 'text-muted-foreground'} />
-          <MetricCard title='Pending Obligations' value={data.overview.obligations_pending} subtitle='Awaiting action' icon={<BarChart3 className='h-4 w-4' />} color='text-yellow-600' />
+            icon={<CheckCircle className='h-4 w-4' />}
+            color='text-green-600'
+          />
+          <MetricCard
+            title='Total Value'
+            value={`$${(data.overview.total_value / 1000).toFixed(0)}K`}
+            subtitle='Contract portfolio'
+            icon={<DollarSign className='h-4 w-4' />}
+            color='text-blue-600'
+          />
+          <MetricCard
+            title='Avg. Approval'
+            value={`${data.overview.avg_approval_time}h`}
+            subtitle='Hours to approve'
+            icon={<Clock className='h-4 w-4' />}
+            color='text-purple-600'
+          />
+          <MetricCard
+            title='Expiring Soon'
+            value={data.overview.expiring_soon}
+            subtitle='Within 30 days'
+            icon={<AlertTriangle className='h-4 w-4' />}
+            color={
+              data.overview.expiring_soon > 0
+                ? 'text-orange-500'
+                : 'text-muted-foreground'
+            }
+          />
+          <MetricCard
+            title='Pending Obligations'
+            value={data.overview.obligations_pending}
+            subtitle='Awaiting action'
+            icon={<BarChart3 className='h-4 w-4' />}
+            color='text-yellow-600'
+          />
         </div>
       ) : null}
 
@@ -215,8 +290,13 @@ export function AnalyticsView() {
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><TrendingUp className='h-5 w-5 text-blue-600' />Monthly Contract Volume</CardTitle>
-              <CardDescription>Number of contracts created per month</CardDescription>
+              <CardTitle className='flex items-center gap-2'>
+                <TrendingUp className='h-5 w-5 text-blue-600' />
+                Monthly Contract Volume
+              </CardTitle>
+              <CardDescription>
+                Number of contracts created per month
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width='100%' height={240}>
@@ -225,7 +305,14 @@ export function AnalyticsView() {
                   <XAxis dataKey='month' tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip />
-                  <Line type='monotone' dataKey='count' stroke='#3b82f6' strokeWidth={2} dot={{ r: 4 }} name='Contracts' />
+                  <Line
+                    type='monotone'
+                    dataKey='count'
+                    stroke='#3b82f6'
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    name='Contracts'
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -233,16 +320,35 @@ export function AnalyticsView() {
 
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><BarChart3 className='h-5 w-5 text-purple-600' />Status Distribution</CardTitle>
-              <CardDescription>Breakdown of contracts by current status</CardDescription>
+              <CardTitle className='flex items-center gap-2'>
+                <BarChart3 className='h-5 w-5 text-purple-600' />
+                Status Distribution
+              </CardTitle>
+              <CardDescription>
+                Breakdown of contracts by current status
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {statusPieData.length > 0 ? (
                 <ResponsiveContainer width='100%' height={240}>
                   <PieChart>
-                    <Pie data={statusPieData} cx='50%' cy='50%' innerRadius={60} outerRadius={100} paddingAngle={3} dataKey='value'>
+                    <Pie
+                      data={statusPieData}
+                      cx='50%'
+                      cy='50%'
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={3}
+                      dataKey='value'
+                    >
                       {statusPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || CHART_COLORS[index % CHART_COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            STATUS_COLORS[entry.name] ||
+                            CHART_COLORS[index % CHART_COLORS.length]
+                          }
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -250,7 +356,9 @@ export function AnalyticsView() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className='h-[240px] flex items-center justify-center text-muted-foreground'>No status data available</div>
+                <div className='h-[240px] flex items-center justify-center text-muted-foreground'>
+                  No status data available
+                </div>
               )}
             </CardContent>
           </Card>
@@ -261,17 +369,35 @@ export function AnalyticsView() {
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><DollarSign className='h-5 w-5 text-green-600' />Monthly Contract Value</CardTitle>
-              <CardDescription>Total contract value created per month</CardDescription>
+              <CardTitle className='flex items-center gap-2'>
+                <DollarSign className='h-5 w-5 text-green-600' />
+                Monthly Contract Value
+              </CardTitle>
+              <CardDescription>
+                Total contract value created per month
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width='100%' height={240}>
                 <BarChart data={data.trends.value_by_month}>
                   <CartesianGrid strokeDasharray='3 3' />
                   <XAxis dataKey='month' tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, 'Value']} />
-                  <Bar dataKey='value' fill='#22c55e' radius={[4, 4, 0, 0]} name='Value ($)' />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={v => `$${(v / 1000).toFixed(0)}K`}
+                  />
+                  <Tooltip
+                    formatter={(v: number) => [
+                      `$${v.toLocaleString()}`,
+                      'Value',
+                    ]}
+                  />
+                  <Bar
+                    dataKey='value'
+                    fill='#22c55e'
+                    radius={[4, 4, 0, 0]}
+                    name='Value ($)'
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -279,8 +405,13 @@ export function AnalyticsView() {
 
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><FileText className='h-5 w-5 text-orange-600' />Contract Types</CardTitle>
-              <CardDescription>Distribution of contracts by type</CardDescription>
+              <CardTitle className='flex items-center gap-2'>
+                <FileText className='h-5 w-5 text-orange-600' />
+                Contract Types
+              </CardTitle>
+              <CardDescription>
+                Distribution of contracts by type
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {typeBarData.length > 0 ? (
@@ -288,13 +419,25 @@ export function AnalyticsView() {
                   <BarChart data={typeBarData} layout='vertical'>
                     <CartesianGrid strokeDasharray='3 3' />
                     <XAxis type='number' tick={{ fontSize: 12 }} />
-                    <YAxis dataKey='name' type='category' tick={{ fontSize: 11 }} width={100} />
+                    <YAxis
+                      dataKey='name'
+                      type='category'
+                      tick={{ fontSize: 11 }}
+                      width={100}
+                    />
                     <Tooltip />
-                    <Bar dataKey='value' fill='#f59e0b' radius={[0, 4, 4, 0]} name='Count' />
+                    <Bar
+                      dataKey='value'
+                      fill='#f59e0b'
+                      radius={[0, 4, 4, 0]}
+                      name='Count'
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className='h-[240px] flex items-center justify-center text-muted-foreground'>No type data available</div>
+                <div className='h-[240px] flex items-center justify-center text-muted-foreground'>
+                  No type data available
+                </div>
               )}
             </CardContent>
           </Card>
@@ -305,13 +448,24 @@ export function AnalyticsView() {
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><CheckCircle className='h-5 w-5 text-green-600' />Performance Metrics</CardTitle>
+              <CardTitle className='flex items-center gap-2'>
+                <CheckCircle className='h-5 w-5 text-green-600' />
+                Performance Metrics
+              </CardTitle>
               <CardDescription>Key performance indicators</CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
               {[
-                { label: 'On-Time Completion', value: data.performance.on_time_completion, color: 'bg-green-500' },
-                { label: 'Obligations On Time', value: data.performance.obligations_completed_on_time, color: 'bg-blue-500' },
+                {
+                  label: 'On-Time Completion',
+                  value: data.performance.on_time_completion,
+                  color: 'bg-green-500',
+                },
+                {
+                  label: 'Obligations On Time',
+                  value: data.performance.obligations_completed_on_time,
+                  color: 'bg-blue-500',
+                },
               ].map(metric => (
                 <div key={metric.label} className='space-y-1'>
                   <div className='flex items-center justify-between text-sm'>
@@ -319,37 +473,61 @@ export function AnalyticsView() {
                     <Badge variant='outline'>{metric.value}%</Badge>
                   </div>
                   <div className='h-2 bg-muted rounded-full overflow-hidden'>
-                    <div className={`h-full ${metric.color} rounded-full transition-all duration-700`} style={{ width: `${metric.value}%` }} />
+                    <div
+                      className={`h-full ${metric.color} rounded-full transition-all duration-700`}
+                      style={{ width: `${metric.value}%` }}
+                    />
                   </div>
                 </div>
               ))}
               <div className='flex items-center justify-between pt-2 border-t'>
-                <span className='text-sm text-muted-foreground'>Avg. Cycle Time</span>
-                <Badge variant='secondary'>{data.performance.average_cycle_time} days</Badge>
+                <span className='text-sm text-muted-foreground'>
+                  Avg. Cycle Time
+                </span>
+                <Badge variant='secondary'>
+                  {data.performance.average_cycle_time} days
+                </Badge>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><Building2 className='h-5 w-5 text-indigo-600' />Top Vendors</CardTitle>
-              <CardDescription>Vendors by contract volume and value</CardDescription>
+              <CardTitle className='flex items-center gap-2'>
+                <Building2 className='h-5 w-5 text-indigo-600' />
+                Top Vendors
+              </CardTitle>
+              <CardDescription>
+                Vendors by contract volume and value
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className='space-y-3'>
                 {data.top_vendors.map((vendor, index) => (
-                  <div key={vendor.name} className='flex items-center justify-between'>
+                  <div
+                    key={vendor.name}
+                    className='flex items-center justify-between'
+                  >
                     <div className='flex items-center gap-3'>
-                      <div className='w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold'
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}>
+                      <div
+                        className='w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold'
+                        style={{
+                          backgroundColor:
+                            CHART_COLORS[index % CHART_COLORS.length],
+                        }}
+                      >
                         {index + 1}
                       </div>
                       <div>
                         <div className='text-sm font-medium'>{vendor.name}</div>
-                        <div className='text-xs text-muted-foreground'>{vendor.contracts} contracts</div>
+                        <div className='text-xs text-muted-foreground'>
+                          {vendor.contracts} contracts
+                        </div>
                       </div>
                     </div>
-                    <Badge variant='outline'>${(vendor.value / 1000).toFixed(0)}K</Badge>
+                    <Badge variant='outline'>
+                      ${(vendor.value / 1000).toFixed(0)}K
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -361,8 +539,13 @@ export function AnalyticsView() {
       {data && (
         <Card>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'><Clock className='h-5 w-5 text-purple-600' />Approval Time Trend</CardTitle>
-            <CardDescription>Average hours from submission to approval per month</CardDescription>
+            <CardTitle className='flex items-center gap-2'>
+              <Clock className='h-5 w-5 text-purple-600' />
+              Approval Time Trend
+            </CardTitle>
+            <CardDescription>
+              Average hours from submission to approval per month
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width='100%' height={200}>
@@ -370,8 +553,17 @@ export function AnalyticsView() {
                 <CartesianGrid strokeDasharray='3 3' />
                 <XAxis dataKey='month' tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} unit='h' />
-                <Tooltip formatter={(v: number) => [`${v}h`, 'Avg. Approval Time']} />
-                <Line type='monotone' dataKey='hours' stroke='#8b5cf6' strokeWidth={2} dot={{ r: 4 }} name='Hours' />
+                <Tooltip
+                  formatter={(v: number) => [`${v}h`, 'Avg. Approval Time']}
+                />
+                <Line
+                  type='monotone'
+                  dataKey='hours'
+                  stroke='#8b5cf6'
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  name='Hours'
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

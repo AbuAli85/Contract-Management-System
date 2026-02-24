@@ -233,13 +233,13 @@ export default function PromoterDetailPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCompany, setFilterCompany] = useState('all');
-  const [filterDocument, setFilterDocument] = useState('all');
+  const [filterDocument, _setFilterDocument] = useState('all');
   const [allPromoters, setAllPromoters] = useState<Promoter[]>([]);
   const [filteredPromoters, setFilteredPromoters] = useState<Promoter[]>([]);
   const [employers, setEmployers] = useState<
     { id: string; name_en?: string; name_ar?: string }[]
   >([]);
-  const [employersLoading, setEmployersLoading] = useState(true);
+  const [_employersLoading, setEmployersLoading] = useState(true);
 
   // Get current user ID and check if viewing own profile
   useEffect(() => {
@@ -1199,23 +1199,39 @@ export default function PromoterDetailPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PromoterFilterSection
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterStatus={filterStatus}
-            setFilterStatus={setFilterStatus}
-            filterCompany={filterCompany}
-            setFilterCompany={setFilterCompany}
-            filterDocument={filterDocument}
-            setFilterDocument={setFilterDocument}
-            employers={employers}
-            employersLoading={employersLoading}
-            uniqueCompanies={employers.map(emp => ({
-              id: emp.id,
-              name: emp.name_en || emp.name_ar || emp.id,
-            }))}
-            showBulkActions={false}
-          />
+          <div className='flex flex-col gap-3'>
+            <input
+              type='text'
+              placeholder='Search promoters by name or ID...'
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            />
+            <div className='flex gap-2 flex-wrap'>
+              <select
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+                className='rounded-md border border-input bg-background px-3 py-2 text-sm'
+              >
+                <option value='all'>All Statuses</option>
+                <option value='active'>Active</option>
+                <option value='inactive'>Inactive</option>
+                <option value='suspended'>Suspended</option>
+              </select>
+              <select
+                value={filterCompany}
+                onChange={e => setFilterCompany(e.target.value)}
+                className='rounded-md border border-input bg-background px-3 py-2 text-sm'
+              >
+                <option value='all'>All Companies</option>
+                {employers.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name_en || emp.name_ar || emp.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           {/* Filtered Promoters List */}
           {filteredPromoters.length > 0 &&
@@ -1712,7 +1728,8 @@ export default function PromoterDetailPage() {
                                 toast({
                                   variant: 'destructive',
                                   title: 'Connection Error',
-                                  description: 'Failed to initialize database connection.',
+                                  description:
+                                    'Failed to initialize database connection.',
                                 });
                                 return;
                               }
@@ -1732,7 +1749,8 @@ export default function PromoterDetailPage() {
                                 } else {
                                   toast({
                                     title: 'Assignment Removed',
-                                    description: 'Employer assignment has been removed successfully.',
+                                    description:
+                                      'Employer assignment has been removed successfully.',
                                   });
                                   window.location.reload();
                                 }

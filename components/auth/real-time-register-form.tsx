@@ -29,7 +29,7 @@ import {
   Building,
   Phone,
 } from 'lucide-react';
-import { useRouter , useParams} from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 

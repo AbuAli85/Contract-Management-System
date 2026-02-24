@@ -32,7 +32,7 @@ export default function EditPromoterPage() {
 
   // Filter state
   const [employers, setEmployers] = useState<Employer[]>([]);
-  const [employersLoading, setEmployersLoading] = useState(true);
+  const [_employersLoading, setEmployersLoading] = useState(true);
 
   // Fetch employers for the filter
   useEffect(() => {
@@ -179,7 +179,6 @@ export default function EditPromoterPage() {
             </div>
           </div>
         </div>
-
 
         {/* Loading State */}
         {isLoading && (

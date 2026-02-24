@@ -452,7 +452,10 @@ export default function UsersPageComponent() {
             </Button>
           )}
           <Button variant='secondary' size='sm' asChild>
-            <Link href={`/${locale}/admin/users`} className='flex items-center gap-2'>
+            <Link
+              href={`/${locale}/admin/users`}
+              className='flex items-center gap-2'
+            >
               <Shield className='h-4 w-4' />
               Advanced Permissions
             </Link>

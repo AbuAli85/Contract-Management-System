@@ -33,7 +33,7 @@ export default function GenerateContractPage() {
     return () => clearTimeout(timer);
   }, [loading, isLoading]);
 
-   // Still loading (with timeout check)
+  // Still loading (with timeout check)
   if ((loading || isLoading) && !authTimeout) {
     return (
       <div className='flex items-center justify-center min-h-[60vh]'>

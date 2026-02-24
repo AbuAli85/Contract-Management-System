@@ -148,7 +148,6 @@ export default function ContractDetailPage() {
         const data = await response.json();
         const updatedContract = data?.contract || data;
 
-
         // Check if PDF is ready
         if (updatedContract?.pdf_url) {
           clearInterval(interval);
@@ -701,7 +700,9 @@ export default function ContractDetailPage() {
                       </div>
                     )}
                     {statusMessage && (
-                      <Alert className={`mt-3 ${statusMessage.includes('successfully') ? 'border-green-200 bg-green-50' : ''}`}>
+                      <Alert
+                        className={`mt-3 ${statusMessage.includes('successfully') ? 'border-green-200 bg-green-50' : ''}`}
+                      >
                         <AlertCircleIcon className='h-4 w-4' />
                         <AlertDescription>{statusMessage}</AlertDescription>
                       </Alert>
