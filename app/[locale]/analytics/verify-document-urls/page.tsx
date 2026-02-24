@@ -101,8 +101,8 @@ export default function VerifyDocumentUrlsPage() {
           promoterName: promoter.name_en || '',
           idCardExists: false,
           passportExists: false,
-          idCardUrl: promoter.id_card_url,
-          passportUrl: promoter.passport_url,
+          idCardUrl: promoter.id_card_url || undefined,
+          passportUrl: promoter.passport_url || undefined,
           idCardBroken: false,
           passportBroken: false,
         };
