@@ -54,7 +54,7 @@ export default function PayrollRunDetailPage() {
   const _router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const runId = params.id as string;
+  const runId = (params?.id as string) || '';
 
   const { data, isLoading } = useQuery({
     queryKey: ['payroll-run', runId],
