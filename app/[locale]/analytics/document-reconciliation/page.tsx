@@ -107,7 +107,8 @@ export default function DocumentReconciliationPage() {
         id_card_number: string | null;
         passport_number: string | null;
       };
-      const promotersData: PromoterRow[] = (promoters as PromoterRow[] | null) || [];
+      const promotersData: PromoterRow[] =
+        (promoters as PromoterRow[] | null) || [];
 
       // Calculate basic stats
       const withIdCard = promotersData.filter(
