@@ -82,16 +82,17 @@ export default function AuditLogsPage() {
       const { data, error } = await supabase
         .from('audit_logs')
         .select(
-          'id, user_id, action, entity_type, entity_id, details, created_at'
+          'id, user_id, action, table_name, record_id, new_values, old_values, created_at'
         )
-        .order(sortKey, { ascending: sortDirection === 'asc' });
+        .order(sortKey as any, { ascending: sortDirection === 'asc' });
       if (error) throw error;
 
       // Transform the data to add compatibility fields
       const transformedData = (data || []).map(log => ({
         ...log,
-        id: log.id.toString(), // Convert number to string
-        entity_id: log.entity_id?.toString() || '', // Convert number to string
+        entity_type: log.table_name || '', // Map table_name to entity_type
+        entity_id: log.record_id || '', // Map record_id to entity_id
+        details: log.new_values, // Map new_values to details
         user_email: log.user_id || null, // For compatibility
         ip_address: null, // Column doesn't exist in schema
         timestamp: log.created_at, // Map created_at to timestamp
