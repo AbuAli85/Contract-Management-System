@@ -3,7 +3,7 @@ export interface Party {
   name_en: string | null;
   name_ar: string | null;
   crn: string | null;
-  type?: 'Employer' | 'Client' | 'Generic' | null;
+  type?: string | null;
   role?: string | null;
   designation_id?: string | null;
   signatory_name_en?: string | null;

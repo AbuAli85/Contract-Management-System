@@ -98,7 +98,7 @@ export default function PromoterDocumentsReportPage() {
 
         // Process promoters with document status
         const processedPromoters: PromoterWithEmployer[] = (
-          promotersData || []
+          (promotersData as any[]) || []
         ).map(promoter => {
           const hasIdCard = !!(
             promoter.id_card_url && promoter.id_card_url.trim() !== ''
