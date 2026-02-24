@@ -136,7 +136,7 @@ export default function DocumentReconciliationPage() {
             type: 'missing_url',
             severity: 'high',
             promoterId: promoter.id,
-            promoterName: promoter.name_en,
+            promoterName: promoter.name_en ?? undefined,
             documentType: 'id_card',
             description: `${promoter.name_en} has ID number "${promoter.id_card_number}" but missing ID card URL`,
             fixable: true,
@@ -152,7 +152,7 @@ export default function DocumentReconciliationPage() {
             type: 'missing_url',
             severity: 'high',
             promoterId: promoter.id,
-            promoterName: promoter.name_en,
+            promoterName: promoter.name_en ?? undefined,
             documentType: 'passport',
             description: `${promoter.name_en} has passport number "${promoter.passport_number}" but missing passport URL`,
             fixable: true,
@@ -168,7 +168,7 @@ export default function DocumentReconciliationPage() {
             type: 'missing_url',
             severity: 'medium',
             promoterId: promoter.id,
-            promoterName: promoter.name_en,
+            promoterName: promoter.name_en ?? undefined,
             description: `${promoter.name_en} has no documents uploaded`,
             fixable: false,
           });
@@ -180,7 +180,7 @@ export default function DocumentReconciliationPage() {
             type: 'broken_link',
             severity: 'high',
             promoterId: promoter.id,
-            promoterName: promoter.name_en,
+            promoterName: promoter.name_en ?? undefined,
             fileUrl: promoter.id_card_url,
             documentType: 'id_card',
             description: `${promoter.name_en} has invalid ID card URL: "${promoter.id_card_url}"`,
@@ -196,7 +196,7 @@ export default function DocumentReconciliationPage() {
             type: 'broken_link',
             severity: 'high',
             promoterId: promoter.id,
-            promoterName: promoter.name_en,
+            promoterName: promoter.name_en ?? undefined,
             fileUrl: promoter.passport_url,
             documentType: 'passport',
             description: `${promoter.name_en} has invalid passport URL: "${promoter.passport_url}"`,
@@ -212,13 +212,13 @@ export default function DocumentReconciliationPage() {
       promotersData.forEach(promoter => {
         if (promoter.id_card_url && promoter.id_card_url.trim() !== '') {
           const existing = idCardUrls.get(promoter.id_card_url) || [];
-          existing.push(promoter.name_en);
+          existing.push(promoter.name_en ?? '');
           idCardUrls.set(promoter.id_card_url, existing);
         }
 
         if (promoter.passport_url && promoter.passport_url.trim() !== '') {
           const existing = passportUrls.get(promoter.passport_url) || [];
-          existing.push(promoter.name_en);
+          existing.push(promoter.name_en ?? '');
           passportUrls.set(promoter.passport_url, existing);
         }
       });
