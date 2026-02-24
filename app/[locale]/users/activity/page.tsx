@@ -49,7 +49,7 @@ export default function UserActivityPage() {
   const { canManageUsers } = usePermissions();
 
   // Use toast helpers at the top level (React Hooks rule)
-  const { _success, error } = useToastHelpers();
+  const { error } = useToastHelpers();
   const [activities, setActivities] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredActivities, setFilteredActivities] = useState<UserActivity[]>(

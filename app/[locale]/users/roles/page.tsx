@@ -89,7 +89,7 @@ export default function RolesAndPermissionsPage() {
   const { canManageUsers, canAssignRoles } = usePermissions();
 
   // Use toast helpers at the top level (React Hooks rule)
-  const { success, error, _warning } = useToastHelpers();
+  const { success, error } = useToastHelpers();
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [users, setUsers] = useState<User[]>([]);
