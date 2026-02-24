@@ -314,12 +314,15 @@ export default function DocumentReconciliationPage() {
               .from('promoter-documents')
               .getPublicUrl(brokenUrl);
 
-            const updateField =
-              issue.documentType === 'id_card' ? 'id_card_url' : 'passport_url';
+            const updateData =
+              issue.documentType === 'id_card'
+                ? ({ id_card_url: publicUrl } as Record<string, string>)
+                : ({ passport_url: publicUrl } as Record<string, string>);
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { error } = await supabase
               .from('promoters')
-              .update({ [updateField]: publicUrl })
+              .update(updateData as any)
               .eq('id', issue.promoterId);
 
             if (!error) {
