@@ -12,7 +12,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -20,18 +19,15 @@ import {
   RefreshCw,
   Settings,
   Calendar,
-  TrendingUp,
   FileText,
   Activity,
   Bell,
-  Plus,
   User,
   Eye,
   Edit,
   Clock,
   CheckCircle,
   AlertCircle,
-  Download,
   MessageSquare,
   BookOpen,
 } from 'lucide-react';
@@ -403,8 +399,8 @@ export default function UserDashboard({
   params: { locale: string };
 }) {
   const { locale } = params;
-  const { user, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
+  const { user, loading: _authLoading } = useAuth();
+  const { profile, loading: _profileLoading } = useUserProfile();
   const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
 

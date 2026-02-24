@@ -17,7 +17,7 @@ import {
 
 // Enable MFA for user
 export const POST = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (req: NextRequest, _context) => {
     try {
       const { action, token, backupCode } = await req.json();
 
@@ -101,7 +101,7 @@ export const POST = professionalSecurityMiddleware.withSecurity(
 
 // Get MFA status
 export const GET = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (_req: NextRequest, _context) => {
     try {
       // TODO: Get user's MFA status from database
       return NextResponse.json({
@@ -127,7 +127,7 @@ export const GET = professionalSecurityMiddleware.withSecurity(
 
 // Disable MFA
 export const DELETE = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (req: NextRequest, _context) => {
     try {
       const { password } = await req.json();
 

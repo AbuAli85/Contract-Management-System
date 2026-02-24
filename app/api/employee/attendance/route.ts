@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -35,18 +35,19 @@ export async function GET(request: NextRequest) {
 
     // Get query params
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get('month') || new Date().toISOString().slice(0, 7);
-    
+    const month =
+      searchParams.get('month') || new Date().toISOString().slice(0, 7);
+
     const startDate = `${month}-01`;
     const [yearStr, monthStr] = month.split('-');
     const year = parseInt(yearStr || '2025', 10);
     const monthNum = parseInt(monthStr || '1', 10);
-    const endDate = new Date(year, monthNum, 0)
-      .toISOString()
-      .slice(0, 10);
+    const endDate = new Date(year, monthNum, 0).toISOString().slice(0, 10);
 
     const supabaseAdmin = getSupabaseAdmin();
-    const { data: attendance, error } = await (supabaseAdmin.from('employee_attendance') as any)
+    const { data: attendance, error } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
       .select('*')
       .eq('employer_employee_id', employeeLink.id)
       .gte('attendance_date', startDate)
@@ -55,17 +56,34 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching attendance:', error);
-      return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch attendance' },
+        { status: 500 }
+      );
     }
 
     // Calculate summary
     const totalDays = attendance?.length || 0;
-    const presentDays = attendance?.filter((a: any) => a.status === 'present' || a.status === 'late').length || 0;
-    const lateDays = attendance?.filter((a: any) => a.status === 'late').length || 0;
-    const absentDays = attendance?.filter((a: any) => a.status === 'absent').length || 0;
-    const totalHours = attendance?.reduce((sum: number, a: any) => sum + (parseFloat(a.total_hours) || 0), 0) || 0;
-    const overtimeHours = attendance?.reduce((sum: number, a: any) => sum + (parseFloat(a.overtime_hours) || 0), 0) || 0;
-    const averageHours = presentDays > 0 ? (totalHours / presentDays).toFixed(1) : '0.0';
+    const presentDays =
+      attendance?.filter(
+        (a: any) => a.status === 'present' || a.status === 'late'
+      ).length || 0;
+    const lateDays =
+      attendance?.filter((a: any) => a.status === 'late').length || 0;
+    const absentDays =
+      attendance?.filter((a: any) => a.status === 'absent').length || 0;
+    const totalHours =
+      attendance?.reduce(
+        (sum: number, a: any) => sum + (parseFloat(a.total_hours) || 0),
+        0
+      ) || 0;
+    const overtimeHours =
+      attendance?.reduce(
+        (sum: number, a: any) => sum + (parseFloat(a.overtime_hours) || 0),
+        0
+      ) || 0;
+    const averageHours =
+      presentDays > 0 ? (totalHours / presentDays).toFixed(1) : '0.0';
 
     return NextResponse.json({
       attendance: attendance || [],
@@ -81,7 +99,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in attendance GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -89,7 +110,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -100,15 +121,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { 
-      action, 
-      location, 
+    const {
+      action,
+      location,
       notes,
       latitude,
       longitude,
       accuracy,
       photo,
-      device_info
+      device_info,
     } = body; // action: 'check_in' or 'check_out'
 
     if (!action || !['check_in', 'check_out'].includes(action)) {
@@ -120,10 +141,12 @@ export async function POST(request: NextRequest) {
 
     // Get IP address from request headers
     const forwarded = request.headers.get('x-forwarded-for');
-    const ipAddress = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
+    const ipAddress = forwarded
+      ? forwarded.split(',')[0]
+      : request.headers.get('x-real-ip') || 'unknown';
 
     // Generate device fingerprint
-    const deviceFingerprint = device_info 
+    const deviceFingerprint = device_info
       ? `${device_info.userAgent || ''}-${device_info.platform || ''}-${device_info.screenWidth || ''}x${device_info.screenHeight || ''}`
       : null;
 
@@ -147,7 +170,9 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
 
     // Check existing attendance for today
-    const { data: existing } = await (supabaseAdmin.from('employee_attendance') as any)
+    const { data: existing } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
       .select('*')
       .eq('employer_employee_id', employeeLink.id)
       .eq('attendance_date', today)
@@ -165,27 +190,37 @@ export async function POST(request: NextRequest) {
       let companySettings: any = null;
       if (employeeLink.company_id) {
         try {
-          const { data: settingsData } = await supabaseAdmin.rpc('get_company_attendance_settings', {
-            p_company_id: employeeLink.company_id,
-          });
+          const { data: settingsData } = await supabaseAdmin.rpc(
+            'get_company_attendance_settings',
+            {
+              p_company_id: employeeLink.company_id,
+            }
+          );
           if (settingsData && settingsData.length > 0) {
             companySettings = settingsData[0];
           }
         } catch (error) {
-          console.warn('Failed to fetch company settings, using defaults:', error);
+          console.warn(
+            'Failed to fetch company settings, using defaults:',
+            error
+          );
         }
       }
 
       // Get default check-in time from settings (default to 09:00)
-      const defaultCheckInTime = companySettings?.default_check_in_time || '09:00:00';
-      const [checkInHour, checkInMinute] = defaultCheckInTime.split(':').map(Number);
-      
+      const defaultCheckInTime =
+        companySettings?.default_check_in_time || '09:00:00';
+      const [checkInHour, checkInMinute] = defaultCheckInTime
+        .split(':')
+        .map(Number);
+
       // Determine if late based on company settings
       const now = new Date();
       const checkInTime = new Date(now);
       checkInTime.setHours(checkInHour, checkInMinute || 0, 0, 0);
-      
-      const lateThresholdMinutes = companySettings?.late_threshold_minutes || 15;
+
+      const lateThresholdMinutes =
+        companySettings?.late_threshold_minutes || 15;
       const minutesLate = (now.getTime() - checkInTime.getTime()) / (1000 * 60);
       const status = minutesLate > lateThresholdMinutes ? 'late' : 'present';
 
@@ -210,21 +245,26 @@ export async function POST(request: NextRequest) {
       // Verify location if GPS coordinates provided
       let locationVerified = false;
       let distanceFromOffice = null;
-      const locationRadiusMeters = companySettings?.location_radius_meters || 50;
-      
+      const locationRadiusMeters =
+        companySettings?.location_radius_meters || 50;
+
       if (latitude && longitude && employeeLink.company_id) {
         try {
           // @ts-ignore - Supabase RPC type inference issue
-          const { data: locationVerification } = await supabaseAdmin.rpc('verify_attendance_location', {
-            p_attendance_id: existing?.id || null,
-            p_latitude: latitude,
-            p_longitude: longitude,
-            p_company_id: employeeLink.company_id,
-            p_radius_meters: locationRadiusMeters,
-          });
+          const { data: locationVerification } = await supabaseAdmin.rpc(
+            'verify_attendance_location',
+            {
+              p_attendance_id: existing?.id || null,
+              p_latitude: latitude,
+              p_longitude: longitude,
+              p_company_id: employeeLink.company_id,
+              p_radius_meters: locationRadiusMeters,
+            }
+          );
           if (locationVerification) {
             locationVerified = (locationVerification as any).verified || false;
-            distanceFromOffice = (locationVerification as any).distance_meters || null;
+            distanceFromOffice =
+              (locationVerification as any).distance_meters || null;
           }
         } catch (error) {
           console.warn('Location verification failed:', error);
@@ -235,9 +275,13 @@ export async function POST(request: NextRequest) {
       // Determine approval status based on settings
       let approvalStatus = 'pending';
       const autoApprove = companySettings?.auto_approve ?? false;
-      const autoApproveValidCheckins = companySettings?.auto_approve_valid_checkins ?? false;
-      
-      if (autoApprove || (autoApproveValidCheckins && locationVerified && status === 'present')) {
+      const autoApproveValidCheckins =
+        companySettings?.auto_approve_valid_checkins ?? false;
+
+      if (
+        autoApprove ||
+        (autoApproveValidCheckins && locationVerified && status === 'present')
+      ) {
         approvalStatus = 'approved';
       }
 
@@ -249,13 +293,14 @@ export async function POST(request: NextRequest) {
           const base64Data = photo.split(',')[1];
           const buffer = Buffer.from(base64Data, 'base64');
           const fileName = `attendance/${user.id}/${today}-checkin-${Date.now()}.jpg`;
-          
-          const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-            .from('attendance-photos')
-            .upload(fileName, buffer, {
-              contentType: 'image/jpeg',
-              upsert: false,
-            });
+
+          const { data: uploadData, error: uploadError } =
+            await supabaseAdmin.storage
+              .from('attendance-photos')
+              .upload(fileName, buffer, {
+                contentType: 'image/jpeg',
+                upsert: false,
+              });
 
           if (!uploadError && uploadData) {
             const { data: urlData } = supabaseAdmin.storage
@@ -285,12 +330,17 @@ export async function POST(request: NextRequest) {
         if (accuracy !== undefined) updateData.location_accuracy = accuracy;
         if (photoUrl) updateData.check_in_photo = photoUrl;
         if (ipAddress) updateData.ip_address = ipAddress;
-        if (deviceFingerprint) updateData.device_fingerprint = deviceFingerprint;
+        if (deviceFingerprint)
+          updateData.device_fingerprint = deviceFingerprint;
         if (device_info) updateData.device_info = device_info;
-        if (locationVerified !== undefined) updateData.location_verified = locationVerified;
-        if (distanceFromOffice !== null) updateData.distance_from_office = distanceFromOffice;
+        if (locationVerified !== undefined)
+          updateData.location_verified = locationVerified;
+        if (distanceFromOffice !== null)
+          updateData.distance_from_office = distanceFromOffice;
 
-        const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
+        const { data: updated, error: updateError } = await (
+          supabaseAdmin.from('employee_attendance') as any
+        )
           .update(updateData)
           .eq('id', existing.id)
           .select()
@@ -320,12 +370,17 @@ export async function POST(request: NextRequest) {
         if (accuracy !== undefined) insertData.location_accuracy = accuracy;
         if (photoUrl) insertData.check_in_photo = photoUrl;
         if (ipAddress) insertData.ip_address = ipAddress;
-        if (deviceFingerprint) insertData.device_fingerprint = deviceFingerprint;
+        if (deviceFingerprint)
+          insertData.device_fingerprint = deviceFingerprint;
         if (device_info) insertData.device_info = device_info;
-        if (locationVerified !== undefined) insertData.location_verified = locationVerified;
-        if (distanceFromOffice !== null) insertData.distance_from_office = distanceFromOffice;
+        if (locationVerified !== undefined)
+          insertData.location_verified = locationVerified;
+        if (distanceFromOffice !== null)
+          insertData.distance_from_office = distanceFromOffice;
 
-        const { data: created, error: createError } = await (supabaseAdmin.from('employee_attendance') as any)
+        const { data: created, error: createError } = await (
+          supabaseAdmin.from('employee_attendance') as any
+        )
           .insert(insertData)
           .select()
           .single();
@@ -375,7 +430,9 @@ export async function POST(request: NextRequest) {
         // End the active break
         const breakStart = new Date(existing.break_start_time);
         const breakEnd = new Date();
-        const activeBreakMinutes = Math.round((breakEnd.getTime() - breakStart.getTime()) / 1000 / 60);
+        const activeBreakMinutes = Math.round(
+          (breakEnd.getTime() - breakStart.getTime()) / 1000 / 60
+        );
         finalBreakMinutes = finalBreakMinutes + activeBreakMinutes;
       }
 
@@ -383,9 +440,12 @@ export async function POST(request: NextRequest) {
       let companySettings: any = null;
       if (employeeLink.company_id) {
         try {
-          const { data: settingsData } = await supabaseAdmin.rpc('get_company_attendance_settings', {
-            p_company_id: employeeLink.company_id,
-          });
+          const { data: settingsData } = await supabaseAdmin.rpc(
+            'get_company_attendance_settings',
+            {
+              p_company_id: employeeLink.company_id,
+            }
+          );
           if (settingsData && settingsData.length > 0) {
             companySettings = settingsData[0];
           }
@@ -397,15 +457,23 @@ export async function POST(request: NextRequest) {
       // Calculate total hours
       const checkInTime = new Date(existing.check_in);
       const checkOutTime = new Date();
-      const totalMinutes = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
+      const totalMinutes =
+        (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60);
       const unpaidBreakMinutes = companySettings?.unpaid_break_minutes || 0;
       const netMinutes = totalMinutes - finalBreakMinutes - unpaidBreakMinutes;
       const totalHours = (netMinutes / 60).toFixed(2);
-      
+
       // Calculate overtime based on company settings
-      const standardWorkHours = parseFloat(companySettings?.standard_work_hours?.toString() || '8.0');
-      const overtimeThreshold = parseFloat(companySettings?.overtime_threshold_hours?.toString() || '8.0');
-      const overtimeHours = Math.max(0, parseFloat(totalHours) - overtimeThreshold).toFixed(2);
+      const standardWorkHours = parseFloat(
+        companySettings?.standard_work_hours?.toString() || '8.0'
+      );
+      const overtimeThreshold = parseFloat(
+        companySettings?.overtime_threshold_hours?.toString() || '8.0'
+      );
+      const overtimeHours = Math.max(
+        0,
+        parseFloat(totalHours) - overtimeThreshold
+      ).toFixed(2);
 
       // Upload check-out photo if provided
       let checkOutPhotoUrl = null;
@@ -414,13 +482,14 @@ export async function POST(request: NextRequest) {
           const base64Data = photo.split(',')[1];
           const buffer = Buffer.from(base64Data, 'base64');
           const fileName = `attendance/${user.id}/${today}-checkout-${Date.now()}.jpg`;
-          
-          const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-            .from('attendance-photos')
-            .upload(fileName, buffer, {
-              contentType: 'image/jpeg',
-              upsert: false,
-            });
+
+          const { data: uploadData, error: uploadError } =
+            await supabaseAdmin.storage
+              .from('attendance-photos')
+              .upload(fileName, buffer, {
+                contentType: 'image/jpeg',
+                upsert: false,
+              });
 
           if (!uploadError && uploadData) {
             const { data: urlData } = supabaseAdmin.storage
@@ -449,7 +518,9 @@ export async function POST(request: NextRequest) {
       if (accuracy !== undefined) updateData.location_accuracy = accuracy;
       if (ipAddress) updateData.ip_address = ipAddress;
 
-      const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
+      const { data: updated, error: updateError } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
         .update(updateData)
         .eq('id', existing.id)
         .select()
@@ -465,7 +536,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error in attendance POST:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

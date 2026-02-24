@@ -1,3 +1,4 @@
+/** @jest-environment node */
 /**
  * API Tests for Metrics Validation Endpoint
  */

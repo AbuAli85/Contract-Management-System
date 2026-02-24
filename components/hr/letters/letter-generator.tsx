@@ -29,14 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  FileText,
-  Download,
-  Send,
-  Eye,
-  Plus,
-  Calendar,
-} from 'lucide-react';
+import { FileText, Download, Send, Eye, Plus, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -100,7 +93,7 @@ export function LetterGenerator() {
       }
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['hr-letters'] });
       setGenerateDialogOpen(false);
       toast({
@@ -127,10 +120,14 @@ export function LetterGenerator() {
     setLetterType(type);
     // Auto-generate subject based on type
     if (selectedEmployee) {
-      const employee = employees.find((e) => e.id === selectedEmployee);
+      const employee = employees.find(e => e.id === selectedEmployee);
       if (employee) {
-        const employeeName = employee.employee?.name_en || employee.employee?.name_ar || 'Employee';
-        const typeLabel = LETTER_TYPES.find((t) => t.value === type)?.label || 'Letter';
+        const employeeName =
+          employee.employee?.name_en ||
+          employee.employee?.name_ar ||
+          'Employee';
+        const typeLabel =
+          LETTER_TYPES.find(t => t.value === type)?.label || 'Letter';
         setSubject(`${typeLabel} - ${employeeName}`);
       }
     }
@@ -155,15 +152,15 @@ export function LetterGenerator() {
     });
   };
 
-  const selectedEmployeeData = employees.find((e) => e.id === selectedEmployee);
+  const selectedEmployeeData = employees.find(e => e.id === selectedEmployee);
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Letter Generator</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className='text-3xl font-bold'>Letter Generator</h1>
+          <p className='text-muted-foreground mt-1'>
             Generate official letters, certificates, and documents for employees
           </p>
         </div>
@@ -177,18 +174,24 @@ export function LetterGenerator() {
             Select employee and letter type to generate a letter
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className='space-y-4'>
           {/* Employee Selection */}
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label>Employee</Label>
-            <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+            <Select
+              value={selectedEmployee}
+              onValueChange={setSelectedEmployee}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Select an employee" />
+                <SelectValue placeholder='Select an employee' />
               </SelectTrigger>
               <SelectContent>
-                {employees.map((employee) => (
+                {employees.map(employee => (
                   <SelectItem key={employee.id} value={employee.id}>
-                    {employee.employee?.name_en || employee.employee?.name_ar || 'Unknown'} ({employee.employee_id})
+                    {employee.employee?.name_en ||
+                      employee.employee?.name_ar ||
+                      'Unknown'}{' '}
+                    ({employee.employee_id})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -196,14 +199,14 @@ export function LetterGenerator() {
           </div>
 
           {/* Letter Type */}
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label>Letter Type</Label>
             <Select value={letterType} onValueChange={handleLetterTypeChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Select letter type" />
+                <SelectValue placeholder='Select letter type' />
               </SelectTrigger>
               <SelectContent>
-                {LETTER_TYPES.map((type) => (
+                {LETTER_TYPES.map(type => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
                   </SelectItem>
@@ -214,44 +217,56 @@ export function LetterGenerator() {
 
           {/* Additional Fields based on letter type */}
           {letterType === 'leave' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className='grid grid-cols-2 gap-4'>
+              <div className='space-y-2'>
                 <Label>Leave Type</Label>
                 <Input
                   value={additionalData.leave_type || ''}
-                  onChange={(e) =>
-                    setAdditionalData({ ...additionalData, leave_type: e.target.value })
+                  onChange={e =>
+                    setAdditionalData({
+                      ...additionalData,
+                      leave_type: e.target.value,
+                    })
                   }
-                  placeholder="e.g., Annual Leave"
+                  placeholder='e.g., Annual Leave'
                 />
               </div>
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Start Date</Label>
                 <Input
-                  type="date"
+                  type='date'
                   value={additionalData.start_date || ''}
-                  onChange={(e) =>
-                    setAdditionalData({ ...additionalData, start_date: e.target.value })
+                  onChange={e =>
+                    setAdditionalData({
+                      ...additionalData,
+                      start_date: e.target.value,
+                    })
                   }
                 />
               </div>
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>End Date</Label>
                 <Input
-                  type="date"
+                  type='date'
                   value={additionalData.end_date || ''}
-                  onChange={(e) =>
-                    setAdditionalData({ ...additionalData, end_date: e.target.value })
+                  onChange={e =>
+                    setAdditionalData({
+                      ...additionalData,
+                      end_date: e.target.value,
+                    })
                   }
                 />
               </div>
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Total Days</Label>
                 <Input
-                  type="number"
+                  type='number'
                   value={additionalData.total_days || ''}
-                  onChange={(e) =>
-                    setAdditionalData({ ...additionalData, total_days: parseInt(e.target.value) })
+                  onChange={e =>
+                    setAdditionalData({
+                      ...additionalData,
+                      total_days: parseInt(e.target.value),
+                    })
                   }
                 />
               </div>
@@ -259,41 +274,44 @@ export function LetterGenerator() {
           )}
 
           {/* Subject */}
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label>Subject</Label>
             <Input
               value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Letter subject (auto-generated if left empty)"
+              onChange={e => setSubject(e.target.value)}
+              placeholder='Letter subject (auto-generated if left empty)'
             />
           </div>
 
           {/* Content */}
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label>Content</Label>
             <Textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Letter content (auto-generated if left empty)"
+              onChange={e => setContent(e.target.value)}
+              placeholder='Letter content (auto-generated if left empty)'
               rows={10}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className='text-xs text-muted-foreground'>
               Leave empty to auto-generate content based on employee data
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2">
-            <Button onClick={handleGenerate} disabled={generateMutation.isPending}>
-              <FileText className="h-4 w-4 mr-2" />
+          <div className='flex gap-2'>
+            <Button
+              onClick={handleGenerate}
+              disabled={generateMutation.isPending}
+            >
+              <FileText className='h-4 w-4 mr-2' />
               {generateMutation.isPending ? 'Generating...' : 'Generate Letter'}
             </Button>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setPreviewOpen(true)}
               disabled={!selectedEmployee || !letterType}
             >
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className='h-4 w-4 mr-2' />
               Preview
             </Button>
           </div>
@@ -302,21 +320,21 @@ export function LetterGenerator() {
 
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>Letter Preview</DialogTitle>
             <DialogDescription>
               Preview of the generated letter
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <div>
-              <Label className="text-sm font-medium">Subject:</Label>
-              <p className="text-sm">{subject || 'Auto-generated subject'}</p>
+              <Label className='text-sm font-medium'>Subject:</Label>
+              <p className='text-sm'>{subject || 'Auto-generated subject'}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium">Content:</Label>
-              <div className="mt-2 p-4 border rounded-md bg-muted whitespace-pre-wrap text-sm">
+              <Label className='text-sm font-medium'>Content:</Label>
+              <div className='mt-2 p-4 border rounded-md bg-muted whitespace-pre-wrap text-sm'>
                 {content || 'Auto-generated content will appear here...'}
               </div>
             </div>
@@ -326,4 +344,3 @@ export function LetterGenerator() {
     </div>
   );
 }
-

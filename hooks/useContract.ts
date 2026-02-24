@@ -73,7 +73,7 @@ const fetchContract = async (
 ): Promise<ContractWithRelations | null> => {
   try {
     console.log(`📋 Fetching contract: ${contractId}`);
-    
+
     // Use API route for better reliability and server-side auth handling
     const response = await fetch(`/api/contracts/${contractId}`, {
       credentials: 'include',
@@ -85,17 +85,19 @@ const fetchContract = async (
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('Error fetching contract:', errorData);
-      
+
       if (response.status === 404) {
         // Contract not found
         return null;
       }
-      
-      throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
+
+      throw new Error(
+        errorData.error || errorData.message || `HTTP ${response.status}`
+      );
     }
 
     const result = await response.json();
-    
+
     if (!result.success || !result.contract) {
       console.warn('⚠️ Contract fetch returned no data');
       return null;
@@ -103,10 +105,10 @@ const fetchContract = async (
 
     // Transform the API response to match ContractWithRelations type
     const contract = result.contract;
-    
+
     // Handle promoter data - API returns promoters array, we need promoter object
     const promoter = contract.promoters?.[0] || null;
-    
+
     const transformed: ContractWithRelations = {
       ...contract,
       promoter,
@@ -127,24 +129,27 @@ const fetchContract = async (
 export function useContract(contractId: string) {
   const { user, loading: authLoading, initialLoading } = useAuth();
   const queryKey = ['contract', contractId];
-  
+
   // Add timeout to prevent infinite loading if auth is stuck
   const [authTimeout, setAuthTimeout] = useState(false);
-  
+
   useEffect(() => {
     // If auth is still loading after 10 seconds, proceed anyway
     const timer = setTimeout(() => {
       if (authLoading || initialLoading) {
-        console.warn('⚠️ Auth loading timeout reached in useContract, proceeding with query');
+        console.warn(
+          '⚠️ Auth loading timeout reached in useContract, proceeding with query'
+        );
         setAuthTimeout(true);
       }
     }, 10000);
-    
+
     return () => clearTimeout(timer);
   }, [authLoading, initialLoading]);
 
   // Enable query after auth completes OR after timeout
-  const shouldEnableQuery = !!contractId && (!initialLoading && !authLoading || authTimeout);
+  const shouldEnableQuery =
+    !!contractId && ((!initialLoading && !authLoading) || authTimeout);
 
   const {
     data: contract,
@@ -169,7 +174,8 @@ export function useContract(contractId: string) {
   });
 
   // Return loading state that includes auth initialization (but respect timeout)
-  const loading = (!authTimeout && (authLoading || initialLoading)) || queryLoading;
+  const loading =
+    (!authTimeout && (authLoading || initialLoading)) || queryLoading;
 
   return {
     contract,

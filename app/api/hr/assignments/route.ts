@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    let query = (supabaseAdmin.from('client_assignments') as any)
-      .select(`
+    let query = (supabaseAdmin.from('client_assignments') as any).select(`
         *,
         employer_employee:employer_employee_id (
           id,
@@ -64,7 +63,10 @@ export async function GET(request: NextRequest) {
 
     // Company scoping
     if (userProfile?.role !== 'admin') {
-      query = query.eq('employer_employee.company_id', userProfile?.active_company_id);
+      query = query.eq(
+        'employer_employee.company_id',
+        userProfile?.active_company_id
+      );
     }
 
     // Filter by employee
@@ -115,7 +117,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -147,9 +149,17 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!employer_employee_id || !client_party_id || !job_title || !start_date) {
+    if (
+      !employer_employee_id ||
+      !client_party_id ||
+      !job_title ||
+      !start_date
+    ) {
       return NextResponse.json(
-        { error: 'Missing required fields: employer_employee_id, client_party_id, job_title, start_date' },
+        {
+          error:
+            'Missing required fields: employer_employee_id, client_party_id, job_title, start_date',
+        },
         { status: 400 }
       );
     }
@@ -200,14 +210,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!client) {
-      return NextResponse.json(
-        { error: 'Client not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
     }
 
     // Create assignment
-    const { data: assignment, error: createError } = await (supabaseAdmin.from('client_assignments') as any)
+    const { data: assignment, error: createError } = await (
+      supabaseAdmin.from('client_assignments') as any
+    )
       .insert({
         employer_employee_id,
         client_party_id,
@@ -239,7 +248,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If generate_deployment_letter is true, trigger deployment letter generation
-    let deploymentLetterId = assignment.deployment_letter_id;
+    const deploymentLetterId = assignment.deployment_letter_id;
     if (generate_deployment_letter && !deployment_letter_id) {
       // This would call the deployment letter generation API
       // For now, we'll just return the assignment
@@ -260,4 +269,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

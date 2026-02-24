@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * Supabase Client Configuration
- * 
+ *
  * IMPORTANT for Single Sign-On (SSO):
  * - storageKey must match other platforms (BusinessHub, Contract-Management-System, business-services-hub)
  * - All platforms must use same Supabase project (same URL and anon key)
@@ -26,7 +26,8 @@ export function getSupabaseClient() {
         detectSessionInUrl: true,
         // CRITICAL: Must match BusinessHub and business-services-hub for SSO
         storageKey: 'sb-auth-token',
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storage:
+          typeof window !== 'undefined' ? window.localStorage : undefined,
       },
     });
   }

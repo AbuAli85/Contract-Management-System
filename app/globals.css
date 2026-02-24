@@ -418,3 +418,88 @@ body {
     padding: 0.375rem 0.5rem;
   }
 }
+
+/* ============================================
+   RTL (Right-to-Left) Layout Support
+   ============================================ */
+
+html[dir='rtl'] {
+  font-family: 'Cairo', 'Tajawal', 'Noto Sans Arabic', 'Arial Unicode MS', 'Tahoma', sans-serif;
+}
+
+html[dir='rtl'] aside.fixed {
+  left: auto !important;
+  right: 0 !important;
+}
+
+html[dir='rtl'] input,
+html[dir='rtl'] textarea,
+html[dir='rtl'] select {
+  text-align: right;
+  direction: rtl;
+}
+
+html[dir='rtl'] th,
+html[dir='rtl'] td {
+  text-align: right;
+}
+
+html[dir='rtl'] [data-radix-popper-content-wrapper] {
+  direction: rtl;
+}
+
+html[dir='rtl'] [data-sonner-toaster] {
+  left: 1rem !important;
+  right: auto !important;
+}
+
+html[dir='rtl'] [aria-label='breadcrumb'] ol {
+  flex-direction: row-reverse;
+}
+
+html[dir='rtl'] input[type='number'],
+html[dir='rtl'] input[type='date'],
+html[dir='rtl'] input[type='time'],
+html[dir='rtl'] input[type='tel'] {
+  direction: ltr;
+  text-align: right;
+}
+
+html[dir='rtl'] canvas,
+html[dir='rtl'] svg {
+  direction: ltr;
+}
+
+html[dir='rtl'] h1,
+html[dir='rtl'] h2,
+html[dir='rtl'] h3,
+html[dir='rtl'] h4,
+html[dir='rtl'] h5,
+html[dir='rtl'] h6 {
+  font-family: 'Cairo', 'Tajawal', 'Noto Sans Arabic', sans-serif;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+html[dir='rtl'] p,
+html[dir='rtl'] span,
+html[dir='rtl'] label,
+html[dir='rtl'] li {
+  font-family: 'Cairo', 'Tajawal', 'Noto Sans Arabic', sans-serif;
+  line-height: 1.8;
+}
+
+html[dir='rtl'] [data-contract-id],
+html[dir='rtl'] code,
+html[dir='rtl'] pre {
+  direction: ltr;
+  text-align: left;
+  font-family: 'Courier New', monospace;
+}
+
+@media print {
+  html[dir='rtl'] body {
+    direction: rtl;
+    font-family: 'Cairo', 'Tajawal', 'Noto Sans Arabic', sans-serif;
+  }
+}

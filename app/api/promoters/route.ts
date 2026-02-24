@@ -110,9 +110,7 @@ async function handleGET(request: Request) {
       });
     }
 
-    logger.log(
-      '🔍 API /api/promoters GET called (RBAC ENABLED, Rate Limited)'
-    );
+    logger.log('🔍 API /api/promoters GET called (RBAC ENABLED, Rate Limited)');
 
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -145,16 +143,22 @@ async function handleGET(request: Request) {
         getAll() {
           return cookieStore.getAll();
         },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options as CookieOptions)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
-          },
+        setAll(
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options?: CookieOptions;
+          }>
+        ) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options as CookieOptions)
+            );
+          } catch {
+            // Ignore cookie setting errors
+          }
         },
+      },
     });
 
     // ✅ SECURITY: Verify authenticated user
@@ -283,10 +287,13 @@ async function handleGET(request: Request) {
       if (partyCheck && partyCheck.type === 'Employer') {
         // active_company_id IS a party_id for party-based companies
         activePartyId = profile.active_company_id;
-        logger.log('Using party_id directly for promoter filtering (parties_employer_direct)', {
-          partyId: activePartyId,
-          companyId: profile.active_company_id,
-        });
+        logger.log(
+          'Using party_id directly for promoter filtering (parties_employer_direct)',
+          {
+            partyId: activePartyId,
+            companyId: profile.active_company_id,
+          }
+        );
       } else {
         // Get company's party_id from companies table
         const { data: company } = await adminClient
@@ -479,7 +486,9 @@ async function handleGET(request: Request) {
 // Export GET with optional RBAC protection (bypass when RBAC_ENFORCEMENT is not true)
 export const GET = RBAC_BYPASS
   ? async (request: Request) => {
-      console.log('⚠️ RBAC BYPASS ENABLED for promoters - Running without permission checks');
+      console.log(
+        '⚠️ RBAC BYPASS ENABLED for promoters - Running without permission checks'
+      );
       return handleGET(request);
     }
   : withRBAC('promoter:read:own', handleGET);
@@ -523,7 +532,13 @@ export const POST = withRBAC(
           getAll() {
             return cookieStore.getAll();
           },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+          setAll(
+            cookiesToSet: Array<{
+              name: string;
+              value: string;
+              options?: CookieOptions;
+            }>
+          ) {
             try {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options as CookieOptions)

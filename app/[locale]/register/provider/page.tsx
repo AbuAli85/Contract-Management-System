@@ -160,7 +160,7 @@ export default function ProviderRegistrationPage() {
     }
   };
 
-  const handleRegistrationSuccess = () => {
+  const _handleRegistrationSuccess = () => {
     setRegistrationComplete(true);
 
     // Redirect to dashboard after 3 seconds
@@ -169,7 +169,7 @@ export default function ProviderRegistrationPage() {
     }, 3000);
   };
 
-  const handleRegistrationError = (error: string) => {
+  const _handleRegistrationError = (error: string) => {
     console.error('Registration error:', error);
     // Error is handled by the form component
   };

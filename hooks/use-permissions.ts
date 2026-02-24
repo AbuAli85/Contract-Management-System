@@ -258,7 +258,7 @@ export function usePermissions() {
   const hasPermission = (permission: string): boolean => {
     if (loading || authLoading) return false;
     if (role === 'admin') return true;
-    
+
     // Parse permission string (format: 'resource:action' or 'resource:action:scope')
     const parts = permission.split(':');
     const resource = parts[0];

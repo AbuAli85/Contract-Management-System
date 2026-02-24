@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     // In a production system, you'd update a notifications table
     // For now, we'll just return success
-    
+
     return NextResponse.json({
       success: true,
       message: 'All notifications marked as read',
@@ -32,4 +32,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

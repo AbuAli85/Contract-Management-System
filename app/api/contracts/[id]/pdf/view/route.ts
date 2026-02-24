@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { withRBAC } from '@/lib/rbac/guard';
-import { generateContractPDF } from '@/lib/pdf-generator';
 
 // Create Supabase service client for storage operations
 function createServiceClient() {
@@ -98,8 +97,7 @@ export const GET = withRBAC(
       const isApproved =
         contract.status === 'approved' ||
         contract.approval_status === 'approved';
-      const hasPDF = !!contract.pdf_url;
-
+      const _hasPDF = !!contract.pdf_url;
       if (!isApproved) {
         console.log('❌ Contract not approved:', contract.approval_status);
         return NextResponse.json(
@@ -110,7 +108,7 @@ export const GET = withRBAC(
 
       // Find the correct PDF file in storage - MUST fetch from storage, never generate
       let pdfFileName: string | null = null;
-      let pdfUrl: string | null = contract.pdf_url || null;
+      const _pdfUrl: string | null = contract.pdf_url || null;
 
       if (!contract.contract_number) {
         console.error('❌ Contract number missing, cannot search for PDF');
@@ -219,7 +217,7 @@ export const GET = withRBAC(
                 .from('contracts')
                 .getPublicUrl(matchingFile.name);
 
-              pdfUrl = publicUrl;
+              _pdfUrl = publicUrl;
 
               // Update contract with correct URL (fire and forget)
               void (async () => {

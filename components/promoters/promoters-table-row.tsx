@@ -156,16 +156,17 @@ function DocumentStatusPill({
             <p className='text-xs text-muted-foreground mt-1'>{health.label}</p>
             {health.expiresOn && (
               <p className='text-xs text-muted-foreground mt-1'>
-                Expiry Date: {new Date(health.expiresOn).toLocaleDateString('en-US', {
+                Expiry Date:{' '}
+                {new Date(health.expiresOn).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric'
+                  day: 'numeric',
                 })}
               </p>
             )}
             {health.daysRemaining !== null && (
               <p className='text-xs text-muted-foreground mt-1'>
-                {health.daysRemaining > 0 
+                {health.daysRemaining > 0
                   ? `${health.daysRemaining} days remaining`
                   : `Expired ${Math.abs(health.daysRemaining)} days ago`}
               </p>
@@ -261,7 +262,7 @@ function EnhancedActionsMenu({
             : 'Notification sent';
 
       toast({
-        title: '✓ ' + notificationText,
+        title: `✓ ${notificationText}`,
         description: `${notificationText} to ${promoter.displayName}.`,
       });
     } catch (error) {
@@ -579,13 +580,17 @@ export function PromotersTableRow({
                           </span>
                         </span>
                       ) : (
-                        <span className='text-slate-500 dark:text-slate-400 italic'>Team Member</span>
+                        <span className='text-slate-500 dark:text-slate-400 italic'>
+                          Team Member
+                        </span>
                       )}
                     </div>
                     {promoter.work_location && (
                       <div className='text-xs text-slate-500 dark:text-slate-500 flex items-center gap-1'>
                         <MapPin className='h-3 w-3 flex-shrink-0' />
-                        <span className='truncate'>{promoter.work_location}</span>
+                        <span className='truncate'>
+                          {promoter.work_location}
+                        </span>
                       </div>
                     )}
                   </div>

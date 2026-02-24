@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { _useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -20,14 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  Download,
-  Eye,
-  DollarSign,
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle, Eye, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -58,7 +51,7 @@ interface PayrollEntry {
 
 export default function PayrollRunDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const _router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const runId = params.id as string;
@@ -99,7 +92,10 @@ export default function PayrollRunDetailPage() {
       const response = await fetch(`/api/hr/payroll/runs/${runId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'paid', payment_date: new Date().toISOString().split('T')[0] }),
+        body: JSON.stringify({
+          status: 'paid',
+          payment_date: new Date().toISOString().split('T')[0],
+        }),
       });
       if (!response.ok) throw new Error('Failed to mark as paid');
       return response.json();
@@ -115,19 +111,19 @@ export default function PayrollRunDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className='flex items-center justify-center py-12'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
       </div>
     );
   }
 
   if (!payrollRun) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Payroll run not found</p>
-        <Link href="/hr/payroll">
-          <Button variant="outline" className="mt-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className='text-center py-12'>
+        <p className='text-muted-foreground'>Payroll run not found</p>
+        <Link href='/hr/payroll'>
+          <Button variant='outline' className='mt-4'>
+            <ArrowLeft className='h-4 w-4 mr-2' />
             Back to Payroll
           </Button>
         </Link>
@@ -136,33 +132,40 @@ export default function PayrollRunDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <Link href="/hr/payroll">
-            <Button variant="ghost" size="sm" className="mb-2">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+          <Link href='/hr/payroll'>
+            <Button variant='ghost' size='sm' className='mb-2'>
+              <ArrowLeft className='h-4 w-4 mr-2' />
               Back
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold">
-            Payroll Run - {format(new Date(payrollRun.payroll_month), 'MMMM yyyy')}
+          <h1 className='text-3xl font-bold'>
+            Payroll Run -{' '}
+            {format(new Date(payrollRun.payroll_month), 'MMMM yyyy')}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className='text-muted-foreground mt-1'>
             Review and manage payroll entries
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className='flex gap-2'>
           {payrollRun.status === 'draft' && (
-            <Button onClick={() => approveMutation.mutate()} disabled={approveMutation.isPending}>
-              <CheckCircle className="h-4 w-4 mr-2" />
+            <Button
+              onClick={() => approveMutation.mutate()}
+              disabled={approveMutation.isPending}
+            >
+              <CheckCircle className='h-4 w-4 mr-2' />
               Approve
             </Button>
           )}
           {payrollRun.status === 'approved' && (
-            <Button onClick={() => markPaidMutation.mutate()} disabled={markPaidMutation.isPending}>
-              <DollarSign className="h-4 w-4 mr-2" />
+            <Button
+              onClick={() => markPaidMutation.mutate()}
+              disabled={markPaidMutation.isPending}
+            >
+              <DollarSign className='h-4 w-4 mr-2' />
               Mark as Paid
             </Button>
           )}
@@ -170,41 +173,45 @@ export default function PayrollRunDetailPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <CardTitle className='text-sm font-medium'>Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge variant={payrollRun.status === 'paid' ? 'default' : 'outline'}>
+            <Badge
+              variant={payrollRun.status === 'paid' ? 'default' : 'outline'}
+            >
               {payrollRun.status}
             </Badge>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+            <CardTitle className='text-sm font-medium'>Total Amount</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {payrollRun.total_amount?.toFixed(2)} OMR
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Employees</CardTitle>
+            <CardTitle className='text-sm font-medium'>Employees</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{payrollRun.total_employees}</div>
+            <div className='text-2xl font-bold'>
+              {payrollRun.total_employees}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Net Salary</CardTitle>
+            <CardTitle className='text-sm font-medium'>Net Salary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {payrollRun.total_amount?.toFixed(2)} OMR
             </div>
           </CardContent>
@@ -234,7 +241,7 @@ export default function PayrollRunDetailPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {entries.map((entry) => (
+              {entries.map(entry => (
                 <TableRow key={entry.id}>
                   <TableCell>
                     {entry.employer_employee?.employee?.name_en ||
@@ -245,7 +252,7 @@ export default function PayrollRunDetailPage() {
                   <TableCell>{entry.allowances?.toFixed(2)} OMR</TableCell>
                   <TableCell>{entry.deductions?.toFixed(2)} OMR</TableCell>
                   <TableCell>{entry.overtime_pay?.toFixed(2)} OMR</TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className='font-medium'>
                     {entry.net_salary?.toFixed(2)} OMR
                   </TableCell>
                   <TableCell>
@@ -254,16 +261,16 @@ export default function PayrollRunDetailPage() {
                         entry.payment_status === 'paid'
                           ? 'default'
                           : entry.payment_status === 'failed'
-                          ? 'destructive'
-                          : 'outline'
+                            ? 'destructive'
+                            : 'outline'
                       }
                     >
                       {entry.payment_status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
+                    <Button variant='ghost' size='sm'>
+                      <Eye className='h-4 w-4 mr-2' />
                       View Payslip
                     </Button>
                   </TableCell>
@@ -276,4 +283,3 @@ export default function PayrollRunDetailPage() {
     </div>
   );
 }
-

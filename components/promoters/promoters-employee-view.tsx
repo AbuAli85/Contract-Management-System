@@ -24,7 +24,12 @@ import { useRoleContext } from './promoters-role-context';
 import type { DashboardPromoter } from './types';
 import { cn } from '@/lib/utils';
 import { toTitleCase } from '@/lib/utils/text-formatting';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface PromotersEmployeeViewProps {
   promoter: DashboardPromoter | null;
@@ -64,7 +69,8 @@ export function PromotersEmployeeView({
             Profile Not Found
           </h3>
           <p className='text-sm text-amber-700'>
-            Your promoter profile could not be found. Please contact your administrator.
+            Your promoter profile could not be found. Please contact your
+            administrator.
           </p>
         </CardContent>
       </Card>
@@ -121,7 +127,9 @@ export function PromotersEmployeeView({
                   {promoter.displayName}
                 </CardTitle>
                 <p className='text-sm text-muted-foreground mt-1'>
-                  {promoter.job_title ? toTitleCase(promoter.job_title) : 'Employee'}
+                  {promoter.job_title
+                    ? toTitleCase(promoter.job_title)
+                    : 'Employee'}
                 </p>
               </div>
             </div>
@@ -133,7 +141,11 @@ export function PromotersEmployeeView({
                 </Button>
               )}
               {onDownloadDocuments && (
-                <Button variant='outline' size='sm' onClick={onDownloadDocuments}>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={onDownloadDocuments}
+                >
                   <Download className='h-4 w-4 mr-2' />
                   Documents
                 </Button>
@@ -179,14 +191,17 @@ export function PromotersEmployeeView({
                 {promoter.organisationLabel && (
                   <div className='flex items-center gap-2'>
                     <Building2 className='h-4 w-4 text-muted-foreground' />
-                    <span className='text-sm font-medium'>{promoter.organisationLabel}</span>
+                    <span className='text-sm font-medium'>
+                      {promoter.organisationLabel}
+                    </span>
                   </div>
                 )}
                 {promoter.created_at && (
                   <div className='flex items-center gap-2'>
                     <Calendar className='h-4 w-4 text-muted-foreground' />
                     <span className='text-sm'>
-                      Joined {format(new Date(promoter.created_at), 'MMM dd, yyyy')}
+                      Joined{' '}
+                      {format(new Date(promoter.created_at), 'MMM dd, yyyy')}
                     </span>
                   </div>
                 )}
@@ -197,11 +212,15 @@ export function PromotersEmployeeView({
                     promoter.overallStatus === 'active'
                       ? 'bg-green-100 text-green-700 border-green-300'
                       : promoter.overallStatus === 'critical'
-                      ? 'bg-red-100 text-red-700 border-red-300'
-                      : 'bg-amber-100 text-amber-700 border-amber-300'
+                        ? 'bg-red-100 text-red-700 border-red-300'
+                        : 'bg-amber-100 text-amber-700 border-amber-300'
                   )}
                 >
-                  {promoter.overallStatus === 'active' ? 'Active' : promoter.overallStatus === 'critical' ? 'Critical' : 'Needs Attention'}
+                  {promoter.overallStatus === 'active'
+                    ? 'Active'
+                    : promoter.overallStatus === 'critical'
+                      ? 'Critical'
+                      : 'Needs Attention'}
                 </Badge>
               </div>
             </div>
@@ -223,16 +242,19 @@ export function PromotersEmployeeView({
                     </div>
                     <Badge
                       variant='outline'
-                      className={cn('flex items-center gap-1', getStatusColor(documentStatus.id))}
+                      className={cn(
+                        'flex items-center gap-1',
+                        getStatusColor(documentStatus.id)
+                      )}
                     >
                       {getStatusIcon(documentStatus.id)}
                       {documentStatus.id === 'valid'
                         ? 'Valid'
                         : documentStatus.id === 'expiring'
-                        ? 'Expiring'
-                        : documentStatus.id === 'expired'
-                        ? 'Expired'
-                        : 'Missing'}
+                          ? 'Expiring'
+                          : documentStatus.id === 'expired'
+                            ? 'Expired'
+                            : 'Missing'}
                     </Badge>
                   </div>
                   {promoter.idDocument.daysRemaining !== null && (
@@ -244,7 +266,11 @@ export function PromotersEmployeeView({
                   )}
                   {promoter.idDocument.expiresOn && (
                     <p className='text-xs text-muted-foreground mt-1'>
-                      Expires: {format(new Date(promoter.idDocument.expiresOn), 'MMM dd, yyyy')}
+                      Expires:{' '}
+                      {format(
+                        new Date(promoter.idDocument.expiresOn),
+                        'MMM dd, yyyy'
+                      )}
                     </p>
                   )}
                 </CardContent>
@@ -260,16 +286,19 @@ export function PromotersEmployeeView({
                     </div>
                     <Badge
                       variant='outline'
-                      className={cn('flex items-center gap-1', getStatusColor(documentStatus.passport))}
+                      className={cn(
+                        'flex items-center gap-1',
+                        getStatusColor(documentStatus.passport)
+                      )}
                     >
                       {getStatusIcon(documentStatus.passport)}
                       {documentStatus.passport === 'valid'
                         ? 'Valid'
                         : documentStatus.passport === 'expiring'
-                        ? 'Expiring'
-                        : documentStatus.passport === 'expired'
-                        ? 'Expired'
-                        : 'Missing'}
+                          ? 'Expiring'
+                          : documentStatus.passport === 'expired'
+                            ? 'Expired'
+                            : 'Missing'}
                     </Badge>
                   </div>
                   {promoter.passportDocument.daysRemaining !== null && (
@@ -281,7 +310,11 @@ export function PromotersEmployeeView({
                   )}
                   {promoter.passportDocument.expiresOn && (
                     <p className='text-xs text-muted-foreground mt-1'>
-                      Expires: {format(new Date(promoter.passportDocument.expiresOn), 'MMM dd, yyyy')}
+                      Expires:{' '}
+                      {format(
+                        new Date(promoter.passportDocument.expiresOn),
+                        'MMM dd, yyyy'
+                      )}
                     </p>
                   )}
                 </CardContent>
@@ -290,22 +323,37 @@ export function PromotersEmployeeView({
           </div>
 
           {/* Action Required Alerts */}
-          {(documentStatus.id !== 'valid' || documentStatus.passport !== 'valid') && (
+          {(documentStatus.id !== 'valid' ||
+            documentStatus.passport !== 'valid') && (
             <Card className='border-2 border-amber-200 bg-amber-50/50'>
               <CardContent className='p-4'>
                 <div className='flex items-start gap-3'>
                   <AlertTriangle className='h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5' />
                   <div className='flex-1'>
-                    <h4 className='font-semibold text-amber-900 mb-1'>Action Required</h4>
+                    <h4 className='font-semibold text-amber-900 mb-1'>
+                      Action Required
+                    </h4>
                     <ul className='text-sm text-amber-800 space-y-1'>
                       {documentStatus.id !== 'valid' && (
                         <li>
-                          • Your ID Card {documentStatus.id === 'expired' ? 'has expired' : documentStatus.id === 'expiring' ? 'is expiring soon' : 'is missing'}. Please update it.
+                          • Your ID Card{' '}
+                          {documentStatus.id === 'expired'
+                            ? 'has expired'
+                            : documentStatus.id === 'expiring'
+                              ? 'is expiring soon'
+                              : 'is missing'}
+                          . Please update it.
                         </li>
                       )}
                       {documentStatus.passport !== 'valid' && (
                         <li>
-                          • Your Passport {documentStatus.passport === 'expired' ? 'has expired' : documentStatus.passport === 'expiring' ? 'is expiring soon' : 'is missing'}. Please update it.
+                          • Your Passport{' '}
+                          {documentStatus.passport === 'expired'
+                            ? 'has expired'
+                            : documentStatus.passport === 'expiring'
+                              ? 'is expiring soon'
+                              : 'is missing'}
+                          . Please update it.
                         </li>
                       )}
                     </ul>
@@ -319,4 +367,3 @@ export function PromotersEmployeeView({
     </div>
   );
 }
-

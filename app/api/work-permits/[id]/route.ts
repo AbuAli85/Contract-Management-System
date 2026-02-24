@@ -15,13 +15,15 @@ export const GET = withAnyRBAC(
 
       const { data: application, error } = await supabase
         .from('work_permit_applications')
-        .select(`
+        .select(
+          `
           *,
           employer:profiles!work_permit_applications_employer_id_fkey(id, email, full_name),
           employee:profiles!work_permit_applications_employee_id_fkey(id, email, full_name),
           employer_party:parties(id, name_en, name_ar, crn),
           promoter:promoters(id, name_en, name_ar, email, passport_number, id_card_number)
-        `)
+        `
+        )
         .eq('id', id)
         .single();
 
@@ -33,7 +35,10 @@ export const GET = withAnyRBAC(
           );
         }
         return NextResponse.json(
-          { error: 'Failed to fetch work permit application', details: error.message },
+          {
+            error: 'Failed to fetch work permit application',
+            details: error.message,
+          },
           { status: 500 }
         );
       }
@@ -109,13 +114,29 @@ export const PUT = withAnyRBAC(
 
       // Update other fields
       const allowedFields = [
-        'employee_name_en', 'employee_name_ar', 'national_id', 'passport_number',
-        'nationality', 'job_title', 'department', 'employment_type',
-        'work_permit_start_date', 'work_permit_end_date', 'work_permit_category',
-        'salary', 'currency', 'required_documents', 'submitted_documents',
-        'document_urls', 'internal_notes', 'ministry_reference_number',
-        'ministry_submission_date', 'ministry_approval_date', 'ministry_notes',
-        'rejection_reason', 'work_permit_number'
+        'employee_name_en',
+        'employee_name_ar',
+        'national_id',
+        'passport_number',
+        'nationality',
+        'job_title',
+        'department',
+        'employment_type',
+        'work_permit_start_date',
+        'work_permit_end_date',
+        'work_permit_category',
+        'salary',
+        'currency',
+        'required_documents',
+        'submitted_documents',
+        'document_urls',
+        'internal_notes',
+        'ministry_reference_number',
+        'ministry_submission_date',
+        'ministry_approval_date',
+        'ministry_notes',
+        'rejection_reason',
+        'work_permit_number',
       ];
 
       allowedFields.forEach(field => {
@@ -134,16 +155,18 @@ export const PUT = withAnyRBAC(
       if (error) {
         console.error('Error updating work permit application:', error);
         return NextResponse.json(
-          { error: 'Failed to update work permit application', details: error.message },
+          {
+            error: 'Failed to update work permit application',
+            details: error.message,
+          },
           { status: 500 }
         );
       }
 
       // Update compliance record if work permit was approved
       if (body.status === 'approved' && application.work_permit_end_date) {
-        await supabase
-          .from('work_permit_compliance')
-          .upsert({
+        await supabase.from('work_permit_compliance').upsert(
+          {
             employer_id: application.employer_id,
             employer_party_id: application.employer_party_id,
             employee_id: application.employee_id,
@@ -151,9 +174,11 @@ export const PUT = withAnyRBAC(
             work_permit_number: application.work_permit_number,
             work_permit_expiry_date: application.work_permit_end_date,
             compliance_status: 'compliant',
-          }, {
+          },
+          {
             onConflict: 'employer_id,employee_id',
-          });
+          }
+        );
       }
 
       return NextResponse.json({
@@ -211,7 +236,10 @@ export const DELETE = withAnyRBAC(
       if (error) {
         console.error('Error deleting work permit application:', error);
         return NextResponse.json(
-          { error: 'Failed to delete work permit application', details: error.message },
+          {
+            error: 'Failed to delete work permit application',
+            details: error.message,
+          },
           { status: 500 }
         );
       }
@@ -229,4 +257,3 @@ export const DELETE = withAnyRBAC(
     }
   }
 );
-

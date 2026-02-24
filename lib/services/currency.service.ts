@@ -10,7 +10,7 @@ import type {
   ExchangeRate,
   ConversionResult,
 } from '@/types/currency';
-import { CURRENCY_CONFIG, getCurrencyMetadata } from '@/types/currency';
+import { _CURRENCY_CONFIG, getCurrencyMetadata } from '@/types/currency';
 
 class CurrencyService {
   private exchangeRatesCache: Map<string, ExchangeRate> = new Map();
@@ -50,17 +50,17 @@ class CurrencyService {
     let result = '';
 
     if (showSymbol && metadata.symbolPosition === 'before') {
-      result += metadata.symbol + ' ';
+      result += `${metadata.symbol} `;
     }
 
     result += formattedNumber;
 
     if (showSymbol && metadata.symbolPosition === 'after') {
-      result += ' ' + metadata.symbol;
+      result += ` ${metadata.symbol}`;
     }
 
     if (showCode) {
-      result += ' ' + currency;
+      result += ` ${currency}`;
     }
 
     return result.trim();

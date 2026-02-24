@@ -5,13 +5,13 @@ import type { Database } from '@/types/supabase';
 
 /**
  * Supabase Client Configuration (SSR)
- * 
+ *
  * IMPORTANT for Single Sign-On (SSO):
  * - This client uses cookies for SSR compatibility, but also syncs to localStorage
  * - storageKey must match other platforms (BusinessHub, Contract-Management-System, business-services-hub)
  * - All platforms must use same Supabase project (same URL and anon key)
  * - This allows one login to work across all platforms
- * 
+ *
  * The localStorage sync in cookie handlers ensures SSO works even with SSR
  */
 
@@ -31,28 +31,34 @@ function createSupabaseClient() {
   }
 
   // Extract project reference once for reuse
-  const projectRef = supabaseUrl?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
-  
+  const projectRef = supabaseUrl?.match(
+    /https?:\/\/([^.]+)\.supabase\.co/
+  )?.[1];
+
   // Helper function to fix cookie names
   const fixCookieName = (name: string): string => {
     if (!projectRef) return name;
-    
+
     // Fix old format: sb-auth-token.X → sb-{projectRef}-auth-token.X
     if (name.startsWith('sb-auth-token') && !name.includes(projectRef)) {
       return name.replace(/^sb-auth-token/, `sb-${projectRef}-auth-token`);
     }
-    
+
     // Fix other sb- cookies missing project ref
-    if (name.startsWith('sb-') && !name.includes(projectRef) && name !== 'sb-auth-token') {
+    if (
+      name.startsWith('sb-') &&
+      !name.includes(projectRef) &&
+      name !== 'sb-auth-token'
+    ) {
       const parts = name.split('-');
       if (parts.length > 1 && parts[1] !== projectRef) {
         return `sb-${projectRef}-${parts.slice(1).join('-')}`;
       }
     }
-    
+
     return name;
   };
-  
+
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -64,7 +70,7 @@ function createSupabaseClient() {
           if (!document || !document.cookie) {
             return [];
           }
-          
+
           const cookies = document.cookie.split(';').map(cookie => {
             const trimmedCookie = cookie.trim();
             const firstEqualsIndex = trimmedCookie.indexOf('=');
@@ -73,10 +79,10 @@ function createSupabaseClient() {
             }
             const name = trimmedCookie.substring(0, firstEqualsIndex);
             const value = trimmedCookie.substring(firstEqualsIndex + 1);
-            
+
             // Fix cookie names when reading (for old-format cookies)
             const fixedName = fixCookieName(name);
-            
+
             // If name was fixed, also rename the actual cookie
             if (fixedName !== name && value) {
               try {
@@ -86,15 +92,17 @@ function createSupabaseClient() {
                 document.cookie = `${fixedName}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
                 // Delete old cookie
                 document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-                console.debug(`[SSO] Auto-fixed cookie on read: ${name} → ${fixedName}`);
+                console.debug(
+                  `[SSO] Auto-fixed cookie on read: ${name} → ${fixedName}`
+                );
               } catch (e) {
                 console.debug(`[SSO] Could not auto-fix cookie ${name}:`, e);
               }
             }
-            
+
             return { name: fixedName, value };
           });
-          
+
           return cookies;
         } catch (error) {
           console.error('Error parsing cookies:', error);
@@ -110,24 +118,30 @@ function createSupabaseClient() {
           if (!document) {
             return;
           }
-          
+
           cookiesToSet.forEach(({ name, value }) => {
             try {
               // Fix cookie names if they're missing the project reference
               const cookieName = fixCookieName(name);
               if (cookieName !== name) {
-                console.debug(`[SSO] Fixed cookie name on set: ${name} → ${cookieName}`);
+                console.debug(
+                  `[SSO] Fixed cookie name on set: ${name} → ${cookieName}`
+                );
               }
-              
+
               // Build cookie string with proper flags
               const isProduction = window.location.protocol === 'https:';
               const secureFlag = isProduction ? '; Secure' : '';
               document.cookie = `${cookieName}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
-              
+
               // CRITICAL: Also sync to localStorage for SSO across platforms
               // This allows login on one platform to work on all platforms
               // Supabase SSR uses cookies, but we sync to localStorage for cross-platform SSO
-              if (cookieName.includes('auth-token') || cookieName.includes('sb-') || cookieName.includes('supabase')) {
+              if (
+                cookieName.includes('auth-token') ||
+                cookieName.includes('sb-') ||
+                cookieName.includes('supabase')
+              ) {
                 try {
                   const storageKey = 'sb-auth-token';
                   if (value && value.trim()) {
@@ -136,7 +150,10 @@ function createSupabaseClient() {
                       const decoded = decodeURIComponent(value);
                       const sessionData = JSON.parse(decoded);
                       if (sessionData && typeof sessionData === 'object') {
-                        localStorage.setItem(storageKey, JSON.stringify(sessionData));
+                        localStorage.setItem(
+                          storageKey,
+                          JSON.stringify(sessionData)
+                        );
                       } else {
                         // If not JSON, store the raw value (for token strings)
                         localStorage.setItem(storageKey, value);
@@ -151,7 +168,10 @@ function createSupabaseClient() {
                   }
                 } catch (storageError) {
                   // Silently fail if localStorage is not available
-                  console.debug('Could not sync to localStorage for SSO:', storageError);
+                  console.debug(
+                    'Could not sync to localStorage for SSO:',
+                    storageError
+                  );
                 }
               }
             } catch (error) {
@@ -186,54 +206,75 @@ export const createClient = () => {
       // Check if environment variables are available
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
+
       if (!supabaseUrl || !supabaseAnonKey) {
         console.error('[Supabase Client] Missing environment variables:', {
           hasUrl: !!supabaseUrl,
           hasKey: !!supabaseAnonKey,
-          isProduction: window.location.hostname.includes('thesmartpro.io') || window.location.hostname.includes('vercel.app'),
+          isProduction:
+            window.location.hostname.includes('thesmartpro.io') ||
+            window.location.hostname.includes('vercel.app'),
         });
-        console.error('[Supabase Client] Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting platform (Vercel)');
+        console.error(
+          '[Supabase Client] Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting platform (Vercel)'
+        );
         return null;
       }
-      
+
       supabaseInstance = createSupabaseClient();
-      
+
       // CRITICAL: Force session initialization from localStorage
       // createBrowserClient should do this automatically, but we ensure it happens
       // This reads from localStorage and sets cookies
-      supabaseInstance.auth.getSession().then(({ data: { session }, error }) => {
-        if (session && !error && session.user) {
-          console.log('[SSO] Session initialized from localStorage, cookies should be set');
-          
-          // Verify cookies were set by checking if we can read them back
-          const cookies = document.cookie.split(';').map(c => c.trim());
-          const hasAuthCookies = cookies.some(c => 
-            c.includes('sb-') && (c.includes('auth-token') || c.includes('auth'))
-          );
-          
-          if (!hasAuthCookies) {
-            console.warn('[SSO] Session found but cookies not set. Attempting to set session again...');
-            // Force setSession to ensure cookies are created
-            supabaseInstance.auth.setSession({
-              access_token: session.access_token,
-              refresh_token: session.refresh_token,
-            }).then(({ error: setError }) => {
-              if (setError) {
-                console.error('[SSO] Failed to set session in cookies:', setError);
-              } else {
-                console.log('[SSO] Session forced into cookies');
-              }
-            });
+      supabaseInstance.auth
+        .getSession()
+        .then(({ data: { session }, error }) => {
+          if (session && !error && session.user) {
+            console.log(
+              '[SSO] Session initialized from localStorage, cookies should be set'
+            );
+
+            // Verify cookies were set by checking if we can read them back
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const hasAuthCookies = cookies.some(
+              c =>
+                c.includes('sb-') &&
+                (c.includes('auth-token') || c.includes('auth'))
+            );
+
+            if (!hasAuthCookies) {
+              console.warn(
+                '[SSO] Session found but cookies not set. Attempting to set session again...'
+              );
+              // Force setSession to ensure cookies are created
+              supabaseInstance.auth
+                .setSession({
+                  access_token: session.access_token,
+                  refresh_token: session.refresh_token,
+                })
+                .then(({ error: setError }) => {
+                  if (setError) {
+                    console.error(
+                      '[SSO] Failed to set session in cookies:',
+                      setError
+                    );
+                  } else {
+                    console.log('[SSO] Session forced into cookies');
+                  }
+                });
+            }
+          } else if (error) {
+            console.warn(
+              '[SSO] No valid session found in localStorage:',
+              error.message
+            );
+          } else {
+            console.debug('[SSO] No session found - user needs to log in');
           }
-        } else if (error) {
-          console.warn('[SSO] No valid session found in localStorage:', error.message);
-        } else {
-          console.debug('[SSO] No session found - user needs to log in');
-        }
-      }).catch((err) => {
-        console.debug('[SSO] Error initializing session:', err);
-      });
+        })
+        .catch(err => {
+          console.debug('[SSO] Error initializing session:', err);
+        });
     } catch (error) {
       console.error('Failed to create Supabase client:', error);
       return null;
@@ -269,49 +310,66 @@ async function migrateLocalStorageToCookies() {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) return;
-    
+
     const supabase = createClient();
     if (!supabase) return;
-    
+
     // Check if we already have a session in cookies
-    const { data: { session: cookieSession } } = await supabase.auth.getSession();
+    const {
+      data: { session: cookieSession },
+    } = await supabase.auth.getSession();
     if (cookieSession && cookieSession.user) {
       // Already have session in cookies, no migration needed
       return;
     }
-    
+
     // Check localStorage for session
     const localStorageSession = localStorage.getItem('sb-auth-token');
     if (!localStorageSession) return;
-    
+
     try {
       // Try to parse the localStorage value
       const sessionData = JSON.parse(localStorageSession);
-      
+
       // Check if it's the storage key format (with uuid, version, domain, ts)
       // This is Supabase's internal storage metadata, not the actual session
       if (sessionData.uuid && sessionData.version && sessionData.domain) {
-        console.warn('[SSO] Found storage key metadata in localStorage (not actual session data)');
-        console.warn('[SSO] This format cannot be used directly. Supabase client should handle this.');
-        console.warn('[SSO] If cookies are missing, the session may be expired or corrupted.');
-        
+        console.warn(
+          '[SSO] Found storage key metadata in localStorage (not actual session data)'
+        );
+        console.warn(
+          '[SSO] This format cannot be used directly. Supabase client should handle this.'
+        );
+        console.warn(
+          '[SSO] If cookies are missing, the session may be expired or corrupted.'
+        );
+
         // The createBrowserClient should read from its internal storage automatically
         // But if it's not working, the session might be expired
         // Try one more time to get the session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
         if (session && session.user && !error) {
-          console.log('[SSO] Session retrieved successfully from Supabase internal storage');
+          console.log(
+            '[SSO] Session retrieved successfully from Supabase internal storage'
+          );
           return;
         } else {
-          console.warn('[SSO] Could not retrieve session. The storage key may point to an expired session.');
-          console.warn('[SSO] Recommendation: Clear localStorage and log in again.');
+          console.warn(
+            '[SSO] Could not retrieve session. The storage key may point to an expired session.'
+          );
+          console.warn(
+            '[SSO] Recommendation: Clear localStorage and log in again.'
+          );
           // Optionally clear the invalid storage
           // localStorage.removeItem('sb-auth-token');
           return;
         }
       }
-      
+
       // Check if it has the required session fields (standard Supabase session format)
       if (sessionData.access_token && sessionData.refresh_token) {
         // Set the session in Supabase client, which will sync to cookies
@@ -319,24 +377,36 @@ async function migrateLocalStorageToCookies() {
           access_token: sessionData.access_token,
           refresh_token: sessionData.refresh_token,
         });
-        
+
         if (error) {
-          console.error('[SSO] Failed to set session from localStorage:', error);
+          console.error(
+            '[SSO] Failed to set session from localStorage:',
+            error
+          );
           console.warn('[SSO] Session may be expired. Please log in again.');
         } else {
           console.log('[SSO] Migrated session from localStorage to cookies');
         }
       } else if (sessionData.user) {
         // Has user but no tokens - might be expired, try to refresh
-        const { data: { session: refreshedSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: refreshedSession },
+        } = await supabase.auth.getSession();
         if (refreshedSession) {
           console.log('[SSO] Refreshed session from localStorage');
         } else {
-          console.warn('[SSO] Session in localStorage appears expired. Please log in again.');
+          console.warn(
+            '[SSO] Session in localStorage appears expired. Please log in again.'
+          );
         }
       } else {
-        console.warn('[SSO] localStorage session format not recognized:', Object.keys(sessionData));
-        console.warn('[SSO] Expected: access_token, refresh_token, user OR uuid, version, domain, ts');
+        console.warn(
+          '[SSO] localStorage session format not recognized:',
+          Object.keys(sessionData)
+        );
+        console.warn(
+          '[SSO] Expected: access_token, refresh_token, user OR uuid, version, domain, ts'
+        );
       }
     } catch (parseError) {
       console.debug('[SSO] Could not parse localStorage session:', parseError);
@@ -350,47 +420,51 @@ function fixOldFormatCookies() {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) return;
-    
-    const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+
+    const projectRef = supabaseUrl.match(
+      /https?:\/\/([^.]+)\.supabase\.co/
+    )?.[1];
     if (!projectRef) return;
-    
+
     const allCookies = document.cookie.split(';').map(c => c.trim());
     const oldFormatCookies = ['sb-auth-token.0', 'sb-auth-token.1'];
     const newFormatCookies = [
       `sb-${projectRef}-auth-token.0`,
-      `sb-${projectRef}-auth-token.1`
+      `sb-${projectRef}-auth-token.1`,
     ];
-    
+
     let fixed = false;
     const cookieMap: Record<string, string> = {};
-    
+
     // Build cookie map
     allCookies.forEach(c => {
       const [name, ...valueParts] = c.split('=');
       const value = valueParts.join('=');
       cookieMap[name] = value;
     });
-    
+
     // Check if old format exists and new format doesn't
     for (let i = 0; i < oldFormatCookies.length; i++) {
       const oldName = oldFormatCookies[i];
       const newName = newFormatCookies[i];
-      
+
       if (cookieMap[oldName] && !cookieMap[newName]) {
         const value = cookieMap[oldName];
         const isProduction = window.location.protocol === 'https:';
         const secureFlag = isProduction ? '; Secure' : '';
-        
+
         // Set new cookie
         document.cookie = `${newName}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
         // Delete old cookie
         document.cookie = `${oldName}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        
+
         fixed = true;
-        console.debug(`[SSO] Auto-fixed cookie on page load: ${oldName} → ${newName}`);
+        console.debug(
+          `[SSO] Auto-fixed cookie on page load: ${oldName} → ${newName}`
+        );
       }
     }
-    
+
     if (fixed) {
       console.log('[SSO] Fixed old-format cookies on page load');
     }

@@ -124,10 +124,10 @@ export function PromotersPremiumHeader({
       </div>
       <div className='absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-blue-500/5 to-purple-500/5 pointer-events-none' />
       <div className='absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,.05)_25%,rgba(255,255,255,.05)_50%,transparent_50%,transparent_75%,rgba(255,255,255,.05)_75%,rgba(255,255,255,.05))] bg-[length:20px_20px] opacity-20 pointer-events-none' />
-      
+
       {/* Animated gradient overlay */}
       <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer pointer-events-none' />
-      
+
       <CardHeader className='relative pb-6 overflow-visible'>
         <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between w-full'>
           <div className='space-y-4 flex-1 min-w-0 w-full lg:max-w-[calc(100%-450px)]'>
@@ -144,13 +144,19 @@ export function PromotersPremiumHeader({
                   <CardTitle className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight break-words bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent drop-shadow-2xl'>
                     Promoter Intelligence Hub
                   </CardTitle>
-                  <Badge variant='outline' className='bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-100 border-emerald-400/40 text-xs font-bold px-3 py-1 shadow-lg'>
+                  <Badge
+                    variant='outline'
+                    className='bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-100 border-emerald-400/40 text-xs font-bold px-3 py-1 shadow-lg'
+                  >
                     <Sparkles className='h-3 w-3 mr-1' />
                     Premium
                   </Badge>
                 </div>
                 <div className='flex items-center gap-3 mt-2 flex-wrap'>
-                  <Badge variant='outline' className='bg-white/10 text-white/90 border-white/30 text-xs font-semibold'>
+                  <Badge
+                    variant='outline'
+                    className='bg-white/10 text-white/90 border-white/30 text-xs font-semibold'
+                  >
                     Enterprise Edition
                   </Badge>
                   <span className='text-xs text-white/70 font-medium flex items-center gap-1'>
@@ -169,7 +175,10 @@ export function PromotersPremiumHeader({
             <CardDescription className='max-w-3xl text-lg text-white/90 leading-relaxed break-words font-medium'>
               Monitor workforce readiness, document compliance, and partner
               coverage in real-time to keep every engagement on track.{' '}
-              <span className='font-bold text-white text-xl'>{metrics.total || 0}</span> active promoter{metrics.total !== 1 ? 's' : ''} in system.
+              <span className='font-bold text-white text-xl'>
+                {metrics.total || 0}
+              </span>{' '}
+              active promoter{metrics.total !== 1 ? 's' : ''} in system.
             </CardDescription>
 
             {/* Premium Metrics Badges */}
@@ -177,83 +186,101 @@ export function PromotersPremiumHeader({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge 
+                    <Badge
                       className={cn(
                         'text-white border-white/30 cursor-pointer transition-all px-4 py-2.5',
                         'inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0',
                         'overflow-visible shadow-xl backdrop-blur-sm font-bold text-sm',
                         'hover:scale-105 hover:shadow-2xl',
-                        autoRefreshEnabled 
-                          ? 'bg-gradient-to-r from-emerald-500/40 to-green-500/40 hover:from-emerald-500/50 hover:to-green-500/50 border-emerald-400/60' 
+                        autoRefreshEnabled
+                          ? 'bg-gradient-to-r from-emerald-500/40 to-green-500/40 hover:from-emerald-500/50 hover:to-green-500/50 border-emerald-400/60'
                           : 'bg-white/20 hover:bg-white/30 border-white/30'
                       )}
                       onClick={() => onToggleAutoRefresh?.(!autoRefreshEnabled)}
                     >
-                      <Activity className={cn(
-                        'h-4 w-4 flex-shrink-0 transition-transform',
-                        autoRefreshEnabled && 'animate-pulse'
-                      )} />
+                      <Activity
+                        className={cn(
+                          'h-4 w-4 flex-shrink-0 transition-transform',
+                          autoRefreshEnabled && 'animate-pulse'
+                        )}
+                      />
                       <span className='whitespace-nowrap overflow-visible'>
-                        {autoRefreshEnabled ? 'Auto-refresh Active' : 'Auto-refresh Off'}
+                        {autoRefreshEnabled
+                          ? 'Auto-refresh Active'
+                          : 'Auto-refresh Off'}
                       </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='max-w-xs bg-slate-900 border-slate-700 shadow-2xl'>
                     <p className='text-xs text-white font-medium'>
-                      {autoRefreshEnabled 
+                      {autoRefreshEnabled
                         ? 'Data automatically refreshes every 60 seconds. Click to disable.'
                         : 'Auto-refresh is disabled. Click to enable automatic updates every 60 seconds.'}
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className={cn(
-                      'px-4 py-2.5 inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 overflow-visible shadow-xl backdrop-blur-sm font-bold text-sm',
-                      'hover:scale-105 hover:shadow-2xl transition-all cursor-help',
-                      complianceTrend.color === 'emerald' && 'bg-gradient-to-r from-emerald-500/40 to-green-500/40 text-emerald-50 border-emerald-400/60',
-                      complianceTrend.color === 'blue' && 'bg-gradient-to-r from-blue-500/40 to-indigo-500/40 text-blue-50 border-blue-400/60',
-                      complianceTrend.color === 'amber' && 'bg-gradient-to-r from-amber-500/40 to-orange-500/40 text-amber-50 border-amber-400/60',
-                      complianceTrend.color === 'red' && 'bg-gradient-to-r from-red-500/40 to-rose-500/40 text-red-50 border-red-400/60'
-                    )}>
+                    <Badge
+                      className={cn(
+                        'px-4 py-2.5 inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 overflow-visible shadow-xl backdrop-blur-sm font-bold text-sm',
+                        'hover:scale-105 hover:shadow-2xl transition-all cursor-help',
+                        complianceTrend.color === 'emerald' &&
+                          'bg-gradient-to-r from-emerald-500/40 to-green-500/40 text-emerald-50 border-emerald-400/60',
+                        complianceTrend.color === 'blue' &&
+                          'bg-gradient-to-r from-blue-500/40 to-indigo-500/40 text-blue-50 border-blue-400/60',
+                        complianceTrend.color === 'amber' &&
+                          'bg-gradient-to-r from-amber-500/40 to-orange-500/40 text-amber-50 border-amber-400/60',
+                        complianceTrend.color === 'red' &&
+                          'bg-gradient-to-r from-red-500/40 to-rose-500/40 text-red-50 border-red-400/60'
+                      )}
+                    >
                       <CheckCircle className='h-4 w-4 flex-shrink-0' />
-                      <span className='whitespace-nowrap overflow-visible'>{Math.round(metrics.complianceRate || 0)}% Compliant</span>
+                      <span className='whitespace-nowrap overflow-visible'>
+                        {Math.round(metrics.complianceRate || 0)}% Compliant
+                      </span>
                       <TrendingUp className='h-3 w-3 flex-shrink-0 opacity-75' />
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='bg-slate-900 border-slate-700 shadow-2xl'>
                     <p className='text-xs text-white font-medium'>
-                      {Math.round(metrics.complianceRate || 0)}% of promoters have all documents valid and up to date
+                      {Math.round(metrics.complianceRate || 0)}% of promoters
+                      have all documents valid and up to date
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge className='bg-gradient-to-r from-amber-500/40 to-orange-500/40 text-amber-50 border-amber-400/60 cursor-help px-4 py-2.5 inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 overflow-visible shadow-xl backdrop-blur-sm font-bold text-sm hover:scale-105 hover:shadow-2xl transition-all'>
                       <AlertTriangle className='h-4 w-4 flex-shrink-0' />
-                      <span className='whitespace-nowrap overflow-visible'>{metrics.critical || 0} Critical</span>
+                      <span className='whitespace-nowrap overflow-visible'>
+                        {metrics.critical || 0} Critical
+                      </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='bg-slate-900 border-slate-700 shadow-2xl'>
                     <p className='text-xs text-white font-medium'>
-                      {metrics.critical || 0} promoters have expired documents requiring immediate attention
+                      {metrics.critical || 0} promoters have expired documents
+                      requiring immediate attention
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge className='bg-gradient-to-r from-blue-500/40 to-indigo-500/40 text-blue-50 border-blue-400/60 cursor-help px-4 py-2.5 inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 overflow-visible shadow-xl backdrop-blur-sm font-bold text-sm hover:scale-105 hover:shadow-2xl transition-all'>
                       <Building2 className='h-4 w-4 flex-shrink-0' />
-                      <span className='whitespace-nowrap overflow-visible'>{metrics.companies || 0} Companies</span>
+                      <span className='whitespace-nowrap overflow-visible'>
+                        {metrics.companies || 0} Companies
+                      </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='bg-slate-900 border-slate-700 shadow-2xl'>
@@ -277,7 +304,7 @@ export function PromotersPremiumHeader({
               <Plus className='mr-2 h-5 w-5 flex-shrink-0' aria-hidden='true' />
               <span>Add Promoter</span>
             </Button>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -288,7 +315,10 @@ export function PromotersPremiumHeader({
                     size='lg'
                     aria-label='Import promoters from CSV/Excel file'
                   >
-                    <Upload className='mr-2 h-5 w-5 flex-shrink-0' aria-hidden='true' />
+                    <Upload
+                      className='mr-2 h-5 w-5 flex-shrink-0'
+                      aria-hidden='true'
+                    />
                     <span>Import</span>
                   </Button>
                 </TooltipTrigger>
@@ -299,7 +329,7 @@ export function PromotersPremiumHeader({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -310,7 +340,10 @@ export function PromotersPremiumHeader({
                     size='lg'
                     aria-label='Export promoter data'
                   >
-                    <Download className='mr-2 h-5 w-5 flex-shrink-0' aria-hidden='true' />
+                    <Download
+                      className='mr-2 h-5 w-5 flex-shrink-0'
+                      aria-hidden='true'
+                    />
                     <span>Export</span>
                   </Button>
                 </TooltipTrigger>
@@ -321,7 +354,7 @@ export function PromotersPremiumHeader({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -353,7 +386,7 @@ export function PromotersPremiumHeader({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <NotificationBadge promoters={promoters} />
             <div className='hidden sm:block flex-shrink-0'>
               <PromotersKeyboardShortcuts />
@@ -364,4 +397,3 @@ export function PromotersPremiumHeader({
     </Card>
   );
 }
-

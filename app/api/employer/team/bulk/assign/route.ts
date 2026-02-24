@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!employee_ids || !Array.isArray(employee_ids) || employee_ids.length === 0) {
+    if (
+      !employee_ids ||
+      !Array.isArray(employee_ids) ||
+      employee_ids.length === 0
+    ) {
       return NextResponse.json(
         { error: 'Employee IDs are required' },
         { status: 400 }
@@ -42,7 +46,11 @@ export async function POST(request: NextRequest) {
       .in('id', employee_ids)
       .eq('employer_id', user.id);
 
-    if (employeesError || !employees || employees.length !== employee_ids.length) {
+    if (
+      employeesError ||
+      !employees ||
+      employees.length !== employee_ids.length
+    ) {
       return NextResponse.json(
         { error: 'Some employees not found or unauthorized' },
         { status: 403 }
@@ -62,8 +70,9 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }));
 
-    const { error: insertError } = await (supabaseAdmin.from('employee_tasks') as any)
-      .insert(tasksToInsert);
+    const { error: insertError } = await (
+      supabaseAdmin.from('employee_tasks') as any
+    ).insert(tasksToInsert);
 
     if (insertError) {
       console.error('Error creating tasks:', insertError);
@@ -86,4 +95,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -11,8 +11,6 @@ import {
   type ProfileFormData,
   type PasswordChangeData,
 } from '@/lib/schemas/profile-form-schema';
-import { FormFieldWithValidation } from '@/components/ui/form-field-with-validation';
-import { SelectFieldWithValidation } from '@/components/ui/select-field-with-validation';
 import {
   Card,
   CardContent,
@@ -60,7 +58,6 @@ import {
   AlertCircle,
   Loader2,
   Save,
-  Upload,
   RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -204,7 +201,9 @@ export default function ProfilePage() {
         }
       } else {
         const errorData = await profileResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.message || 'Failed to load profile data');
+        throw new Error(
+          errorData.error || errorData.message || 'Failed to load profile data'
+        );
       }
 
       // Fetch activity log with retry logic for 403 errors
@@ -235,12 +234,14 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load profile data';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to load profile data';
       toast({
         title: 'Unable to Load Profile',
-        description: errorMessage.includes('403') || errorMessage.includes('Forbidden')
-          ? 'Please wait a moment and refresh the page. Your permissions are being set up automatically.'
-          : errorMessage,
+        description:
+          errorMessage.includes('403') || errorMessage.includes('Forbidden')
+            ? 'Please wait a moment and refresh the page. Your permissions are being set up automatically.'
+            : errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -407,16 +408,22 @@ export default function ProfilePage() {
             <div className='rounded-full bg-red-100 p-4 mb-4'>
               <AlertCircle className='h-12 w-12 text-red-600' />
             </div>
-            <h3 className='text-lg font-semibold text-gray-900 mb-2'>Unable to Load Profile</h3>
+            <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+              Unable to Load Profile
+            </h3>
             <p className='text-gray-600 mb-6 max-w-md'>
-              We couldn't load your profile information. This might be a temporary issue. Please try again.
+              We couldn't load your profile information. This might be a
+              temporary issue. Please try again.
             </p>
             <div className='flex gap-3'>
               <Button onClick={fetchProfileData} variant='default'>
                 <RefreshCw className='h-4 w-4 mr-2' />
                 Try Again
               </Button>
-              <Button onClick={() => window.location.reload()} variant='outline'>
+              <Button
+                onClick={() => window.location.reload()}
+                variant='outline'
+              >
                 Refresh Page
               </Button>
             </div>

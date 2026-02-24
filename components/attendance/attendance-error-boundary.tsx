@@ -34,7 +34,11 @@ export class AttendanceErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Attendance Error Boundary caught an error:', error, errorInfo);
+    console.error(
+      'Attendance Error Boundary caught an error:',
+      error,
+      errorInfo
+    );
     this.setState({
       error,
       errorInfo,
@@ -48,14 +52,18 @@ export class AttendanceErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <Alert variant="destructive" className="m-4">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant='destructive' className='m-4'>
+          <AlertCircle className='h-4 w-4' />
           <AlertTitle>Something went wrong</AlertTitle>
           <AlertDescription>
-            {this.state.error?.message || 'An error occurred in the attendance component'}
+            {this.state.error?.message ||
+              'An error occurred in the attendance component'}
             {this.state.error?.message?.includes('object with keys') && (
-              <div className="mt-2 text-sm">
-                <p>This error usually means an object is being rendered directly in JSX.</p>
+              <div className='mt-2 text-sm'>
+                <p>
+                  This error usually means an object is being rendered directly
+                  in JSX.
+                </p>
                 <p>Check the browser console for more details.</p>
               </div>
             )}
@@ -67,4 +75,3 @@ export class AttendanceErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
-

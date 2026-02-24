@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withRBAC } from '@/lib/rbac/guard';
 
-export const POST = withRBAC('data:seed:all', async (request: NextRequest) => {
+export const POST = withRBAC('data:seed:all', async (_request: NextRequest) => {
   try {
     // 🔒 SECURITY: Disable seed data endpoint in production
     if (process.env.NODE_ENV === 'production') {
@@ -54,7 +54,7 @@ export const POST = withRBAC('data:seed:all', async (request: NextRequest) => {
     }
 
     // Check the actual schema first
-    const { data: schemaCheck, error: schemaError } = await supabase
+    const { data: _schemaCheck, error: schemaError } = await supabase
       .from('contracts')
       .select('first_party_id, second_party_id, client_id, employer_id')
       .limit(0);

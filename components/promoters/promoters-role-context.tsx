@@ -4,7 +4,12 @@ import { createContext, useContext, useMemo, ReactNode } from 'react';
 import { useAuth, useSupabase } from '@/app/providers';
 import { usePermissions } from '@/hooks/use-permissions';
 
-export type UserRoleType = 'employer' | 'employee' | 'admin' | 'manager' | 'viewer';
+export type UserRoleType =
+  | 'employer'
+  | 'employee'
+  | 'admin'
+  | 'manager'
+  | 'viewer';
 
 interface RoleContextType {
   userRole: UserRoleType;
@@ -41,20 +46,36 @@ interface RoleContextProviderProps {
 export function RoleContextProvider({ children }: RoleContextProviderProps) {
   const { user, loading: authLoading } = useAuth();
   const { session, supabase } = useSupabase();
-  const { role, canRead, canCreate, canUpdate, canDelete, isAdmin, isManager } = usePermissions();
+  const { role, canRead, canCreate, canUpdate, canDelete, isAdmin, isManager } =
+    usePermissions();
 
   const roleContext = useMemo<RoleContextType>(() => {
     // Determine user role type
     const userRoleMetadata = (user?.user_metadata || {}) as Record<string, any>;
     const userRoleFromMetadata = userRoleMetadata.role as string | undefined;
-    const employerIdFromMetadata = userRoleMetadata.employer_id as string | null | undefined;
-    const companyIdFromMetadata = userRoleMetadata.company_id as string | null | undefined;
-    
+    const employerIdFromMetadata = userRoleMetadata.employer_id as
+      | string
+      | null
+      | undefined;
+    const companyIdFromMetadata = userRoleMetadata.company_id as
+      | string
+      | null
+      | undefined;
+
     // Also check session metadata
-    const sessionMetadata = (session?.user?.user_metadata || {}) as Record<string, any>;
-    const sessionEmployerId = sessionMetadata.employer_id as string | null | undefined;
-    const sessionCompanyId = sessionMetadata.company_id as string | null | undefined;
-    
+    const sessionMetadata = (session?.user?.user_metadata || {}) as Record<
+      string,
+      any
+    >;
+    const sessionEmployerId = sessionMetadata.employer_id as
+      | string
+      | null
+      | undefined;
+    const sessionCompanyId = sessionMetadata.company_id as
+      | string
+      | null
+      | undefined;
+
     // Determine if user is employer or employee
     // Employers typically have: employer_id, company_id, or role === 'employer' | 'manager' | 'admin'
     // Employees typically have: role === 'promoter' | 'employee' | 'user'
@@ -90,11 +111,26 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
     } else if (isManager()) {
       userRoleType = 'manager';
       isEmployerUser = true; // Managers can act as employers
-    } else if (userRoleFromMetadata === 'employer' || employerIdFromMetadata || companyIdFromMetadata || sessionEmployerId || sessionCompanyId) {
+    } else if (
+      userRoleFromMetadata === 'employer' ||
+      employerIdFromMetadata ||
+      companyIdFromMetadata ||
+      sessionEmployerId ||
+      sessionCompanyId
+    ) {
       userRoleType = 'employer';
       isEmployerUser = true;
-      employerId = (employerIdFromMetadata || companyIdFromMetadata || sessionEmployerId || sessionCompanyId || null) as string | null;
-    } else if (userRoleFromMetadata === 'promoter' || userRoleFromMetadata === 'employee' || role === 'promoter' || role === 'user') {
+      employerId = (employerIdFromMetadata ||
+        companyIdFromMetadata ||
+        sessionEmployerId ||
+        sessionCompanyId ||
+        null) as string | null;
+    } else if (
+      userRoleFromMetadata === 'promoter' ||
+      userRoleFromMetadata === 'employee' ||
+      role === 'promoter' ||
+      role === 'user'
+    ) {
       userRoleType = 'employee';
       isEmployeeUser = true;
     } else {
@@ -103,10 +139,12 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
 
     // Permissions based on role
     const canViewAllPromoters = isAdmin() || isManager() || isEmployerUser;
-    const canCreatePromoters = canCreate('promoter') || isAdmin() || isManager();
+    const canCreatePromoters =
+      canCreate('promoter') || isAdmin() || isManager();
     const canEditPromoters = canUpdate('promoter') || isAdmin() || isManager();
     const canDeletePromoters = canDelete('promoter') || isAdmin();
-    const canExportData = canRead('promoter') || isAdmin() || isManager() || isEmployerUser;
+    const canExportData =
+      canRead('promoter') || isAdmin() || isManager() || isEmployerUser;
     const canManageAssignments = isAdmin() || isManager() || isEmployerUser;
     const canViewAnalyticsData = isAdmin() || isManager() || isEmployerUser;
     const canPerformBulkActions = isAdmin() || isManager() || isEmployerUser;
@@ -124,16 +162,24 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
       canEdit: canEditPromoters,
       canDelete: canDeletePromoters,
       canExport: canExportData,
-      canManageAssignments: canManageAssignments,
+      canManageAssignments,
       canViewAnalytics: canViewAnalyticsData,
       canBulkActions: canPerformBulkActions,
     };
-  }, [user, session, authLoading, role, canRead, canCreate, canUpdate, canDelete, isAdmin, isManager]);
+  }, [
+    user,
+    session,
+    authLoading,
+    role,
+    canRead,
+    canCreate,
+    canUpdate,
+    canDelete,
+    isAdmin,
+    isManager,
+  ]);
 
   return (
-    <RoleContext.Provider value={roleContext}>
-      {children}
-    </RoleContext.Provider>
+    <RoleContext.Provider value={roleContext}>{children}</RoleContext.Provider>
   );
 }
-

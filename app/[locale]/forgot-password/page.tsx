@@ -15,7 +15,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import Link from 'next/link';
+import _Link from 'next/link';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');

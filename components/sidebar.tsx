@@ -170,19 +170,20 @@ function SidebarContent({
   // Get user role information (defined at component level for use in JSX)
   const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
   const userRole = userProfile?.role || userMetadata?.role || '';
-  const isAdmin = userRole === 'admin' || 
-                  userRole === 'super_admin' || 
-                  roleInfo?.canDoAdmin === true;
+  const isAdmin =
+    userRole === 'admin' ||
+    userRole === 'super_admin' ||
+    roleInfo?.canDoAdmin === true;
   const isManager = userRole === 'manager';
-  const isEmployer = userRole === 'employer' || 
-                     userMetadata?.employer_id ||
-                     userMetadata?.company_id;
+  const isEmployer =
+    userRole === 'employer' ||
+    userMetadata?.employer_id ||
+    userMetadata?.company_id;
   const isPromoter = userRole === 'promoter' || userRole === 'user';
 
   // Safe navigation items with error handling
   const createNavigationItems = () => {
     try {
-
       // Base items that everyone can see
       const baseItems: any[] = [
         {
@@ -197,147 +198,147 @@ function SidebarContent({
       // Admin/Manager/Employer only items
       if (isAdmin || isManager || isEmployer) {
         baseItems.push(
-        {
-          title: 'eXtra Contracts',
-          href: '/generate-contract',
-          icon: FilePlus,
-          description: 'Employment contracts',
+          {
+            title: 'eXtra Contracts',
+            href: '/generate-contract',
+            icon: FilePlus,
+            description: 'Employment contracts',
             roles: ['admin', 'manager', 'employer'],
-        },
-        {
-          title: 'General Contracts',
-          href: '/contracts/general',
-          icon: FileEdit,
-          description: 'Business contracts',
-          badge: 'New',
+          },
+          {
+            title: 'General Contracts',
+            href: '/contracts/general',
+            icon: FileEdit,
+            description: 'Business contracts',
+            badge: 'New',
             roles: ['admin', 'manager', 'employer'],
-        },
-        {
-          title: 'Sharaf DG Deployment',
-          href: '/contracts/sharaf-dg',
-          icon: Building2,
-          description: 'Deployment letters with PDF',
-          badge: 'PDF',
+          },
+          {
+            title: 'Sharaf DG Deployment',
+            href: '/contracts/sharaf-dg',
+            icon: Building2,
+            description: 'Deployment letters with PDF',
+            badge: 'PDF',
             roles: ['admin', 'manager', 'employer'],
-        },
-        {
-          title: 'View Contracts',
-          href: '/contracts',
-          icon: FolderOpen,
-          description: 'Browse existing contracts',
-          badge: 'Active',
+          },
+          {
+            title: 'View Contracts',
+            href: '/contracts',
+            icon: FolderOpen,
+            description: 'Browse existing contracts',
+            badge: 'Active',
             roles: ['admin', 'manager', 'employer'],
-        },
-        {
-          title: 'Parties & Employers',
-          icon: Building2,
-          description: 'Manage parties and employers',
+          },
+          {
+            title: 'Parties & Employers',
+            icon: Building2,
+            description: 'Manage parties and employers',
             roles: ['admin', 'manager', 'employer'],
-          children: [
-            {
-              title: 'Manage Parties',
-              href: '/manage-parties',
-              icon: FilePlus,
-              description: 'Add or edit parties',
-            },
-            {
-              title: 'Employers',
-              href: '/manage-parties/employers',
-              icon: Building2,
-              description: 'View all employers',
-            },
-            {
-              title: 'Clients',
-              href: '/manage-parties/clients',
-              icon: Users,
-              description: 'View all clients',
-            },
-            {
-              title: 'Generic Parties',
-              href: '/manage-parties/generic',
-              icon: Briefcase,
-              description: 'View generic parties',
-            },
-          ],
-        },
-        {
-          title: 'HR Management',
-          icon: Users,
-          description: 'HR operations and employee management',
+            children: [
+              {
+                title: 'Manage Parties',
+                href: '/manage-parties',
+                icon: FilePlus,
+                description: 'Add or edit parties',
+              },
+              {
+                title: 'Employers',
+                href: '/manage-parties/employers',
+                icon: Building2,
+                description: 'View all employers',
+              },
+              {
+                title: 'Clients',
+                href: '/manage-parties/clients',
+                icon: Users,
+                description: 'View all clients',
+              },
+              {
+                title: 'Generic Parties',
+                href: '/manage-parties/generic',
+                icon: Briefcase,
+                description: 'View generic parties',
+              },
+            ],
+          },
+          {
+            title: 'HR Management',
+            icon: Users,
+            description: 'HR operations and employee management',
             roles: ['admin', 'manager', 'employer'],
-          children: [
-            {
-              title: 'Alignment Overview',
-              href: '/hr/alignment',
-              icon: Users,
-              description: 'Employer-employee alignment & overview',
-            },
-            {
-              title: 'Documents',
-              href: '/hr/documents',
-              icon: FileText,
-              description: 'Document management & compliance',
-            },
-            {
-              title: 'Assignments',
-              href: '/hr/assignments',
-              icon: Briefcase,
-              description: 'Client assignments',
-            },
-            {
-              title: 'Deployment Letters',
-              href: '/hr/deployment-letters',
-              icon: FileEdit,
-              description: 'Generate deployment letters',
-            },
-            {
-              title: 'Team Management',
-              href: '/employer/team',
-              icon: Users,
-              description: 'Manage team members',
-            },
-            {
-              title: 'Attendance Approval',
-              href: '/employer/attendance-approval',
-              icon: Clock,
-              description: 'Review and approve employee attendance',
-              roles: ['admin', 'manager', 'employer'],
-            },
-            {
-              title: 'Attendance Links',
-              href: '/employer/attendance-links',
-              icon: LinkIcon,
-              description: 'Create location-restricted check-in links',
-              roles: ['admin', 'manager', 'employer'],
-            },
-            {
-              title: 'Automated Schedules',
-              href: '/employer/attendance-schedules',
-              icon: Calendar,
-              description: 'Automated daily attendance link generation',
-              roles: ['admin', 'manager', 'employer'],
-            },
-            {
-              title: 'Employee Groups',
-              href: '/employer/attendance-groups',
-              icon: Users,
-              description: 'Organize employees by location or department',
-              roles: ['admin', 'manager', 'employer'],
-            },
-          ],
-        },
-        {
-          title: 'Promoters',
-          href: '/promoters',
-          icon: Users,
-          description: 'View and manage all promoters',
+            children: [
+              {
+                title: 'Alignment Overview',
+                href: '/hr/alignment',
+                icon: Users,
+                description: 'Employer-employee alignment & overview',
+              },
+              {
+                title: 'Documents',
+                href: '/hr/documents',
+                icon: FileText,
+                description: 'Document management & compliance',
+              },
+              {
+                title: 'Assignments',
+                href: '/hr/assignments',
+                icon: Briefcase,
+                description: 'Client assignments',
+              },
+              {
+                title: 'Deployment Letters',
+                href: '/hr/deployment-letters',
+                icon: FileEdit,
+                description: 'Generate deployment letters',
+              },
+              {
+                title: 'Team Management',
+                href: '/employer/team',
+                icon: Users,
+                description: 'Manage team members',
+              },
+              {
+                title: 'Attendance Approval',
+                href: '/employer/attendance-approval',
+                icon: Clock,
+                description: 'Review and approve employee attendance',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Attendance Links',
+                href: '/employer/attendance-links',
+                icon: LinkIcon,
+                description: 'Create location-restricted check-in links',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Automated Schedules',
+                href: '/employer/attendance-schedules',
+                icon: Calendar,
+                description: 'Automated daily attendance link generation',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Employee Groups',
+                href: '/employer/attendance-groups',
+                icon: Users,
+                description: 'Organize employees by location or department',
+                roles: ['admin', 'manager', 'employer'],
+              },
+            ],
+          },
+          {
+            title: 'Promoters',
+            href: '/promoters',
+            icon: Users,
+            description: 'View and manage all promoters',
             roles: ['admin', 'manager', 'employer'],
-        },
-        {
-          title: 'Promoter Analysis',
-          href: '/promoter-analysis',
-          icon: FolderSearch,
-          description: 'Performance analytics',
+          },
+          {
+            title: 'Promoter Analysis',
+            href: '/promoter-analysis',
+            icon: FolderSearch,
+            description: 'Performance analytics',
             roles: ['admin', 'manager', 'employer'],
           }
         );
@@ -366,46 +367,46 @@ function SidebarContent({
       // Admin only items
       if (isAdmin) {
         baseItems.push(
-        {
-          title: 'User Management',
-          href: '/dashboard/users',
-          icon: UserCheck,
-          description: 'Manage system users',
+          {
+            title: 'User Management',
+            href: '/dashboard/users',
+            icon: UserCheck,
+            description: 'Manage system users',
             roles: ['admin'],
-        },
-        {
-          title: 'User Approvals',
-          href: '/dashboard/user-approvals',
-          icon: UserPlus,
-          description: 'Approve pending users',
+          },
+          {
+            title: 'User Approvals',
+            href: '/dashboard/user-approvals',
+            icon: UserPlus,
+            description: 'Approve pending users',
             roles: ['admin'],
-        },
-        {
-          title: 'CRM',
-          href: '/crm',
-          icon: Building2,
-          description: 'Customer relationship management',
+          },
+          {
+            title: 'CRM',
+            href: '/crm',
+            icon: Building2,
+            description: 'Customer relationship management',
             roles: ['admin'],
-        },
-        {
-          title: 'Analytics',
-          href: '/dashboard/analytics',
-          icon: FolderEdit,
-          description: 'Detailed analytics',
+          },
+          {
+            title: 'Analytics',
+            href: '/dashboard/analytics',
+            icon: FolderEdit,
+            description: 'Detailed analytics',
             roles: ['admin'],
-        },
-        {
-          title: 'Reports',
-          href: '/dashboard/reports',
-          icon: FolderCheck,
-          description: 'Generate reports',
+          },
+          {
+            title: 'Reports',
+            href: '/dashboard/reports',
+            icon: FolderCheck,
+            description: 'Generate reports',
             roles: ['admin'],
-        },
-        {
-          title: 'Audit Logs',
-          href: '/dashboard/audit',
-          icon: Shield,
-          description: 'System audit trails',
+          },
+          {
+            title: 'Audit Logs',
+            href: '/dashboard/audit',
+            icon: Shield,
+            description: 'System audit trails',
             roles: ['admin'],
           }
         );
@@ -414,11 +415,11 @@ function SidebarContent({
       // Add Team Management for employers, managers, and admins
       if (isAdmin || isManager || isEmployer) {
         baseItems.push({
-            title: 'Team Management',
-            href: '/employer/team',
-            icon: Users,
-            description: 'Manage your team, attendance, tasks, and targets',
-            badge: 'New',
+          title: 'Team Management',
+          href: '/employer/team',
+          icon: Users,
+          description: 'Manage your team, attendance, tasks, and targets',
+          badge: 'New',
           roles: ['admin', 'manager', 'employer'],
         });
       }
@@ -426,10 +427,10 @@ function SidebarContent({
       // Add Employee Dashboard for promoters/employees
       if (isPromoter) {
         baseItems.push({
-            title: 'My Workplace',
-            href: '/employee/dashboard',
-            icon: Briefcase,
-            description: 'View your tasks, targets, and attendance',
+          title: 'My Workplace',
+          href: '/employee/dashboard',
+          icon: Briefcase,
+          description: 'View your tasks, targets, and attendance',
           roles: ['promoter', 'user'],
         });
       }
@@ -463,7 +464,8 @@ function SidebarContent({
           href: '/notifications',
           icon: Bell,
           description: 'View all notifications',
-          badge: notificationCount > 0 ? notificationCount.toString() : undefined,
+          badge:
+            notificationCount > 0 ? notificationCount.toString() : undefined,
           badgeVariant: 'secondary',
           roles: ['admin', 'manager', 'employer', 'promoter', 'user'],
         },
@@ -486,11 +488,14 @@ function SidebarContent({
       // Filter items based on user role
       const filteredItems = baseItems.filter(item => {
         if (!item.roles) return true; // If no roles specified, show to everyone
-        return item.roles.includes(userRole) || 
-               (isAdmin && item.roles.includes('admin')) ||
-               (isManager && item.roles.includes('manager')) ||
-               (isEmployer && item.roles.includes('employer')) ||
-               (isPromoter && (item.roles.includes('promoter') || item.roles.includes('user')));
+        return (
+          item.roles.includes(userRole) ||
+          (isAdmin && item.roles.includes('admin')) ||
+          (isManager && item.roles.includes('manager')) ||
+          (isEmployer && item.roles.includes('employer')) ||
+          (isPromoter &&
+            (item.roles.includes('promoter') || item.roles.includes('user')))
+        );
       });
 
       return filteredItems;
@@ -734,40 +739,47 @@ function SidebarContent({
                     {/* Children items */}
                     {isExpanded && (
                       <div className='ml-4 space-y-1 border-l-2 border-muted pl-3'>
-                        {(item.children || []).filter((child: any) => {
-                          // Filter children by role if specified
-                          if (!child.roles) return true; // If no roles specified, show to everyone
-                          return child.roles.includes(userRole) || 
-                                 (isAdmin && child.roles.includes('admin')) ||
-                                 (isManager && child.roles.includes('manager')) ||
-                                 (isEmployer && child.roles.includes('employer')) ||
-                                 (isPromoter && (child.roles.includes('promoter') || child.roles.includes('user')));
-                        }).map((child: any) => {
-                          const ChildIcon = child.icon;
-                          const isChildActive = child.href
-                            ? isActiveRoute(child.href)
-                            : false;
+                        {(item.children || [])
+                          .filter((child: any) => {
+                            // Filter children by role if specified
+                            if (!child.roles) return true; // If no roles specified, show to everyone
+                            return (
+                              child.roles.includes(userRole) ||
+                              (isAdmin && child.roles.includes('admin')) ||
+                              (isManager && child.roles.includes('manager')) ||
+                              (isEmployer &&
+                                child.roles.includes('employer')) ||
+                              (isPromoter &&
+                                (child.roles.includes('promoter') ||
+                                  child.roles.includes('user')))
+                            );
+                          })
+                          .map((child: any) => {
+                            const ChildIcon = child.icon;
+                            const isChildActive = child.href
+                              ? isActiveRoute(child.href)
+                              : false;
 
-                          return (
-                            <Link
-                              key={child.title}
-                              href={child.href || '#'}
-                              onClick={onClose}
-                              className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
-                                isChildActive
-                                  ? 'bg-accent text-accent-foreground font-medium'
-                                  : 'text-muted-foreground'
-                              }`}
-                            >
-                              <div className='flex items-center space-x-2'>
-                                <ChildIcon className='h-3 w-3 shrink-0' />
-                                <span className='truncate text-xs'>
-                                  {child.title}
-                                </span>
-                              </div>
-                            </Link>
-                          );
-                        })}
+                            return (
+                              <Link
+                                key={child.title}
+                                href={child.href || '#'}
+                                onClick={onClose}
+                                className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground ${
+                                  isChildActive
+                                    ? 'bg-accent text-accent-foreground font-medium'
+                                    : 'text-muted-foreground'
+                                }`}
+                              >
+                                <div className='flex items-center space-x-2'>
+                                  <ChildIcon className='h-3 w-3 shrink-0' />
+                                  <span className='truncate text-xs'>
+                                    {child.title}
+                                  </span>
+                                </div>
+                              </Link>
+                            );
+                          })}
                       </div>
                     )}
                   </div>

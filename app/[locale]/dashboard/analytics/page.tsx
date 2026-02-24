@@ -1,13 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
 
 // Force dynamic rendering to avoid build-time Supabase issues

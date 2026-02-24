@@ -96,7 +96,9 @@ export function PromoterFormComprehensive({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [employers, setEmployers] = useState<Array<{ id: string; name_en?: string | null; name_ar?: string | null }>>([]);
+  const [employers, setEmployers] = useState<
+    Array<{ id: string; name_en?: string | null; name_ar?: string | null }>
+  >([]);
   const [isLoadingEmployers, setIsLoadingEmployers] = useState(true);
 
   const form = useForm<PromoterFormData>({
@@ -280,13 +282,13 @@ export function PromoterFormComprehensive({
     setIsSubmitting(true);
     try {
       await onSubmit(data);
-      
+
       // Clear draft after successful save
       if (mode === 'edit' && promoterId) {
         const autoSaveKey = `promoter-form-draft-${promoterId}`;
         localStorage.removeItem(autoSaveKey);
       }
-      
+
       setHasUnsavedChanges(false);
       toast.success(
         mode === 'create'
@@ -978,7 +980,13 @@ export function PromoterFormComprehensive({
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder={isLoadingEmployers ? 'Loading employers...' : 'Select employer (optional)'} />
+                  <SelectValue
+                    placeholder={
+                      isLoadingEmployers
+                        ? 'Loading employers...'
+                        : 'Select employer (optional)'
+                    }
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -1528,7 +1536,9 @@ export function PromoterFormComprehensive({
                 Last saved: {format(lastSaved, 'HH:mm:ss')}
               </span>
             )}
-            <span className='font-medium'>{Math.round(progress)}% Complete</span>
+            <span className='font-medium'>
+              {Math.round(progress)}% Complete
+            </span>
           </div>
         </div>
         <Progress value={progress} className='h-2' />
@@ -1539,7 +1549,7 @@ export function PromoterFormComprehensive({
         {sections.map(section => {
           const isComplete = isSectionComplete(section);
           const completion = getSectionCompletion(section);
-          
+
           return (
             <Button
               key={section}

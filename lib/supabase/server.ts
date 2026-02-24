@@ -28,18 +28,37 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+        setAll(
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options?: CookieOptions;
+          }>
+        ) {
           try {
-            cookiesToSet.forEach(({ name, value, options }: { name: string; value: string; options?: CookieOptions }) => {
-              try {
-                cookieStore.set(name, value, options as CookieOptions);
-              } catch (setError) {
-                // Log the error instead of silently failing
-                console.warn(`[Supabase Server] Failed to set cookie ${name}:`, setError);
-                // In API routes, we might need to handle this differently
-                // But for now, log it so we can debug
+            cookiesToSet.forEach(
+              ({
+                name,
+                value,
+                options,
+              }: {
+                name: string;
+                value: string;
+                options?: CookieOptions;
+              }) => {
+                try {
+                  cookieStore.set(name, value, options as CookieOptions);
+                } catch (setError) {
+                  // Log the error instead of silently failing
+                  console.warn(
+                    `[Supabase Server] Failed to set cookie ${name}:`,
+                    setError
+                  );
+                  // In API routes, we might need to handle this differently
+                  // But for now, log it so we can debug
+                }
               }
-            });
+            );
           } catch (error) {
             // Log the error instead of silently failing
             console.error('[Supabase Server] Error in setAll:', error);
@@ -87,12 +106,16 @@ export function createAdminClient() {
 
     // Verify service role key format
     if (!supabaseServiceKey.startsWith('eyJ')) {
-      console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token');
+      console.warn(
+        '⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token'
+      );
     }
 
     // Extract project reference from URL to verify key matches
-    const urlProjectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
-    
+    const urlProjectRef = supabaseUrl.match(
+      /https?:\/\/([^.]+)\.supabase\.co/
+    )?.[1];
+
     // Decode JWT to verify it matches the project (basic validation)
     try {
       const jwtParts = supabaseServiceKey.split('.');
@@ -104,30 +127,43 @@ export function createAdminClient() {
           base64 += '=';
         }
         // Decode the payload (second part of JWT)
-        const payload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
+        const payload = JSON.parse(
+          Buffer.from(base64, 'base64').toString('utf-8')
+        );
         const keyProjectRef = payload.ref;
-        
+
         if (keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef) {
           console.error('❌ SUPABASE_SERVICE_ROLE_KEY project mismatch:', {
             urlProjectRef,
             keyProjectRef,
             supabaseUrl,
-            message: 'The service role key is for a different Supabase project. Please use the service_role key from the project matching your NEXT_PUBLIC_SUPABASE_URL.',
+            message:
+              'The service role key is for a different Supabase project. Please use the service_role key from the project matching your NEXT_PUBLIC_SUPABASE_URL.',
           });
-          throw new Error(`Service role key project mismatch: URL project is "${urlProjectRef}" but key is for "${keyProjectRef}". Please use the correct service_role key from your Supabase project.`);
+          throw new Error(
+            `Service role key project mismatch: URL project is "${urlProjectRef}" but key is for "${keyProjectRef}". Please use the correct service_role key from your Supabase project.`
+          );
         }
-        
+
         if (keyProjectRef && urlProjectRef && keyProjectRef === urlProjectRef) {
-          console.log('✅ Service role key project matches URL:', keyProjectRef);
+          console.log(
+            '✅ Service role key project matches URL:',
+            keyProjectRef
+          );
         }
       }
     } catch (jwtError) {
       // If JWT decoding fails, log but don't fail - might still work
-      console.warn('⚠️ Could not decode service role key JWT for validation:', (jwtError as Error).message);
+      console.warn(
+        '⚠️ Could not decode service role key JWT for validation:',
+        (jwtError as Error).message
+      );
     }
 
     // Use ES6 import for better Next.js compatibility
-    const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
+    const {
+      createClient: createSupabaseClient,
+    } = require('@supabase/supabase-js');
 
     const adminClient = createSupabaseClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -139,15 +175,16 @@ export function createAdminClient() {
       },
       global: {
         headers: {
-          'apikey': supabaseServiceKey,
-          'Authorization': `Bearer ${supabaseServiceKey}`,
+          apikey: supabaseServiceKey,
+          Authorization: `Bearer ${supabaseServiceKey}`,
         },
       },
     });
 
     return adminClient;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('[createAdminClient] Failed to create admin client:', {
       error: errorMessage,
       hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,

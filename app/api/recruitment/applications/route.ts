@@ -31,11 +31,14 @@ export const GET = withAnyRBAC(
 
       let query = supabase
         .from('candidate_applications')
-        .select(`
+        .select(
+          `
           *,
           job_posting:job_postings(id, title, title_ar, department),
           candidate:profiles(id, email, full_name, phone)
-        `, { count: 'exact' })
+        `,
+          { count: 'exact' }
+        )
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -151,20 +154,25 @@ export const POST = withAnyRBAC(
       }
 
       // Update job posting applications count
-      await supabase.rpc('increment', {
-        table_name: 'job_postings',
-        column_name: 'applications_count',
-        row_id: job_posting_id,
-        increment_value: 1,
-      }).catch(() => {
-        // RPC might not exist, that's okay
-      });
+      await supabase
+        .rpc('increment', {
+          table_name: 'job_postings',
+          column_name: 'applications_count',
+          row_id: job_posting_id,
+          increment_value: 1,
+        })
+        .catch(() => {
+          // RPC might not exist, that's okay
+        });
 
-      return NextResponse.json({
-        success: true,
-        application,
-        message: 'Application submitted successfully',
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          success: true,
+          application,
+          message: 'Application submitted successfully',
+        },
+        { status: 201 }
+      );
     } catch (error: any) {
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
@@ -173,4 +181,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

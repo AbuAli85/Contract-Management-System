@@ -89,8 +89,8 @@ export default function UsersPageComponent() {
 
   // Loading states
   const [addLoading, setAddLoading] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editLoading, _setEditLoading] = useState(false);
+  const [deleteLoading, _setDeleteLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Filter and search states
@@ -103,8 +103,8 @@ export default function UsersPageComponent() {
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[1] ?? 25);
 
   // Sorting states
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, _setSortBy] = useState('created_at');
+  const [sortDir, _setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const { toast } = useToast();
 

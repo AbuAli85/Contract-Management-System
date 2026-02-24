@@ -28,7 +28,7 @@ export default function EditPromoterPage() {
 
   const [promoter, setPromoter] = useState<Promoter | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [_isSaving, _setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filter state
@@ -153,7 +153,7 @@ export default function EditPromoterPage() {
     router.push(`/${locale}/manage-promoters/${promoterId}`);
   };
 
-  const uniqueCompanies = employers.map(emp => ({
+  const _uniqueCompanies = employers.map(emp => ({
     id: emp.id,
     name: emp.name_en || emp.name_ar || emp.id,
   }));

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { PendingReviewsList } from '@/components/approval/PendingReviewsList';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import {

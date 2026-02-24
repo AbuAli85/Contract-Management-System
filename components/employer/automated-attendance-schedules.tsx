@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -29,9 +35,22 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { GoogleLocationPicker } from './google-location-picker';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -92,7 +111,8 @@ export function AutomatedAttendanceSchedules() {
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingSchedule, setEditingSchedule] = useState<AttendanceSchedule | null>(null);
+  const [editingSchedule, setEditingSchedule] =
+    useState<AttendanceSchedule | null>(null);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
@@ -117,12 +137,12 @@ export function AutomatedAttendanceSchedules() {
     send_check_in_link: true,
     send_check_out_link: false,
     notification_method: ['email'] as string[],
-      send_before_minutes: '15',
-      send_to_all_employees: true,
-      specific_employee_ids: [],
-      employee_group_ids: [],
-      assignment_type: 'all',
-      max_uses_per_link: '',
+    send_before_minutes: '15',
+    send_to_all_employees: true,
+    specific_employee_ids: [],
+    employee_group_ids: [],
+    assignment_type: 'all',
+    max_uses_per_link: '',
     require_photo: true,
     require_location_verification: true,
   });
@@ -132,7 +152,9 @@ export function AutomatedAttendanceSchedules() {
     longitude: number;
     address: string;
   } | null>(null);
-  const [locationSource, setLocationSource] = useState<'office' | 'google' | 'custom'>('office');
+  const [locationSource, setLocationSource] = useState<
+    'office' | 'google' | 'custom'
+  >('office');
 
   useEffect(() => {
     fetchSchedules();
@@ -245,8 +267,10 @@ export function AutomatedAttendanceSchedules() {
       return;
     }
 
-    if ((locationSource === 'google' || locationSource === 'custom') && 
-        (!formData.target_latitude || !formData.target_longitude)) {
+    if (
+      (locationSource === 'google' || locationSource === 'custom') &&
+      (!formData.target_latitude || !formData.target_longitude)
+    ) {
       toast({
         title: 'Validation Error',
         description: 'Please select or enter a location',
@@ -259,15 +283,31 @@ export function AutomatedAttendanceSchedules() {
       setSaving(true);
       const payload: any = {
         ...formData,
-        office_location_id: locationSource === 'office' ? formData.office_location_id : null,
-        target_latitude: locationSource !== 'office' ? parseFloat(formData.target_latitude) : null,
-        target_longitude: locationSource !== 'office' ? parseFloat(formData.target_longitude) : null,
+        office_location_id:
+          locationSource === 'office' ? formData.office_location_id : null,
+        target_latitude:
+          locationSource !== 'office'
+            ? parseFloat(formData.target_latitude)
+            : null,
+        target_longitude:
+          locationSource !== 'office'
+            ? parseFloat(formData.target_longitude)
+            : null,
         allowed_radius_meters: parseInt(formData.allowed_radius_meters),
         link_valid_duration_hours: parseInt(formData.link_valid_duration_hours),
         send_before_minutes: parseInt(formData.send_before_minutes),
-        max_uses_per_link: formData.max_uses_per_link ? parseInt(formData.max_uses_per_link) : null,
-        specific_employee_ids: formData.assignment_type === 'selected' ? formData.specific_employee_ids : [],
-        employee_group_ids: formData.assignment_type === 'groups' || formData.assignment_type === 'location_based' ? formData.employee_group_ids : [],
+        max_uses_per_link: formData.max_uses_per_link
+          ? parseInt(formData.max_uses_per_link)
+          : null,
+        specific_employee_ids:
+          formData.assignment_type === 'selected'
+            ? formData.specific_employee_ids
+            : [],
+        employee_group_ids:
+          formData.assignment_type === 'groups' ||
+          formData.assignment_type === 'location_based'
+            ? formData.employee_group_ids
+            : [],
         assignment_type: formData.assignment_type,
         send_to_all_employees: formData.assignment_type === 'all',
       };
@@ -275,7 +315,7 @@ export function AutomatedAttendanceSchedules() {
       const url = editingSchedule
         ? `/api/employer/attendance-schedules/${editingSchedule.id}`
         : '/api/employer/attendance-schedules';
-      
+
       const method = editingSchedule ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -292,8 +332,8 @@ export function AutomatedAttendanceSchedules() {
 
       toast({
         title: 'Success',
-        description: editingSchedule 
-          ? 'Schedule updated successfully' 
+        description: editingSchedule
+          ? 'Schedule updated successfully'
           : 'Schedule created successfully',
       });
 
@@ -386,11 +426,14 @@ export function AutomatedAttendanceSchedules() {
 
   const handleToggleActive = async (schedule: AttendanceSchedule) => {
     try {
-      const response = await fetch(`/api/employer/attendance-schedules/${schedule.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !schedule.is_active }),
-      });
+      const response = await fetch(
+        `/api/employer/attendance-schedules/${schedule.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: !schedule.is_active }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to update schedule');
@@ -398,8 +441,8 @@ export function AutomatedAttendanceSchedules() {
 
       toast({
         title: 'Success',
-        description: schedule.is_active 
-          ? 'Schedule deactivated' 
+        description: schedule.is_active
+          ? 'Schedule deactivated'
           : 'Schedule activated',
       });
 
@@ -462,7 +505,11 @@ export function AutomatedAttendanceSchedules() {
       send_to_all_employees: true,
       specific_employee_ids: [] as string[],
       employee_group_ids: [] as string[],
-      assignment_type: 'all' as 'all' | 'selected' | 'groups' | 'location_based',
+      assignment_type: 'all' as
+        | 'all'
+        | 'selected'
+        | 'groups'
+        | 'location_based',
       max_uses_per_link: '',
       require_photo: true,
       require_location_verification: true,
@@ -485,157 +532,204 @@ export function AutomatedAttendanceSchedules() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className='flex items-center justify-center py-12'>
+        <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between'>
         <div>
-          <h2 className="text-2xl font-bold">Automated Attendance Schedules</h2>
-          <p className="text-muted-foreground">
-            Configure automated daily attendance link generation and distribution
+          <h2 className='text-2xl font-bold'>Automated Attendance Schedules</h2>
+          <p className='text-muted-foreground'>
+            Configure automated daily attendance link generation and
+            distribution
           </p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={(open) => {
-          setShowCreateDialog(open);
-          if (!open) {
-            setEditingSchedule(null);
-            resetForm();
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
+        <Dialog
+          open={showCreateDialog}
+          onOpenChange={open => {
+            setShowCreateDialog(open);
+            if (!open) {
+              setEditingSchedule(null);
               resetForm();
-              setShowCreateDialog(true);
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
+            }
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button
+              onClick={() => {
+                resetForm();
+                setShowCreateDialog(true);
+              }}
+            >
+              <Plus className='h-4 w-4 mr-2' />
               Create Schedule
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>
                 {editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}
               </DialogTitle>
               <DialogDescription>
-                Configure automated daily attendance link generation with location and time settings
+                Configure automated daily attendance link generation with
+                location and time settings
               </DialogDescription>
             </DialogHeader>
 
-            <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="basic">Basic</TabsTrigger>
-                <TabsTrigger value="location">Location</TabsTrigger>
-                <TabsTrigger value="schedule">Schedule</TabsTrigger>
-                <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <Tabs defaultValue='basic' className='w-full'>
+              <TabsList className='grid w-full grid-cols-4'>
+                <TabsTrigger value='basic'>Basic</TabsTrigger>
+                <TabsTrigger value='location'>Location</TabsTrigger>
+                <TabsTrigger value='schedule'>Schedule</TabsTrigger>
+                <TabsTrigger value='notifications'>Notifications</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="basic" className="space-y-4">
+              <TabsContent value='basic' className='space-y-4'>
                 <div>
-                  <Label htmlFor="name">Schedule Name *</Label>
+                  <Label htmlFor='name'>Schedule Name *</Label>
                   <Input
-                    id="name"
+                    id='name'
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g., Daily Office Check-In"
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, name: e.target.value }))
+                    }
+                    placeholder='e.g., Daily Office Check-In'
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor='description'>Description</Label>
                   <Textarea
-                    id="description"
+                    id='description'
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Optional description"
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder='Optional description'
                     rows={3}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className='grid grid-cols-2 gap-4'>
                   <div>
-                    <Label htmlFor="checkInTime">Check-In Time *</Label>
+                    <Label htmlFor='checkInTime'>Check-In Time *</Label>
                     <Input
-                      id="checkInTime"
-                      type="time"
+                      id='checkInTime'
+                      type='time'
                       value={formData.check_in_time}
-                      onChange={(e) => setFormData(prev => ({ ...prev, check_in_time: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          check_in_time: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="checkOutTime">Check-Out Time (Optional)</Label>
+                    <Label htmlFor='checkOutTime'>
+                      Check-Out Time (Optional)
+                    </Label>
                     <Input
-                      id="checkOutTime"
-                      type="time"
+                      id='checkOutTime'
+                      type='time'
                       value={formData.check_out_time}
-                      onChange={(e) => setFormData(prev => ({ ...prev, check_out_time: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          check_out_time: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className='grid grid-cols-2 gap-4'>
                   <div>
-                    <Label htmlFor="linkDuration">Link Valid Duration (Hours)</Label>
+                    <Label htmlFor='linkDuration'>
+                      Link Valid Duration (Hours)
+                    </Label>
                     <Input
-                      id="linkDuration"
-                      type="number"
+                      id='linkDuration'
+                      type='number'
                       value={formData.link_valid_duration_hours}
-                      onChange={(e) => setFormData(prev => ({ ...prev, link_valid_duration_hours: e.target.value }))}
-                      min="1"
-                      max="24"
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          link_valid_duration_hours: e.target.value,
+                        }))
+                      }
+                      min='1'
+                      max='24'
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="maxUses">Max Uses Per Link (Optional)</Label>
+                    <Label htmlFor='maxUses'>
+                      Max Uses Per Link (Optional)
+                    </Label>
                     <Input
-                      id="maxUses"
-                      type="number"
+                      id='maxUses'
+                      type='number'
                       value={formData.max_uses_per_link}
-                      onChange={(e) => setFormData(prev => ({ ...prev, max_uses_per_link: e.target.value }))}
-                      placeholder="Unlimited if empty"
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          max_uses_per_link: e.target.value,
+                        }))
+                      }
+                      placeholder='Unlimited if empty'
                     />
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="location" className="space-y-4">
+              <TabsContent value='location' className='space-y-4'>
                 <div>
                   <Label>Location Source</Label>
                   <Select
                     value={locationSource}
-                    onValueChange={(value: 'office' | 'google' | 'custom') => setLocationSource(value)}
+                    onValueChange={(value: 'office' | 'google' | 'custom') =>
+                      setLocationSource(value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="office">Office Location</SelectItem>
-                      <SelectItem value="google">Google Maps Search</SelectItem>
-                      <SelectItem value="custom">Custom Coordinates</SelectItem>
+                      <SelectItem value='office'>Office Location</SelectItem>
+                      <SelectItem value='google'>Google Maps Search</SelectItem>
+                      <SelectItem value='custom'>Custom Coordinates</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {locationSource === 'office' && (
                   <div>
-                    <Label htmlFor="officeLocation">Office Location *</Label>
+                    <Label htmlFor='officeLocation'>Office Location *</Label>
                     <Select
                       value={formData.office_location_id}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, office_location_id: value }))}
+                      onValueChange={value =>
+                        setFormData(prev => ({
+                          ...prev,
+                          office_location_id: value,
+                        }))
+                      }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select office location" />
+                        <SelectValue placeholder='Select office location' />
                       </SelectTrigger>
                       <SelectContent>
-                        {officeLocations.map((loc) => (
+                        {officeLocations.map(loc => (
                           <SelectItem key={loc.id} value={loc.id}>
                             {loc.name} - {loc.address}
                           </SelectItem>
@@ -653,7 +747,7 @@ export function AutomatedAttendanceSchedules() {
                       initialAddress={googleLocation?.address}
                     />
                     {googleLocation && (
-                      <Alert className="mt-2">
+                      <Alert className='mt-2'>
                         <AlertDescription>
                           Selected: {googleLocation.address}
                         </AlertDescription>
@@ -663,122 +757,153 @@ export function AutomatedAttendanceSchedules() {
                 )}
 
                 {locationSource === 'custom' && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className='grid grid-cols-2 gap-4'>
                     <div>
-                      <Label htmlFor="latitude">Latitude *</Label>
+                      <Label htmlFor='latitude'>Latitude *</Label>
                       <Input
-                        id="latitude"
-                        type="number"
-                        step="any"
+                        id='latitude'
+                        type='number'
+                        step='any'
                         value={formData.target_latitude}
-                        onChange={(e) => setFormData(prev => ({ ...prev, target_latitude: e.target.value }))}
-                        placeholder="23.6145"
+                        onChange={e =>
+                          setFormData(prev => ({
+                            ...prev,
+                            target_latitude: e.target.value,
+                          }))
+                        }
+                        placeholder='23.6145'
                       />
                     </div>
                     <div>
-                      <Label htmlFor="longitude">Longitude *</Label>
+                      <Label htmlFor='longitude'>Longitude *</Label>
                       <Input
-                        id="longitude"
-                        type="number"
-                        step="any"
+                        id='longitude'
+                        type='number'
+                        step='any'
                         value={formData.target_longitude}
-                        onChange={(e) => setFormData(prev => ({ ...prev, target_longitude: e.target.value }))}
-                        placeholder="58.5458"
+                        onChange={e =>
+                          setFormData(prev => ({
+                            ...prev,
+                            target_longitude: e.target.value,
+                          }))
+                        }
+                        placeholder='58.5458'
                       />
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <Label htmlFor="radius">Allowed Radius (meters)</Label>
+                  <Label htmlFor='radius'>Allowed Radius (meters)</Label>
                   <Input
-                    id="radius"
-                    type="number"
+                    id='radius'
+                    type='number'
                     value={formData.allowed_radius_meters}
-                    onChange={(e) => setFormData(prev => ({ ...prev, allowed_radius_meters: e.target.value }))}
-                    min="10"
-                    max="1000"
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        allowed_radius_meters: e.target.value,
+                      }))
+                    }
+                    min='10'
+                    max='1000'
                   />
                 </div>
               </TabsContent>
 
-              <TabsContent value="schedule" className="space-y-4">
+              <TabsContent value='schedule' className='space-y-4'>
                 <div>
                   <Label>Active Days</Label>
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                      <div key={day} className="flex items-center space-x-2">
+                  <div className='grid grid-cols-4 gap-2 mt-2'>
+                    {[
+                      'monday',
+                      'tuesday',
+                      'wednesday',
+                      'thursday',
+                      'friday',
+                      'saturday',
+                      'sunday',
+                    ].map(day => (
+                      <div key={day} className='flex items-center space-x-2'>
                         <button
-                          type="button"
+                          type='button'
                           onClick={() => handleDayToggle(day)}
-                          className="flex items-center space-x-2"
+                          className='flex items-center space-x-2'
                         >
                           {formData[day as keyof typeof formData] ? (
-                            <CheckSquare className="h-4 w-4" />
+                            <CheckSquare className='h-4 w-4' />
                           ) : (
-                            <Square className="h-4 w-4" />
+                            <Square className='h-4 w-4' />
                           )}
-                          <span className="text-sm capitalize">{day.substring(0, 3)}</span>
+                          <span className='text-sm capitalize'>
+                            {day.substring(0, 3)}
+                          </span>
                         </button>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className='space-y-2'>
+                  <div className='flex items-center justify-between'>
                     <Label>Send Check-In Link</Label>
                     <Switch
                       checked={formData.send_check_in_link}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({ ...prev, send_check_in_link: checked }))
+                      onCheckedChange={checked =>
+                        setFormData(prev => ({
+                          ...prev,
+                          send_check_in_link: checked,
+                        }))
                       }
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className='flex items-center justify-between'>
                     <Label>Send Check-Out Link</Label>
                     <Switch
                       checked={formData.send_check_out_link}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({ ...prev, send_check_out_link: checked }))
+                      onCheckedChange={checked =>
+                        setFormData(prev => ({
+                          ...prev,
+                          send_check_out_link: checked,
+                        }))
                       }
                     />
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="notifications" className="space-y-4">
+              <TabsContent value='notifications' className='space-y-4'>
                 <div>
                   <Label>Notification Methods</Label>
-                  <div className="space-y-2 mt-2">
-                    <div className="flex items-center space-x-2">
+                  <div className='space-y-2 mt-2'>
+                    <div className='flex items-center space-x-2'>
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => handleNotificationMethodToggle('email')}
-                        className="flex items-center space-x-2"
+                        className='flex items-center space-x-2'
                       >
                         {formData.notification_method.includes('email') ? (
-                          <CheckSquare className="h-4 w-4" />
+                          <CheckSquare className='h-4 w-4' />
                         ) : (
-                          <Square className="h-4 w-4" />
+                          <Square className='h-4 w-4' />
                         )}
-                        <Mail className="h-4 w-4 mr-2" />
+                        <Mail className='h-4 w-4 mr-2' />
                         <span>Email</span>
                       </button>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className='flex items-center space-x-2'>
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => handleNotificationMethodToggle('sms')}
-                        className="flex items-center space-x-2"
+                        className='flex items-center space-x-2'
                       >
                         {formData.notification_method.includes('sms') ? (
-                          <CheckSquare className="h-4 w-4" />
+                          <CheckSquare className='h-4 w-4' />
                         ) : (
-                          <Square className="h-4 w-4" />
+                          <Square className='h-4 w-4' />
                         )}
-                        <Smartphone className="h-4 w-4 mr-2" />
+                        <Smartphone className='h-4 w-4 mr-2' />
                         <span>SMS</span>
                       </button>
                     </div>
@@ -786,27 +911,32 @@ export function AutomatedAttendanceSchedules() {
                 </div>
 
                 <div>
-                  <Label htmlFor="sendBefore">Send Before (Minutes)</Label>
+                  <Label htmlFor='sendBefore'>Send Before (Minutes)</Label>
                   <Input
-                    id="sendBefore"
-                    type="number"
+                    id='sendBefore'
+                    type='number'
                     value={formData.send_before_minutes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, send_before_minutes: e.target.value }))}
-                    min="0"
-                    max="120"
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        send_before_minutes: e.target.value,
+                      }))
+                    }
+                    min='0'
+                    max='120'
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className='text-xs text-muted-foreground mt-1'>
                     Send notification this many minutes before check-in time
                   </p>
                 </div>
 
-                <div className="space-y-4">
+                <div className='space-y-4'>
                   <Label>Employee Assignment</Label>
                   <EmployeeScheduleSelector
                     selectedEmployeeIds={formData.specific_employee_ids || []}
                     selectedGroupIds={formData.employee_group_ids || []}
                     assignmentType={formData.assignment_type || 'all'}
-                    onSelectionChange={(data) => {
+                    onSelectionChange={data => {
                       setFormData(prev => ({
                         ...prev,
                         specific_employee_ids: data.employeeIds,
@@ -821,21 +951,21 @@ export function AutomatedAttendanceSchedules() {
               </TabsContent>
             </Tabs>
 
-            <div className="flex gap-2 mt-4">
+            <div className='flex gap-2 mt-4'>
               <Button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="flex-1"
+                className='flex-1'
               >
                 {saving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                 ) : (
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className='h-4 w-4 mr-2' />
                 )}
                 {editingSchedule ? 'Update Schedule' : 'Create Schedule'}
               </Button>
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => {
                   setShowCreateDialog(false);
                   setEditingSchedule(null);
@@ -851,38 +981,43 @@ export function AutomatedAttendanceSchedules() {
 
       {schedules.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No Schedules Created</p>
-            <p className="text-sm text-muted-foreground">
-              Create your first automated schedule to start sending daily attendance links
+          <CardContent className='flex flex-col items-center justify-center py-12'>
+            <Calendar className='h-12 w-12 text-muted-foreground mb-4' />
+            <p className='text-lg font-medium'>No Schedules Created</p>
+            <p className='text-sm text-muted-foreground'>
+              Create your first automated schedule to start sending daily
+              attendance links
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {schedules.map((schedule) => (
-            <Card key={schedule.id} className={!schedule.is_active ? 'opacity-60' : ''}>
+        <div className='grid gap-4'>
+          {schedules.map(schedule => (
+            <Card
+              key={schedule.id}
+              className={!schedule.is_active ? 'opacity-60' : ''}
+            >
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
+                <div className='flex items-start justify-between'>
+                  <div className='flex-1'>
+                    <CardTitle className='flex items-center gap-2'>
+                      <Calendar className='h-5 w-5' />
                       {schedule.name}
                     </CardTitle>
-                    <CardDescription className="mt-1">
-                      {schedule.description || 'Automated daily attendance schedule'}
+                    <CardDescription className='mt-1'>
+                      {schedule.description ||
+                        'Automated daily attendance schedule'}
                     </CardDescription>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className='flex flex-col items-end gap-2'>
                     {schedule.is_active ? (
-                      <Badge variant="default">
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                      <Badge variant='default'>
+                        <CheckCircle className='h-3 w-3 mr-1' />
                         Active
                       </Badge>
                     ) : (
-                      <Badge variant="secondary">
-                        <XCircle className="h-3 w-3 mr-1" />
+                      <Badge variant='secondary'>
+                        <XCircle className='h-3 w-3 mr-1' />
                         Inactive
                       </Badge>
                     )}
@@ -890,114 +1025,126 @@ export function AutomatedAttendanceSchedules() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-4'>
                   <div>
-                    <p className="text-sm text-muted-foreground">Check-In Time</p>
-                    <p className="font-medium flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
+                    <p className='text-sm text-muted-foreground'>
+                      Check-In Time
+                    </p>
+                    <p className='font-medium flex items-center gap-1'>
+                      <Clock className='h-4 w-4' />
                       {schedule.check_in_time}
                     </p>
                   </div>
                   {schedule.check_out_time && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Check-Out Time</p>
-                      <p className="font-medium flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
+                      <p className='text-sm text-muted-foreground'>
+                        Check-Out Time
+                      </p>
+                      <p className='font-medium flex items-center gap-1'>
+                        <Clock className='h-4 w-4' />
                         {schedule.check_out_time}
                       </p>
                     </div>
                   )}
                   <div>
-                    <p className="text-sm text-muted-foreground">Location</p>
-                    <p className="font-medium flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
+                    <p className='text-sm text-muted-foreground'>Location</p>
+                    <p className='font-medium flex items-center gap-1'>
+                      <MapPin className='h-4 w-4' />
                       {schedule.office_location?.name || 'Custom'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Days</p>
-                    <p className="font-medium text-sm">{getDaysActive(schedule)}</p>
+                    <p className='text-sm text-muted-foreground'>Active Days</p>
+                    <p className='font-medium text-sm'>
+                      {getDaysActive(schedule)}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className='flex flex-wrap gap-2 mb-4'>
                   {schedule.send_check_in_link && (
-                    <Badge variant="outline">
-                      <CheckCircle className="h-3 w-3 mr-1" />
+                    <Badge variant='outline'>
+                      <CheckCircle className='h-3 w-3 mr-1' />
                       Check-In
                     </Badge>
                   )}
                   {schedule.send_check_out_link && (
-                    <Badge variant="outline">
-                      <CheckCircle className="h-3 w-3 mr-1" />
+                    <Badge variant='outline'>
+                      <CheckCircle className='h-3 w-3 mr-1' />
                       Check-Out
                     </Badge>
                   )}
                   {schedule.notification_method?.includes('email') && (
-                    <Badge variant="outline">
-                      <Mail className="h-3 w-3 mr-1" />
+                    <Badge variant='outline'>
+                      <Mail className='h-3 w-3 mr-1' />
                       Email
                     </Badge>
                   )}
                   {schedule.notification_method?.includes('sms') && (
-                    <Badge variant="outline">
-                      <Smartphone className="h-3 w-3 mr-1" />
+                    <Badge variant='outline'>
+                      <Smartphone className='h-3 w-3 mr-1' />
                       SMS
                     </Badge>
                   )}
                 </div>
 
-                <div className="text-sm text-muted-foreground mb-4">
+                <div className='text-sm text-muted-foreground mb-4'>
                   <p>Links Generated: {schedule.total_links_generated}</p>
                   <p>Notifications Sent: {schedule.total_notifications_sent}</p>
                   {schedule.last_generated_at && (
-                    <p>Last Generated: {format(parseISO(schedule.last_generated_at), 'PPp')}</p>
+                    <p>
+                      Last Generated:{' '}
+                      {format(parseISO(schedule.last_generated_at), 'PPp')}
+                    </p>
                   )}
                   {schedule.next_generation_date && (
-                    <p>Next Generation: {format(parseISO(schedule.next_generation_date), 'PP')}</p>
+                    <p>
+                      Next Generation:{' '}
+                      {format(parseISO(schedule.next_generation_date), 'PP')}
+                    </p>
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => handleEdit(schedule)}
                   >
-                    <Edit className="h-4 w-4 mr-2" />
+                    <Edit className='h-4 w-4 mr-2' />
                     Edit
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => handleToggleActive(schedule)}
                   >
                     {schedule.is_active ? (
                       <>
-                        <Pause className="h-4 w-4 mr-2" />
+                        <Pause className='h-4 w-4 mr-2' />
                         Deactivate
                       </>
                     ) : (
                       <>
-                        <Play className="h-4 w-4 mr-2" />
+                        <Play className='h-4 w-4 mr-2' />
                         Activate
                       </>
                     )}
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => handleManualTrigger(schedule.id)}
                   >
-                    <Play className="h-4 w-4 mr-2" />
+                    <Play className='h-4 w-4 mr-2' />
                     Generate Now
                   </Button>
                   <Button
-                    variant="destructive"
-                    size="sm"
+                    variant='destructive'
+                    size='sm'
                     onClick={() => handleDelete(schedule.id)}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className='h-4 w-4 mr-2' />
                     Delete
                   </Button>
                 </div>
@@ -1009,4 +1156,3 @@ export function AutomatedAttendanceSchedules() {
     </div>
   );
 }
-

@@ -560,8 +560,14 @@ export default function PromoterForm(props: PromoterFormProps) {
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorData.error || errorData.message || `Failed to update promoter: ${response.statusText}`);
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: 'Unknown error' }));
+          throw new Error(
+            errorData.error ||
+              errorData.message ||
+              `Failed to update promoter: ${response.statusText}`
+          );
         }
 
         const responseData = await response.json();

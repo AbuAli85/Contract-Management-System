@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-export type CompanyPermission = 
+export type CompanyPermission =
   | 'company:create'
   | 'company:edit'
   | 'company:delete'
@@ -22,7 +22,9 @@ interface UseCompanyPermissionsResult {
 /**
  * Hook to check company permissions for the current user
  */
-export function useCompanyPermissions(companyId: string | null): UseCompanyPermissionsResult {
+export function useCompanyPermissions(
+  companyId: string | null
+): UseCompanyPermissionsResult {
   const [permissions, setPermissions] = useState<CompanyPermission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -37,8 +39,10 @@ export function useCompanyPermissions(companyId: string | null): UseCompanyPermi
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`/api/company/permissions?company_id=${companyId}`);
+
+      const response = await fetch(
+        `/api/company/permissions?company_id=${companyId}`
+      );
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -79,7 +83,8 @@ export function useCompanyPermissions(companyId: string | null): UseCompanyPermi
  * Uses role-based fallback if explicit permissions not found
  */
 export function useCompanyActions(companyId: string | null, userRole: string) {
-  const { permissions, hasPermission, loading } = useCompanyPermissions(companyId);
+  const { permissions, hasPermission, loading } =
+    useCompanyPermissions(companyId);
 
   // Role-based default permissions
   const rolePermissions: Record<string, CompanyPermission[]> = {
@@ -105,37 +110,65 @@ export function useCompanyActions(companyId: string | null, userRole: string) {
 
   const canCreate = () => {
     if (loading) return false;
-    return hasPermission('company:create') || rolePermissions[userRole]?.includes('company:create') || false;
+    return (
+      hasPermission('company:create') ||
+      rolePermissions[userRole]?.includes('company:create') ||
+      false
+    );
   };
 
   const canEdit = () => {
     if (loading) return false;
-    return hasPermission('company:edit') || rolePermissions[userRole]?.includes('company:edit') || false;
+    return (
+      hasPermission('company:edit') ||
+      rolePermissions[userRole]?.includes('company:edit') ||
+      false
+    );
   };
 
   const canDelete = () => {
     if (loading) return false;
-    return hasPermission('company:delete') || rolePermissions[userRole]?.includes('company:delete') || false;
+    return (
+      hasPermission('company:delete') ||
+      rolePermissions[userRole]?.includes('company:delete') ||
+      false
+    );
   };
 
   const canView = () => {
     if (loading) return true; // Default to true for view
-    return hasPermission('company:view') || rolePermissions[userRole]?.includes('company:view') || true;
+    return (
+      hasPermission('company:view') ||
+      rolePermissions[userRole]?.includes('company:view') ||
+      true
+    );
   };
 
   const canManageSettings = () => {
     if (loading) return false;
-    return hasPermission('company:settings') || rolePermissions[userRole]?.includes('company:settings') || false;
+    return (
+      hasPermission('company:settings') ||
+      rolePermissions[userRole]?.includes('company:settings') ||
+      false
+    );
   };
 
   const canManageMembers = () => {
     if (loading) return false;
-    return hasPermission('company:manage_members') || rolePermissions[userRole]?.includes('company:manage_members') || false;
+    return (
+      hasPermission('company:manage_members') ||
+      rolePermissions[userRole]?.includes('company:manage_members') ||
+      false
+    );
   };
 
   const canInviteUsers = () => {
     if (loading) return false;
-    return hasPermission('company:invite_users') || rolePermissions[userRole]?.includes('company:invite_users') || false;
+    return (
+      hasPermission('company:invite_users') ||
+      rolePermissions[userRole]?.includes('company:invite_users') ||
+      false
+    );
   };
 
   return {
@@ -149,4 +182,3 @@ export function useCompanyActions(companyId: string | null, userRole: string) {
     loading,
   };
 }
-

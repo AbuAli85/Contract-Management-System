@@ -5,7 +5,7 @@ import { workflowEngine } from '@/lib/services/workflow-engine.service';
 
 /**
  * POST /api/workflows/[id]/execute
- * 
+ *
  * Execute a workflow manually or via trigger
  */
 export const POST = withAnyRBAC(
@@ -59,4 +59,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

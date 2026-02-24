@@ -86,7 +86,9 @@ export function PromotersEnhancedEmptyState({
           <div className='rounded-full bg-yellow-100 dark:bg-yellow-900 p-6 mb-6'>
             <Search className='h-16 w-16 text-yellow-600 dark:text-yellow-400' />
           </div>
-          <h3 className='text-2xl font-bold mb-2'>No Matching Promoters Found</h3>
+          <h3 className='text-2xl font-bold mb-2'>
+            No Matching Promoters Found
+          </h3>
           <p className='text-muted-foreground text-center max-w-md mb-6'>
             {searchTerm ? (
               <>
@@ -127,7 +129,10 @@ export function PromotersEnhancedEmptyState({
                     <>
                       <li>• Try shorter or more general keywords</li>
                       <li>• Check for typos in the search term</li>
-                      <li>• Search by name, email, phone, or partial ID (4+ digits)</li>
+                      <li>
+                        • Search by name, email, phone, or partial ID (4+
+                        digits)
+                      </li>
                       <li>• Remove some filters to broaden your search</li>
                       <li>• Use advanced search for complex queries</li>
                     </>

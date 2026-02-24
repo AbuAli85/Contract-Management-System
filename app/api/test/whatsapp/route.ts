@@ -1,6 +1,6 @@
 /**
  * Test WhatsApp Notification Endpoint
- * 
+ *
  * This endpoint allows you to test WhatsApp notifications
  * Usage: POST /api/test/whatsapp
  * Body: { phone: "+96879665522", message: "Test message" }
@@ -8,7 +8,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { sendWhatsApp, isWhatsAppConfigured, formatPhoneNumber } from '@/lib/services/whatsapp.service';
+import {
+  sendWhatsApp,
+  isWhatsAppConfigured,
+  formatPhoneNumber,
+} from '@/lib/services/whatsapp.service';
 import { UnifiedNotificationService } from '@/lib/services/unified-notification.service';
 
 /**
@@ -17,7 +21,9 @@ import { UnifiedNotificationService } from '@/lib/services/unified-notification.
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json(
@@ -59,7 +65,9 @@ export async function POST(request: NextRequest) {
     if (message && !useTemplate) {
       const result = await sendWhatsApp({
         to: formattedPhone,
-        message: message || 'This is a test WhatsApp message from the Contract Management System.',
+        message:
+          message ||
+          'This is a test WhatsApp message from the Contract Management System.',
       });
 
       return NextResponse.json({
@@ -79,7 +87,7 @@ export async function POST(request: NextRequest) {
     if (useTemplate && templateSid) {
       const result = await sendWhatsApp({
         to: formattedPhone,
-        templateSid: templateSid,
+        templateSid,
         templateVariables: templateVariables || {
           '1': 'Test Notification',
           '2': message || 'This is a test message via WhatsApp template.',
@@ -93,7 +101,7 @@ export async function POST(request: NextRequest) {
         details: {
           phone: formattedPhone,
           method: 'template',
-          templateSid: templateSid,
+          templateSid,
           templateVariables: templateVariables || {
             '1': 'Test Notification',
             '2': message || 'This is a test message via WhatsApp template.',
@@ -120,15 +128,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     // Explicitly type the profile data to avoid 'never' type inference
-    const profileData: ProfileData | null = profileResult.data as ProfileData | null;
-    
+    const profileData: ProfileData | null =
+      profileResult.data as ProfileData | null;
+
     // Extract email and name with proper fallbacks
     const profileEmail: string | null | undefined = profileData?.email ?? null;
-    const profileName: string | null | undefined = profileData?.full_name ?? null;
-    const userEmail: string | undefined = (user.email as string | undefined) || undefined;
-    const metadataName = (user.user_metadata as { full_name?: string } | null)?.full_name;
+    const profileName: string | null | undefined =
+      profileData?.full_name ?? null;
+    const userEmail: string | undefined =
+      (user.email as string | undefined) || undefined;
+    const metadataName = (user.user_metadata as { full_name?: string } | null)
+      ?.full_name;
     const userName: string = profileName || metadataName || 'Test User';
-    const finalEmail: string | undefined = profileEmail || userEmail || undefined;
+    const finalEmail: string | undefined =
+      profileEmail || userEmail || undefined;
 
     const result = await notificationService.sendNotification({
       recipients: [
@@ -141,7 +154,9 @@ export async function POST(request: NextRequest) {
       ],
       content: {
         title: 'Test WhatsApp Notification',
-        message: message || 'This is a test notification sent via WhatsApp. If you receive this, WhatsApp is working correctly!',
+        message:
+          message ||
+          'This is a test notification sent via WhatsApp. If you receive this, WhatsApp is working correctly!',
         priority: 'high', // Required for WhatsApp
         category: 'general',
       },
@@ -182,7 +197,9 @@ export async function GET() {
     accountSid: process.env.TWILIO_ACCOUNT_SID ? '✅ Set' : '❌ Missing',
     authToken: process.env.TWILIO_AUTH_TOKEN ? '✅ Set' : '❌ Missing',
     whatsappFrom: process.env.TWILIO_WHATSAPP_FROM ? '✅ Set' : '❌ Missing',
-    templateSid: process.env.TWILIO_WHATSAPP_TEMPLATE_SID ? '✅ Set (Optional)' : '⚠️ Not Set (Optional)',
+    templateSid: process.env.TWILIO_WHATSAPP_TEMPLATE_SID
+      ? '✅ Set (Optional)'
+      : '⚠️ Not Set (Optional)',
   };
 
   return NextResponse.json({
@@ -193,4 +210,3 @@ export async function GET() {
       : 'Please configure WhatsApp in your .env file. See docs/WHATSAPP_SETUP_GUIDE.md for details.',
   });
 }
-

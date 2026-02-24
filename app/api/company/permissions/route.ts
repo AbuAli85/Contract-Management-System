@@ -7,7 +7,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,7 +20,10 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('user_id') || user.id;
 
     if (!companyId) {
-      return NextResponse.json({ error: 'Company ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Company ID is required' },
+        { status: 400 }
+      );
     }
 
     const adminClient = createAdminClient();
@@ -38,14 +43,17 @@ export async function GET(request: NextRequest) {
       .eq('id', companyId)
       .single();
 
-    const canView = 
+    const canView =
       ownedCompany?.owner_id === user.id ||
       requesterMembership?.role === 'owner' ||
       requesterMembership?.role === 'admin' ||
       userId === user.id; // Users can view their own permissions
 
     if (!canView) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Insufficient permissions' },
+        { status: 403 }
+      );
     }
 
     // Get permissions
@@ -58,7 +66,10 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching permissions:', error);
-      return NextResponse.json({ error: 'Failed to fetch permissions' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch permissions' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -75,7 +86,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -108,35 +121,44 @@ export async function POST(request: NextRequest) {
       .eq('id', company_id)
       .single();
 
-    const canGrant = 
+    const canGrant =
       ownedCompany?.owner_id === user.id ||
       requesterMembership?.role === 'owner' ||
       requesterMembership?.role === 'admin';
 
     if (!canGrant) {
-      return NextResponse.json({ error: 'Insufficient permissions to grant permissions' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Insufficient permissions to grant permissions' },
+        { status: 403 }
+      );
     }
 
     // Grant permission (upsert)
     const { data: permissionData, error } = await adminClient
       .from('company_permissions')
-      .upsert({
-        user_id: user_id,
-        company_id: company_id,
-        permission: permission,
-        granted: true,
-        granted_by: user.id,
-        expires_at: expires_at || null,
-        is_active: true,
-      }, {
-        onConflict: 'user_id,company_id,permission',
-      })
+      .upsert(
+        {
+          user_id,
+          company_id,
+          permission,
+          granted: true,
+          granted_by: user.id,
+          expires_at: expires_at || null,
+          is_active: true,
+        },
+        {
+          onConflict: 'user_id,company_id,permission',
+        }
+      )
       .select()
       .single();
 
     if (error) {
       console.error('Error granting permission:', error);
-      return NextResponse.json({ error: 'Failed to grant permission' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to grant permission' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -154,7 +176,9 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -189,13 +213,16 @@ export async function DELETE(request: NextRequest) {
       .eq('id', companyId)
       .single();
 
-    const canRevoke = 
+    const canRevoke =
       ownedCompany?.owner_id === user.id ||
       requesterMembership?.role === 'owner' ||
       requesterMembership?.role === 'admin';
 
     if (!canRevoke) {
-      return NextResponse.json({ error: 'Insufficient permissions to revoke permissions' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Insufficient permissions to revoke permissions' },
+        { status: 403 }
+      );
     }
 
     // Revoke permission (soft delete)
@@ -208,7 +235,10 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       console.error('Error revoking permission:', error);
-      return NextResponse.json({ error: 'Failed to revoke permission' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to revoke permission' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -220,4 +250,3 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

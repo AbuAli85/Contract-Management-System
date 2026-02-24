@@ -76,7 +76,7 @@ export default function StorageAnalysisPage() {
 
       if (promotersError) {
         console.error('Error fetching promoters:', promotersError);
-        setError('Failed to fetch promoter data: ' + promotersError.message);
+        setError(`Failed to fetch promoter data: ${promotersError.message}`);
         return;
       }
 
@@ -186,8 +186,9 @@ export default function StorageAnalysisPage() {
     } catch (error) {
       console.error('Error in fetchStorageStats:', error);
       setError(
-        'Failed to load statistics: ' +
-          (error instanceof Error ? error.message : 'Unknown error')
+        `Failed to load statistics: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
       );
     } finally {
       setLoading(false);

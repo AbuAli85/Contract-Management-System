@@ -123,9 +123,10 @@ export async function POST(request: NextRequest) {
 
     if (!targetCompanyId) {
       return NextResponse.json(
-        { 
-          error: 'No company found. Please set an active company in your profile or provide a company_id',
-          requires_company: true
+        {
+          error:
+            'No company found. Please set an active company in your profile or provide a company_id',
+          requires_company: true,
         },
         { status: 400 }
       );
@@ -153,7 +154,10 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Payroll run already exists for this month', payroll_run_id: existing.id },
+        {
+          error: 'Payroll run already exists for this month',
+          payroll_run_id: existing.id,
+        },
         { status: 400 }
       );
     }
@@ -161,7 +165,7 @@ export async function POST(request: NextRequest) {
     // Get employer_id from company (via party relationship)
     // Company -> Party -> Party contact_email -> Profile ID (employer_id)
     let employerProfileId: string | null = null;
-    
+
     const { data: company } = await supabase
       .from('companies')
       .select('party_id')
@@ -193,7 +197,8 @@ export async function POST(request: NextRequest) {
 
     // Get all active employees for the employer
     let employeesQuery = (supabaseAdmin.from('employer_employees') as any)
-      .select(`
+      .select(
+        `
         id,
         employee_id,
         employer_id,
@@ -203,13 +208,16 @@ export async function POST(request: NextRequest) {
           name_ar,
           email
         )
-      `)
+      `
+      )
       .eq('employer_id', effectiveEmployerId)
       .eq('employment_status', 'active');
 
     // Also filter by company_id if it exists in the table (for backwards compatibility)
     // This uses .or() to include employees with null company_id
-    employeesQuery = employeesQuery.or(`company_id.eq.${targetCompanyId},company_id.is.null`);
+    employeesQuery = employeesQuery.or(
+      `company_id.eq.${targetCompanyId},company_id.is.null`
+    );
 
     const { data: employees, error: employeesError } = await employeesQuery;
 
@@ -229,7 +237,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payroll run
-    const { data: payrollRun, error: createError } = await (supabaseAdmin.from('payroll_runs') as any)
+    const { data: payrollRun, error: createError } = await (
+      supabaseAdmin.from('payroll_runs') as any
+    )
       .insert({
         company_id: targetCompanyId,
         payroll_month,
@@ -274,16 +284,22 @@ export async function POST(request: NextRequest) {
       // Calculate allowances total
       let allowancesTotal = 0;
       if (salaryStructure.allowances) {
-        Object.values(salaryStructure.allowances as Record<string, number>).forEach((val) => {
-          allowancesTotal += typeof val === 'number' ? val : parseFloat(val as string);
+        Object.values(
+          salaryStructure.allowances as Record<string, number>
+        ).forEach(val => {
+          allowancesTotal +=
+            typeof val === 'number' ? val : parseFloat(val as string);
         });
       }
 
       // Calculate deductions total
       let deductionsTotal = 0;
       if (salaryStructure.deductions) {
-        Object.values(salaryStructure.deductions as Record<string, number>).forEach((val) => {
-          deductionsTotal += typeof val === 'number' ? val : parseFloat(val as string);
+        Object.values(
+          salaryStructure.deductions as Record<string, number>
+        ).forEach(val => {
+          deductionsTotal +=
+            typeof val === 'number' ? val : parseFloat(val as string);
         });
       }
 
@@ -300,18 +316,30 @@ export async function POST(request: NextRequest) {
         .gte('attendance_date', monthStart.toISOString().split('T')[0])
         .lte('attendance_date', monthEnd.toISOString().split('T')[0]);
 
-      const presentDays = attendance?.filter(a => a.status === 'present' || a.status === 'late').length || 0;
-      const absentDays = attendance?.filter(a => a.status === 'absent').length || 0;
-      const leaveDays = attendance?.filter(a => a.status === 'leave').length || 0;
-      const totalOvertimeHours = attendance?.reduce((sum, a) => sum + (parseFloat(a.overtime_hours) || 0), 0) || 0;
+      const presentDays =
+        attendance?.filter(a => a.status === 'present' || a.status === 'late')
+          .length || 0;
+      const absentDays =
+        attendance?.filter(a => a.status === 'absent').length || 0;
+      const leaveDays =
+        attendance?.filter(a => a.status === 'leave').length || 0;
+      const totalOvertimeHours =
+        attendance?.reduce(
+          (sum, a) => sum + (parseFloat(a.overtime_hours) || 0),
+          0
+        ) || 0;
 
       // Calculate overtime pay
       const hourlyRate = salaryStructure.basic_salary / (30 * 8); // Assuming 8 hours per day, 30 days per month
-      const overtimePay = totalOvertimeHours * hourlyRate * (salaryStructure.overtime_rate || 1.5);
+      const overtimePay =
+        totalOvertimeHours *
+        hourlyRate *
+        (salaryStructure.overtime_rate || 1.5);
 
       // Calculate working days (assuming 30 days per month, adjust as needed)
       const workingDays = 30;
-      const basicSalary = (salaryStructure.basic_salary / workingDays) * presentDays;
+      const basicSalary =
+        (salaryStructure.basic_salary / workingDays) * presentDays;
 
       const grossSalary = basicSalary + allowancesTotal + overtimePay;
       const netSalary = grossSalary - deductionsTotal;
@@ -341,8 +369,9 @@ export async function POST(request: NextRequest) {
 
     // Insert all payroll entries
     if (payrollEntries.length > 0) {
-      const { error: entriesError } = await (supabaseAdmin.from('payroll_entries') as any)
-        .insert(payrollEntries);
+      const { error: entriesError } = await (
+        supabaseAdmin.from('payroll_entries') as any
+      ).insert(payrollEntries);
 
       if (entriesError) {
         console.error('Error creating payroll entries:', entriesError);
@@ -351,13 +380,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Update payroll run totals
-    const { data: updatedRun, error: updateError } = await (supabaseAdmin.from('payroll_runs') as any)
+    const { data: updatedRun, error: updateError } = await (
+      supabaseAdmin.from('payroll_runs') as any
+    )
       .update({
         total_amount: totalAmount,
         total_basic_salary: totalBasic,
         total_allowances: totalAllowances,
         total_deductions: totalDeductions,
-        total_overtime: payrollEntries.reduce((sum, e) => sum + (e.overtime_pay || 0), 0),
+        total_overtime: payrollEntries.reduce(
+          (sum, e) => sum + (e.overtime_pay || 0),
+          0
+        ),
       })
       .eq('id', payrollRun.id)
       .select()
@@ -381,4 +415,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

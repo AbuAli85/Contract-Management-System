@@ -2,7 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft, Shield, Building2 } from 'lucide-react';
@@ -22,7 +28,9 @@ export default function CompanyPermissionsPage() {
   const searchParams = useSearchParams();
   const companyId = searchParams?.get('company_id') ?? null;
   const [companies, setCompanies] = useState<any[]>([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(companyId);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    companyId
+  );
   const [selectedCompanyName, setSelectedCompanyName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -50,10 +58,12 @@ export default function CompanyPermissionsPage() {
 
       if (response.ok && data.success) {
         setCompanies(data.companies || []);
-        
+
         // If company_id in URL, verify it exists and set it
         if (companyId) {
-          const company = data.companies?.find((c: any) => c.company_id === companyId);
+          const company = data.companies?.find(
+            (c: any) => c.company_id === companyId
+          );
           if (company) {
             setSelectedCompanyId(companyId);
             setSelectedCompanyName(company.company_name);
@@ -90,22 +100,25 @@ export default function CompanyPermissionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className='flex items-center justify-center min-h-[60vh]'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary' />
       </div>
     );
   }
 
   if (companies.length === 0) {
     return (
-      <div className="container mx-auto py-6">
+      <div className='container mx-auto py-6'>
         <Card>
-          <CardContent className="py-12 text-center">
-            <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Companies Found</h3>
-            <p className="text-gray-500 mb-4">You need to have access to at least one company to manage permissions.</p>
+          <CardContent className='py-12 text-center'>
+            <Shield className='h-12 w-12 mx-auto text-gray-400 mb-4' />
+            <h3 className='text-xl font-semibold mb-2'>No Companies Found</h3>
+            <p className='text-gray-500 mb-4'>
+              You need to have access to at least one company to manage
+              permissions.
+            </p>
             <Button onClick={() => router.push('/en/dashboard/companies')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className='h-4 w-4 mr-2' />
               Back to Companies
             </Button>
           </CardContent>
@@ -115,23 +128,25 @@ export default function CompanyPermissionsPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className='container mx-auto py-6 space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-4'>
           <Button
-            variant="ghost"
-            size="icon"
+            variant='ghost'
+            size='icon'
             onClick={() => router.push('/en/dashboard/companies')}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className='h-4 w-4' />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Shield className="h-8 w-8 text-indigo-600" />
+            <h1 className='text-3xl font-bold flex items-center gap-3'>
+              <Shield className='h-8 w-8 text-indigo-600' />
               Company Permissions
             </h1>
-            <p className="text-gray-500 mt-1">Manage user permissions for companies</p>
+            <p className='text-gray-500 mt-1'>
+              Manage user permissions for companies
+            </p>
           </div>
         </div>
       </div>
@@ -146,30 +161,36 @@ export default function CompanyPermissionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="company-select">Company</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='company-select'>Company</Label>
               <Select
                 value={selectedCompanyId || ''}
-                onValueChange={(value) => {
+                onValueChange={value => {
                   setSelectedCompanyId(value);
                   const company = companies.find(c => c.company_id === value);
                   if (company) {
                     setSelectedCompanyName(company.company_name);
                     // Update URL without navigation
-                    router.replace(`/en/dashboard/companies/permissions?company_id=${value}`, { scroll: false });
+                    router.replace(
+                      `/en/dashboard/companies/permissions?company_id=${value}`,
+                      { scroll: false }
+                    );
                   }
                 }}
               >
-                <SelectTrigger id="company-select">
-                  <SelectValue placeholder="Select a company" />
+                <SelectTrigger id='company-select'>
+                  <SelectValue placeholder='Select a company' />
                 </SelectTrigger>
                 <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.company_id} value={company.company_id}>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4" />
+                  {companies.map(company => (
+                    <SelectItem
+                      key={company.company_id}
+                      value={company.company_id}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <Building2 className='h-4 w-4' />
                         <span>{company.company_name}</span>
-                        <Badge variant="outline" className="ml-2">
+                        <Badge variant='outline' className='ml-2'>
                           {company.user_role}
                         </Badge>
                       </div>
@@ -185,7 +206,7 @@ export default function CompanyPermissionsPage() {
       {/* Permissions Manager */}
       {selectedCompanyId && selectedCompanyName && (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className='pt-6'>
             <CompanyPermissionsManager
               companyId={selectedCompanyId}
               companyName={selectedCompanyName}
@@ -196,14 +217,15 @@ export default function CompanyPermissionsPage() {
 
       {!selectedCompanyId && (
         <Card>
-          <CardContent className="py-12 text-center">
-            <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Company Selected</h3>
-            <p className="text-gray-500">Please select a company to manage permissions.</p>
+          <CardContent className='py-12 text-center'>
+            <Shield className='h-12 w-12 mx-auto text-gray-400 mb-4' />
+            <h3 className='text-xl font-semibold mb-2'>No Company Selected</h3>
+            <p className='text-gray-500'>
+              Please select a company to manage permissions.
+            </p>
           </CardContent>
         </Card>
       )}
     </div>
   );
 }
-

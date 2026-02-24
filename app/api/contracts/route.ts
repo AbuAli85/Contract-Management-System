@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import {} from '@supabase/ssr';
+import {} from 'next/headers';
 import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 import { getContractMetrics } from '@/lib/metrics';
 import { withTimeout, logApiCall } from '@/lib/performance-monitor';
@@ -154,7 +154,7 @@ async function handleContractsRequest(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    throw new Error('Unauthorized: ' + (userError?.message || 'No user found'));
+    throw new Error(`Unauthorized: ${userError?.message || 'No user found'}`);
   }
 
   // ✅ COMPANY SCOPE: Get active company's party_id
@@ -186,7 +186,11 @@ async function handleContractsRequest(
         activePartyId = company.party_id;
         logger.debug(
           'Using company party_id for contract filtering',
-          { companyId: profile.active_company_id, partyId: activePartyId, requestId },
+          {
+            companyId: profile.active_company_id,
+            partyId: activePartyId,
+            requestId,
+          },
           'ContractsAPI'
         );
       }
@@ -300,7 +304,9 @@ async function handleContractsRequest(
 
     // ✅ COMPANY SCOPE: Filter by active company's party_id if available
     if (activePartyId) {
-      query = query.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+      query = query.or(
+        `second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`
+      );
       logger.debug(
         'Filtering contracts by company party_id',
         { activePartyId, requestId },
@@ -386,7 +392,9 @@ async function handleContractsRequest(
 
       // ✅ COMPANY SCOPE: Apply company filter to fallback query too
       if (activePartyId) {
-        fallbackQuery = fallbackQuery.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+        fallbackQuery = fallbackQuery.or(
+          `second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`
+        );
       }
 
       // Apply RBAC to fallback query too (only if no company scope)
@@ -682,7 +690,7 @@ async function handleContractsRequest(
     lastUpdated: new Date().toISOString(),
     requestId,
     // Include full metrics for advanced use
-    metrics: metrics,
+    metrics,
   };
 }
 
@@ -782,7 +790,7 @@ export const POST = withAnyRBAC(
         /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i.test(
           v
         );
-      const isNumeric = (v: any) =>
+      const _isNumeric = (v: any) =>
         v !== null && v !== undefined && /^\d+$/.test(String(v));
 
       // Accept any non-empty string or number as valid ID, not just UUIDs
@@ -809,8 +817,8 @@ export const POST = withAnyRBAC(
         : undefined;
 
       // For numeric IDs, accept any non-empty value
-      const intFirstPartyId = validClientId ? validClientId : undefined;
-      const intSecondPartyId = validEmployerId ? validEmployerId : undefined;
+      const _intFirstPartyId = validClientId ? validClientId : undefined;
+      const _intSecondPartyId = validEmployerId ? validEmployerId : undefined;
 
       logger.debug(
         'Contract creation debug info',

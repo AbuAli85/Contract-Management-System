@@ -4,7 +4,7 @@ import { EmployerAttendanceDashboard } from '@/components/attendance/employer-at
 
 export default function AttendanceApprovalPage() {
   return (
-    <div className="container mx-auto py-6">
+    <div className='container mx-auto py-6'>
       <EmployerAttendanceDashboard />
     </div>
   );

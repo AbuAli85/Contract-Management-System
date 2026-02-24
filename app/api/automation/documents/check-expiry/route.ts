@@ -5,7 +5,7 @@ import { documentExpiryAutomation } from '@/lib/services/document-expiry-automat
 
 /**
  * POST /api/automation/documents/check-expiry
- * 
+ *
  * Check all documents for expiry and send automated alerts
  * This endpoint can be called:
  * - Manually by admins
@@ -64,14 +64,12 @@ export const POST = withAnyRBAC(
       });
 
       // Send expiry alerts
-      const expiryAlertsResult = await documentExpiryAutomation.sendExpiryAlerts(
-        report.alerts,
-        {
+      const expiryAlertsResult =
+        await documentExpiryAutomation.sendExpiryAlerts(report.alerts, {
           sendToEmployee,
           sendToEmployer,
           channels: channels as any,
-        }
-      );
+        });
 
       console.log('📧 Expiry Alerts Sent:', {
         sent: expiryAlertsResult.sent,
@@ -81,13 +79,14 @@ export const POST = withAnyRBAC(
       // Send missing document alerts
       let missingAlertsResult = { sent: 0, failed: 0, errors: [] as string[] };
       if (checkMissing && report.missingDocuments.length > 0) {
-        missingAlertsResult = await documentExpiryAutomation.sendMissingDocumentAlerts(
-          report.missingDocuments,
-          {
-            sendToEmployee,
-            sendToEmployer,
-          }
-        );
+        missingAlertsResult =
+          await documentExpiryAutomation.sendMissingDocumentAlerts(
+            report.missingDocuments,
+            {
+              sendToEmployee,
+              sendToEmployer,
+            }
+          );
 
         console.log('📋 Missing Document Alerts Sent:', {
           sent: missingAlertsResult.sent,
@@ -136,7 +135,7 @@ export const POST = withAnyRBAC(
 
 /**
  * GET /api/automation/documents/check-expiry
- * 
+ *
  * Get compliance report without sending alerts
  */
 export const GET = withAnyRBAC(
@@ -185,4 +184,3 @@ export const GET = withAnyRBAC(
     }
   }
 );
-

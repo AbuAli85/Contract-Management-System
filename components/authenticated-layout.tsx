@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, type ReactNode } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-service';
 // RBACProvider is now handled in app/providers.tsx
 import { ThemeProvider } from '@/components/theme-provider';
@@ -9,13 +9,13 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { NotificationPanel } from '@/components/notifications/notification-panel';
 import { usePathname } from '@/navigation';
 import { Button } from '@/components/ui/button';
-import { FilePlus, UserPlus, Sun, Bell, User, LogOut } from 'lucide-react';
+import { FilePlus, UserPlus, Sun, User, LogOut } from 'lucide-react';
 import GlobalSearch from '@/components/global-search';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { CompanySwitcher } from '@/components/layout/company-switcher';
+import { isRTL } from '@/lib/i18n/rtl';
 
 // Pages that don't need authentication or sidebar
 const PUBLIC_PAGES = [
@@ -137,7 +137,10 @@ export function AuthenticatedLayout({
   const recentLogin =
     justLoggedIn && Date.now() - parseInt(justLoggedIn) < 5000; // Increased to 5 seconds
 
-  if (!mounted || loading) {
+  // FIX (2026-02-24): Only block on initialLoading (one-time startup check), NOT on
+  // the recurring `loading` flag which fires on every token refresh and caused the
+  // infinite spinner. We still wait for `mounted` to prevent SSR hydration issues.
+  if (!mounted || initialLoading) {
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center'>
@@ -190,6 +193,8 @@ export function AuthenticatedLayout({
     );
   }
 
+  const rtl = isRTL(locale);
+
   // If user is authenticated, show sidebar and navigation
   // (Public pages like login were already returned earlier)
   if (user) {
@@ -200,7 +205,9 @@ export function AuthenticatedLayout({
         enableSystem
         disableTransitionOnChange
       >
-        <div className='flex h-screen bg-background'>
+        <div
+          className={`flex h-screen bg-background${rtl ? ' flex-row-reverse' : ''}`}
+        >
           {/* Mobile overlay */}
           {!isSidebarCollapsed && (
             <div
@@ -238,31 +245,37 @@ export function AuthenticatedLayout({
 
                   {/* Quick Actions - Only show for admins, managers, and employers */}
                   {(() => {
-                    const userMetadata = (user?.user_metadata || {}) as Record<string, any>;
+                    const userMetadata = (user?.user_metadata || {}) as Record<
+                      string,
+                      any
+                    >;
                     const userRole = userMetadata?.role || '';
-                    const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+                    const isAdmin =
+                      userRole === 'admin' || userRole === 'super_admin';
                     const isManager = userRole === 'manager';
                     const isEmployer = userRole === 'employer';
-                    const isPromoter = userRole === 'promoter' || userRole === 'user';
-                    const showActions = (isAdmin || isManager || isEmployer) && !isPromoter;
+                    const isPromoter =
+                      userRole === 'promoter' || userRole === 'user';
+                    const showActions =
+                      (isAdmin || isManager || isEmployer) && !isPromoter;
 
                     return showActions && !pathname?.includes('/promoters') ? (
-                    <div className='hidden md:flex items-center space-x-2'>
-                      <Button size='sm' variant='outline' asChild>
-                        <Link href='/en/generate-contract'>
-                          <FilePlus className='mr-2 h-4 w-4' />
-                          New Contract
-                        </Link>
-                      </Button>
+                      <div className='hidden md:flex items-center space-x-2'>
+                        <Button size='sm' variant='outline' asChild>
+                          <Link href='/en/generate-contract'>
+                            <FilePlus className='me-2 h-4 w-4' />
+                            {rtl ? 'عقد جديد' : 'New Contract'}
+                          </Link>
+                        </Button>
                         {(isAdmin || isManager || isEmployer) && (
-                      <Button size='sm' variant='outline' asChild>
-                        <Link href='/manage-promoters/new'>
-                          <UserPlus className='mr-2 h-4 w-4' />
-                          Add Promoter
-                        </Link>
-                      </Button>
+                          <Button size='sm' variant='outline' asChild>
+                            <Link href='/manage-promoters/new'>
+                              <UserPlus className='me-2 h-4 w-4' />
+                              {rtl ? 'إضافة مروج' : 'Add Promoter'}
+                            </Link>
+                          </Button>
                         )}
-                    </div>
+                      </div>
                     ) : null;
                   })()}
                 </div>

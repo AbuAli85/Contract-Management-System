@@ -1,6 +1,6 @@
 /**
  * WhatsApp Webhook Handler
- * 
+ *
  * Handles incoming WhatsApp messages from Twilio
  * Configure this URL in Twilio Console: https://yourdomain.com/api/webhooks/whatsapp
  */
@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    
+
     // Twilio sends form data
     const from = formData.get('From') as string; // whatsapp:+96879665522
     const to = formData.get('To') as string; // whatsapp:+14155238886
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Extract phone number (remove whatsapp: prefix)
     const phoneNumber = from?.replace('whatsapp:', '') || '';
-    
+
     if (!phoneNumber || !body) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Find promoter/profile by phone number
     const supabase = await createClient();
-    
+
     // Try to find in promoters table
     const { data: promoter } = await supabase
       .from('promoters')
@@ -77,7 +77,8 @@ export async function POST(request: NextRequest) {
 
     if (message === 'stop' || message === 'unsubscribe') {
       // Handle unsubscribe
-      responseMessage = 'You have been unsubscribed from notifications. Reply START to subscribe again.';
+      responseMessage =
+        'You have been unsubscribed from notifications. Reply START to subscribe again.';
     } else if (message === 'start' || message === 'subscribe') {
       // Handle subscribe
       responseMessage = 'You are now subscribed to notifications. Thank you!';
@@ -95,11 +96,12 @@ export async function POST(request: NextRequest) {
       responseMessage = `Hello ${userName}! Your account is ${userStatus}.`;
     } else if (message.startsWith('join ')) {
       // Handle sandbox join (already handled by Twilio, but acknowledge)
-      responseMessage = 'Welcome to the WhatsApp Sandbox! You are now connected.';
+      responseMessage =
+        'Welcome to the WhatsApp Sandbox! You are now connected.';
     } else {
       // Default response - acknowledge receipt
       responseMessage = `Thank you for your message: "${body}". Our team will respond shortly. For help, reply HELP.`;
-      
+
       // You can add custom logic here:
       // - Route to support team
       // - Process orders/requests
@@ -121,7 +123,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error handling WhatsApp webhook:', error);
-    
+
     // Return empty TwiML response to avoid Twilio retries
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -147,4 +149,3 @@ export async function GET(request: NextRequest) {
     message: 'WhatsApp webhook is active',
   });
 }
-

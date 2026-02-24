@@ -124,7 +124,7 @@ class APIErrorLogger {
     const icon = this.getCategoryIcon(context.category);
     const color = this.getCategoryColor(context.category);
 
-    console.error('\n' + '='.repeat(80));
+    console.error(`\n${'='.repeat(80)}`);
     console.error(`${icon} API ERROR - ${context.category.toUpperCase()}`);
     console.error('='.repeat(80));
     console.error(`\n📍 Endpoint: ${context.method} ${context.endpoint}`);
@@ -176,7 +176,7 @@ class APIErrorLogger {
       }
     }
 
-    console.error('\n' + '='.repeat(80) + '\n');
+    console.error(`\n${'='.repeat(80)}\n`);
   }
 
   /**

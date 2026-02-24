@@ -1,12 +1,12 @@
 /**
  * Company Permissions Utility
- * 
+ *
  * Helper functions to check if a user has specific permissions for a company
  */
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 
-export type CompanyPermission = 
+export type CompanyPermission =
   | 'company:create'
   | 'company:edit'
   | 'company:delete'
@@ -41,7 +41,8 @@ export async function hasCompanyPermission(
       .eq('id', companyId)
       .maybeSingle();
 
-    const userRole = membership?.role || (ownedCompany?.owner_id === userId ? 'owner' : null);
+    const userRole =
+      membership?.role || (ownedCompany?.owner_id === userId ? 'owner' : null);
 
     // Role-based default permissions
     if (userRole === 'owner') {
@@ -102,7 +103,8 @@ export async function getUserCompanyPermissions(
       .eq('id', companyId)
       .maybeSingle();
 
-    const userRole = membership?.role || (ownedCompany?.owner_id === userId ? 'owner' : null);
+    const userRole =
+      membership?.role || (ownedCompany?.owner_id === userId ? 'owner' : null);
 
     const permissions: CompanyPermission[] = [];
 
@@ -145,7 +147,7 @@ export async function getUserCompanyPermissions(
       .is('expires_at', null);
 
     if (explicitPermissions) {
-      explicitPermissions.forEach((p) => {
+      explicitPermissions.forEach(p => {
         if (!permissions.includes(p.permission as CompanyPermission)) {
           permissions.push(p.permission as CompanyPermission);
         }
@@ -165,9 +167,16 @@ export async function getUserCompanyPermissions(
 export async function canPerformCompanyAction(
   userId: string,
   companyId: string,
-  action: 'create' | 'edit' | 'delete' | 'view' | 'settings' | 'manage_members' | 'invite_users'
+  action:
+    | 'create'
+    | 'edit'
+    | 'delete'
+    | 'view'
+    | 'settings'
+    | 'manage_members'
+    | 'invite_users'
 ): Promise<boolean> {
-  const permission: CompanyPermission = `company:${action}` as CompanyPermission;
+  const permission: CompanyPermission =
+    `company:${action}` as CompanyPermission;
   return hasCompanyPermission(userId, companyId, permission);
 }
-

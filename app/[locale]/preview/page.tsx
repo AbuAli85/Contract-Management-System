@@ -34,7 +34,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Users,
   FileText,
-  BarChart3,
   Plus,
   ArrowRight,
   Eye,

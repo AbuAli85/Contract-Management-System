@@ -59,7 +59,7 @@ export function DocumentUploadDialog({
   const uploadMutation = useMutation({
     mutationFn: async (data: any) => {
       setUploading(true);
-      
+
       // Upload file to Supabase Storage
       let fileUrl = '';
       if (selectedFile) {
@@ -109,7 +109,10 @@ export function DocumentUploadDialog({
     onSuccess: () => {
       toast({
         title: locale === 'ar' ? 'تم الرفع بنجاح' : 'Upload Successful',
-        description: locale === 'ar' ? 'تم رفع المستند بنجاح' : 'Document has been uploaded successfully',
+        description:
+          locale === 'ar'
+            ? 'تم رفع المستند بنجاح'
+            : 'Document has been uploaded successfully',
       });
       setFormData({
         employer_employee_id: employerEmployeeId || '',
@@ -125,10 +128,11 @@ export function DocumentUploadDialog({
       onSuccess?.();
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: error instanceof Error ? error.message : 'Failed to upload document',
+        description:
+          error instanceof Error ? error.message : 'Failed to upload document',
         variant: 'destructive',
       });
     },
@@ -139,11 +143,12 @@ export function DocumentUploadDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.employer_employee_id) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى اختيار الموظف' : 'Please select an employee',
+        description:
+          locale === 'ar' ? 'يرجى اختيار الموظف' : 'Please select an employee',
         variant: 'destructive',
       });
       return;
@@ -152,7 +157,10 @@ export function DocumentUploadDialog({
     if (!formData.document_type) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى اختيار نوع المستند' : 'Please select document type',
+        description:
+          locale === 'ar'
+            ? 'يرجى اختيار نوع المستند'
+            : 'Please select document type',
         variant: 'destructive',
       });
       return;
@@ -161,7 +169,10 @@ export function DocumentUploadDialog({
     if (!formData.document_name) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى إدخال اسم المستند' : 'Please enter document name',
+        description:
+          locale === 'ar'
+            ? 'يرجى إدخال اسم المستند'
+            : 'Please enter document name',
         variant: 'destructive',
       });
       return;
@@ -170,7 +181,8 @@ export function DocumentUploadDialog({
     if (!selectedFile) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى اختيار ملف' : 'Please select a file',
+        description:
+          locale === 'ar' ? 'يرجى اختيار ملف' : 'Please select a file',
         variant: 'destructive',
       });
       return;
@@ -181,10 +193,10 @@ export function DocumentUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Upload className='h-5 w-5' />
             {locale === 'ar' ? 'رفع مستند جديد' : 'Upload New Document'}
           </DialogTitle>
           <DialogDescription>
@@ -194,60 +206,82 @@ export function DocumentUploadDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="document_type">
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='document_type'>
                 {locale === 'ar' ? 'نوع المستند' : 'Document Type'} *
               </Label>
               <Select
                 value={formData.document_type}
-                onValueChange={(value) =>
+                onValueChange={value =>
                   setFormData({ ...formData, document_type: value })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={locale === 'ar' ? 'اختر النوع' : 'Select type'} />
+                  <SelectValue
+                    placeholder={locale === 'ar' ? 'اختر النوع' : 'Select type'}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="id_card">{locale === 'ar' ? 'بطاقة الهوية' : 'ID Card'}</SelectItem>
-                  <SelectItem value="passport">{locale === 'ar' ? 'جواز السفر' : 'Passport'}</SelectItem>
-                  <SelectItem value="contract">{locale === 'ar' ? 'عقد' : 'Contract'}</SelectItem>
-                  <SelectItem value="certificate">{locale === 'ar' ? 'شهادة' : 'Certificate'}</SelectItem>
-                  <SelectItem value="training_certificate">{locale === 'ar' ? 'شهادة تدريب' : 'Training Certificate'}</SelectItem>
-                  <SelectItem value="license">{locale === 'ar' ? 'رخصة' : 'License'}</SelectItem>
-                  <SelectItem value="visa">{locale === 'ar' ? 'تأشيرة' : 'Visa'}</SelectItem>
-                  <SelectItem value="work_permit">{locale === 'ar' ? 'تصريح عمل' : 'Work Permit'}</SelectItem>
-                  <SelectItem value="insurance">{locale === 'ar' ? 'تأمين' : 'Insurance'}</SelectItem>
-                  <SelectItem value="other">{locale === 'ar' ? 'أخرى' : 'Other'}</SelectItem>
+                  <SelectItem value='id_card'>
+                    {locale === 'ar' ? 'بطاقة الهوية' : 'ID Card'}
+                  </SelectItem>
+                  <SelectItem value='passport'>
+                    {locale === 'ar' ? 'جواز السفر' : 'Passport'}
+                  </SelectItem>
+                  <SelectItem value='contract'>
+                    {locale === 'ar' ? 'عقد' : 'Contract'}
+                  </SelectItem>
+                  <SelectItem value='certificate'>
+                    {locale === 'ar' ? 'شهادة' : 'Certificate'}
+                  </SelectItem>
+                  <SelectItem value='training_certificate'>
+                    {locale === 'ar' ? 'شهادة تدريب' : 'Training Certificate'}
+                  </SelectItem>
+                  <SelectItem value='license'>
+                    {locale === 'ar' ? 'رخصة' : 'License'}
+                  </SelectItem>
+                  <SelectItem value='visa'>
+                    {locale === 'ar' ? 'تأشيرة' : 'Visa'}
+                  </SelectItem>
+                  <SelectItem value='work_permit'>
+                    {locale === 'ar' ? 'تصريح عمل' : 'Work Permit'}
+                  </SelectItem>
+                  <SelectItem value='insurance'>
+                    {locale === 'ar' ? 'تأمين' : 'Insurance'}
+                  </SelectItem>
+                  <SelectItem value='other'>
+                    {locale === 'ar' ? 'أخرى' : 'Other'}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="document_name">
+            <div className='space-y-2'>
+              <Label htmlFor='document_name'>
                 {locale === 'ar' ? 'اسم المستند' : 'Document Name'} *
               </Label>
               <Input
-                id="document_name"
+                id='document_name'
                 value={formData.document_name}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, document_name: e.target.value })
                 }
-                placeholder={locale === 'ar' ? 'أدخل اسم المستند' : 'Enter document name'}
+                placeholder={
+                  locale === 'ar' ? 'أدخل اسم المستند' : 'Enter document name'
+                }
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="file">
-              {locale === 'ar' ? 'الملف' : 'File'} *
-            </Label>
-            <div className="flex items-center gap-2">
+          <div className='space-y-2'>
+            <Label htmlFor='file'>{locale === 'ar' ? 'الملف' : 'File'} *</Label>
+            <div className='flex items-center gap-2'>
               <Input
-                id="file"
-                type="file"
-                onChange={(e) => {
+                id='file'
+                type='file'
+                onChange={e => {
                   const file = e.target.files?.[0];
                   if (file) {
                     setSelectedFile(file);
@@ -256,120 +290,135 @@ export function DocumentUploadDialog({
                     }
                   }
                 }}
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                className="flex-1"
+                accept='.pdf,.jpg,.jpeg,.png,.doc,.docx'
+                className='flex-1'
               />
               {selectedFile && (
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
+                  type='button'
+                  variant='ghost'
+                  size='sm'
                   onClick={() => setSelectedFile(null)}
                 >
-                  <X className="h-4 w-4" />
+                  <X className='h-4 w-4' />
                 </Button>
               )}
             </div>
             {selectedFile && (
-              <p className="text-sm text-gray-500">
+              <p className='text-sm text-gray-500'>
                 {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
               </p>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="issue_date">
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='issue_date'>
                 {locale === 'ar' ? 'تاريخ الإصدار' : 'Issue Date'}
               </Label>
               <Input
-                id="issue_date"
-                type="date"
+                id='issue_date'
+                type='date'
                 value={formData.issue_date}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, issue_date: e.target.value })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="expiry_date">
+            <div className='space-y-2'>
+              <Label htmlFor='expiry_date'>
                 {locale === 'ar' ? 'تاريخ الانتهاء' : 'Expiry Date'}
               </Label>
               <Input
-                id="expiry_date"
-                type="date"
+                id='expiry_date'
+                type='date'
                 value={formData.expiry_date}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, expiry_date: e.target.value })
                 }
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="issuing_authority">
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='issuing_authority'>
                 {locale === 'ar' ? 'جهة الإصدار' : 'Issuing Authority'}
               </Label>
               <Input
-                id="issuing_authority"
+                id='issuing_authority'
                 value={formData.issuing_authority}
-                onChange={(e) =>
-                  setFormData({ ...formData, issuing_authority: e.target.value })
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    issuing_authority: e.target.value,
+                  })
                 }
-                placeholder={locale === 'ar' ? 'مثال: وزارة الداخلية' : 'e.g., Ministry of Interior'}
+                placeholder={
+                  locale === 'ar'
+                    ? 'مثال: وزارة الداخلية'
+                    : 'e.g., Ministry of Interior'
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="document_number">
+            <div className='space-y-2'>
+              <Label htmlFor='document_number'>
                 {locale === 'ar' ? 'رقم المستند' : 'Document Number'}
               </Label>
               <Input
-                id="document_number"
+                id='document_number'
                 value={formData.document_number}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, document_number: e.target.value })
                 }
-                placeholder={locale === 'ar' ? 'رقم الهوية أو الجواز' : 'ID or Passport number'}
+                placeholder={
+                  locale === 'ar'
+                    ? 'رقم الهوية أو الجواز'
+                    : 'ID or Passport number'
+                }
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">
+          <div className='space-y-2'>
+            <Label htmlFor='notes'>
               {locale === 'ar' ? 'ملاحظات' : 'Notes'}
             </Label>
             <Textarea
-              id="notes"
+              id='notes'
               value={formData.notes}
-              onChange={(e) =>
+              onChange={e =>
                 setFormData({ ...formData, notes: e.target.value })
               }
-              placeholder={locale === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...'}
+              placeholder={
+                locale === 'ar'
+                  ? 'أي ملاحظات إضافية...'
+                  : 'Any additional notes...'
+              }
               rows={3}
             />
           </div>
 
           <DialogFooter>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={() => onOpenChange(false)}
               disabled={uploading}
             >
               {locale === 'ar' ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button type="submit" disabled={uploading}>
+            <Button type='submit' disabled={uploading}>
               {uploading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                   {locale === 'ar' ? 'جاري الرفع...' : 'Uploading...'}
                 </>
               ) : (
                 <>
-                  <Upload className="h-4 w-4 mr-2" />
+                  <Upload className='h-4 w-4 mr-2' />
                   {locale === 'ar' ? 'رفع' : 'Upload'}
                 </>
               )}
@@ -380,4 +429,3 @@ export function DocumentUploadDialog({
     </Dialog>
   );
 }
-

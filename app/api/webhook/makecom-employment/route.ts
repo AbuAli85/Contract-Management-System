@@ -255,9 +255,9 @@ export async function POST(request: NextRequest) {
       contractData.description = `Department: ${body.department}`;
     }
     if (body.work_location && body.work_location.trim() !== '') {
-      contractData.description =
-        (contractData.description || '') +
-        `\nWork Location: ${body.work_location}`;
+      contractData.description = `${
+        contractData.description || ''
+      }\nWork Location: ${body.work_location}`;
     }
 
     const { data: newContract, error: createError } = await (supabase as any)

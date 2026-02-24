@@ -13,7 +13,7 @@ export interface RetryOptions {
 
 /**
  * Retries a function with exponential backoff
- * 
+ *
  * @example
  * ```typescript
  * const result = await retryWithBackoff(
@@ -34,7 +34,7 @@ export async function retryWithBackoff<T>(
     initialDelayMs = 100,
     maxDelayMs = 1000,
     onRetry,
-    shouldRetry = (error) => {
+    shouldRetry = error => {
       // Retry on network errors, timeouts, and transient DB errors
       const message = error.message.toLowerCase();
       return (
@@ -70,7 +70,7 @@ export async function retryWithBackoff<T>(
 
         onRetry?.(attempt + 1, lastError);
 
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
     }
@@ -87,41 +87,44 @@ export async function retrySupabaseOperation<T>(
   operation: () => Promise<{ data: T | null; error: any }>,
   options: RetryOptions = {}
 ): Promise<{ data: T | null; error: any }> {
-  return retryWithBackoff(async () => {
-    const result = await operation();
-    
-    // If there's an error, check if it's retryable
-    if (result.error) {
-      const errorMessage = result.error.message?.toLowerCase() || '';
-      const isRetryable = 
-        errorMessage.includes('network') ||
-        errorMessage.includes('timeout') ||
-        errorMessage.includes('connection') ||
-        errorMessage.includes('temporary') ||
-        result.error.status === 408 || // Request Timeout
-        result.error.status === 429 || // Too Many Requests
-        result.error.status === 503;    // Service Unavailable
+  return retryWithBackoff(
+    async () => {
+      const result = await operation();
 
-      if (isRetryable) {
-        throw new Error(result.error.message || 'Supabase operation failed');
+      // If there's an error, check if it's retryable
+      if (result.error) {
+        const errorMessage = result.error.message?.toLowerCase() || '';
+        const isRetryable =
+          errorMessage.includes('network') ||
+          errorMessage.includes('timeout') ||
+          errorMessage.includes('connection') ||
+          errorMessage.includes('temporary') ||
+          result.error.status === 408 || // Request Timeout
+          result.error.status === 429 || // Too Many Requests
+          result.error.status === 503; // Service Unavailable
+
+        if (isRetryable) {
+          throw new Error(result.error.message || 'Supabase operation failed');
+        }
       }
-    }
-    
-    return result;
-  }, {
-    shouldRetry: (error) => {
-      // Don't retry auth errors (401, 403) or validation errors (400)
-      const message = error.message.toLowerCase();
-      if (
-        message.includes('unauthorized') ||
-        message.includes('forbidden') ||
-        message.includes('invalid') ||
-        message.includes('validation')
-      ) {
-        return false;
-      }
-      return true;
+
+      return result;
     },
-    ...options,
-  });
+    {
+      shouldRetry: error => {
+        // Don't retry auth errors (401, 403) or validation errors (400)
+        const message = error.message.toLowerCase();
+        if (
+          message.includes('unauthorized') ||
+          message.includes('forbidden') ||
+          message.includes('invalid') ||
+          message.includes('validation')
+        ) {
+          return false;
+        }
+        return true;
+      },
+      ...options,
+    }
+  );
 }

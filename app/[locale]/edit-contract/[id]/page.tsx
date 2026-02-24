@@ -41,11 +41,10 @@ import { useContract } from '@/hooks/useContract';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorCard } from '@/components/ErrorCard';
 // StatusBadge component removed - using Badge from UI components instead
-import { createClient } from '@/lib/supabase/client';
 
 export default function EditContractPage() {
   const params = useParams();
-  const router = useRouter();
+  const _router = useRouter();
   const queryClient = useQueryClient();
   const contractId = params?.id as string;
 

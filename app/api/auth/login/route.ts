@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { AuthErrorHandler } from '@/lib/auth-error-handler';
-import { ApiErrorHandler } from '@/lib/api-error-handler';
 import {
   rateLimiters,
   getRateLimitHeaders,
@@ -164,7 +163,7 @@ export async function POST(request: NextRequest) {
         access_token: data.session.access_token,
         refresh_token: data.session.refresh_token,
       });
-      
+
       if (setError) {
         console.error('🔐 Failed to set session in cookies:', setError);
       } else {
@@ -192,10 +191,10 @@ export async function POST(request: NextRequest) {
     // Verify cookies were set
     const cookieStore = await import('next/headers').then(m => m.cookies());
     const allCookies = cookieStore.getAll();
-    const authCookies = allCookies.filter(c => 
-      c.name.includes('sb-') && c.name.includes('auth-token')
+    const authCookies = allCookies.filter(
+      c => c.name.includes('sb-') && c.name.includes('auth-token')
     );
-    
+
     if (authCookies.length > 0) {
       console.log(`🔐 Found ${authCookies.length} auth cookies after login`);
       // Copy cookies from cookieStore to response
@@ -209,7 +208,9 @@ export async function POST(request: NextRequest) {
         });
       });
     } else {
-      console.warn('🔐 No auth cookies found after login. This will cause 401 errors.');
+      console.warn(
+        '🔐 No auth cookies found after login. This will cause 401 errors.'
+      );
     }
 
     console.log('🔐 Login completed');

@@ -18,7 +18,7 @@ import {
 
 // Get biometric status and available methods
 export const GET = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (_req: NextRequest, _context) => {
     try {
       // TODO: Get user's biometric settings from database
       const mockBiometricStatus = {
@@ -70,8 +70,7 @@ export const GET = professionalSecurityMiddleware.withSecurity(
 export const POST = professionalSecurityMiddleware.withSecurity(
   async (req: NextRequest, context) => {
     try {
-      const { action, credentialId, challenge, response } = await req.json();
-
+      const { action, _credentialId, _challenge, response } = await req.json();
       switch (action) {
         case 'check_support':
           // Check if WebAuthn is supported
@@ -231,7 +230,7 @@ export const POST = professionalSecurityMiddleware.withSecurity(
 
 // Remove biometric authentication
 export const DELETE = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (req: NextRequest, _context) => {
     try {
       const url = new URL(req.url);
       const credentialId = url.searchParams.get('credentialId');

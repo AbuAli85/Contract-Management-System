@@ -4,7 +4,7 @@ import { withAnyRBAC } from '@/lib/rbac/guard';
 
 /**
  * POST /api/offboarding/initiate
- * 
+ *
  * Initiate offboarding process for an employee
  * Creates offboarding checklist and initializes all offboarding tasks
  */
@@ -31,7 +31,10 @@ export const POST = withAnyRBAC(
 
       if (!employer_employee_id || !last_working_date || !offboarding_type) {
         return NextResponse.json(
-          { error: 'Missing required fields: employer_employee_id, last_working_date, offboarding_type' },
+          {
+            error:
+              'Missing required fields: employer_employee_id, last_working_date, offboarding_type',
+          },
           { status: 400 }
         );
       }
@@ -39,7 +42,8 @@ export const POST = withAnyRBAC(
       // Get employee details
       const { data: employee } = await supabase
         .from('employer_employees')
-        .select(`
+        .select(
+          `
           id,
           employee_id,
           employer_id,
@@ -51,7 +55,8 @@ export const POST = withAnyRBAC(
             email,
             full_name
           )
-        `)
+        `
+        )
         .eq('id', employer_employee_id)
         .single();
 
@@ -128,7 +133,10 @@ export const POST = withAnyRBAC(
 
       if (checklistError || !checklist) {
         return NextResponse.json(
-          { error: 'Failed to create offboarding checklist', details: checklistError?.message },
+          {
+            error: 'Failed to create offboarding checklist',
+            details: checklistError?.message,
+          },
           { status: 500 }
         );
       }
@@ -176,10 +184,26 @@ export const POST = withAnyRBAC(
           employer_employee_id,
           company_id: employee.company_id,
           documents_to_return: [
-            { document_type: 'access_card', document_name: 'Access Card', returned: false },
-            { document_type: 'laptop', document_name: 'Company Laptop', returned: false },
-            { document_type: 'phone', document_name: 'Company Phone', returned: false },
-            { document_type: 'other', document_name: 'Other Equipment', returned: false },
+            {
+              document_type: 'access_card',
+              document_name: 'Access Card',
+              returned: false,
+            },
+            {
+              document_type: 'laptop',
+              document_name: 'Company Laptop',
+              returned: false,
+            },
+            {
+              document_type: 'phone',
+              document_name: 'Company Phone',
+              returned: false,
+            },
+            {
+              document_type: 'other',
+              document_name: 'Other Equipment',
+              returned: false,
+            },
           ],
           status: 'pending',
           requested_date: new Date().toISOString().split('T')[0],
@@ -199,15 +223,18 @@ export const POST = withAnyRBAC(
         })
         .eq('id', employer_employee_id);
 
-      return NextResponse.json({
-        success: true,
-        offboarding: {
-          checklist,
-          exitInterview,
-          documentReturn,
+      return NextResponse.json(
+        {
+          success: true,
+          offboarding: {
+            checklist,
+            exitInterview,
+            documentReturn,
+          },
+          message: 'Offboarding process initiated successfully',
         },
-        message: 'Offboarding process initiated successfully',
-      }, { status: 201 });
+        { status: 201 }
+      );
     } catch (error: any) {
       console.error('Error initiating offboarding:', error);
       return NextResponse.json(
@@ -217,4 +244,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

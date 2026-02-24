@@ -39,11 +39,20 @@ export function PromotersEnhancedCharts({
     };
 
     promoters.forEach(p => {
-      if (p.idDocument.status === 'valid' && p.passportDocument.status === 'valid') {
+      if (
+        p.idDocument.status === 'valid' &&
+        p.passportDocument.status === 'valid'
+      ) {
         statusCounts.valid++;
-      } else if (p.idDocument.status === 'expiring' || p.passportDocument.status === 'expiring') {
+      } else if (
+        p.idDocument.status === 'expiring' ||
+        p.passportDocument.status === 'expiring'
+      ) {
         statusCounts.expiring++;
-      } else if (p.idDocument.status === 'expired' || p.passportDocument.status === 'expired') {
+      } else if (
+        p.idDocument.status === 'expired' ||
+        p.passportDocument.status === 'expired'
+      ) {
         statusCounts.expired++;
       } else {
         statusCounts.missing++;
@@ -101,18 +110,24 @@ export function PromotersEnhancedCharts({
   const monthlyTrends = useMemo(() => {
     const months: Record<string, number> = {};
     const now = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now);
       date.setMonth(date.getMonth() - i);
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const monthKey = date.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      });
       months[monthKey] = 0;
     }
 
     promoters.forEach(p => {
       if (p.created_at) {
         const createdDate = new Date(p.created_at);
-        const monthKey = createdDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        const monthKey = createdDate.toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+        });
         if (months[monthKey] !== undefined) {
           months[monthKey]++;
         }
@@ -140,9 +155,15 @@ export function PromotersEnhancedCharts({
                 <span className='text-sm font-medium'>Valid</span>
               </div>
               <div className='flex items-center gap-2'>
-                <span className='text-sm font-bold'>{documentStatusData.valid}</span>
+                <span className='text-sm font-bold'>
+                  {documentStatusData.valid}
+                </span>
                 <span className='text-xs text-muted-foreground'>
-                  ({Math.round((documentStatusData.valid / promoters.length) * 100)}%)
+                  (
+                  {Math.round(
+                    (documentStatusData.valid / promoters.length) * 100
+                  )}
+                  %)
                 </span>
               </div>
             </div>
@@ -159,9 +180,15 @@ export function PromotersEnhancedCharts({
                 <span className='text-sm font-medium'>Expiring</span>
               </div>
               <div className='flex items-center gap-2'>
-                <span className='text-sm font-bold'>{documentStatusData.expiring}</span>
+                <span className='text-sm font-bold'>
+                  {documentStatusData.expiring}
+                </span>
                 <span className='text-xs text-muted-foreground'>
-                  ({Math.round((documentStatusData.expiring / promoters.length) * 100)}%)
+                  (
+                  {Math.round(
+                    (documentStatusData.expiring / promoters.length) * 100
+                  )}
+                  %)
                 </span>
               </div>
             </div>
@@ -178,9 +205,15 @@ export function PromotersEnhancedCharts({
                 <span className='text-sm font-medium'>Expired</span>
               </div>
               <div className='flex items-center gap-2'>
-                <span className='text-sm font-bold'>{documentStatusData.expired}</span>
+                <span className='text-sm font-bold'>
+                  {documentStatusData.expired}
+                </span>
                 <span className='text-xs text-muted-foreground'>
-                  ({Math.round((documentStatusData.expired / promoters.length) * 100)}%)
+                  (
+                  {Math.round(
+                    (documentStatusData.expired / promoters.length) * 100
+                  )}
+                  %)
                 </span>
               </div>
             </div>
@@ -197,9 +230,15 @@ export function PromotersEnhancedCharts({
                 <span className='text-sm font-medium'>Missing</span>
               </div>
               <div className='flex items-center gap-2'>
-                <span className='text-sm font-bold'>{documentStatusData.missing}</span>
+                <span className='text-sm font-bold'>
+                  {documentStatusData.missing}
+                </span>
                 <span className='text-xs text-muted-foreground'>
-                  ({Math.round((documentStatusData.missing / promoters.length) * 100)}%)
+                  (
+                  {Math.round(
+                    (documentStatusData.missing / promoters.length) * 100
+                  )}
+                  %)
                 </span>
               </div>
             </div>
@@ -222,19 +261,22 @@ export function PromotersEnhancedCharts({
         <CardContent className='p-6 space-y-4'>
           {Object.entries(statusDistribution).map(([status, count]) => {
             const percentage = (count / promoters.length) * 100;
-            const colorClass = {
-              active: 'bg-green-500',
-              warning: 'bg-amber-500',
-              critical: 'bg-red-500',
-              inactive: 'bg-gray-500',
-            }[status] || 'bg-gray-500';
+            const colorClass =
+              {
+                active: 'bg-green-500',
+                warning: 'bg-amber-500',
+                critical: 'bg-red-500',
+                inactive: 'bg-gray-500',
+              }[status] || 'bg-gray-500';
 
             return (
               <div key={status} className='space-y-2'>
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
                     <div className={cn('h-3 w-3 rounded-full', colorClass)} />
-                    <span className='text-sm font-medium capitalize'>{status}</span>
+                    <span className='text-sm font-medium capitalize'>
+                      {status}
+                    </span>
                   </div>
                   <div className='flex items-center gap-2'>
                     <span className='text-sm font-bold'>{count}</span>
@@ -266,10 +308,15 @@ export function PromotersEnhancedCharts({
                 <div key={title} className='space-y-2'>
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center gap-2'>
-                      <Badge variant='outline' className='w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs'>
+                      <Badge
+                        variant='outline'
+                        className='w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs'
+                      >
                         {index + 1}
                       </Badge>
-                      <span className='text-sm font-medium truncate flex-1'>{title}</span>
+                      <span className='text-sm font-medium truncate flex-1'>
+                        {title}
+                      </span>
                     </div>
                     <div className='flex items-center gap-2'>
                       <span className='text-sm font-bold'>{count}</span>
@@ -302,10 +349,15 @@ export function PromotersEnhancedCharts({
                 <div key={company} className='space-y-2'>
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center gap-2'>
-                      <Badge variant='outline' className='w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs'>
+                      <Badge
+                        variant='outline'
+                        className='w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs'
+                      >
                         {index + 1}
                       </Badge>
-                      <span className='text-sm font-medium truncate flex-1'>{company}</span>
+                      <span className='text-sm font-medium truncate flex-1'>
+                        {company}
+                      </span>
                     </div>
                     <div className='flex items-center gap-2'>
                       <span className='text-sm font-bold'>{count}</span>
@@ -344,4 +396,3 @@ export function PromotersEnhancedCharts({
     </div>
   );
 }
-

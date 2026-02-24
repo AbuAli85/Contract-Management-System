@@ -2,19 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { retrySupabaseOperation } from '@/lib/auth/retry';
-import { extractCorrelationId, generateCorrelationId, logWithCorrelation, withCorrelationId } from '@/lib/utils/correlation';
+import {
+  extractCorrelationId,
+  generateCorrelationId,
+  logWithCorrelation,
+  withCorrelationId,
+} from '@/lib/utils/correlation';
 
 export const dynamic = 'force-dynamic';
 
 // Helper function to check if a company is invalid/mock
 function isInvalidCompany(companyName: string): boolean {
   const name = companyName.toLowerCase().trim();
-  
+
   // Explicitly allow valid Falcon Eye companies
   if (name.includes('falcon eye modern investments')) {
     return false;
   }
-  
+
   // Filter out invalid/mock companies
   return (
     name === 'digital morph' ||
@@ -29,69 +34,82 @@ function isInvalidCompany(companyName: string): boolean {
 // GET: Fetch user's companies
 export async function GET(request: NextRequest) {
   // Extract or generate correlation ID
-  const correlationId = extractCorrelationId(request.headers) || generateCorrelationId();
-  
+  const correlationId =
+    extractCorrelationId(request.headers) || generateCorrelationId();
+
   try {
     // CRITICAL: Check environment variables first
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
-      logWithCorrelation(correlationId, 'error', 'Missing environment variables', {
-        hasUrl: !!supabaseUrl,
-        hasKey: !!supabaseAnonKey,
-        nodeEnv: process.env.NODE_ENV,
-        vercelEnv: process.env.VERCEL_ENV,
-      });
-      
+      logWithCorrelation(
+        correlationId,
+        'error',
+        'Missing environment variables',
+        {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseAnonKey,
+          nodeEnv: process.env.NODE_ENV,
+          vercelEnv: process.env.VERCEL_ENV,
+        }
+      );
+
       return NextResponse.json(
         {
           error: 'Configuration Error',
-          message: 'Supabase environment variables are not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting platform (Vercel) and redeploy.',
+          message:
+            'Supabase environment variables are not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting platform (Vercel) and redeploy.',
           details: {
             missingVariables: [
               !supabaseUrl && 'NEXT_PUBLIC_SUPABASE_URL',
               !supabaseAnonKey && 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
             ].filter(Boolean),
-            isProduction: process.env.NODE_ENV === 'production' || !!process.env.VERCEL_ENV,
+            isProduction:
+              process.env.NODE_ENV === 'production' || !!process.env.VERCEL_ENV,
             diagnosticEndpoint: '/api/diagnostics/env-check',
             correlationId,
           },
         },
-        { 
+        {
           status: 500,
           headers: withCorrelationId({}, correlationId),
         }
       );
     }
-    
+
     // Debug: Log all cookies to diagnose cookie naming issue
     const cookieStore = await cookies();
     const allCookies = cookieStore.getAll();
-    const supabaseCookies = allCookies.filter(c => 
-      c.name.includes('sb-') || c.name.includes('auth-token') || c.name.includes('supabase')
+    const supabaseCookies = allCookies.filter(
+      c =>
+        c.name.includes('sb-') ||
+        c.name.includes('auth-token') ||
+        c.name.includes('supabase')
     );
     logWithCorrelation(correlationId, 'debug', 'Cookie check', {
       allCookies: allCookies.map(c => c.name),
-      supabaseCookies: supabaseCookies.map(c => ({ 
-        name: c.name, 
-        hasValue: !!c.value, 
-        valueLength: c.value?.length || 0 
+      supabaseCookies: supabaseCookies.map(c => ({
+        name: c.name,
+        hasValue: !!c.value,
+        valueLength: c.value?.length || 0,
       })),
     });
-    
+
     // Extract project reference from Supabase URL (already checked above)
-    const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+    const projectRef = supabaseUrl.match(
+      /https?:\/\/([^.]+)\.supabase\.co/
+    )?.[1];
     logWithCorrelation(correlationId, 'debug', 'Expected cookie prefix', {
       prefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
     });
-    
+
     const supabase = await createClient();
 
     // Try getUser() with retry logic (most reliable)
     let user = null;
     let authError = null;
-    
+
     try {
       const authResult = await retrySupabaseOperation(
         () => supabase.auth.getUser(),
@@ -99,13 +117,18 @@ export async function GET(request: NextRequest) {
           maxRetries: 2,
           initialDelayMs: 50,
           onRetry: (attempt, error) => {
-            logWithCorrelation(correlationId, 'warn', `getUser() retry ${attempt}`, {
-              error: error.message,
-            });
+            logWithCorrelation(
+              correlationId,
+              'warn',
+              `getUser() retry ${attempt}`,
+              {
+                error: error.message,
+              }
+            );
           },
         }
       );
-      
+
       user = authResult.data?.user || null;
       authError = authResult.error;
     } catch (e: any) {
@@ -114,10 +137,14 @@ export async function GET(request: NextRequest) {
         error: e.message || String(e),
       });
     }
-    
+
     // Fallback: Try getSession() if getUser() fails
     if (!user && authError) {
-      logWithCorrelation(correlationId, 'debug', 'getUser() failed, trying getSession() as fallback');
+      logWithCorrelation(
+        correlationId,
+        'debug',
+        'getUser() failed, trying getSession() as fallback'
+      );
       try {
         const sessionResult = await retrySupabaseOperation(
           () => supabase.auth.getSession(),
@@ -125,17 +152,26 @@ export async function GET(request: NextRequest) {
             maxRetries: 2,
             initialDelayMs: 50,
             onRetry: (attempt, error) => {
-              logWithCorrelation(correlationId, 'warn', `getSession() retry ${attempt}`, {
-                error: error.message,
-              });
+              logWithCorrelation(
+                correlationId,
+                'warn',
+                `getSession() retry ${attempt}`,
+                {
+                  error: error.message,
+                }
+              );
             },
           }
         );
-        
+
         if (sessionResult.data?.session?.user) {
           user = sessionResult.data.session.user;
           authError = null;
-          logWithCorrelation(correlationId, 'info', 'Fallback getSession() succeeded');
+          logWithCorrelation(
+            correlationId,
+            'info',
+            'Fallback getSession() succeeded'
+          );
         }
       } catch (sessionError: any) {
         logWithCorrelation(correlationId, 'error', 'getSession() also failed', {
@@ -143,31 +179,42 @@ export async function GET(request: NextRequest) {
         });
       }
     }
-    
+
     if (authError || !user) {
       const errorDetails = {
         authError: authError?.message || 'No user found',
         hasCookies: allCookies.length > 0,
         cookieNames: allCookies.map(c => c.name),
         supabaseCookies: supabaseCookies.map(c => c.name),
-        expectedCookiePrefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
+        expectedCookiePrefix: projectRef
+          ? `sb-${projectRef}-auth-token`
+          : 'sb-auth-token',
         correlationId,
       };
-      
-      logWithCorrelation(correlationId, 'error', 'Authentication failed', errorDetails);
-      
+
+      logWithCorrelation(
+        correlationId,
+        'error',
+        'Authentication failed',
+        errorDetails
+      );
+
       return NextResponse.json(
-        { 
-          error: 'Unauthorized', 
+        {
+          error: 'Unauthorized',
           message: 'Please sign in to access your companies',
           details: authError?.message || 'No active session found',
           troubleshooting: {
-            suggestion: 'Your session may have expired. Please refresh the page or sign in again.',
-            cookieIssue: supabaseCookies.length === 0 ? 'No Supabase cookies found. This may indicate a session issue.' : undefined,
+            suggestion:
+              'Your session may have expired. Please refresh the page or sign in again.',
+            cookieIssue:
+              supabaseCookies.length === 0
+                ? 'No Supabase cookies found. This may indicate a session issue.'
+                : undefined,
           },
           correlationId,
         },
-        { 
+        {
           status: 401,
           headers: withCorrelationId({}, correlationId),
         }
@@ -190,7 +237,8 @@ export async function GET(request: NextRequest) {
     // Include both active and invited status to catch all memberships
     const { data: membershipData, error: membershipError } = await adminClient
       .from('company_members')
-      .select(`
+      .select(
+        `
         company_id,
         role,
         is_primary,
@@ -202,7 +250,8 @@ export async function GET(request: NextRequest) {
           group_id,
           is_active
         )
-      `)
+      `
+      )
       .eq('user_id', user.id)
       .in('status', ['active', 'invited']) // Include both active and invited
       .order('is_primary', { ascending: false });
@@ -210,28 +259,35 @@ export async function GET(request: NextRequest) {
     if (!membershipError && membershipData) {
       membershipCompanies = membershipData; // Store for logging
       // First, identify any orphaned memberships (company_id exists but company record doesn't)
-      const orphanedMemberships = membershipData.filter((cm: any) => !cm.company?.id || !cm.company?.name);
-      
+      const orphanedMemberships = membershipData.filter(
+        (cm: any) => !cm.company?.id || !cm.company?.name
+      );
+
       if (orphanedMemberships.length > 0) {
-        console.warn('[Companies API] Found orphaned company_members records (missing company data):', {
-          count: orphanedMemberships.length,
-          company_ids: orphanedMemberships.map((cm: any) => cm.company_id),
-          user_id: user.id
-        });
-        
+        console.warn(
+          '[Companies API] Found orphaned company_members records (missing company data):',
+          {
+            count: orphanedMemberships.length,
+            company_ids: orphanedMemberships.map((cm: any) => cm.company_id),
+            user_id: user.id,
+          }
+        );
+
         // Try to fetch company data directly for orphaned memberships
-        const orphanedCompanyIds = orphanedMemberships.map((cm: any) => cm.company_id).filter(Boolean);
+        const orphanedCompanyIds = orphanedMemberships
+          .map((cm: any) => cm.company_id)
+          .filter(Boolean);
         if (orphanedCompanyIds.length > 0) {
           const { data: orphanedCompanies } = await adminClient
             .from('companies')
             .select('id, name, logo_url, group_id, is_active')
             .in('id', orphanedCompanyIds);
-          
+
           // Create a map for quick lookup
           const orphanedCompanyMap = new Map(
             (orphanedCompanies || []).map((c: any) => [c.id, c])
           );
-          
+
           // Update membershipCompanies with found company data
           for (const cm of orphanedMemberships) {
             const foundCompany = orphanedCompanyMap.get(cm.company_id);
@@ -241,17 +297,20 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-      
+
       allCompanies = membershipData
         .filter((cm: any) => {
           // Include companies even if is_active is false (user might need to see them)
           // Only filter if company record doesn't exist at all (even after orphaned check)
           if (!cm.company?.id || !cm.company?.name) {
-            console.warn('[Companies API] Filtered out membership - missing company data (even after orphaned check):', {
-              company_id: cm.company_id,
-              membership_status: cm.status,
-              membership_id: cm.id
-            });
+            console.warn(
+              '[Companies API] Filtered out membership - missing company data (even after orphaned check):',
+              {
+                company_id: cm.company_id,
+                membership_status: cm.status,
+                membership_id: cm.id,
+              }
+            );
             return false;
           }
           // Don't filter by is_active - include all companies user is a member of
@@ -271,7 +330,10 @@ export async function GET(request: NextRequest) {
         .filter((c: any) => {
           const isValid = !isInvalidCompany(c.company_name || '');
           if (!isValid) {
-            console.warn('[Companies API] Filtered out invalid company:', c.company_name);
+            console.warn(
+              '[Companies API] Filtered out invalid company:',
+              c.company_name
+            );
           }
           return isValid;
         });
@@ -283,7 +345,7 @@ export async function GET(request: NextRequest) {
       .from('companies')
       .select('id, name, logo_url, group_id, party_id, is_active')
       .eq('owner_id', user.id);
-      // Removed .eq('is_active', true) - owners should see all their companies
+    // Removed .eq('is_active', true) - owners should see all their companies
 
     if (!ownedError && ownedCompanies) {
       // Add owned companies that aren't already in the list
@@ -292,7 +354,10 @@ export async function GET(request: NextRequest) {
         if (!existingIds.has(company.id) && company.id && company.name) {
           // Check if invalid before adding
           if (isInvalidCompany(company.name || '')) {
-            console.warn('[Companies API] Filtered out invalid owned company:', company.name);
+            console.warn(
+              '[Companies API] Filtered out invalid owned company:',
+              company.name
+            );
             continue;
           }
           allCompanies.push({
@@ -314,9 +379,11 @@ export async function GET(request: NextRequest) {
     // This helps include parties that are linked to companies via party_id
     if (user.email) {
       try {
-        const { data: partyLinkedCompanies, error: partyError } = await adminClient
-          .from('companies')
-          .select(`
+        const { data: partyLinkedCompanies, error: partyError } =
+          await adminClient
+            .from('companies')
+            .select(
+              `
             id,
             name,
             logo_url,
@@ -328,27 +395,36 @@ export async function GET(request: NextRequest) {
               contact_email,
               role
             )
-          `)
-          .not('party_id', 'is', null)
-          .eq('is_active', true);
+          `
+            )
+            .not('party_id', 'is', null)
+            .eq('is_active', true);
 
         if (!partyError && partyLinkedCompanies) {
           const existingIds = new Set(allCompanies.map(c => c.company_id));
           for (const company of partyLinkedCompanies) {
             const party = company.party as any;
             // Check if user's email matches party contact_email
-            if (party?.contact_email && 
-                party.contact_email.toLowerCase() === user.email.toLowerCase() &&
-                !existingIds.has(company.id)) {
-              
+            if (
+              party?.contact_email &&
+              party.contact_email.toLowerCase() === user.email.toLowerCase() &&
+              !existingIds.has(company.id)
+            ) {
               // Filter out invalid/mock companies
-              if (isInvalidCompany((company.name || party?.name_en) || '')) continue;
-              
+              if (isInvalidCompany(company.name || party?.name_en || ''))
+                continue;
+
               // Determine role from party role
               let userRole = 'member';
-              if (party.role && ['ceo', 'chairman', 'owner'].includes(party.role.toLowerCase())) {
+              if (
+                party.role &&
+                ['ceo', 'chairman', 'owner'].includes(party.role.toLowerCase())
+              ) {
                 userRole = 'owner';
-              } else if (party.role && ['admin', 'manager'].includes(party.role.toLowerCase())) {
+              } else if (
+                party.role &&
+                ['admin', 'manager'].includes(party.role.toLowerCase())
+              ) {
                 userRole = 'admin';
               }
 
@@ -391,14 +467,15 @@ export async function GET(request: NextRequest) {
 
         if (!partiesError && employerParties && employerParties.length > 0) {
           const partyIds = employerParties.map((p: any) => p.id);
-          
+
           // Find companies linked to these parties
           // Include inactive companies too - user should see all their employer companies
-          const { data: employerCompanies, error: employerCompaniesError } = await adminClient
-            .from('companies')
-            .select('id, name, logo_url, group_id, party_id, is_active')
-            .in('party_id', partyIds);
-            // Removed .eq('is_active', true) - show all employer companies
+          const { data: employerCompanies, error: employerCompaniesError } =
+            await adminClient
+              .from('companies')
+              .select('id, name, logo_url, group_id, party_id, is_active')
+              .in('party_id', partyIds);
+          // Removed .eq('is_active', true) - show all employer companies
 
           if (!employerCompaniesError && employerCompanies) {
             const existingIds = new Set(allCompanies.map(c => c.company_id));
@@ -439,22 +516,32 @@ export async function GET(request: NextRequest) {
 
         // Find all parties with type 'Employer' where user is associated
         // Match by: contact_email, contact_person, or any other relationship
-        const { data: employerParties, error: employerPartiesError } = await adminClient
-          .from('parties')
-          .select('id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role')
-          .eq('type', 'Employer')
-          .in('overall_status', ['Active', 'active'])
-          .or(`contact_email.eq.${user.email},contact_email.eq.${userProfile?.email || ''},contact_person.ilike.%${userProfile?.full_name || ''}%`);
+        const { data: employerParties, error: employerPartiesError } =
+          await adminClient
+            .from('parties')
+            .select(
+              'id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role'
+            )
+            .eq('type', 'Employer')
+            .in('overall_status', ['Active', 'active'])
+            .or(
+              `contact_email.eq.${user.email},contact_email.eq.${userProfile?.email || ''},contact_person.ilike.%${userProfile?.full_name || ''}%`
+            );
 
-        if (!employerPartiesError && employerParties && employerParties.length > 0) {
+        if (
+          !employerPartiesError &&
+          employerParties &&
+          employerParties.length > 0
+        ) {
           const partyIds = employerParties.map((p: any) => p.id);
-          
+
           // Find companies linked to these parties
-          const { data: profileLinkedCompanies, error: profileLinkedError } = await adminClient
-            .from('companies')
-            .select('id, name, logo_url, group_id, party_id')
-            .in('party_id', partyIds)
-            .eq('is_active', true);
+          const { data: profileLinkedCompanies, error: profileLinkedError } =
+            await adminClient
+              .from('companies')
+              .select('id, name, logo_url, group_id, party_id')
+              .in('party_id', partyIds)
+              .eq('is_active', true);
 
           if (!profileLinkedError && profileLinkedCompanies) {
             const existingIds = new Set(allCompanies.map(c => c.company_id));
@@ -464,7 +551,9 @@ export async function GET(request: NextRequest) {
                 if (isInvalidCompany(company.name || '')) continue;
 
                 // Find matching party to determine role
-                const matchingParty = employerParties.find((p: any) => p.id === company.party_id);
+                const matchingParty = employerParties.find(
+                  (p: any) => p.id === company.party_id
+                );
                 let userRole = 'owner'; // Default to owner for employer parties
                 if (matchingParty?.role) {
                   const role = matchingParty.role.toLowerCase();
@@ -507,19 +596,26 @@ export async function GET(request: NextRequest) {
 
         // Find all active employer parties
         // Match by contact_email, or if user is associated with the party
-        const { data: allEmployerParties, error: employerPartiesError } = await adminClient
-          .from('parties')
-          .select('id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role')
-          .eq('type', 'Employer')
-          .in('overall_status', ['Active', 'active']);
+        const { data: allEmployerParties, error: employerPartiesError } =
+          await adminClient
+            .from('parties')
+            .select(
+              'id, name_en, name_ar, contact_email, contact_person, type, overall_status, logo_url, crn, role'
+            )
+            .eq('type', 'Employer')
+            .in('overall_status', ['Active', 'active']);
 
-        if (!employerPartiesError && allEmployerParties && allEmployerParties.length > 0) {
+        if (
+          !employerPartiesError &&
+          allEmployerParties &&
+          allEmployerParties.length > 0
+        ) {
           const existingIds = new Set(allCompanies.map(c => c.company_id));
-          
+
           for (const party of allEmployerParties) {
             // Skip if already in companies list
             if (existingIds.has(party.id)) continue;
-            
+
             // Filter out invalid/mock companies
             if (isInvalidCompany(party.name_en || '')) continue;
 
@@ -550,7 +646,7 @@ export async function GET(request: NextRequest) {
                   .eq('user_id', user.id)
                   .eq('status', 'active')
                   .single();
-                
+
                 if (membership) {
                   isAssociated = true;
                   userRole = membership.role || 'member';
@@ -560,14 +656,19 @@ export async function GET(request: NextRequest) {
 
             // Also check direct party association
             if (!isAssociated) {
-              isAssociated = 
-                (party.contact_email && (
-                  party.contact_email.toLowerCase() === user.email?.toLowerCase() ||
-                  (userProfile?.email && party.contact_email.toLowerCase() === userProfile.email.toLowerCase())
-                )) ||
-                (party.contact_person && userProfile?.full_name && 
-                  party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase()));
-              
+              isAssociated =
+                (party.contact_email &&
+                  (party.contact_email.toLowerCase() ===
+                    user.email?.toLowerCase() ||
+                    (userProfile?.email &&
+                      party.contact_email.toLowerCase() ===
+                        userProfile.email.toLowerCase()))) ||
+                (party.contact_person &&
+                  userProfile?.full_name &&
+                  party.contact_person
+                    .toLowerCase()
+                    .includes(userProfile.full_name.toLowerCase()));
+
               // Determine user role from party role
               if (isAssociated && party.role) {
                 const role = party.role.toLowerCase();
@@ -583,7 +684,6 @@ export async function GET(request: NextRequest) {
 
             // If user is associated, add the party as a company
             if (isAssociated) {
-
               // Use linked company if exists, otherwise use party data
               if (linkedCompany && !existingIds.has(linkedCompany.id)) {
                 allCompanies.push({
@@ -600,7 +700,8 @@ export async function GET(request: NextRequest) {
                 // Add party directly as a company (even if no company record exists)
                 allCompanies.push({
                   company_id: party.id, // Use party ID as company ID
-                  company_name: party.name_en || party.name_ar || 'Unknown Company',
+                  company_name:
+                    party.name_en || party.name_ar || 'Unknown Company',
                   company_logo: party.logo_url,
                   user_role: userRole,
                   is_primary: allCompanies.length === 0,
@@ -626,11 +727,11 @@ export async function GET(request: NextRequest) {
 
     // Determine active_company_id
     let activeCompanyId = profile?.active_company_id;
-    
+
     // If no active company set but user has companies, set the first one
     if (!activeCompanyId && allCompanies.length > 0) {
       activeCompanyId = allCompanies[0].company_id;
-      
+
       // Update profile with active company using admin client
       await adminClient
         .from('profiles')
@@ -656,34 +757,34 @@ export async function GET(request: NextRequest) {
         .filter(c => c.party_id)
         .map(c => c.party_id)
         .filter(Boolean);
-      
+
       // Also include company_ids that are actually party_ids (for parties_employer_direct)
       const partyIdsFromDirect = uniqueCompanies
         .filter(c => c.source === 'parties_employer_direct')
         .map(c => c.company_id);
-      const allPartyIds = Array.from(new Set([...partyIds, ...partyIdsFromDirect]));
-      
+      const allPartyIds = Array.from(
+        new Set([...partyIds, ...partyIdsFromDirect])
+      );
+
       // Fetch companies with their group_id and party_id
       const { data: companiesWithGroups } = await adminClient
         .from('companies')
         .select('id, group_id, party_id')
         .in('id', companyIds);
-      
+
       // Get all party_ids from companies (for checking party-based group memberships)
       const companyPartyIds = new Set(
-        (companiesWithGroups || [])
-          .map((c: any) => c.party_id)
-          .filter(Boolean)
+        (companiesWithGroups || []).map((c: any) => c.party_id).filter(Boolean)
       );
-      const allPartyIdsForGroups = Array.from(new Set([...allPartyIds, ...companyPartyIds]));
-      
+      const allPartyIdsForGroups = Array.from(
+        new Set([...allPartyIds, ...companyPartyIds])
+      );
+
       // Get all unique group_ids (both from companies.group_id and holding_group_members)
       const groupIdsFromCompanies = new Set(
-        (companiesWithGroups || [])
-          .map((c: any) => c.group_id)
-          .filter(Boolean)
+        (companiesWithGroups || []).map((c: any) => c.group_id).filter(Boolean)
       );
-      
+
       // Check holding_group_members table for both company_id and party_id
       const [companyGroupMembers, partyGroupMembers] = await Promise.all([
         // Companies linked via company_id
@@ -701,28 +802,30 @@ export async function GET(request: NextRequest) {
               .select('party_id, holding_group_id')
               .in('party_id', allPartyIdsForGroups)
               .eq('member_type', 'party')
-          : { data: null, error: null }
+          : { data: null, error: null },
       ]);
-      
+
       const groupIdsFromCompanyMembers = new Set(
         (companyGroupMembers?.data || [])
           .map((gm: any) => gm.holding_group_id)
           .filter(Boolean)
       );
-      
+
       const groupIdsFromPartyMembers = new Set(
         (partyGroupMembers?.data || [])
           .map((gm: any) => gm.holding_group_id)
           .filter(Boolean)
       );
-      
+
       // Combine all group IDs
-      const allGroupIds = Array.from(new Set([
-        ...groupIdsFromCompanies,
-        ...groupIdsFromCompanyMembers,
-        ...groupIdsFromPartyMembers
-      ]));
-      
+      const allGroupIds = Array.from(
+        new Set([
+          ...groupIdsFromCompanies,
+          ...groupIdsFromCompanyMembers,
+          ...groupIdsFromPartyMembers,
+        ])
+      );
+
       // Fetch all group names
       const groupNameMap = new Map<string, string>();
       if (allGroupIds.length > 0) {
@@ -731,17 +834,20 @@ export async function GET(request: NextRequest) {
           .select('id, name_en, name_ar')
           .in('id', allGroupIds)
           .eq('is_active', true);
-        
+
         if (groups) {
           for (const group of groups) {
-            groupNameMap.set(group.id, group.name_en || group.name_ar || 'Unknown Group');
+            groupNameMap.set(
+              group.id,
+              group.name_en || group.name_ar || 'Unknown Group'
+            );
           }
         }
       }
-      
+
       // Create a map of company_id -> group_id (from all sources)
       const companyGroupMap = new Map<string, string>();
-      
+
       // From companies.group_id
       if (companiesWithGroups) {
         for (const company of companiesWithGroups) {
@@ -750,7 +856,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-      
+
       // From holding_group_members (company-based)
       if (companyGroupMembers?.data) {
         for (const member of companyGroupMembers.data) {
@@ -759,7 +865,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-      
+
       // From holding_group_members (party-based) - for parties_employer_direct and companies with party_id
       if (partyGroupMembers?.data) {
         // Create a map of party_id -> group_id for quick lookup
@@ -769,7 +875,7 @@ export async function GET(request: NextRequest) {
             partyGroupMap.set(member.party_id, member.holding_group_id);
           }
         }
-        
+
         // Apply party-based groups to companies
         for (const company of uniqueCompanies) {
           // Check if company's party_id is in a group
@@ -779,16 +885,19 @@ export async function GET(request: NextRequest) {
               companyGroupMap.set(company.company_id, groupId);
             }
           }
-          
+
           // For parties_employer_direct, company_id IS the party_id
-          if (company.source === 'parties_employer_direct' && partyGroupMap.has(company.company_id)) {
+          if (
+            company.source === 'parties_employer_direct' &&
+            partyGroupMap.has(company.company_id)
+          ) {
             const groupId = partyGroupMap.get(company.company_id);
             if (groupId) {
               companyGroupMap.set(company.company_id, groupId);
             }
           }
         }
-        
+
         // Also check companies from companiesWithGroups that have party_id
         if (companiesWithGroups) {
           for (const company of companiesWithGroups) {
@@ -801,7 +910,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-      
+
       // Update companies with group names
       for (const company of uniqueCompanies) {
         const groupId = companyGroupMap.get(company.company_id);
@@ -819,10 +928,10 @@ export async function GET(request: NextRequest) {
 
     // Enrich companies with feature statistics
     const enrichedCompanies = await Promise.all(
-      uniqueCompanies.map(async (company) => {
+      uniqueCompanies.map(async company => {
         try {
           const today = new Date().toISOString().split('T')[0];
-          
+
           // Count employees
           let employeesCount = 0;
           try {
@@ -844,7 +953,7 @@ export async function GET(request: NextRequest) {
               .select('id')
               .eq('company_id', company.company_id)
               .eq('employment_status', 'active');
-            
+
             if (employees && employees.length > 0) {
               const employeeIds = employees.map((e: any) => e.id);
               const { count } = await adminClient
@@ -866,7 +975,7 @@ export async function GET(request: NextRequest) {
               .select('id')
               .eq('company_id', company.company_id)
               .eq('employment_status', 'active');
-            
+
             if (employees && employees.length > 0) {
               const employeeIds = employees.map((e: any) => e.id);
               const { count } = await adminClient
@@ -887,7 +996,9 @@ export async function GET(request: NextRequest) {
               const { count } = await adminClient
                 .from('contracts')
                 .select('id', { count: 'exact', head: true })
-                .or(`second_party_id.eq.${company.party_id},first_party_id.eq.${company.party_id}`);
+                .or(
+                  `second_party_id.eq.${company.party_id},first_party_id.eq.${company.party_id}`
+                );
               contractsCount = count || 0;
             } catch (e) {
               // Ignore errors
@@ -937,60 +1048,87 @@ export async function GET(request: NextRequest) {
     );
 
     // Log for debugging (always log to help diagnose missing companies)
-    const membershipCompanyIds = membershipCompanies?.map((cm: any) => cm.company_id) || [];
+    const membershipCompanyIds =
+      membershipCompanies?.map((cm: any) => cm.company_id) || [];
     const foundCompanyIds = enrichedCompanies.map(c => c.company_id);
-    const missingCompanyIds = membershipCompanyIds.filter(id => !foundCompanyIds.includes(id));
-    
-    logWithCorrelation(correlationId, 'info', `Found ${enrichedCompanies.length} companies for user ${user.id}`, {
-      sources: enrichedCompanies.map(c => ({ 
-        name: c.company_name, 
-        source: c.source || 'unknown',
-        role: c.user_role,
-        employees: c.stats?.employees || 0,
-        company_id: c.company_id,
-      })),
-      total_before_dedup: allCompanies.length,
-      total_after_dedup: uniqueCompanies.length,
-      total_after_enrichment: enrichedCompanies.length,
-      filtered_out: allCompanies.length - uniqueCompanies.length,
-      membership_count: membershipCompanyIds.length,
-      missing_company_ids: missingCompanyIds.length > 0 ? {
-        count: missingCompanyIds.length,
-        ids: missingCompanyIds,
-        note: 'These company_ids from company_members were not included in the final list'
-      } : null,
-    });
+    const missingCompanyIds = membershipCompanyIds.filter(
+      id => !foundCompanyIds.includes(id)
+    );
 
-    logWithCorrelation(correlationId, 'info', 'Successfully fetched companies', {
-      count: enrichedCompanies.length,
-    });
-
-    return NextResponse.json({
-      success: true,
-      companies: enrichedCompanies,
-      active_company_id: activeCompanyId,
+    logWithCorrelation(
       correlationId,
-    }, {
-      headers: withCorrelationId({}, correlationId),
-    });
+      'info',
+      `Found ${enrichedCompanies.length} companies for user ${user.id}`,
+      {
+        sources: enrichedCompanies.map(c => ({
+          name: c.company_name,
+          source: c.source || 'unknown',
+          role: c.user_role,
+          employees: c.stats?.employees || 0,
+          company_id: c.company_id,
+        })),
+        total_before_dedup: allCompanies.length,
+        total_after_dedup: uniqueCompanies.length,
+        total_after_enrichment: enrichedCompanies.length,
+        filtered_out: allCompanies.length - uniqueCompanies.length,
+        membership_count: membershipCompanyIds.length,
+        missing_company_ids:
+          missingCompanyIds.length > 0
+            ? {
+                count: missingCompanyIds.length,
+                ids: missingCompanyIds,
+                note: 'These company_ids from company_members were not included in the final list',
+              }
+            : null,
+      }
+    );
+
+    logWithCorrelation(
+      correlationId,
+      'info',
+      'Successfully fetched companies',
+      {
+        count: enrichedCompanies.length,
+      }
+    );
+
+    return NextResponse.json(
+      {
+        success: true,
+        companies: enrichedCompanies,
+        active_company_id: activeCompanyId,
+        correlationId,
+      },
+      {
+        headers: withCorrelationId({}, correlationId),
+      }
+    );
   } catch (error: any) {
     // Generate correlation ID if not already set
     const errorCorrelationId = correlationId || generateCorrelationId();
-    logWithCorrelation(errorCorrelationId, 'error', 'Error in companies endpoint', {
-      error: error.message || String(error),
-      stack: error.stack,
-    });
-    
+    logWithCorrelation(
+      errorCorrelationId,
+      'error',
+      'Error in companies endpoint',
+      {
+        error: error.message || String(error),
+        stack: error.stack,
+      }
+    );
+
     // Return empty state instead of error
-    return NextResponse.json({
-      success: true,
-      companies: [],
-      active_company_id: null,
-      message: 'An error occurred loading companies',
-      correlationId: errorCorrelationId,
-    }, {
-      headers: withCorrelationId({}, errorCorrelationId),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        companies: [],
+        active_company_id: null,
+        message: 'An error occurred loading companies',
+        correlationId: errorCorrelationId,
+      },
+      {
+        headers: withCorrelationId({}, errorCorrelationId),
+      }
+    );
   }
 }
 
@@ -999,7 +1137,9 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -1017,11 +1157,17 @@ export async function POST(request: Request) {
     const { name, description, logo_url, business_type, group_id } = body;
 
     if (!name) {
-      return NextResponse.json({ error: 'Company name is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Company name is required' },
+        { status: 400 }
+      );
     }
 
     // Create slug from name
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
 
     // Create the company using admin client
     const { data: company, error: createError } = await adminClient
@@ -1042,7 +1188,10 @@ export async function POST(request: Request) {
 
     if (createError) {
       console.error('Error creating company:', createError);
-      return NextResponse.json({ error: 'Failed to create company' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to create company' },
+        { status: 500 }
+      );
     }
 
     // The trigger will auto-create company_members entry
@@ -1056,15 +1205,13 @@ export async function POST(request: Request) {
 
     if (!membership) {
       // Create membership manually if trigger didn't fire
-      await adminClient
-        .from('company_members')
-        .insert({
-          company_id: company.id,
-          user_id: user.id,
-          role: 'owner',
-          is_primary: true,
-          status: 'active',
-        });
+      await adminClient.from('company_members').insert({
+        company_id: company.id,
+        user_id: user.id,
+        role: 'owner',
+        is_primary: true,
+        status: 'active',
+      });
     }
 
     return NextResponse.json({
@@ -1077,4 +1224,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

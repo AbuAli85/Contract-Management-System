@@ -2142,7 +2142,7 @@ function EnhancedActionsMenu({
             : 'Notification sent';
 
       toast({
-        title: '✓ ' + notificationText,
+        title: `✓ ${notificationText}`,
         description: `${notificationText} to ${promoter.displayName}.`,
       });
     } catch (error) {

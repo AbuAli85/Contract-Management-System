@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30');
 
     // Calculate date range
-    const endDate = new Date();
+    const _endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -63,7 +63,9 @@ export async function GET(request: NextRequest) {
       .gte('created_at', startDate.toISOString());
 
     if (activePartyId) {
-      contractsQuery = contractsQuery.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+      contractsQuery = contractsQuery.or(
+        `second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`
+      );
     }
 
     const { data: contracts } = await contractsQuery;
@@ -88,7 +90,10 @@ export async function GET(request: NextRequest) {
         approvalsQuery = approvalsQuery.in('contract_id', contractIds);
       } else {
         // No contracts for this company, return empty
-        approvalsQuery = approvalsQuery.eq('contract_id', '00000000-0000-0000-0000-000000000000');
+        approvalsQuery = approvalsQuery.eq(
+          'contract_id',
+          '00000000-0000-0000-0000-000000000000'
+        );
       }
     }
 
@@ -116,7 +121,9 @@ export async function GET(request: NextRequest) {
       .in('status', ['active', 'signed']);
 
     if (activePartyId) {
-      expiringQuery = expiringQuery.or(`second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`);
+      expiringQuery = expiringQuery.or(
+        `second_party_id.eq.${activePartyId},first_party_id.eq.${activePartyId}`
+      );
     }
 
     const { data: expiringContracts } = await expiringQuery;

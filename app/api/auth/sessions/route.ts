@@ -18,7 +18,7 @@ import {
 
 // Get active sessions
 export const GET = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (_req: NextRequest, _context) => {
     try {
       // TODO: Get user's active sessions from database
       const mockSessions = [
@@ -72,8 +72,7 @@ export const GET = professionalSecurityMiddleware.withSecurity(
 export const POST = professionalSecurityMiddleware.withSecurity(
   async (req: NextRequest, context) => {
     try {
-      const { action, sessionId, reason } = await req.json();
-
+      const { action, sessionId, _reason } = await req.json();
       switch (action) {
         case 'terminate':
           if (!sessionId) {
@@ -188,7 +187,7 @@ export const POST = professionalSecurityMiddleware.withSecurity(
 
 // Terminate session (alternative DELETE endpoint)
 export const DELETE = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (req: NextRequest, _context) => {
     try {
       const url = new URL(req.url);
       const sessionId = url.searchParams.get('sessionId');

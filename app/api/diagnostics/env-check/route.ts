@@ -16,7 +16,7 @@ export async function GET() {
     hasSupabaseUrl: !!supabaseUrl,
     hasSupabaseAnonKey: !!supabaseAnonKey,
     hasServiceKey,
-    supabaseUrlPreview: supabaseUrl 
+    supabaseUrlPreview: supabaseUrl
       ? `${supabaseUrl.substring(0, 20)}...${supabaseUrl.substring(supabaseUrl.length - 15)}`
       : 'NOT SET',
     anonKeyPreview: supabaseAnonKey
@@ -30,8 +30,9 @@ export async function GET() {
   return NextResponse.json({
     success: envCheck.hasSupabaseUrl && envCheck.hasSupabaseAnonKey,
     environment: envCheck,
-    message: envCheck.hasSupabaseUrl && envCheck.hasSupabaseAnonKey
-      ? '✅ Environment variables are set correctly'
-      : '❌ Environment variables are missing. Please set them in Vercel and redeploy.',
+    message:
+      envCheck.hasSupabaseUrl && envCheck.hasSupabaseAnonKey
+        ? '✅ Environment variables are set correctly'
+        : '❌ Environment variables are missing. Please set them in Vercel and redeploy.',
   });
 }

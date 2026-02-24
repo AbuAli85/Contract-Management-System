@@ -3,4 +3,3 @@ import { ComprehensiveHRAnalyticsDashboard } from '@/components/analytics/compre
 export default function HRAnalyticsPage() {
   return <ComprehensiveHRAnalyticsDashboard />;
 }
-

@@ -191,7 +191,7 @@ export default function ComprehensivePromotersPage() {
   };
 
   // Handle opening create form
-  const handleOpenCreateForm = () => {
+  const _handleOpenCreateForm = () => {
     setEditingPromoterId(null);
     setEditingPromoter(null);
     setIsFormOpen(true);

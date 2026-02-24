@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { 
-  findOrCreateEmployeeAccount, 
+import {
+  findOrCreateEmployeeAccount,
   resetEmployeePassword,
-  ensurePromoterRole
+  ensurePromoterRole,
 } from '@/lib/services/employee-account-service';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +17,7 @@ export async function POST(
   try {
     const { id: inputId } = await params;
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -36,7 +36,7 @@ export async function POST(
     if (inputId.startsWith('promoter_')) {
       // Extract promoter ID from the prefixed format
       const promoterId = inputId.replace('promoter_', '');
-      
+
       // Get employer's party_id to verify ownership
       const { data: profile } = await supabase
         .from('profiles')
@@ -80,7 +80,10 @@ export async function POST(
       // Verify ownership: promoter.employer_id should match employer's party_id
       if (partyId && promoter.employer_id !== partyId) {
         return NextResponse.json(
-          { error: 'Access denied. This promoter does not belong to your company.' },
+          {
+            error:
+              'Access denied. This promoter does not belong to your company.',
+          },
           { status: 403 }
         );
       }
@@ -97,7 +100,10 @@ export async function POST(
 
         if (!employerEmployee) {
           return NextResponse.json(
-            { error: 'Access denied. This employee does not belong to your team.' },
+            {
+              error:
+                'Access denied. This employee does not belong to your team.',
+            },
             { status: 403 }
           );
         }
@@ -146,7 +152,10 @@ export async function POST(
     // Validate required fields
     if (!employeeEmail) {
       return NextResponse.json(
-        { error: 'Employee email not found. Please add an email for this employee first.' },
+        {
+          error:
+            'Employee email not found. Please add an email for this employee first.',
+        },
         { status: 400 }
       );
     }
@@ -180,11 +189,15 @@ export async function POST(
 
     if (!accountResult.success || !accountResult.authUserId) {
       return NextResponse.json(
-        { 
-          error: accountResult.error || 'Failed to find or create employee account',
-          details: accountResult.errorDetails 
+        {
+          error:
+            accountResult.error || 'Failed to find or create employee account',
+          details: accountResult.errorDetails,
         },
-        { status: accountResult.error === 'Email already registered' ? 400 : 500 }
+        {
+          status:
+            accountResult.error === 'Email already registered' ? 400 : 500,
+        }
       );
     }
 
@@ -195,9 +208,9 @@ export async function POST(
 
     if (!passwordResult.success || !passwordResult.password) {
       return NextResponse.json(
-        { 
+        {
           error: passwordResult.error || 'Failed to reset password',
-          details: 'Could not reset the password for this account.'
+          details: 'Could not reset the password for this account.',
         },
         { status: 500 }
       );
@@ -220,12 +233,13 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/[id]/reset-password:', error);
+    console.error(
+      'Error in POST /api/employer/team/[id]/reset-password:',
+      error
+    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
-
-

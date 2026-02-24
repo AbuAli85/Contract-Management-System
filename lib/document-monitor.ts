@@ -272,9 +272,8 @@ export class DocumentMonitor {
 
       // Import email service and template
       const { sendEmail } = await import('@/lib/services/email.service');
-      const { documentExpiryEmail } = await import(
-        '@/lib/email-templates/document-expiry'
-      );
+      const { documentExpiryEmail } =
+        await import('@/lib/email-templates/document-expiry');
 
       // Generate email content
       const emailContent = documentExpiryEmail({

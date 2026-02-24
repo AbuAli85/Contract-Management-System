@@ -15,7 +15,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Clock,
   Search,
-  Filter,
   Eye,
   AlertTriangle,
   ShieldAlert,
@@ -25,17 +24,13 @@ import {
   CheckCircle,
   XCircle,
   Edit,
-  Send,
   Users,
   FileText,
   MoreHorizontal,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/use-permissions';
-import {
-  ContractsCardSkeleton,
-  ContractsTableSkeleton,
-} from '@/components/contracts/ContractsSkeleton';
+import { ContractsCardSkeleton } from '@/components/contracts/ContractsSkeleton';
 import { ContractsErrorBoundary } from '@/components/error-boundary/ContractsErrorBoundary';
 import { performanceMonitor } from '@/lib/performance-monitor';
 import {
@@ -148,7 +143,7 @@ function PendingContractsPageContent() {
     }, 3000);
 
     // Start performance tracking
-    const operationId = performanceMonitor.startOperation(
+    const _operationId = performanceMonitor.startOperation(
       'fetch-pending-contracts',
       {
         retryCount,
@@ -666,7 +661,7 @@ function PendingContractsPageContent() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const _getStatusColor = (status: string) => {
     switch (status) {
       case 'legal_review':
         return 'bg-blue-100 text-blue-800';
@@ -683,7 +678,7 @@ function PendingContractsPageContent() {
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const _getStatusLabel = (status: string) => {
     switch (status) {
       case 'legal_review':
         return 'Legal Review';

@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  WifiOff,
-  RefreshCw,
-  ArrowRight,
-  Database,
-  CheckCircle,
-} from 'lucide-react';
+import { RefreshCw, ArrowRight, Database, CheckCircle } from 'lucide-react';
 
 export default function InstantOfflinePage() {
   useEffect(() => {

@@ -10,7 +10,9 @@ export async function PATCH(
   const supabase = await createClient();
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -27,7 +29,10 @@ export async function PATCH(
       .single();
 
     if (eeError || !employerEmployee) {
-      return NextResponse.json({ error: 'Employee record not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Employee record not found' },
+        { status: 404 }
+      );
     }
 
     // Verify the review belongs to this employee
@@ -44,7 +49,10 @@ export async function PATCH(
 
     // Only allow acknowledgment if status is 'submitted'
     if (status === 'acknowledged' && review.status !== 'submitted') {
-      return NextResponse.json({ error: 'Can only acknowledge submitted reviews' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Can only acknowledge submitted reviews' },
+        { status: 400 }
+      );
     }
 
     // Update the review
@@ -52,7 +60,7 @@ export async function PATCH(
       .from('performance_reviews')
       .update({
         status: status || review.status,
-        employee_comments: employee_comments,
+        employee_comments,
         updated_at: new Date().toISOString(),
       })
       .eq('id', params.id)
@@ -61,7 +69,10 @@ export async function PATCH(
 
     if (updateError) {
       console.error('Error updating review:', updateError);
-      return NextResponse.json({ error: 'Failed to update review' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to update review' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -73,4 +84,3 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

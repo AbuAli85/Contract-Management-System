@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,14 +25,11 @@ import {
 } from '@/components/ui/select';
 import {
   Building2,
-  Settings,
   Palette,
   Clock,
   Calendar,
   DollarSign,
-  Star,
   Users,
-  Shield,
   Save,
   Loader2,
   Upload,
@@ -37,7 +40,6 @@ import {
   FileText,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 interface CompanyData {
   id: string;
@@ -155,7 +157,7 @@ export default function CompanySettingsPage() {
         }
         setUserRole(data.user_role || 'member');
         setCanEdit(data.can_edit || false);
-        
+
         if (data.message && !data.company) {
           toast({
             title: 'Info',
@@ -300,41 +302,49 @@ export default function CompanySettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className='flex items-center justify-center min-h-[60vh]'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary' />
       </div>
     );
   }
 
   if (!company) {
     return (
-      <Card className="max-w-lg mx-auto mt-12">
-        <CardContent className="py-12 text-center">
-          <Building2 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No Company Selected</h2>
-          <p className="text-gray-500">Please select a company from the header dropdown.</p>
+      <Card className='max-w-lg mx-auto mt-12'>
+        <CardContent className='py-12 text-center'>
+          <Building2 className='h-12 w-12 mx-auto text-gray-400 mb-4' />
+          <h2 className='text-xl font-semibold mb-2'>No Company Selected</h2>
+          <p className='text-gray-500'>
+            Please select a company from the header dropdown.
+          </p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className='container mx-auto py-6 space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-4'>
+          <div className='h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg'>
             {company.logo_url ? (
-              <img src={company.logo_url} alt="" className="w-full h-full rounded-xl object-cover" />
+              <img
+                src={company.logo_url}
+                alt=''
+                className='w-full h-full rounded-xl object-cover'
+              />
             ) : (
               company.name.charAt(0).toUpperCase()
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{company.name}</h1>
-            <div className="flex items-center gap-2 text-gray-500">
-              <Badge variant="outline" className="capitalize">{userRole}</Badge>
-              {!canEdit && <span className="text-sm">View only</span>}
+            <h1 className='text-2xl font-bold'>{company.name}</h1>
+            <div className='flex items-center gap-2 text-gray-500'>
+              <Badge variant='outline' className='capitalize'>
+                {userRole}
+              </Badge>
+              {!canEdit && <span className='text-sm'>View only</span>}
             </div>
           </div>
         </div>
@@ -342,84 +352,90 @@ export default function CompanySettingsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="general" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            <span className="hidden sm:inline">General</span>
+        <TabsList className='grid w-full grid-cols-6 lg:w-auto lg:inline-grid'>
+          <TabsTrigger value='general' className='gap-2'>
+            <Building2 className='h-4 w-4' />
+            <span className='hidden sm:inline'>General</span>
           </TabsTrigger>
-          <TabsTrigger value="team" className="gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Team</span>
+          <TabsTrigger value='team' className='gap-2'>
+            <Users className='h-4 w-4' />
+            <span className='hidden sm:inline'>Team</span>
           </TabsTrigger>
-          <TabsTrigger value="branding" className="gap-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Branding</span>
+          <TabsTrigger value='branding' className='gap-2'>
+            <Palette className='h-4 w-4' />
+            <span className='hidden sm:inline'>Branding</span>
           </TabsTrigger>
-          <TabsTrigger value="leave" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Leave</span>
+          <TabsTrigger value='leave' className='gap-2'>
+            <Calendar className='h-4 w-4' />
+            <span className='hidden sm:inline'>Leave</span>
           </TabsTrigger>
-          <TabsTrigger value="attendance" className="gap-2">
-            <Clock className="h-4 w-4" />
-            <span className="hidden sm:inline">Attendance</span>
+          <TabsTrigger value='attendance' className='gap-2'>
+            <Clock className='h-4 w-4' />
+            <span className='hidden sm:inline'>Attendance</span>
           </TabsTrigger>
-          <TabsTrigger value="expenses" className="gap-2">
-            <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Expenses</span>
+          <TabsTrigger value='expenses' className='gap-2'>
+            <DollarSign className='h-4 w-4' />
+            <span className='hidden sm:inline'>Expenses</span>
           </TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
-        <TabsContent value="general" className="space-y-6">
+        <TabsContent value='general' className='space-y-6'>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Building2 className='h-5 w-5' />
                 Company Information
               </CardTitle>
-              <CardDescription>Basic company details and contact information</CardDescription>
+              <CardDescription>
+                Basic company details and contact information
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Company Name *</Label>
+            <CardContent className='space-y-6'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div className='space-y-2'>
+                  <Label htmlFor='name'>Company Name *</Label>
                   <Input
-                    id="name"
+                    id='name'
                     value={company.name || ''}
-                    onChange={(e) => setCompany({ ...company, name: e.target.value })}
+                    onChange={e =>
+                      setCompany({ ...company, name: e.target.value })
+                    }
                     disabled={!canEdit}
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="industry">Industry</Label>
+                <div className='space-y-2'>
+                  <Label htmlFor='industry'>Industry</Label>
                   <Select
                     value={company.industry || ''}
-                    onValueChange={(v) => setCompany({ ...company, industry: v })}
+                    onValueChange={v => setCompany({ ...company, industry: v })}
                     disabled={!canEdit}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select industry" />
+                      <SelectValue placeholder='Select industry' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="retail">Retail</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="events">Events</SelectItem>
-                      <SelectItem value="hospitality">Hospitality</SelectItem>
-                      <SelectItem value="healthcare">Healthcare</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value='technology'>Technology</SelectItem>
+                      <SelectItem value='retail'>Retail</SelectItem>
+                      <SelectItem value='marketing'>Marketing</SelectItem>
+                      <SelectItem value='events'>Events</SelectItem>
+                      <SelectItem value='hospitality'>Hospitality</SelectItem>
+                      <SelectItem value='healthcare'>Healthcare</SelectItem>
+                      <SelectItem value='education'>Education</SelectItem>
+                      <SelectItem value='finance'>Finance</SelectItem>
+                      <SelectItem value='other'>Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="description">Description</Label>
+                <div className='space-y-2 md:col-span-2'>
+                  <Label htmlFor='description'>Description</Label>
                   <Textarea
-                    id="description"
+                    id='description'
                     value={company.description || ''}
-                    onChange={(e) => setCompany({ ...company, description: e.target.value })}
+                    onChange={e =>
+                      setCompany({ ...company, description: e.target.value })
+                    }
                     disabled={!canEdit}
                     rows={3}
                   />
@@ -428,49 +444,57 @@ export default function CompanySettingsPage() {
 
               <Separator />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" /> Email
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div className='space-y-2'>
+                  <Label htmlFor='email' className='flex items-center gap-2'>
+                    <Mail className='h-4 w-4' /> Email
                   </Label>
                   <Input
-                    id="email"
-                    type="email"
+                    id='email'
+                    type='email'
                     value={company.email || ''}
-                    onChange={(e) => setCompany({ ...company, email: e.target.value })}
+                    onChange={e =>
+                      setCompany({ ...company, email: e.target.value })
+                    }
                     disabled={!canEdit}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" /> Phone
+                <div className='space-y-2'>
+                  <Label htmlFor='phone' className='flex items-center gap-2'>
+                    <Phone className='h-4 w-4' /> Phone
                   </Label>
                   <Input
-                    id="phone"
+                    id='phone'
                     value={company.phone || ''}
-                    onChange={(e) => setCompany({ ...company, phone: e.target.value })}
+                    onChange={e =>
+                      setCompany({ ...company, phone: e.target.value })
+                    }
                     disabled={!canEdit}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="website" className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" /> Website
+                <div className='space-y-2'>
+                  <Label htmlFor='website' className='flex items-center gap-2'>
+                    <Globe className='h-4 w-4' /> Website
                   </Label>
                   <Input
-                    id="website"
+                    id='website'
                     value={company.website || ''}
-                    onChange={(e) => setCompany({ ...company, website: e.target.value })}
+                    onChange={e =>
+                      setCompany({ ...company, website: e.target.value })
+                    }
                     disabled={!canEdit}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="location" className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" /> Location
+                <div className='space-y-2'>
+                  <Label htmlFor='location' className='flex items-center gap-2'>
+                    <MapPin className='h-4 w-4' /> Location
                   </Label>
                   <Input
-                    id="location"
+                    id='location'
                     value={company.location || ''}
-                    onChange={(e) => setCompany({ ...company, location: e.target.value })}
+                    onChange={e =>
+                      setCompany({ ...company, location: e.target.value })
+                    }
                     disabled={!canEdit}
                   />
                 </div>
@@ -478,34 +502,46 @@ export default function CompanySettingsPage() {
 
               <Separator />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="registration_number" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" /> CR Number
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <div className='space-y-2'>
+                  <Label
+                    htmlFor='registration_number'
+                    className='flex items-center gap-2'
+                  >
+                    <FileText className='h-4 w-4' /> CR Number
                   </Label>
                   <Input
-                    id="registration_number"
+                    id='registration_number'
                     value={company.registration_number || ''}
-                    onChange={(e) => setCompany({ ...company, registration_number: e.target.value })}
+                    onChange={e =>
+                      setCompany({
+                        ...company,
+                        registration_number: e.target.value,
+                      })
+                    }
                     disabled={!canEdit}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vat_number">VAT Number</Label>
+                <div className='space-y-2'>
+                  <Label htmlFor='vat_number'>VAT Number</Label>
                   <Input
-                    id="vat_number"
+                    id='vat_number'
                     value={company.vat_number || ''}
-                    onChange={(e) => setCompany({ ...company, vat_number: e.target.value })}
+                    onChange={e =>
+                      setCompany({ ...company, vat_number: e.target.value })
+                    }
                     disabled={!canEdit}
                   />
                 </div>
               </div>
 
               {canEdit && (
-                <div className="flex justify-end">
+                <div className='flex justify-end'>
                   <Button onClick={handleSaveGeneral} disabled={saving}>
-                    {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    <Save className="h-4 w-4 mr-2" />
+                    {saving && (
+                      <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                    )}
+                    <Save className='h-4 w-4 mr-2' />
                     Save Changes
                   </Button>
                 </div>
@@ -515,62 +551,84 @@ export default function CompanySettingsPage() {
         </TabsContent>
 
         {/* Branding */}
-        <TabsContent value="branding" className="space-y-6">
+        <TabsContent value='branding' className='space-y-6'>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Palette className='h-5 w-5' />
                 Brand Colors
               </CardTitle>
-              <CardDescription>Customize your company's visual identity</CardDescription>
+              <CardDescription>
+                Customize your company's visual identity
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
+            <CardContent className='space-y-6'>
+              <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                <div className='space-y-2'>
                   <Label>Primary Color</Label>
-                  <div className="flex gap-2">
+                  <div className='flex gap-2'>
                     <Input
-                      type="color"
+                      type='color'
                       value={company.brand_colors?.primary || '#3b82f6'}
-                      onChange={(e) => setCompany({
-                        ...company,
-                        brand_colors: { ...company.brand_colors, primary: e.target.value }
-                      })}
+                      onChange={e =>
+                        setCompany({
+                          ...company,
+                          brand_colors: {
+                            ...company.brand_colors,
+                            primary: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
-                      className="w-12 h-10 p-1"
+                      className='w-12 h-10 p-1'
                     />
                     <Input
                       value={company.brand_colors?.primary || '#3b82f6'}
-                      onChange={(e) => setCompany({
-                        ...company,
-                        brand_colors: { ...company.brand_colors, primary: e.target.value }
-                      })}
+                      onChange={e =>
+                        setCompany({
+                          ...company,
+                          brand_colors: {
+                            ...company.brand_colors,
+                            primary: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
-                      className="flex-1"
+                      className='flex-1'
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   <Label>Secondary Color</Label>
-                  <div className="flex gap-2">
+                  <div className='flex gap-2'>
                     <Input
-                      type="color"
+                      type='color'
                       value={company.brand_colors?.secondary || '#6366f1'}
-                      onChange={(e) => setCompany({
-                        ...company,
-                        brand_colors: { ...company.brand_colors, secondary: e.target.value }
-                      })}
+                      onChange={e =>
+                        setCompany({
+                          ...company,
+                          brand_colors: {
+                            ...company.brand_colors,
+                            secondary: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
-                      className="w-12 h-10 p-1"
+                      className='w-12 h-10 p-1'
                     />
                     <Input
                       value={company.brand_colors?.secondary || '#6366f1'}
-                      onChange={(e) => setCompany({
-                        ...company,
-                        brand_colors: { ...company.brand_colors, secondary: e.target.value }
-                      })}
+                      onChange={e =>
+                        setCompany({
+                          ...company,
+                          brand_colors: {
+                            ...company.brand_colors,
+                            secondary: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
-                      className="flex-1"
+                      className='flex-1'
                     />
                   </div>
                 </div>
@@ -578,34 +636,44 @@ export default function CompanySettingsPage() {
 
               <Separator />
 
-              <div className="space-y-4">
+              <div className='space-y-4'>
                 <Label>Company Logo</Label>
-                <div className="flex items-center gap-4">
-                  <div className="h-24 w-24 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
+                <div className='flex items-center gap-4'>
+                  <div className='h-24 w-24 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50'>
                     {company.logo_url ? (
-                      <img src={company.logo_url} alt="" className="w-full h-full rounded-xl object-cover" />
+                      <img
+                        src={company.logo_url}
+                        alt=''
+                        className='w-full h-full rounded-xl object-cover'
+                      />
                     ) : (
-                      <Upload className="h-8 w-8 text-gray-400" />
+                      <Upload className='h-8 w-8 text-gray-400' />
                     )}
                   </div>
                   {canEdit && (
-                    <div className="space-y-2">
+                    <div className='space-y-2'>
                       <Input
-                        placeholder="Logo URL"
+                        placeholder='Logo URL'
                         value={company.logo_url || ''}
-                        onChange={(e) => setCompany({ ...company, logo_url: e.target.value })}
+                        onChange={e =>
+                          setCompany({ ...company, logo_url: e.target.value })
+                        }
                       />
-                      <p className="text-xs text-gray-500">Enter a URL or upload to Supabase Storage</p>
+                      <p className='text-xs text-gray-500'>
+                        Enter a URL or upload to Supabase Storage
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
 
               {canEdit && (
-                <div className="flex justify-end">
+                <div className='flex justify-end'>
                   <Button onClick={handleSaveGeneral} disabled={saving}>
-                    {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    <Save className="h-4 w-4 mr-2" />
+                    {saving && (
+                      <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                    )}
+                    <Save className='h-4 w-4 mr-2' />
                     Save Branding
                   </Button>
                 </div>
@@ -615,80 +683,90 @@ export default function CompanySettingsPage() {
         </TabsContent>
 
         {/* Team Members */}
-        <TabsContent value="team" className="space-y-6">
+        <TabsContent value='team' className='space-y-6'>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Users className='h-5 w-5' />
                 Company Team
               </CardTitle>
               <CardDescription>
-                View employees, promoters, and candidates associated with this company
+                View employees, promoters, and candidates associated with this
+                company
               </CardDescription>
             </CardHeader>
             <CardContent>
               {teamLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div className='flex items-center justify-center py-12'>
+                  <Loader2 className='h-8 w-8 animate-spin text-primary' />
                 </div>
               ) : team.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Team Members</h3>
-                  <p className="text-gray-500">
-                    No employees, promoters, or candidates are currently associated with this company.
+                <div className='text-center py-12'>
+                  <Users className='h-12 w-12 mx-auto text-gray-400 mb-4' />
+                  <h3 className='text-lg font-semibold mb-2'>
+                    No Team Members
+                  </h3>
+                  <p className='text-gray-500'>
+                    No employees, promoters, or candidates are currently
+                    associated with this company.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-sm text-gray-500">
-                      {team.length} {team.length === 1 ? 'member' : 'members'} total
+                <div className='space-y-4'>
+                  <div className='flex items-center justify-between mb-4'>
+                    <div className='text-sm text-gray-500'>
+                      {team.length} {team.length === 1 ? 'member' : 'members'}{' '}
+                      total
                     </div>
                   </div>
-                  <div className="grid gap-4">
+                  <div className='grid gap-4'>
                     {team.map((member: TeamMember) => (
                       <div
                         key={member.id}
-                        className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        className='flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors'
                       >
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                        <div className='h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0'>
                           {member.avatar_url ? (
                             <img
                               src={member.avatar_url}
                               alt={member.name}
-                              className="h-full w-full rounded-full object-cover"
+                              className='h-full w-full rounded-full object-cover'
                             />
                           ) : (
                             member.name
                               .split(' ')
-                              .map((n) => n[0])
+                              .map(n => n[0])
                               .join('')
                               .toUpperCase()
                               .slice(0, 2)
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-lg">{member.name}</h4>
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center gap-2 mb-1'>
+                            <h4 className='font-semibold text-lg'>
+                              {member.name}
+                            </h4>
                             <Badge
                               variant={
                                 member.type === 'promoter'
                                   ? 'default'
                                   : member.type === 'employee'
-                                  ? 'secondary'
-                                  : 'outline'
+                                    ? 'secondary'
+                                    : 'outline'
                               }
-                              className="text-xs"
+                              className='text-xs'
                             >
                               {member.type === 'promoter'
                                 ? 'Promoter'
                                 : member.type === 'employee'
-                                ? 'Employee'
-                                : 'Member'}
+                                  ? 'Employee'
+                                  : 'Member'}
                             </Badge>
                             {member.role && (
-                              <Badge variant="outline" className="text-xs capitalize">
+                              <Badge
+                                variant='outline'
+                                className='text-xs capitalize'
+                              >
                                 {member.role}
                               </Badge>
                             )}
@@ -697,38 +775,45 @@ export default function CompanySettingsPage() {
                                 member.status === 'active'
                                   ? 'default'
                                   : member.status === 'terminated'
-                                  ? 'destructive'
-                                  : 'secondary'
+                                    ? 'destructive'
+                                    : 'secondary'
                               }
-                              className="text-xs"
+                              className='text-xs'
                             >
                               {member.status || 'active'}
                             </Badge>
                           </div>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                          <div className='flex flex-wrap items-center gap-4 text-sm text-gray-500'>
                             {member.email && (
-                              <div className="flex items-center gap-1">
-                                <Mail className="h-3 w-3" />
-                                <span className="truncate">{member.email}</span>
+                              <div className='flex items-center gap-1'>
+                                <Mail className='h-3 w-3' />
+                                <span className='truncate'>{member.email}</span>
                               </div>
                             )}
                             {member.phone && (
-                              <div className="flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
+                              <div className='flex items-center gap-1'>
+                                <Phone className='h-3 w-3' />
                                 <span>{member.phone}</span>
                               </div>
                             )}
                             {member.job_title && (
-                              <div className="flex items-center gap-1">
-                                <FileText className="h-3 w-3" />
+                              <div className='flex items-center gap-1'>
+                                <FileText className='h-3 w-3' />
                                 <span>{member.job_title}</span>
-                                {member.department && <span> • {member.department}</span>}
+                                {member.department && (
+                                  <span> • {member.department}</span>
+                                )}
                               </div>
                             )}
                             {member.hire_date && (
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                <span>Hired: {new Date(member.hire_date).toLocaleDateString()}</span>
+                              <div className='flex items-center gap-1'>
+                                <Calendar className='h-3 w-3' />
+                                <span>
+                                  Hired:{' '}
+                                  {new Date(
+                                    member.hire_date
+                                  ).toLocaleDateString()}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -743,84 +828,110 @@ export default function CompanySettingsPage() {
         </TabsContent>
 
         {/* Leave Policies */}
-        <TabsContent value="leave" className="space-y-6">
+        <TabsContent value='leave' className='space-y-6'>
           {policies && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <Calendar className='h-5 w-5' />
                   Leave Policies
                 </CardTitle>
-                <CardDescription>Configure leave entitlements and rules</CardDescription>
+                <CardDescription>
+                  Configure leave entitlements and rules
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
+              <CardContent className='space-y-6'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                  <div className='space-y-2'>
                     <Label>Annual Leave Days</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.leave.annual_leave_days}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        leave: { ...policies.leave, annual_leave_days: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          leave: {
+                            ...policies.leave,
+                            annual_leave_days: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Sick Leave Days</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.leave.sick_leave_days}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        leave: { ...policies.leave, sick_leave_days: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          leave: {
+                            ...policies.leave,
+                            sick_leave_days: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Carry-Over Days</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.leave.carry_over_days}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        leave: { ...policies.leave, carry_over_days: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          leave: {
+                            ...policies.leave,
+                            carry_over_days: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Notice Days Required</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.leave.notice_days_required}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        leave: { ...policies.leave, notice_days_required: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          leave: {
+                            ...policies.leave,
+                            notice_days_required: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+                  <div className='flex items-center justify-between space-x-2 p-4 border rounded-lg'>
                     <Label>Require Approval</Label>
                     <Switch
                       checked={policies.leave.approval_required}
-                      onCheckedChange={(v) => setPolicies({
-                        ...policies,
-                        leave: { ...policies.leave, approval_required: v }
-                      })}
+                      onCheckedChange={v =>
+                        setPolicies({
+                          ...policies,
+                          leave: { ...policies.leave, approval_required: v },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
                 </div>
 
                 {canEdit && (
-                  <div className="flex justify-end">
+                  <div className='flex justify-end'>
                     <Button onClick={handleSavePolicies} disabled={saving}>
-                      {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      <Save className="h-4 w-4 mr-2" />
+                      {saving && (
+                        <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                      )}
+                      <Save className='h-4 w-4 mr-2' />
                       Save Leave Policies
                     </Button>
                   </div>
@@ -831,74 +942,99 @@ export default function CompanySettingsPage() {
         </TabsContent>
 
         {/* Attendance Policies */}
-        <TabsContent value="attendance" className="space-y-6">
+        <TabsContent value='attendance' className='space-y-6'>
           {policies && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <Clock className='h-5 w-5' />
                   Attendance Policies
                 </CardTitle>
-                <CardDescription>Configure work hours and attendance rules</CardDescription>
+                <CardDescription>
+                  Configure work hours and attendance rules
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
+              <CardContent className='space-y-6'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <div className='space-y-2'>
                     <Label>Work Start Time</Label>
                     <Input
-                      type="time"
+                      type='time'
                       value={policies.attendance.work_start_time}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        attendance: { ...policies.attendance, work_start_time: e.target.value }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          attendance: {
+                            ...policies.attendance,
+                            work_start_time: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Work End Time</Label>
                     <Input
-                      type="time"
+                      type='time'
                       value={policies.attendance.work_end_time}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        attendance: { ...policies.attendance, work_end_time: e.target.value }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          attendance: {
+                            ...policies.attendance,
+                            work_end_time: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Grace Period (minutes)</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.attendance.grace_period_minutes}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        attendance: { ...policies.attendance, grace_period_minutes: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          attendance: {
+                            ...policies.attendance,
+                            grace_period_minutes: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Overtime Multiplier</Label>
                     <Input
-                      type="number"
-                      step="0.1"
+                      type='number'
+                      step='0.1'
                       value={policies.attendance.overtime_multiplier}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        attendance: { ...policies.attendance, overtime_multiplier: parseFloat(e.target.value) || 1 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          attendance: {
+                            ...policies.attendance,
+                            overtime_multiplier:
+                              parseFloat(e.target.value) || 1,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
                 </div>
 
                 {canEdit && (
-                  <div className="flex justify-end">
+                  <div className='flex justify-end'>
                     <Button onClick={handleSavePolicies} disabled={saving}>
-                      {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      <Save className="h-4 w-4 mr-2" />
+                      {saving && (
+                        <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                      )}
+                      <Save className='h-4 w-4 mr-2' />
                       Save Attendance Policies
                     </Button>
                   </div>
@@ -909,96 +1045,123 @@ export default function CompanySettingsPage() {
         </TabsContent>
 
         {/* Expense Policies */}
-        <TabsContent value="expenses" className="space-y-6">
+        <TabsContent value='expenses' className='space-y-6'>
           {policies && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <DollarSign className='h-5 w-5' />
                   Expense Policies
                 </CardTitle>
-                <CardDescription>Configure expense limits and approval rules</CardDescription>
+                <CardDescription>
+                  Configure expense limits and approval rules
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
+              <CardContent className='space-y-6'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <div className='space-y-2'>
                     <Label>Daily Limit</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.expenses.daily_limit}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        expenses: { ...policies.expenses, daily_limit: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          expenses: {
+                            ...policies.expenses,
+                            daily_limit: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Monthly Limit</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.expenses.monthly_limit}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        expenses: { ...policies.expenses, monthly_limit: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          expenses: {
+                            ...policies.expenses,
+                            monthly_limit: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Currency</Label>
                     <Select
                       value={policies.expenses.currency}
-                      onValueChange={(v) => setPolicies({
-                        ...policies,
-                        expenses: { ...policies.expenses, currency: v }
-                      })}
+                      onValueChange={v =>
+                        setPolicies({
+                          ...policies,
+                          expenses: { ...policies.expenses, currency: v },
+                        })
+                      }
                       disabled={!canEdit}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="OMR">OMR - Omani Rial</SelectItem>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
-                        <SelectItem value="AED">AED - UAE Dirham</SelectItem>
-                        <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                        <SelectItem value='OMR'>OMR - Omani Rial</SelectItem>
+                        <SelectItem value='USD'>USD - US Dollar</SelectItem>
+                        <SelectItem value='AED'>AED - UAE Dirham</SelectItem>
+                        <SelectItem value='SAR'>SAR - Saudi Riyal</SelectItem>
+                        <SelectItem value='EUR'>EUR - Euro</SelectItem>
+                        <SelectItem value='GBP'>GBP - British Pound</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Requires Receipt Above</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.expenses.requires_receipt_above}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        expenses: { ...policies.expenses, requires_receipt_above: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          expenses: {
+                            ...policies.expenses,
+                            requires_receipt_above:
+                              parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className='space-y-2'>
                     <Label>Auto-Approve Below</Label>
                     <Input
-                      type="number"
+                      type='number'
                       value={policies.expenses.auto_approve_below}
-                      onChange={(e) => setPolicies({
-                        ...policies,
-                        expenses: { ...policies.expenses, auto_approve_below: parseInt(e.target.value) || 0 }
-                      })}
+                      onChange={e =>
+                        setPolicies({
+                          ...policies,
+                          expenses: {
+                            ...policies.expenses,
+                            auto_approve_below: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
                       disabled={!canEdit}
                     />
                   </div>
                 </div>
 
                 {canEdit && (
-                  <div className="flex justify-end">
+                  <div className='flex justify-end'>
                     <Button onClick={handleSavePolicies} disabled={saving}>
-                      {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      <Save className="h-4 w-4 mr-2" />
+                      {saving && (
+                        <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                      )}
+                      <Save className='h-4 w-4 mr-2' />
                       Save Expense Policies
                     </Button>
                   </div>
@@ -1011,4 +1174,3 @@ export default function CompanySettingsPage() {
     </div>
   );
 }
-

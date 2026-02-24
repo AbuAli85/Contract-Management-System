@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -37,14 +37,18 @@ export async function GET(request: NextRequest) {
 
     // Get announcements from employer
     const now = new Date().toISOString();
-    const { data: announcements, error: announcementsError } = await (supabaseAdmin.from('team_announcements') as any)
-      .select(`
+    const { data: announcements, error: announcementsError } = await (
+      supabaseAdmin.from('team_announcements') as any
+    )
+      .select(
+        `
         *,
         created_by_user:created_by (
           full_name,
           avatar_url
         )
-      `)
+      `
+      )
       .eq('employer_id', employeeLink.employer_id)
       .or(`expires_at.is.null,expires_at.gt.${now}`)
       .order('is_pinned', { ascending: false })
@@ -52,22 +56,28 @@ export async function GET(request: NextRequest) {
 
     if (announcementsError) {
       console.error('Error fetching announcements:', announcementsError);
-      return NextResponse.json({ error: 'Failed to fetch announcements' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch announcements' },
+        { status: 500 }
+      );
     }
 
     // Filter by department if applicable
     let filteredAnnouncements = announcements || [];
     if (employeeLink.department) {
-      filteredAnnouncements = filteredAnnouncements.filter((a: any) => 
-        !a.target_departments || 
-        a.target_departments.length === 0 || 
-        a.target_departments.includes(employeeLink.department)
+      filteredAnnouncements = filteredAnnouncements.filter(
+        (a: any) =>
+          !a.target_departments ||
+          a.target_departments.length === 0 ||
+          a.target_departments.includes(employeeLink.department)
       );
     }
 
     // Get read status
     const announcementIds = filteredAnnouncements.map((a: any) => a.id);
-    const { data: reads } = await (supabaseAdmin.from('announcement_reads') as any)
+    const { data: reads } = await (
+      supabaseAdmin.from('announcement_reads') as any
+    )
       .select('announcement_id')
       .eq('employee_id', user.id)
       .in('announcement_id', announcementIds);
@@ -80,7 +90,9 @@ export async function GET(request: NextRequest) {
       is_read: readIds.has(a.id),
     }));
 
-    const unreadCount = announcementsWithStatus.filter((a: any) => !a.is_read).length;
+    const unreadCount = announcementsWithStatus.filter(
+      (a: any) => !a.is_read
+    ).length;
 
     return NextResponse.json({
       success: true,
@@ -89,7 +101,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in announcements GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -98,7 +113,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -112,19 +127,24 @@ export async function POST(request: NextRequest) {
     const { announcement_id } = body;
 
     if (!announcement_id) {
-      return NextResponse.json({ error: 'Announcement ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Announcement ID is required' },
+        { status: 400 }
+      );
     }
 
     // Mark as read (upsert to handle duplicates)
-    await (supabaseAdmin.from('announcement_reads') as any)
-      .upsert({
+    await (supabaseAdmin.from('announcement_reads') as any).upsert(
+      {
         announcement_id,
         employee_id: user.id,
         read_at: new Date().toISOString(),
-      }, {
+      },
+      {
         onConflict: 'announcement_id,employee_id',
         ignoreDuplicates: true,
-      });
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -132,7 +152,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in announcements POST:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

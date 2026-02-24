@@ -2,14 +2,13 @@
 
 import type React from 'react';
 
-import { useEffect, useState, useCallback, useMemo, memo } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import type {
   Promoter,
   Contract,
-  Party,
   PromoterSkill,
   PromoterExperience,
   PromoterEducation,
@@ -24,15 +23,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import _Link from 'next/link';
 import {
-  ArrowLeftIcon,
   UserCircle2Icon,
   FileTextIcon,
   BriefcaseIcon,
   ExternalLinkIcon,
   Loader2,
-  EditIcon,
   ArrowLeft,
   Edit,
   Plus,
@@ -46,19 +43,10 @@ import {
   Tablet,
   AlertTriangle,
 } from 'lucide-react';
-import { format, parseISO, isPast, isValid, parse } from 'date-fns';
+import { format, parseISO, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { DocumentStatusBadge } from '@/components/unified-status-badge';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -79,8 +67,6 @@ import { PromoterFinancialSummary } from '@/components/promoters/promoter-financ
 import { PromoterDocumentHealth } from '@/components/promoters/promoter-document-health';
 import { EmployerEmployeeManagementPanel } from '@/components/promoters/employer-employee-management-panel';
 import { EmployeeTeamComparison } from '@/components/promoters/employee-team-comparison';
-import { EmployeeComplianceAlerts } from '@/components/promoters/employee-compliance-alerts';
-import { EmployeeWorkloadStatus } from '@/components/promoters/employee-workload-status';
 import { EmployeeSelfServicePortal } from '@/components/promoters/employee-self-service-portal';
 import { logger } from '@/lib/utils/logger';
 
@@ -182,7 +168,7 @@ function DocumentStatusDisplay({
   expiryDate,
   documentUrl,
   documentNumber,
-  documentType,
+  _documentType,
 }: {
   expiryDate: string | null | undefined;
   documentUrl: string | null | undefined;
@@ -239,7 +225,7 @@ export default function PromoterDetailPage() {
     'desktop'
   );
   const role = useUserRole();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [_currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isViewingOwnProfile, setIsViewingOwnProfile] = useState(false);
 
   // Filter section state
@@ -259,14 +245,18 @@ export default function PromoterDetailPage() {
     async function getCurrentUser() {
       const supabase = createClient();
       if (!supabase) return;
-      
-      const { data: { user } } = await supabase.auth.getUser();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
         // Check if user is viewing their own profile
-        const isOwnProfile = 
-          user.id === promoterId || 
-          (promoterId && user.id && promoterId.startsWith(user.id.substring(0, 8))) ||
+        const isOwnProfile =
+          user.id === promoterId ||
+          (promoterId &&
+            user.id &&
+            promoterId.startsWith(user.id.substring(0, 8))) ||
           (promoterId && user.id && user.id.startsWith(promoterId));
         setIsViewingOwnProfile(!!isOwnProfile);
       }
@@ -474,14 +464,18 @@ export default function PromoterDetailPage() {
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: 'Unknown error' }));
+
           // Handle 404 - promoter not found
           if (response.status === 404) {
-            setError('Promoter not found. The record may not exist or you may not have permission to view it.');
-        setIsLoading(false);
-        return;
-      }
+            setError(
+              'Promoter not found. The record may not exist or you may not have permission to view it.'
+            );
+            setIsLoading(false);
+            return;
+          }
 
           // Handle 401/403 - unauthorized
           if (response.status === 401 || response.status === 403) {
@@ -489,7 +483,7 @@ export default function PromoterDetailPage() {
             setIsLoading(false);
             return;
           }
-          
+
           setError(errorData.error || 'Failed to fetch promoter details.');
           setIsLoading(false);
           return;
@@ -500,39 +494,40 @@ export default function PromoterDetailPage() {
 
         if (!promoterData) {
           setError('Promoter not found.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Get tags from promoter_tags table if it exists
-        const supabase = createClient();
-      let tags: string[] = [];
-      try {
-          if (supabase) {
-        const { data: tagsData, error: tagsError } = await supabase
-          .from('promoter_tags')
-          .select('tag')
-          .eq('promoter_id', promoterId);
-
-        if (!tagsError && tagsData) {
-          tags = tagsData.map((t: any) => t.tag).filter(Boolean);
-            }
+          setIsLoading(false);
+          return;
         }
-      } catch (error) {
-        // If promoter_tags table doesn't exist, use empty array
-        logger.log(
-          'promoter_tags table not available, using empty tags array'
-        );
-      }
+
+        // Get tags from promoter_tags table if it exists
+        const supabase = createClient();
+        let tags: string[] = [];
+        try {
+          if (supabase) {
+            const { data: tagsData, error: tagsError } = await supabase
+              .from('promoter_tags')
+              .select('tag')
+              .eq('promoter_id', promoterId);
+
+            if (!tagsError && tagsData) {
+              tags = tagsData.map((t: any) => t.tag).filter(Boolean);
+            }
+          }
+        } catch (error) {
+          // If promoter_tags table doesn't exist, use empty array
+          logger.log(
+            'promoter_tags table not available, using empty tags array'
+          );
+        }
 
         // Fetch contracts using API or direct call
         let contracts: any[] = [];
         try {
           if (supabase) {
-      const { data: contractsData, error: contractsError } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('promoter_id', promoterId);
+            const { data: contractsData, error: contractsError } =
+              await supabase
+                .from('contracts')
+                .select('*')
+                .eq('promoter_id', promoterId);
 
             if (!contractsError && contractsData) {
               contracts = contractsData;
@@ -540,26 +535,26 @@ export default function PromoterDetailPage() {
           }
         } catch (error) {
           logger.error('Error fetching contracts:', error);
-        // Don't set error for contracts, just log it
-      }
+          // Don't set error for contracts, just log it
+        }
 
         // Employer info is already included in API response
         const employerInfo = data.employer || promoterData.employer || null;
 
-      setPromoterDetails({
-        ...promoterData,
+        setPromoterDetails({
+          ...promoterData,
           contracts: contracts || [],
-        employer: employerInfo,
-        name_en:
-          promoterData.name_en ||
-          [promoterData.first_name, promoterData.last_name]
-            .filter(Boolean)
-            .join(' '),
-        name_ar: promoterData.name_ar || '',
-        id_card_number: promoterData.id_card_number || '',
-        tags,
-      });
-      setIsLoading(false);
+          employer: employerInfo,
+          name_en:
+            promoterData.name_en ||
+            [promoterData.first_name, promoterData.last_name]
+              .filter(Boolean)
+              .join(' '),
+          name_ar: promoterData.name_ar || '',
+          id_card_number: promoterData.id_card_number || '',
+          tags,
+        });
+        setIsLoading(false);
       } catch (fetchError) {
         console.error('Error fetching promoter details:', fetchError);
         setError('Failed to load promoter details. Please try again.');
@@ -666,7 +661,10 @@ export default function PromoterDetailPage() {
     const supabase = createClient();
     if (!supabase) return;
 
-    logger.log('🔔 Setting up real-time subscriptions for promoter:', promoterId);
+    logger.log(
+      '🔔 Setting up real-time subscriptions for promoter:',
+      promoterId
+    );
 
     // Subscribe to promoter updates
     const promoterChannel = supabase
@@ -679,10 +677,10 @@ export default function PromoterDetailPage() {
           table: 'promoters',
           filter: `id=eq.${promoterId}`,
         },
-        (payload) => {
+        payload => {
           logger.log('📝 Promoter updated in real-time:', payload.new);
           // Update local state with new data
-          setPromoterDetails((prev) =>
+          setPromoterDetails(prev =>
             prev ? { ...prev, ...payload.new } : null
           );
           // Show toast notification
@@ -711,7 +709,7 @@ export default function PromoterDetailPage() {
           table: 'contracts',
           filter: `promoter_id=eq.${promoterId}`,
         },
-        (payload) => {
+        payload => {
           logger.log('📄 Contract changed in real-time:', payload);
           // Refetch contracts to get updated data
           const supabaseClient = createClient();
@@ -722,7 +720,7 @@ export default function PromoterDetailPage() {
               .eq('promoter_id', promoterId)
               .then(({ data, error }) => {
                 if (!error && data) {
-                  setPromoterDetails((prev) =>
+                  setPromoterDetails(prev =>
                     prev ? { ...prev, contracts: data } : null
                   );
                 }
@@ -747,10 +745,18 @@ export default function PromoterDetailPage() {
           logger.log('📎 Document changed, refetching...');
           // Refetch documents by calling the API endpoints
           Promise.all([
-            fetch(`/api/promoters/${promoterId}/documents`).then(r => r.ok ? r.json() : null).catch(() => null),
-            fetch(`/api/promoters/${promoterId}/skills`).then(r => r.ok ? r.json() : null).catch(() => null),
-            fetch(`/api/promoters/${promoterId}/experience`).then(r => r.ok ? r.json() : null).catch(() => null),
-            fetch(`/api/promoters/${promoterId}/education`).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(`/api/promoters/${promoterId}/documents`)
+              .then(r => (r.ok ? r.json() : null))
+              .catch(() => null),
+            fetch(`/api/promoters/${promoterId}/skills`)
+              .then(r => (r.ok ? r.json() : null))
+              .catch(() => null),
+            fetch(`/api/promoters/${promoterId}/experience`)
+              .then(r => (r.ok ? r.json() : null))
+              .catch(() => null),
+            fetch(`/api/promoters/${promoterId}/education`)
+              .then(r => (r.ok ? r.json() : null))
+              .catch(() => null),
           ]).then(([docsData, skillsData, expData, eduData]) => {
             if (docsData?.documents) setDocuments(docsData.documents);
             if (skillsData?.skills) setSkills(skillsData.skills);
@@ -785,7 +791,7 @@ export default function PromoterDetailPage() {
           .eq('promoter_id', promoterId)
           .then(({ data, error }) => {
             if (!error && data) {
-              setPromoterDetails((prev) =>
+              setPromoterDetails(prev =>
                 prev ? { ...prev, contracts: data } : null
               );
             }
@@ -898,6 +904,76 @@ export default function PromoterDetailPage() {
     window.location.reload();
   }, []);
 
+  // Pre-compute performance metrics for PromoterGoalWidget (extracted from JSX to fix react-hooks/rules-of-hooks)
+  const goalWidgetMetrics = useMemo(() => {
+    const contracts = promoterDetails?.contracts || [];
+    const activeContracts = contracts.filter(
+      (c: any) => c.status === 'active'
+    ).length;
+    const completedContracts = contracts.filter(
+      (c: any) => c.status === 'completed'
+    ).length;
+    const totalContracts = contracts.length;
+    const contractCompletionRate =
+      totalContracts > 0
+        ? Math.round((completedContracts / totalContracts) * 100)
+        : 0;
+    const rating = promoterDetails?.rating || 0;
+    const customerSatisfaction = rating > 0 ? Math.round(rating * 20) : 85;
+    const overallScore = Math.round(
+      contractCompletionRate * 0.4 +
+        customerSatisfaction * 0.3 +
+        (promoterDetails?.status === 'active' ? 30 : 0)
+    );
+    return {
+      overallScore: Math.min(100, Math.max(0, overallScore)),
+      attendanceRate: 90,
+      taskCompletion: contractCompletionRate,
+      customerSatisfaction,
+      totalTasks: totalContracts,
+      completedTasks: completedContracts,
+      activeContracts,
+    };
+  }, [promoterDetails]);
+
+  // Pre-compute performance metrics for PromoterPredictiveScore (extracted from JSX to fix react-hooks/rules-of-hooks)
+  const predictiveScoreMetrics = useMemo(() => {
+    const contracts = promoterDetails?.contracts || [];
+    const completedContracts = contracts.filter(
+      (c: any) => c.status === 'completed'
+    ).length;
+    const totalContracts = contracts.length;
+    const contractCompletionRate =
+      totalContracts > 0
+        ? Math.round((completedContracts / totalContracts) * 100)
+        : 0;
+    const rating = promoterDetails?.rating || 0;
+    const customerSatisfaction = rating > 0 ? Math.round(rating * 20) : 85;
+    const overallScore = Math.round(
+      contractCompletionRate * 0.4 + customerSatisfaction * 0.3
+    );
+    return {
+      overallScore: Math.min(100, Math.max(0, overallScore)),
+      attendanceRate: 90,
+      taskCompletion: contractCompletionRate,
+      customerSatisfaction,
+      totalTasks: totalContracts,
+      completedTasks: completedContracts,
+      activeContracts: contracts.filter((c: any) => c.status === 'active')
+        .length,
+    };
+  }, [promoterDetails]);
+
+  // Pre-compute performance score for EmployeeTeamComparison (extracted from JSX to fix react-hooks/rules-of-hooks)
+  const teamComparisonScore = useMemo(() => {
+    const contracts = promoterDetails?.contracts || [];
+    const completed = contracts.filter(
+      (c: any) => c.status === 'completed'
+    ).length;
+    const total = contracts.length;
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+  }, [promoterDetails?.contracts]);
+
   if (isLoading) {
     return useEnhancedView ? (
       <PromoterDetailsSkeleton />
@@ -925,9 +1001,13 @@ export default function PromoterDetailPage() {
   // Use enhanced view if enabled
   if (useEnhancedView) {
     // For employees viewing their own profile, show only the employee portal
-    if (isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails) {
+    if (
+      isViewingOwnProfile &&
+      (role === 'promoter' || role === 'user' || role === 'employee') &&
+      promoterDetails
+    ) {
       return (
-        <div className="container mx-auto py-6">
+        <div className='container mx-auto py-6'>
           <EmployeeSelfServicePortal
             promoterId={promoterId}
             promoterDetails={promoterDetails}
@@ -936,7 +1016,7 @@ export default function PromoterDetailPage() {
         </div>
       );
     }
-    
+
     // For employers/admins, show the full enhanced view
     return (
       <PromoterDetailsEnhanced
@@ -950,9 +1030,13 @@ export default function PromoterDetailPage() {
   }
 
   // For employees viewing their own profile, show only the employee portal
-  if (isViewingOwnProfile && (role === 'promoter' || role === 'user' || role === 'employee') && promoterDetails) {
+  if (
+    isViewingOwnProfile &&
+    (role === 'promoter' || role === 'user' || role === 'employee') &&
+    promoterDetails
+  ) {
     return (
-      <div className="container mx-auto py-6">
+      <div className='container mx-auto py-6'>
         <EmployeeSelfServicePortal
           promoterId={promoterId}
           promoterDetails={promoterDetails}
@@ -1218,44 +1302,7 @@ export default function PromoterDetailPage() {
               {/* Goal Tracking & Progress Widget */}
               <PromoterGoalWidget
                 promoterId={promoterId}
-                performanceMetrics={useMemo(() => {
-                  // Calculate real metrics from actual data
-                  const contracts = promoterDetails?.contracts || [];
-                  const activeContracts = contracts.filter(
-                    (c: any) => c.status === 'active'
-                  ).length;
-                  const completedContracts = contracts.filter(
-                    (c: any) => c.status === 'completed'
-                  ).length;
-                  const totalContracts = contracts.length;
-                  
-                  // Calculate completion rate
-                  const contractCompletionRate =
-                    totalContracts > 0
-                      ? Math.round((completedContracts / totalContracts) * 100)
-                      : 0;
-
-                  // Calculate customer satisfaction from rating if available
-                  const rating = promoterDetails?.rating || 0;
-                  const customerSatisfaction = rating > 0 ? Math.round(rating * 20) : 85;
-
-                  // Calculate overall score based on multiple factors
-                  const overallScore = Math.round(
-                    (contractCompletionRate * 0.4) +
-                    (customerSatisfaction * 0.3) +
-                    (promoterDetails?.status === 'active' ? 30 : 0)
-                  );
-
-                  return {
-                    overallScore: Math.min(100, Math.max(0, overallScore)),
-                    attendanceRate: 90, // Would need attendance data
-                    taskCompletion: contractCompletionRate,
-                    customerSatisfaction,
-                    totalTasks: totalContracts,
-                    completedTasks: completedContracts,
-                    activeContracts,
-                  };
-                }, [promoterDetails])}
+                performanceMetrics={goalWidgetMetrics}
                 isAdmin={role === 'admin'}
               />
 
@@ -1663,7 +1710,7 @@ export default function PromoterDetailPage() {
                                   .eq('id', promoterId);
 
                                 if (error) {
-                                  alert('Failed to update: ' + error.message);
+                                  alert(`Failed to update: ${error.message}`);
                                 } else {
                                   alert('Employer assignment removed');
                                   window.location.reload();
@@ -1673,7 +1720,7 @@ export default function PromoterDetailPage() {
                                   err instanceof Error
                                     ? err.message
                                     : 'Unknown error';
-                                alert('Failed to update: ' + message);
+                                alert(`Failed to update: ${message}`);
                               }
                             }
                           }}
@@ -2136,40 +2183,7 @@ export default function PromoterDetailPage() {
         <aside className='lg:col-span-1 space-y-6'>
           {/* Predictive Performance Score */}
           <PromoterPredictiveScore
-            performanceMetrics={useMemo(() => {
-              // Calculate real metrics from actual data
-              const contracts = promoterDetails?.contracts || [];
-              const activeContracts = contracts.filter(
-                (c: any) => c.status === 'active'
-              ).length;
-              const completedContracts = contracts.filter(
-                (c: any) => c.status === 'completed'
-              ).length;
-              const totalContracts = contracts.length;
-              
-              const contractCompletionRate =
-                totalContracts > 0
-                  ? Math.round((completedContracts / totalContracts) * 100)
-                  : 0;
-
-              const rating = promoterDetails?.rating || 0;
-              const customerSatisfaction = rating > 0 ? Math.round(rating * 20) : 85;
-
-              const overallScore = Math.round(
-                (contractCompletionRate * 0.4) +
-                (customerSatisfaction * 0.3) +
-                (promoterDetails?.status === 'active' ? 30 : 0)
-              );
-
-              return {
-                overallScore: Math.min(100, Math.max(0, overallScore)),
-                attendanceRate: 90,
-                taskCompletion: contractCompletionRate,
-                customerSatisfaction,
-                totalTasks: totalContracts,
-                completedTasks: completedContracts,
-              };
-            }, [promoterDetails])}
+            performanceMetrics={predictiveScoreMetrics}
             contracts={promoterDetails?.contracts || []}
             documentsCompliant={
               !!(
@@ -2181,17 +2195,25 @@ export default function PromoterDetailPage() {
                 new Date(promoterDetails.passport_expiry_date) > new Date()
               )
             }
-            lastActive={(promoterDetails?.updated_at || promoterDetails?.created_at) || undefined}
+            lastActive={
+              promoterDetails?.updated_at ||
+              promoterDetails?.created_at ||
+              undefined
+            }
           />
 
           {/* Financial & Payout Summary */}
           <PromoterFinancialSummary
             promoterId={promoterId}
             contracts={promoterDetails?.contracts || []}
-            isAdmin={role === 'admin' || role === 'employer' || role === 'manager'}
-            onProcessPayment={(amount) => {
+            isAdmin={
+              role === 'admin' || role === 'employer' || role === 'manager'
+            }
+            onProcessPayment={amount => {
               // TODO: Implement payment processing
-              alert(`Processing payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)}`);
+              alert(
+                `Processing payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)}`
+              );
             }}
           />
 
@@ -2201,12 +2223,7 @@ export default function PromoterDetailPage() {
               promoterId={promoterId}
               employerId={promoterDetails?.employer_id || undefined}
               contracts={promoterDetails?.contracts || []}
-              performanceScore={useMemo(() => {
-                const contracts = promoterDetails?.contracts || [];
-                const completed = contracts.filter((c: any) => c.status === 'completed').length;
-                const total = contracts.length;
-                return total > 0 ? Math.round((completed / total) * 100) : 0;
-              }, [promoterDetails?.contracts])}
+              performanceScore={teamComparisonScore}
             />
           )}
 
@@ -2246,15 +2263,15 @@ export default function PromoterDetailPage() {
                 })(),
               },
             }}
-            onUpload={(type) => setShowDocumentUpload(true)}
-            onView={(type) => {
+            onUpload={_type => setShowDocumentUpload(true)}
+            onView={type => {
               const url =
                 type === 'id_card'
                   ? promoterDetails?.id_card_url
                   : promoterDetails?.passport_url;
               if (url) window.open(url, '_blank');
             }}
-            onDownload={(type) => {
+            onDownload={type => {
               const url =
                 type === 'id_card'
                   ? promoterDetails?.id_card_url

@@ -317,9 +317,8 @@ export async function POST(
 
         // Send appropriate detailed email based on type
         if (validatedData.type === 'urgent') {
-          const { urgentNotificationEmail } = await import(
-            '@/lib/email-templates/urgent-notification'
-          );
+          const { urgentNotificationEmail } =
+            await import('@/lib/email-templates/urgent-notification');
           emailContent = urgentNotificationEmail({
             promoterName: promoter.full_name,
             reason: 'Immediate action required for documents and contracts',
@@ -348,9 +347,8 @@ export async function POST(
 
           if (mostUrgentDoc) {
             // If there are expiring documents, send specific document expiry email
-            const { documentExpiryEmail } = await import(
-              '@/lib/email-templates/document-expiry'
-            );
+            const { documentExpiryEmail } =
+              await import('@/lib/email-templates/document-expiry');
             emailContent = documentExpiryEmail({
               promoterName: promoter.full_name,
               documentType: mostUrgentDoc.type as 'ID Card' | 'Passport',
@@ -360,13 +358,12 @@ export async function POST(
             });
           } else {
             // If no expiring documents, send a standard reminder email
-            const { standardNotificationEmail } = await import(
-              '@/lib/email-templates/standard-notification'
-            );
+            const { standardNotificationEmail } =
+              await import('@/lib/email-templates/standard-notification');
             emailContent = standardNotificationEmail({
               promoterName: promoter.full_name,
               title: 'Document Status Reminder',
-              message: message,
+              message,
               details: {
                 ...(promoterDetails.currentContract && {
                   contractInfo: {
@@ -401,16 +398,15 @@ export async function POST(
           }
         } else {
           // Standard or info notification with full details
-          const { standardNotificationEmail } = await import(
-            '@/lib/email-templates/standard-notification'
-          );
+          const { standardNotificationEmail } =
+            await import('@/lib/email-templates/standard-notification');
           emailContent = standardNotificationEmail({
             promoterName: promoter.full_name,
             title:
               validatedData.type === 'warning'
                 ? 'Important Update'
                 : 'Notification',
-            message: message,
+            message,
             details: {
               ...(promoterDetails.currentContract && {
                 contractInfo: {
@@ -468,7 +464,7 @@ export async function POST(
       promoter_id: params.id,
       user_id: user.id,
       type: validatedData.type,
-      message: message,
+      message,
       status: 'sent',
       created_at: new Date().toISOString(),
     };
@@ -479,7 +475,7 @@ export async function POST(
         id: notification.id,
         promoter_id: params.id,
         type: validatedData.type,
-        message: message,
+        message,
         status: 'sent',
         created_at: notification.created_at,
       },

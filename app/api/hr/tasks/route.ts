@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('employee_tasks')
-      .select(`
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           id,
@@ -43,7 +44,8 @@ export async function GET(request: NextRequest) {
             name_ar
           )
         )
-      `)
+      `
+      )
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -61,7 +63,10 @@ export async function GET(request: NextRequest) {
 
     // Company scoping for non-admins
     if (profile?.role !== 'admin' && profile?.active_company_id) {
-      query = query.eq('employer_employee.company_id', profile.active_company_id);
+      query = query.eq(
+        'employer_employee.company_id',
+        profile.active_company_id
+      );
     }
 
     const { data: tasks, error } = await query;
@@ -144,7 +149,8 @@ export async function POST(request: NextRequest) {
     const isEmployer = employeeLink.employer_id === user.id;
     const isAdmin = profile?.role === 'admin';
     const isHR = profile?.role === 'hr_manager' || profile?.role === 'manager';
-    const isSameCompany = profile?.active_company_id === employeeLink.company_id;
+    const isSameCompany =
+      profile?.active_company_id === employeeLink.company_id;
 
     if (!isEmployer && !isAdmin && !(isHR && isSameCompany)) {
       return NextResponse.json(
@@ -154,7 +160,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create task
-    const { data: task, error: createError } = await (supabaseAdmin.from('employee_tasks') as any)
+    const { data: task, error: createError } = await (
+      supabaseAdmin.from('employee_tasks') as any
+    )
       .insert({
         employer_employee_id,
         title,
@@ -190,4 +198,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

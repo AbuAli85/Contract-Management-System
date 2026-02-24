@@ -253,7 +253,9 @@ export default function DocumentUpload({
         const supabase = createClient();
         if (!supabase) {
           clearInterval(progressInterval);
-          throw new Error('Database connection unavailable. Please refresh the page.');
+          throw new Error(
+            'Database connection unavailable. Please refresh the page.'
+          );
         }
 
         // Check if user is authenticated
@@ -263,7 +265,9 @@ export default function DocumentUpload({
         } = await supabase.auth.getSession();
         if (sessionError || !session) {
           clearInterval(progressInterval);
-          throw new Error('Your session has expired. Please log in again to upload files.');
+          throw new Error(
+            'Your session has expired. Please log in again to upload files.'
+          );
         }
 
         // Create a unique filename with promoter name and ID

@@ -36,7 +36,9 @@ export async function ensureEmployerEmployeeRecord(
 
     if (existingError) {
       console.error('Error checking employer_employee record:', existingError);
-      throw new Error(`Error checking employer employee record: ${existingError.message}`);
+      throw new Error(
+        `Error checking employer employee record: ${existingError.message}`
+      );
     }
 
     if (existing) {
@@ -84,7 +86,9 @@ export async function ensureEmployerEmployeeRecord(
   }
 
   if (!party) {
-    throw new Error(`Employer party not found for promoter: ${promoterId} (employer_id: ${promoter.employer_id})`);
+    throw new Error(
+      `Employer party not found for promoter: ${promoterId} (employer_id: ${promoter.employer_id})`
+    );
   }
 
   // Find employer profile (from party contact_email)
@@ -96,11 +100,15 @@ export async function ensureEmployerEmployeeRecord(
 
   if (employerProfileError) {
     console.error('Error fetching employer profile:', employerProfileError);
-    throw new Error(`Error fetching employer profile: ${employerProfileError.message}`);
+    throw new Error(
+      `Error fetching employer profile: ${employerProfileError.message}`
+    );
   }
 
   if (!employerProfile) {
-    throw new Error(`Employer profile not found for party: ${party.id} (contact_email: ${party.contact_email || 'N/A'})`);
+    throw new Error(
+      `Employer profile not found for party: ${party.id} (contact_email: ${party.contact_email || 'N/A'})`
+    );
   }
 
   // Find employee profile (from promoter email)
@@ -112,11 +120,15 @@ export async function ensureEmployerEmployeeRecord(
 
   if (employeeProfileError) {
     console.error('Error fetching employee profile:', employeeProfileError);
-    throw new Error(`Error fetching employee profile: ${employeeProfileError.message}`);
+    throw new Error(
+      `Error fetching employee profile: ${employeeProfileError.message}`
+    );
   }
 
   if (!employeeProfile) {
-    throw new Error(`Employee profile not found for promoter email: ${promoter.email || 'N/A'} (promoter_id: ${promoterId})`);
+    throw new Error(
+      `Employee profile not found for promoter email: ${promoter.email || 'N/A'} (promoter_id: ${promoterId})`
+    );
   }
 
   // Check if employer_employee record already exists
@@ -125,23 +137,32 @@ export async function ensureEmployerEmployeeRecord(
     .eq('employee_id', employeeProfile.id)
     .eq('employer_id', employerProfile.id)
     .maybeSingle();
-  
+
   const existing = existingResult.data as any;
   const existingError = existingResult.error;
-  
-  if (existingError && existingError.code !== 'PGRST116') { // PGRST116 is "not found" which is OK
-    console.error('Error checking existing employer_employee record:', existingError);
-    throw new Error(`Error checking existing employer_employee record: ${existingError.message}`);
+
+  if (existingError && existingError.code !== 'PGRST116') {
+    // PGRST116 is "not found" which is OK
+    console.error(
+      'Error checking existing employer_employee record:',
+      existingError
+    );
+    throw new Error(
+      `Error checking existing employer_employee record: ${existingError.message}`
+    );
   }
 
   // ✅ FIX: If record exists but company_id doesn't match user's active company, update it
   if (existing) {
     // Update company_id if it doesn't match user's active company (or is null)
-    if (userProfile.active_company_id && existing.company_id !== userProfile.active_company_id) {
+    if (
+      userProfile.active_company_id &&
+      existing.company_id !== userProfile.active_company_id
+    ) {
       await (supabaseAdmin.from('employer_employees') as any)
-        .update({ 
+        .update({
           company_id: userProfile.active_company_id,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', existing.id);
     }
@@ -149,11 +170,11 @@ export async function ensureEmployerEmployeeRecord(
   }
 
   // Get company_id from party (for reference)
-  const { data: company } = await supabase
+  const { data: company } = (await supabase
     .from('companies')
     .select('id')
     .eq('party_id', promoter.employer_id)
-    .maybeSingle() as any;
+    .maybeSingle()) as any;
 
   // ✅ FIX: Prioritize user's active_company_id when creating new record
   // This ensures the record belongs to the user's active company
@@ -161,7 +182,10 @@ export async function ensureEmployerEmployeeRecord(
 
   // Auto-generate employee code
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const uuidSuffix = employeeProfile.id.replace(/-/g, '').slice(-4).toUpperCase();
+  const uuidSuffix = employeeProfile.id
+    .replace(/-/g, '')
+    .slice(-4)
+    .toUpperCase();
   const employeeCode = `EMP-${date}-${uuidSuffix}`;
 
   // Create employer_employee record
@@ -179,15 +203,16 @@ export async function ensureEmployerEmployeeRecord(
     })
     .select('id')
     .single();
-  
+
   const newRecord = insertResult.data as any;
   const insertError = insertResult.error;
 
   if (insertError || !newRecord) {
     console.error('Error creating employer_employee record:', insertError);
-    throw new Error(`Failed to create employer_employee record: ${insertError?.message || 'Unknown error'}`);
+    throw new Error(
+      `Failed to create employer_employee record: ${insertError?.message || 'Unknown error'}`
+    );
   }
 
   return { employerEmployeeId: newRecord.id, isNew: true };
 }
-

@@ -1,6 +1,6 @@
 /**
  * Real-Time WhatsApp Notification Test
- * 
+ *
  * Tests WhatsApp notifications through the actual UnifiedNotificationService
  * This simulates real system notifications (document expiry, alerts, etc.)
  */
@@ -15,7 +15,9 @@ import { UnifiedNotificationService } from '@/lib/services/unified-notification.
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json(
@@ -56,16 +58,19 @@ export async function POST(request: NextRequest) {
         {
           userId: user.id,
           email: profile?.email || user.email || undefined,
-          phone: phone, // Will be auto-formatted
-          name: profile?.full_name || user.user_metadata?.full_name || 'Test User',
+          phone, // Will be auto-formatted
+          name:
+            profile?.full_name || user.user_metadata?.full_name || 'Test User',
         },
       ],
       content: {
         title: title || 'Test WhatsApp Notification',
-        message: message || 'This is a test notification sent via the real system notification service.',
+        message:
+          message ||
+          'This is a test notification sent via the real system notification service.',
         priority: priority as 'low' | 'medium' | 'high' | 'urgent',
-        category: category,
-        actionUrl: actionUrl,
+        category,
+        actionUrl,
       },
       channels: ['whatsapp', 'in_app'], // Include WhatsApp
     });
@@ -73,9 +78,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: result.success,
       details: {
-        phone: phone,
+        phone,
         method: 'unified_notification_service',
-        priority: priority,
+        priority,
         channels: result.sent,
         failed: result.failed,
         errors: result.errors,
@@ -108,7 +113,8 @@ export async function GET() {
         body: {
           phone: '+96879665522',
           title: 'Document Expiry Alert',
-          message: 'Your passport will expire in 30 days. Please renew it soon.',
+          message:
+            'Your passport will expire in 30 days. Please renew it soon.',
           priority: 'high',
           category: 'document_expiry',
           actionUrl: '/documents',
@@ -120,7 +126,8 @@ export async function GET() {
         body: {
           phone: '+96879665522',
           title: 'Urgent: Action Required',
-          message: 'Your account requires immediate attention. Please contact support.',
+          message:
+            'Your account requires immediate attention. Please contact support.',
           priority: 'urgent',
           category: 'system_alert',
         },
@@ -131,7 +138,8 @@ export async function GET() {
         body: {
           phone: '+96879665522',
           title: 'New Task Assigned',
-          message: 'You have been assigned a new task. Please review and complete it.',
+          message:
+            'You have been assigned a new task. Please review and complete it.',
           priority: 'high',
           category: 'task_assignment',
           actionUrl: '/tasks',
@@ -140,4 +148,3 @@ export async function GET() {
     ],
   });
 }
-

@@ -92,7 +92,9 @@ export function PromoterFinancialSummary({
         // Fetch payroll entries
         const { data: payrollEntries } = await supabase
           .from('payroll_entries')
-          .select('net_salary, payment_status, payment_date, payment_method, created_at')
+          .select(
+            'net_salary, payment_status, payment_date, payment_method, created_at'
+          )
           .eq('employer_employee_id', employerEmployee.id)
           .order('created_at', { ascending: false })
           .catch(() => ({ data: [], error: null }));
@@ -140,16 +142,13 @@ export function PromoterFinancialSummary({
       const now = new Date();
       const yearStart = new Date(now.getFullYear(), 0, 1);
       const ytdPayments = payoutHistory.filter(
-        (p) => new Date(p.date) >= yearStart
+        p => new Date(p.date) >= yearStart
       );
-      const ytdEarnings = ytdPayments.reduce(
-        (sum, p) => sum + p.amount,
-        0
-      );
+      const ytdEarnings = ytdPayments.reduce((sum, p) => sum + p.amount, 0);
       const monthsElapsed = Math.max(1, now.getMonth() + 1);
       const averageMonthly = ytdEarnings / monthsElapsed;
 
-    // Next payout is typically 15th of next month
+      // Next payout is typically 15th of next month
       const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15);
 
       setFinancialData({
@@ -170,7 +169,9 @@ export function PromoterFinancialSummary({
 
   const calculateFromContracts = () => {
     // Fallback calculation from contracts
-    const completedContracts = contracts.filter((c: any) => c.status === 'completed');
+    const completedContracts = contracts.filter(
+      (c: any) => c.status === 'completed'
+    );
     const activeContracts = contracts.filter((c: any) => c.status === 'active');
 
     // Calculate from contract amounts

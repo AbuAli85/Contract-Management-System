@@ -17,7 +17,7 @@ import {
 
 // Get user's devices
 export const GET = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (_req: NextRequest, _context) => {
     try {
       // TODO: Get user's registered devices from database
       const mockDevices = [
@@ -72,7 +72,7 @@ export const POST = professionalSecurityMiddleware.withSecurity(
         case 'trust':
           if (!deviceId && !deviceName) {
             // Trust current device
-            const currentDeviceFingerprint =
+            const _currentDeviceFingerprint =
               req.headers.get('x-device-fingerprint') || 'unknown';
 
             // TODO: Mark current device as trusted in database
@@ -150,7 +150,7 @@ export const POST = professionalSecurityMiddleware.withSecurity(
 
 // Remove a device
 export const DELETE = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (req: NextRequest, _context) => {
     try {
       const url = new URL(req.url);
       const deviceId = url.searchParams.get('deviceId');

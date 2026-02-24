@@ -66,7 +66,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
   TooltipContent,
@@ -87,44 +86,34 @@ import {
   Grid,
   List,
   Calendar,
-  Users,
   Activity,
   TrendingUp,
   Clock,
   ChevronUp,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   Building2,
   User,
   Edit,
   Copy,
-  Archive,
   AlertTriangle,
   CheckCircle,
   XCircle,
   Mail,
-  Share,
   FileDown,
-  Plus,
   Info,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ContractStatusBadge } from '@/components/contracts/contract-status-badge';
 import { useTranslations } from 'next-intl';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import {
   ContractsLoadingState,
   PermissionsLoadingState,
 } from '@/components/contracts/enhanced-loading-state';
-import { EnhancedEmptyState } from '@/components/contracts/enhanced-empty-state';
 
-import { FileTextIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/protected-route';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Enhanced Contract interface
@@ -338,8 +327,7 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
 
 export default function ContractsDashboardPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'en';
-
+  const _locale = (params?.locale as string) || 'en';
   return <ContractsContent />;
 }
 
@@ -352,9 +340,7 @@ function ContractsContent() {
   const searchParams = useSearchParams();
 
   // Add authentication check
-  const { user, loading: authLoading } = useAuth();
-
-  // Get user's preferred currency
+  const { _user, loading: _authLoading } = useAuth(); // Get user's preferred currency
   const { preferredCurrency } = useCurrencyPreference();
 
   // Get pagination params from URL
@@ -426,8 +412,8 @@ function ContractsContent() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   // All hooks must be called before any conditional returns
-  const isMountedRef = useRef(true);
-  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const _isMountedRef = useRef(true);
+  const _refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // ✅ PERFORMANCE: Debounce search input
@@ -473,8 +459,7 @@ function ContractsContent() {
 
     try {
       const enhanced = contracts.map(enhanceContract);
-      const now = new Date();
-
+      const _now = new Date();
       // ✅ Count actual workflow statuses from database
       const pendingCount = enhanced.filter(
         c => getContractStatus(c) === 'pending'
@@ -872,7 +857,7 @@ function ContractsContent() {
       ].join('\n');
 
       // Add BOM for proper UTF-8 encoding in Excel
-      const csvWithBOM = '\uFEFF' + csv;
+      const csvWithBOM = `\uFEFF${csv}`;
 
       const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
@@ -1177,8 +1162,7 @@ function ContractsContent() {
   const canEditContract = permissions.canEditContract();
   const canDeleteContract = permissions.canDeleteContract();
   const canExportContracts = permissions.canExportContracts();
-  const canGenerateContract = permissions.canGenerateContract();
-
+  const _canGenerateContract = permissions.canGenerateContract();
   if (isLoading) {
     return (
       <div className='space-y-6 p-4 md:p-6 loading-fade-in'>

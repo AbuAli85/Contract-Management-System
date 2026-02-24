@@ -14,7 +14,7 @@ export async function PATCH(
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
     const { id } = await params;
-    
+
     const {
       data: { user },
       error: authError,
@@ -35,8 +35,11 @@ export async function PATCH(
     }
 
     // Get the expense
-    const { data: expense, error: fetchError } = await (supabaseAdmin.from('employee_expenses') as any)
-      .select(`
+    const { data: expense, error: fetchError } = await (
+      supabaseAdmin.from('employee_expenses') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           employer_id,
@@ -46,7 +49,8 @@ export async function PATCH(
             full_name
           )
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -67,7 +71,10 @@ export async function PATCH(
 
     if (action === 'approve') {
       if (expense.status !== 'pending') {
-        return NextResponse.json({ error: 'Can only approve pending expenses' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Can only approve pending expenses' },
+          { status: 400 }
+        );
       }
       newStatus = 'approved';
       updateData.status = newStatus;
@@ -76,7 +83,10 @@ export async function PATCH(
       updateData.review_notes = review_notes || null;
     } else if (action === 'reject') {
       if (expense.status !== 'pending') {
-        return NextResponse.json({ error: 'Can only reject pending expenses' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Can only reject pending expenses' },
+          { status: 400 }
+        );
       }
       newStatus = 'rejected';
       updateData.status = newStatus;
@@ -86,7 +96,10 @@ export async function PATCH(
     } else {
       // pay
       if (expense.status !== 'approved') {
-        return NextResponse.json({ error: 'Can only pay approved expenses' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Can only pay approved expenses' },
+          { status: 400 }
+        );
       }
       newStatus = 'paid';
       updateData.status = newStatus;
@@ -95,7 +108,9 @@ export async function PATCH(
     }
 
     // Update the expense
-    const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_expenses') as any)
+    const { data: updated, error: updateError } = await (
+      supabaseAdmin.from('employee_expenses') as any
+    )
       .update(updateData)
       .eq('id', id)
       .select()
@@ -103,7 +118,10 @@ export async function PATCH(
 
     if (updateError) {
       console.error('Error updating expense:', updateError);
-      return NextResponse.json({ error: 'Failed to update expense' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to update expense' },
+        { status: 500 }
+      );
     }
 
     // Get reviewer name for notification
@@ -134,7 +152,9 @@ export async function PATCH(
     });
   } catch (error) {
     console.error('Error in expense PATCH:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

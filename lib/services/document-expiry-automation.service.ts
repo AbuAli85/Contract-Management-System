@@ -1,6 +1,6 @@
 /**
  * Document Expiry Automation Service
- * 
+ *
  * Smart automation for document expiry tracking, alerts, and workflows
  * - Automatic expiry detection
  * - Smart alert scheduling (90, 60, 30, 14, 7 days before)
@@ -9,8 +9,12 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/server';
-import { notificationService, NotificationRecipient, NotificationContent } from './unified-notification.service';
-import { differenceInDays, addDays, format } from 'date-fns';
+import {
+  notificationService,
+  NotificationRecipient,
+  NotificationContent,
+} from './unified-notification.service';
+import { differenceInDays, _addDays, format } from 'date-fns';
 
 export interface DocumentExpiryAlert {
   documentId: string;
@@ -71,7 +75,9 @@ export class DocumentExpiryAutomationService {
   /**
    * Check all documents and generate compliance report
    */
-  async checkAllDocuments(companyId?: string): Promise<DocumentComplianceReport> {
+  async checkAllDocuments(
+    companyId?: string
+  ): Promise<DocumentComplianceReport> {
     const now = new Date();
     const alerts: DocumentExpiryAlert[] = [];
     const missingDocuments: MissingDocumentAlert[] = [];
@@ -79,7 +85,8 @@ export class DocumentExpiryAutomationService {
     // Get all employee documents
     let query = this.supabase
       .from('employee_documents')
-      .select(`
+      .select(
+        `
         id,
         document_type,
         document_name,
@@ -100,7 +107,8 @@ export class DocumentExpiryAutomationService {
             email
           )
         )
-      `)
+      `
+      )
       .eq('status', 'verified')
       .not('expiry_date', 'is', null);
 
@@ -211,9 +219,10 @@ export class DocumentExpiryAutomationService {
     missingDocuments.push(...missingDocs);
 
     const totalDocuments = documents?.length || 0;
-    const complianceRate = totalDocuments > 0 
-      ? ((compliant / totalDocuments) * 100).toFixed(1)
-      : '100.0';
+    const complianceRate =
+      totalDocuments > 0
+        ? ((compliant / totalDocuments) * 100).toFixed(1)
+        : '100.0';
 
     return {
       totalDocuments,
@@ -230,7 +239,9 @@ export class DocumentExpiryAutomationService {
   /**
    * Check for missing required documents
    */
-  async checkMissingDocuments(companyId?: string): Promise<MissingDocumentAlert[]> {
+  async checkMissingDocuments(
+    companyId?: string
+  ): Promise<MissingDocumentAlert[]> {
     const missing: MissingDocumentAlert[] = [];
 
     // Get compliance requirements
@@ -253,7 +264,8 @@ export class DocumentExpiryAutomationService {
     // Get all employees
     let employeesQuery = this.supabase
       .from('employer_employees')
-      .select(`
+      .select(
+        `
         id,
         employee_id,
         employer_id,
@@ -267,7 +279,8 @@ export class DocumentExpiryAutomationService {
           id,
           email
         )
-      `)
+      `
+      )
       .eq('employment_status', 'active');
 
     if (companyId) {
@@ -482,15 +495,16 @@ export class DocumentExpiryAutomationService {
   private async updateLastAlertSent(documentId: string): Promise<void> {
     // Update document_reminders table if it exists
     try {
-      await this.supabase
-        .from('document_reminders')
-        .upsert({
+      await this.supabase.from('document_reminders').upsert(
+        {
           document_id: documentId,
           last_sent_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        }, {
+        },
+        {
           onConflict: 'document_id',
-        });
+        }
+      );
     } catch (error) {
       // Table might not exist, that's okay
       console.warn('Could not update document_reminders:', error);
@@ -517,7 +531,7 @@ export class DocumentExpiryAutomationService {
    */
   private getAlertMessage(alert: DocumentExpiryAlert): string {
     const expiryDate = format(alert.expiryDate, 'MMM dd, yyyy');
-    
+
     if (alert.status === 'expired') {
       return `Your ${alert.documentName} expired on ${expiryDate}. Please renew it immediately to avoid compliance issues.`;
     } else {
@@ -530,13 +544,14 @@ export class DocumentExpiryAutomationService {
    */
   private getAlertEmailHtml(alert: DocumentExpiryAlert): string {
     const expiryDate = format(alert.expiryDate, 'MMM dd, yyyy');
-    const color = alert.status === 'expired' 
-      ? '#dc2626' 
-      : alert.daysUntilExpiry <= 7 
-        ? '#ea580c' 
-        : alert.daysUntilExpiry <= 30 
-          ? '#f59e0b' 
-          : '#3b82f6';
+    const color =
+      alert.status === 'expired'
+        ? '#dc2626'
+        : alert.daysUntilExpiry <= 7
+          ? '#ea580c'
+          : alert.daysUntilExpiry <= 30
+            ? '#f59e0b'
+            : '#3b82f6';
 
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -548,9 +563,11 @@ export class DocumentExpiryAutomationService {
             <strong>Expiry Date:</strong> ${expiryDate}<br>
             <strong>Days Remaining:</strong> ${alert.daysUntilExpiry} ${alert.daysUntilExpiry === 1 ? 'day' : 'days'}
           </p>
-          ${alert.status === 'expired' 
-            ? '<p style="color: #dc2626; font-weight: bold;">⚠️ This document has expired. Immediate action is required.</p>' 
-            : ''}
+          ${
+            alert.status === 'expired'
+              ? '<p style="color: #dc2626; font-weight: bold;">⚠️ This document has expired. Immediate action is required.</p>'
+              : ''
+          }
           <div style="margin-top: 20px;">
             <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/en/hr/documents/${alert.documentId}" 
                style="background-color: ${color}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
@@ -581,4 +598,3 @@ export class DocumentExpiryAutomationService {
 
 // Export singleton instance
 export const documentExpiryAutomation = new DocumentExpiryAutomationService();
-

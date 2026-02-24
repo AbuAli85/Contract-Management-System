@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
     const todayEnd = endOfDay(today).toISOString();
 
     // Get total employees
-    const { data: employees, error: employeesError } = await (supabaseAdmin.from('employer_employees') as any)
+    const { data: employees, error: employeesError } = await (
+      supabaseAdmin.from('employer_employees') as any
+    )
       .select('id')
       .eq('company_id', companyId)
       .eq('employment_status', 'active');
@@ -47,14 +49,18 @@ export async function GET(request: NextRequest) {
     const totalEmployees = employees?.length || 0;
 
     // Get today's attendance
-    const { data: todayAttendance, error: attendanceError } = await (supabaseAdmin.from('employee_attendance') as any)
-      .select(`
+    const { data: todayAttendance, error: attendanceError } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           company_id,
           employment_status
         )
-      `)
+      `
+      )
       .eq('employer_employee.company_id', companyId)
       .eq('employer_employee.employment_status', 'active')
       .gte('attendance_date', todayStart.split('T')[0])
@@ -63,8 +69,12 @@ export async function GET(request: NextRequest) {
     const attendanceRecords = todayAttendance || [];
 
     // Calculate stats
-    const checkedInToday = attendanceRecords.filter((r: any) => r.check_in !== null).length;
-    const lateToday = attendanceRecords.filter((r: any) => r.status === 'late').length;
+    const checkedInToday = attendanceRecords.filter(
+      (r: any) => r.check_in !== null
+    ).length;
+    const lateToday = attendanceRecords.filter(
+      (r: any) => r.status === 'late'
+    ).length;
     const absentToday = totalEmployees - checkedInToday;
     const pendingApprovals = attendanceRecords.filter(
       (r: any) => r.approval_status === 'pending'
@@ -76,8 +86,10 @@ export async function GET(request: NextRequest) {
     );
     const averageHours =
       recordsWithHours.length > 0
-        ? recordsWithHours.reduce((sum: number, r: any) => sum + (r.total_hours || 0), 0) /
-          recordsWithHours.length
+        ? recordsWithHours.reduce(
+            (sum: number, r: any) => sum + (r.total_hours || 0),
+            0
+          ) / recordsWithHours.length
         : 0;
 
     const totalOvertime = attendanceRecords.reduce(
@@ -105,4 +117,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

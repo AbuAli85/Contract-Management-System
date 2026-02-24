@@ -18,7 +18,10 @@ export function generateCorrelationId(): string {
  * Extract correlation ID from headers
  */
 export function extractCorrelationId(
-  headers: Headers | Record<string, string | string[] | undefined> | NextRequest['headers']
+  headers:
+    | Headers
+    | Record<string, string | string[] | undefined>
+    | NextRequest['headers']
 ): string | undefined {
   if (headers instanceof Headers) {
     return (
@@ -27,17 +30,17 @@ export function extractCorrelationId(
       undefined
     );
   }
-  
+
   // Handle Record<string, string>
   if (typeof headers === 'object' && headers !== null) {
-    const correlationId = 
+    const correlationId =
       (headers as any)['x-correlation-id'] ||
       (headers as any)['X-Correlation-ID'] ||
       (headers as any)['x-request-id'];
-    
+
     return typeof correlationId === 'string' ? correlationId : undefined;
   }
-  
+
   return undefined;
 }
 
@@ -77,7 +80,7 @@ export function logWithCorrelation(
 ): void {
   const logMessage = `[${correlationId}] ${message}`;
   const logData = data ? { ...data, correlationId } : { correlationId };
-  
+
   switch (level) {
     case 'error':
       console.error(logMessage, logData);

@@ -1,6 +1,6 @@
 /**
  * Fix Permissions API
- * 
+ *
  * This endpoint allows employers to fix permissions for their employees
  * by ensuring they have the 'promoter' role assigned.
  */
@@ -20,7 +20,7 @@ export { ensurePromoterRole };
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -37,9 +37,10 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    const isEmployer = profile?.role === 'employer' || 
-                       profile?.role === 'admin' || 
-                       profile?.role === 'manager';
+    const isEmployer =
+      profile?.role === 'employer' ||
+      profile?.role === 'admin' ||
+      profile?.role === 'manager';
 
     if (!isEmployer) {
       return NextResponse.json(
@@ -72,10 +73,10 @@ export async function POST(request: NextRequest) {
           await ensurePromoterRole(employee.employee_id);
           results.push({ employeeId: employee.employee_id, success: true });
         } catch (error: any) {
-          results.push({ 
-            employeeId: employee.employee_id, 
-            success: false, 
-            error: error.message 
+          results.push({
+            employeeId: employee.employee_id,
+            success: false,
+            error: error.message,
           });
         }
       }
@@ -123,4 +124,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

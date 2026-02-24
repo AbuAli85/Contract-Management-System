@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -25,7 +19,6 @@ import { useToastHelpers } from '@/components/toast-notifications';
 import {
   Activity,
   Users,
-  Calendar,
   Search,
   Filter,
   Download,
@@ -52,12 +45,11 @@ interface UserActivity {
 
 export default function UserActivityPage() {
   const pathname = usePathname();
-  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
+  const _locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
   const { canManageUsers } = usePermissions();
 
   // Use toast helpers at the top level (React Hooks rule)
-  const { success, error } = useToastHelpers();
-
+  const { _success, error } = useToastHelpers();
   const [activities, setActivities] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredActivities, setFilteredActivities] = useState<UserActivity[]>(

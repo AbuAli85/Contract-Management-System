@@ -9,7 +9,7 @@ export const GET = withAnyRBAC(
     try {
       const supabase = await createClient();
       const { searchParams } = new URL(request.url);
-      
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -34,13 +34,16 @@ export const GET = withAnyRBAC(
       // Build query
       let query = supabase
         .from('work_permit_applications')
-        .select(`
+        .select(
+          `
           *,
           employer:profiles!work_permit_applications_employer_id_fkey(id, email, full_name),
           employee:profiles!work_permit_applications_employee_id_fkey(id, email, full_name),
           employer_party:parties(id, name_en, name_ar),
           promoter:promoters(id, name_en, name_ar, email)
-        `, { count: 'exact' })
+        `,
+          { count: 'exact' }
+        )
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -144,9 +147,18 @@ export const POST = withAnyRBAC(
       } = body;
 
       // Validation
-      if (!employer_id || !employee_id || !application_type || !employee_name_en || !job_title) {
+      if (
+        !employer_id ||
+        !employee_id ||
+        !application_type ||
+        !employee_name_en ||
+        !job_title
+      ) {
         return NextResponse.json(
-          { error: 'Missing required fields: employer_id, employee_id, application_type, employee_name_en, job_title' },
+          {
+            error:
+              'Missing required fields: employer_id, employee_id, application_type, employee_name_en, job_title',
+          },
           { status: 400 }
         );
       }
@@ -186,16 +198,18 @@ export const POST = withAnyRBAC(
       if (error) {
         console.error('Error creating work permit application:', error);
         return NextResponse.json(
-          { error: 'Failed to create work permit application', details: error.message },
+          {
+            error: 'Failed to create work permit application',
+            details: error.message,
+          },
           { status: 500 }
         );
       }
 
       // Create or update compliance record
       if (work_permit_end_date) {
-        await supabase
-          .from('work_permit_compliance')
-          .upsert({
+        await supabase.from('work_permit_compliance').upsert(
+          {
             employer_id,
             employer_party_id: employer_party_id || null,
             employee_id,
@@ -203,16 +217,21 @@ export const POST = withAnyRBAC(
             work_permit_number: null, // Will be updated when approved
             work_permit_expiry_date: work_permit_end_date,
             compliance_status: 'pending_renewal',
-          }, {
+          },
+          {
             onConflict: 'employer_id,employee_id',
-          });
+          }
+        );
       }
 
-      return NextResponse.json({
-        success: true,
-        application,
-        message: 'Work permit application created successfully',
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          success: true,
+          application,
+          message: 'Work permit application created successfully',
+        },
+        { status: 201 }
+      );
     } catch (error: any) {
       console.error('Error in POST /api/work-permits:', error);
       return NextResponse.json(
@@ -222,4 +241,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

@@ -22,7 +22,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -39,32 +38,19 @@ import {
   Shield,
   Users,
   Eye,
-  Settings,
   Plus,
   Edit,
   Trash2,
-  Copy,
-  Save,
   RefreshCw,
   Lock,
-  Unlock,
-  UserCheck,
-  UserX,
   AlertTriangle,
-  CheckCircle,
-  XCircle,
   Loader2,
   Search,
   Filter,
   Download,
-  Upload,
-  MoreHorizontal,
-  ChevronDown,
-  ChevronUp,
   Crown,
   Briefcase,
   User,
-  Monitor,
 } from 'lucide-react';
 
 interface Role {
@@ -99,12 +85,11 @@ interface User {
 
 export default function RolesAndPermissionsPage() {
   const pathname = usePathname();
-  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
+  const _locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
   const { canManageUsers, canAssignRoles } = usePermissions();
 
   // Use toast helpers at the top level (React Hooks rule)
-  const { success, error, warning } = useToastHelpers();
-
+  const { success, error, _warning } = useToastHelpers();
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [users, setUsers] = useState<User[]>([]);

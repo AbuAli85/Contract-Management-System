@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
     // Fetch employee data
     const { data: employees, error: employeesError } = await supabase
       .from('employer_employees')
-      .select(`
+      .select(
+        `
         id,
         employee_code,
         job_title,
@@ -58,7 +59,8 @@ export async function GET(request: NextRequest) {
           last_name,
           phone
         )
-      `)
+      `
+      )
       .in('id', employeeIds)
       .eq('employer_id', user.id);
 
@@ -103,7 +105,9 @@ export async function GET(request: NextRequest) {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map((row: any[]) => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+        ...rows.map((row: any[]) =>
+          row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+        ),
       ].join('\n');
 
       return new NextResponse(csvContent, {
@@ -149,12 +153,15 @@ export async function GET(request: NextRequest) {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map((row: any[]) => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+        ...rows.map((row: any[]) =>
+          row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+        ),
       ].join('\n');
 
       return new NextResponse(csvContent, {
         headers: {
-          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type':
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="team-export-${new Date().toISOString().split('T')[0]}.xlsx"`,
         },
       });
@@ -167,7 +174,9 @@ export async function GET(request: NextRequest) {
 Generated: ${new Date().toLocaleString()}
 Total Employees: ${employees.length}
 
-${employees.map((emp: any, index: number) => `
+${employees
+  .map(
+    (emp: any, index: number) => `
 ${index + 1}. ${emp.employee?.full_name || 'N/A'}
    Code: ${emp.employee_code || 'N/A'}
    Email: ${emp.employee?.email || 'N/A'}
@@ -175,7 +184,9 @@ ${index + 1}. ${emp.employee?.full_name || 'N/A'}
    Job Title: ${emp.job_title || 'N/A'}
    Department: ${emp.department || 'N/A'}
    Status: ${emp.employment_status || 'N/A'}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 `;
 
       return new NextResponse(pdfContent, {
@@ -198,4 +209,3 @@ ${index + 1}. ${emp.employee?.full_name || 'N/A'}
     );
   }
 }
-

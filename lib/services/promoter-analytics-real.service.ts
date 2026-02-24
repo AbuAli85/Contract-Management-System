@@ -90,11 +90,11 @@ export interface AnalyticsResult<T> {
  * Get date thresholds for expiry calculations
  */
 function getDateThresholds() {
-  const now = new Date();
-  const thirtyDaysFromNow = new Date(now);
+  const _now = new Date();
+  const _thirtyDaysFromNow = new Date(now);
   thirtyDaysFromNow.setDate(now.getDate() + 30);
 
-  const ninetyDaysFromNow = new Date(now);
+  const _ninetyDaysFromNow = new Date(now);
   ninetyDaysFromNow.setDate(now.getDate() + 90);
 
   return {
@@ -290,7 +290,11 @@ export async function getDocumentExpiryStats(
         error: 'Failed to initialize client',
       };
     }
-    const { now, thirtyDaysFromNow, ninetyDaysFromNow } = getDateThresholds();
+    const {
+      now: _now,
+      thirtyDaysFromNow: _thirtyDaysFromNow,
+      ninetyDaysFromNow: _ninetyDaysFromNow,
+    } = getDateThresholds();
 
     // Build query with filters
     let query = supabase

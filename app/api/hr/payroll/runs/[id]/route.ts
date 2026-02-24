@@ -36,7 +36,8 @@ export async function GET(
     // Get payroll entries
     const { data: entries, error: entriesError } = await supabase
       .from('payroll_entries')
-      .select(`
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           id,
@@ -48,7 +49,8 @@ export async function GET(
             email
           )
         )
-      `)
+      `
+      )
       .eq('payroll_run_id', id)
       .order('created_at', { ascending: false });
 
@@ -134,7 +136,8 @@ export async function PATCH(
         updateData.approved_at = new Date().toISOString();
       }
       if (status === 'paid') {
-        updateData.payment_date = payment_date || new Date().toISOString().split('T')[0];
+        updateData.payment_date =
+          payment_date || new Date().toISOString().split('T')[0];
       }
     }
 
@@ -142,7 +145,9 @@ export async function PATCH(
       updateData.notes = notes;
     }
 
-    const { data: updated, error: updateError } = await (supabaseAdmin.from('payroll_runs') as any)
+    const { data: updated, error: updateError } = await (
+      supabaseAdmin.from('payroll_runs') as any
+    )
       .update(updateData)
       .eq('id', id)
       .select()
@@ -169,4 +174,3 @@ export async function PATCH(
     );
   }
 }
-

@@ -42,8 +42,7 @@ async function generateContractPDF(
   contractNumber: string
 ): Promise<Buffer> {
   // Create HTML content for the contract
-  const htmlContent = `
-    <!DOCTYPE html>
+  const _htmlContent = `    <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">

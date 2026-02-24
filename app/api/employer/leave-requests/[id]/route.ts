@@ -13,7 +13,7 @@ export async function PATCH(
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
     const { id } = await params;
-    
+
     const {
       data: { user },
       error: authError,
@@ -34,19 +34,26 @@ export async function PATCH(
     }
 
     // Get the leave request
-    const { data: leaveRequest, error: fetchError } = await (supabaseAdmin.from('employee_leave_requests') as any)
-      .select(`
+    const { data: leaveRequest, error: fetchError } = await (
+      supabaseAdmin.from('employee_leave_requests') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           employer_id,
           employee_id
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
     if (fetchError || !leaveRequest) {
-      return NextResponse.json({ error: 'Leave request not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Leave request not found' },
+        { status: 404 }
+      );
     }
 
     // Verify the user is the employer
@@ -66,7 +73,9 @@ export async function PATCH(
     const now = new Date().toISOString();
 
     // Update the leave request
-    const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_leave_requests') as any)
+    const { data: updated, error: updateError } = await (
+      supabaseAdmin.from('employee_leave_requests') as any
+    )
       .update({
         status: newStatus,
         reviewed_by: user.id,
@@ -88,24 +97,28 @@ export async function PATCH(
 
     // Update leave balance
     const year = new Date(leaveRequest.start_date).getFullYear();
-    
+
     if (action === 'approve') {
       // Move from pending to used
-      await (supabaseAdmin.from('employee_leave_balances') as any)
-        .upsert({
+      await (supabaseAdmin.from('employee_leave_balances') as any).upsert(
+        {
           employer_employee_id: leaveRequest.employer_employee_id,
           leave_type: leaveRequest.leave_type,
           year,
           total_days: 21,
           used_days: leaveRequest.total_days,
           pending_days: 0,
-        }, { 
+        },
+        {
           onConflict: 'employer_employee_id,leave_type,year',
-          ignoreDuplicates: false 
-        });
+          ignoreDuplicates: false,
+        }
+      );
     } else {
       // Remove from pending
-      const { data: balance } = await (supabaseAdmin.from('employee_leave_balances') as any)
+      const { data: balance } = await (
+        supabaseAdmin.from('employee_leave_balances') as any
+      )
         .select('pending_days')
         .eq('employer_employee_id', leaveRequest.employer_employee_id)
         .eq('leave_type', leaveRequest.leave_type)
@@ -115,7 +128,10 @@ export async function PATCH(
       if (balance) {
         await (supabaseAdmin.from('employee_leave_balances') as any)
           .update({
-            pending_days: Math.max(0, (balance.pending_days || 0) - leaveRequest.total_days),
+            pending_days: Math.max(
+              0,
+              (balance.pending_days || 0) - leaveRequest.total_days
+            ),
             updated_at: now,
           })
           .eq('employer_employee_id', leaveRequest.employer_employee_id)
@@ -131,7 +147,9 @@ export async function PATCH(
     });
   } catch (error) {
     console.error('Error in leave request PATCH:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

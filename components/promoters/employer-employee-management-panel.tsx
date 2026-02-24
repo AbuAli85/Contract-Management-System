@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,8 +80,12 @@ export function EmployerEmployeeManagementPanel({
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [newStatus, setNewStatus] = useState(currentStatus);
 
-  const activeContracts = contracts.filter((c: any) => c.status === 'active').length;
-  const completedContracts = contracts.filter((c: any) => c.status === 'completed').length;
+  const activeContracts = contracts.filter(
+    (c: any) => c.status === 'active'
+  ).length;
+  const completedContracts = contracts.filter(
+    (c: any) => c.status === 'completed'
+  ).length;
 
   const handleSaveNote = async () => {
     if (!note.trim()) return;
@@ -193,93 +203,102 @@ export function EmployerEmployeeManagementPanel({
   };
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Quick Status Updates */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <UserCheck className="h-5 w-5" />
+          <CardTitle className='text-base flex items-center gap-2'>
+            <UserCheck className='h-5 w-5' />
             Quick Status Update
           </CardTitle>
           <CardDescription>Change employee status quickly</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+        <CardContent className='space-y-2'>
+          <div className='grid grid-cols-2 gap-2'>
             <Button
               variant={currentStatus === 'active' ? 'default' : 'outline'}
-              size="sm"
+              size='sm'
               onClick={() => handleStatusUpdate('active')}
               disabled={currentStatus === 'active'}
             >
-              <CheckCircle className="mr-1 h-3 w-3" />
+              <CheckCircle className='mr-1 h-3 w-3' />
               Active
             </Button>
             <Button
               variant={currentStatus === 'on_leave' ? 'default' : 'outline'}
-              size="sm"
+              size='sm'
               onClick={() => handleStatusUpdate('on_leave')}
               disabled={currentStatus === 'on_leave'}
             >
-              <CalendarIcon className="mr-1 h-3 w-3" />
+              <CalendarIcon className='mr-1 h-3 w-3' />
               On Leave
             </Button>
             <Button
               variant={currentStatus === 'inactive' ? 'default' : 'outline'}
-              size="sm"
+              size='sm'
               onClick={() => handleStatusUpdate('inactive')}
               disabled={currentStatus === 'inactive'}
             >
-              <Clock className="mr-1 h-3 w-3" />
+              <Clock className='mr-1 h-3 w-3' />
               Inactive
             </Button>
             <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
               <DialogTrigger asChild>
                 <Button
-                  variant={currentStatus === 'terminated' ? 'destructive' : 'outline'}
-                  size="sm"
-                  className={currentStatus === 'terminated' ? '' : 'border-red-300 text-red-600 hover:bg-red-50'}
+                  variant={
+                    currentStatus === 'terminated' ? 'destructive' : 'outline'
+                  }
+                  size='sm'
+                  className={
+                    currentStatus === 'terminated'
+                      ? ''
+                      : 'border-red-300 text-red-600 hover:bg-red-50'
+                  }
                 >
-                  <UserX className="mr-1 h-3 w-3" />
+                  <UserX className='mr-1 h-3 w-3' />
                   Terminate
                 </Button>
               </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Update Employee Status</DialogTitle>
-                <DialogDescription>
-                  Change the employment status for {promoterName}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="on_leave">On Leave</SelectItem>
-                    <SelectItem value="terminated">Terminated</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="flex gap-2">
-                  <Button onClick={() => {
-                    handleStatusUpdate();
-                  }} className="flex-1">
-                    Update Status
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowStatusDialog(false)}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Update Employee Status</DialogTitle>
+                  <DialogDescription>
+                    Change the employment status for {promoterName}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className='space-y-4 py-4'>
+                  <Select value={newStatus} onValueChange={setNewStatus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select status' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='active'>Active</SelectItem>
+                      <SelectItem value='inactive'>Inactive</SelectItem>
+                      <SelectItem value='on_leave'>On Leave</SelectItem>
+                      <SelectItem value='terminated'>Terminated</SelectItem>
+                      <SelectItem value='suspended'>Suspended</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className='flex gap-2'>
+                    <Button
+                      onClick={() => {
+                        handleStatusUpdate();
+                      }}
+                      className='flex-1'
+                    >
+                      Update Status
+                    </Button>
+                    <Button
+                      variant='outline'
+                      onClick={() => setShowStatusDialog(false)}
+                      className='flex-1'
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
@@ -287,40 +306,44 @@ export function EmployerEmployeeManagementPanel({
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
+          <CardTitle className='text-base flex items-center gap-2'>
+            <Briefcase className='h-5 w-5' />
             Quick Actions
           </CardTitle>
           <CardDescription>Manage this employee quickly</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className='space-y-2'>
           <Button
-            variant="default"
-            size="sm"
-            className="w-full justify-start"
-            onClick={() => router.push(`/${locale}/generate-contract?promoter=${promoterId}`)}
+            variant='default'
+            size='sm'
+            className='w-full justify-start'
+            onClick={() =>
+              router.push(`/${locale}/generate-contract?promoter=${promoterId}`)
+            }
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className='mr-2 h-4 w-4' />
             Assign New Contract
           </Button>
 
           <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start"
-            onClick={() => router.push(`/${locale}/employer/team/${promoterId}/tasks`)}
+            variant='outline'
+            size='sm'
+            className='w-full justify-start'
+            onClick={() =>
+              router.push(`/${locale}/employer/team/${promoterId}/tasks`)
+            }
           >
-            <Target className="mr-2 h-4 w-4" />
+            <Target className='mr-2 h-4 w-4' />
             Assign Task
           </Button>
 
           <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start"
+            variant='outline'
+            size='sm'
+            className='w-full justify-start'
             onClick={handleExportReport}
           >
-            <Download className="mr-2 h-4 w-4" />
+            <Download className='mr-2 h-4 w-4' />
             Export Report
           </Button>
         </CardContent>
@@ -329,33 +352,33 @@ export function EmployerEmployeeManagementPanel({
       {/* Internal Notes */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
+          <CardTitle className='text-base flex items-center gap-2'>
+            <MessageSquare className='h-5 w-5' />
             Internal Notes
           </CardTitle>
           <CardDescription>Private notes about this employee</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className='space-y-3'>
           <Textarea
-            placeholder="Add a note about this employee..."
+            placeholder='Add a note about this employee...'
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={e => setNote(e.target.value)}
             rows={3}
           />
           <Button
-            size="sm"
+            size='sm'
             onClick={handleSaveNote}
             disabled={!note.trim() || isSavingNote}
-            className="w-full"
+            className='w-full'
           >
-            <Send className="mr-2 h-4 w-4" />
+            <Send className='mr-2 h-4 w-4' />
             {isSavingNote ? 'Saving...' : 'Save Note'}
           </Button>
-          
+
           {/* Recent Notes List */}
-          <div className="space-y-2 pt-2 border-t">
-            <p className="text-xs text-muted-foreground">Recent Notes</p>
-            <div className="text-sm text-muted-foreground">
+          <div className='space-y-2 pt-2 border-t'>
+            <p className='text-xs text-muted-foreground'>Recent Notes</p>
+            <div className='text-sm text-muted-foreground'>
               No notes yet. Add your first note above.
             </div>
           </div>
@@ -365,34 +388,40 @@ export function EmployerEmployeeManagementPanel({
       {/* Performance Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
+          <CardTitle className='text-base flex items-center gap-2'>
+            <BarChart3 className='h-5 w-5' />
             Performance Summary
           </CardTitle>
           <CardDescription>Quick performance overview</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{activeContracts}</div>
-              <div className="text-xs text-muted-foreground">Active Contracts</div>
+        <CardContent className='space-y-3'>
+          <div className='grid grid-cols-2 gap-3'>
+            <div className='text-center p-3 bg-blue-50 rounded-lg'>
+              <div className='text-2xl font-bold text-blue-600'>
+                {activeContracts}
+              </div>
+              <div className='text-xs text-muted-foreground'>
+                Active Contracts
+              </div>
             </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{completedContracts}</div>
-              <div className="text-xs text-muted-foreground">Completed</div>
+            <div className='text-center p-3 bg-green-50 rounded-lg'>
+              <div className='text-2xl font-bold text-green-600'>
+                {completedContracts}
+              </div>
+              <div className='text-xs text-muted-foreground'>Completed</div>
             </div>
           </div>
-          
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Status</span>
+
+          <div className='pt-2 border-t'>
+            <div className='flex items-center justify-between text-sm'>
+              <span className='text-muted-foreground'>Status</span>
               <Badge
                 variant={
                   currentStatus === 'active'
                     ? 'default'
                     : currentStatus === 'on_leave'
-                    ? 'secondary'
-                    : 'destructive'
+                      ? 'secondary'
+                      : 'destructive'
                 }
               >
                 {currentStatus}
@@ -405,22 +434,22 @@ export function EmployerEmployeeManagementPanel({
       {/* Compliance Alerts */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
+          <CardTitle className='text-base flex items-center gap-2'>
+            <AlertTriangle className='h-5 w-5' />
             Compliance Status
           </CardTitle>
           <CardDescription>Document and compliance alerts</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-2 bg-green-50 rounded">
-              <span className="text-sm">Documents</span>
-              <Badge variant="outline" className="bg-green-100">
-                <CheckCircle className="h-3 w-3 mr-1" />
+          <div className='space-y-2'>
+            <div className='flex items-center justify-between p-2 bg-green-50 rounded'>
+              <span className='text-sm'>Documents</span>
+              <Badge variant='outline' className='bg-green-100'>
+                <CheckCircle className='h-3 w-3 mr-1' />
                 Compliant
               </Badge>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className='text-xs text-muted-foreground'>
               All required documents are up to date
             </div>
           </div>
@@ -429,4 +458,3 @@ export function EmployerEmployeeManagementPanel({
     </div>
   );
 }
-

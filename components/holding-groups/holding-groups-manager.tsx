@@ -201,7 +201,7 @@ export function HoldingGroupsManager() {
   }
 
   function toggleGroupExpansion(groupId: string) {
-    setExpandedGroups((prev) => {
+    setExpandedGroups(prev => {
       const newSet = new Set(prev);
       if (newSet.has(groupId)) {
         newSet.delete(groupId);
@@ -214,23 +214,23 @@ export function HoldingGroupsManager() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className='flex items-center justify-center p-8'>
+        <Loader2 className='h-8 w-8 animate-spin' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Holding Groups</h1>
-          <p className="text-muted-foreground">
+          <h1 className='text-3xl font-bold'>Holding Groups</h1>
+          <p className='text-muted-foreground'>
             Manage holding groups and their member companies
           </p>
         </div>
         <Button onClick={handleAddNew}>
-          <PlusIcon className="mr-2 h-4 w-4" />
+          <PlusIcon className='mr-2 h-4 w-4' />
           Add Holding Group
         </Button>
       </div>
@@ -244,7 +244,7 @@ export function HoldingGroupsManager() {
         </CardHeader>
         <CardContent>
           {holdingGroups.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className='text-center py-8 text-muted-foreground'>
               No holding groups found. Create one to get started.
             </div>
           ) : (
@@ -255,36 +255,36 @@ export function HoldingGroupsManager() {
                   <TableHead>Name (AR)</TableHead>
                   <TableHead>Members</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {holdingGroups.map((group) => {
+                {holdingGroups.map(group => {
                   const isExpanded = expandedGroups.has(group.id);
                   return (
                     <React.Fragment key={group.id}>
                       <TableRow>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
+                        <TableCell className='font-medium'>
+                          <div className='flex items-center gap-2'>
                             <span>{group.name_en}</span>
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant='ghost'
+                              size='sm'
                               onClick={() => toggleGroupExpansion(group.id)}
-                              className="h-6 w-6 p-0"
+                              className='h-6 w-6 p-0'
                             >
                               {isExpanded ? (
-                                <ChevronUpIcon className="h-4 w-4" />
+                                <ChevronUpIcon className='h-4 w-4' />
                               ) : (
-                                <ChevronDownIcon className="h-4 w-4" />
+                                <ChevronDownIcon className='h-4 w-4' />
                               )}
                             </Button>
                           </div>
                         </TableCell>
                         <TableCell>{group.name_ar || '-'}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <BuildingIcon className="h-4 w-4" />
+                          <div className='flex items-center gap-2'>
+                            <BuildingIcon className='h-4 w-4' />
                             <span>{group.members?.length || 0} companies</span>
                           </div>
                         </TableCell>
@@ -299,39 +299,41 @@ export function HoldingGroupsManager() {
                             {group.is_active ? 'Active' : 'Inactive'}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                        <TableCell className='text-right'>
+                          <div className='flex justify-end gap-2'>
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant='ghost'
+                              size='sm'
                               onClick={() => toggleGroupExpansion(group.id)}
-                              title="Manage Members"
+                              title='Manage Members'
                             >
-                              <UsersIcon className="h-4 w-4" />
+                              <UsersIcon className='h-4 w-4' />
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant='ghost'
+                              size='sm'
                               onClick={() => handleEdit(group)}
-                              title="Edit"
+                              title='Edit'
                             >
-                              <EditIcon className="h-4 w-4" />
+                              <EditIcon className='h-4 w-4' />
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(group.id, group.name_en)}
-                              title="Delete"
+                              variant='ghost'
+                              size='sm'
+                              onClick={() =>
+                                handleDelete(group.id, group.name_en)
+                              }
+                              title='Delete'
                             >
-                              <TrashIcon className="h-4 w-4 text-destructive" />
+                              <TrashIcon className='h-4 w-4 text-destructive' />
                             </Button>
                           </div>
                         </TableCell>
                       </TableRow>
                       {isExpanded && (
                         <TableRow>
-                          <TableCell colSpan={5} className="bg-muted/30 p-0">
-                            <div className="p-4">
+                          <TableCell colSpan={5} className='bg-muted/30 p-0'>
+                            <div className='p-4'>
                               <HoldingGroupMembersManager
                                 holdingGroupId={group.id}
                                 holdingGroupName={group.name_en}
@@ -351,7 +353,7 @@ export function HoldingGroupsManager() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className='max-w-2xl'>
           <DialogHeader>
             <DialogTitle>
               {editingGroup ? 'Edit Holding Group' : 'Create Holding Group'}
@@ -362,55 +364,55 @@ export function HoldingGroupsManager() {
                 : 'Create a new holding group to manage multiple companies'}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name_en">Name (English) *</Label>
+          <form onSubmit={handleSubmit} className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='name_en'>Name (English) *</Label>
               <Input
-                id="name_en"
+                id='name_en'
                 value={formData.name_en}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, name_en: e.target.value })
                 }
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="name_ar">Name (Arabic)</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='name_ar'>Name (Arabic)</Label>
               <Input
-                id="name_ar"
+                id='name_ar'
                 value={formData.name_ar}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, name_ar: e.target.value })
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='description'>Description</Label>
               <Textarea
-                id="description"
+                id='description'
                 value={formData.description}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, description: e.target.value })
                 }
                 rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="logo_url">Logo URL</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='logo_url'>Logo URL</Label>
               <Input
-                id="logo_url"
-                type="url"
+                id='logo_url'
+                type='url'
                 value={formData.logo_url}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, logo_url: e.target.value })
                 }
-                placeholder="https://example.com/logo.png"
+                placeholder='https://example.com/logo.png'
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <div className='flex justify-end gap-2'>
               <Button
-                type="button"
-                variant="outline"
+                type='button'
+                variant='outline'
                 onClick={() => {
                   setIsDialogOpen(false);
                   resetForm();
@@ -418,7 +420,7 @@ export function HoldingGroupsManager() {
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type='submit'>
                 {editingGroup ? 'Update' : 'Create'}
               </Button>
             </div>
@@ -428,4 +430,3 @@ export function HoldingGroupsManager() {
     </div>
   );
 }
-

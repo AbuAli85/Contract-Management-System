@@ -19,12 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  MoreVertical, 
-  User, 
-  Users, 
-  ChevronRight, 
-  Mail, 
+import {
+  MoreVertical,
+  User,
+  Users,
+  ChevronRight,
+  Mail,
   Briefcase,
   Building2,
   UserPlus,
@@ -82,14 +82,20 @@ export function TeamMemberList({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
 
-  const handleResetPassword = async (e: React.MouseEvent, member: TeamMember) => {
+  const handleResetPassword = async (
+    e: React.MouseEvent,
+    member: TeamMember
+  ) => {
     e.stopPropagation();
     setResettingId(member.id);
 
     try {
-      const response = await fetch(`/api/employer/team/${member.id}/reset-password`, {
-        method: 'POST',
-      });
+      const response = await fetch(
+        `/api/employer/team/${member.id}/reset-password`,
+        {
+          method: 'POST',
+        }
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -132,13 +138,21 @@ export function TeamMemberList({
   };
 
   const shareViaWhatsApp = () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(getCredentialsText())}`, '_blank');
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(getCredentialsText())}`,
+      '_blank'
+    );
   };
 
   const shareViaEmail = () => {
     if (!credentials) return;
-    const subject = encodeURIComponent('Your Login Credentials - SmartPro Portal');
-    window.open(`mailto:${credentials.email}?subject=${subject}&body=${encodeURIComponent(getCredentialsText())}`, '_blank');
+    const subject = encodeURIComponent(
+      'Your Login Credentials - SmartPro Portal'
+    );
+    window.open(
+      `mailto:${credentials.email}?subject=${subject}&body=${encodeURIComponent(getCredentialsText())}`,
+      '_blank'
+    );
   };
 
   const getStatusConfig = (status: string) => {
@@ -148,28 +162,28 @@ export function TeamMemberList({
           bg: 'bg-emerald-50 dark:bg-emerald-900/20',
           text: 'text-emerald-700 dark:text-emerald-400',
           dot: 'bg-emerald-500',
-          label: 'Active'
+          label: 'Active',
         };
       case 'on_leave':
         return {
           bg: 'bg-amber-50 dark:bg-amber-900/20',
           text: 'text-amber-700 dark:text-amber-400',
           dot: 'bg-amber-500',
-          label: 'On Leave'
+          label: 'On Leave',
         };
       case 'terminated':
         return {
           bg: 'bg-red-50 dark:bg-red-900/20',
           text: 'text-red-700 dark:text-red-400',
           dot: 'bg-red-500',
-          label: 'Terminated'
+          label: 'Terminated',
         };
       default:
         return {
           bg: 'bg-gray-50 dark:bg-gray-800',
           text: 'text-gray-700 dark:text-gray-400',
           dot: 'bg-gray-500',
-          label: status
+          label: status,
         };
     }
   };
@@ -185,19 +199,20 @@ export function TeamMemberList({
 
   if (members.length === 0) {
     return (
-      <Card className="border-dashed border-2">
-        <CardContent className="py-16 text-center">
-          <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center mb-4">
-            <Users className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+      <Card className='border-dashed border-2'>
+        <CardContent className='py-16 text-center'>
+          <div className='mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center mb-4'>
+            <Users className='h-10 w-10 text-blue-600 dark:text-blue-400' />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-2'>
             No team members yet
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
-            Start building your team by adding your first member. You can assign tasks, set targets, and manage permissions.
+          <p className='text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6'>
+            Start building your team by adding your first member. You can assign
+            tasks, set targets, and manage permissions.
           </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-            <Sparkles className="h-4 w-4" />
+          <div className='flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400'>
+            <Sparkles className='h-4 w-4' />
             <span>Click "Add Team Member" above to get started</span>
           </div>
         </CardContent>
@@ -206,182 +221,207 @@ export function TeamMemberList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className='space-y-3'>
       {members.map((member, index) => {
         const statusConfig = getStatusConfig(member.employment_status);
         const employeeName = member.employee?.full_name || 'Unknown Employee';
         const employeeEmail = member.employee?.email || 'No email';
-        
+
         return (
-        <Card
-          key={member.id}
+          <Card
+            key={member.id}
             className={cn(
-              "cursor-pointer border transition-all duration-200",
-              "hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800",
-              "hover:translate-x-1 group"
+              'cursor-pointer border transition-all duration-200',
+              'hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800',
+              'hover:translate-x-1 group'
             )}
-          onClick={() => onMemberSelect(member)}
-        >
-          <CardContent className="p-4">
-              <div className="flex items-center gap-4">
+            onClick={() => onMemberSelect(member)}
+          >
+            <CardContent className='p-4'>
+              <div className='flex items-center gap-4'>
                 {/* Avatar with Status Indicator */}
-                <div className="relative">
-                  <Avatar className="h-12 w-12 border-2 border-white dark:border-gray-800 shadow-md">
+                <div className='relative'>
+                  <Avatar className='h-12 w-12 border-2 border-white dark:border-gray-800 shadow-md'>
                     <AvatarImage src={member.employee?.avatar_url} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold">
+                    <AvatarFallback className='bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold'>
                       {getInitials(employeeName)}
                     </AvatarFallback>
                   </Avatar>
-                  <span 
+                  <span
                     className={cn(
-                      "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-gray-800",
+                      'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-gray-800',
                       statusConfig.dot
-                    )} 
+                    )}
                   />
                 </div>
 
                 {/* Employee Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                <div className='flex-1 min-w-0'>
+                  <div className='flex items-center gap-2'>
+                    <h3 className='font-semibold text-gray-900 dark:text-white truncate'>
                       {employeeName}
                     </h3>
                     {member.employee_code && (
-                      <span className="text-xs font-mono text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                      <span className='text-xs font-mono text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded'>
                         #{member.employee_code}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 mt-1">
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 truncate">
-                      <Mail className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="truncate">{employeeEmail}</span>
+                  <div className='flex items-center gap-4 mt-1'>
+                    <div className='flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 truncate'>
+                      <Mail className='h-3.5 w-3.5 flex-shrink-0' />
+                      <span className='truncate'>{employeeEmail}</span>
                     </div>
-                  {member.job_title && (
-                      <div className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                        <Briefcase className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span className="truncate">{member.job_title}</span>
+                    {member.job_title && (
+                      <div className='hidden sm:flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400'>
+                        <Briefcase className='h-3.5 w-3.5 flex-shrink-0' />
+                        <span className='truncate'>{member.job_title}</span>
                       </div>
-                  )}
+                    )}
                     {member.department && (
-                      <div className="hidden md:flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                        <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span className="truncate">{member.department}</span>
+                      <div className='hidden md:flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400'>
+                        <Building2 className='h-3.5 w-3.5 flex-shrink-0' />
+                        <span className='truncate'>{member.department}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Status Badge & Actions */}
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant="outline"
+                <div className='flex items-center gap-2'>
+                  <Badge
+                    variant='outline'
                     className={cn(
-                      "font-medium border-0 px-3 py-1",
+                      'font-medium border-0 px-3 py-1',
                       statusConfig.bg,
                       statusConfig.text
                     )}
                   >
-                    <span className={cn("h-1.5 w-1.5 rounded-full mr-2", statusConfig.dot)} />
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full mr-2',
+                        statusConfig.dot
+                      )}
+                    />
                     {statusConfig.label}
                   </Badge>
-                  
+
                   {/* Actions Dropdown */}
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
+                    <DropdownMenuTrigger
+                      asChild
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <Button variant='ghost' size='icon' className='h-8 w-8'>
+                        <MoreVertical className='h-4 w-4' />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => { e?.stopPropagation(); onMemberSelect(member); }}>
-                        <User className="h-4 w-4 mr-2" />
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        onClick={e => {
+                          e?.stopPropagation();
+                          onMemberSelect(member);
+                        }}
+                      >
+                        <User className='h-4 w-4 mr-2' />
                         View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => { 
-                        e?.stopPropagation(); 
-                        setEditingMember(member);
-                        setShowEditDialog(true);
-                      }}>
-                        <Edit className="h-4 w-4 mr-2" />
+                      <DropdownMenuItem
+                        onClick={e => {
+                          e?.stopPropagation();
+                          setEditingMember(member);
+                          setShowEditDialog(true);
+                        }}
+                      >
+                        <Edit className='h-4 w-4 mr-2' />
                         Edit Employee
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={(e) => handleResetPassword(e as React.MouseEvent, member)}
+                      <DropdownMenuItem
+                        onClick={e =>
+                          handleResetPassword(e as React.MouseEvent, member)
+                        }
                         disabled={resettingId === member.id}
                       >
                         {resettingId === member.id ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                         ) : (
-                          <Key className="h-4 w-4 mr-2" />
+                          <Key className='h-4 w-4 mr-2' />
                         )}
                         Reset Password
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  <ChevronRight className="h-5 w-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
+                  <ChevronRight className='h-5 w-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors' />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         );
       })}
 
       {/* Password Reset Credentials Dialog */}
       <Dialog open={showCredentials} onOpenChange={setShowCredentials}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5 text-emerald-600" />
+            <DialogTitle className='flex items-center gap-2'>
+              <Key className='h-5 w-5 text-emerald-600' />
               Password Reset Successful
             </DialogTitle>
             <DialogDescription>
               Share these new credentials with {credentials?.employee_name}
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Email:</span>
-                <span className="font-mono font-medium">{credentials?.email}</span>
+
+          <div className='space-y-4 py-4'>
+            <div className='space-y-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border'>
+              <div className='flex items-center justify-between'>
+                <span className='text-sm text-gray-500'>Email:</span>
+                <span className='font-mono font-medium'>
+                  {credentials?.email}
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">New Password:</span>
-                <span className="font-mono font-medium text-emerald-600">{credentials?.temporary_password}</span>
+              <div className='flex items-center justify-between'>
+                <span className='text-sm text-gray-500'>New Password:</span>
+                <span className='font-mono font-medium text-emerald-600'>
+                  {credentials?.temporary_password}
+                </span>
               </div>
             </div>
 
-            <p className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+            <p className='text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg'>
               ⚠️ Employee must change password on first login
             </p>
 
-            <div className="grid grid-cols-3 gap-2">
-              <Button 
+            <div className='grid grid-cols-3 gap-2'>
+              <Button
                 onClick={shareViaWhatsApp}
-                variant="outline"
-                className="flex-col h-auto py-3"
+                variant='outline'
+                className='flex-col h-auto py-3'
               >
-                <MessageCircle className="h-5 w-5 mb-1" />
-                <span className="text-xs">WhatsApp</span>
+                <MessageCircle className='h-5 w-5 mb-1' />
+                <span className='text-xs'>WhatsApp</span>
               </Button>
-              <Button 
+              <Button
                 onClick={shareViaEmail}
-                variant="outline"
-                className="flex-col h-auto py-3"
+                variant='outline'
+                className='flex-col h-auto py-3'
               >
-                <Send className="h-5 w-5 mb-1" />
-                <span className="text-xs">Email</span>
+                <Send className='h-5 w-5 mb-1' />
+                <span className='text-xs'>Email</span>
               </Button>
-              <Button 
+              <Button
                 onClick={copyCredentials}
-                variant="outline"
+                variant='outline'
                 className={`flex-col h-auto py-3 ${copied ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : ''}`}
               >
-                {copied ? <CheckCircle2 className="h-5 w-5 mb-1" /> : <Copy className="h-5 w-5 mb-1" />}
-                <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+                {copied ? (
+                  <CheckCircle2 className='h-5 w-5 mb-1' />
+                ) : (
+                  <Copy className='h-5 w-5 mb-1' />
+                )}
+                <span className='text-xs'>{copied ? 'Copied!' : 'Copy'}</span>
               </Button>
             </div>
           </div>

@@ -25,15 +25,20 @@ async function getTargetsHandler(
 
     // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
     try {
-      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(
+        id,
+        user.id
+      );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
       console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record',
-          input_id: id
+          details:
+            error.message ||
+            'Could not create or find employer_employee record',
+          input_id: id,
         },
         { status: 400 }
       );
@@ -65,7 +70,11 @@ async function getTargetsHandler(
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
     // Allow if company_id is null (backwards compatibility) OR matches active company
-    if (profile?.active_company_id && teamMember.company_id && teamMember.company_id !== profile.active_company_id) {
+    if (
+      profile?.active_company_id &&
+      teamMember.company_id &&
+      teamMember.company_id !== profile.active_company_id
+    ) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }
@@ -131,13 +140,16 @@ async function getTargetsHandler(
         .in('target_id', targetIds)
         .order('recorded_date', { ascending: false });
 
-      progressRecords = (progress || []).reduce((acc, record) => {
-        if (!acc[record.target_id]) {
-          acc[record.target_id] = [];
-        }
-        acc[record.target_id].push(record);
-        return acc;
-      }, {} as Record<string, any[]>);
+      progressRecords = (progress || []).reduce(
+        (acc, record) => {
+          if (!acc[record.target_id]) {
+            acc[record.target_id] = [];
+          }
+          acc[record.target_id].push(record);
+          return acc;
+        },
+        {} as Record<string, any[]>
+      );
     }
 
     const targetsWithProgress = filteredTargets.map(target => ({
@@ -178,15 +190,20 @@ async function createTargetHandler(
 
     // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
     try {
-      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(
+        id,
+        user.id
+      );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
       console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record',
-          input_id: id
+          details:
+            error.message ||
+            'Could not create or find employer_employee record',
+          input_id: id,
         },
         { status: 400 }
       );
@@ -234,7 +251,11 @@ async function createTargetHandler(
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
     // Allow if company_id is null (backwards compatibility) OR matches active company
-    if (userProfile?.active_company_id && teamMember.company_id && teamMember.company_id !== userProfile.active_company_id) {
+    if (
+      userProfile?.active_company_id &&
+      teamMember.company_id &&
+      teamMember.company_id !== userProfile.active_company_id
+    ) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }
@@ -297,4 +318,3 @@ async function createTargetHandler(
 // Export handlers directly - internal authorization is already implemented
 export const GET = getTargetsHandler;
 export const POST = createTargetHandler;
-

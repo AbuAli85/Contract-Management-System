@@ -41,8 +41,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch settings from database using the function (returns defaults if not found)
-    const { data: settingsData, error: settingsError } = await supabaseAdmin
-      .rpc('get_company_attendance_settings', { p_company_id: activeCompanyId });
+    const { data: settingsData, error: settingsError } =
+      await supabaseAdmin.rpc('get_company_attendance_settings', {
+        p_company_id: activeCompanyId,
+      });
 
     if (settingsError) {
       console.error('Error fetching attendance settings:', settingsError);
@@ -98,8 +100,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform database result to frontend format
-    const settings = settingsData && settingsData.length > 0 ? settingsData[0] : null;
-    
+    const settings =
+      settingsData && settingsData.length > 0 ? settingsData[0] : null;
+
     if (!settings) {
       // Return defaults if no settings found
       const defaultSettings = {
@@ -169,12 +172,19 @@ export async function GET(request: NextRequest) {
       require_photo: settings.require_photo ?? true,
       require_location: settings.require_location ?? true,
       location_radius_meters: settings.location_radius_meters ?? 50,
-      check_in_time_window_minutes: settings.check_in_time_window_minutes ?? 120,
+      check_in_time_window_minutes:
+        settings.check_in_time_window_minutes ?? 120,
       default_check_in_time: formatTime(settings.default_check_in_time),
       default_check_out_time: formatTime(settings.default_check_out_time),
-      standard_work_hours: parseFloat(settings.standard_work_hours?.toString() || '8.0'),
-      overtime_threshold_hours: parseFloat(settings.overtime_threshold_hours?.toString() || '8.0'),
-      overtime_rate_multiplier: parseFloat(settings.overtime_rate_multiplier?.toString() || '1.5'),
+      standard_work_hours: parseFloat(
+        settings.standard_work_hours?.toString() || '8.0'
+      ),
+      overtime_threshold_hours: parseFloat(
+        settings.overtime_threshold_hours?.toString() || '8.0'
+      ),
+      overtime_rate_multiplier: parseFloat(
+        settings.overtime_rate_multiplier?.toString() || '1.5'
+      ),
       allow_breaks: settings.allow_breaks ?? true,
       max_break_duration_minutes: settings.max_break_duration_minutes ?? 60,
       max_breaks_per_day: settings.max_breaks_per_day ?? 2,
@@ -186,7 +196,8 @@ export async function GET(request: NextRequest) {
       auto_approve: settings.auto_approve ?? false,
       require_approval: settings.require_approval ?? true,
       approval_deadline_hours: settings.approval_deadline_hours ?? 24,
-      auto_approve_valid_checkins: settings.auto_approve_valid_checkins ?? false,
+      auto_approve_valid_checkins:
+        settings.auto_approve_valid_checkins ?? false,
       default_link_validity_hours: settings.default_link_validity_hours ?? 8,
       max_uses_per_link: settings.max_uses_per_link ?? 1,
       link_expiry_hours: settings.link_expiry_hours ?? 24,
@@ -199,9 +210,11 @@ export async function GET(request: NextRequest) {
       default_report_format: settings.default_report_format || 'pdf',
       include_photos_in_reports: settings.include_photos_in_reports ?? false,
       include_location_in_reports: settings.include_location_in_reports ?? true,
-      include_device_info_in_reports: settings.include_device_info_in_reports ?? false,
+      include_device_info_in_reports:
+        settings.include_device_info_in_reports ?? false,
       auto_generate_reports: settings.auto_generate_reports ?? false,
-      report_generation_schedule: settings.report_generation_schedule || 'monthly',
+      report_generation_schedule:
+        settings.report_generation_schedule || 'monthly',
       report_generation_day: settings.report_generation_day ?? 1,
       enable_analytics: settings.enable_analytics ?? true,
       analytics_retention_days: settings.analytics_retention_days ?? 365,
@@ -267,13 +280,16 @@ export async function PUT(request: NextRequest) {
 
     // Prepare settings for database insertion/update
     const dbSettings: any = {
-      company_id: company_id,
+      company_id,
       require_photo: settings.require_photo ?? true,
       require_location: settings.require_location ?? true,
       location_radius_meters: settings.location_radius_meters ?? 50,
-      check_in_time_window_minutes: settings.check_in_time_window_minutes ?? 120,
-      default_check_in_time: convertTimeToDB(settings.default_check_in_time) || '09:00:00',
-      default_check_out_time: convertTimeToDB(settings.default_check_out_time) || '17:00:00',
+      check_in_time_window_minutes:
+        settings.check_in_time_window_minutes ?? 120,
+      default_check_in_time:
+        convertTimeToDB(settings.default_check_in_time) || '09:00:00',
+      default_check_out_time:
+        convertTimeToDB(settings.default_check_out_time) || '17:00:00',
       standard_work_hours: settings.standard_work_hours ?? 8.0,
       overtime_threshold_hours: settings.overtime_threshold_hours ?? 8.0,
       overtime_rate_multiplier: settings.overtime_rate_multiplier ?? 1.5,
@@ -284,11 +300,13 @@ export async function PUT(request: NextRequest) {
       late_threshold_minutes: settings.late_threshold_minutes ?? 15,
       absent_threshold_hours: settings.absent_threshold_hours ?? 4,
       auto_mark_absent: settings.auto_mark_absent ?? false,
-      auto_mark_absent_time: convertTimeToDB(settings.auto_mark_absent_time) || '12:00:00',
+      auto_mark_absent_time:
+        convertTimeToDB(settings.auto_mark_absent_time) || '12:00:00',
       auto_approve: settings.auto_approve ?? false,
       require_approval: settings.require_approval ?? true,
       approval_deadline_hours: settings.approval_deadline_hours ?? 24,
-      auto_approve_valid_checkins: settings.auto_approve_valid_checkins ?? false,
+      auto_approve_valid_checkins:
+        settings.auto_approve_valid_checkins ?? false,
       default_link_validity_hours: settings.default_link_validity_hours ?? 8,
       max_uses_per_link: settings.max_uses_per_link ?? 1,
       link_expiry_hours: settings.link_expiry_hours ?? 24,
@@ -301,9 +319,11 @@ export async function PUT(request: NextRequest) {
       default_report_format: settings.default_report_format || 'pdf',
       include_photos_in_reports: settings.include_photos_in_reports ?? false,
       include_location_in_reports: settings.include_location_in_reports ?? true,
-      include_device_info_in_reports: settings.include_device_info_in_reports ?? false,
+      include_device_info_in_reports:
+        settings.include_device_info_in_reports ?? false,
       auto_generate_reports: settings.auto_generate_reports ?? false,
-      report_generation_schedule: settings.report_generation_schedule || 'monthly',
+      report_generation_schedule:
+        settings.report_generation_schedule || 'monthly',
       report_generation_day: settings.report_generation_day ?? 1,
       enable_analytics: settings.enable_analytics ?? true,
       analytics_retention_days: settings.analytics_retention_days ?? 365,
@@ -364,4 +384,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-

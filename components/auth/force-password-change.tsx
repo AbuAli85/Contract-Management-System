@@ -6,14 +6,20 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Key, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Loader2, 
+import {
+  Key,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
   CheckCircle2,
   AlertCircle,
   Shield,
@@ -25,7 +31,10 @@ interface ForcePasswordChangeProps {
   onSuccess?: () => void;
 }
 
-export function ForcePasswordChange({ userEmail, onSuccess }: ForcePasswordChangeProps) {
+export function ForcePasswordChange({
+  userEmail,
+  onSuccess,
+}: ForcePasswordChangeProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -43,12 +52,14 @@ export function ForcePasswordChange({ userEmail, onSuccess }: ForcePasswordChang
     if (!/[A-Z]/.test(password)) errors.push('At least one uppercase letter');
     if (!/[a-z]/.test(password)) errors.push('At least one lowercase letter');
     if (!/[0-9]/.test(password)) errors.push('At least one number');
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('At least one special character');
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password))
+      errors.push('At least one special character');
     return errors;
   };
 
   const passwordErrors = validatePassword(newPassword);
-  const isPasswordValid = passwordErrors.length === 0 && newPassword === confirmPassword;
+  const isPasswordValid =
+    passwordErrors.length === 0 && newPassword === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,12 +106,17 @@ export function ForcePasswordChange({ userEmail, onSuccess }: ForcePasswordChang
 
       // Update the profile to remove must_change_password flag
       if (supabase) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
-          await supabase.from('profiles').update({
-            must_change_password: false,
-            updated_at: new Date().toISOString(),
-          }).eq('id', user.id);
+          await supabase
+            .from('profiles')
+            .update({
+              must_change_password: false,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
 
           // Also update user metadata
           await supabase.auth.updateUser({
@@ -115,7 +131,7 @@ export function ForcePasswordChange({ userEmail, onSuccess }: ForcePasswordChang
       });
 
       onSuccess?.();
-      
+
       // Redirect to dashboard
       router.push('/en/dashboard');
     } catch (err: any) {
@@ -127,135 +143,173 @@ export function ForcePasswordChange({ userEmail, onSuccess }: ForcePasswordChang
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
-        <CardHeader className="space-y-4 text-center pb-2">
-          <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
-            <Key className="h-8 w-8 text-white" />
+    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4'>
+      <Card className='w-full max-w-md shadow-2xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur'>
+        <CardHeader className='space-y-4 text-center pb-2'>
+          <div className='mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg'>
+            <Key className='h-8 w-8 text-white' />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Change Your Password</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className='text-2xl font-bold'>
+              Change Your Password
+            </CardTitle>
+            <CardDescription className='text-base mt-2'>
               For security, please create a new password for your account.
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className='space-y-4'>
             {error && (
-              <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20">
-                <AlertCircle className="h-4 w-4" />
+              <Alert
+                variant='destructive'
+                className='border-red-200 bg-red-50 dark:bg-red-900/20'
+              >
+                <AlertCircle className='h-4 w-4' />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm">
-              <p className="text-gray-600 dark:text-gray-400">
-                Logged in as: <span className="font-medium text-gray-900 dark:text-white">{userEmail}</span>
+            <div className='p-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm'>
+              <p className='text-gray-600 dark:text-gray-400'>
+                Logged in as:{' '}
+                <span className='font-medium text-gray-900 dark:text-white'>
+                  {userEmail}
+                </span>
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="current-password">Temporary Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className='space-y-2'>
+              <Label htmlFor='current-password'>Temporary Password</Label>
+              <div className='relative'>
+                <Lock className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
                 <Input
-                  id="current-password"
+                  id='current-password'
                   type={showCurrentPassword ? 'text' : 'password'}
-                  placeholder="Enter temporary password"
+                  placeholder='Enter temporary password'
                   value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="pl-10 pr-10"
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  className='pl-10 pr-10'
                   required
                 />
                 <button
-                  type="button"
+                  type='button'
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
                 >
-                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showCurrentPassword ? (
+                    <EyeOff className='h-4 w-4' />
+                  ) : (
+                    <Eye className='h-4 w-4' />
+                  )}
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <div className="relative">
-                <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className='space-y-2'>
+              <Label htmlFor='new-password'>New Password</Label>
+              <div className='relative'>
+                <Key className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
                 <Input
-                  id="new-password"
+                  id='new-password'
                   type={showNewPassword ? 'text' : 'password'}
-                  placeholder="Create new password"
+                  placeholder='Create new password'
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="pl-10 pr-10"
+                  onChange={e => setNewPassword(e.target.value)}
+                  className='pl-10 pr-10'
                   required
                 />
                 <button
-                  type="button"
+                  type='button'
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
                 >
-                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showNewPassword ? (
+                    <EyeOff className='h-4 w-4' />
+                  ) : (
+                    <Eye className='h-4 w-4' />
+                  )}
                 </button>
               </div>
-              
+
               {/* Password requirements */}
               {newPassword && (
-                <div className="mt-2 space-y-1">
+                <div className='mt-2 space-y-1'>
                   {[
-                    { text: 'At least 8 characters', met: newPassword.length >= 8 },
-                    { text: 'Uppercase letter', met: /[A-Z]/.test(newPassword) },
-                    { text: 'Lowercase letter', met: /[a-z]/.test(newPassword) },
+                    {
+                      text: 'At least 8 characters',
+                      met: newPassword.length >= 8,
+                    },
+                    {
+                      text: 'Uppercase letter',
+                      met: /[A-Z]/.test(newPassword),
+                    },
+                    {
+                      text: 'Lowercase letter',
+                      met: /[a-z]/.test(newPassword),
+                    },
                     { text: 'Number', met: /[0-9]/.test(newPassword) },
-                    { text: 'Special character', met: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword) },
+                    {
+                      text: 'Special character',
+                      met: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword),
+                    },
                   ].map((req, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                      <CheckCircle2 className={`h-3 w-3 ${req.met ? 'text-emerald-500' : 'text-gray-300'}`} />
-                      <span className={req.met ? 'text-emerald-600' : 'text-gray-500'}>{req.text}</span>
+                    <div key={i} className='flex items-center gap-2 text-xs'>
+                      <CheckCircle2
+                        className={`h-3 w-3 ${req.met ? 'text-emerald-500' : 'text-gray-300'}`}
+                      />
+                      <span
+                        className={
+                          req.met ? 'text-emerald-600' : 'text-gray-500'
+                        }
+                      >
+                        {req.text}
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <div className="relative">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className='space-y-2'>
+              <Label htmlFor='confirm-password'>Confirm New Password</Label>
+              <div className='relative'>
+                <Shield className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400' />
                 <Input
-                  id="confirm-password"
-                  type="password"
-                  placeholder="Confirm new password"
+                  id='confirm-password'
+                  type='password'
+                  placeholder='Confirm new password'
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className='pl-10'
                   required
                 />
               </div>
               {confirmPassword && newPassword !== confirmPassword && (
-                <p className="text-xs text-red-500">Passwords do not match</p>
+                <p className='text-xs text-red-500'>Passwords do not match</p>
               )}
-              {confirmPassword && newPassword === confirmPassword && confirmPassword.length > 0 && (
-                <p className="text-xs text-emerald-500 flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" /> Passwords match
-                </p>
-              )}
+              {confirmPassword &&
+                newPassword === confirmPassword &&
+                confirmPassword.length > 0 && (
+                  <p className='text-xs text-emerald-500 flex items-center gap-1'>
+                    <CheckCircle2 className='h-3 w-3' /> Passwords match
+                  </p>
+                )}
             </div>
 
             <Button
-              type="submit"
+              type='submit'
               disabled={loading || !isPasswordValid}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold h-11"
+              className='w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold h-11'
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                   Updating Password...
                 </>
               ) : (
                 <>
-                  <Key className="h-4 w-4 mr-2" />
+                  <Key className='h-4 w-4 mr-2' />
                   Update Password
                 </>
               )}
@@ -266,5 +320,3 @@ export function ForcePasswordChange({ userEmail, onSuccess }: ForcePasswordChang
     </div>
   );
 }
-
-

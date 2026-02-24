@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
 import type { Promoter } from '@/lib/types';
 
 export async function getPromoters(): Promise<Promoter[]> {

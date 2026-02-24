@@ -85,13 +85,13 @@ export function CompaniesView() {
       if (data.success) {
         const companiesData = data.companies || [];
         setCompanies(companiesData);
-        
+
         // Calculate stats
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        
+
         // Fetch contract counts for companies
-        let contractCounts: Record<string, number> = {};
+        const contractCounts: Record<string, number> = {};
         try {
           const contractResponse = await fetch('/api/contracts?limit=1000');
           const contractData = await contractResponse.json();
@@ -99,7 +99,8 @@ export function CompaniesView() {
             contractData.contracts.forEach((contract: any) => {
               // Count contracts by employer_id (which links to companies via parties)
               if (contract.employer_id) {
-                contractCounts[contract.employer_id] = (contractCounts[contract.employer_id] || 0) + 1;
+                contractCounts[contract.employer_id] =
+                  (contractCounts[contract.employer_id] || 0) + 1;
               }
             });
           }
@@ -119,7 +120,7 @@ export function CompaniesView() {
             return created >= startOfMonth;
           }).length,
         });
-        
+
         setError(null);
       } else {
         setError(data.error || 'Failed to fetch companies');
@@ -132,19 +133,17 @@ export function CompaniesView() {
     }
   };
 
-  const filteredCompanies = companies.filter(
-    company => {
-      const name = company.company_name || company.name || '';
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        name.toLowerCase().includes(searchLower) ||
-        company.company_number?.toLowerCase().includes(searchLower) ||
-        company.email?.toLowerCase().includes(searchLower) ||
-        company.phone?.toLowerCase().includes(searchLower) ||
-        safeRender(company.address).toLowerCase().includes(searchLower)
-      );
-    }
-  );
+  const filteredCompanies = companies.filter(company => {
+    const name = company.company_name || company.name || '';
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      name.toLowerCase().includes(searchLower) ||
+      company.company_number?.toLowerCase().includes(searchLower) ||
+      company.email?.toLowerCase().includes(searchLower) ||
+      company.phone?.toLowerCase().includes(searchLower) ||
+      safeRender(company.address).toLowerCase().includes(searchLower)
+    );
+  });
 
   if (loading) {
     return (
@@ -203,17 +202,23 @@ export function CompaniesView() {
             <Building2 className='h-5 w-5 text-blue-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-3xl font-bold text-gray-900'>{stats.total}</div>
+            <div className='text-3xl font-bold text-gray-900'>
+              {stats.total}
+            </div>
             <p className='text-xs text-gray-500 mt-1'>All companies</p>
           </CardContent>
         </Card>
         <Card className='border-l-4 border-l-green-500'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-600'>Active</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>
+              Active
+            </CardTitle>
             <Users className='h-5 w-5 text-green-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-3xl font-bold text-gray-900'>{stats.active}</div>
+            <div className='text-3xl font-bold text-gray-900'>
+              {stats.active}
+            </div>
             <p className='text-xs text-gray-500 mt-1'>Active companies</p>
           </CardContent>
         </Card>
@@ -225,17 +230,23 @@ export function CompaniesView() {
             <FileText className='h-5 w-5 text-purple-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-3xl font-bold text-gray-900'>{stats.withContracts}</div>
+            <div className='text-3xl font-bold text-gray-900'>
+              {stats.withContracts}
+            </div>
             <p className='text-xs text-gray-500 mt-1'>Has contracts</p>
           </CardContent>
         </Card>
         <Card className='border-l-4 border-l-orange-500'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium text-gray-600'>This Month</CardTitle>
+            <CardTitle className='text-sm font-medium text-gray-600'>
+              This Month
+            </CardTitle>
             <Calendar className='h-5 w-5 text-orange-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-3xl font-bold text-gray-900'>{stats.thisMonth}</div>
+            <div className='text-3xl font-bold text-gray-900'>
+              {stats.thisMonth}
+            </div>
             <p className='text-xs text-gray-500 mt-1'>New this month</p>
           </CardContent>
         </Card>
@@ -294,10 +305,11 @@ export function CompaniesView() {
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {filteredCompanies.map(company => {
-            const companyName = company.company_name || company.name || 'Unnamed Company';
+            const companyName =
+              company.company_name || company.name || 'Unnamed Company';
             const addressText = safeRender(company.address);
             const hasAddress = addressText && addressText.trim().length > 0;
-            
+
             return (
               <Card
                 key={company.id}
@@ -325,7 +337,9 @@ export function CompaniesView() {
                             </CardDescription>
                           )}
                         </div>
-                        <Badge variant='secondary' className='shrink-0'>Active</Badge>
+                        <Badge variant='secondary' className='shrink-0'>
+                          Active
+                        </Badge>
                       </div>
                       {company.industry && (
                         <Badge variant='outline' className='mt-2 text-xs'>
@@ -359,7 +373,11 @@ export function CompaniesView() {
                       <div className='flex items-center gap-2 text-sm text-gray-700'>
                         <Globe className='h-4 w-4 text-gray-400 shrink-0' />
                         <a
-                          href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                          href={
+                            company.website.startsWith('http')
+                              ? company.website
+                              : `https://${company.website}`
+                          }
                           target='_blank'
                           rel='noopener noreferrer'
                           className='text-blue-600 hover:text-blue-800 hover:underline truncate flex items-center gap-1'
@@ -370,19 +388,24 @@ export function CompaniesView() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className='flex items-center justify-between pt-3 border-t border-gray-100'>
                     <div className='flex items-center gap-1 text-xs text-gray-500'>
                       <Calendar className='h-3 w-3' />
-                      <span>{new Date(company.created_at).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}</span>
+                      <span>
+                        {new Date(company.created_at).toLocaleDateString(
+                          'en-US',
+                          {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          }
+                        )}
+                      </span>
                     </div>
                     <div className='flex gap-2'>
-                      <Button 
-                        size='sm' 
+                      <Button
+                        size='sm'
                         variant='outline'
                         className='h-8 px-3'
                         onClick={() => {
@@ -392,11 +415,13 @@ export function CompaniesView() {
                         <Edit className='h-3 w-3 mr-1' />
                         Edit
                       </Button>
-                      <Button 
+                      <Button
                         size='sm'
                         className='h-8 px-3'
                         onClick={() => {
-                          router.push(`/en/dashboard/companies?view=${company.id}`);
+                          router.push(
+                            `/en/dashboard/companies?view=${company.id}`
+                          );
                         }}
                       >
                         <Eye className='h-3 w-3 mr-1' />

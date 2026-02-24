@@ -75,8 +75,8 @@ export class AuthSessionManager {
 
       return {
         user: session.user,
-        session: session,
-        profile: profile,
+        session,
+        profile,
         lastActivity: this.getLastActivity(),
       };
     } catch (error) {
@@ -96,25 +96,32 @@ export class AuthSessionManager {
   }> {
     try {
       if (!this.supabase) {
-        const hasEnvVars = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-        const isProduction = typeof window !== 'undefined' && 
-          (window.location.hostname.includes('thesmartpro.io') || window.location.hostname.includes('vercel.app'));
-        
+        const hasEnvVars = !!(
+          process.env.NEXT_PUBLIC_SUPABASE_URL &&
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        );
+        const isProduction =
+          typeof window !== 'undefined' &&
+          (window.location.hostname.includes('thesmartpro.io') ||
+            window.location.hostname.includes('vercel.app'));
+
         console.error('🔐 Supabase client not initialized', {
           hasEnvVars,
           isProduction,
-          hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+          hostname:
+            typeof window !== 'undefined' ? window.location.hostname : 'server',
         });
-        
-        const errorMessage = isProduction && !hasEnvVars
-          ? 'Environment variables are missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel and redeploy.'
-          : 'Supabase client not initialized. Please check your environment configuration.';
-        
+
+        const errorMessage =
+          isProduction && !hasEnvVars
+            ? 'Environment variables are missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel and redeploy.'
+            : 'Supabase client not initialized. Please check your environment configuration.';
+
         return {
           success: false,
           error: errorMessage,
-          debug: { 
-            step: 'client_check', 
+          debug: {
+            step: 'client_check',
             hasSupabase: false,
             hasEnvVars,
             isProduction,
@@ -174,7 +181,7 @@ export class AuthSessionManager {
       const userSession: UserSession = {
         user: data.user,
         session: data.session,
-        profile: profile,
+        profile,
         lastActivity: Date.now(),
       };
 
@@ -223,7 +230,7 @@ export class AuthSessionManager {
         'userSession',
         JSON.stringify({
           user: session.user,
-          session: session,
+          session,
           lastActivity: Date.now(),
         })
       );

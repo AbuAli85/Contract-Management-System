@@ -5,21 +5,20 @@ import { withAnyRBAC } from '@/lib/rbac/guard';
 // GET /api/holding-groups/[id]/members - Get members of a holding group
 export const GET = withAnyRBAC(
   ['company:read:all', 'party:read:all'],
-  async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
     try {
       const supabase = await createClient();
       const { id } = params;
 
       const { data: members, error } = await supabase
         .from('holding_group_members')
-        .select(`
+        .select(
+          `
           *,
           party:parties(id, name_en, name_ar, type, overall_status, contact_email),
           company:companies(id, name, email, is_active)
-        `)
+        `
+        )
         .eq('holding_group_id', id)
         .order('display_order');
 
@@ -27,10 +26,7 @@ export const GET = withAnyRBAC(
 
       return NextResponse.json({ data: members });
     } catch (error: any) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 );
@@ -38,10 +34,7 @@ export const GET = withAnyRBAC(
 // POST /api/holding-groups/[id]/members - Add members to holding group
 export const POST = withAnyRBAC(
   ['company:manage:all', 'party:manage:all'],
-  async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
     try {
       const supabase = await createClient();
       const { id } = params;
@@ -57,7 +50,11 @@ export const POST = withAnyRBAC(
       const { member_ids, member_type } = body;
 
       // Validation
-      if (!member_ids || !Array.isArray(member_ids) || member_ids.length === 0) {
+      if (
+        !member_ids ||
+        !Array.isArray(member_ids) ||
+        member_ids.length === 0
+      ) {
         return NextResponse.json(
           { error: 'member_ids must be a non-empty array' },
           { status: 400 }
@@ -92,17 +89,24 @@ export const POST = withAnyRBAC(
         .eq('holding_group_id', id);
 
       if (existingError) {
-        console.error('[HoldingGroupMembers] Error checking existing members:', existingError);
+        console.error(
+          '[HoldingGroupMembers] Error checking existing members:',
+          existingError
+        );
       }
 
       const existingIds = new Set(
-        (existingMembers || []).map((m: any) => 
-          member_type === 'party' ? m.party_id : m.company_id
-        ).filter(Boolean)
+        (existingMembers || [])
+          .map((m: any) =>
+            member_type === 'party' ? m.party_id : m.company_id
+          )
+          .filter(Boolean)
       );
 
       // Filter out already existing members
-      const newMemberIds = member_ids.filter((id: string) => !existingIds.has(id));
+      const newMemberIds = member_ids.filter(
+        (id: string) => !existingIds.has(id)
+      );
 
       if (newMemberIds.length === 0) {
         return NextResponse.json(
@@ -129,20 +133,27 @@ export const POST = withAnyRBAC(
         const { data, error } = await supabase
           .from('holding_group_members')
           .insert(member)
-          .select(`
+          .select(
+            `
             *,
             party:parties(id, name_en, name_ar, type, overall_status),
             company:companies(id, name, email, is_active)
-          `)
+          `
+          )
           .single();
 
         if (error) {
           // Check if it's a unique constraint violation (already exists)
           if (error.code === '23505' || error.message.includes('unique')) {
-            console.warn(`Member ${member.party_id || member.company_id} already exists, skipping`);
+            console.warn(
+              `Member ${member.party_id || member.company_id} already exists, skipping`
+            );
             continue;
           }
-          errors.push({ memberId: member.party_id || member.company_id, error: error.message });
+          errors.push({
+            memberId: member.party_id || member.company_id,
+            error: error.message,
+          });
         } else if (data) {
           insertedMembers.push(data);
         }
@@ -150,25 +161,29 @@ export const POST = withAnyRBAC(
 
       if (errors.length > 0 && insertedMembers.length === 0) {
         return NextResponse.json(
-          { 
+          {
             error: 'Failed to add members',
-            details: errors 
+            details: errors,
           },
           { status: 500 }
         );
       }
 
-      return NextResponse.json({ 
-        data: insertedMembers,
-        message: `Successfully added ${insertedMembers.length} member(s)`,
-        skipped: member_ids.length - insertedMembers.length
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          data: insertedMembers,
+          message: `Successfully added ${insertedMembers.length} member(s)`,
+          skipped: member_ids.length - insertedMembers.length,
+        },
+        { status: 201 }
+      );
     } catch (error: any) {
       console.error('[HoldingGroupMembers] POST error:', error);
       return NextResponse.json(
-        { 
+        {
           error: error.message || 'Internal server error',
-          details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+          details:
+            process.env.NODE_ENV === 'development' ? error.stack : undefined,
         },
         { status: 500 }
       );
@@ -179,10 +194,7 @@ export const POST = withAnyRBAC(
 // DELETE /api/holding-groups/[id]/members - Remove members from holding group
 export const DELETE = withAnyRBAC(
   ['company:manage:all', 'party:manage:all'],
-  async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
     try {
       const supabase = await createClient();
       const { id } = params;
@@ -206,11 +218,7 @@ export const DELETE = withAnyRBAC(
 
       return NextResponse.json({ message: 'Members removed' });
     } catch (error: any) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 );
-

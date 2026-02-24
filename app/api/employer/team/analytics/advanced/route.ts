@@ -60,7 +60,13 @@ export async function GET(request: NextRequest) {
           },
           attendance: {
             today: { present: 0, absent: 0, late: 0, onLeave: 0 },
-            monthly: { averageHours: 0, presentDays: 0, absentDays: 0, lateCount: 0, overtimeHours: 0 },
+            monthly: {
+              averageHours: 0,
+              presentDays: 0,
+              absentDays: 0,
+              lateCount: 0,
+              overtimeHours: 0,
+            },
             trends: [],
           },
           tasks: {
@@ -97,8 +103,12 @@ export async function GET(request: NextRequest) {
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
     // Overview metrics
-    const activeEmployees = teamMembers.filter(tm => tm.employment_status === 'active').length;
-    const onLeave = teamMembers.filter(tm => tm.employment_status === 'on_leave').length;
+    const activeEmployees = teamMembers.filter(
+      tm => tm.employment_status === 'active'
+    ).length;
+    const onLeave = teamMembers.filter(
+      tm => tm.employment_status === 'on_leave'
+    ).length;
     const newThisMonth = teamMembers.filter(
       tm => new Date(tm.created_at) >= startOfMonth
     ).length;
@@ -111,8 +121,12 @@ export async function GET(request: NextRequest) {
       .eq('employer_id', user.id)
       .lt('created_at', startOfMonth.toISOString());
 
-    const lastMonthActive = lastMonthTeam?.filter(tm => tm.employment_status === 'active').length || 0;
-    const lastMonthOnLeave = lastMonthTeam?.filter(tm => tm.employment_status === 'on_leave').length || 0;
+    const lastMonthActive =
+      lastMonthTeam?.filter(tm => tm.employment_status === 'active').length ||
+      0;
+    const lastMonthOnLeave =
+      lastMonthTeam?.filter(tm => tm.employment_status === 'on_leave').length ||
+      0;
     const lastMonthTotal = lastMonthTeam?.length || 0;
 
     // Attendance data
@@ -123,11 +137,17 @@ export async function GET(request: NextRequest) {
       .in('employer_employee_id', employeeIds)
       .eq('attendance_date', today);
 
-    const todayPresent = todayAttendance?.filter(a => a.status === 'present').length || 0;
-    const todayAbsent = todayAttendance?.filter(a => a.status === 'absent').length || 0;
-    const todayLate = todayAttendance?.filter(
-      a => a.status === 'present' && a.check_in_time && new Date(a.check_in_time).getHours() > 9
-    ).length || 0;
+    const todayPresent =
+      todayAttendance?.filter(a => a.status === 'present').length || 0;
+    const todayAbsent =
+      todayAttendance?.filter(a => a.status === 'absent').length || 0;
+    const todayLate =
+      todayAttendance?.filter(
+        a =>
+          a.status === 'present' &&
+          a.check_in_time &&
+          new Date(a.check_in_time).getHours() > 9
+      ).length || 0;
 
     // Monthly attendance
     const { data: monthlyAttendance } = await supabase
@@ -136,13 +156,20 @@ export async function GET(request: NextRequest) {
       .in('employer_employee_id', employeeIds)
       .gte('attendance_date', startOfMonth.toISOString().split('T')[0]);
 
-    const monthlyPresent = monthlyAttendance?.filter(a => a.status === 'present').length || 0;
-    const monthlyAbsent = monthlyAttendance?.filter(a => a.status === 'absent').length || 0;
-    const monthlyLate = monthlyAttendance?.filter(
-      a => a.status === 'present' && a.check_in_time && new Date(a.check_in_time).getHours() > 9
-    ).length || 0;
+    const monthlyPresent =
+      monthlyAttendance?.filter(a => a.status === 'present').length || 0;
+    const monthlyAbsent =
+      monthlyAttendance?.filter(a => a.status === 'absent').length || 0;
+    const monthlyLate =
+      monthlyAttendance?.filter(
+        a =>
+          a.status === 'present' &&
+          a.check_in_time &&
+          new Date(a.check_in_time).getHours() > 9
+      ).length || 0;
 
-    const totalHours = monthlyAttendance?.reduce((sum, a) => sum + (a.total_hours || 0), 0) || 0;
+    const totalHours =
+      monthlyAttendance?.reduce((sum, a) => sum + (a.total_hours || 0), 0) || 0;
     const averageHours = monthlyPresent > 0 ? totalHours / monthlyPresent : 0;
 
     // Tasks data
@@ -153,12 +180,17 @@ export async function GET(request: NextRequest) {
 
     const tasksTotal = tasks?.length || 0;
     const tasksPending = tasks?.filter(t => t.status === 'pending').length || 0;
-    const tasksInProgress = tasks?.filter(t => t.status === 'in_progress').length || 0;
-    const tasksCompleted = tasks?.filter(t => t.status === 'completed').length || 0;
-    const tasksOverdue = tasks?.filter(
-      t => t.status !== 'completed' && t.due_date && new Date(t.due_date) < now
-    ).length || 0;
-    const completionRate = tasksTotal > 0 ? (tasksCompleted / tasksTotal) * 100 : 0;
+    const tasksInProgress =
+      tasks?.filter(t => t.status === 'in_progress').length || 0;
+    const tasksCompleted =
+      tasks?.filter(t => t.status === 'completed').length || 0;
+    const tasksOverdue =
+      tasks?.filter(
+        t =>
+          t.status !== 'completed' && t.due_date && new Date(t.due_date) < now
+      ).length || 0;
+    const completionRate =
+      tasksTotal > 0 ? (tasksCompleted / tasksTotal) * 100 : 0;
 
     // Targets data
     const { data: targets } = await supabase
@@ -167,18 +199,27 @@ export async function GET(request: NextRequest) {
       .in('employer_employee_id', employeeIds);
 
     const targetsTotal = targets?.length || 0;
-    const targetsActive = targets?.filter(t => t.status === 'active').length || 0;
-    const targetsCompleted = targets?.filter(t => t.status === 'completed').length || 0;
-    const targetsBehind = targets?.filter(
-      t => t.status === 'active' && t.end_date && new Date(t.end_date) < now
-    ).length || 0;
+    const targetsActive =
+      targets?.filter(t => t.status === 'active').length || 0;
+    const targetsCompleted =
+      targets?.filter(t => t.status === 'completed').length || 0;
+    const targetsBehind =
+      targets?.filter(
+        t => t.status === 'active' && t.end_date && new Date(t.end_date) < now
+      ).length || 0;
 
-    const progressRecords = targets?.flatMap(t => t.progress_records || []) || [];
-    const averageProgress = progressRecords.length > 0
-      ? progressRecords.reduce((sum: number, p: any) => sum + (p.progress_percentage || 0), 0) / progressRecords.length
-      : 0;
+    const progressRecords =
+      targets?.flatMap(t => t.progress_records || []) || [];
+    const averageProgress =
+      progressRecords.length > 0
+        ? progressRecords.reduce(
+            (sum: number, p: any) => sum + (p.progress_percentage || 0),
+            0
+          ) / progressRecords.length
+        : 0;
 
-    const achievementRate = targetsTotal > 0 ? (targetsCompleted / targetsTotal) * 100 : 0;
+    const achievementRate =
+      targetsTotal > 0 ? (targetsCompleted / targetsTotal) * 100 : 0;
 
     // Performance insights
     const insights = [];
@@ -216,15 +257,26 @@ export async function GET(request: NextRequest) {
           trends: {
             totalEmployees: {
               value: teamMembers.length,
-              change: lastMonthTotal > 0 ? ((teamMembers.length - lastMonthTotal) / lastMonthTotal) * 100 : 0,
+              change:
+                lastMonthTotal > 0
+                  ? ((teamMembers.length - lastMonthTotal) / lastMonthTotal) *
+                    100
+                  : 0,
             },
             activeEmployees: {
               value: activeEmployees,
-              change: lastMonthActive > 0 ? ((activeEmployees - lastMonthActive) / lastMonthActive) * 100 : 0,
+              change:
+                lastMonthActive > 0
+                  ? ((activeEmployees - lastMonthActive) / lastMonthActive) *
+                    100
+                  : 0,
             },
             onLeave: {
               value: onLeave,
-              change: lastMonthOnLeave > 0 ? ((onLeave - lastMonthOnLeave) / lastMonthOnLeave) * 100 : 0,
+              change:
+                lastMonthOnLeave > 0
+                  ? ((onLeave - lastMonthOnLeave) / lastMonthOnLeave) * 100
+                  : 0,
             },
           },
         },
@@ -277,4 +329,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

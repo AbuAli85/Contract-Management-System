@@ -27,7 +27,7 @@ function generateApiKey(): { key: string; prefix: string; hash: string } {
  */
 export const GET = withRBAC(
   'system:admin:all',
-  async (request: NextRequest) => {
+  async (_request: NextRequest) => {
     try {
       const supabase = await createClient();
 
@@ -193,7 +193,7 @@ export const POST = withRBAC(
           name: name.trim(),
           key_hash: hash,
           key_prefix: prefix,
-          permissions: permissions,
+          permissions,
           allowed_origins: allowedOrigins,
           rate_limit_per_minute: rateLimitPerMinute,
           expires_at: expiresAt || null,
@@ -229,7 +229,7 @@ export const POST = withRBAC(
           apiKey: {
             id: apiKeyRecord.id,
             name: apiKeyRecord.name,
-            key: key, // ⚠️ Only returned once - save this!
+            key, // ⚠️ Only returned once - save this!
             keyPrefix: prefix,
             permissions: apiKeyRecord.permissions,
             allowedOrigins: apiKeyRecord.allowed_origins,

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -36,17 +36,20 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
-    const year = searchParams.get('year') || new Date().getFullYear().toString();
+    const year =
+      searchParams.get('year') || new Date().getFullYear().toString();
 
     // Get leave requests
     let requestsQuery = (supabaseAdmin.from('employee_leave_requests') as any)
-      .select(`
+      .select(
+        `
         *,
         reviewed_by_user:reviewed_by (
           full_name,
           email
         )
-      `)
+      `
+      )
       .eq('employer_employee_id', employeeLink.id)
       .order('created_at', { ascending: false });
 
@@ -58,11 +61,16 @@ export async function GET(request: NextRequest) {
 
     if (requestsError) {
       console.error('Error fetching leave requests:', requestsError);
-      return NextResponse.json({ error: 'Failed to fetch leave requests' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch leave requests' },
+        { status: 500 }
+      );
     }
 
     // Get leave balances
-    const { data: balances, error: balancesError } = await (supabaseAdmin.from('employee_leave_balances') as any)
+    const { data: balances, error: balancesError } = await (
+      supabaseAdmin.from('employee_leave_balances') as any
+    )
       .select('*')
       .eq('employer_employee_id', employeeLink.id)
       .eq('year', parseInt(year));
@@ -72,10 +80,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate stats
-    const pending = (requests || []).filter((r: any) => r.status === 'pending').length;
-    const approved = (requests || []).filter((r: any) => r.status === 'approved').length;
-    const totalUsed = (balances || []).reduce((sum: number, b: any) => sum + (b.used_days || 0), 0);
-    const totalAvailable = (balances || []).reduce((sum: number, b: any) => sum + (b.total_days - b.used_days - b.pending_days), 0);
+    const pending = (requests || []).filter(
+      (r: any) => r.status === 'pending'
+    ).length;
+    const approved = (requests || []).filter(
+      (r: any) => r.status === 'approved'
+    ).length;
+    const totalUsed = (balances || []).reduce(
+      (sum: number, b: any) => sum + (b.used_days || 0),
+      0
+    );
+    const totalAvailable = (balances || []).reduce(
+      (sum: number, b: any) =>
+        sum + (b.total_days - b.used_days - b.pending_days),
+      0
+    );
 
     return NextResponse.json({
       success: true,
@@ -90,7 +109,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in leave requests GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -99,7 +121,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -157,7 +179,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for overlapping leave requests
-    const { data: overlapping } = await (supabaseAdmin.from('employee_leave_requests') as any)
+    const { data: overlapping } = await (
+      supabaseAdmin.from('employee_leave_requests') as any
+    )
       .select('id')
       .eq('employer_employee_id', employeeLink.id)
       .in('status', ['pending', 'approved'])
@@ -171,7 +195,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create leave request
-    const { data: leaveRequest, error: createError } = await (supabaseAdmin.from('employee_leave_requests') as any)
+    const { data: leaveRequest, error: createError } = await (
+      supabaseAdmin.from('employee_leave_requests') as any
+    )
       .insert({
         employer_employee_id: employeeLink.id,
         leave_type,
@@ -187,25 +213,30 @@ export async function POST(request: NextRequest) {
     if (createError) {
       console.error('Error creating leave request:', createError);
       return NextResponse.json(
-        { error: 'Failed to create leave request', details: createError.message },
+        {
+          error: 'Failed to create leave request',
+          details: createError.message,
+        },
         { status: 500 }
       );
     }
 
     // Update pending days in balance
     const year = new Date(start_date).getFullYear();
-    await (supabaseAdmin.from('employee_leave_balances') as any)
-      .upsert({
+    await (supabaseAdmin.from('employee_leave_balances') as any).upsert(
+      {
         employer_employee_id: employeeLink.id,
         leave_type,
         year,
         total_days: 21, // Default annual leave
         used_days: 0,
         pending_days: totalDays,
-      }, { 
+      },
+      {
         onConflict: 'employer_employee_id,leave_type,year',
-        ignoreDuplicates: false 
-      });
+        ignoreDuplicates: false,
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -214,7 +245,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in leave requests POST:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

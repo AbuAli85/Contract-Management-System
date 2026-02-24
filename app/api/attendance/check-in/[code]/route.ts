@@ -27,7 +27,9 @@ export async function GET(
     }
 
     // Get link details
-    const { data: link, error: linkError } = await (supabaseAdmin.from('attendance_links') as any)
+    const { data: link, error: linkError } = await (
+      supabaseAdmin.from('attendance_links') as any
+    )
       .select('*')
       .eq('link_code', code)
       .eq('is_active', true)
@@ -69,7 +71,9 @@ export async function GET(
 
     // Get employee record using admin client to bypass RLS
     // First try with the link's company_id
-    const { data: employeeLink, error: employeeError } = await (supabaseAdmin.from('employer_employees') as any)
+    const { data: employeeLink, error: employeeError } = await (
+      supabaseAdmin.from('employer_employees') as any
+    )
       .select('id, employee_id, company_id, employment_status')
       .eq('employee_id', user.id)
       .eq('company_id', link.company_id)
@@ -79,9 +83,9 @@ export async function GET(
     if (employeeError) {
       console.error('Error fetching employee record:', employeeError);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to verify employee authorization',
-          details: employeeError.message 
+          details: employeeError.message,
         },
         { status: 500 }
       );
@@ -90,7 +94,9 @@ export async function GET(
     // If user is an employee, proceed with employee check-in flow
     if (employeeLink) {
       // Check if already checked in today using this link
-      const { data: existingUsage } = await (supabaseAdmin.from('attendance_link_usage') as any)
+      const { data: existingUsage } = await (
+        supabaseAdmin.from('attendance_link_usage') as any
+      )
         .select('id')
         .eq('attendance_link_id', link.id)
         .eq('employer_employee_id', employeeLink.id)
@@ -125,7 +131,9 @@ export async function GET(
     let userRole = null;
 
     // Check company_members first
-    const { data: membership } = await (supabaseAdmin.from('company_members') as any)
+    const { data: membership } = await (
+      supabaseAdmin.from('company_members') as any
+    )
       .select('role')
       .eq('company_id', link.company_id)
       .eq('user_id', user.id)
@@ -137,11 +145,13 @@ export async function GET(
       userRole = membership.role;
     } else {
       // Fallback: Check if user owns the company directly
-      const { data: ownedCompany } = await (supabaseAdmin.from('companies') as any)
+      const { data: ownedCompany } = await (
+        supabaseAdmin.from('companies') as any
+      )
         .select('id, owner_id')
         .eq('id', link.company_id)
         .single();
-      
+
       if (ownedCompany && ownedCompany.owner_id === user.id) {
         hasCompanyAccess = true;
         userRole = 'owner';
@@ -149,7 +159,10 @@ export async function GET(
     }
 
     // If admin/employer has access, allow them to view the link (for testing/preview)
-    if (hasCompanyAccess && ['owner', 'admin', 'manager', 'hr'].includes(userRole || '')) {
+    if (
+      hasCompanyAccess &&
+      ['owner', 'admin', 'manager', 'hr'].includes(userRole || '')
+    ) {
       return NextResponse.json({
         success: true,
         link: {
@@ -162,18 +175,23 @@ export async function GET(
         },
         employee: null, // No employee record - admin/employer viewing
         is_admin_view: true,
-        message: 'You are viewing this link as an admin/employer. Employees will need an active employee record to check in.',
+        message:
+          'You are viewing this link as an admin/employer. Employees will need an active employee record to check in.',
       });
     }
 
     // If not an employee and not an admin/employer, provide detailed error
-    const { data: allEmployeeRecords } = await (supabaseAdmin.from('employer_employees') as any)
+    const { data: allEmployeeRecords } = await (
+      supabaseAdmin.from('employer_employees') as any
+    )
       .select('id, employee_id, company_id, employment_status, employer_id')
       .eq('employee_id', user.id)
       .maybeSingle();
 
     // Check if employee has any active records for the link's company
-    const { data: linkCompanyRecords } = await (supabaseAdmin.from('employer_employees') as any)
+    const { data: linkCompanyRecords } = await (
+      supabaseAdmin.from('employer_employees') as any
+    )
       .select('id, employee_id, company_id, employment_status')
       .eq('employee_id', user.id)
       .eq('company_id', link.company_id)
@@ -194,15 +212,16 @@ export async function GET(
 
     if (!allEmployeeRecords) {
       return NextResponse.json(
-        { 
+        {
           error: 'You are not authorized to use this check-in link',
-          details: 'No employee record found. Please contact your manager to be added to the company.',
+          details:
+            'No employee record found. Please contact your manager to be added to the company.',
           diagnostic: {
             user_id: user.id,
             link_company_id: link.company_id,
             user_active_company_id: userProfile?.active_company_id,
-            issue: 'no_employee_record'
-          }
+            issue: 'no_employee_record',
+          },
         },
         { status: 403 }
       );
@@ -210,17 +229,19 @@ export async function GET(
 
     if (allEmployeeRecords.company_id !== link.company_id) {
       // Check if user's active company matches the link's company
-      const activeCompanyMatches = userProfile?.active_company_id === link.company_id;
+      const activeCompanyMatches =
+        userProfile?.active_company_id === link.company_id;
       const hasLinkCompanyRecord = !!linkCompanyRecords;
-      
+
       return NextResponse.json(
-        { 
+        {
           error: 'You are not authorized to use this check-in link',
-          details: activeCompanyMatches 
+          details: activeCompanyMatches
             ? 'Your employee record is assigned to a different company. Please contact your manager to update your company assignment.'
-            : hasLinkCompanyRecord && linkCompanyRecords.employment_status !== 'active'
-            ? `You have a record for this company, but your employment status is "${linkCompanyRecords.employment_status}". Only active employees can check in.`
-            : 'This link is for a different company than your current assignment. Please use a check-in link for your assigned company or contact your manager.',
+            : hasLinkCompanyRecord &&
+                linkCompanyRecords.employment_status !== 'active'
+              ? `You have a record for this company, but your employment status is "${linkCompanyRecords.employment_status}". Only active employees can check in.`
+              : 'This link is for a different company than your current assignment. Please use a check-in link for your assigned company or contact your manager.',
           diagnostic: {
             user_id: user.id,
             employee_company_id: allEmployeeRecords.company_id,
@@ -229,8 +250,8 @@ export async function GET(
             active_company_matches: activeCompanyMatches,
             has_link_company_record: hasLinkCompanyRecord,
             link_company_status: linkCompanyRecords?.employment_status,
-            issue: 'company_mismatch'
-          }
+            issue: 'company_mismatch',
+          },
         },
         { status: 403 }
       );
@@ -238,30 +259,31 @@ export async function GET(
 
     if (allEmployeeRecords.employment_status !== 'active') {
       return NextResponse.json(
-        { 
+        {
           error: 'You are not authorized to use this check-in link',
           details: `Your employment status is "${allEmployeeRecords.employment_status}". Only active employees can check in.`,
           diagnostic: {
             user_id: user.id,
             employment_status: allEmployeeRecords.employment_status,
             link_company_id: link.company_id,
-            issue: 'inactive_status'
-          }
+            issue: 'inactive_status',
+          },
         },
         { status: 403 }
       );
     }
 
     return NextResponse.json(
-      { 
+      {
         error: 'You are not authorized to use this check-in link',
-        details: 'Unable to verify your authorization. Please contact your manager.',
+        details:
+          'Unable to verify your authorization. Please contact your manager.',
         diagnostic: {
           user_id: user.id,
           link_company_id: link.company_id,
           employee_record: allEmployeeRecords,
-          issue: 'unknown_authorization_failure'
-        }
+          issue: 'unknown_authorization_failure',
+        },
       },
       { status: 403 }
     );
@@ -294,13 +316,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const {
-      latitude,
-      longitude,
-      accuracy,
-      photo,
-      device_info,
-    } = body;
+    const { latitude, longitude, accuracy, photo, device_info } = body;
 
     if (!latitude || !longitude) {
       return NextResponse.json(
@@ -310,7 +326,9 @@ export async function POST(
     }
 
     // Get link details first
-    const { data: linkData, error: linkError } = await (supabaseAdmin.from('attendance_links') as any)
+    const { data: linkData, error: linkError } = await (
+      supabaseAdmin.from('attendance_links') as any
+    )
       .select('*')
       .eq('link_code', code)
       .eq('is_active', true)
@@ -325,15 +343,14 @@ export async function POST(
 
     // Validate link and location
     // @ts-ignore - Supabase RPC type inference issue with admin client
-    const { data: validation, error: validationError } = await (supabaseAdmin.rpc as any)(
-      'validate_attendance_link',
-      {
-        p_link_code: code,
-        p_latitude: latitude,
-        p_longitude: longitude,
-        p_employee_id: user.id,
-      }
-    );
+    const { data: validation, error: validationError } = await (
+      supabaseAdmin.rpc as any
+    )('validate_attendance_link', {
+      p_link_code: code,
+      p_latitude: latitude,
+      p_longitude: longitude,
+      p_employee_id: user.id,
+    });
 
     const validationResult = validation as any;
 
@@ -352,7 +369,7 @@ export async function POST(
     const employerEmployeeId = validationResult.employer_employee_id as string;
 
     // Get employee link for company info
-    const { data: employeeLink } = await supabase
+    const { data: _employeeLink } = await supabase
       .from('employer_employees')
       .select('id, company_id')
       .eq('id', employerEmployeeId)
@@ -366,13 +383,14 @@ export async function POST(
         const buffer = Buffer.from(base64Data, 'base64');
         const today = new Date().toISOString().slice(0, 10);
         const fileName = `attendance/${user.id}/${today}-checkin-${Date.now()}.jpg`;
-        
-        const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-          .from('attendance-photos')
-          .upload(fileName, buffer, {
-            contentType: 'image/jpeg',
-            upsert: false,
-          });
+
+        const { data: uploadData, error: uploadError } =
+          await supabaseAdmin.storage
+            .from('attendance-photos')
+            .upload(fileName, buffer, {
+              contentType: 'image/jpeg',
+              upsert: false,
+            });
 
         if (!uploadError && uploadData) {
           const { data: urlData } = supabaseAdmin.storage
@@ -387,10 +405,12 @@ export async function POST(
 
     // Get IP address
     const forwarded = request.headers.get('x-forwarded-for');
-    const ipAddress = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
+    const ipAddress = forwarded
+      ? forwarded.split(',')[0]
+      : request.headers.get('x-real-ip') || 'unknown';
 
     // Generate device fingerprint
-    const deviceFingerprint = device_info 
+    const deviceFingerprint = device_info
       ? `${device_info.userAgent || ''}-${device_info.platform || ''}-${device_info.screenWidth || ''}x${device_info.screenHeight || ''}`
       : null;
 
@@ -402,7 +422,9 @@ export async function POST(
     const now = new Date().toISOString();
 
     // Check if attendance record exists for today
-    const { data: existing } = await (supabaseAdmin.from('employee_attendance') as any)
+    const { data: existing } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
       .select('*')
       .eq('employer_employee_id', employerEmployeeId)
       .eq('attendance_date', today)
@@ -436,7 +458,9 @@ export async function POST(
       if (deviceFingerprint) updateData.device_fingerprint = deviceFingerprint;
       if (device_info) updateData.device_info = device_info;
 
-      const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
+      const { data: updated, error: updateError } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
         .update(updateData)
         .eq('id', existing.id)
         .select()
@@ -464,7 +488,9 @@ export async function POST(
       if (deviceFingerprint) insertData.device_fingerprint = deviceFingerprint;
       if (device_info) insertData.device_info = device_info;
 
-      const { data: created, error: createError } = await (supabaseAdmin.from('employee_attendance') as any)
+      const { data: created, error: createError } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
         .insert(insertData)
         .select()
         .single();
@@ -474,16 +500,15 @@ export async function POST(
     }
 
     // Record link usage
-    await (supabaseAdmin.from('attendance_link_usage') as any)
-      .insert({
-        attendance_link_id: linkId,
-        employer_employee_id: employerEmployeeId,
-        attendance_id: attendanceRecord.id,
-        latitude,
-        longitude,
-        distance_from_target: validationResult.distance_meters as number,
-        location_verified: true,
-      });
+    await (supabaseAdmin.from('attendance_link_usage') as any).insert({
+      attendance_link_id: linkId,
+      employer_employee_id: employerEmployeeId,
+      attendance_id: attendanceRecord.id,
+      latitude,
+      longitude,
+      distance_from_target: validationResult.distance_meters as number,
+      location_verified: true,
+    });
 
     // Increment link usage count
     await (supabaseAdmin.from('attendance_links') as any)
@@ -503,4 +528,3 @@ export async function POST(
     );
   }
 }
-

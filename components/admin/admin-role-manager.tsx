@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -91,7 +97,9 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
   }, []);
 
   // Get available employer IDs
-  const [employers, setEmployers] = useState<Array<{ id: string; name_en: string }>>([]);
+  const [employers, setEmployers] = useState<
+    Array<{ id: string; name_en: string }>
+  >([]);
 
   const fetchEmployerIds = async () => {
     try {
@@ -118,8 +126,10 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
     const profileRole = user.role;
 
     if (profileRole === 'admin') return 'Admin';
-    if (profileRole === 'manager' || metadataRole === 'employer') return 'Employer';
-    if (metadataRole === 'promoter' || metadataRole === 'employee') return 'Employee';
+    if (profileRole === 'manager' || metadataRole === 'employer')
+      return 'Employer';
+    if (metadataRole === 'promoter' || metadataRole === 'employee')
+      return 'Employee';
     return 'Unassigned';
   };
 
@@ -149,8 +159,10 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
     }
 
     try {
-      let updates: any = {};
-      let metadataUpdates: Record<string, any> = { ...selectedUser.user_metadata };
+      const updates: any = {};
+      const metadataUpdates: Record<string, any> = {
+        ...selectedUser.user_metadata,
+      };
 
       switch (newRole) {
         case 'employee':
@@ -214,9 +226,12 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
   };
 
   // Filter users
-  const filteredUsers = users.filter(user =>
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getUserEffectiveRole(user).toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    user =>
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getUserEffectiveRole(user)
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
 
   // Count users by role
@@ -224,7 +239,8 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
     admin: users.filter(u => getUserEffectiveRole(u) === 'Admin').length,
     employer: users.filter(u => getUserEffectiveRole(u) === 'Employer').length,
     employee: users.filter(u => getUserEffectiveRole(u) === 'Employee').length,
-    unassigned: users.filter(u => getUserEffectiveRole(u) === 'Unassigned').length,
+    unassigned: users.filter(u => getUserEffectiveRole(u) === 'Unassigned')
+      .length,
   };
 
   return (
@@ -238,7 +254,8 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
                 User Role Management
               </CardTitle>
               <CardDescription className='mt-2'>
-                Manage user roles and permissions for the Promoter Intelligence Hub
+                Manage user roles and permissions for the Promoter Intelligence
+                Hub
               </CardDescription>
             </div>
             <Button onClick={fetchUsers} variant='outline' size='sm'>
@@ -252,25 +269,33 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             <Card className='border-2 border-purple-200 bg-purple-50/50'>
               <CardContent className='p-4 text-center'>
-                <div className='text-2xl font-bold text-purple-700'>{roleCounts.admin}</div>
+                <div className='text-2xl font-bold text-purple-700'>
+                  {roleCounts.admin}
+                </div>
                 <div className='text-sm text-purple-600 mt-1'>Admins</div>
               </CardContent>
             </Card>
             <Card className='border-2 border-blue-200 bg-blue-50/50'>
               <CardContent className='p-4 text-center'>
-                <div className='text-2xl font-bold text-blue-700'>{roleCounts.employer}</div>
+                <div className='text-2xl font-bold text-blue-700'>
+                  {roleCounts.employer}
+                </div>
                 <div className='text-sm text-blue-600 mt-1'>Employers</div>
               </CardContent>
             </Card>
             <Card className='border-2 border-green-200 bg-green-50/50'>
               <CardContent className='p-4 text-center'>
-                <div className='text-2xl font-bold text-green-700'>{roleCounts.employee}</div>
+                <div className='text-2xl font-bold text-green-700'>
+                  {roleCounts.employee}
+                </div>
                 <div className='text-sm text-green-600 mt-1'>Employees</div>
               </CardContent>
             </Card>
             <Card className='border-2 border-gray-200 bg-gray-50/50'>
               <CardContent className='p-4 text-center'>
-                <div className='text-2xl font-bold text-gray-700'>{roleCounts.unassigned}</div>
+                <div className='text-2xl font-bold text-gray-700'>
+                  {roleCounts.unassigned}
+                </div>
                 <div className='text-sm text-gray-600 mt-1'>Unassigned</div>
               </CardContent>
             </Card>
@@ -283,7 +308,7 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
               <Input
                 placeholder='Search users by email or role...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className='pl-10'
               />
             </div>
@@ -295,33 +320,54 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
               <table className='w-full'>
                 <thead className='bg-slate-100 dark:bg-slate-800'>
                   <tr>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Email</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Current Role</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Profile Role</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Metadata</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Last Sign In</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Actions</th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Email
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Current Role
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Profile Role
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Metadata
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Last Sign In
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className='divide-y'>
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className='px-4 py-8 text-center text-muted-foreground'>
+                      <td
+                        colSpan={6}
+                        className='px-4 py-8 text-center text-muted-foreground'
+                      >
                         <RefreshCw className='h-5 w-5 animate-spin mx-auto mb-2' />
                         Loading users...
                       </td>
                     </tr>
                   ) : filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className='px-4 py-8 text-center text-muted-foreground'>
+                      <td
+                        colSpan={6}
+                        className='px-4 py-8 text-center text-muted-foreground'
+                      >
                         No users found
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => {
+                    filteredUsers.map(user => {
                       const effectiveRole = getUserEffectiveRole(user);
                       return (
-                        <tr key={user.id} className='hover:bg-slate-50 dark:hover:bg-slate-800/50'>
+                        <tr
+                          key={user.id}
+                          className='hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        >
                           <td className='px-4 py-3'>
                             <div className='font-medium'>{user.email}</div>
                           </td>
@@ -343,14 +389,21 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
                               )}
                               {user.user_metadata?.employer_id && (
                                 <div className='text-xs'>
-                                  Employer: {user.user_metadata.employer_id.substring(0, 8)}...
+                                  Employer:{' '}
+                                  {user.user_metadata.employer_id.substring(
+                                    0,
+                                    8
+                                  )}
+                                  ...
                                 </div>
                               )}
                             </div>
                           </td>
                           <td className='px-4 py-3 text-sm text-muted-foreground'>
                             {user.last_sign_in_at
-                              ? new Date(user.last_sign_in_at).toLocaleDateString()
+                              ? new Date(
+                                  user.last_sign_in_at
+                                ).toLocaleDateString()
                               : 'Never'}
                           </td>
                           <td className='px-4 py-3'>
@@ -360,8 +413,12 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
                               onClick={() => {
                                 setSelectedUser(user);
                                 setNewRole('');
-                                setEmployerId(user.user_metadata?.employer_id || '');
-                                setCompanyId(user.user_metadata?.company_id || '');
+                                setEmployerId(
+                                  user.user_metadata?.employer_id || ''
+                                );
+                                setCompanyId(
+                                  user.user_metadata?.company_id || ''
+                                );
                                 setIsDialogOpen(true);
                               }}
                             >
@@ -442,7 +499,7 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
                   <Input
                     placeholder='Or enter employer UUID manually'
                     value={employerId}
-                    onChange={(e) => setEmployerId(e.target.value)}
+                    onChange={e => setEmployerId(e.target.value)}
                   />
                 </div>
 
@@ -451,7 +508,7 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
                   <Input
                     placeholder='Enter company UUID'
                     value={companyId}
-                    onChange={(e) => setCompanyId(e.target.value)}
+                    onChange={e => setCompanyId(e.target.value)}
                   />
                 </div>
               </>
@@ -461,7 +518,8 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
               <div className='flex items-start gap-2'>
                 <AlertCircle className='h-4 w-4 text-blue-600 mt-0.5' />
                 <div className='text-sm text-blue-800 dark:text-blue-200'>
-                  <strong>Note:</strong> User will need to logout and login again for changes to take effect.
+                  <strong>Note:</strong> User will need to logout and login
+                  again for changes to take effect.
                 </div>
               </div>
             </div>
@@ -481,4 +539,3 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
     </div>
   );
 }
-

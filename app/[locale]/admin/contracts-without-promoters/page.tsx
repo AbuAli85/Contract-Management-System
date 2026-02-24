@@ -34,7 +34,6 @@ import {
   AlertTriangle,
   CheckCircle,
   RefreshCw,
-  Users,
   FileText,
   TrendingUp,
   Save,
@@ -83,7 +82,7 @@ interface Stats {
 
 export default function ContractsWithoutPromotersPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'en';
+  const _locale = (params?.locale as string) || 'en';
   const { toast } = useToast();
 
   const [contracts, setContracts] = useState<Contract[]>([]);

@@ -30,7 +30,7 @@ export default function ClientRegistrationPage() {
     setIsLoading(false);
   }, [user, router]);
 
-  const handleRegistrationSuccess = (data: CompanyProfile) => {
+  const handleRegistrationSuccess = (_data: CompanyProfile) => {
     setRegistrationComplete(true);
 
     // Redirect to dashboard after 3 seconds

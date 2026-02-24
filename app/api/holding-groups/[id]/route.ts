@@ -5,10 +5,7 @@ import { withAnyRBAC } from '@/lib/rbac/guard';
 // GET /api/holding-groups/[id] - Get a specific holding group with members
 export const GET = withAnyRBAC(
   ['company:read:all', 'party:read:all'],
-  async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
     try {
       const supabase = await createClient();
       const { id } = params;
@@ -25,11 +22,13 @@ export const GET = withAnyRBAC(
       // Get members
       const { data: members, error: membersError } = await supabase
         .from('holding_group_members')
-        .select(`
+        .select(
+          `
           *,
           party:parties(id, name_en, name_ar, type, overall_status, contact_email),
           company:companies(id, name, email, is_active)
-        `)
+        `
+        )
         .eq('holding_group_id', id)
         .order('display_order');
 
@@ -38,14 +37,11 @@ export const GET = withAnyRBAC(
       return NextResponse.json({
         data: {
           ...holdingGroup,
-          members: members || []
-        }
+          members: members || [],
+        },
       });
     } catch (error: any) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 );
@@ -53,10 +49,7 @@ export const GET = withAnyRBAC(
 // PUT /api/holding-groups/[id] - Update holding group
 export const PUT = withAnyRBAC(
   ['company:manage:all', 'party:manage:all'],
-  async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
     try {
       const supabase = await createClient();
       const { id } = params;
@@ -81,10 +74,7 @@ export const PUT = withAnyRBAC(
 
       return NextResponse.json({ data: holdingGroup });
     } catch (error: any) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 );
@@ -92,10 +82,7 @@ export const PUT = withAnyRBAC(
 // DELETE /api/holding-groups/[id] - Delete holding group
 export const DELETE = withAnyRBAC(
   ['company:manage:all', 'party:manage:all'],
-  async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
     try {
       const supabase = await createClient();
       const { id } = params;
@@ -109,11 +96,7 @@ export const DELETE = withAnyRBAC(
 
       return NextResponse.json({ message: 'Holding group deleted' });
     } catch (error: any) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 );
-

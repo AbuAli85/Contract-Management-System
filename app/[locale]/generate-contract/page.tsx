@@ -44,8 +44,8 @@ export default function GenerateContractPage() {
           <p className='text-muted-foreground mb-4'>
             Please sign in to access this page.
           </p>
-          <a 
-            href='/en/auth/login' 
+          <a
+            href='/en/auth/login'
             className='inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90'
           >
             Sign In

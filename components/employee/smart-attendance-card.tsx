@@ -25,7 +25,13 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface TodayAttendance {
@@ -62,7 +68,8 @@ interface LocationData {
 }
 
 export function SmartAttendanceCard() {
-  const [todayAttendance, setTodayAttendance] = useState<TodayAttendance | null>(null);
+  const [todayAttendance, setTodayAttendance] =
+    useState<TodayAttendance | null>(null);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -100,7 +107,7 @@ export function SmartAttendanceCard() {
       const todayRecord = data.attendance?.find(
         (a: TodayAttendance) => a.attendance_date === today
       );
-      
+
       setTodayAttendance(todayRecord || null);
       setSummary(data.summary);
     } catch (error) {
@@ -118,14 +125,14 @@ export function SmartAttendanceCard() {
       }
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        position => {
           resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
           });
         },
-        (error) => {
+        error => {
           reject(new Error(`Location error: ${error.message}`));
         },
         {
@@ -142,7 +149,7 @@ export function SmartAttendanceCard() {
       try {
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        
+
         if (!video || !canvas) {
           reject(new Error('Video or canvas not available'));
           return;
@@ -176,7 +183,7 @@ export function SmartAttendanceCard() {
         video: { facingMode: 'user' },
         audio: false,
       });
-      
+
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -245,7 +252,7 @@ export function SmartAttendanceCard() {
       }
 
       // Step 2: Capture photo if not already captured
-      let photoData = capturedPhoto;
+      const photoData = capturedPhoto;
       if (!photoData) {
         await startCamera();
         // Wait for user to take photo
@@ -284,7 +291,9 @@ export function SmartAttendanceCard() {
 
       toast({
         title: '✅ Checked In Successfully',
-        description: data.message || 'Your attendance has been recorded and is pending manager approval',
+        description:
+          data.message ||
+          'Your attendance has been recorded and is pending manager approval',
       });
 
       setTodayAttendance(data.attendance);
@@ -323,7 +332,7 @@ export function SmartAttendanceCard() {
       }
 
       // Step 2: Capture photo if not already captured
-      let photoData = capturedPhoto;
+      const photoData = capturedPhoto;
       if (!photoData) {
         await startCamera();
         return;
@@ -379,16 +388,16 @@ export function SmartAttendanceCard() {
 
   const getWorkDuration = () => {
     if (!todayAttendance?.check_in) return null;
-    
+
     const checkIn = new Date(todayAttendance.check_in);
-    const now = todayAttendance.check_out 
-      ? new Date(todayAttendance.check_out) 
+    const now = todayAttendance.check_out
+      ? new Date(todayAttendance.check_out)
       : new Date();
-    
+
     const diffMs = now.getTime() - checkIn.getTime();
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     return { hours, minutes, total: (diffMs / (1000 * 60 * 60)).toFixed(1) };
   };
 
@@ -396,9 +405,9 @@ export function SmartAttendanceCard() {
 
   if (loading) {
     return (
-      <Card className="border-0 shadow-lg">
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <Card className='border-0 shadow-lg'>
+        <CardContent className='flex items-center justify-center py-12'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary' />
         </CardContent>
       </Card>
     );
@@ -406,19 +415,19 @@ export function SmartAttendanceCard() {
 
   return (
     <>
-      <Card className="border-0 shadow-lg overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-4">
-          <div className="flex items-center justify-between">
+      <Card className='border-0 shadow-lg overflow-hidden'>
+        <CardHeader className='bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-4'>
+          <div className='flex items-center justify-between'>
             <div>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Shield className="h-5 w-5" />
+              <CardTitle className='text-xl flex items-center gap-2'>
+                <Shield className='h-5 w-5' />
                 Smart Attendance
               </CardTitle>
-              <p className="text-blue-100 mt-1">
+              <p className='text-blue-100 mt-1'>
                 {format(new Date(), 'EEEE, MMMM d, yyyy')}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-2">
+            <div className='flex flex-col items-end gap-2'>
               {todayAttendance?.status && (
                 <Badge
                   className={cn(
@@ -428,7 +437,8 @@ export function SmartAttendanceCard() {
                     todayAttendance.status === 'absent' && 'bg-red-500'
                   )}
                 >
-                  {todayAttendance.status.charAt(0).toUpperCase() + todayAttendance.status.slice(1)}
+                  {todayAttendance.status.charAt(0).toUpperCase() +
+                    todayAttendance.status.slice(1)}
                 </Badge>
               )}
               {todayAttendance?.approval_status && (
@@ -437,14 +447,20 @@ export function SmartAttendanceCard() {
                     todayAttendance.approval_status === 'approved'
                       ? 'default'
                       : todayAttendance.approval_status === 'rejected'
-                      ? 'destructive'
-                      : 'secondary'
+                        ? 'destructive'
+                        : 'secondary'
                   }
-                  className="text-xs"
+                  className='text-xs'
                 >
-                  {todayAttendance.approval_status === 'approved' && <CheckCircle className="h-3 w-3 mr-1" />}
-                  {todayAttendance.approval_status === 'rejected' && <X className="h-3 w-3 mr-1" />}
-                  {todayAttendance.approval_status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                  {todayAttendance.approval_status === 'approved' && (
+                    <CheckCircle className='h-3 w-3 mr-1' />
+                  )}
+                  {todayAttendance.approval_status === 'rejected' && (
+                    <X className='h-3 w-3 mr-1' />
+                  )}
+                  {todayAttendance.approval_status === 'pending' && (
+                    <Clock className='h-3 w-3 mr-1' />
+                  )}
                   {todayAttendance.approval_status}
                 </Badge>
               )}
@@ -452,75 +468,77 @@ export function SmartAttendanceCard() {
           </div>
         </CardHeader>
 
-        <CardContent className="pt-6 space-y-6">
+        <CardContent className='pt-6 space-y-6'>
           {/* Approval Status Alert */}
           {todayAttendance?.approval_status === 'pending' && (
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className='h-4 w-4' />
               <AlertDescription>
-                Your attendance is pending manager approval. You will be notified once reviewed.
+                Your attendance is pending manager approval. You will be
+                notified once reviewed.
               </AlertDescription>
             </Alert>
           )}
 
-          {todayAttendance?.approval_status === 'rejected' && todayAttendance.rejection_reason && (
-            <Alert variant="destructive">
-              <XCircle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Rejected:</strong> {todayAttendance.rejection_reason}
-              </AlertDescription>
-            </Alert>
-          )}
+          {todayAttendance?.approval_status === 'rejected' &&
+            todayAttendance.rejection_reason && (
+              <Alert variant='destructive'>
+                <XCircle className='h-4 w-4' />
+                <AlertDescription>
+                  <strong>Rejected:</strong> {todayAttendance.rejection_reason}
+                </AlertDescription>
+              </Alert>
+            )}
 
           {/* Current Status */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
-              <div className="flex items-center gap-2 text-gray-500 mb-2">
-                <LogIn className="h-4 w-4" />
-                <span className="text-sm">Check In</span>
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-xl'>
+              <div className='flex items-center gap-2 text-gray-500 mb-2'>
+                <LogIn className='h-4 w-4' />
+                <span className='text-sm'>Check In</span>
               </div>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
+              <p className='text-xl font-bold text-gray-900 dark:text-white'>
                 {todayAttendance?.check_in
                   ? format(new Date(todayAttendance.check_in), 'hh:mm a')
                   : '--:--'}
               </p>
               {todayAttendance?.check_in_photo && (
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 text-xs"
+                  variant='ghost'
+                  size='sm'
+                  className='mt-2 text-xs'
                   onClick={() => {
                     setCapturedPhoto(todayAttendance.check_in_photo || null);
                     setShowPreview(true);
                   }}
                 >
-                  <Camera className="h-3 w-3 mr-1" />
+                  <Camera className='h-3 w-3 mr-1' />
                   View Photo
                 </Button>
               )}
             </div>
 
-            <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
-              <div className="flex items-center gap-2 text-gray-500 mb-2">
-                <LogOut className="h-4 w-4" />
-                <span className="text-sm">Check Out</span>
+            <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-xl'>
+              <div className='flex items-center gap-2 text-gray-500 mb-2'>
+                <LogOut className='h-4 w-4' />
+                <span className='text-sm'>Check Out</span>
               </div>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
+              <p className='text-xl font-bold text-gray-900 dark:text-white'>
                 {todayAttendance?.check_out
                   ? format(new Date(todayAttendance.check_out), 'hh:mm a')
                   : '--:--'}
               </p>
               {todayAttendance?.check_out_photo && (
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 text-xs"
+                  variant='ghost'
+                  size='sm'
+                  className='mt-2 text-xs'
                   onClick={() => {
                     setCapturedPhoto(todayAttendance.check_out_photo || null);
                     setShowPreview(true);
                   }}
                 >
-                  <Camera className="h-3 w-3 mr-1" />
+                  <Camera className='h-3 w-3 mr-1' />
                   View Photo
                 </Button>
               )}
@@ -529,14 +547,15 @@ export function SmartAttendanceCard() {
 
           {/* Location Display */}
           {location && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-700 dark:text-blue-300">
-                  Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+            <div className='p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200'>
+              <div className='flex items-center gap-2 text-sm'>
+                <MapPin className='h-4 w-4 text-blue-600' />
+                <span className='text-blue-700 dark:text-blue-300'>
+                  Location: {location.latitude.toFixed(6)},{' '}
+                  {location.longitude.toFixed(6)}
                 </span>
                 {location.accuracy && (
-                  <span className="text-xs text-blue-600">
+                  <span className='text-xs text-blue-600'>
                     (Accuracy: ±{Math.round(location.accuracy)}m)
                   </span>
                 )}
@@ -546,21 +565,27 @@ export function SmartAttendanceCard() {
 
           {/* Work Duration */}
           {workDuration && (
-            <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Timer className="h-5 w-5 text-emerald-600" />
-                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-                    {todayAttendance?.check_out ? 'Total Work Time' : 'Working Since'}
+            <div className='p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <Timer className='h-5 w-5 text-emerald-600' />
+                  <span className='text-sm font-medium text-emerald-700 dark:text-emerald-400'>
+                    {todayAttendance?.check_out
+                      ? 'Total Work Time'
+                      : 'Working Since'}
                   </span>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                <div className='text-right'>
+                  <p className='text-2xl font-bold text-emerald-700 dark:text-emerald-400'>
                     {workDuration.hours}h {workDuration.minutes}m
                   </p>
                   {!todayAttendance?.check_out && (
-                    <p className="text-xs text-emerald-600">
-                      Started {formatDistanceToNow(new Date(todayAttendance!.check_in!))} ago
+                    <p className='text-xs text-emerald-600'>
+                      Started{' '}
+                      {formatDistanceToNow(
+                        new Date(todayAttendance!.check_in!)
+                      )}{' '}
+                      ago
                     </p>
                   )}
                 </div>
@@ -570,41 +595,41 @@ export function SmartAttendanceCard() {
 
           {/* Action Buttons */}
           {!todayAttendance?.check_in ? (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {locationError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                <Alert variant='destructive'>
+                  <AlertCircle className='h-4 w-4' />
                   <AlertDescription>{locationError}</AlertDescription>
                 </Alert>
               )}
-              
+
               {capturedPhoto && showPreview ? (
-                <div className="space-y-3">
-                  <div className="relative">
+                <div className='space-y-3'>
+                  <div className='relative'>
                     <img
                       src={capturedPhoto}
-                      alt="Attendance photo"
-                      className="w-full rounded-lg border-2 border-gray-200"
+                      alt='Attendance photo'
+                      className='w-full rounded-lg border-2 border-gray-200'
                     />
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="absolute top-2 right-2"
+                      variant='outline'
+                      size='sm'
+                      className='absolute top-2 right-2'
                       onClick={retakePhoto}
                     >
-                      <Camera className="h-4 w-4 mr-1" />
+                      <Camera className='h-4 w-4 mr-1' />
                       Retake
                     </Button>
                   </div>
                   <Button
                     onClick={handleCheckIn}
                     disabled={actionLoading || !location}
-                    className="w-full h-14 text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg"
+                    className='w-full h-14 text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg'
                   >
                     {actionLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      <Loader2 className='h-5 w-5 animate-spin mr-2' />
                     ) : (
-                      <LogIn className="h-5 w-5 mr-2" />
+                      <LogIn className='h-5 w-5 mr-2' />
                     )}
                     Confirm Check In
                   </Button>
@@ -612,42 +637,42 @@ export function SmartAttendanceCard() {
               ) : (
                 <Button
                   onClick={startCamera}
-                  className="w-full h-14 text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg"
+                  className='w-full h-14 text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg'
                 >
-                  <Camera className="h-5 w-5 mr-2" />
+                  <Camera className='h-5 w-5 mr-2' />
                   Start Check In (Photo Required)
                 </Button>
               )}
             </div>
           ) : !todayAttendance?.check_out ? (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {capturedPhoto && showPreview ? (
-                <div className="space-y-3">
-                  <div className="relative">
+                <div className='space-y-3'>
+                  <div className='relative'>
                     <img
                       src={capturedPhoto}
-                      alt="Check-out photo"
-                      className="w-full rounded-lg border-2 border-gray-200"
+                      alt='Check-out photo'
+                      className='w-full rounded-lg border-2 border-gray-200'
                     />
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="absolute top-2 right-2"
+                      variant='outline'
+                      size='sm'
+                      className='absolute top-2 right-2'
                       onClick={retakePhoto}
                     >
-                      <Camera className="h-4 w-4 mr-1" />
+                      <Camera className='h-4 w-4 mr-1' />
                       Retake
                     </Button>
                   </div>
                   <Button
                     onClick={handleCheckOut}
                     disabled={actionLoading || !location}
-                    className="w-full h-14 text-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg"
+                    className='w-full h-14 text-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg'
                   >
                     {actionLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      <Loader2 className='h-5 w-5 animate-spin mr-2' />
                     ) : (
-                      <LogOut className="h-5 w-5 mr-2" />
+                      <LogOut className='h-5 w-5 mr-2' />
                     )}
                     Confirm Check Out
                   </Button>
@@ -655,20 +680,20 @@ export function SmartAttendanceCard() {
               ) : (
                 <Button
                   onClick={startCamera}
-                  className="w-full h-14 text-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg"
+                  className='w-full h-14 text-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg'
                 >
-                  <Camera className="h-5 w-5 mr-2" />
+                  <Camera className='h-5 w-5 mr-2' />
                   Start Check Out (Photo Required)
                 </Button>
               )}
             </div>
           ) : (
-            <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-xl text-center">
-              <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <p className="font-medium text-gray-900 dark:text-white">
+            <div className='p-4 bg-gray-100 dark:bg-gray-800 rounded-xl text-center'>
+              <CheckCircle2 className='h-8 w-8 text-green-500 mx-auto mb-2' />
+              <p className='font-medium text-gray-900 dark:text-white'>
                 Workday Complete!
               </p>
-              <p className="text-sm text-gray-500">
+              <p className='text-sm text-gray-500'>
                 You worked {todayAttendance.total_hours?.toFixed(1)} hours today
               </p>
             </div>
@@ -676,26 +701,34 @@ export function SmartAttendanceCard() {
 
           {/* Monthly Summary */}
           {summary && (
-            <div className="pt-4 border-t">
-              <h4 className="text-sm font-medium text-gray-600 mb-3">This Month</h4>
-              <div className="grid grid-cols-4 gap-2">
-                <div className="text-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+            <div className='pt-4 border-t'>
+              <h4 className='text-sm font-medium text-gray-600 mb-3'>
+                This Month
+              </h4>
+              <div className='grid grid-cols-4 gap-2'>
+                <div className='text-center p-2 bg-gray-50 dark:bg-gray-900 rounded-lg'>
+                  <p className='text-lg font-bold text-gray-900 dark:text-white'>
                     {summary.presentDays}
                   </p>
-                  <p className="text-xs text-gray-500">Present</p>
+                  <p className='text-xs text-gray-500'>Present</p>
                 </div>
-                <div className="text-center p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                  <p className="text-lg font-bold text-amber-600">{summary.lateDays}</p>
-                  <p className="text-xs text-gray-500">Late</p>
+                <div className='text-center p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg'>
+                  <p className='text-lg font-bold text-amber-600'>
+                    {summary.lateDays}
+                  </p>
+                  <p className='text-xs text-gray-500'>Late</p>
                 </div>
-                <div className="text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <p className="text-lg font-bold text-red-600">{summary.absentDays}</p>
-                  <p className="text-xs text-gray-500">Absent</p>
+                <div className='text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-lg'>
+                  <p className='text-lg font-bold text-red-600'>
+                    {summary.absentDays}
+                  </p>
+                  <p className='text-xs text-gray-500'>Absent</p>
                 </div>
-                <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-lg font-bold text-blue-600">{summary.totalHours}</p>
-                  <p className="text-xs text-gray-500">Hours</p>
+                <div className='text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
+                  <p className='text-lg font-bold text-blue-600'>
+                    {summary.totalHours}
+                  </p>
+                  <p className='text-xs text-gray-500'>Hours</p>
                 </div>
               </div>
             </div>
@@ -704,34 +737,37 @@ export function SmartAttendanceCard() {
       </Card>
 
       {/* Photo Capture Dialog */}
-      <Dialog open={showPhotoDialog} onOpenChange={(open) => {
-        if (!open) stopCamera();
-        setShowPhotoDialog(open);
-      }}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog
+        open={showPhotoDialog}
+        onOpenChange={open => {
+          if (!open) stopCamera();
+          setShowPhotoDialog(open);
+        }}
+      >
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>Capture Attendance Photo</DialogTitle>
             <DialogDescription>
               Please position your face in the camera frame
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="relative bg-black rounded-lg overflow-hidden">
+          <div className='space-y-4'>
+            <div className='relative bg-black rounded-lg overflow-hidden'>
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className="w-full h-auto"
+                className='w-full h-auto'
               />
-              <canvas ref={canvasRef} className="hidden" />
+              <canvas ref={canvasRef} className='hidden' />
             </div>
-            <div className="flex gap-2">
-              <Button onClick={takePhoto} className="flex-1">
-                <Camera className="h-4 w-4 mr-2" />
+            <div className='flex gap-2'>
+              <Button onClick={takePhoto} className='flex-1'>
+                <Camera className='h-4 w-4 mr-2' />
                 Capture Photo
               </Button>
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => {
                   stopCamera();
                   setShowPhotoDialog(false);
@@ -746,23 +782,25 @@ export function SmartAttendanceCard() {
 
       {/* Photo Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>Photo Preview</DialogTitle>
-            <DialogDescription>
-              Review your attendance photo
-            </DialogDescription>
+            <DialogDescription>Review your attendance photo</DialogDescription>
           </DialogHeader>
           {capturedPhoto && (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               <img
                 src={capturedPhoto}
-                alt="Preview"
-                className="w-full rounded-lg border-2 border-gray-200"
+                alt='Preview'
+                className='w-full rounded-lg border-2 border-gray-200'
               />
-              <div className="flex gap-2">
-                <Button onClick={retakePhoto} variant="outline" className="flex-1">
-                  <Camera className="h-4 w-4 mr-2" />
+              <div className='flex gap-2'>
+                <Button
+                  onClick={retakePhoto}
+                  variant='outline'
+                  className='flex-1'
+                >
+                  <Camera className='h-4 w-4 mr-2' />
                   Retake
                 </Button>
                 <Button
@@ -775,7 +813,7 @@ export function SmartAttendanceCard() {
                       handleCheckOut();
                     }
                   }}
-                  className="flex-1"
+                  className='flex-1'
                 >
                   Use This Photo
                 </Button>
@@ -787,4 +825,3 @@ export function SmartAttendanceCard() {
     </>
   );
 }
-

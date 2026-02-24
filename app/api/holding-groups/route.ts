@@ -27,27 +27,29 @@ export const GET = withAnyRBAC(
       // Get members for each holding group
       const { data: members, error: membersError } = await supabase
         .from('holding_group_members')
-        .select(`
+        .select(
+          `
           *,
           party:parties(id, name_en, name_ar, type, overall_status),
           company:companies(id, name, email, is_active)
-        `)
-        .in('holding_group_id', holdingGroups.map(g => g.id));
+        `
+        )
+        .in(
+          'holding_group_id',
+          holdingGroups.map(g => g.id)
+        );
 
       if (membersError) throw membersError;
 
       // Group members by holding group
       const groupsWithMembers = holdingGroups.map(group => ({
         ...group,
-        members: members?.filter(m => m.holding_group_id === group.id) || []
+        members: members?.filter(m => m.holding_group_id === group.id) || [],
       }));
 
       return NextResponse.json({ data: groupsWithMembers });
     } catch (error: any) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 );
@@ -108,11 +110,7 @@ export const POST = withAnyRBAC(
 
       return NextResponse.json({ data: holdingGroup }, { status: 201 });
     } catch (error: any) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 );
-

@@ -123,7 +123,9 @@ export function EmployerEmployeeAlignment({
   locale = 'en',
 }: EmployerEmployeeAlignmentProps) {
   const { toast } = useToast();
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(
+    null
+  );
   const [viewMode, setViewMode] = useState<'overview' | 'detailed'>('overview');
 
   // Fetch all employees with their assignments, tasks, and targets
@@ -140,35 +142,36 @@ export function EmployerEmployeeAlignment({
 
   const employeesRaw = (employeesData?.employees || []) as EmployeeOverview[];
   const employees: EmployeeOverview[] = employeesRaw.filter(
-    (emp: EmployeeOverview): emp is EmployeeOverview => emp !== null && emp !== undefined
+    (emp: EmployeeOverview): emp is EmployeeOverview =>
+      emp !== null && emp !== undefined
   );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading employee alignment...</p>
+      <div className='flex items-center justify-center py-12'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-muted-foreground'>Loading employee alignment...</p>
         </div>
       </div>
     );
   }
 
   const selectedEmployee = employees.find(
-    (e) => e.employee.id === selectedEmployeeId
+    e => e.employee.id === selectedEmployeeId
   );
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Employer-Employee Alignment</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className='text-3xl font-bold'>Employer-Employee Alignment</h1>
+          <p className='text-muted-foreground mt-1'>
             Comprehensive view of employees, assignments, tasks, and targets
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className='flex gap-2'>
           <Button
             variant={viewMode === 'overview' ? 'default' : 'outline'}
             onClick={() => setViewMode('overview')}
@@ -185,77 +188,93 @@ export function EmployerEmployeeAlignment({
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Total Employees
+            </CardTitle>
+            <Users className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{employees.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {employees.filter((e) => e.employee.employment_status === 'active').length} active
+            <div className='text-2xl font-bold'>{employees.length}</div>
+            <p className='text-xs text-muted-foreground'>
+              {
+                employees.filter(e => e.employee.employment_status === 'active')
+                  .length
+              }{' '}
+              active
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Assignments</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Active Assignments
+            </CardTitle>
+            <Briefcase className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {employees.reduce((sum, e) => sum + e.stats.activeAssignments, 0)}
             </div>
-            <p className="text-xs text-muted-foreground">Across all employees</p>
+            <p className='text-xs text-muted-foreground'>
+              Across all employees
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tasks Progress</CardTitle>
-            <CheckSquare className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Tasks Progress
+            </CardTitle>
+            <CheckSquare className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {employees.reduce((sum, e) => sum + e.stats.completedTasks, 0)} /{' '}
               {employees.reduce((sum, e) => sum + e.stats.totalTasks, 0)}
             </div>
-            <p className="text-xs text-muted-foreground">Completed tasks</p>
+            <p className='text-xs text-muted-foreground'>Completed tasks</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Targets Progress</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Targets Progress
+            </CardTitle>
+            <Target className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {employees.length > 0
                 ? Math.round(
-                    employees.reduce((sum, e) => sum + e.stats.targetsProgress, 0) /
-                      employees.length
+                    employees.reduce(
+                      (sum, e) => sum + e.stats.targetsProgress,
+                      0
+                    ) / employees.length
                   )
                 : 0}
               %
             </div>
-            <p className="text-xs text-muted-foreground">Average progress</p>
+            <p className='text-xs text-muted-foreground'>Average progress</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="employees" className="space-y-4">
+      <Tabs defaultValue='employees' className='space-y-4'>
         <TabsList>
-          <TabsTrigger value="employees">Employees & Assignments</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks Overview</TabsTrigger>
-          <TabsTrigger value="targets">Targets Overview</TabsTrigger>
+          <TabsTrigger value='employees'>Employees & Assignments</TabsTrigger>
+          <TabsTrigger value='tasks'>Tasks Overview</TabsTrigger>
+          <TabsTrigger value='targets'>Targets Overview</TabsTrigger>
         </TabsList>
 
         {/* Employees & Assignments Tab */}
-        <TabsContent value="employees" className="space-y-4">
+        <TabsContent value='employees' className='space-y-4'>
           <Card>
             <CardHeader>
               <CardTitle>Employees & Their Assignments</CardTitle>
@@ -264,26 +283,29 @@ export function EmployerEmployeeAlignment({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {employees.map((empOverview) => (
+              <div className='space-y-6'>
+                {employees.map(empOverview => (
                   <div
                     key={empOverview.employee.id}
                     className={cn(
                       'border rounded-lg p-4 space-y-4',
-                      selectedEmployeeId === empOverview.employee.id && 'ring-2 ring-primary'
+                      selectedEmployeeId === empOverview.employee.id &&
+                        'ring-2 ring-primary'
                     )}
                   >
                     {/* Employee Header */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className='flex items-center justify-between'>
+                      <div className='flex items-center gap-4'>
                         <div>
-                          <h3 className="font-semibold text-lg">
+                          <h3 className='font-semibold text-lg'>
                             {empOverview.employee.employee?.name_en ||
                               empOverview.employee.employee?.name_ar ||
                               'Unknown'}
                           </h3>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                            <span>{empOverview.employee.job_title || 'No title'}</span>
+                          <div className='flex items-center gap-4 mt-1 text-sm text-muted-foreground'>
+                            <span>
+                              {empOverview.employee.job_title || 'No title'}
+                            </span>
                             {empOverview.employee.department && (
                               <>
                                 <span>•</span>
@@ -292,7 +314,8 @@ export function EmployerEmployeeAlignment({
                             )}
                             <Badge
                               variant={
-                                empOverview.employee.employment_status === 'active'
+                                empOverview.employee.employment_status ===
+                                'active'
                                   ? 'default'
                                   : 'secondary'
                               }
@@ -303,8 +326,8 @@ export function EmployerEmployeeAlignment({
                         </div>
                       </div>
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant='outline'
+                        size='sm'
                         onClick={() =>
                           setSelectedEmployeeId(
                             selectedEmployeeId === empOverview.employee.id
@@ -313,81 +336,103 @@ export function EmployerEmployeeAlignment({
                           )
                         }
                       >
-                        <Eye className="h-4 w-4 mr-2" />
-                        {selectedEmployeeId === empOverview.employee.id ? 'Hide' : 'View'} Details
+                        <Eye className='h-4 w-4 mr-2' />
+                        {selectedEmployeeId === empOverview.employee.id
+                          ? 'Hide'
+                          : 'View'}{' '}
+                        Details
                       </Button>
                     </div>
 
                     {/* Quick Stats */}
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="text-center p-2 bg-muted rounded">
-                        <div className="text-2xl font-bold">
+                    <div className='grid grid-cols-4 gap-4'>
+                      <div className='text-center p-2 bg-muted rounded'>
+                        <div className='text-2xl font-bold'>
                           {empOverview.stats.activeAssignments}
                         </div>
-                        <div className="text-xs text-muted-foreground">Assignments</div>
-                      </div>
-                      <div className="text-center p-2 bg-muted rounded">
-                        <div className="text-2xl font-bold">
-                          {empOverview.stats.completedTasks}/{empOverview.stats.totalTasks}
+                        <div className='text-xs text-muted-foreground'>
+                          Assignments
                         </div>
-                        <div className="text-xs text-muted-foreground">Tasks</div>
                       </div>
-                      <div className="text-center p-2 bg-muted rounded">
-                        <div className="text-2xl font-bold">
+                      <div className='text-center p-2 bg-muted rounded'>
+                        <div className='text-2xl font-bold'>
+                          {empOverview.stats.completedTasks}/
+                          {empOverview.stats.totalTasks}
+                        </div>
+                        <div className='text-xs text-muted-foreground'>
+                          Tasks
+                        </div>
+                      </div>
+                      <div className='text-center p-2 bg-muted rounded'>
+                        <div className='text-2xl font-bold'>
                           {empOverview.stats.activeTargets}
                         </div>
-                        <div className="text-xs text-muted-foreground">Targets</div>
+                        <div className='text-xs text-muted-foreground'>
+                          Targets
+                        </div>
                       </div>
-                      <div className="text-center p-2 bg-muted rounded">
-                        <div className="text-2xl font-bold">
+                      <div className='text-center p-2 bg-muted rounded'>
+                        <div className='text-2xl font-bold'>
                           {empOverview.stats.targetsProgress}%
                         </div>
-                        <div className="text-xs text-muted-foreground">Progress</div>
+                        <div className='text-xs text-muted-foreground'>
+                          Progress
+                        </div>
                       </div>
                     </div>
 
                     {/* Assignments */}
                     {empOverview.assignments.length > 0 ? (
                       <div>
-                        <h4 className="font-medium mb-2 flex items-center gap-2">
-                          <Briefcase className="h-4 w-4" />
+                        <h4 className='font-medium mb-2 flex items-center gap-2'>
+                          <Briefcase className='h-4 w-4' />
                           Client Assignments
                         </h4>
-                        <div className="space-y-2">
-                          {empOverview.assignments.map((assignment) => (
+                        <div className='space-y-2'>
+                          {empOverview.assignments.map(assignment => (
                             <div
                               key={assignment.id}
-                              className="flex items-center justify-between p-3 border rounded-lg"
+                              className='flex items-center justify-between p-3 border rounded-lg'
                             >
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                                  <span className="font-medium">
-                                    {assignment.client?.name_en || assignment.client?.name_ar || 'Unknown Client'}
+                              <div className='flex-1'>
+                                <div className='flex items-center gap-2'>
+                                  <Building2 className='h-4 w-4 text-muted-foreground' />
+                                  <span className='font-medium'>
+                                    {assignment.client?.name_en ||
+                                      assignment.client?.name_ar ||
+                                      'Unknown Client'}
                                   </span>
-                                  <Badge variant="outline">{assignment.status}</Badge>
+                                  <Badge variant='outline'>
+                                    {assignment.status}
+                                  </Badge>
                                 </div>
-                                <div className="text-sm text-muted-foreground mt-1">
+                                <div className='text-sm text-muted-foreground mt-1'>
                                   {assignment.job_title}
-                                  {assignment.department && ` • ${assignment.department}`}
+                                  {assignment.department &&
+                                    ` • ${assignment.department}`}
                                   {assignment.work_location && (
                                     <>
                                       {' • '}
-                                      <MapPin className="h-3 w-3 inline mr-1" />
+                                      <MapPin className='h-3 w-3 inline mr-1' />
                                       {assignment.work_location}
                                     </>
                                   )}
                                 </div>
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  <Calendar className="h-3 w-3 inline mr-1" />
-                                  {format(new Date(assignment.start_date), 'MMM dd, yyyy')}
+                                <div className='text-xs text-muted-foreground mt-1'>
+                                  <Calendar className='h-3 w-3 inline mr-1' />
+                                  {format(
+                                    new Date(assignment.start_date),
+                                    'MMM dd, yyyy'
+                                  )}
                                   {assignment.end_date &&
                                     ` - ${format(new Date(assignment.end_date), 'MMM dd, yyyy')}`}
                                 </div>
                               </div>
-                              <Link href={`/hr/assignments?employee=${empOverview.employee.id}`}>
-                                <Button variant="ghost" size="sm">
-                                  <LinkIcon className="h-4 w-4" />
+                              <Link
+                                href={`/hr/assignments?employee=${empOverview.employee.id}`}
+                              >
+                                <Button variant='ghost' size='sm'>
+                                  <LinkIcon className='h-4 w-4' />
                                 </Button>
                               </Link>
                             </div>
@@ -395,45 +440,51 @@ export function EmployerEmployeeAlignment({
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-4 text-muted-foreground">
+                      <div className='text-center py-4 text-muted-foreground'>
                         No active assignments
                       </div>
                     )}
 
                     {/* Expanded Details */}
                     {selectedEmployeeId === empOverview.employee.id && (
-                      <div className="pt-4 border-t space-y-4">
+                      <div className='pt-4 border-t space-y-4'>
                         {/* Tasks */}
                         {empOverview.tasks.length > 0 && (
                           <div>
-                            <h4 className="font-medium mb-2 flex items-center gap-2">
-                              <CheckSquare className="h-4 w-4" />
+                            <h4 className='font-medium mb-2 flex items-center gap-2'>
+                              <CheckSquare className='h-4 w-4' />
                               Recent Tasks
                             </h4>
-                            <div className="space-y-2">
-                              {empOverview.tasks.slice(0, 5).map((task) => (
+                            <div className='space-y-2'>
+                              {empOverview.tasks.slice(0, 5).map(task => (
                                 <div
                                   key={task.id}
-                                  className="flex items-center justify-between p-2 border rounded text-sm"
+                                  className='flex items-center justify-between p-2 border rounded text-sm'
                                 >
-                                  <div className="flex-1">
-                                    <span className="font-medium">{task.title}</span>
-                                    <div className="flex items-center gap-2 mt-1">
+                                  <div className='flex-1'>
+                                    <span className='font-medium'>
+                                      {task.title}
+                                    </span>
+                                    <div className='flex items-center gap-2 mt-1'>
                                       <Badge
                                         variant={
                                           task.status === 'completed'
                                             ? 'default'
                                             : task.priority === 'urgent'
-                                            ? 'destructive'
-                                            : 'outline'
+                                              ? 'destructive'
+                                              : 'outline'
                                         }
-                                        className="text-xs"
+                                        className='text-xs'
                                       >
                                         {task.status}
                                       </Badge>
                                       {task.due_date && (
-                                        <span className="text-xs text-muted-foreground">
-                                          Due: {format(new Date(task.due_date), 'MMM dd')}
+                                        <span className='text-xs text-muted-foreground'>
+                                          Due:{' '}
+                                          {format(
+                                            new Date(task.due_date),
+                                            'MMM dd'
+                                          )}
                                         </span>
                                       )}
                                     </div>
@@ -447,32 +498,47 @@ export function EmployerEmployeeAlignment({
                         {/* Targets */}
                         {empOverview.targets.length > 0 && (
                           <div>
-                            <h4 className="font-medium mb-2 flex items-center gap-2">
-                              <Target className="h-4 w-4" />
+                            <h4 className='font-medium mb-2 flex items-center gap-2'>
+                              <Target className='h-4 w-4' />
                               Active Targets
                             </h4>
-                            <div className="space-y-2">
-                              {empOverview.targets.map((target) => (
-                                <div key={target.id} className="p-3 border rounded-lg">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium">{target.title}</span>
-                                    <Badge variant="outline">{target.status}</Badge>
+                            <div className='space-y-2'>
+                              {empOverview.targets.map(target => (
+                                <div
+                                  key={target.id}
+                                  className='p-3 border rounded-lg'
+                                >
+                                  <div className='flex items-center justify-between mb-2'>
+                                    <span className='font-medium'>
+                                      {target.title}
+                                    </span>
+                                    <Badge variant='outline'>
+                                      {target.status}
+                                    </Badge>
                                   </div>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <div className="flex-1 bg-muted rounded-full h-2">
+                                  <div className='flex items-center gap-2 mb-2'>
+                                    <div className='flex-1 bg-muted rounded-full h-2'>
                                       {/* Dynamic width required for progress bar */}
                                       <div
-                                        className="bg-primary h-2 rounded-full transition-all"
-                                        style={{ width: `${Math.min(100, Math.max(0, target.progress_percentage || 0))}%` } as React.CSSProperties}
+                                        className='bg-primary h-2 rounded-full transition-all'
+                                        style={
+                                          {
+                                            width: `${Math.min(100, Math.max(0, target.progress_percentage || 0))}%`,
+                                          } as React.CSSProperties
+                                        }
                                       />
                                     </div>
-                                    <span className="text-sm font-medium">
+                                    <span className='text-sm font-medium'>
                                       {target.progress_percentage}%
                                     </span>
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {target.current_value} / {target.target_value} • Ends:{' '}
-                                    {format(new Date(target.end_date), 'MMM dd, yyyy')}
+                                  <div className='text-xs text-muted-foreground'>
+                                    {target.current_value} /{' '}
+                                    {target.target_value} • Ends:{' '}
+                                    {format(
+                                      new Date(target.end_date),
+                                      'MMM dd, yyyy'
+                                    )}
                                   </div>
                                 </div>
                               ))}
@@ -489,11 +555,13 @@ export function EmployerEmployeeAlignment({
         </TabsContent>
 
         {/* Tasks Overview Tab */}
-        <TabsContent value="tasks">
+        <TabsContent value='tasks'>
           <Card>
             <CardHeader>
               <CardTitle>All Tasks Overview</CardTitle>
-              <CardDescription>Tasks across all employees and assignments</CardDescription>
+              <CardDescription>
+                Tasks across all employees and assignments
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -508,27 +576,30 @@ export function EmployerEmployeeAlignment({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {employees.flatMap((emp) => {
+                  {employees.flatMap(emp => {
                     // TypeScript type guard: emp is guaranteed to be EmployeeOverview after filter
                     if (!emp || typeof emp !== 'object' || !('tasks' in emp)) {
                       return [];
                     }
                     const employee: EmployeeOverview = emp;
                     const tasks = employee.tasks || [];
-                    return tasks.map((task) => (
+                    return tasks.map(task => (
                       <TableRow key={task.id}>
                         <TableCell>
-                          {employee.employee?.employee?.name_en || employee.employee?.employee?.name_ar}
+                          {employee.employee?.employee?.name_en ||
+                            employee.employee?.employee?.name_ar}
                         </TableCell>
-                        <TableCell className="font-medium">{task.title}</TableCell>
+                        <TableCell className='font-medium'>
+                          {task.title}
+                        </TableCell>
                         <TableCell>
                           <Badge
                             variant={
                               task.status === 'completed'
                                 ? 'default'
                                 : task.status === 'in_progress'
-                                ? 'secondary'
-                                : 'outline'
+                                  ? 'secondary'
+                                  : 'outline'
                             }
                           >
                             {task.status}
@@ -540,8 +611,8 @@ export function EmployerEmployeeAlignment({
                               task.priority === 'urgent'
                                 ? 'destructive'
                                 : task.priority === 'high'
-                                ? 'default'
-                                : 'outline'
+                                  ? 'default'
+                                  : 'outline'
                             }
                           >
                             {task.priority}
@@ -565,29 +636,37 @@ export function EmployerEmployeeAlignment({
         </TabsContent>
 
         {/* Targets Overview Tab */}
-        <TabsContent value="targets">
+        <TabsContent value='targets'>
           <Card>
             <CardHeader>
               <CardTitle>All Targets Overview</CardTitle>
-              <CardDescription>Targets and goals across all employees</CardDescription>
+              <CardDescription>
+                Targets and goals across all employees
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {employees.map((emp) =>
+              <div className='space-y-4'>
+                {employees.map(emp =>
                   emp.targets.length > 0 ? (
-                    <div key={emp.employee.id} className="border rounded-lg p-4">
-                      <h3 className="font-semibold mb-3">
-                        {emp.employee.employee?.name_en || emp.employee.employee?.name_ar}
+                    <div
+                      key={emp.employee.id}
+                      className='border rounded-lg p-4'
+                    >
+                      <h3 className='font-semibold mb-3'>
+                        {emp.employee.employee?.name_en ||
+                          emp.employee.employee?.name_ar}
                       </h3>
-                      <div className="space-y-3">
-                        {emp.targets.map((target) => (
+                      <div className='space-y-3'>
+                        {emp.targets.map(target => (
                           <div key={target.id}>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium">{target.title}</span>
-                              <Badge variant="outline">{target.status}</Badge>
+                            <div className='flex items-center justify-between mb-2'>
+                              <span className='font-medium'>
+                                {target.title}
+                              </span>
+                              <Badge variant='outline'>{target.status}</Badge>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 bg-muted rounded-full h-2">
+                            <div className='flex items-center gap-2'>
+                              <div className='flex-1 bg-muted rounded-full h-2'>
                                 {/* Dynamic width required for progress bar */}
                                 <div
                                   className={cn(
@@ -595,19 +674,27 @@ export function EmployerEmployeeAlignment({
                                     target.progress_percentage >= 80
                                       ? 'bg-green-500'
                                       : target.progress_percentage >= 50
-                                      ? 'bg-yellow-500'
-                                      : 'bg-red-500'
+                                        ? 'bg-yellow-500'
+                                        : 'bg-red-500'
                                   )}
-                                  style={{ width: `${Math.min(100, Math.max(0, target.progress_percentage || 0))}%` } as React.CSSProperties}
+                                  style={
+                                    {
+                                      width: `${Math.min(100, Math.max(0, target.progress_percentage || 0))}%`,
+                                    } as React.CSSProperties
+                                  }
                                 />
                               </div>
-                              <span className="text-sm font-medium w-16 text-right">
+                              <span className='text-sm font-medium w-16 text-right'>
                                 {target.progress_percentage}%
                               </span>
                             </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {target.current_value} / {target.target_value} • Ends:{' '}
-                              {format(new Date(target.end_date), 'MMM dd, yyyy')}
+                            <div className='text-xs text-muted-foreground mt-1'>
+                              {target.current_value} / {target.target_value} •
+                              Ends:{' '}
+                              {format(
+                                new Date(target.end_date),
+                                'MMM dd, yyyy'
+                              )}
                             </div>
                           </div>
                         ))}
@@ -623,4 +710,3 @@ export function EmployerEmployeeAlignment({
     </div>
   );
 }
-

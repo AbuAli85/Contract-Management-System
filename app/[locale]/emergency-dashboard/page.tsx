@@ -8,7 +8,6 @@ import {
   Users,
   BarChart3,
   Bell,
-  User,
   Plus,
   RefreshCw,
 } from 'lucide-react';
@@ -18,10 +17,9 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+import _Link from 'next/link';
 
 // Completely isolated stats component with no external dependencies
 function IsolatedStatsOverview() {

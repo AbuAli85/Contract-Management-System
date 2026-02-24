@@ -92,7 +92,7 @@ export default function DocumentReconciliationPage() {
         console.error('Error fetching promoters:', promotersError);
         toast({
           title: 'Error',
-          description: 'Failed to fetch promoters: ' + promotersError.message,
+          description: `Failed to fetch promoters: ${promotersError.message}`,
           variant: 'destructive',
         });
         return;

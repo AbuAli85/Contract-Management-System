@@ -280,36 +280,36 @@ export async function POST(request: NextRequest) {
       contractData.description = `Department: ${body.department}`;
     }
     if (body.work_location && body.work_location.trim() !== '') {
-      contractData.description =
-        (contractData.description || '') +
-        `\nWork Location: ${body.work_location}`;
+      contractData.description = `${
+        contractData.description || ''
+      }\nWork Location: ${body.work_location}`;
     }
 
     // Add general contract specific fields
     if (body.product_name) {
-      contractData.description =
-        (contractData.description || '') +
-        `\nProduct/Service: ${body.product_name}`;
+      contractData.description = `${
+        contractData.description || ''
+      }\nProduct/Service: ${body.product_name}`;
     }
     if (body.service_description) {
-      contractData.description =
-        (contractData.description || '') +
-        `\nService Description: ${body.service_description}`;
+      contractData.description = `${
+        contractData.description || ''
+      }\nService Description: ${body.service_description}`;
     }
     if (body.project_duration) {
-      contractData.description =
-        (contractData.description || '') +
-        `\nProject Duration: ${body.project_duration}`;
+      contractData.description = `${
+        contractData.description || ''
+      }\nProject Duration: ${body.project_duration}`;
     }
     if (body.deliverables) {
-      contractData.description =
-        (contractData.description || '') +
-        `\nDeliverables: ${body.deliverables}`;
+      contractData.description = `${
+        contractData.description || ''
+      }\nDeliverables: ${body.deliverables}`;
     }
     if (body.payment_terms) {
-      contractData.description =
-        (contractData.description || '') +
-        `\nPayment Terms: ${body.payment_terms}`;
+      contractData.description = `${
+        contractData.description || ''
+      }\nPayment Terms: ${body.payment_terms}`;
     }
 
     const { data: newContract, error: createError } = await (supabase as any)

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const _supabase = createClient();
     const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
 

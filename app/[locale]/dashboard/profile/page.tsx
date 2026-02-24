@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { User, Shield, Settings } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export default function DashboardProfilePage() {
   return (

@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, X, User, Mail, Phone, CreditCard, Loader2 } from 'lucide-react';
+import {
+  Search,
+  X,
+  User,
+  Mail,
+  Phone,
+  CreditCard,
+  Loader2,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,7 +27,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { maskIdNumber, formatIdForSuggestion, isIdSearch } from '@/lib/utils/id-masking';
+import {
+  maskIdNumber,
+  formatIdForSuggestion,
+  isIdSearch,
+} from '@/lib/utils/id-masking';
 import { cn } from '@/lib/utils';
 
 interface SearchSuggestion {
@@ -154,16 +166,14 @@ export const PromotersSearchWithAutocomplete = React.memo(
     }, [searchTerm]);
 
     // Fetch suggestions when user types
-    const {
-      data: suggestions = [],
-      isLoading: isLoadingSuggestions,
-    } = useQuery<SearchSuggestion[]>({
-      queryKey: ['promoter-search-suggestions', localValue],
-      queryFn: () => fetchSearchSuggestions(localValue),
-      enabled: localValue.length >= 2 && isFocused,
-      staleTime: 1000,
-      gcTime: 5000,
-    });
+    const { data: suggestions = [], isLoading: isLoadingSuggestions } =
+      useQuery<SearchSuggestion[]>({
+        queryKey: ['promoter-search-suggestions', localValue],
+        queryFn: () => fetchSearchSuggestions(localValue),
+        enabled: localValue.length >= 2 && isFocused,
+        staleTime: 1000,
+        gcTime: 5000,
+      });
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,7 +243,10 @@ export const PromotersSearchWithAutocomplete = React.memo(
     return (
       <div className='space-y-3'>
         <div className='flex items-center justify-between flex-wrap gap-2'>
-          <Label htmlFor='promoter-search' className='text-sm font-medium whitespace-nowrap'>
+          <Label
+            htmlFor='promoter-search'
+            className='text-sm font-medium whitespace-nowrap'
+          >
             Search promoters
           </Label>
           <div className='flex items-center gap-3 flex-wrap'>
@@ -244,7 +257,15 @@ export const PromotersSearchWithAutocomplete = React.memo(
               </div>
             )}
             <span className='text-xs text-muted-foreground hidden sm:inline whitespace-nowrap'>
-              Press <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600'>Ctrl+K</kbd> for focus • <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600'>Esc</kbd> to clear
+              Press{' '}
+              <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600'>
+                Ctrl+K
+              </kbd>{' '}
+              for focus •{' '}
+              <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600'>
+                Esc
+              </kbd>{' '}
+              to clear
             </span>
           </div>
         </div>
@@ -368,7 +389,10 @@ export const PromotersSearchWithAutocomplete = React.memo(
           )}
         </div>
         <div className='flex items-center justify-between flex-wrap gap-2'>
-          <p id='search-help' className='text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap'>
+          <p
+            id='search-help'
+            className='text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap'
+          >
             <span className='whitespace-nowrap'>Press</span>
             <kbd className='px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600 whitespace-nowrap'>
               Ctrl+K
@@ -393,4 +417,3 @@ export const PromotersSearchWithAutocomplete = React.memo(
 );
 
 PromotersSearchWithAutocomplete.displayName = 'PromotersSearchWithAutocomplete';
-

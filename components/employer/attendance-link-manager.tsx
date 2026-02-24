@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -23,9 +29,22 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { GoogleLocationPicker } from './google-location-picker';
 
 interface AttendanceLink {
@@ -72,7 +91,8 @@ export function AttendanceLinkManager() {
 
   // Form state
   const [title, setTitle] = useState('');
-  const [selectedOfficeLocation, setSelectedOfficeLocation] = useState<string>('');
+  const [selectedOfficeLocation, setSelectedOfficeLocation] =
+    useState<string>('');
   const [customLatitude, setCustomLatitude] = useState('');
   const [customLongitude, setCustomLongitude] = useState('');
   const [googleLocation, setGoogleLocation] = useState<{
@@ -81,7 +101,9 @@ export function AttendanceLinkManager() {
     address: string;
     name?: string;
   } | null>(null);
-  const [locationSource, setLocationSource] = useState<'office' | 'google' | 'custom'>('google');
+  const [locationSource, setLocationSource] = useState<
+    'office' | 'google' | 'custom'
+  >('google');
   const [allowedRadius, setAllowedRadius] = useState('50');
   const [validUntil, setValidUntil] = useState('');
   const [maxUses, setMaxUses] = useState('');
@@ -137,7 +159,9 @@ export function AttendanceLinkManager() {
 
       if (locationSource === 'office' && selectedOfficeLocation) {
         // Use office location coordinates
-        const office = officeLocations.find(loc => loc.id === selectedOfficeLocation);
+        const office = officeLocations.find(
+          loc => loc.id === selectedOfficeLocation
+        );
         if (!office) {
           throw new Error('Selected office location not found');
         }
@@ -152,7 +176,7 @@ export function AttendanceLinkManager() {
         // Use custom coordinates
         latitude = parseFloat(customLatitude);
         longitude = parseFloat(customLongitude);
-        
+
         if (isNaN(latitude) || isNaN(longitude)) {
           throw new Error('Please provide valid coordinates');
         }
@@ -240,51 +264,52 @@ export function AttendanceLinkManager() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <CardContent className='flex items-center justify-center py-12'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary' />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between'>
         <div>
-          <h2 className="text-2xl font-bold">Attendance Check-In Links</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className='text-2xl font-bold'>Attendance Check-In Links</h2>
+          <p className='text-sm text-muted-foreground'>
             Create location-restricted check-in links for employees
           </p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className='h-4 w-4 mr-2' />
               Create New Link
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className='sm:max-w-lg'>
             <DialogHeader>
               <DialogTitle>Create Attendance Check-In Link</DialogTitle>
               <DialogDescription>
-                Create a location-restricted link that employees can use to check in
+                Create a location-restricted link that employees can use to
+                check in
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className='space-y-4'>
               <div>
-                <Label htmlFor="title">Title (Optional)</Label>
+                <Label htmlFor='title'>Title (Optional)</Label>
                 <Input
-                  id="title"
+                  id='title'
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Main Office Check-In"
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder='e.g., Main Office Check-In'
                 />
               </div>
 
               <div>
-                <Label htmlFor="location-source">Location Source</Label>
-                <Select 
-                  value={locationSource} 
+                <Label htmlFor='location-source'>Location Source</Label>
+                <Select
+                  value={locationSource}
                   onValueChange={(value: 'office' | 'google' | 'custom') => {
                     setLocationSource(value);
                     if (value !== 'google') {
@@ -300,19 +325,19 @@ export function AttendanceLinkManager() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select location source" />
+                    <SelectValue placeholder='Select location source' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="google">Google Maps Search</SelectItem>
-                    <SelectItem value="office">Office Location</SelectItem>
-                    <SelectItem value="custom">Custom Coordinates</SelectItem>
+                    <SelectItem value='google'>Google Maps Search</SelectItem>
+                    <SelectItem value='office'>Office Location</SelectItem>
+                    <SelectItem value='custom'>Custom Coordinates</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {locationSource === 'google' && (
                 <GoogleLocationPicker
-                  onLocationSelect={(location) => {
+                  onLocationSelect={location => {
                     setGoogleLocation(location);
                     if (location.name && !title) {
                       setTitle(location.name);
@@ -323,16 +348,18 @@ export function AttendanceLinkManager() {
 
               {locationSource === 'office' && (
                 <div>
-                  <Label htmlFor="office-location">Select Office Location</Label>
-                  <Select 
-                    value={selectedOfficeLocation} 
+                  <Label htmlFor='office-location'>
+                    Select Office Location
+                  </Label>
+                  <Select
+                    value={selectedOfficeLocation}
                     onValueChange={setSelectedOfficeLocation}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select an office location" />
+                      <SelectValue placeholder='Select an office location' />
                     </SelectTrigger>
                     <SelectContent>
-                      {officeLocations.map((loc) => (
+                      {officeLocations.map(loc => (
                         <SelectItem key={loc.id} value={loc.id}>
                           {loc.name} - {loc.address}
                         </SelectItem>
@@ -340,8 +367,8 @@ export function AttendanceLinkManager() {
                     </SelectContent>
                   </Select>
                   {selectedOfficeLocation && (
-                    <Alert className="mt-2">
-                      <MapPin className="h-4 w-4" />
+                    <Alert className='mt-2'>
+                      <MapPin className='h-4 w-4' />
                       <AlertDescription>
                         Using coordinates from selected office location
                       </AlertDescription>
@@ -351,96 +378,96 @@ export function AttendanceLinkManager() {
               )}
 
               {locationSource === 'custom' && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className='grid grid-cols-2 gap-4'>
                   <div>
-                    <Label htmlFor="latitude">Latitude</Label>
+                    <Label htmlFor='latitude'>Latitude</Label>
                     <Input
-                      id="latitude"
-                      type="number"
-                      step="any"
+                      id='latitude'
+                      type='number'
+                      step='any'
                       value={customLatitude}
-                      onChange={(e) => setCustomLatitude(e.target.value)}
-                      placeholder="23.5859"
+                      onChange={e => setCustomLatitude(e.target.value)}
+                      placeholder='23.5859'
                     />
                   </div>
                   <div>
-                    <Label htmlFor="longitude">Longitude</Label>
+                    <Label htmlFor='longitude'>Longitude</Label>
                     <Input
-                      id="longitude"
-                      type="number"
-                      step="any"
+                      id='longitude'
+                      type='number'
+                      step='any'
                       value={customLongitude}
-                      onChange={(e) => setCustomLongitude(e.target.value)}
-                      placeholder="58.4059"
+                      onChange={e => setCustomLongitude(e.target.value)}
+                      placeholder='58.4059'
                     />
                   </div>
                 </div>
               )}
 
               <div>
-                <Label htmlFor="radius">Allowed Radius (meters)</Label>
+                <Label htmlFor='radius'>Allowed Radius (meters)</Label>
                 <Input
-                  id="radius"
-                  type="number"
+                  id='radius'
+                  type='number'
                   value={allowedRadius}
-                  onChange={(e) => setAllowedRadius(e.target.value)}
-                  placeholder="50"
+                  onChange={e => setAllowedRadius(e.target.value)}
+                  placeholder='50'
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className='text-xs text-muted-foreground mt-1'>
                   Employees must be within this distance to check in
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="validUntil">Valid Until</Label>
+                <Label htmlFor='validUntil'>Valid Until</Label>
                 <Input
-                  id="validUntil"
-                  type="datetime-local"
+                  id='validUntil'
+                  type='datetime-local'
                   value={validUntil}
-                  onChange={(e) => setValidUntil(e.target.value)}
+                  onChange={e => setValidUntil(e.target.value)}
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="maxUses">Max Uses (Optional)</Label>
+                <Label htmlFor='maxUses'>Max Uses (Optional)</Label>
                 <Input
-                  id="maxUses"
-                  type="number"
+                  id='maxUses'
+                  type='number'
                   value={maxUses}
-                  onChange={(e) => setMaxUses(e.target.value)}
-                  placeholder="Leave empty for unlimited"
+                  onChange={e => setMaxUses(e.target.value)}
+                  placeholder='Leave empty for unlimited'
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 <input
-                  type="checkbox"
-                  id="autoGenerate"
+                  type='checkbox'
+                  id='autoGenerate'
                   checked={autoGenerateDaily}
-                  onChange={(e) => setAutoGenerateDaily(e.target.checked)}
-                  className="rounded"
+                  onChange={e => setAutoGenerateDaily(e.target.checked)}
+                  className='rounded'
                 />
-                <Label htmlFor="autoGenerate" className="cursor-pointer">
+                <Label htmlFor='autoGenerate' className='cursor-pointer'>
                   Auto-generate daily at valid_from time
                 </Label>
               </div>
 
-              <div className="flex gap-2">
+              <div className='flex gap-2'>
                 <Button
                   onClick={handleCreateLink}
                   disabled={creating}
-                  className="flex-1"
+                  className='flex-1'
                 >
                   {creating ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                   ) : (
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className='h-4 w-4 mr-2' />
                   )}
                   Create Link
                 </Button>
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => setShowCreateDialog(false)}
                 >
                   Cancel
@@ -453,119 +480,133 @@ export function AttendanceLinkManager() {
 
       {links.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <LinkIcon className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No Links Created</p>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className='flex flex-col items-center justify-center py-12'>
+            <LinkIcon className='h-12 w-12 text-muted-foreground mb-4' />
+            <p className='text-lg font-medium'>No Links Created</p>
+            <p className='text-sm text-muted-foreground'>
               Create your first attendance check-in link to get started
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {links.map((link) => (
-            <Card key={link.id} className={!isLinkActive(link) ? 'opacity-60' : ''}>
+        <div className='grid gap-4'>
+          {links.map(link => (
+            <Card
+              key={link.id}
+              className={!isLinkActive(link) ? 'opacity-60' : ''}
+            >
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <LinkIcon className="h-5 w-5" />
+                <div className='flex items-start justify-between'>
+                  <div className='flex-1'>
+                    <CardTitle className='flex items-center gap-2'>
+                      <LinkIcon className='h-5 w-5' />
                       {link.title}
                     </CardTitle>
-                    <CardDescription className="mt-1">
+                    <CardDescription className='mt-1'>
                       {link.office_location?.name || `Custom Location`}
                     </CardDescription>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className='flex flex-col items-end gap-2'>
                     {isLinkActive(link) ? (
-                      <Badge variant="default">
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                      <Badge variant='default'>
+                        <CheckCircle className='h-3 w-3 mr-1' />
                         Active
                       </Badge>
                     ) : (
-                      <Badge variant="secondary">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        {isLinkExpired(link.valid_until) ? 'Expired' : 'Inactive'}
+                      <Badge variant='secondary'>
+                        <XCircle className='h-3 w-3 mr-1' />
+                        {isLinkExpired(link.valid_until)
+                          ? 'Expired'
+                          : 'Inactive'}
                       </Badge>
                     )}
                     {link.auto_generate_daily && (
-                      <Badge variant="outline" className="text-xs">
-                        <Clock className="h-3 w-3 mr-1" />
+                      <Badge variant='outline' className='text-xs'>
+                        <Clock className='h-3 w-3 mr-1' />
                         Auto Daily
                       </Badge>
                     )}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-2 gap-4 text-sm'>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Location</Label>
-                    <p className="font-medium">
-                      {link.target_latitude.toFixed(6)}, {link.target_longitude.toFixed(6)}
+                    <Label className='text-xs text-muted-foreground'>
+                      Location
+                    </Label>
+                    <p className='font-medium'>
+                      {link.target_latitude.toFixed(6)},{' '}
+                      {link.target_longitude.toFixed(6)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className='text-xs text-muted-foreground'>
                       Radius: {link.allowed_radius_meters}m
                     </p>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Valid Until</Label>
-                    <p className="font-medium">
-                      {format(parseISO(link.valid_until), 'MMM dd, yyyy hh:mm a')}
+                    <Label className='text-xs text-muted-foreground'>
+                      Valid Until
+                    </Label>
+                    <p className='font-medium'>
+                      {format(
+                        parseISO(link.valid_until),
+                        'MMM dd, yyyy hh:mm a'
+                      )}
                     </p>
                     {link.max_uses && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className='text-xs text-muted-foreground'>
                         Uses: {link.current_uses} / {link.max_uses}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                <div className='flex items-center gap-2 p-3 bg-gray-50 rounded-lg'>
                   <Input
                     value={link.url}
                     readOnly
-                    className="font-mono text-sm"
+                    className='font-mono text-sm'
                   />
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => copyLink(link.url)}
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className='h-4 w-4' />
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => window.open(link.url, '_blank')}
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className='h-4 w-4' />
                   </Button>
                 </div>
 
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => copyLink(link.url)}
-                    className="flex-1"
+                    className='flex-1'
                   >
-                    <Copy className="h-4 w-4 mr-2" />
+                    <Copy className='h-4 w-4 mr-2' />
                     Copy Link
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => {
                       // Generate QR code (you can integrate a QR code library)
                       toast({
                         title: 'QR Code',
-                        description: 'QR code feature coming soon. Use the link for now.',
+                        description:
+                          'QR code feature coming soon. Use the link for now.',
                       });
                     }}
-                    className="flex-1"
+                    className='flex-1'
                   >
-                    <QrCode className="h-4 w-4 mr-2" />
+                    <QrCode className='h-4 w-4 mr-2' />
                     QR Code
                   </Button>
                 </div>
@@ -577,4 +618,3 @@ export function AttendanceLinkManager() {
     </div>
   );
 }
-

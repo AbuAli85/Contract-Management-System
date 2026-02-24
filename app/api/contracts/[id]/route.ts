@@ -325,7 +325,7 @@ export const PUT = withRBAC(
               code: error.code,
               hint: `To enable "${dataToUpdate.status}" status, run the migration: supabase/migrations/20251116_add_rejected_and_extended_statuses.sql. For now, use one of these safe statuses: draft, pending, active, completed, terminated, expired`,
               attemptedStatus: dataToUpdate.status,
-              currentStatus: currentStatus,
+              currentStatus,
               safeStatuses: [
                 'draft',
                 'pending',

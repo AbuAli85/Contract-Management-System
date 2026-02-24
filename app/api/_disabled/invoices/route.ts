@@ -197,7 +197,7 @@ export async function GET(req: Request) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const status = searchParams.get('status');
     const providerId = searchParams.get('provider_id');
-    const clientId = searchParams.get('client_id');
+    const _clientId = searchParams.get('client_id');
     const startDate = searchParams.get('start_date');
     const endDate = searchParams.get('end_date');
 

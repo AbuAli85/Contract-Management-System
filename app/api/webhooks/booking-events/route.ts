@@ -34,10 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!verification.payload) {
-      return NextResponse.json(
-        { error: 'Missing payload' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing payload' }, { status: 400 });
     }
 
     const bookingEvent: BookingEventPayload =
@@ -128,9 +125,8 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint for webhook health check
 export async function GET() {
-  const { validateMakeWebhookConfig, getWebhookStats } = await import(
-    '@/lib/webhooks/make-integration'
-  );
+  const { validateMakeWebhookConfig, getWebhookStats } =
+    await import('@/lib/webhooks/make-integration');
 
   const validation = validateMakeWebhookConfig();
   const stats = getWebhookStats();

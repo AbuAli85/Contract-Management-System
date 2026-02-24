@@ -9,7 +9,7 @@ import { AlertCircle } from 'lucide-react';
 export default function AttendanceCheckInRedirectPage() {
   const router = useRouter();
   const params = useParams();
-  const locale = params?.locale as string || 'en';
+  const locale = (params?.locale as string) || 'en';
 
   useEffect(() => {
     // Redirect to attendance page if no code is provided
@@ -17,16 +17,17 @@ export default function AttendanceCheckInRedirectPage() {
   }, [router, locale]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="max-w-md w-full">
+    <div className='min-h-screen flex items-center justify-center p-4'>
+      <Card className='max-w-md w-full'>
         <CardHeader>
           <CardTitle>Invalid Check-In Link</CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+          <Alert variant='destructive'>
+            <AlertCircle className='h-4 w-4' />
             <AlertDescription>
-              This check-in link is invalid. Please use a valid attendance link provided by your manager.
+              This check-in link is invalid. Please use a valid attendance link
+              provided by your manager.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -34,4 +35,3 @@ export default function AttendanceCheckInRedirectPage() {
     </div>
   );
 }
-

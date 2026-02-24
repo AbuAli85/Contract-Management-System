@@ -96,7 +96,7 @@ export function TasksManager() {
   const tasks = (tasksData?.tasks || []) as Task[];
 
   // Filter by search term
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = tasks.filter(task => {
     if (!searchTerm) return true;
     const name =
       task.employer_employee?.employee?.name_en ||
@@ -109,7 +109,10 @@ export function TasksManager() {
   });
 
   const getPriorityBadge = (priority: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<
+      string,
+      'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
       urgent: 'destructive',
       high: 'default',
       medium: 'secondary',
@@ -124,7 +127,10 @@ export function TasksManager() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<
+      string,
+      'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
       completed: 'default',
       in_progress: 'secondary',
       pending: 'outline',
@@ -140,30 +146,30 @@ export function TasksManager() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className='flex items-center justify-center py-12'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Tasks Management</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className='text-3xl font-bold'>Tasks Management</h1>
+          <p className='text-muted-foreground mt-1'>
             Assign, track, and manage employee tasks
           </p>
         </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className='h-4 w-4 mr-2' />
               Create Task
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className='max-w-2xl'>
             <DialogHeader>
               <DialogTitle>Create New Task</DialogTitle>
               <DialogDescription>
@@ -181,59 +187,61 @@ export function TasksManager() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
-            <CheckSquare className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Total Tasks</CardTitle>
+            <CheckSquare className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{tasks.length}</div>
-            <p className="text-xs text-muted-foreground">All tasks</p>
+            <div className='text-2xl font-bold'>{tasks.length}</div>
+            <p className='text-xs text-muted-foreground'>All tasks</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>In Progress</CardTitle>
+            <Clock className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {tasks.filter((t) => t.status === 'in_progress').length}
+            <div className='text-2xl font-bold'>
+              {tasks.filter(t => t.status === 'in_progress').length}
             </div>
-            <p className="text-xs text-muted-foreground">Active tasks</p>
+            <p className='text-xs text-muted-foreground'>Active tasks</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Completed</CardTitle>
+            <TrendingUp className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {tasks.filter((t) => t.status === 'completed').length}
+            <div className='text-2xl font-bold'>
+              {tasks.filter(t => t.status === 'completed').length}
             </div>
-            <p className="text-xs text-muted-foreground">Finished tasks</p>
+            <p className='text-xs text-muted-foreground'>Finished tasks</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Overdue</CardTitle>
+            <AlertCircle className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {tasks.filter(
-                (t) =>
-                  t.due_date &&
-                  new Date(t.due_date) < new Date() &&
-                  t.status !== 'completed'
-              ).length}
+            <div className='text-2xl font-bold'>
+              {
+                tasks.filter(
+                  t =>
+                    t.due_date &&
+                    new Date(t.due_date) < new Date() &&
+                    t.status !== 'completed'
+                ).length
+              }
             </div>
-            <p className="text-xs text-muted-foreground">Past due date</p>
+            <p className='text-xs text-muted-foreground'>Past due date</p>
           </CardContent>
         </Card>
       </div>
@@ -244,45 +252,45 @@ export function TasksManager() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+            <div className='relative'>
+              <Search className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
               <Input
-                placeholder="Search tasks..."
+                placeholder='Search tasks...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onChange={e => setSearchTerm(e.target.value)}
+                className='pl-10'
               />
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder='Status' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value='all'>All Status</SelectItem>
+                <SelectItem value='pending'>Pending</SelectItem>
+                <SelectItem value='in_progress'>In Progress</SelectItem>
+                <SelectItem value='completed'>Completed</SelectItem>
+                <SelectItem value='cancelled'>Cancelled</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Priority" />
+                <SelectValue placeholder='Priority' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value='all'>All Priorities</SelectItem>
+                <SelectItem value='urgent'>Urgent</SelectItem>
+                <SelectItem value='high'>High</SelectItem>
+                <SelectItem value='medium'>Medium</SelectItem>
+                <SelectItem value='low'>Low</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
+            <Button variant='outline'>
+              <Filter className='h-4 w-4 mr-2' />
               Apply Filters
             </Button>
           </div>
@@ -293,13 +301,11 @@ export function TasksManager() {
       <Card>
         <CardHeader>
           <CardTitle>Tasks</CardTitle>
-          <CardDescription>
-            {filteredTasks.length} tasks found
-          </CardDescription>
+          <CardDescription>{filteredTasks.length} tasks found</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredTasks.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className='text-center py-8 text-muted-foreground'>
               No tasks found
             </div>
           ) : (
@@ -316,13 +322,13 @@ export function TasksManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTasks.map((task) => (
+                {filteredTasks.map(task => (
                   <TableRow key={task.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{task.title}</div>
+                        <div className='font-medium'>{task.title}</div>
                         {task.description && (
-                          <div className="text-sm text-muted-foreground">
+                          <div className='text-sm text-muted-foreground'>
                             {task.description.substring(0, 50)}...
                           </div>
                         )}
@@ -344,12 +350,12 @@ export function TasksManager() {
                       {task.actual_hours
                         ? `${task.actual_hours}h`
                         : task.estimated_hours
-                        ? `Est: ${task.estimated_hours}h`
-                        : '-'}
+                          ? `Est: ${task.estimated_hours}h`
+                          : '-'}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4 mr-2" />
+                      <Button variant='ghost' size='sm'>
+                        <Eye className='h-4 w-4 mr-2' />
                         View
                       </Button>
                     </TableCell>
@@ -416,47 +422,47 @@ function TaskForm({ onSuccess }: { onSuccess: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit} className='space-y-4'>
+      <div className='space-y-2'>
         <Label>Employee</Label>
         <Input
           value={formData.employer_employee_id}
-          onChange={(e) =>
+          onChange={e =>
             setFormData({ ...formData, employer_employee_id: e.target.value })
           }
-          placeholder="Employee ID"
+          placeholder='Employee ID'
           required
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Title</Label>
         <Input
           value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="Task title"
+          onChange={e => setFormData({ ...formData, title: e.target.value })}
+          placeholder='Task title'
           required
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Description</Label>
         <Textarea
           value={formData.description}
-          onChange={(e) =>
+          onChange={e =>
             setFormData({ ...formData, description: e.target.value })
           }
-          placeholder="Task description"
+          placeholder='Task description'
           rows={4}
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
           <Label>Priority</Label>
           <Select
             value={formData.priority}
-            onValueChange={(value) =>
+            onValueChange={value =>
               setFormData({ ...formData, priority: value })
             }
           >
@@ -464,42 +470,41 @@ function TaskForm({ onSuccess }: { onSuccess: () => void }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
+              <SelectItem value='low'>Low</SelectItem>
+              <SelectItem value='medium'>Medium</SelectItem>
+              <SelectItem value='high'>High</SelectItem>
+              <SelectItem value='urgent'>Urgent</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className='space-y-2'>
           <Label>Due Date</Label>
           <Input
-            type="date"
+            type='date'
             value={formData.due_date}
-            onChange={(e) =>
+            onChange={e =>
               setFormData({ ...formData, due_date: e.target.value })
             }
           />
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Estimated Hours</Label>
         <Input
-          type="number"
+          type='number'
           value={formData.estimated_hours}
-          onChange={(e) =>
+          onChange={e =>
             setFormData({ ...formData, estimated_hours: e.target.value })
           }
-          placeholder="0"
+          placeholder='0'
         />
       </div>
 
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type='submit' disabled={loading} className='w-full'>
         {loading ? 'Creating...' : 'Create Task'}
       </Button>
     </form>
   );
 }
-

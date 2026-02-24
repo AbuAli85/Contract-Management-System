@@ -22,51 +22,6 @@ const MAKE_WEBHOOK_URL_LEGACY =
   process.env.MAKE_CONTRACT_PDF_WEBHOOK_URL || process.env.MAKECOM_WEBHOOK_URL;
 
 // Interface is just for reference - actual contract data structure varies
-interface ContractData {
-  id: string;
-  contract_number: string;
-  contract_type: string;
-  promoter_id: string | null;
-  first_party_id: string | null;
-  second_party_id: string | null;
-  title: string; // Main title field in database
-  description: string | null; // Description field
-  terms: string | null; // Terms field
-  basic_salary: number | null;
-  value: number | null;
-  total_value: number | null;
-  start_date: string;
-  end_date: string;
-  notice_period: number | null;
-  metadata: any; // JSONB field containing additional data
-
-  // Joined promoter data
-  promoters?: {
-    name_en: string;
-    name_ar: string;
-    mobile_number: string | null;
-    email: string | null;
-    id_card_number: string | null;
-    id_card_url: string | null;
-    passport_url: string | null;
-    passport_number: string | null;
-  };
-
-  // Joined party data
-  first_party?: {
-    name_en: string;
-    name_ar: string;
-    crn: string | null;
-    logo_url: string | null;
-  };
-
-  second_party?: {
-    name_en: string;
-    name_ar: string;
-    crn: string | null;
-    logo_url: string | null;
-  };
-}
 
 export async function POST(
   request: Request,
@@ -594,9 +549,9 @@ export async function POST(
     console.log('📤 Webhook URL (full):', webhookUrl);
     console.log(
       '📤 Webhook URL (masked):',
-      webhookUrl.substring(0, 30) +
-        '...' +
-        webhookUrl.substring(webhookUrl.length - 10)
+      `${webhookUrl.substring(0, 30)}...${webhookUrl.substring(
+        webhookUrl.length - 10
+      )}`
     );
     console.log('📤 Webhook URL length:', webhookUrl.length);
     console.log('📤 Available webhook URLs:', {

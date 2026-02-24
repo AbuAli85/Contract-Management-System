@@ -5,7 +5,7 @@ import { differenceInDays, differenceInMonths } from 'date-fns';
 
 /**
  * POST /api/offboarding/settlements
- * 
+ *
  * Calculate and create final settlement for departing employee
  */
 export const POST = withAnyRBAC(
@@ -31,7 +31,10 @@ export const POST = withAnyRBAC(
 
       if (!employer_employee_id || !last_working_date || !settlement_type) {
         return NextResponse.json(
-          { error: 'Missing required fields: employer_employee_id, last_working_date, settlement_type' },
+          {
+            error:
+              'Missing required fields: employer_employee_id, last_working_date, settlement_type',
+          },
           { status: 400 }
         );
       }
@@ -39,7 +42,8 @@ export const POST = withAnyRBAC(
       // Get employee details
       const { data: employee } = await supabase
         .from('employer_employees')
-        .select(`
+        .select(
+          `
           id,
           employee_id,
           company_id,
@@ -53,7 +57,8 @@ export const POST = withAnyRBAC(
             email,
             full_name
           )
-        `)
+        `
+        )
         .eq('id', employer_employee_id)
         .single();
 
@@ -65,7 +70,9 @@ export const POST = withAnyRBAC(
       }
 
       // Calculate settlement components
-      const hireDate = employee.hire_date ? new Date(employee.hire_date) : new Date();
+      const hireDate = employee.hire_date
+        ? new Date(employee.hire_date)
+        : new Date();
       const lastWorkingDate = new Date(last_working_date);
       const serviceMonths = differenceInMonths(lastWorkingDate, hireDate);
       const serviceYears = serviceMonths / 12;
@@ -81,7 +88,9 @@ export const POST = withAnyRBAC(
       const unusedLeaveDays = 0; // Placeholder - would calculate from leave balance
 
       // Calculate leave encashment (if applicable)
-      const dailySalary = employee.salary ? parseFloat(employee.salary) / 30 : 0;
+      const dailySalary = employee.salary
+        ? parseFloat(employee.salary) / 30
+        : 0;
       const leaveEncashment = unusedLeaveDays * dailySalary;
 
       // Calculate notice period pay (if applicable)
@@ -100,7 +109,8 @@ export const POST = withAnyRBAC(
 
       // Calculate total settlement
       const finalSalary = employee.salary ? parseFloat(employee.salary) : 0;
-      const totalSettlement = finalSalary + leaveEncashment + noticePeriodPay + gratuity - deductions;
+      const totalSettlement =
+        finalSalary + leaveEncashment + noticePeriodPay + gratuity - deductions;
 
       // Create settlement record
       const { data: settlement, error } = await supabase
@@ -110,13 +120,14 @@ export const POST = withAnyRBAC(
           company_id: employee.company_id,
           settlement_type,
           last_working_date,
-          settlement_date: settlement_date || new Date().toISOString().split('T')[0],
+          settlement_date:
+            settlement_date || new Date().toISOString().split('T')[0],
           final_salary: finalSalary,
           unused_leave_days: unusedLeaveDays,
           leave_encashment: leaveEncashment,
           notice_period_pay: noticePeriodPay,
-          gratuity: gratuity,
-          deductions: deductions,
+          gratuity,
+          deductions,
           total_settlement: totalSettlement,
           currency: employee.currency || 'OMR',
           payment_status: 'pending',
@@ -132,22 +143,25 @@ export const POST = withAnyRBAC(
         );
       }
 
-      return NextResponse.json({
-        success: true,
-        settlement,
-        calculations: {
-          serviceYears: serviceYears.toFixed(2),
-          serviceMonths,
-          unusedLeaveDays,
-          dailySalary,
-          leaveEncashment,
-          noticePeriodPay,
-          gratuity,
-          deductions,
-          totalSettlement,
+      return NextResponse.json(
+        {
+          success: true,
+          settlement,
+          calculations: {
+            serviceYears: serviceYears.toFixed(2),
+            serviceMonths,
+            unusedLeaveDays,
+            dailySalary,
+            leaveEncashment,
+            noticePeriodPay,
+            gratuity,
+            deductions,
+            totalSettlement,
+          },
+          message: 'Settlement calculated and created successfully',
         },
-        message: 'Settlement calculated and created successfully',
-      }, { status: 201 });
+        { status: 201 }
+      );
     } catch (error: any) {
       console.error('Error creating settlement:', error);
       return NextResponse.json(
@@ -157,4 +171,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

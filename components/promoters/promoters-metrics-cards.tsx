@@ -108,7 +108,8 @@ function EnhancedStatCard({
         isClickable &&
           'cursor-pointer hover:shadow-3xl hover:scale-[1.03] hover:-translate-y-2 active:scale-[0.97] hover:border-primary/60',
         !isClickable && 'hover:shadow-2xl hover:scale-[1.02]',
-        isActive && 'ring-4 ring-primary ring-offset-4 shadow-3xl border-primary/70 bg-gradient-to-br from-primary/5 via-blue-500/5 to-primary/5',
+        isActive &&
+          'ring-4 ring-primary ring-offset-4 shadow-3xl border-primary/70 bg-gradient-to-br from-primary/5 via-blue-500/5 to-primary/5',
         styles.container
       )}
       onClick={onClick}
@@ -131,7 +132,7 @@ function EnhancedStatCard({
       {/* Premium gradient accent with animation */}
       <div className='absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80' />
       <div className='absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer' />
-      
+
       <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-5 pt-6'>
         <div className='space-y-3 flex-1 min-w-0'>
           <div className='flex items-center gap-2 flex-wrap'>

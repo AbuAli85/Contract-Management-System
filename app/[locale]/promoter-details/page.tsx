@@ -14,15 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Search,
-  User,
-  Eye,
-  ArrowLeft,
-  Loader2,
-  Users,
-  Filter,
-} from 'lucide-react';
+import { Search, User, Eye, ArrowLeft, Loader2, Users } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
 interface Promoter {
@@ -40,7 +32,7 @@ export default function PromoterDetailsPage() {
   const [promoters, setPromoters] = useState<Promoter[]>([]);
   const [filteredPromoters, setFilteredPromoters] = useState<Promoter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const role = useUserRole();

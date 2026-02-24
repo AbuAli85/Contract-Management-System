@@ -35,10 +35,6 @@ import {
   AlertCircle,
   ChevronUp,
   ChevronDown,
-  Filter,
-  MoreHorizontal,
-  Download,
-  Upload,
   Shield,
   Lock,
   Users,
@@ -189,7 +185,7 @@ function formatDate(date: string): string {
 export default function NewUsersPage() {
   // Hooks
   const params = useParams();
-  const locale = (params?.locale as string) || 'en';
+  const _locale = (params?.locale as string) || 'en';
   const { count: pendingUsersCount } = usePendingUsersCount();
 
   // Basic state
@@ -204,7 +200,7 @@ export default function NewUsersPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [_showBulkActions, setShowBulkActions] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 
@@ -222,7 +218,7 @@ export default function NewUsersPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   // Loading states
-  const [addLoading, setAddLoading] = useState(false);
+  const [_addLoading, setAddLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -251,7 +247,7 @@ export default function NewUsersPage() {
   });
 
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { _user } = useAuth();
   const { roleInfo } = useRolePermissions();
 
   // Get current user role from auth context

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { _NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +42,9 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -114,7 +116,9 @@ export async function PUT(request: Request) {
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -138,12 +142,15 @@ export async function PUT(request: Request) {
       .single();
 
     if (!profile?.active_company_id) {
-      return NextResponse.json({ error: 'No active company selected' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No active company selected' },
+        { status: 400 }
+      );
     }
 
     // Verify user has admin access
     let canEdit = false;
-    
+
     // Check company_members first
     const { data: membership } = await adminClient
       .from('company_members')
@@ -162,14 +169,17 @@ export async function PUT(request: Request) {
         .select('id, owner_id')
         .eq('id', profile.active_company_id)
         .single();
-      
+
       if (ownedCompany && ownedCompany.owner_id === user.id) {
         canEdit = true;
       }
     }
 
     if (!canEdit) {
-      return NextResponse.json({ error: 'Admin or HR access required' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Admin or HR access required' },
+        { status: 403 }
+      );
     }
 
     // Get current settings using admin client
@@ -200,7 +210,10 @@ export async function PUT(request: Request) {
 
     if (error) {
       console.error('Error updating policies:', error);
-      return NextResponse.json({ error: 'Failed to update policies' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to update policies' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -213,4 +226,3 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

@@ -74,9 +74,12 @@ export function useUserActivity() {
             return;
           }
         }
-        
+
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || errorData.message || 'Failed to fetch user activities';
+        const errorMessage =
+          errorData.error ||
+          errorData.message ||
+          'Failed to fetch user activities';
         throw new Error(errorMessage);
       }
 

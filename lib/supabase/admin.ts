@@ -25,7 +25,9 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
 
   // Verify service role key format (should start with 'eyJ' for JWT)
   if (!supabaseServiceRoleKey.startsWith('eyJ')) {
-    console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token. It should start with "eyJ".');
+    console.warn(
+      '⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token. It should start with "eyJ".'
+    );
   }
 
   supabaseAdminInstance = createClient<Database>(

@@ -174,43 +174,51 @@ export function ComprehensiveClientDashboard() {
       const partiesData = await partiesResponse.json();
 
       // Get current user's client party (if any)
-      const clientParties = partiesData.success ? (partiesData.parties || []).filter((p: any) => p.type === 'Client') : [];
-      const contracts = contractsData.success ? (contractsData.contracts || []) : [];
+      const clientParties = partiesData.success
+        ? (partiesData.parties || []).filter((p: any) => p.type === 'Client')
+        : [];
+      const contracts = contractsData.success
+        ? contractsData.contracts || []
+        : [];
 
       // Calculate overview stats
-      const activeContracts = contracts.filter((c: any) => 
+      const activeContracts = contracts.filter((c: any) =>
         ['active', 'pending', 'in_progress'].includes(c.status?.toLowerCase())
       );
-      const completedContracts = contracts.filter((c: any) => 
+      const completedContracts = contracts.filter((c: any) =>
         ['completed', 'closed', 'finished'].includes(c.status?.toLowerCase())
       );
-      const totalSpent = contracts.reduce((sum: number, c: any) => 
-        sum + (parseFloat(c.contract_value) || 0), 0
+      const totalSpent = contracts.reduce(
+        (sum: number, c: any) => sum + (parseFloat(c.contract_value) || 0),
+        0
       );
 
       // Transform contracts to projects format
-      const recentProjects = activeContracts.slice(0, 10).map((contract: any, index: number) => ({
-        id: contract.id || `contract_${index}`,
-        title: contract.title || contract.contract_number || 'Untitled Contract',
-        provider: {
-          id: contract.employer_id || '',
-          name: contract.employer_name || 'Unknown Employer',
-          avatar: null,
-          rating: 0,
-        },
-        status: contract.status?.toLowerCase() || 'active',
-        progress: contract.progress || 0,
-        budget: parseFloat(contract.contract_value) || 0,
-        deadline: contract.contract_end_date || '',
-        category: contract.contract_type || 'General',
-        lastUpdate: contract.updated_at || contract.created_at,
-      }));
+      const recentProjects = activeContracts
+        .slice(0, 10)
+        .map((contract: any, index: number) => ({
+          id: contract.id || `contract_${index}`,
+          title:
+            contract.title || contract.contract_number || 'Untitled Contract',
+          provider: {
+            id: contract.employer_id || '',
+            name: contract.employer_name || 'Unknown Employer',
+            avatar: null,
+            rating: 0,
+          },
+          status: contract.status?.toLowerCase() || 'active',
+          progress: contract.progress || 0,
+          budget: parseFloat(contract.contract_value) || 0,
+          deadline: contract.contract_end_date || '',
+          category: contract.contract_type || 'General',
+          lastUpdate: contract.updated_at || contract.created_at,
+        }));
 
       const dashboardData: ClientDashboardData = {
         overview: {
           activeProjects: activeContracts.length,
           completedProjects: completedContracts.length,
-          totalSpent: totalSpent,
+          totalSpent,
           savedProviders: 0, // Could be calculated from favorite employers
           pendingReviews: 0, // Could be calculated from pending reviews
           avgProjectRating: 0, // Could be calculated from ratings

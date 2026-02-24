@@ -486,7 +486,9 @@ function EnhancedPromotersViewRefactoredContent({
   // State management - Initialize with default values (will sync from URL in useEffect)
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
+    'all'
+  );
   const [documentFilter, setDocumentFilter] = useState<
     'all' | 'expired' | 'expiring' | 'missing'
   >('all');
@@ -501,7 +503,7 @@ function EnhancedPromotersViewRefactoredContent({
   const [viewMode, setViewMode] = useState<
     'table' | 'grid' | 'cards' | 'analytics'
   >('table');
-  
+
   // Get pagination params from URL
   const page = useMemo(() => {
     try {
@@ -552,16 +554,19 @@ function EnhancedPromotersViewRefactoredContent({
   }, [locale]);
 
   // Use ref to safely access searchParams.get
-  const getUrlParam = useCallback((key: string, defaultValue: string = ''): string => {
-    try {
-      if (!searchParams) return defaultValue;
-      if (typeof searchParams.get !== 'function') return defaultValue;
-      const value = searchParams.get(key);
-      return value !== null && value !== undefined ? value : defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  }, [searchParams]);
+  const getUrlParam = useCallback(
+    (key: string, defaultValue: string = ''): string => {
+      try {
+        if (!searchParams) return defaultValue;
+        if (typeof searchParams.get !== 'function') return defaultValue;
+        const value = searchParams.get(key);
+        return value !== null && value !== undefined ? value : defaultValue;
+      } catch {
+        return defaultValue;
+      }
+    },
+    [searchParams]
+  );
 
   // Sync state from URL parameters (runs on mount and when URL changes)
   // Only depend on searchParams to avoid circular dependencies
@@ -580,54 +585,102 @@ function EnhancedPromotersViewRefactoredContent({
       // Read search term
       const urlSearch = getUrlParam('search');
       if (urlSearch) {
-        setSearchTerm(prev => prev !== urlSearch ? urlSearch : prev);
+        setSearchTerm(prev => (prev !== urlSearch ? urlSearch : prev));
       }
 
       // Read status filter
       const urlStatus = getUrlParam('status');
-      if (urlStatus && (urlStatus === 'critical' || urlStatus === 'active' || urlStatus === 'inactive' || urlStatus === 'warning')) {
-        setStatusFilter(prev => prev !== urlStatus ? (urlStatus as OverallStatus) : prev);
+      if (
+        urlStatus &&
+        (urlStatus === 'critical' ||
+          urlStatus === 'active' ||
+          urlStatus === 'inactive' ||
+          urlStatus === 'warning')
+      ) {
+        setStatusFilter(prev =>
+          prev !== urlStatus ? (urlStatus as OverallStatus) : prev
+        );
       } else if (!urlStatus) {
-        setStatusFilter(prev => prev !== 'all' ? 'all' : prev);
+        setStatusFilter(prev => (prev !== 'all' ? 'all' : prev));
       }
 
       // Read document filter
-      const urlDocFilter = getUrlParam('document_filter') || getUrlParam('documents');
-      if (urlDocFilter && (urlDocFilter === 'expired' || urlDocFilter === 'expiring' || urlDocFilter === 'missing')) {
-        setDocumentFilter(prev => prev !== urlDocFilter ? (urlDocFilter as 'expired' | 'expiring' | 'missing') : prev);
+      const urlDocFilter =
+        getUrlParam('document_filter') || getUrlParam('documents');
+      if (
+        urlDocFilter &&
+        (urlDocFilter === 'expired' ||
+          urlDocFilter === 'expiring' ||
+          urlDocFilter === 'missing')
+      ) {
+        setDocumentFilter(prev =>
+          prev !== urlDocFilter
+            ? (urlDocFilter as 'expired' | 'expiring' | 'missing')
+            : prev
+        );
       } else if (!urlDocFilter) {
-        setDocumentFilter(prev => prev !== 'all' ? 'all' : prev);
+        setDocumentFilter(prev => (prev !== 'all' ? 'all' : prev));
       }
 
       // Read assignment filter
-      const urlAssignment = getUrlParam('assignment_filter') || getUrlParam('assignment');
-      if (urlAssignment && (urlAssignment === 'assigned' || urlAssignment === 'unassigned')) {
-        setAssignmentFilter(prev => prev !== urlAssignment ? (urlAssignment as 'assigned' | 'unassigned') : prev);
+      const urlAssignment =
+        getUrlParam('assignment_filter') || getUrlParam('assignment');
+      if (
+        urlAssignment &&
+        (urlAssignment === 'assigned' || urlAssignment === 'unassigned')
+      ) {
+        setAssignmentFilter(prev =>
+          prev !== urlAssignment
+            ? (urlAssignment as 'assigned' | 'unassigned')
+            : prev
+        );
       } else if (!urlAssignment) {
-        setAssignmentFilter(prev => prev !== 'all' ? 'all' : prev);
+        setAssignmentFilter(prev => (prev !== 'all' ? 'all' : prev));
       }
 
       // Read sort field
       const urlSortField = getUrlParam('sortField');
-      if (urlSortField && (urlSortField === 'name' || urlSortField === 'status' || urlSortField === 'created' || urlSortField === 'documents')) {
-        setSortField(prev => prev !== urlSortField ? (urlSortField as SortField) : prev);
+      if (
+        urlSortField &&
+        (urlSortField === 'name' ||
+          urlSortField === 'status' ||
+          urlSortField === 'created' ||
+          urlSortField === 'documents')
+      ) {
+        setSortField(prev =>
+          prev !== urlSortField ? (urlSortField as SortField) : prev
+        );
       }
 
       // Read sort order
       const urlSortOrder = getUrlParam('sortOrder');
       if (urlSortOrder && (urlSortOrder === 'asc' || urlSortOrder === 'desc')) {
-        setSortOrder(prev => prev !== urlSortOrder ? (urlSortOrder as SortOrder) : prev);
+        setSortOrder(prev =>
+          prev !== urlSortOrder ? (urlSortOrder as SortOrder) : prev
+        );
       }
 
       // Read view mode
       const urlView = getUrlParam('view');
-      if (urlView && (urlView === 'table' || urlView === 'grid' || urlView === 'cards' || urlView === 'analytics')) {
-        setViewMode(prev => prev !== urlView ? urlView : prev);
+      if (
+        urlView &&
+        (urlView === 'table' ||
+          urlView === 'grid' ||
+          urlView === 'cards' ||
+          urlView === 'analytics')
+      ) {
+        setViewMode(prev => (prev !== urlView ? urlView : prev));
       } else if (typeof window !== 'undefined') {
         // Fallback to localStorage only if no URL param
         const savedView = localStorage.getItem('promoters-view-mode');
-        if (savedView && (savedView === 'table' || savedView === 'grid' || savedView === 'cards' || savedView === 'analytics')) {
-          setViewMode(prev => prev !== savedView ? savedView : prev);
+        if (
+          savedView &&
+          (savedView === 'table' ||
+            savedView === 'grid' ||
+            savedView === 'cards' ||
+            savedView === 'analytics')
+        ) {
+          setViewMode(prev => (prev !== savedView ? savedView : prev));
         }
       }
     } catch (error) {
@@ -665,11 +718,15 @@ function EnhancedPromotersViewRefactoredContent({
     if (assignmentFilter !== 'all') result.assignment = assignmentFilter;
     if (sortField) result.sortField = sortField;
     if (sortOrder) result.sortOrder = sortOrder;
-    
+
     // Role-based filtering
     if (roleContext.isEmployee && roleContext.userId) {
       result.userId = roleContext.userId;
-    } else if (roleContext.isEmployer && roleContext.employerId && !roleContext.isAdmin) {
+    } else if (
+      roleContext.isEmployer &&
+      roleContext.employerId &&
+      !roleContext.isAdmin
+    ) {
       result.employerId = roleContext.employerId;
     }
     // Admins don't get filters - they see all
@@ -702,7 +759,10 @@ function EnhancedPromotersViewRefactoredContent({
   // Save auto-refresh preference to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('promoters-auto-refresh', String(autoRefreshEnabled));
+      localStorage.setItem(
+        'promoters-auto-refresh',
+        String(autoRefreshEnabled)
+      );
     }
   }, [autoRefreshEnabled]);
 
@@ -714,7 +774,16 @@ function EnhancedPromotersViewRefactoredContent({
     error,
     refetch,
   } = useQuery<PromotersResponse, Error>({
-    queryKey: ['promoters', page, limit, filters, roleContext.employerId, roleContext.userId, roleContext.isEmployee, 'v5-server-filtered'],
+    queryKey: [
+      'promoters',
+      page,
+      limit,
+      filters,
+      roleContext.employerId,
+      roleContext.userId,
+      roleContext.isEmployee,
+      'v5-server-filtered',
+    ],
     queryFn: () => fetchPromoters(page, limit, filters),
     staleTime: 2 * 60 * 1000, // 2 minutes - shorter cache for filtered results
     gcTime: 5 * 60 * 1000, // 5 minutes - keep unused data in cache
@@ -1564,9 +1633,8 @@ function EnhancedPromotersViewRefactoredContent({
         }
 
         // Import and send reminder
-        const { sendDocumentExpiryReminder } = await import(
-          '@/lib/services/promoter-notification.service'
-        );
+        const { sendDocumentExpiryReminder } =
+          await import('@/lib/services/promoter-notification.service');
 
         if (!expiryDate) {
           throw new Error('No expiry date available for reminder');
@@ -1611,9 +1679,8 @@ function EnhancedPromotersViewRefactoredContent({
 
       try {
         // Import and send document request
-        const { sendDocumentRequest } = await import(
-          '@/lib/services/promoter-notification.service'
-        );
+        const { sendDocumentRequest } =
+          await import('@/lib/services/promoter-notification.service');
 
         const result = await sendDocumentRequest({
           promoterId: promoter.id,
@@ -1723,7 +1790,11 @@ function EnhancedPromotersViewRefactoredContent({
     const rows = sortedPromoters.map(p => {
       // Escape CSV values properly
       const escapeCSV = (value: string) => {
-        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        if (
+          value.includes(',') ||
+          value.includes('"') ||
+          value.includes('\n')
+        ) {
           return `"${value.replace(/"/g, '""')}"`;
         }
         return value;
@@ -1739,9 +1810,10 @@ function EnhancedPromotersViewRefactoredContent({
         escapeCSV(formatDisplayDate(p.passport_expiry_date)),
       ];
     });
-    const csv = [headers.map(h => `"${h}"`).join(','), ...rows.map(row => row.join(','))].join(
-      '\n'
-    );
+    const csv = [
+      headers.map(h => `"${h}"`).join(','),
+      ...rows.map(row => row.join(',')),
+    ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1815,487 +1887,540 @@ function EnhancedPromotersViewRefactoredContent({
 
   return (
     <PromotersErrorBoundary>
-      <main className='flex-1 overflow-auto p-6 relative space-y-4 sm:space-y-6' role='main' aria-label='Promoter Intelligence Hub'>
-      {/* Loading overlay */}
-      {showLoadingOverlay && (
-        <div
-          className='absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center'
-          role='status'
-          aria-live='polite'
-        >
-          <div className='flex items-center gap-3 bg-card p-4 rounded-lg shadow-lg border'>
-            <RefreshCw
-              className='h-5 w-5 animate-spin text-primary'
-              aria-hidden='true'
-            />
-            <span className='text-sm font-medium'>
-              Updating promoters data...
-            </span>
+      <main
+        className='flex-1 overflow-auto p-6 relative space-y-4 sm:space-y-6'
+        role='main'
+        aria-label='Promoter Intelligence Hub'
+      >
+        {/* Loading overlay */}
+        {showLoadingOverlay && (
+          <div
+            className='absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center'
+            role='status'
+            aria-live='polite'
+          >
+            <div className='flex items-center gap-3 bg-card p-4 rounded-lg shadow-lg border'>
+              <RefreshCw
+                className='h-5 w-5 animate-spin text-primary'
+                aria-hidden='true'
+              />
+              <span className='text-sm font-medium'>
+                Updating promoters data...
+              </span>
+            </div>
           </div>
-        </div>
-      )}
-      {/* Role-Based Header */}
-      <header>
-        {roleContext.isEmployee ? (
-          // Employee View - Show their own profile
-          <Card className='shadow-xl border-2 border-primary/20'>
-            <CardHeader className='bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-b-2 border-primary/20'>
-              <CardTitle className='text-2xl font-bold flex items-center gap-3'>
-                <Users className='h-6 w-6 text-primary' />
-                My Profile
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        ) : (
-          // Employer/Admin View - Show full dashboard header
-          <PromotersPremiumHeader
-            metrics={metrics}
-            promoters={dashboardPromoters}
-            isFetching={isDataFetching}
-            onRefresh={handleRefresh}
-            onAddPromoter={roleContext.canCreate ? handleAddPromoter : undefined}
-            locale={derivedLocale}
-            autoRefreshEnabled={autoRefreshEnabled}
-            onToggleAutoRefresh={setAutoRefreshEnabled}
-          />
         )}
-      </header>
-
-      {/* Advanced Export Dialog */}
-      <PromotersAdvancedExport
-        promoters={sortedPromoters}
-        selectedIds={selectedPromoters}
-        isOpen={showAdvancedExport}
-        onClose={() => setShowAdvancedExport(false)}
-      />
-
-      {/* Advanced Export Dialog */}
-      <PromotersAdvancedExport
-        promoters={sortedPromoters}
-        selectedIds={selectedPromoters}
-        isOpen={showAdvancedExport}
-        onClose={() => setShowAdvancedExport(false)}
-      />
-
-      {/* Enhanced Metrics - Only for Employers/Admins */}
-      {!roleContext.isEmployee && (
-        <section aria-labelledby='metrics-heading'>
-          <h2 id='metrics-heading' className='sr-only'>
-            Promoter Statistics
-          </h2>
-          {isLoading ? (
-            <MetricsCardsSkeleton />
+        {/* Role-Based Header */}
+        <header>
+          {roleContext.isEmployee ? (
+            // Employee View - Show their own profile
+            <Card className='shadow-xl border-2 border-primary/20'>
+              <CardHeader className='bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-b-2 border-primary/20'>
+                <CardTitle className='text-2xl font-bold flex items-center gap-3'>
+                  <Users className='h-6 w-6 text-primary' />
+                  My Profile
+                </CardTitle>
+              </CardHeader>
+            </Card>
           ) : (
-            <PromotersMetricsCards
+            // Employer/Admin View - Show full dashboard header
+            <PromotersPremiumHeader
               metrics={metrics}
-              onCardClick={handleMetricCardClick}
-              activeFilter={activeMetricFilter}
+              promoters={dashboardPromoters}
+              isFetching={isDataFetching}
+              onRefresh={handleRefresh}
+              onAddPromoter={
+                roleContext.canCreate ? handleAddPromoter : undefined
+              }
+              locale={derivedLocale}
+              autoRefreshEnabled={autoRefreshEnabled}
+              onToggleAutoRefresh={setAutoRefreshEnabled}
             />
           )}
-        </section>
-      )}
+        </header>
 
-      {/* AI-Powered Smart Insights - Only for Employers/Admins */}
-      {!isLoading && dashboardPromoters.length > 0 && !roleContext.isEmployee && (
-        <section aria-labelledby='smart-insights-heading' className='mt-6'>
-          <h2 id='smart-insights-heading' className='sr-only'>
-            AI-Powered Smart Insights
-          </h2>
-          <PromotersSmartInsights
-            promoters={dashboardPromoters}
-            metrics={metrics}
-            onActionClick={(action) => {
-              // Handle smart insight actions
-              if (action.startsWith('filter:')) {
-                const [, type, value] = action.split(':');
-                if (type === 'documents') {
-                  setDocumentFilter(value as 'all' | 'expired' | 'expiring' | 'missing');
-                } else if (type === 'status') {
-                  setStatusFilter(value as OverallStatus | 'all');
-                } else if (type === 'assignment') {
-                  setAssignmentFilter(value as 'all' | 'assigned' | 'unassigned');
-                }
-              } else if (action === 'view:analytics') {
-                setViewMode('analytics');
-              }
-            }}
-          />
-        </section>
-      )}
+        {/* Advanced Export Dialog */}
+        <PromotersAdvancedExport
+          promoters={sortedPromoters}
+          selectedIds={selectedPromoters}
+          isOpen={showAdvancedExport}
+          onClose={() => setShowAdvancedExport(false)}
+        />
 
-      {/* Data Insights & Charts - Only for Employers/Admins */}
-      {!isLoading && dashboardPromoters.length > 0 && !roleContext.isEmployee && (
-        <section aria-labelledby='insights-heading' className='mt-6'>
-          <h2 id='insights-heading' className='sr-only'>
-            Data Insights and Analytics
-          </h2>
-          <PromotersStatsCharts
-            metrics={metrics}
-            promoters={dashboardPromoters}
-            hasFiltersApplied={hasFiltersApplied}
-          />
-        </section>
-      )}
+        {/* Advanced Export Dialog */}
+        <PromotersAdvancedExport
+          promoters={sortedPromoters}
+          selectedIds={selectedPromoters}
+          isOpen={showAdvancedExport}
+          onClose={() => setShowAdvancedExport(false)}
+        />
 
-      {/* Refresh Indicator */}
-      <RefreshIndicator
-        isFetching={isDataFetching && !isLoading}
-        showFloating={true}
-      />
+        {/* Enhanced Metrics - Only for Employers/Admins */}
+        {!roleContext.isEmployee && (
+          <section aria-labelledby='metrics-heading'>
+            <h2 id='metrics-heading' className='sr-only'>
+              Promoter Statistics
+            </h2>
+            {isLoading ? (
+              <MetricsCardsSkeleton />
+            ) : (
+              <PromotersMetricsCards
+                metrics={metrics}
+                onCardClick={handleMetricCardClick}
+                activeFilter={activeMetricFilter}
+              />
+            )}
+          </section>
+        )}
 
-      {/* Quick Actions Panel - Only for Employers/Admins */}
-      {!isLoading && !roleContext.isEmployee && (
-        <section aria-labelledby='quick-actions-heading' className='mt-6'>
-          <h2 id='quick-actions-heading' className='sr-only'>
-            Quick Actions
-          </h2>
-          <PromotersQuickActionsPanel
-            onAddPromoter={roleContext.canCreate ? handleAddPromoter : undefined}
-            onImport={roleContext.canCreate ? handleImportPromoters : undefined}
-            onExport={roleContext.canExport ? handleExport : undefined}
-            onViewAnalytics={roleContext.canViewAnalytics ? () => setViewMode('analytics') : undefined}
-            onSendNotification={roleContext.canBulkActions ? () => {
-              toast({
-                title: 'Notification Sent',
-                description: `Sending notifications to ${selectedPromoters.size} selected promoters`,
-              });
-            } : undefined}
-            onScheduleMeeting={roleContext.canBulkActions ? () => {
-              toast({
-                title: 'Meeting Scheduled',
-                description: 'Scheduling meeting with selected promoters',
-              });
-            } : undefined}
-            onBulkAction={roleContext.canBulkActions ? (action) => {
-              handleBulkAction(action);
-            } : undefined}
-            selectedCount={selectedPromoters.size}
-          />
-        </section>
-      )}
-
-      {/* Enhanced Filters - Only for Employers/Admins */}
-      {!roleContext.isEmployee && (
-        <section aria-labelledby='filters-heading'>
-          <h2 id='filters-heading' className='sr-only'>
-            Search and Filter Options
-          </h2>
-          <PromotersFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            documentFilter={documentFilter}
-            onDocumentFilterChange={setDocumentFilter}
-            assignmentFilter={assignmentFilter}
-            onAssignmentFilterChange={setAssignmentFilter}
-            hasFiltersApplied={hasFiltersApplied}
-            onResetFilters={handleResetFilters}
-            onExport={handleExport}
-            onRefresh={handleRefresh}
-            isFetching={isDataFetching}
-            metrics={metrics}
-            locale={derivedLocale}
-          />
-        </section>
-      )}
-
-      {/* Bulk Actions Bar - Only for Employers/Admins */}
-          {roleContext.canBulkActions && (
-            <section aria-labelledby='bulk-actions-heading'>
-              <h2 id='bulk-actions-heading' className='sr-only'>
-                Bulk Actions
+        {/* AI-Powered Smart Insights - Only for Employers/Admins */}
+        {!isLoading &&
+          dashboardPromoters.length > 0 &&
+          !roleContext.isEmployee && (
+            <section aria-labelledby='smart-insights-heading' className='mt-6'>
+              <h2 id='smart-insights-heading' className='sr-only'>
+                AI-Powered Smart Insights
               </h2>
-              <PromotersBulkActions
-                selectedCount={selectedPromoters.size}
-                totalCount={sortedPromoters.length}
-                isPerformingAction={isPerformingBulkAction}
-                onSelectAll={handleSelectAll}
-                onBulkAction={handleBulkAction}
-                onClearSelection={() => setSelectedPromoters(new Set())}
+              <PromotersSmartInsights
+                promoters={dashboardPromoters}
+                metrics={metrics}
+                onActionClick={action => {
+                  // Handle smart insight actions
+                  if (action.startsWith('filter:')) {
+                    const [, type, value] = action.split(':');
+                    if (type === 'documents') {
+                      setDocumentFilter(
+                        value as 'all' | 'expired' | 'expiring' | 'missing'
+                      );
+                    } else if (type === 'status') {
+                      setStatusFilter(value as OverallStatus | 'all');
+                    } else if (type === 'assignment') {
+                      setAssignmentFilter(
+                        value as 'all' | 'assigned' | 'unassigned'
+                      );
+                    }
+                  } else if (action === 'view:analytics') {
+                    setViewMode('analytics');
+                  }
+                }}
               />
             </section>
           )}
 
-      {/* Main Content - Role-Based Rendering */}
-      <section aria-labelledby='promoters-content-heading'>
-        <h2 id='promoters-content-heading' className='sr-only'>
-          {roleContext.isEmployee 
-            ? 'My Profile' 
-            : viewMode === 'analytics' 
-            ? 'Promoters Analytics' 
-            : 'Promoters List'}
-        </h2>
+        {/* Data Insights & Charts - Only for Employers/Admins */}
+        {!isLoading &&
+          dashboardPromoters.length > 0 &&
+          !roleContext.isEmployee && (
+            <section aria-labelledby='insights-heading' className='mt-6'>
+              <h2 id='insights-heading' className='sr-only'>
+                Data Insights and Analytics
+              </h2>
+              <PromotersStatsCharts
+                metrics={metrics}
+                promoters={dashboardPromoters}
+                hasFiltersApplied={hasFiltersApplied}
+              />
+            </section>
+          )}
 
-        {/* Employee View - Show only their own profile */}
-        {roleContext.isEmployee ? (
-          <PromotersEmployeeView
-            promoter={dashboardPromoters.find(p => p.id === roleContext.userId) || dashboardPromoters[0] || null}
-            isLoading={isLoading}
-            onEdit={roleContext.canEdit ? () => {
-              const myPromoter = dashboardPromoters.find(p => p.id === roleContext.userId);
-              if (myPromoter) handleEditPromoter(myPromoter);
-            } : undefined}
-            onDownloadDocuments={() => {
-              toast({
-                title: 'Download Documents',
-                description: 'Document download functionality coming soon',
-              });
-            }}
-          />
-        ) : roleContext.isEmployer && !roleContext.isAdmin ? (
-          /* Employer View - Show employer dashboard */
-          <PromotersEmployerDashboard
-            promoters={dashboardPromoters}
-            metrics={metrics}
-            onAddPromoter={roleContext.canCreate ? handleAddPromoter : undefined}
-            onExport={roleContext.canExport ? handleExport : undefined}
-            onViewAnalytics={roleContext.canViewAnalytics ? () => setViewMode('analytics') : undefined}
-          />
-        ) : viewMode === 'analytics' ? (
-          /* Analytics View */
-          <div className='space-y-6'>
-            {/* Analytics View Header with Navigation */}
-            <div className='bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 rounded-xl shadow-xl border-0 p-6'>
-              <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-                <div className='space-y-2'>
+        {/* Refresh Indicator */}
+        <RefreshIndicator
+          isFetching={isDataFetching && !isLoading}
+          showFloating={true}
+        />
+
+        {/* Quick Actions Panel - Only for Employers/Admins */}
+        {!isLoading && !roleContext.isEmployee && (
+          <section aria-labelledby='quick-actions-heading' className='mt-6'>
+            <h2 id='quick-actions-heading' className='sr-only'>
+              Quick Actions
+            </h2>
+            <PromotersQuickActionsPanel
+              onAddPromoter={
+                roleContext.canCreate ? handleAddPromoter : undefined
+              }
+              onImport={
+                roleContext.canCreate ? handleImportPromoters : undefined
+              }
+              onExport={roleContext.canExport ? handleExport : undefined}
+              onViewAnalytics={
+                roleContext.canViewAnalytics
+                  ? () => setViewMode('analytics')
+                  : undefined
+              }
+              onSendNotification={
+                roleContext.canBulkActions
+                  ? () => {
+                      toast({
+                        title: 'Notification Sent',
+                        description: `Sending notifications to ${selectedPromoters.size} selected promoters`,
+                      });
+                    }
+                  : undefined
+              }
+              onScheduleMeeting={
+                roleContext.canBulkActions
+                  ? () => {
+                      toast({
+                        title: 'Meeting Scheduled',
+                        description:
+                          'Scheduling meeting with selected promoters',
+                      });
+                    }
+                  : undefined
+              }
+              onBulkAction={
+                roleContext.canBulkActions
+                  ? action => {
+                      handleBulkAction(action);
+                    }
+                  : undefined
+              }
+              selectedCount={selectedPromoters.size}
+            />
+          </section>
+        )}
+
+        {/* Enhanced Filters - Only for Employers/Admins */}
+        {!roleContext.isEmployee && (
+          <section aria-labelledby='filters-heading'>
+            <h2 id='filters-heading' className='sr-only'>
+              Search and Filter Options
+            </h2>
+            <PromotersFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              documentFilter={documentFilter}
+              onDocumentFilterChange={setDocumentFilter}
+              assignmentFilter={assignmentFilter}
+              onAssignmentFilterChange={setAssignmentFilter}
+              hasFiltersApplied={hasFiltersApplied}
+              onResetFilters={handleResetFilters}
+              onExport={handleExport}
+              onRefresh={handleRefresh}
+              isFetching={isDataFetching}
+              metrics={metrics}
+              locale={derivedLocale}
+            />
+          </section>
+        )}
+
+        {/* Bulk Actions Bar - Only for Employers/Admins */}
+        {roleContext.canBulkActions && (
+          <section aria-labelledby='bulk-actions-heading'>
+            <h2 id='bulk-actions-heading' className='sr-only'>
+              Bulk Actions
+            </h2>
+            <PromotersBulkActions
+              selectedCount={selectedPromoters.size}
+              totalCount={sortedPromoters.length}
+              isPerformingAction={isPerformingBulkAction}
+              onSelectAll={handleSelectAll}
+              onBulkAction={handleBulkAction}
+              onClearSelection={() => setSelectedPromoters(new Set())}
+            />
+          </section>
+        )}
+
+        {/* Main Content - Role-Based Rendering */}
+        <section aria-labelledby='promoters-content-heading'>
+          <h2 id='promoters-content-heading' className='sr-only'>
+            {roleContext.isEmployee
+              ? 'My Profile'
+              : viewMode === 'analytics'
+                ? 'Promoters Analytics'
+                : 'Promoters List'}
+          </h2>
+
+          {/* Employee View - Show only their own profile */}
+          {roleContext.isEmployee ? (
+            <PromotersEmployeeView
+              promoter={
+                dashboardPromoters.find(p => p.id === roleContext.userId) ||
+                dashboardPromoters[0] ||
+                null
+              }
+              isLoading={isLoading}
+              onEdit={
+                roleContext.canEdit
+                  ? () => {
+                      const myPromoter = dashboardPromoters.find(
+                        p => p.id === roleContext.userId
+                      );
+                      if (myPromoter) handleEditPromoter(myPromoter);
+                    }
+                  : undefined
+              }
+              onDownloadDocuments={() => {
+                toast({
+                  title: 'Download Documents',
+                  description: 'Document download functionality coming soon',
+                });
+              }}
+            />
+          ) : roleContext.isEmployer && !roleContext.isAdmin ? (
+            /* Employer View - Show employer dashboard */
+            <PromotersEmployerDashboard
+              promoters={dashboardPromoters}
+              metrics={metrics}
+              onAddPromoter={
+                roleContext.canCreate ? handleAddPromoter : undefined
+              }
+              onExport={roleContext.canExport ? handleExport : undefined}
+              onViewAnalytics={
+                roleContext.canViewAnalytics
+                  ? () => setViewMode('analytics')
+                  : undefined
+              }
+            />
+          ) : viewMode === 'analytics' ? (
+            /* Analytics View */
+            <div className='space-y-6'>
+              {/* Analytics View Header with Navigation */}
+              <div className='bg-gradient-to-br from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 rounded-xl shadow-xl border-0 p-6'>
+                <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+                  <div className='space-y-2'>
+                    <div className='flex items-center gap-3'>
+                      <div className='p-2 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg'>
+                        <Users className='h-6 w-6 text-white' />
+                      </div>
+                      <div>
+                        <h1 className='text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300'>
+                          Workforce Analytics Dashboard
+                        </h1>
+                        <p className='text-base text-slate-600 dark:text-slate-400 mt-1'>
+                          <span className='font-bold text-purple-600 dark:text-purple-400 text-lg'>
+                            {allDashboardPromoters.length || 'Loading...'}
+                          </span>{' '}
+                          <span className='text-slate-600 dark:text-slate-400'>
+                            total workforce members • Complete analytics
+                            coverage
+                          </span>
+                          {allPromotersData && (
+                            <span className='block text-sm text-green-600 dark:text-green-400 mt-1'>
+                              ✅ Showing complete workforce data (
+                              {allPromotersData.total} members) • Last updated:{' '}
+                              {new Date(
+                                allPromotersData.timestamp
+                              ).toLocaleTimeString()}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* View Mode Selector - Always Visible */}
+                  <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4'>
+                    {/* Quick Back to List Button */}
+                    <button
+                      onClick={() => handleViewModeChange('table')}
+                      className='inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shadow-sm'
+                      title='Return to promoter list view'
+                    >
+                      ← Back to List
+                    </button>
+                    {isDataFetching && (
+                      <Badge
+                        variant='outline'
+                        className='gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200/80 shadow-sm w-fit'
+                      >
+                        <RefreshCw className='h-3.5 w-3.5 animate-spin' />
+                        <span className='font-medium'>Syncing</span>
+                      </Badge>
+                    )}
+                    <div className='bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm rounded-lg p-1'>
+                      <div className='grid grid-cols-4 gap-1'>
+                        <button
+                          onClick={() => handleViewModeChange('table')}
+                          className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
+                        >
+                          Table
+                        </button>
+                        <button
+                          onClick={() => handleViewModeChange('grid')}
+                          className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
+                        >
+                          Grid
+                        </button>
+                        <button
+                          onClick={() => handleViewModeChange('cards')}
+                          className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
+                        >
+                          Cards
+                        </button>
+                        <button
+                          className='px-4 py-2 text-sm font-medium rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md cursor-default'
+                          disabled
+                          title='Currently viewing Analytics'
+                        >
+                          Analytics ✓
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional Loading State for Analytics */}
+              {isLoadingAnalytics && <AnalyticsLoadingSkeleton />}
+
+              {/* Error State for Analytics */}
+              {analyticsError && (
+                <div className='bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-6 border border-red-200 dark:border-red-800'>
                   <div className='flex items-center gap-3'>
-                    <div className='p-2 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg'>
-                      <Users className='h-6 w-6 text-white' />
+                    <div className='p-2 rounded-full bg-red-100 dark:bg-red-900/30'>
+                      <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-400' />
                     </div>
                     <div>
-                      <h1 className='text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300'>
-                        Workforce Analytics Dashboard
-                      </h1>
-                      <p className='text-base text-slate-600 dark:text-slate-400 mt-1'>
-                        <span className='font-bold text-purple-600 dark:text-purple-400 text-lg'>
-                          {allDashboardPromoters.length || 'Loading...'}
-                        </span>{' '}
-                        <span className='text-slate-600 dark:text-slate-400'>
-                          total workforce members • Complete analytics coverage
-                        </span>
-                        {allPromotersData && (
-                          <span className='block text-sm text-green-600 dark:text-green-400 mt-1'>
-                            ✅ Showing complete workforce data (
-                            {allPromotersData.total} members) • Last updated:{' '}
-                            {new Date(
-                              allPromotersData.timestamp
-                            ).toLocaleTimeString()}
-                          </span>
-                        )}
+                      <h3 className='font-semibold text-red-900 dark:text-red-100'>
+                        Failed to Load Analytics Data
+                      </h3>
+                      <p className='text-red-700 dark:text-red-300 mt-1'>
+                        {analyticsError}
                       </p>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => loadAnalyticsData(true)}
+                        className='mt-3 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800'
+                      >
+                        <RefreshCw className='h-4 w-4 mr-2' />
+                        Retry Loading Analytics
+                      </Button>
                     </div>
                   </div>
-                </div>
-
-                {/* View Mode Selector - Always Visible */}
-                <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4'>
-                  {/* Quick Back to List Button */}
-                  <button
-                    onClick={() => handleViewModeChange('table')}
-                    className='inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors shadow-sm'
-                    title='Return to promoter list view'
-                  >
-                    ← Back to List
-                  </button>
-                  {isDataFetching && (
-                    <Badge
-                      variant='outline'
-                      className='gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border-amber-200/80 shadow-sm w-fit'
-                    >
-                      <RefreshCw className='h-3.5 w-3.5 animate-spin' />
-                      <span className='font-medium'>Syncing</span>
-                    </Badge>
-                  )}
-                  <div className='bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-sm rounded-lg p-1'>
-                    <div className='grid grid-cols-4 gap-1'>
-                      <button
-                        onClick={() => handleViewModeChange('table')}
-                        className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
-                      >
-                        Table
-                      </button>
-                      <button
-                        onClick={() => handleViewModeChange('grid')}
-                        className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
-                      >
-                        Grid
-                      </button>
-                      <button
-                        onClick={() => handleViewModeChange('cards')}
-                        className='px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white'
-                      >
-                        Cards
-                      </button>
-                      <button
-                        className='px-4 py-2 text-sm font-medium rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md cursor-default'
-                        disabled
-                        title='Currently viewing Analytics'
-                      >
-                        Analytics ✓
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Professional Loading State for Analytics */}
-            {isLoadingAnalytics && <AnalyticsLoadingSkeleton />}
-
-            {/* Error State for Analytics */}
-            {analyticsError && (
-              <div className='bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-6 border border-red-200 dark:border-red-800'>
-                <div className='flex items-center gap-3'>
-                  <div className='p-2 rounded-full bg-red-100 dark:bg-red-900/30'>
-                    <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-400' />
-                  </div>
-                  <div>
-                    <h3 className='font-semibold text-red-900 dark:text-red-100'>
-                      Failed to Load Analytics Data
-                    </h3>
-                    <p className='text-red-700 dark:text-red-300 mt-1'>
-                      {analyticsError}
-                    </p>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => loadAnalyticsData(true)}
-                      className='mt-3 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800'
-                    >
-                      <RefreshCw className='h-4 w-4 mr-2' />
-                      Retry Loading Analytics
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Professional Analytics Dashboard */}
-            {!isLoadingAnalytics &&
-              !analyticsError &&
-              allDashboardPromoters.length > 0 && (
-                <div className='space-y-6'>
-                  {/* Analytics Toolbar */}
-                  <AnalyticsToolbar
-                    totalRecords={allDashboardPromoters.length}
-                    isLoading={isLoadingAnalytics || metricsLoading}
-                    onRefresh={async () => {
-                      // Refresh both analytics data and metrics
-                      logger.log(
-                        '🔄 Manual refresh triggered from analytics toolbar'
-                      );
-                      await Promise.all([
-                        loadAnalyticsData(true), // Force refresh
-                        refetch(), // Refetch metrics
-                      ]);
-                      toast({
-                        title: '✅ Analytics Refreshed',
-                        description: `All data updated • ${allDashboardPromoters.length} workforce members loaded`,
-                      });
-                    }}
-                    onExport={format => logger.log(`Export ${format}`)}
-                    onPrint={() => window.print()}
-                    onFullScreen={() =>
-                      document.documentElement.requestFullscreen()
-                    }
-                    lastUpdated={allPromotersData?.timestamp || undefined}
-                  />
-
-                  {/* Metrics Overview Cards - System-Wide Data */}
-                  <PromotersMetricsCards
-                    metrics={metrics}
-                    onCardClick={filterType => {
-                      // Switch back to table view with filter applied
-                      handleViewModeChange('table');
-                      if (filterType === 'alerts') setStatusFilter('critical');
-                      else if (filterType === 'active')
-                        setStatusFilter('active');
-                      else setStatusFilter('all');
-                    }}
-                    activeFilter={null}
-                  />
-
-                  {/* Enhanced Charts - Comprehensive Visualizations */}
-                  <PromotersEnhancedCharts
-                    promoters={allDashboardPromoters}
-                    metrics={metrics}
-                  />
-
-                  {/* Stats Charts - Quick Insights */}
-                  <PromotersStatsCharts
-                    metrics={metrics}
-                    promoters={allDashboardPromoters}
-                    hasFiltersApplied={hasFiltersApplied}
-                  />
-
-                  {/* Workforce Summary */}
-                  <WorkforceAnalyticsSummary
-                    promoters={allDashboardPromoters}
-                    isRealTime={true}
-                    lastUpdated={allPromotersData?.timestamp || undefined}
-                  />
-
-                  {/* Smart Insights Panel */}
-                  <AnalyticsInsightsPanel
-                    promoters={allDashboardPromoters}
-                    locale={locale || 'en'}
-                  />
-
-                  {/* Document Expiry Analysis */}
-                  <PromotersDocumentExpiryChart
-                    promoters={allDashboardPromoters}
-                    title='Document Expiry Timeline - Complete Workforce'
-                    description={`Monitor document expiration patterns across all ${allDashboardPromoters.length} workforce members`}
-                  />
-
-                  {/* Comprehensive Analytics Charts */}
-                  <PromotersAnalyticsCharts
-                    promoters={allDashboardPromoters}
-                    isRealTime={true}
-                    onRefresh={loadAnalyticsData}
-                    isFetching={isLoadingAnalytics}
-                  />
                 </div>
               )}
-          </div>
-        ) : (
-          /* Table/Grid/Cards View */
-          <div className='grid gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(900px,2fr)_minmax(300px,1fr)]'>
-            <PromotersTable
-              promoters={sortedPromoters}
-              selectedPromoters={selectedPromoters}
-              sortField={sortField}
-              sortOrder={sortOrder}
-              viewMode={viewMode}
-              pagination={pagination}
-              isFetching={isDataFetching}
-              hasFiltersApplied={hasFiltersApplied}
-              onSelectAll={handleSelectAll}
-              onSelectPromoter={handleSelectPromoter}
-              onSort={handleSort}
-              onViewModeChange={handleViewModeChange}
-              onViewPromoter={handleViewPromoter}
-              onEditPromoter={handleEditPromoter}
-              onAddPromoter={handleAddPromoter}
-              onResetFilters={handleResetFilters}
-              onPageChange={handlePageChange}
-              onPartyAssignmentUpdate={handlePartyAssignmentUpdate}
-              enableEnhancedPartyManagement={true}
-              onInlineUpdate={handleInlineUpdate}
-              enableInlineEdit={true}
-            />
 
-            {/* Enhanced Alerts Panel - Only show in non-analytics view */}
-            <PromotersAlertsPanel
-              atRiskPromoters={atRiskPromoters}
-              onViewPromoter={handleViewPromoter}
-              onSendReminder={handleSendReminder}
-              onRequestDocument={handleRequestDocument}
-            />
-          </div>
-        )}
-      </section>
+              {/* Professional Analytics Dashboard */}
+              {!isLoadingAnalytics &&
+                !analyticsError &&
+                allDashboardPromoters.length > 0 && (
+                  <div className='space-y-6'>
+                    {/* Analytics Toolbar */}
+                    <AnalyticsToolbar
+                      totalRecords={allDashboardPromoters.length}
+                      isLoading={isLoadingAnalytics || metricsLoading}
+                      onRefresh={async () => {
+                        // Refresh both analytics data and metrics
+                        logger.log(
+                          '🔄 Manual refresh triggered from analytics toolbar'
+                        );
+                        await Promise.all([
+                          loadAnalyticsData(true), // Force refresh
+                          refetch(), // Refetch metrics
+                        ]);
+                        toast({
+                          title: '✅ Analytics Refreshed',
+                          description: `All data updated • ${allDashboardPromoters.length} workforce members loaded`,
+                        });
+                      }}
+                      onExport={format => logger.log(`Export ${format}`)}
+                      onPrint={() => window.print()}
+                      onFullScreen={() =>
+                        document.documentElement.requestFullscreen()
+                      }
+                      lastUpdated={allPromotersData?.timestamp || undefined}
+                    />
+
+                    {/* Metrics Overview Cards - System-Wide Data */}
+                    <PromotersMetricsCards
+                      metrics={metrics}
+                      onCardClick={filterType => {
+                        // Switch back to table view with filter applied
+                        handleViewModeChange('table');
+                        if (filterType === 'alerts')
+                          setStatusFilter('critical');
+                        else if (filterType === 'active')
+                          setStatusFilter('active');
+                        else setStatusFilter('all');
+                      }}
+                      activeFilter={null}
+                    />
+
+                    {/* Enhanced Charts - Comprehensive Visualizations */}
+                    <PromotersEnhancedCharts
+                      promoters={allDashboardPromoters}
+                      metrics={metrics}
+                    />
+
+                    {/* Stats Charts - Quick Insights */}
+                    <PromotersStatsCharts
+                      metrics={metrics}
+                      promoters={allDashboardPromoters}
+                      hasFiltersApplied={hasFiltersApplied}
+                    />
+
+                    {/* Workforce Summary */}
+                    <WorkforceAnalyticsSummary
+                      promoters={allDashboardPromoters}
+                      isRealTime={true}
+                      lastUpdated={allPromotersData?.timestamp || undefined}
+                    />
+
+                    {/* Smart Insights Panel */}
+                    <AnalyticsInsightsPanel
+                      promoters={allDashboardPromoters}
+                      locale={locale || 'en'}
+                    />
+
+                    {/* Document Expiry Analysis */}
+                    <PromotersDocumentExpiryChart
+                      promoters={allDashboardPromoters}
+                      title='Document Expiry Timeline - Complete Workforce'
+                      description={`Monitor document expiration patterns across all ${allDashboardPromoters.length} workforce members`}
+                    />
+
+                    {/* Comprehensive Analytics Charts */}
+                    <PromotersAnalyticsCharts
+                      promoters={allDashboardPromoters}
+                      isRealTime={true}
+                      onRefresh={loadAnalyticsData}
+                      isFetching={isLoadingAnalytics}
+                    />
+                  </div>
+                )}
+            </div>
+          ) : (
+            /* Table/Grid/Cards View */
+            <div className='grid gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(900px,2fr)_minmax(300px,1fr)]'>
+              <PromotersTable
+                promoters={sortedPromoters}
+                selectedPromoters={selectedPromoters}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                viewMode={viewMode}
+                pagination={pagination}
+                isFetching={isDataFetching}
+                hasFiltersApplied={hasFiltersApplied}
+                onSelectAll={handleSelectAll}
+                onSelectPromoter={handleSelectPromoter}
+                onSort={handleSort}
+                onViewModeChange={handleViewModeChange}
+                onViewPromoter={handleViewPromoter}
+                onEditPromoter={handleEditPromoter}
+                onAddPromoter={handleAddPromoter}
+                onResetFilters={handleResetFilters}
+                onPageChange={handlePageChange}
+                onPartyAssignmentUpdate={handlePartyAssignmentUpdate}
+                enableEnhancedPartyManagement={true}
+                onInlineUpdate={handleInlineUpdate}
+                enableInlineEdit={true}
+              />
+
+              {/* Enhanced Alerts Panel - Only show in non-analytics view */}
+              <PromotersAlertsPanel
+                atRiskPromoters={atRiskPromoters}
+                onViewPromoter={handleViewPromoter}
+                onSendReminder={handleSendReminder}
+                onRequestDocument={handleRequestDocument}
+              />
+            </div>
+          )}
+        </section>
       </main>
     </PromotersErrorBoundary>
   );

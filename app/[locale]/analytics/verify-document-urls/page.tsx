@@ -10,9 +10,8 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
 interface VerificationResult {

@@ -261,13 +261,13 @@ export function AuthGuard({
       // @ts-ignore - Adding to window for development
       window.forceAuth = (email: string, role: string = 'user') => {
         const mockUser = {
-          id: 'emergency-user-' + Date.now(),
-          email: email,
-          role: role,
+          id: `emergency-user-${Date.now()}`,
+          email,
+          role,
           full_name: 'Emergency User',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          user_metadata: { role: role },
+          user_metadata: { role },
         };
 
         globalAuthState.user = mockUser;
@@ -296,8 +296,8 @@ export function AuthGuard({
         const userInfo = userMap[email];
         if (userInfo) {
           const mockUser = {
-            id: 'test-user-' + Date.now(),
-            email: email,
+            id: `test-user-${Date.now()}`,
+            email,
             role: userInfo.role,
             full_name: userInfo.name,
             created_at: new Date().toISOString(),

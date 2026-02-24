@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 
 interface Provider {

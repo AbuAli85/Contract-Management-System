@@ -28,69 +28,28 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  // Navigation & Menus
-  Menu,
-  Search, // ← The current missing one
-
-  // Users
-  UserPlus, // ← Previously missing
+  // Navigation & Menus,
+  // ← The current missing one,
+  // Users,
+  // ← Previously missing,
   Users,
-  User,
-
-  // Core UI Icons
+  // Core UI Icons,
   Sparkles,
   FileText,
   Info,
   CheckCircle,
   AlertTriangle,
-  Brain,
-  Lock,
-  Plus,
-  Briefcase,
-  Workflow,
-
-  // Additional common icons that might be missing
-  X,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  MoreVertical,
-  MoreHorizontal,
-  // Settings,        // ← MOVED TO TOP FOR GLOBAL ACCESS
-  Cog, // ← ALTERNATIVE SETTINGS ICON
-  Sliders, // ← ALTERNATIVE SETTINGS ICON
-  Edit,
-  Trash2,
-  Save,
-  Download,
-  Upload,
-  Copy,
-  Share,
-  Filter,
-  SortAsc,
-  SortDesc,
-  Calendar,
-  Clock,
+  // Additional common icons that might be missing,
+  // Settings,
+  // ← MOVED TO TOP FOR GLOBAL ACCESS,
+  // ← ALTERNATIVE SETTINGS ICON,
+  // ← ALTERNATIVE SETTINGS ICON,
   Globe,
   Shield,
   Zap,
   Star,
   Award,
   TrendingUp,
-  TrendingDown,
-  Home,
-  ExternalLink,
-  RefreshCw,
-  Eye,
-  EyeOff,
-  Bell,
-  Mail,
-  Phone,
-  MapPin,
-  Building,
-  CreditCard,
-  DollarSign,
 } from 'lucide-react';
 
 // Error Boundary Component
@@ -243,12 +202,12 @@ const FormLoadingFallback = () => (
 
 export default function DashboardGenerateContractPage() {
   const pathname = usePathname();
-  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
-  const [progress, setProgress] = useState(65);
+  const _locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
+  const [_progress, _setProgress] = useState(65);
   const [activeFeature, setActiveFeature] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [insights, setInsights] = useState({
+  const [insights, _setInsights] = useState({
     totalRequiredFields: 25,
     completedFields: 16,
     completionPercentage: 64,

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    let query = (supabaseAdmin.from('employee_documents') as any)
-      .select(`
+    let query = (supabaseAdmin.from('employee_documents') as any).select(`
         *,
         employer_employee:employer_employee_id (
           id,
@@ -52,7 +51,10 @@ export async function GET(request: NextRequest) {
     // Company scoping
     if (userProfile?.role !== 'admin') {
       // Filter by company
-      query = query.eq('employer_employee.company_id', userProfile?.active_company_id);
+      query = query.eq(
+        'employer_employee.company_id',
+        userProfile?.active_company_id
+      );
     }
 
     // Filter by employee if specified
@@ -75,7 +77,7 @@ export async function GET(request: NextRequest) {
       const today = new Date();
       const thirtyDaysFromNow = new Date(today);
       thirtyDaysFromNow.setDate(today.getDate() + 30);
-      
+
       query = query
         .not('expiry_date', 'is', null)
         .gte('expiry_date', today.toISOString().split('T')[0])
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -141,9 +143,17 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!employer_employee_id || !document_type || !document_name || !file_url) {
+    if (
+      !employer_employee_id ||
+      !document_type ||
+      !document_name ||
+      !file_url
+    ) {
       return NextResponse.json(
-        { error: 'Missing required fields: employer_employee_id, document_type, document_name, file_url' },
+        {
+          error:
+            'Missing required fields: employer_employee_id, document_type, document_name, file_url',
+        },
         { status: 400 }
       );
     }
@@ -170,9 +180,15 @@ export async function POST(request: NextRequest) {
 
     // Check permissions
     if (userProfile?.role !== 'admin') {
-      if (employee.employer_id !== user.id && employee.employee_id !== user.id) {
+      if (
+        employee.employer_id !== user.id &&
+        employee.employee_id !== user.id
+      ) {
         return NextResponse.json(
-          { error: 'Unauthorized - You can only upload documents for your own employees' },
+          {
+            error:
+              'Unauthorized - You can only upload documents for your own employees',
+          },
           { status: 403 }
         );
       }
@@ -187,7 +203,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create document record
-    const { data: document, error: createError } = await (supabaseAdmin.from('employee_documents') as any)
+    const { data: document, error: createError } = await (
+      supabaseAdmin.from('employee_documents') as any
+    )
       .insert({
         employer_employee_id,
         document_type,
@@ -227,4 +245,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

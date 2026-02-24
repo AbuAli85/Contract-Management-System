@@ -20,7 +20,7 @@ import {
 export const POST = professionalSecurityMiddleware.withSecurity(
   async (req: NextRequest, context) => {
     try {
-      const { email, password, mfaToken, deviceName, trustDevice } =
+      const { email, password, _mfaToken, _deviceName, _trustDevice } =
         await req.json();
 
       if (!email || !password) {

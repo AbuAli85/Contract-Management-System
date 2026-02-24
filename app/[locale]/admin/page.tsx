@@ -3,7 +3,8 @@ import { AdminDashboardUnified } from '@/components/admin/admin-dashboard-unifie
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard | Control Center',
-  description: 'Admin control center for managing users, roles, and permissions',
+  description:
+    'Admin control center for managing users, roles, and permissions',
 };
 
 export default function AdminPage() {
@@ -13,4 +14,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

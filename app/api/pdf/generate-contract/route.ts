@@ -7,7 +7,7 @@ import { generateContractPDF } from '@/lib/pdf-generator';
  * Uses jsPDF to generate contract PDFs without external dependencies
  *
  * POST /api/pdf/generate-contract
- * Body: { contractId: string }
+ * Body: { contractId: string, returnType?: 'url' | 'download', sendEmail?: boolean }
  *
  * Returns: PDF file or uploads to Supabase Storage
  */
@@ -114,12 +114,9 @@ export async function POST(request: Request) {
       'bytes'
     );
 
-    // 6. Handle return type
+    // 6. Handle return type — direct download
     if (returnType === 'download') {
-      // Return PDF directly for download
-      // Convert Buffer to Uint8Array for NextResponse
       const pdfArrayBuffer = new Uint8Array(pdfBuffer);
-
       return new NextResponse(pdfArrayBuffer, {
         status: 200,
         headers: {
@@ -134,7 +131,7 @@ export async function POST(request: Request) {
     const fileName = `contracts/${contract.id}/contract-${contract.contract_number}-${Date.now()}.pdf`;
 
     console.log('📤 Uploading PDF to Supabase Storage:', fileName);
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('contract-documents')
       .upload(fileName, pdfBuffer, {
         contentType: 'application/pdf',
@@ -168,34 +165,36 @@ export async function POST(request: Request) {
 
     if (updateError) {
       console.error('⚠️ Failed to update contract record:', updateError);
-      // Don't fail the request, PDF was still generated
+      // Don't fail the request — PDF was still generated
     }
 
-    // 10. Send email notification (if requested)
+    // 10. Send branded email notification via ContractNotificationService (if requested)
     if (body.sendEmail && contract.promoter?.email) {
       try {
-        const { sendEmail } = await import('@/lib/services/email.service');
-        const { standardNotificationEmail } = await import(
-          '@/lib/email-templates'
-        );
-
-        const emailContent = standardNotificationEmail({
-          title: 'Contract PDF Ready',
-          promoterName: contract.promoter.name_en || 'User',
-          message: `Your contract PDF (${contract.contract_number}) has been generated and is ready for download.`,
-          actionUrl: publicUrl,
-          actionText: 'Download PDF',
+        const { createContractNotificationService } =
+          await import('@/lib/services/contract-notification.service');
+        const notifier = createContractNotificationService(supabase);
+        const emailResult = await notifier.sendContractReady({
+          contractId: contract.id,
+          recipientEmail: contract.promoter.email,
+          recipientName: contract.promoter.name_en || 'User',
+          contractData: { ...contract, pdf_url: publicUrl },
         });
 
-        await sendEmail({
-          to: contract.promoter.email,
-          ...emailContent,
-        });
-
-        console.log('✅ Email notification sent');
+        if (emailResult.success) {
+          console.log(
+            '✅ Contract-ready email sent, messageId:',
+            emailResult.messageId
+          );
+        } else {
+          console.warn(
+            '⚠️ Contract-ready email failed (PDF still generated):',
+            emailResult.error
+          );
+        }
       } catch (emailError) {
         console.error('⚠️ Failed to send email notification:', emailError);
-        // Don't fail the request, PDF was still generated
+        // Don't fail the request — PDF was still generated
       }
     }
 

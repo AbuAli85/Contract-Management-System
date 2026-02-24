@@ -17,7 +17,9 @@ export async function queueNotification(options: NotificationOptions) {
   const supabaseAdmin = getSupabaseAdmin();
 
   try {
-    const { data, error } = await (supabaseAdmin.from('notification_queue') as any)
+    const { data, error } = await (
+      supabaseAdmin.from('notification_queue') as any
+    )
       .insert({
         recipient_id: options.recipientId || null,
         recipient_email: options.recipientEmail,
@@ -70,9 +72,11 @@ Your leave request has been ${status}.
 - Reviewed by: ${reviewerName}
 ${reviewNotes ? `\n📝 Notes: ${reviewNotes}` : ''}
 
-${status === 'approved' 
-  ? 'Your leave has been approved. Enjoy your time off!' 
-  : 'If you have questions about this decision, please contact your manager.'}
+${
+  status === 'approved'
+    ? 'Your leave has been approved. Enjoy your time off!'
+    : 'If you have questions about this decision, please contact your manager.'
+}
 
 Best regards,
 HR System
@@ -97,12 +101,13 @@ export async function notifyNewAnnouncement(
   priority: string,
   senderName: string
 ) {
-  const priorityEmoji = {
-    low: 'ℹ️',
-    normal: '📢',
-    important: '⚠️',
-    urgent: '🚨',
-  }[priority] || '📢';
+  const priorityEmoji =
+    {
+      low: 'ℹ️',
+      normal: '📢',
+      important: '⚠️',
+      urgent: '🚨',
+    }[priority] || '📢';
 
   const subject = `${priorityEmoji} New Announcement: ${announcementTitle}`;
 
@@ -273,4 +278,3 @@ HR System
     metadata: { reviewType, periodStart, periodEnd, action },
   });
 }
-

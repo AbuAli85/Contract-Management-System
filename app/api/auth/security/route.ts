@@ -18,7 +18,7 @@ import {
 
 // Get security events
 export const GET = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (req: NextRequest, _context) => {
     try {
       const url = new URL(req.url);
       const limit = parseInt(url.searchParams.get('limit') || '50');

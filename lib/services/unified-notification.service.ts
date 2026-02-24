@@ -1,16 +1,26 @@
 /**
  * Unified Notification Service
- * 
+ *
  * Central service for all notifications (Email, SMS, In-App)
  * Provides smart routing, retry logic, and delivery tracking
  */
 
 import { sendEmail } from './email.service';
-import { sendSMS, formatPhoneNumber, isValidPhoneNumber } from './sms.service';
-import { sendWhatsApp, formatPhoneNumber as formatWhatsAppPhone, isValidPhoneNumber as isValidWhatsAppPhone, isWhatsAppConfigured } from './whatsapp.service';
+import { _sendSMS, formatPhoneNumber, isValidPhoneNumber } from './sms.service';
+import {
+  _sendWhatsApp,
+  formatPhoneNumber as formatWhatsAppPhone,
+  isValidPhoneNumber as isValidWhatsAppPhone,
+  isWhatsAppConfigured,
+} from './whatsapp.service';
 import { createClient } from '@/lib/supabase/server';
 
-export type NotificationChannel = 'email' | 'sms' | 'whatsapp' | 'in_app' | 'push';
+export type NotificationChannel =
+  | 'email'
+  | 'sms'
+  | 'whatsapp'
+  | 'in_app'
+  | 'push';
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface NotificationRecipient {
@@ -124,9 +134,7 @@ export class UnifiedNotificationService {
             result.sent.sms++;
           } else {
             result.failed.sms++;
-            result.errors.push(
-              `SMS to ${recipient.phone}: ${smsResult.error}`
-            );
+            result.errors.push(`SMS to ${recipient.phone}: ${smsResult.error}`);
           }
         } catch (error: any) {
           result.failed.sms++;
@@ -175,9 +183,7 @@ export class UnifiedNotificationService {
             }
           } else {
             result.failed.inApp++;
-            result.errors.push(
-              `In-app notification: ${inAppResult.error}`
-            );
+            result.errors.push(`In-app notification: ${inAppResult.error}`);
           }
         } catch (error: any) {
           result.failed.inApp++;
@@ -186,7 +192,12 @@ export class UnifiedNotificationService {
       }
     }
 
-    result.success = result.failed.email + result.failed.sms + result.failed.whatsapp + result.failed.inApp === 0;
+    result.success =
+      result.failed.email +
+        result.failed.sms +
+        result.failed.whatsapp +
+        result.failed.inApp ===
+      0;
     return result;
   }
 
@@ -296,22 +307,25 @@ export class UnifiedNotificationService {
 
     const formattedPhone = formatWhatsAppPhone(recipient.phone);
     let whatsappMessage = this.generateSMSMessage(content); // Reuse SMS message format
-    
+
     // Add business branding to message
-    const businessName = process.env.WHATSAPP_BUSINESS_NAME || 'SmartPRO Business Hub';
+    const businessName =
+      process.env.WHATSAPP_BUSINESS_NAME || 'SmartPRO Business Hub';
     if (!whatsappMessage.includes(businessName)) {
       whatsappMessage = `${businessName}\n\n${whatsappMessage}`;
     }
 
     // Use default template if available, otherwise use free-form message
     const templateSid = process.env.TWILIO_WHATSAPP_TEMPLATE_SID;
-    
+
     const { sendWhatsApp } = await import('./whatsapp.service');
     const result = await sendWhatsApp({
       to: formattedPhone,
       message: templateSid ? undefined : whatsappMessage, // Use message if no template
       templateSid: templateSid || undefined,
-      templateVariables: templateSid ? this.generateWhatsAppTemplateVariables(content) : undefined,
+      templateVariables: templateSid
+        ? this.generateWhatsAppTemplateVariables(content)
+        : undefined,
     });
 
     return result;
@@ -328,7 +342,9 @@ export class UnifiedNotificationService {
     // For notifications, we'll use: {{1}} = title, {{2}} = message preview
     return {
       '1': content.title,
-      '2': content.message.substring(0, 50) + (content.message.length > 50 ? '...' : ''),
+      '2':
+        content.message.substring(0, 50) +
+        (content.message.length > 50 ? '...' : ''),
     };
   }
 
@@ -359,7 +375,10 @@ export class UnifiedNotificationService {
 
       if (error) {
         // If notifications table doesn't exist, log and continue
-        console.warn('Notifications table not found, skipping in-app notification:', error);
+        console.warn(
+          'Notifications table not found, skipping in-app notification:',
+          error
+        );
         return { success: false, error: 'Notifications table not available' };
       }
 
@@ -402,11 +421,13 @@ export class UnifiedNotificationService {
           <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <p style="margin: 0;">${content.message}</p>
           </div>
-          ${content.actionUrl
-            ? `<div style="text-align: center; margin-top: 30px;">
+          ${
+            content.actionUrl
+              ? `<div style="text-align: center; margin-top: 30px;">
                 <a href="${content.actionUrl}" style="background-color: ${priorityColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Take Action</a>
               </div>`
-            : ''}
+              : ''
+          }
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
             <p>This is an automated notification from your HR Management System.</p>
             <p>If you have any questions, please contact your administrator.</p>
@@ -435,4 +456,3 @@ export class UnifiedNotificationService {
 
 // Export singleton instance
 export const notificationService = new UnifiedNotificationService();
-

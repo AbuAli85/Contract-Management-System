@@ -253,18 +253,20 @@ export default function PromoterFormProfessional(
   // Fetch employers for dropdown with timeout
   const fetchEmployers = useCallback(async () => {
     setEmployersLoading(true);
-    
+
     // Set a timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
       console.warn('[Promoter Form] Employer fetch timeout - taking too long');
       setEmployersLoading(false);
       setEmployers([]);
     }, 10000); // 10 second timeout
-    
+
     try {
       const supabase = createClient();
       if (!supabase) {
-        console.error('[Promoter Form] Supabase client is null - environment variables may be missing');
+        console.error(
+          '[Promoter Form] Supabase client is null - environment variables may be missing'
+        );
         clearTimeout(timeoutId);
         setEmployers([]);
         setEmployersLoading(false);
@@ -280,10 +282,16 @@ export default function PromoterFormProfessional(
       clearTimeout(timeoutId);
 
       if (error) {
-        console.error('[Promoter Form] Error fetching employers:', error.message, error.code);
+        console.error(
+          '[Promoter Form] Error fetching employers:',
+          error.message,
+          error.code
+        );
         // Check for common error types
         if (error.code === '42501' || error.message?.includes('permission')) {
-          console.warn('[Promoter Form] RLS policy may be blocking employer query');
+          console.warn(
+            '[Promoter Form] RLS policy may be blocking employer query'
+          );
         }
         // Set empty employers instead of throwing
         setEmployers([]);
@@ -295,7 +303,10 @@ export default function PromoterFormProfessional(
     } catch (error) {
       clearTimeout(timeoutId);
       // Error fetching employers - handled gracefully
-      console.error('[Promoter Form] Unexpected error fetching employers:', error);
+      console.error(
+        '[Promoter Form] Unexpected error fetching employers:',
+        error
+      );
       setEmployers([]);
     } finally {
       setEmployersLoading(false);
@@ -593,7 +604,8 @@ export default function PromoterFormProfessional(
       if (!mobileValidation.isValid) {
         setValidationErrors(prev => ({
           ...prev,
-          mobile_number: mobileValidation.error || 'Please enter a valid mobile number',
+          mobile_number:
+            mobileValidation.error || 'Please enter a valid mobile number',
         }));
       }
     }
@@ -626,7 +638,10 @@ export default function PromoterFormProfessional(
 
     // Employer validation - Required only if employers are available
     // Skip validation if employers failed to load to allow form submission
-    if (employers.length > 0 && (!formData.employer_id || !formData.employer_id.trim())) {
+    if (
+      employers.length > 0 &&
+      (!formData.employer_id || !formData.employer_id.trim())
+    ) {
       errors.employer_id = 'Employer is required - Please select an employer';
     }
 
@@ -666,20 +681,26 @@ export default function PromoterFormProfessional(
     // Documents can be uploaded later after promoter is created
     if (!formData.id_card_url || !formData.id_card_url.trim()) {
       // Don't block form submission - just log warning
-      console.warn('[Promoter Form] ID card image not provided - can be added later');
+      console.warn(
+        '[Promoter Form] ID card image not provided - can be added later'
+      );
     }
 
     // Passport validation - STRONGLY ENCOURAGED
     if (!formData.passport_number || !formData.passport_number.trim()) {
       // Add warning instead of error to allow submission but encourage passport
-      console.warn('[Promoter Form] Passport number not provided - recommended for contracts');
+      console.warn(
+        '[Promoter Form] Passport number not provided - recommended for contracts'
+      );
     }
 
     // Passport Image validation - Recommended but not blocking
     // Documents can be uploaded later after promoter is created
     if (!formData.passport_url || !formData.passport_url.trim()) {
       // Don't block form submission - just log warning
-      console.warn('[Promoter Form] Passport image not provided - can be added later');
+      console.warn(
+        '[Promoter Form] Passport image not provided - can be added later'
+      );
     }
 
     // Passport expiry validation - ENCOURAGE with warning
@@ -953,21 +974,44 @@ export default function PromoterFormProfessional(
       </div>
 
       {/* Form */}
-      <form 
-        onSubmit={handleSubmit} 
-        className='space-y-6' 
-        role='form' 
+      <form
+        onSubmit={handleSubmit}
+        className='space-y-6'
+        role='form'
         aria-label={isEditMode ? 'Edit promoter form' : 'Add new promoter form'}
         noValidate
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full' aria-label='Promoter form sections'>
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className='w-full'
+          aria-label='Promoter form sections'
+        >
           <TabsList className='grid w-full grid-cols-6' role='tablist'>
-            <TabsTrigger value='personal' aria-label='Personal information tab'>Personal</TabsTrigger>
-            <TabsTrigger value='documents' aria-label='Documents tab'>Documents</TabsTrigger>
-            <TabsTrigger value='contact' aria-label='Contact information tab'>Contact</TabsTrigger>
-            <TabsTrigger value='professional' aria-label='Professional information tab'>Professional</TabsTrigger>
-            <TabsTrigger value='financial' aria-label='Financial information tab'>Financial</TabsTrigger>
-            <TabsTrigger value='settings' aria-label='Settings tab'>Settings</TabsTrigger>
+            <TabsTrigger value='personal' aria-label='Personal information tab'>
+              Personal
+            </TabsTrigger>
+            <TabsTrigger value='documents' aria-label='Documents tab'>
+              Documents
+            </TabsTrigger>
+            <TabsTrigger value='contact' aria-label='Contact information tab'>
+              Contact
+            </TabsTrigger>
+            <TabsTrigger
+              value='professional'
+              aria-label='Professional information tab'
+            >
+              Professional
+            </TabsTrigger>
+            <TabsTrigger
+              value='financial'
+              aria-label='Financial information tab'
+            >
+              Financial
+            </TabsTrigger>
+            <TabsTrigger value='settings' aria-label='Settings tab'>
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           {/* Personal Information Tab */}
@@ -999,10 +1043,19 @@ export default function PromoterFormProfessional(
                       aria-label='Full name in English'
                       aria-required='true'
                       aria-invalid={!!validationErrors.full_name}
-                      aria-describedby={validationErrors.full_name ? 'full_name-error' : undefined}
+                      aria-describedby={
+                        validationErrors.full_name
+                          ? 'full_name-error'
+                          : undefined
+                      }
                     />
                     {validationErrors.full_name && (
-                      <p id='full_name-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
+                      <p
+                        id='full_name-error'
+                        className='text-sm text-red-500'
+                        role='alert'
+                        aria-live='polite'
+                      >
                         {validationErrors.full_name}
                       </p>
                     )}
@@ -1023,11 +1076,18 @@ export default function PromoterFormProfessional(
                       aria-label='Full name in Arabic'
                       aria-required='true'
                       aria-invalid={!!validationErrors.name_ar}
-                      aria-describedby={validationErrors.name_ar ? 'name_ar-error' : undefined}
+                      aria-describedby={
+                        validationErrors.name_ar ? 'name_ar-error' : undefined
+                      }
                       dir='rtl'
                     />
                     {validationErrors.name_ar && (
-                      <p id='name_ar-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
+                      <p
+                        id='name_ar-error'
+                        className='text-sm text-red-500'
+                        role='alert'
+                        aria-live='polite'
+                      >
                         {validationErrors.name_ar}
                       </p>
                     )}
@@ -1372,316 +1432,377 @@ export default function PromoterFormProfessional(
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='space-y-6'>
-                {/* ID Card Section */}
-                <div className='space-y-4'>
-                  <div className='flex items-center gap-2 pb-2 border-b'>
-                    <FileText className='h-5 w-5 text-primary' />
-                    <h3 className='text-lg font-semibold'>ID Card Information</h3>
-                  </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='id_number' className='flex items-center gap-2'>
-                        ID Number <span className='text-red-500'>*</span>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className='h-4 w-4 text-muted-foreground cursor-help' />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>National ID or Civil ID number</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </Label>
-                      <Input
-                        id='id_number'
-                        value={formData.id_number}
-                        onChange={e =>
-                          handleInputChange('id_number', e.target.value)
-                        }
-                        placeholder='Enter ID number'
-                        className={
-                          validationErrors.id_number ? 'border-red-500' : ''
-                        }
-                        required
-                        aria-label='ID card number'
-                        aria-required='true'
-                        aria-invalid={!!validationErrors.id_number}
-                        aria-describedby={validationErrors.id_number ? 'id_number-error' : undefined}
-                      />
-                      {validationErrors.id_number && (
-                        <p id='id_number-error' className='text-sm text-red-500 flex items-center gap-1' role='alert' aria-live='polite'>
-                          <AlertCircle className='h-3 w-3' />
-                          {validationErrors.id_number}
-                        </p>
-                      )}
+                  {/* ID Card Section */}
+                  <div className='space-y-4'>
+                    <div className='flex items-center gap-2 pb-2 border-b'>
+                      <FileText className='h-5 w-5 text-primary' />
+                      <h3 className='text-lg font-semibold'>
+                        ID Card Information
+                      </h3>
                     </div>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div className='space-y-2'>
+                        <Label
+                          htmlFor='id_number'
+                          className='flex items-center gap-2'
+                        >
+                          ID Number <span className='text-red-500'>*</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className='h-4 w-4 text-muted-foreground cursor-help' />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>National ID or Civil ID number</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Label>
+                        <Input
+                          id='id_number'
+                          value={formData.id_number}
+                          onChange={e =>
+                            handleInputChange('id_number', e.target.value)
+                          }
+                          placeholder='Enter ID number'
+                          className={
+                            validationErrors.id_number ? 'border-red-500' : ''
+                          }
+                          required
+                          aria-label='ID card number'
+                          aria-required='true'
+                          aria-invalid={!!validationErrors.id_number}
+                          aria-describedby={
+                            validationErrors.id_number
+                              ? 'id_number-error'
+                              : undefined
+                          }
+                        />
+                        {validationErrors.id_number && (
+                          <p
+                            id='id_number-error'
+                            className='text-sm text-red-500 flex items-center gap-1'
+                            role='alert'
+                            aria-live='polite'
+                          >
+                            <AlertCircle className='h-3 w-3' />
+                            {validationErrors.id_number}
+                          </p>
+                        )}
+                      </div>
 
-                    <div className='space-y-2'>
-                      <DateInput
-                        id='id_expiry_date'
-                        label='ID Expiry Date'
-                        value={formData.id_expiry_date}
-                        onChange={value =>
-                          handleInputChange('id_expiry_date', value)
-                        }
-                        placeholder='DD/MM/YYYY'
-                        className={
-                          validationErrors.id_expiry_date ? 'border-red-500' : ''
-                        }
-                      />
-                      {validationErrors.id_expiry_date && (
-                        <p className='text-sm text-red-500 mt-1 flex items-center gap-1'>
-                          <AlertCircle className='h-3 w-3' />
-                          {validationErrors.id_expiry_date}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Passport Section */}
-                <div className='space-y-4'>
-                  <div className='flex items-center gap-2 pb-2 border-b'>
-                    <FileText className='h-5 w-5 text-blue-500' />
-                    <h3 className='text-lg font-semibold'>Passport Information</h3>
-                    <Badge variant='outline' className='bg-blue-50 text-blue-700 border-blue-200'>
-                      Highly Recommended
-                    </Badge>
-                  </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='passport_number' className='flex items-center gap-2'>
-                        Passport Number
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className='h-4 w-4 text-muted-foreground cursor-help' />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Required for international assignments and compliance tracking</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </Label>
-                      <Input
-                        id='passport_number'
-                        value={formData.passport_number}
-                        onChange={e =>
-                          handleInputChange('passport_number', e.target.value)
-                        }
-                        placeholder='Enter passport number'
-                        className={
-                          !formData.passport_number
-                            ? 'border-amber-300 bg-amber-50/50'
-                            : ''
-                        }
-                      />
-                      {!formData.passport_number && (
-                        <p className='text-xs text-amber-600 flex items-center gap-1'>
-                          <AlertTriangle className='h-3 w-3' />
-                          Passport required for international assignments and compliance tracking
-                        </p>
-                      )}
-                    </div>
-
-                    <div className='space-y-2'>
-                      <DateInput
-                        id='passport_expiry_date'
-                        label='Passport Expiry Date'
-                        value={formData.passport_expiry_date}
-                        onChange={value =>
-                          handleInputChange('passport_expiry_date', value)
-                        }
-                        placeholder='DD/MM/YYYY'
-                        className={
-                          validationErrors.passport_expiry_date ? 'border-red-500' : ''
-                        }
-                      />
-                      {validationErrors.passport_expiry_date && (
-                        <p className='text-sm text-red-500 mt-1 flex items-center gap-1'>
-                          <AlertCircle className='h-3 w-3' />
-                          {validationErrors.passport_expiry_date}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Visa Section */}
-                <div className='space-y-4'>
-                  <div className='flex items-center gap-2 pb-2 border-b'>
-                    <FileText className='h-5 w-5 text-green-500' />
-                    <h3 className='text-lg font-semibold'>Visa Information</h3>
-                    <Badge variant='outline' className='text-xs'>Optional</Badge>
-                  </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='visa_number'>
-                        Visa Number
-                      </Label>
-                      <Input
-                        id='visa_number'
-                        value={formData.visa_number}
-                        onChange={e =>
-                          handleInputChange('visa_number', e.target.value)
-                        }
-                        placeholder='Enter visa number (if applicable)'
-                      />
-                    </div>
-
-                    <div className='space-y-2'>
-                      <DateInput
-                        id='visa_expiry_date'
-                        label='Visa Expiry Date'
-                        value={formData.visa_expiry_date}
-                        onChange={value =>
-                          handleInputChange('visa_expiry_date', value)
-                        }
-                        placeholder='DD/MM/YYYY'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Work Permit Section */}
-                <div className='space-y-4'>
-                  <div className='flex items-center gap-2 pb-2 border-b'>
-                    <FileText className='h-5 w-5 text-purple-500' />
-                    <h3 className='text-lg font-semibold'>Work Permit Information</h3>
-                    <Badge variant='outline' className='text-xs'>Optional</Badge>
-                  </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='work_permit_number'>
-                        Work Permit Number
-                      </Label>
-                      <Input
-                        id='work_permit_number'
-                        value={formData.work_permit_number}
-                        onChange={e =>
-                          handleInputChange('work_permit_number', e.target.value)
-                        }
-                        placeholder='Enter work permit number (if applicable)'
-                      />
-                    </div>
-
-                    <div className='space-y-2'>
-                      <DateInput
-                        id='work_permit_expiry_date'
-                        label='Work Permit Expiry Date'
-                        value={formData.work_permit_expiry_date}
-                        onChange={value =>
-                          handleInputChange('work_permit_expiry_date', value)
-                        }
-                        placeholder='DD/MM/YYYY'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Document Upload Section */}
-                <div className='mt-6 space-y-4 pt-6 border-t'>
-                  <div className='flex items-center justify-between mb-4'>
-                    <div className='flex items-center gap-3'>
-                      <Upload className='h-5 w-5 text-primary' />
-                      <div>
-                        <h4 className='text-lg font-semibold'>Document Upload & Management</h4>
-                        <p className='text-sm text-muted-foreground'>
-                          Upload, view, edit, replace, or delete documents
-                        </p>
+                      <div className='space-y-2'>
+                        <DateInput
+                          id='id_expiry_date'
+                          label='ID Expiry Date'
+                          value={formData.id_expiry_date}
+                          onChange={value =>
+                            handleInputChange('id_expiry_date', value)
+                          }
+                          placeholder='DD/MM/YYYY'
+                          className={
+                            validationErrors.id_expiry_date
+                              ? 'border-red-500'
+                              : ''
+                          }
+                        />
+                        {validationErrors.id_expiry_date && (
+                          <p className='text-sm text-red-500 mt-1 flex items-center gap-1'>
+                            <AlertCircle className='h-3 w-3' />
+                            {validationErrors.id_expiry_date}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <Button
-                      type='button'
-                      variant={showDocumentUpload ? 'secondary' : 'outline'}
-                      size='sm'
-                      onClick={() => setShowDocumentUpload(!showDocumentUpload)}
-                      className='gap-2'
-                    >
-                      {showDocumentUpload ? (
-                        <>
-                          <EyeOff className='h-4 w-4' />
-                          Hide Upload
-                        </>
-                      ) : (
-                        <>
-                          <Upload className='h-4 w-4' />
-                          Show Upload
-                        </>
-                      )}
-                    </Button>
                   </div>
 
-                  {showDocumentUpload && (
-                    <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-                      <DocumentUploadEnhanced
-                        promoterId={isEditMode ? promoterToEdit?.id : 'new'}
-                        promoterName={
-                          formData.full_name ||
-                          promoterToEdit?.name_en ||
-                          'Unknown'
-                        }
-                        idCardNumber={formData.id_number}
-                        passportNumber={formData.passport_number}
-                        documentType='id_card'
-                        currentUrl={formData.id_card_url}
-                        onUploadComplete={url => {
-                          setFormData(prev => ({ ...prev, id_card_url: url }));
-                          toast({
-                            title: 'Success',
-                            description: 'ID card document uploaded successfully',
-                          });
-                        }}
-                        onDelete={() => {
-                          setFormData(prev => ({ ...prev, id_card_url: '' }));
-                          toast({
-                            title: 'Deleted',
-                            description: 'ID card document has been removed',
-                          });
-                        }}
-                        onReplace={(oldUrl, newUrl) => {
-                          setFormData(prev => ({ ...prev, id_card_url: newUrl }));
-                          toast({
-                            title: 'Replaced',
-                            description: 'ID card document has been replaced',
-                          });
-                        }}
-                      />
-                      <DocumentUploadEnhanced
-                        promoterId={isEditMode ? promoterToEdit?.id : 'new'}
-                        promoterName={
-                          formData.full_name ||
-                          promoterToEdit?.name_en ||
-                          'Unknown'
-                        }
-                        idCardNumber={formData.id_number}
-                        passportNumber={formData.passport_number}
-                        documentType='passport'
-                        currentUrl={formData.passport_url}
-                        onUploadComplete={url => {
-                          setFormData(prev => ({ ...prev, passport_url: url }));
-                          toast({
-                            title: 'Success',
-                            description: 'Passport document uploaded successfully',
-                          });
-                        }}
-                        onDelete={() => {
-                          setFormData(prev => ({ ...prev, passport_url: '' }));
-                          toast({
-                            title: 'Deleted',
-                            description: 'Passport document has been removed',
-                          });
-                        }}
-                        onReplace={(oldUrl, newUrl) => {
-                          setFormData(prev => ({ ...prev, passport_url: newUrl }));
-                          toast({
-                            title: 'Replaced',
-                            description: 'Passport document has been replaced',
-                          });
-                        }}
-                      />
+                  {/* Passport Section */}
+                  <div className='space-y-4'>
+                    <div className='flex items-center gap-2 pb-2 border-b'>
+                      <FileText className='h-5 w-5 text-blue-500' />
+                      <h3 className='text-lg font-semibold'>
+                        Passport Information
+                      </h3>
+                      <Badge
+                        variant='outline'
+                        className='bg-blue-50 text-blue-700 border-blue-200'
+                      >
+                        Highly Recommended
+                      </Badge>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div className='space-y-2'>
+                        <Label
+                          htmlFor='passport_number'
+                          className='flex items-center gap-2'
+                        >
+                          Passport Number
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className='h-4 w-4 text-muted-foreground cursor-help' />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                Required for international assignments and
+                                compliance tracking
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Label>
+                        <Input
+                          id='passport_number'
+                          value={formData.passport_number}
+                          onChange={e =>
+                            handleInputChange('passport_number', e.target.value)
+                          }
+                          placeholder='Enter passport number'
+                          className={
+                            !formData.passport_number
+                              ? 'border-amber-300 bg-amber-50/50'
+                              : ''
+                          }
+                        />
+                        {!formData.passport_number && (
+                          <p className='text-xs text-amber-600 flex items-center gap-1'>
+                            <AlertTriangle className='h-3 w-3' />
+                            Passport required for international assignments and
+                            compliance tracking
+                          </p>
+                        )}
+                      </div>
+
+                      <div className='space-y-2'>
+                        <DateInput
+                          id='passport_expiry_date'
+                          label='Passport Expiry Date'
+                          value={formData.passport_expiry_date}
+                          onChange={value =>
+                            handleInputChange('passport_expiry_date', value)
+                          }
+                          placeholder='DD/MM/YYYY'
+                          className={
+                            validationErrors.passport_expiry_date
+                              ? 'border-red-500'
+                              : ''
+                          }
+                        />
+                        {validationErrors.passport_expiry_date && (
+                          <p className='text-sm text-red-500 mt-1 flex items-center gap-1'>
+                            <AlertCircle className='h-3 w-3' />
+                            {validationErrors.passport_expiry_date}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visa Section */}
+                  <div className='space-y-4'>
+                    <div className='flex items-center gap-2 pb-2 border-b'>
+                      <FileText className='h-5 w-5 text-green-500' />
+                      <h3 className='text-lg font-semibold'>
+                        Visa Information
+                      </h3>
+                      <Badge variant='outline' className='text-xs'>
+                        Optional
+                      </Badge>
+                    </div>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div className='space-y-2'>
+                        <Label htmlFor='visa_number'>Visa Number</Label>
+                        <Input
+                          id='visa_number'
+                          value={formData.visa_number}
+                          onChange={e =>
+                            handleInputChange('visa_number', e.target.value)
+                          }
+                          placeholder='Enter visa number (if applicable)'
+                        />
+                      </div>
+
+                      <div className='space-y-2'>
+                        <DateInput
+                          id='visa_expiry_date'
+                          label='Visa Expiry Date'
+                          value={formData.visa_expiry_date}
+                          onChange={value =>
+                            handleInputChange('visa_expiry_date', value)
+                          }
+                          placeholder='DD/MM/YYYY'
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Work Permit Section */}
+                  <div className='space-y-4'>
+                    <div className='flex items-center gap-2 pb-2 border-b'>
+                      <FileText className='h-5 w-5 text-purple-500' />
+                      <h3 className='text-lg font-semibold'>
+                        Work Permit Information
+                      </h3>
+                      <Badge variant='outline' className='text-xs'>
+                        Optional
+                      </Badge>
+                    </div>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div className='space-y-2'>
+                        <Label htmlFor='work_permit_number'>
+                          Work Permit Number
+                        </Label>
+                        <Input
+                          id='work_permit_number'
+                          value={formData.work_permit_number}
+                          onChange={e =>
+                            handleInputChange(
+                              'work_permit_number',
+                              e.target.value
+                            )
+                          }
+                          placeholder='Enter work permit number (if applicable)'
+                        />
+                      </div>
+
+                      <div className='space-y-2'>
+                        <DateInput
+                          id='work_permit_expiry_date'
+                          label='Work Permit Expiry Date'
+                          value={formData.work_permit_expiry_date}
+                          onChange={value =>
+                            handleInputChange('work_permit_expiry_date', value)
+                          }
+                          placeholder='DD/MM/YYYY'
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Document Upload Section */}
+                  <div className='mt-6 space-y-4 pt-6 border-t'>
+                    <div className='flex items-center justify-between mb-4'>
+                      <div className='flex items-center gap-3'>
+                        <Upload className='h-5 w-5 text-primary' />
+                        <div>
+                          <h4 className='text-lg font-semibold'>
+                            Document Upload & Management
+                          </h4>
+                          <p className='text-sm text-muted-foreground'>
+                            Upload, view, edit, replace, or delete documents
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type='button'
+                        variant={showDocumentUpload ? 'secondary' : 'outline'}
+                        size='sm'
+                        onClick={() =>
+                          setShowDocumentUpload(!showDocumentUpload)
+                        }
+                        className='gap-2'
+                      >
+                        {showDocumentUpload ? (
+                          <>
+                            <EyeOff className='h-4 w-4' />
+                            Hide Upload
+                          </>
+                        ) : (
+                          <>
+                            <Upload className='h-4 w-4' />
+                            Show Upload
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {showDocumentUpload && (
+                      <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                        <DocumentUploadEnhanced
+                          promoterId={isEditMode ? promoterToEdit?.id : 'new'}
+                          promoterName={
+                            formData.full_name ||
+                            promoterToEdit?.name_en ||
+                            'Unknown'
+                          }
+                          idCardNumber={formData.id_number}
+                          passportNumber={formData.passport_number}
+                          documentType='id_card'
+                          currentUrl={formData.id_card_url}
+                          onUploadComplete={url => {
+                            setFormData(prev => ({
+                              ...prev,
+                              id_card_url: url,
+                            }));
+                            toast({
+                              title: 'Success',
+                              description:
+                                'ID card document uploaded successfully',
+                            });
+                          }}
+                          onDelete={() => {
+                            setFormData(prev => ({ ...prev, id_card_url: '' }));
+                            toast({
+                              title: 'Deleted',
+                              description: 'ID card document has been removed',
+                            });
+                          }}
+                          onReplace={(oldUrl, newUrl) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              id_card_url: newUrl,
+                            }));
+                            toast({
+                              title: 'Replaced',
+                              description: 'ID card document has been replaced',
+                            });
+                          }}
+                        />
+                        <DocumentUploadEnhanced
+                          promoterId={isEditMode ? promoterToEdit?.id : 'new'}
+                          promoterName={
+                            formData.full_name ||
+                            promoterToEdit?.name_en ||
+                            'Unknown'
+                          }
+                          idCardNumber={formData.id_number}
+                          passportNumber={formData.passport_number}
+                          documentType='passport'
+                          currentUrl={formData.passport_url}
+                          onUploadComplete={url => {
+                            setFormData(prev => ({
+                              ...prev,
+                              passport_url: url,
+                            }));
+                            toast({
+                              title: 'Success',
+                              description:
+                                'Passport document uploaded successfully',
+                            });
+                          }}
+                          onDelete={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              passport_url: '',
+                            }));
+                            toast({
+                              title: 'Deleted',
+                              description: 'Passport document has been removed',
+                            });
+                          }}
+                          onReplace={(oldUrl, newUrl) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              passport_url: newUrl,
+                            }));
+                            toast({
+                              title: 'Replaced',
+                              description:
+                                'Passport document has been replaced',
+                            });
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </TooltipProvider>
           </TabsContent>
 
@@ -1714,10 +1835,17 @@ export default function PromoterFormProfessional(
                       aria-label='Email address'
                       aria-required='true'
                       aria-invalid={!!validationErrors.email}
-                      aria-describedby={validationErrors.email ? 'email-error' : undefined}
+                      aria-describedby={
+                        validationErrors.email ? 'email-error' : undefined
+                      }
                     />
                     {validationErrors.email && (
-                      <p id='email-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
+                      <p
+                        id='email-error'
+                        className='text-sm text-red-500'
+                        role='alert'
+                        aria-live='polite'
+                      >
                         {validationErrors.email}
                       </p>
                     )}
@@ -1785,13 +1913,25 @@ export default function PromoterFormProfessional(
                       aria-label='Mobile number'
                       aria-required='true'
                       aria-invalid={!!validationErrors.mobile_number}
-                      aria-describedby={validationErrors.mobile_number ? 'mobile_number-error' : 'mobile_number-hint'}
+                      aria-describedby={
+                        validationErrors.mobile_number
+                          ? 'mobile_number-error'
+                          : 'mobile_number-hint'
+                      }
                     />
-                    <p id='mobile_number-hint' className='text-xs text-muted-foreground'>
+                    <p
+                      id='mobile_number-hint'
+                      className='text-xs text-muted-foreground'
+                    >
                       Include country code (e.g., +968 9123 4567)
                     </p>
                     {validationErrors.mobile_number && (
-                      <p id='mobile_number-error' className='text-sm text-red-500' role='alert' aria-live='polite'>
+                      <p
+                        id='mobile_number-error'
+                        className='text-sm text-red-500'
+                        role='alert'
+                        aria-live='polite'
+                      >
                         {validationErrors.mobile_number}
                       </p>
                     )}
@@ -2003,8 +2143,15 @@ export default function PromoterFormProfessional(
 
                   <div className='space-y-2'>
                     <Label htmlFor='employer_id'>
-                      Employer {employers.length > 0 && <span className='text-red-500'>*</span>}
-                      {employers.length === 0 && !employersLoading && <span className='text-muted-foreground text-xs'>(Optional - No employers found)</span>}
+                      Employer{' '}
+                      {employers.length > 0 && (
+                        <span className='text-red-500'>*</span>
+                      )}
+                      {employers.length === 0 && !employersLoading && (
+                        <span className='text-muted-foreground text-xs'>
+                          (Optional - No employers found)
+                        </span>
+                      )}
                     </Label>
                     <Select
                       value={formData.employer_id || ''}
@@ -2015,12 +2162,16 @@ export default function PromoterFormProfessional(
                         )
                       }
                     >
-                      <SelectTrigger className={validationErrors.employer_id ? 'border-red-500' : ''}>
+                      <SelectTrigger
+                        className={
+                          validationErrors.employer_id ? 'border-red-500' : ''
+                        }
+                      >
                         <SelectValue
                           placeholder={
                             employersLoading
                               ? 'Loading employers...'
-                              : employers.length > 0 
+                              : employers.length > 0
                                 ? 'Select employer'
                                 : 'No employers available'
                           }
@@ -2034,11 +2185,14 @@ export default function PromoterFormProfessional(
                         )}
                         {employersLoading ? (
                           <div className='px-2 py-4 text-center text-sm text-muted-foreground'>
-                            <span className='animate-pulse'>Loading employers...</span>
+                            <span className='animate-pulse'>
+                              Loading employers...
+                            </span>
                           </div>
                         ) : employers.length === 0 ? (
                           <div className='px-2 py-4 text-center text-sm text-amber-600'>
-                            No employers found - Please add employers in Manage Parties first
+                            No employers found - Please add employers in Manage
+                            Parties first
                           </div>
                         ) : (
                           <>
@@ -2738,11 +2892,13 @@ export default function PromoterFormProfessional(
             Cancel
           </Button>
 
-          <Button 
-            type='submit' 
-            disabled={isLoading || Object.keys(validationErrors).length > 0} 
+          <Button
+            type='submit'
+            disabled={isLoading || Object.keys(validationErrors).length > 0}
             className='flex-1'
-            aria-label={isEditMode ? 'Save promoter changes' : 'Create new promoter'}
+            aria-label={
+              isEditMode ? 'Save promoter changes' : 'Create new promoter'
+            }
             aria-busy={isLoading}
           >
             <Save className='mr-2 h-4 w-4' />

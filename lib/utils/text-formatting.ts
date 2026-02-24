@@ -223,7 +223,7 @@ export function truncateText(
   const cleaned = text.trim();
   if (cleaned.length <= maxLength) return cleaned;
 
-  return cleaned.slice(0, maxLength) + '...';
+  return `${cleaned.slice(0, maxLength)}...`;
 }
 
 /**

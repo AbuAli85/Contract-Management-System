@@ -7,102 +7,107 @@ import { extractIdFromSlug, isUUID } from '@/lib/utils/slug';
 
 // Validation schema for promoter updates
 // Using passthrough to allow all valid database fields while validating known ones
-const promoterUpdateSchema = z.object({
-  // Names
-  name_en: z.string().min(1, 'English name is required').optional(),
-  name_ar: z.string().min(1, 'Arabic name is required').optional(),
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  
-  // Documents
-  id_card_number: z.string().min(1, 'ID card number is required').optional(),
-  id_card_url: z.string().optional(),
-  id_card_expiry_date: z.string().or(z.date()).optional(),
-  passport_url: z.string().optional(),
-  passport_number: z.string().optional(),
-  passport_expiry_date: z.string().or(z.date()).optional(),
-  visa_number: z.string().optional(),
-  visa_expiry_date: z.string().or(z.date()).optional(),
-  work_permit_number: z.string().optional(),
-  work_permit_expiry_date: z.string().or(z.date()).optional(),
-  
-  // Contact
-  mobile_number: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().refine(
-    (val) => !val || val === '' || z.string().email().safeParse(val).success,
-    { message: 'Invalid email format' }
-  ).optional(),
-  profile_picture_url: z.string().optional(),
-  
-  // Personal info
-  nationality: z.string().optional(),
-  date_of_birth: z.string().or(z.date()).optional(),
-  gender: z.enum(['male', 'female', 'other']).optional(),
-  marital_status: z.string().optional(),
-  
-  // Address
-  address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  postal_code: z.string().optional(),
-  emergency_contact: z.string().optional(),
-  emergency_phone: z.string().optional(),
-  
-  // Professional
-  job_title: z.string().optional(),
-  company: z.string().optional(),
-  department: z.string().optional(),
-  specialization: z.string().optional(),
-  experience_years: z.number().optional(),
-  education_level: z.string().optional(),
-  university: z.string().optional(),
-  graduation_year: z.number().optional(),
-  skills: z.string().optional(),
-  certifications: z.string().optional(),
-  
-  // Financial
-  bank_name: z.string().optional(),
-  account_number: z.string().optional(),
-  iban: z.string().optional(),
-  swift_code: z.string().optional(),
-  tax_id: z.string().optional(),
-  
-  // Status & preferences
-  status: z
-    .enum([
-      'active',
-      'inactive',
-      'suspended',
-      'holiday',
-      'on_leave',
-      'terminated',
-      'pending_approval',
-      'retired',
-      'probation',
-      'resigned',
-      'contractor',
-      'temporary',
-      'training',
-      'other',
-    ])
-    .optional(),
-  overall_status: z.string().optional(),
-  rating: z.number().optional(),
-  availability: z.string().optional(),
-  preferred_language: z.string().optional(),
-  timezone: z.string().optional(),
-  special_requirements: z.string().optional(),
-  notes: z.string().optional(),
-  
-  // Relationships
-  employer_id: z.string().uuid().optional(),
-  
-  // Notifications
-  notify_days_before_id_expiry: z.number().min(1).max(365).optional(),
-  notify_days_before_passport_expiry: z.number().min(1).max(365).optional(),
-}).passthrough(); // Allow additional fields that exist in the database but aren't explicitly listed
+const promoterUpdateSchema = z
+  .object({
+    // Names
+    name_en: z.string().min(1, 'English name is required').optional(),
+    name_ar: z.string().min(1, 'Arabic name is required').optional(),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+
+    // Documents
+    id_card_number: z.string().min(1, 'ID card number is required').optional(),
+    id_card_url: z.string().optional(),
+    id_card_expiry_date: z.string().or(z.date()).optional(),
+    passport_url: z.string().optional(),
+    passport_number: z.string().optional(),
+    passport_expiry_date: z.string().or(z.date()).optional(),
+    visa_number: z.string().optional(),
+    visa_expiry_date: z.string().or(z.date()).optional(),
+    work_permit_number: z.string().optional(),
+    work_permit_expiry_date: z.string().or(z.date()).optional(),
+
+    // Contact
+    mobile_number: z.string().optional(),
+    phone: z.string().optional(),
+    email: z
+      .string()
+      .refine(
+        val => !val || val === '' || z.string().email().safeParse(val).success,
+        { message: 'Invalid email format' }
+      )
+      .optional(),
+    profile_picture_url: z.string().optional(),
+
+    // Personal info
+    nationality: z.string().optional(),
+    date_of_birth: z.string().or(z.date()).optional(),
+    gender: z.enum(['male', 'female', 'other']).optional(),
+    marital_status: z.string().optional(),
+
+    // Address
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    country: z.string().optional(),
+    postal_code: z.string().optional(),
+    emergency_contact: z.string().optional(),
+    emergency_phone: z.string().optional(),
+
+    // Professional
+    job_title: z.string().optional(),
+    company: z.string().optional(),
+    department: z.string().optional(),
+    specialization: z.string().optional(),
+    experience_years: z.number().optional(),
+    education_level: z.string().optional(),
+    university: z.string().optional(),
+    graduation_year: z.number().optional(),
+    skills: z.string().optional(),
+    certifications: z.string().optional(),
+
+    // Financial
+    bank_name: z.string().optional(),
+    account_number: z.string().optional(),
+    iban: z.string().optional(),
+    swift_code: z.string().optional(),
+    tax_id: z.string().optional(),
+
+    // Status & preferences
+    status: z
+      .enum([
+        'active',
+        'inactive',
+        'suspended',
+        'holiday',
+        'on_leave',
+        'terminated',
+        'pending_approval',
+        'retired',
+        'probation',
+        'resigned',
+        'contractor',
+        'temporary',
+        'training',
+        'other',
+      ])
+      .optional(),
+    overall_status: z.string().optional(),
+    rating: z.number().optional(),
+    availability: z.string().optional(),
+    preferred_language: z.string().optional(),
+    timezone: z.string().optional(),
+    special_requirements: z.string().optional(),
+    notes: z.string().optional(),
+
+    // Relationships
+    employer_id: z.string().uuid().optional(),
+
+    // Notifications
+    notify_days_before_id_expiry: z.number().min(1).max(365).optional(),
+    notify_days_before_passport_expiry: z.number().min(1).max(365).optional(),
+  })
+  .passthrough(); // Allow additional fields that exist in the database but aren't explicitly listed
 
 export const GET = withAnyRBAC(
   ['promoter:read:own', 'promoter:manage:own'],
@@ -164,11 +169,17 @@ export const GET = withAnyRBAC(
       // ✅ AUTO-FIX: If user is accessing their own profile, ensure they have promoter role
       if (searchId === userId) {
         try {
-          const { ensurePromoterRole } = await import('@/lib/services/employee-account-service');
+          const { ensurePromoterRole } =
+            await import('@/lib/services/employee-account-service');
           await ensurePromoterRole(userId);
-          console.log(`✅ Auto-assigned promoter role to user ${userId} accessing own profile`);
+          console.log(
+            `✅ Auto-assigned promoter role to user ${userId} accessing own profile`
+          );
         } catch (roleError) {
-          console.warn('⚠️ Could not auto-assign promoter role (non-critical):', roleError);
+          console.warn(
+            '⚠️ Could not auto-assign promoter role (non-critical):',
+            roleError
+          );
           // Continue anyway - the RBAC check will handle it
         }
       }
@@ -196,8 +207,10 @@ export const GET = withAnyRBAC(
 
       // ✅ AUTO-FIX: If user is accessing their own profile and promoter record doesn't exist, create it
       if (!promoter && searchId === userId) {
-        console.log(`🔧 AUTO-FIX: Creating missing promoter record for user ${userId}`);
-        
+        console.log(
+          `🔧 AUTO-FIX: Creating missing promoter record for user ${userId}`
+        );
+
         try {
           // Get user profile to populate promoter data
           const { data: userProfile } = await supabase
@@ -215,19 +228,26 @@ export const GET = withAnyRBAC(
             const promoterData = {
               id: userId,
               email: userProfile.email || session.user.email || '',
-              name_en: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
-              name_ar: userProfile.full_name || session.user.user_metadata?.full_name || 'User',
+              name_en:
+                userProfile.full_name ||
+                session.user.user_metadata?.full_name ||
+                'User',
+              name_ar:
+                userProfile.full_name ||
+                session.user.user_metadata?.full_name ||
+                'User',
               phone: userProfile.phone || null,
               status: 'active',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             };
 
-            const { data: newPromoter, error: createError } = await supabaseAdmin
-              .from('promoters')
-              .upsert(promoterData, { onConflict: 'id' })
-              .select()
-              .single();
+            const { data: newPromoter, error: createError } =
+              await supabaseAdmin
+                .from('promoters')
+                .upsert(promoterData, { onConflict: 'id' })
+                .select()
+                .single();
 
             if (createError) {
               console.error('❌ Error auto-creating promoter record:', {
@@ -239,7 +259,7 @@ export const GET = withAnyRBAC(
                 promoterData,
               });
               return NextResponse.json(
-                { 
+                {
                   error: 'Failed to create promoter record',
                   details: createError.message,
                   code: createError.code,
@@ -251,20 +271,24 @@ export const GET = withAnyRBAC(
             if (!newPromoter) {
               console.error('❌ Promoter record creation returned no data');
               return NextResponse.json(
-                { error: 'Failed to create promoter record - no data returned' },
+                {
+                  error: 'Failed to create promoter record - no data returned',
+                },
                 { status: 500 }
               );
             }
 
-            console.log(`✅ Successfully auto-created promoter record for user ${userId}`);
-            
+            console.log(
+              `✅ Successfully auto-created promoter record for user ${userId}`
+            );
+
             // Re-fetch the promoter using admin client to ensure we can read it
             const { data: refetchedPromoter } = await supabaseAdmin
               .from('promoters')
               .select('*')
               .eq('id', userId)
               .maybeSingle();
-            
+
             if (!refetchedPromoter) {
               console.error('❌ Failed to refetch newly created promoter');
               return NextResponse.json(
@@ -272,7 +296,7 @@ export const GET = withAnyRBAC(
                 { status: 500 }
               );
             }
-            
+
             // Continue with normal flow below (will fetch employer and contracts)
             // Set promoter to the refetched one so the code below handles it
             promoter = refetchedPromoter;
@@ -284,7 +308,10 @@ export const GET = withAnyRBAC(
             );
           }
         } catch (autoFixError) {
-          console.error('❌ Error in auto-fix for promoter record:', autoFixError);
+          console.error(
+            '❌ Error in auto-fix for promoter record:',
+            autoFixError
+          );
           return NextResponse.json(
             { error: 'Failed to create promoter record' },
             { status: 500 }
@@ -425,7 +452,7 @@ export const PUT = withRBAC(
 
       // Parse and validate request body
       const body = await request.json();
-      
+
       // Log the incoming request for debugging
       console.log('📥 PATCH /api/promoters/[id] - Incoming data:', {
         id,
@@ -434,7 +461,7 @@ export const PUT = withRBAC(
           Object.entries(body).slice(0, 10) // First 10 fields
         ),
       });
-      
+
       let validatedData;
       try {
         validatedData = promoterUpdateSchema.parse(body);
@@ -587,10 +614,13 @@ export const PATCH = withRBAC(
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params;
-      
+
       // Log the incoming request for debugging
-      console.log('📥 PATCH /api/promoters/[id] - Request received for ID:', id);
-      
+      console.log(
+        '📥 PATCH /api/promoters/[id] - Request received for ID:',
+        id
+      );
+
       const cookieStore = await cookies();
 
       const supabase = createServerClient(
@@ -639,7 +669,7 @@ export const PATCH = withRBAC(
 
       // Parse and validate request body
       const body = await request.json();
-      
+
       // Log the incoming request for debugging
       console.log('📥 PATCH /api/promoters/[id] - Incoming data:', {
         id,
@@ -648,7 +678,7 @@ export const PATCH = withRBAC(
           Object.entries(body).slice(0, 10) // First 10 fields
         ),
       });
-      
+
       let validatedData;
       try {
         validatedData = promoterUpdateSchema.parse(body);

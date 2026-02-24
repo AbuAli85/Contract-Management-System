@@ -123,15 +123,17 @@ export async function PATCH(
     };
 
     if (status) {
-      const allowedStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+      const allowedStatuses = [
+        'pending',
+        'in_progress',
+        'completed',
+        'cancelled',
+      ];
       if (!allowedStatuses.includes(status)) {
-        return NextResponse.json(
-          { error: 'Invalid status' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
       }
       updateData.status = status;
-      
+
       // If completing the task, set completed_at
       if (status === 'completed') {
         updateData.completed_at = new Date().toISOString();
@@ -175,4 +177,3 @@ export async function PATCH(
     );
   }
 }
-

@@ -7,7 +7,9 @@ export async function GET() {
   const supabase = await createClient();
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -21,24 +23,32 @@ export async function GET() {
       .single();
 
     if (eeError || !employerEmployee) {
-      return NextResponse.json({ error: 'Employee record not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Employee record not found' },
+        { status: 404 }
+      );
     }
 
     // Get performance reviews for this employee
     const { data: reviews, error } = await supabase
       .from('performance_reviews')
-      .select(`
+      .select(
+        `
         *,
         reviewer:profiles!performance_reviews_reviewed_by_fkey (
           full_name
         )
-      `)
+      `
+      )
       .eq('employer_employee_id', employerEmployee.id)
       .order('review_period_end', { ascending: false });
 
     if (error) {
       console.error('Error fetching reviews:', error);
-      return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch reviews' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -50,4 +60,3 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

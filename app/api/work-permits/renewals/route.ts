@@ -9,7 +9,7 @@ export const GET = withAnyRBAC(
     try {
       const supabase = await createClient();
       const { searchParams } = new URL(request.url);
-      
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -26,7 +26,8 @@ export const GET = withAnyRBAC(
       // Build query
       let query = supabase
         .from('work_permit_renewals')
-        .select(`
+        .select(
+          `
           *,
           application:work_permit_applications(
             id,
@@ -37,7 +38,9 @@ export const GET = withAnyRBAC(
             employer_id,
             employee_id
           )
-        `, { count: 'exact' })
+        `,
+          { count: 'exact' }
+        )
         .order('current_expiry_date', { ascending: true })
         .range(offset, offset + limit - 1);
 
@@ -104,7 +107,10 @@ export const POST = withAnyRBAC(
       // Validation
       if (!original_work_permit_number || !current_expiry_date) {
         return NextResponse.json(
-          { error: 'Missing required fields: original_work_permit_number, current_expiry_date' },
+          {
+            error:
+              'Missing required fields: original_work_permit_number, current_expiry_date',
+          },
           { status: 400 }
         );
       }
@@ -136,11 +142,14 @@ export const POST = withAnyRBAC(
         );
       }
 
-      return NextResponse.json({
-        success: true,
-        renewal,
-        message: 'Work permit renewal created successfully',
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          success: true,
+          renewal,
+          message: 'Work permit renewal created successfully',
+        },
+        { status: 201 }
+      );
     } catch (error: any) {
       console.error('Error in POST /api/work-permits/renewals:', error);
       return NextResponse.json(
@@ -150,4 +159,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

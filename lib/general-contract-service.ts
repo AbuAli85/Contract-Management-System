@@ -133,9 +133,8 @@ export class GeneralContractService {
         );
       }
 
-      const { createClient: createSupabaseClient } = await import(
-        '@supabase/supabase-js'
-      );
+      const { createClient: createSupabaseClient } =
+        await import('@supabase/supabase-js');
       this.supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);
     }
     return this.supabase;
@@ -524,7 +523,7 @@ export class GeneralContractService {
                 status: res.statusCode,
                 statusText: res.statusMessage,
                 ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300,
-                data: data,
+                data,
               });
             });
           });

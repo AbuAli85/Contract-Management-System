@@ -215,26 +215,35 @@ export async function guardPermission(
       try {
         const { createClient } = await import('@/lib/supabase/server');
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         sessionUserId = user?.id || null;
       } catch (e) {
         // Ignore - will use result.user_id instead
       }
 
       const userId = sessionUserId || result.user_id;
-      const isPromoterAccess = userId &&
-        requiredPermission.includes('promoter:') && requiredPermission.includes(':own') &&
-        request.nextUrl.pathname.includes('/api/promoters/');
-      
-      const isContractAccess = userId &&
-        requiredPermission.includes('contract:') && requiredPermission.includes(':own') &&
-        (request.nextUrl.pathname.includes('/api/contracts/') || request.nextUrl.pathname.includes('/api/contracts'));
-
-      const isProfileAccess = userId &&
-        (requiredPermission.includes('profile:') || requiredPermission.includes('user:')) && 
+      const isPromoterAccess =
+        userId &&
+        requiredPermission.includes('promoter:') &&
         requiredPermission.includes(':own') &&
-        (request.nextUrl.pathname.includes('/api/users/profile') || 
-         request.nextUrl.pathname.includes('/api/users/activity'));
+        request.nextUrl.pathname.includes('/api/promoters/');
+
+      const isContractAccess =
+        userId &&
+        requiredPermission.includes('contract:') &&
+        requiredPermission.includes(':own') &&
+        (request.nextUrl.pathname.includes('/api/contracts/') ||
+          request.nextUrl.pathname.includes('/api/contracts'));
+
+      const isProfileAccess =
+        userId &&
+        (requiredPermission.includes('profile:') ||
+          requiredPermission.includes('user:')) &&
+        requiredPermission.includes(':own') &&
+        (request.nextUrl.pathname.includes('/api/users/profile') ||
+          request.nextUrl.pathname.includes('/api/users/activity'));
 
       if (isPromoterAccess || isContractAccess || isProfileAccess) {
         try {
@@ -246,11 +255,15 @@ export async function guardPermission(
             const promoterIdIndex = pathParts.indexOf('promoters') + 1;
             const promoterId = pathParts[promoterIdIndex];
 
-            console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing own promoter profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`);
+            console.log(
+              `🔍 AUTO-FIX: Checking if user ${userId} is accessing own promoter profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`
+            );
 
-            shouldAutoFix = 
-              promoterId === userId || 
-              (promoterId && userId && promoterId.startsWith(userId.substring(0, 8))) ||
+            shouldAutoFix =
+              promoterId === userId ||
+              (promoterId &&
+                userId &&
+                promoterId.startsWith(userId.substring(0, 8))) ||
               (promoterId && userId && userId.startsWith(promoterId));
             resourceType = 'promoter';
           } else if (isContractAccess) {
@@ -258,23 +271,32 @@ export async function guardPermission(
             const contractIdIndex = pathParts.indexOf('contracts') + 1;
             const contractId = pathParts[contractIdIndex];
 
-            console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing contracts (contractId: ${contractId || 'list'}, path: ${request.nextUrl.pathname})`);
+            console.log(
+              `🔍 AUTO-FIX: Checking if user ${userId} is accessing contracts (contractId: ${contractId || 'list'}, path: ${request.nextUrl.pathname})`
+            );
 
             shouldAutoFix = true; // Always allow for contract:read:own permission
             resourceType = 'contract';
           } else if (isProfileAccess) {
             // For profile/user access, always allow auto-fix (users should access their own profile/activity)
-            console.log(`🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`);
+            console.log(
+              `🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`
+            );
             shouldAutoFix = true;
             resourceType = 'profile';
           }
 
           if (shouldAutoFix) {
-            console.log(`✅ AUTO-FIX: User ${userId} is accessing own ${resourceType} resource, fixing permissions...`);
-            
-            const { ensurePromoterRole } = await import('@/lib/services/employee-account-service');
+            console.log(
+              `✅ AUTO-FIX: User ${userId} is accessing own ${resourceType} resource, fixing permissions...`
+            );
+
+            const { ensurePromoterRole } =
+              await import('@/lib/services/employee-account-service');
             await ensurePromoterRole(userId);
-            console.log(`✅ Auto-assigned promoter role (with contract permissions) to user ${userId}`);
+            console.log(
+              `✅ Auto-assigned promoter role (with contract permissions) to user ${userId}`
+            );
 
             // Clear permission cache for this user
             try {
@@ -282,7 +304,10 @@ export async function guardPermission(
               await permissionCache.invalidateUser(userId);
               console.log(`✅ Cleared permission cache for user ${userId}`);
             } catch (cacheError) {
-              console.warn('⚠️ Could not clear cache (non-critical):', cacheError);
+              console.warn(
+                '⚠️ Could not clear cache (non-critical):',
+                cacheError
+              );
             }
 
             // Longer delay to ensure database transaction is committed and indexes are updated
@@ -303,18 +328,25 @@ export async function guardPermission(
             });
 
             if (retryResult.allowed) {
-              console.log(`✅ Permission check passed after auto-fix for user ${userId}`);
+              console.log(
+                `✅ Permission check passed after auto-fix for user ${userId}`
+              );
               return null; // Allow access
             } else {
-              console.error(`❌ Permission check still failed after auto-fix for user ${userId}:`, {
-                user_permissions: retryResult.user_permissions,
-                user_roles: retryResult.user_roles,
-                reason: retryResult.reason,
-              });
-              
+              console.error(
+                `❌ Permission check still failed after auto-fix for user ${userId}:`,
+                {
+                  user_permissions: retryResult.user_permissions,
+                  user_roles: retryResult.user_roles,
+                  reason: retryResult.reason,
+                }
+              );
+
               // ✅ FALLBACK: If we've verified it's their own resource and auto-fix ran,
               // allow access anyway (permissions might take a moment to propagate)
-              console.log(`⚠️ Allowing access as fallback for own-resource access (user ${userId})`);
+              console.log(
+                `⚠️ Allowing access as fallback for own-resource access (user ${userId})`
+              );
               return null; // Allow access as fallback
             }
           }
@@ -522,7 +554,9 @@ async function guardAnyPermission(
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       sessionUserId = user?.id || null;
     } catch (e) {
       // Ignore - will use result.user_id instead
@@ -542,19 +576,31 @@ async function guardAnyPermission(
     if (!result.allowed) {
       // ✅ AUTO-FIX: If user is trying to access their own promoter profile or contracts, auto-assign role
       const userId = sessionUserId || result.user_id;
-      const isPromoterAccess = userId &&
-        requiredPermissions.some(p => p.includes('promoter:') && p.includes(':own')) &&
+      const isPromoterAccess =
+        userId &&
+        requiredPermissions.some(
+          p => p.includes('promoter:') && p.includes(':own')
+        ) &&
         request.nextUrl.pathname.includes('/api/promoters/');
-      
-      const isContractAccess = userId &&
-        requiredPermissions.some(p => p.includes('contract:') && p.includes(':own')) &&
-        (request.nextUrl.pathname.includes('/api/contracts/') || request.nextUrl.pathname.includes('/api/contracts'));
 
-      const isProfileAccess = userId &&
-        (requiredPermissions.some(p => (p.includes('profile:') || p.includes('user:')) && p.includes(':own'))) &&
-        (request.nextUrl.pathname.includes('/api/users/profile') || 
-         request.nextUrl.pathname.includes('/api/users/activity'));
-      
+      const isContractAccess =
+        userId &&
+        requiredPermissions.some(
+          p => p.includes('contract:') && p.includes(':own')
+        ) &&
+        (request.nextUrl.pathname.includes('/api/contracts/') ||
+          request.nextUrl.pathname.includes('/api/contracts'));
+
+      const isProfileAccess =
+        userId &&
+        requiredPermissions.some(
+          p =>
+            (p.includes('profile:') || p.includes('user:')) &&
+            p.includes(':own')
+        ) &&
+        (request.nextUrl.pathname.includes('/api/users/profile') ||
+          request.nextUrl.pathname.includes('/api/users/activity'));
+
       if (isPromoterAccess || isContractAccess || isProfileAccess) {
         try {
           let shouldAutoFix = false;
@@ -566,13 +612,17 @@ async function guardAnyPermission(
             const promoterIdIndex = pathParts.indexOf('promoters') + 1;
             const promoterId = pathParts[promoterIdIndex];
 
-            console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing own promoter profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`);
+            console.log(
+              `🔍 AUTO-FIX: Checking if user ${userId} is accessing own promoter profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`
+            );
 
             // If user is accessing their own profile, auto-fix permissions
             // Check both full UUID match and partial match (for slug-based IDs)
-            shouldAutoFix = 
-              promoterId === userId || 
-              (promoterId && userId && promoterId.startsWith(userId.substring(0, 8))) ||
+            shouldAutoFix =
+              promoterId === userId ||
+              (promoterId &&
+                userId &&
+                promoterId.startsWith(userId.substring(0, 8))) ||
               (promoterId && userId && userId.startsWith(promoterId));
             resourceType = 'promoter';
           } else if (isContractAccess) {
@@ -583,7 +633,9 @@ async function guardAnyPermission(
             const contractIdIndex = pathParts.indexOf('contracts') + 1;
             const contractId = pathParts[contractIdIndex];
 
-            console.log(`🔍 AUTO-FIX: Checking if user ${userId} is accessing contracts (contractId: ${contractId || 'list'}, path: ${request.nextUrl.pathname})`);
+            console.log(
+              `🔍 AUTO-FIX: Checking if user ${userId} is accessing contracts (contractId: ${contractId || 'list'}, path: ${request.nextUrl.pathname})`
+            );
 
             // Allow auto-fix for contract access (the route handler will verify ownership)
             // This ensures users have the permission, even if the specific contract check happens later
@@ -591,17 +643,24 @@ async function guardAnyPermission(
             resourceType = 'contract';
           } else if (isProfileAccess) {
             // For profile/user access, always allow auto-fix (users should access their own profile/activity)
-            console.log(`🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`);
+            console.log(
+              `🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`
+            );
             shouldAutoFix = true;
             resourceType = 'profile';
           }
 
           if (shouldAutoFix) {
-            console.log(`✅ AUTO-FIX: User ${userId} is accessing own ${resourceType} resource, fixing permissions...`);
-            
-            const { ensurePromoterRole } = await import('@/lib/services/employee-account-service');
+            console.log(
+              `✅ AUTO-FIX: User ${userId} is accessing own ${resourceType} resource, fixing permissions...`
+            );
+
+            const { ensurePromoterRole } =
+              await import('@/lib/services/employee-account-service');
             await ensurePromoterRole(userId);
-            console.log(`✅ Auto-assigned promoter role (with contract permissions) to user ${userId}`);
+            console.log(
+              `✅ Auto-assigned promoter role (with contract permissions) to user ${userId}`
+            );
 
             // Clear permission cache for this user
             try {
@@ -609,7 +668,10 @@ async function guardAnyPermission(
               await permissionCache.invalidateUser(userId);
               console.log(`✅ Cleared permission cache for user ${userId}`);
             } catch (cacheError) {
-              console.warn('⚠️ Could not clear cache (non-critical):', cacheError);
+              console.warn(
+                '⚠️ Could not clear cache (non-critical):',
+                cacheError
+              );
             }
 
             // Longer delay to ensure database transaction is committed and indexes are updated
@@ -630,29 +692,40 @@ async function guardAnyPermission(
             });
 
             if (retryResult.allowed) {
-              console.log(`✅ Permission check passed after auto-fix for user ${userId}`);
+              console.log(
+                `✅ Permission check passed after auto-fix for user ${userId}`
+              );
               return null; // Allow access
             } else {
-              console.error(`❌ Permission check still failed after auto-fix for user ${userId}:`, {
-                user_permissions: retryResult.user_permissions,
-                user_roles: retryResult.user_roles,
-                reason: retryResult.reason,
-              });
-              
+              console.error(
+                `❌ Permission check still failed after auto-fix for user ${userId}:`,
+                {
+                  user_permissions: retryResult.user_permissions,
+                  user_roles: retryResult.user_roles,
+                  reason: retryResult.reason,
+                }
+              );
+
               // ✅ FALLBACK: If we've verified it's their own profile and auto-fix ran,
               // allow access anyway (permissions might take a moment to propagate)
-              console.log(`⚠️ Allowing access as fallback for own-profile access (user ${userId})`);
+              console.log(
+                `⚠️ Allowing access as fallback for own-profile access (user ${userId})`
+              );
               return null; // Allow access as fallback
             }
           } else {
-            console.log(`ℹ️ AUTO-FIX: Skipped - user ${userId} is not accessing own profile (promoterId: ${promoterId})`);
+            console.log(
+              `ℹ️ AUTO-FIX: Skipped - user ${userId} is not accessing own profile (promoterId: ${promoterId})`
+            );
           }
         } catch (autoFixError) {
           console.error('❌ Could not auto-fix permissions:', autoFixError);
           // Continue with normal error handling
         }
       } else {
-        console.log(`ℹ️ AUTO-FIX: Conditions not met - user_id: ${userId || result.user_id}, path: ${request.nextUrl.pathname}, requiredPerms: ${requiredPermissions.join(', ')}`);
+        console.log(
+          `ℹ️ AUTO-FIX: Conditions not met - user_id: ${userId || result.user_id}, path: ${request.nextUrl.pathname}, requiredPerms: ${requiredPermissions.join(', ')}`
+        );
       }
 
       // In dry-run mode, log but allow

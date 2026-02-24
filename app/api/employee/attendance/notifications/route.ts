@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -37,16 +37,20 @@ export async function GET(request: NextRequest) {
     // In a production system, you'd have a dedicated notifications table
     const supabaseAdmin = getSupabaseAdmin();
     const today = new Date().toISOString().slice(0, 10);
-    
+
     // Get today's attendance
-    const { data: todayAttendance } = await (supabaseAdmin.from('employee_attendance') as any)
+    const { data: todayAttendance } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
       .select('*')
       .eq('employer_employee_id', employeeLink.id)
       .eq('attendance_date', today)
       .single();
 
     // Get recent attendance records
-    const { data: recentAttendance } = await (supabaseAdmin.from('employee_attendance') as any)
+    const { data: recentAttendance } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
       .select('*')
       .eq('employer_employee_id', employeeLink.id)
       .order('attendance_date', { ascending: false })
@@ -62,7 +66,7 @@ export async function GET(request: NextRequest) {
         id: `reminder-${today}`,
         type: 'check_in_reminder',
         title: 'Check-in Reminder',
-        message: 'Don\'t forget to check in today!',
+        message: "Don't forget to check in today!",
         read: false,
         created_at: new Date().toISOString(),
       });
@@ -111,7 +115,8 @@ export async function GET(request: NextRequest) {
           id: `late-warning-${today}`,
           type: 'late_warning',
           title: 'Late Check-in',
-          message: 'You checked in after 9:00 AM. Please ensure you have manager approval if needed.',
+          message:
+            'You checked in after 9:00 AM. Please ensure you have manager approval if needed.',
           read: false,
           created_at: todayAttendance.check_in,
         });
@@ -119,8 +124,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Sort by created_at descending
-    notifications.sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    notifications.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     return NextResponse.json({
@@ -135,4 +141,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

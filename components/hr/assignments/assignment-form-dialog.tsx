@@ -23,7 +23,14 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Building2, Calendar, MapPin, Briefcase } from 'lucide-react';
+import {
+  Loader2,
+  Users,
+  Building2,
+  Calendar,
+  MapPin,
+  Briefcase,
+} from 'lucide-react';
 import { useCompany } from '@/components/providers/company-provider';
 
 interface Assignment {
@@ -141,9 +148,9 @@ export function AssignmentFormDialog({
       const url = assignment
         ? `/api/hr/assignments/${assignment.id}`
         : '/api/hr/assignments';
-      
+
       const method = assignment ? 'PUT' : 'POST';
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -163,19 +170,28 @@ export function AssignmentFormDialog({
     onSuccess: () => {
       toast({
         title: assignment
-          ? (locale === 'ar' ? 'تم التحديث بنجاح' : 'Updated Successfully')
-          : (locale === 'ar' ? 'تم الإنشاء بنجاح' : 'Created Successfully'),
+          ? locale === 'ar'
+            ? 'تم التحديث بنجاح'
+            : 'Updated Successfully'
+          : locale === 'ar'
+            ? 'تم الإنشاء بنجاح'
+            : 'Created Successfully',
         description: assignment
-          ? (locale === 'ar' ? 'تم تحديث التعيين بنجاح' : 'Assignment has been updated successfully')
-          : (locale === 'ar' ? 'تم إنشاء التعيين بنجاح' : 'Assignment has been created successfully'),
+          ? locale === 'ar'
+            ? 'تم تحديث التعيين بنجاح'
+            : 'Assignment has been updated successfully'
+          : locale === 'ar'
+            ? 'تم إنشاء التعيين بنجاح'
+            : 'Assignment has been created successfully',
       });
       onSuccess?.();
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save assignment',
+        description:
+          error instanceof Error ? error.message : 'Failed to save assignment',
         variant: 'destructive',
       });
     },
@@ -187,7 +203,8 @@ export function AssignmentFormDialog({
     if (!formData.employer_employee_id) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى اختيار الموظف' : 'Please select an employee',
+        description:
+          locale === 'ar' ? 'يرجى اختيار الموظف' : 'Please select an employee',
         variant: 'destructive',
       });
       return;
@@ -196,7 +213,8 @@ export function AssignmentFormDialog({
     if (!formData.client_party_id) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى اختيار العميل' : 'Please select a client',
+        description:
+          locale === 'ar' ? 'يرجى اختيار العميل' : 'Please select a client',
         variant: 'destructive',
       });
       return;
@@ -205,7 +223,10 @@ export function AssignmentFormDialog({
     if (!formData.job_title) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى إدخال المسمى الوظيفي' : 'Please enter job title',
+        description:
+          locale === 'ar'
+            ? 'يرجى إدخال المسمى الوظيفي'
+            : 'Please enter job title',
         variant: 'destructive',
       });
       return;
@@ -214,7 +235,10 @@ export function AssignmentFormDialog({
     if (!formData.start_date) {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: locale === 'ar' ? 'يرجى اختيار تاريخ البدء' : 'Please select start date',
+        description:
+          locale === 'ar'
+            ? 'يرجى اختيار تاريخ البدء'
+            : 'Please select start date',
         variant: 'destructive',
       });
       return;
@@ -228,59 +252,78 @@ export function AssignmentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className='max-w-3xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Users className='h-5 w-5' />
             {assignment
-              ? (locale === 'ar' ? 'تعديل التعيين' : 'Edit Assignment')
-              : (locale === 'ar' ? 'تعيين جديد' : 'New Assignment')}
+              ? locale === 'ar'
+                ? 'تعديل التعيين'
+                : 'Edit Assignment'
+              : locale === 'ar'
+                ? 'تعيين جديد'
+                : 'New Assignment'}
           </DialogTitle>
           <DialogDescription>
             {assignment
-              ? (locale === 'ar' ? 'قم بتعديل تفاصيل التعيين' : 'Update assignment details')
-              : (locale === 'ar' ? 'قم بإنشاء تعيين جديد للموظف' : 'Create a new assignment for employee')}
+              ? locale === 'ar'
+                ? 'قم بتعديل تفاصيل التعيين'
+                : 'Update assignment details'
+              : locale === 'ar'
+                ? 'قم بإنشاء تعيين جديد للموظف'
+                : 'Create a new assignment for employee'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="employer_employee_id">
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='employer_employee_id'>
                 {locale === 'ar' ? 'الموظف' : 'Employee'} *
               </Label>
               <Select
                 value={formData.employer_employee_id}
-                onValueChange={(value) =>
+                onValueChange={value =>
                   setFormData({ ...formData, employer_employee_id: value })
                 }
                 disabled={!!employerEmployeeId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={locale === 'ar' ? 'اختر الموظف' : 'Select employee'} />
+                  <SelectValue
+                    placeholder={
+                      locale === 'ar' ? 'اختر الموظف' : 'Select employee'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((emp: any) => (
                     <SelectItem key={emp.id} value={emp.id}>
-                      {emp.employee?.name_en || emp.employee?.name_ar || emp.employee?.email || 'N/A'}
+                      {emp.employee?.name_en ||
+                        emp.employee?.name_ar ||
+                        emp.employee?.email ||
+                        'N/A'}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="client_party_id">
+            <div className='space-y-2'>
+              <Label htmlFor='client_party_id'>
                 {locale === 'ar' ? 'العميل' : 'Client'} *
               </Label>
               <Select
                 value={formData.client_party_id}
-                onValueChange={(value) =>
+                onValueChange={value =>
                   setFormData({ ...formData, client_party_id: value })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={locale === 'ar' ? 'اختر العميل' : 'Select client'} />
+                  <SelectValue
+                    placeholder={
+                      locale === 'ar' ? 'اختر العميل' : 'Select client'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client: any) => (
@@ -293,14 +336,14 @@ export function AssignmentFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="assignment_type">
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='assignment_type'>
                 {locale === 'ar' ? 'نوع التعيين' : 'Assignment Type'}
               </Label>
               <Select
                 value={formData.assignment_type}
-                onValueChange={(value) =>
+                onValueChange={value =>
                   setFormData({ ...formData, assignment_type: value })
                 }
               >
@@ -308,159 +351,191 @@ export function AssignmentFormDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="deployment">{locale === 'ar' ? 'نشر' : 'Deployment'}</SelectItem>
-                  <SelectItem value="temporary">{locale === 'ar' ? 'مؤقت' : 'Temporary'}</SelectItem>
-                  <SelectItem value="project">{locale === 'ar' ? 'مشروع' : 'Project'}</SelectItem>
-                  <SelectItem value="consultation">{locale === 'ar' ? 'استشارة' : 'Consultation'}</SelectItem>
-                  <SelectItem value="training">{locale === 'ar' ? 'تدريب' : 'Training'}</SelectItem>
+                  <SelectItem value='deployment'>
+                    {locale === 'ar' ? 'نشر' : 'Deployment'}
+                  </SelectItem>
+                  <SelectItem value='temporary'>
+                    {locale === 'ar' ? 'مؤقت' : 'Temporary'}
+                  </SelectItem>
+                  <SelectItem value='project'>
+                    {locale === 'ar' ? 'مشروع' : 'Project'}
+                  </SelectItem>
+                  <SelectItem value='consultation'>
+                    {locale === 'ar' ? 'استشارة' : 'Consultation'}
+                  </SelectItem>
+                  <SelectItem value='training'>
+                    {locale === 'ar' ? 'تدريب' : 'Training'}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="job_title">
+            <div className='space-y-2'>
+              <Label htmlFor='job_title'>
                 {locale === 'ar' ? 'المسمى الوظيفي' : 'Job Title'} *
               </Label>
               <Input
-                id="job_title"
+                id='job_title'
                 value={formData.job_title}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, job_title: e.target.value })
                 }
-                placeholder={locale === 'ar' ? 'مثال: مندوب مبيعات' : 'e.g., Sales Representative'}
+                placeholder={
+                  locale === 'ar'
+                    ? 'مثال: مندوب مبيعات'
+                    : 'e.g., Sales Representative'
+                }
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="department">
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='department'>
                 {locale === 'ar' ? 'القسم' : 'Department'}
               </Label>
               <Input
-                id="department"
+                id='department'
                 value={formData.department}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, department: e.target.value })
                 }
                 placeholder={locale === 'ar' ? 'مثال: المبيعات' : 'e.g., Sales'}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="work_location">
+            <div className='space-y-2'>
+              <Label htmlFor='work_location'>
                 {locale === 'ar' ? 'موقع العمل' : 'Work Location'}
               </Label>
               <Input
-                id="work_location"
+                id='work_location'
                 value={formData.work_location}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, work_location: e.target.value })
                 }
-                placeholder={locale === 'ar' ? 'مثال: دبي مول' : 'e.g., Dubai Mall'}
+                placeholder={
+                  locale === 'ar' ? 'مثال: دبي مول' : 'e.g., Dubai Mall'
+                }
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="start_date">
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='start_date'>
                 {locale === 'ar' ? 'تاريخ البدء' : 'Start Date'} *
               </Label>
               <Input
-                id="start_date"
-                type="date"
+                id='start_date'
+                type='date'
                 value={formData.start_date}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, start_date: e.target.value })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="end_date">
+            <div className='space-y-2'>
+              <Label htmlFor='end_date'>
                 {locale === 'ar' ? 'تاريخ الانتهاء' : 'End Date'}
               </Label>
               <Input
-                id="end_date"
-                type="date"
+                id='end_date'
+                type='date'
                 value={formData.end_date}
-                onChange={(e) =>
+                onChange={e =>
                   setFormData({ ...formData, end_date: e.target.value })
                 }
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="client_contact_person">
+          <div className='grid grid-cols-3 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='client_contact_person'>
                 {locale === 'ar' ? 'جهة الاتصال' : 'Contact Person'}
               </Label>
               <Input
-                id="client_contact_person"
+                id='client_contact_person'
                 value={formData.client_contact_person}
-                onChange={(e) =>
-                  setFormData({ ...formData, client_contact_person: e.target.value })
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    client_contact_person: e.target.value,
+                  })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="client_contact_email">
+            <div className='space-y-2'>
+              <Label htmlFor='client_contact_email'>
                 {locale === 'ar' ? 'البريد الإلكتروني' : 'Email'}
               </Label>
               <Input
-                id="client_contact_email"
-                type="email"
+                id='client_contact_email'
+                type='email'
                 value={formData.client_contact_email}
-                onChange={(e) =>
-                  setFormData({ ...formData, client_contact_email: e.target.value })
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    client_contact_email: e.target.value,
+                  })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="client_contact_phone">
+            <div className='space-y-2'>
+              <Label htmlFor='client_contact_phone'>
                 {locale === 'ar' ? 'الهاتف' : 'Phone'}
               </Label>
               <Input
-                id="client_contact_phone"
+                id='client_contact_phone'
                 value={formData.client_contact_phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, client_contact_phone: e.target.value })
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    client_contact_phone: e.target.value,
+                  })
                 }
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">
+          <div className='space-y-2'>
+            <Label htmlFor='notes'>
               {locale === 'ar' ? 'ملاحظات' : 'Notes'}
             </Label>
             <Textarea
-              id="notes"
+              id='notes'
               value={formData.notes}
-              onChange={(e) =>
+              onChange={e =>
                 setFormData({ ...formData, notes: e.target.value })
               }
-              placeholder={locale === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...'}
+              placeholder={
+                locale === 'ar'
+                  ? 'أي ملاحظات إضافية...'
+                  : 'Any additional notes...'
+              }
               rows={3}
             />
           </div>
 
           {!assignment && (
-            <div className="flex items-center space-x-2">
+            <div className='flex items-center space-x-2'>
               <Checkbox
-                id="generate_deployment_letter"
+                id='generate_deployment_letter'
                 checked={formData.generate_deployment_letter}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, generate_deployment_letter: checked as boolean })
+                onCheckedChange={checked =>
+                  setFormData({
+                    ...formData,
+                    generate_deployment_letter: checked as boolean,
+                  })
                 }
               />
               <Label
-                htmlFor="generate_deployment_letter"
-                className="text-sm font-normal cursor-pointer"
+                htmlFor='generate_deployment_letter'
+                className='text-sm font-normal cursor-pointer'
               >
                 {locale === 'ar'
                   ? 'إنشاء خطاب النشر تلقائياً'
@@ -471,23 +546,29 @@ export function AssignmentFormDialog({
 
           <DialogFooter>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={() => onOpenChange(false)}
               disabled={createMutation.isPending}
             >
               {locale === 'ar' ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
+            <Button type='submit' disabled={createMutation.isPending}>
               {createMutation.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                   {locale === 'ar' ? 'جاري الحفظ...' : 'Saving...'}
                 </>
+              ) : assignment ? (
+                locale === 'ar' ? (
+                  'تحديث'
+                ) : (
+                  'Update'
+                )
+              ) : locale === 'ar' ? (
+                'إنشاء'
               ) : (
-                assignment
-                  ? (locale === 'ar' ? 'تحديث' : 'Update')
-                  : (locale === 'ar' ? 'إنشاء' : 'Create')
+                'Create'
               )}
             </Button>
           </DialogFooter>
@@ -496,4 +577,3 @@ export function AssignmentFormDialog({
     </Dialog>
   );
 }
-

@@ -13,15 +13,9 @@ import {
   MessageSquare,
   Shield,
   Zap,
-  TrendingUp,
-  Target,
   Activity,
-  Users,
   FileText,
-  DollarSign,
-  Clock,
   CheckCircle,
-  AlertTriangle,
 } from 'lucide-react';
 
 export default function AdvancedDashboardPage() {

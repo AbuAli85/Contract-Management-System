@@ -99,7 +99,7 @@ export function TargetsManager() {
   const targets = (targetsData?.targets || []) as EmployeeTarget[];
 
   // Filter by search term
-  const filteredTargets = targets.filter((target) => {
+  const filteredTargets = targets.filter(target => {
     if (!searchTerm) return true;
     const name =
       target.employer_employee?.employee?.name_en ||
@@ -112,7 +112,10 @@ export function TargetsManager() {
   });
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<
+      string,
+      'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
       active: 'default',
       completed: 'default',
       paused: 'secondary',
@@ -134,30 +137,30 @@ export function TargetsManager() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className='flex items-center justify-center py-12'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Targets Management</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className='text-3xl font-bold'>Targets Management</h1>
+          <p className='text-muted-foreground mt-1'>
             Set and track employee performance targets and goals
           </p>
         </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className='h-4 w-4 mr-2' />
               Create Target
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className='max-w-2xl'>
             <DialogHeader>
               <DialogTitle>Create New Target</DialogTitle>
               <DialogDescription>
@@ -175,51 +178,51 @@ export function TargetsManager() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Targets</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Total Targets</CardTitle>
+            <Target className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{targets.length}</div>
-            <p className="text-xs text-muted-foreground">All targets</p>
+            <div className='text-2xl font-bold'>{targets.length}</div>
+            <p className='text-xs text-muted-foreground'>All targets</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Active</CardTitle>
+            <TrendingUp className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {targets.filter((t) => t.status === 'active').length}
+            <div className='text-2xl font-bold'>
+              {targets.filter(t => t.status === 'active').length}
             </div>
-            <p className="text-xs text-muted-foreground">In progress</p>
+            <p className='text-xs text-muted-foreground'>In progress</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Completed</CardTitle>
+            <Target className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {targets.filter((t) => t.status === 'completed').length}
+            <div className='text-2xl font-bold'>
+              {targets.filter(t => t.status === 'completed').length}
             </div>
-            <p className="text-xs text-muted-foreground">Achieved</p>
+            <p className='text-xs text-muted-foreground'>Achieved</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Progress</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Avg Progress</CardTitle>
+            <TrendingUp className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {targets.length > 0
                 ? Math.round(
                     targets.reduce((sum, t) => sum + t.progress_percentage, 0) /
@@ -228,7 +231,7 @@ export function TargetsManager() {
                 : 0}
               %
             </div>
-            <p className="text-xs text-muted-foreground">Average completion</p>
+            <p className='text-xs text-muted-foreground'>Average completion</p>
           </CardContent>
         </Card>
       </div>
@@ -239,46 +242,46 @@ export function TargetsManager() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+            <div className='relative'>
+              <Search className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
               <Input
-                placeholder="Search targets..."
+                placeholder='Search targets...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onChange={e => setSearchTerm(e.target.value)}
+                className='pl-10'
               />
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder='Status' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value='all'>All Status</SelectItem>
+                <SelectItem value='active'>Active</SelectItem>
+                <SelectItem value='completed'>Completed</SelectItem>
+                <SelectItem value='paused'>Paused</SelectItem>
+                <SelectItem value='cancelled'>Cancelled</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Type" />
+                <SelectValue placeholder='Type' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="performance">Performance</SelectItem>
-                <SelectItem value="sales">Sales</SelectItem>
-                <SelectItem value="quality">Quality</SelectItem>
-                <SelectItem value="efficiency">Efficiency</SelectItem>
-                <SelectItem value="training">Training</SelectItem>
+                <SelectItem value='all'>All Types</SelectItem>
+                <SelectItem value='performance'>Performance</SelectItem>
+                <SelectItem value='sales'>Sales</SelectItem>
+                <SelectItem value='quality'>Quality</SelectItem>
+                <SelectItem value='efficiency'>Efficiency</SelectItem>
+                <SelectItem value='training'>Training</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
+            <Button variant='outline'>
+              <Filter className='h-4 w-4 mr-2' />
               Apply Filters
             </Button>
           </div>
@@ -295,7 +298,7 @@ export function TargetsManager() {
         </CardHeader>
         <CardContent>
           {filteredTargets.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className='text-center py-8 text-muted-foreground'>
               No targets found
             </div>
           ) : (
@@ -312,13 +315,13 @@ export function TargetsManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTargets.map((target) => (
+                {filteredTargets.map(target => (
                   <TableRow key={target.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{target.title}</div>
+                        <div className='font-medium'>{target.title}</div>
                         {target.description && (
-                          <div className="text-sm text-muted-foreground">
+                          <div className='text-sm text-muted-foreground'>
                             {target.description.substring(0, 50)}...
                           </div>
                         )}
@@ -330,17 +333,17 @@ export function TargetsManager() {
                         'Unknown'}
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
+                      <div className='space-y-1'>
+                        <div className='flex items-center justify-between text-sm'>
                           <span>{target.progress_percentage}%</span>
-                          <span className="text-muted-foreground">
+                          <span className='text-muted-foreground'>
                             {target.current_value} / {target.target_value}{' '}
                             {target.unit || ''}
                           </span>
                         </div>
                         <Progress
                           value={target.progress_percentage}
-                          className="h-2"
+                          className='h-2'
                         />
                       </div>
                     </TableCell>
@@ -348,19 +351,19 @@ export function TargetsManager() {
                       {target.target_value} {target.unit || ''}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
+                      <div className='text-sm'>
                         <div>
                           {format(new Date(target.start_date), 'MMM dd, yyyy')}
                         </div>
-                        <div className="text-muted-foreground">
+                        <div className='text-muted-foreground'>
                           to {format(new Date(target.end_date), 'MMM dd, yyyy')}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(target.status)}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4 mr-2" />
+                      <Button variant='ghost' size='sm'>
+                        <Eye className='h-4 w-4 mr-2' />
                         View
                       </Button>
                     </TableCell>
@@ -427,47 +430,47 @@ function TargetForm({ onSuccess }: { onSuccess: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit} className='space-y-4'>
+      <div className='space-y-2'>
         <Label>Employee ID</Label>
         <Input
           value={formData.employer_employee_id}
-          onChange={(e) =>
+          onChange={e =>
             setFormData({ ...formData, employer_employee_id: e.target.value })
           }
-          placeholder="Employer Employee ID"
+          placeholder='Employer Employee ID'
           required
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Title</Label>
         <Input
           value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="Target title"
+          onChange={e => setFormData({ ...formData, title: e.target.value })}
+          placeholder='Target title'
           required
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Description</Label>
         <Textarea
           value={formData.description}
-          onChange={(e) =>
+          onChange={e =>
             setFormData({ ...formData, description: e.target.value })
           }
-          placeholder="Target description"
+          placeholder='Target description'
           rows={3}
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
           <Label>Target Type</Label>
           <Select
             value={formData.target_type}
-            onValueChange={(value) =>
+            onValueChange={value =>
               setFormData({ ...formData, target_type: value })
             }
           >
@@ -475,20 +478,20 @@ function TargetForm({ onSuccess }: { onSuccess: () => void }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="performance">Performance</SelectItem>
-              <SelectItem value="sales">Sales</SelectItem>
-              <SelectItem value="quality">Quality</SelectItem>
-              <SelectItem value="efficiency">Efficiency</SelectItem>
-              <SelectItem value="training">Training</SelectItem>
+              <SelectItem value='performance'>Performance</SelectItem>
+              <SelectItem value='sales'>Sales</SelectItem>
+              <SelectItem value='quality'>Quality</SelectItem>
+              <SelectItem value='efficiency'>Efficiency</SelectItem>
+              <SelectItem value='training'>Training</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className='space-y-2'>
           <Label>Period Type</Label>
           <Select
             value={formData.period_type}
-            onValueChange={(value) =>
+            onValueChange={value =>
               setFormData({ ...formData, period_type: value })
             }
           >
@@ -496,59 +499,59 @@ function TargetForm({ onSuccess }: { onSuccess: () => void }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="quarterly">Quarterly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
+              <SelectItem value='daily'>Daily</SelectItem>
+              <SelectItem value='weekly'>Weekly</SelectItem>
+              <SelectItem value='monthly'>Monthly</SelectItem>
+              <SelectItem value='quarterly'>Quarterly</SelectItem>
+              <SelectItem value='yearly'>Yearly</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
           <Label>Target Value</Label>
           <Input
-            type="number"
+            type='number'
             value={formData.target_value}
-            onChange={(e) =>
+            onChange={e =>
               setFormData({ ...formData, target_value: e.target.value })
             }
-            placeholder="100"
+            placeholder='100'
             required
           />
         </div>
 
-        <div className="space-y-2">
+        <div className='space-y-2'>
           <Label>Unit</Label>
           <Input
             value={formData.unit}
-            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-            placeholder="e.g., hours, tasks, revenue"
+            onChange={e => setFormData({ ...formData, unit: e.target.value })}
+            placeholder='e.g., hours, tasks, revenue'
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
           <Label>Start Date</Label>
           <Input
-            type="date"
+            type='date'
             value={formData.start_date}
-            onChange={(e) =>
+            onChange={e =>
               setFormData({ ...formData, start_date: e.target.value })
             }
             required
           />
         </div>
 
-        <div className="space-y-2">
+        <div className='space-y-2'>
           <Label>End Date</Label>
           <Input
-            type="date"
+            type='date'
             value={formData.end_date}
-            onChange={(e) =>
+            onChange={e =>
               setFormData({ ...formData, end_date: e.target.value })
             }
             required
@@ -556,10 +559,9 @@ function TargetForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       </div>
 
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type='submit' disabled={loading} className='w-full'>
         {loading ? 'Creating...' : 'Create Target'}
       </Button>
     </form>
   );
 }
-

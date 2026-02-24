@@ -1,6 +1,6 @@
 /**
  * WhatsApp Notification Service
- * 
+ *
  * Handles WhatsApp notifications via Twilio WhatsApp API
  * Supports both template messages and free-form messages
  */
@@ -49,7 +49,9 @@ function getTwilioClient() {
 /**
  * Send WhatsApp message via Twilio
  */
-export async function sendWhatsApp(options: WhatsAppOptions): Promise<WhatsAppResult> {
+export async function sendWhatsApp(
+  options: WhatsAppOptions
+): Promise<WhatsAppResult> {
   try {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       console.warn('⚠️ Twilio not configured - WhatsApp will not be sent');
@@ -81,7 +83,7 @@ export async function sendWhatsApp(options: WhatsAppOptions): Promise<WhatsAppRe
     // Send to first recipient (Twilio supports one at a time)
     const recipient = formattedRecipients[0];
 
-    let messageParams: any = {
+    const messageParams: any = {
       from: fromNumber,
       to: recipient,
     };
@@ -90,14 +92,16 @@ export async function sendWhatsApp(options: WhatsAppOptions): Promise<WhatsAppRe
     if (options.templateSid) {
       messageParams.contentSid = options.templateSid;
       if (options.templateVariables) {
-        messageParams.contentVariables = JSON.stringify(options.templateVariables);
+        messageParams.contentVariables = JSON.stringify(
+          options.templateVariables
+        );
       }
     } else if (options.message) {
       // Free-form message (for user-initiated conversations within 24h window)
       // Add business name prefix if configured
       const businessName = process.env.WHATSAPP_BUSINESS_NAME || 'SmartPRO';
-      const messageWithBrand = options.message.includes(businessName) 
-        ? options.message 
+      const messageWithBrand = options.message.includes(businessName)
+        ? options.message
         : `${businessName}\n\n${options.message}`;
       messageParams.body = messageWithBrand;
     } else {
@@ -140,9 +144,9 @@ export async function sendBulkWhatsApp(
   const batchSize = 5; // WhatsApp has stricter rate limits
   for (let i = 0; i < messages.length; i += batchSize) {
     const batch = messages.slice(i, i + batchSize);
-    
+
     await Promise.all(
-      batch.map(async (message) => {
+      batch.map(async message => {
         const result = await sendWhatsApp(message);
         if (result.success) {
           results.sent++;
@@ -157,7 +161,7 @@ export async function sendBulkWhatsApp(
 
     // Rate limiting: wait 2 seconds between batches (WhatsApp is stricter)
     if (i + batchSize < messages.length) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
 
@@ -170,17 +174,17 @@ export async function sendBulkWhatsApp(
 export function formatPhoneNumber(phone: string): string {
   // Remove all non-digit characters
   const digits = phone.replace(/\D/g, '');
-  
+
   // If starts with 0, replace with country code (Oman: +968)
   if (digits.startsWith('0')) {
     return `+968${digits.substring(1)}`;
   }
-  
+
   // If doesn't start with +, add country code
   if (!phone.startsWith('+')) {
     return `+968${digits}`;
   }
-  
+
   return phone;
 }
 
@@ -203,4 +207,3 @@ export function isWhatsAppConfigured(): boolean {
     process.env.TWILIO_WHATSAPP_FROM
   );
 }
-

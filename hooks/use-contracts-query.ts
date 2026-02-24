@@ -157,7 +157,11 @@ async function deleteContract(id: string): Promise<void> {
 }
 
 // Hook: useContractsQuery
-export function useContractsQuery(page: number = 1, limit: number = 20, companyId?: string | null) {
+export function useContractsQuery(
+  page: number = 1,
+  limit: number = 20,
+  companyId?: string | null
+) {
   return useQuery({
     queryKey: contractsKeys.list(page, limit, companyId),
     queryFn: () => fetchContracts(page, limit),

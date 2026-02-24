@@ -25,15 +25,20 @@ async function getEmployeePermissionsHandler(
 
     // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
     try {
-      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(
+        id,
+        user.id
+      );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
       console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record',
-          input_id: id
+          details:
+            error.message ||
+            'Could not create or find employer_employee record',
+          input_id: id,
         },
         { status: 400 }
       );
@@ -110,15 +115,20 @@ async function assignPermissionsHandler(
 
     // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
     try {
-      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(
+        id,
+        user.id
+      );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
       console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record',
-          input_id: id
+          details:
+            error.message ||
+            'Could not create or find employer_employee record',
+          input_id: id,
         },
         { status: 400 }
       );
@@ -180,7 +190,10 @@ async function assignPermissionsHandler(
       if (insertError) {
         console.error('Error assigning permissions:', insertError);
         return NextResponse.json(
-          { error: 'Failed to assign permissions', details: insertError.message },
+          {
+            error: 'Failed to assign permissions',
+            details: insertError.message,
+          },
           { status: 500 }
         );
       }
@@ -213,4 +226,3 @@ async function checkIsAdmin(userId: string, supabase: any): Promise<boolean> {
 // Export handlers directly - internal authorization is already implemented
 export const GET = getEmployeePermissionsHandler;
 export const POST = assignPermissionsHandler;
-

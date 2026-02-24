@@ -19,8 +19,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 
 // Icons
 import {
@@ -32,24 +30,15 @@ import {
   Brain,
   Users,
   Lock,
-  Plus,
-  Search,
   Briefcase,
-  Workflow,
-  UserPlus,
-  Clock,
   Shield,
   Zap,
   TrendingUp,
-  Star,
   ArrowRight,
   Filter,
   Settings,
-  Download,
   Eye,
   Edit3,
-  Calendar,
-  DollarSign,
   Globe,
   BookOpen,
   Target,
@@ -57,10 +46,7 @@ import {
   Lightbulb,
   Rocket,
   BarChart3,
-  ChevronRight,
   Home,
-  Building,
-  FileCheck,
   BarChart,
   Cog,
 } from 'lucide-react';
@@ -110,18 +96,6 @@ const DynamicContractIntelligence = dynamic(
     ssr: false,
   }
 );
-
-// Enhanced form submission types
-interface FormValues {
-  contractType: string;
-  employerCompany: string;
-  employeeName: string;
-  startDate: string;
-  endDate: string;
-  salary: string;
-  position: string;
-  language: 'english' | 'arabic' | 'bilingual';
-}
 
 // Smart recommendation interface
 interface SmartRecommendation {
@@ -358,7 +332,7 @@ export default function GenerateContractPage() {
   } = useContractConfig();
 
   const pathname = usePathname();
-  const locale = pathname?.split('/')[1] || 'en';
+  const _locale = pathname?.split('/')[1] || 'en';
   const { toast } = useToast();
 
   // State management
@@ -415,33 +389,32 @@ export default function GenerateContractPage() {
   // AI Insights and Recommendations
   const [insights, setInsights] = useState<ContractInsight[]>(initialInsights);
 
-  const [recommendations, setRecommendations] = useState<SmartRecommendation[]>(
-    [
-      {
-        category: 'Compliance',
-        title: 'Oman Labor Law Compliance',
-        description: 'Ensure all contracts meet Oman labor law requirements',
-        impact: 'high',
-        implementation: 'Automated validation checks',
-      },
-      {
-        category: 'Efficiency',
-        title: 'Template Optimization',
-        description: 'Use pre-approved templates for faster processing',
-        impact: 'medium',
-        implementation: 'Template library integration',
-        estimatedSavings: '2-3 hours per contract',
-      },
-      {
-        category: 'Risk Management',
-        title: 'Legal Review Workflow',
-        description:
-          'Implement automated legal review for high-value contracts',
-        impact: 'high',
-        implementation: 'Workflow automation',
-      },
-    ]
-  );
+  const [recommendations, _setRecommendations] = useState<
+    SmartRecommendation[]
+  >([
+    {
+      category: 'Compliance',
+      title: 'Oman Labor Law Compliance',
+      description: 'Ensure all contracts meet Oman labor law requirements',
+      impact: 'high',
+      implementation: 'Automated validation checks',
+    },
+    {
+      category: 'Efficiency',
+      title: 'Template Optimization',
+      description: 'Use pre-approved templates for faster processing',
+      impact: 'medium',
+      implementation: 'Template library integration',
+      estimatedSavings: '2-3 hours per contract',
+    },
+    {
+      category: 'Risk Management',
+      title: 'Legal Review Workflow',
+      description: 'Implement automated legal review for high-value contracts',
+      impact: 'high',
+      implementation: 'Workflow automation',
+    },
+  ]);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const handleContractTypeSelect = useCallback(
@@ -515,7 +488,7 @@ export default function GenerateContractPage() {
     [initialInsights, getEnhancedContractTypeConfig]
   );
 
-  const updateFormProgress = useCallback(
+  const _updateFormProgress = useCallback(
     (sectionName: string, isCompleted: boolean) => {
       try {
         setFormProgress(prevProgress => {

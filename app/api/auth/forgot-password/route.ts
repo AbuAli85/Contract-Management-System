@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { formatAuthError } from '@/lib/actions/cookie-actions';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +35,7 @@ export async function POST(request: NextRequest) {
       console.log(`🔐 Password reset requested for: ${email}`);
 
       // Generate password reset link using Supabase Auth
-      const { data, error: resetError } =
+      const { _data, error: resetError } =
         await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.thesmartpro.io'}/en/reset-password`,
         });
@@ -59,7 +58,7 @@ export async function POST(request: NextRequest) {
 
           const emailContent = passwordResetEmail({
             recipientName: userData.full_name || email.split('@')[0],
-            resetLink: resetLink,
+            resetLink,
             expiresIn: '1 hour',
           });
 

@@ -147,8 +147,7 @@ export default function UserManagementPage() {
   );
   const [permissionSearch, setPermissionSearch] = useState('');
   const [permissionSaving, setPermissionSaving] = useState(false);
-  const router = useRouter();
-
+  const _router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {

@@ -13,7 +13,7 @@ export async function PUT(
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
     const { id } = await params;
-    
+
     const {
       data: { user },
       error: authError,
@@ -24,10 +24,19 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, content, priority, is_pinned, expires_at, target_departments } = body;
+    const {
+      title,
+      content,
+      priority,
+      is_pinned,
+      expires_at,
+      target_departments,
+    } = body;
 
     // Verify ownership
-    const { data: existing } = await (supabaseAdmin.from('team_announcements') as any)
+    const { data: existing } = await (
+      supabaseAdmin.from('team_announcements') as any
+    )
       .select('employer_id')
       .eq('id', id)
       .single();
@@ -45,9 +54,12 @@ export async function PUT(
     if (priority !== undefined) updateData.priority = priority;
     if (is_pinned !== undefined) updateData.is_pinned = is_pinned;
     if (expires_at !== undefined) updateData.expires_at = expires_at;
-    if (target_departments !== undefined) updateData.target_departments = target_departments;
+    if (target_departments !== undefined)
+      updateData.target_departments = target_departments;
 
-    const { data: updated, error: updateError } = await (supabaseAdmin.from('team_announcements') as any)
+    const { data: updated, error: updateError } = await (
+      supabaseAdmin.from('team_announcements') as any
+    )
       .update(updateData)
       .eq('id', id)
       .select()
@@ -67,7 +79,10 @@ export async function PUT(
     });
   } catch (error) {
     console.error('Error in announcement PUT:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -80,7 +95,7 @@ export async function DELETE(
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
     const { id } = await params;
-    
+
     const {
       data: { user },
       error: authError,
@@ -91,7 +106,9 @@ export async function DELETE(
     }
 
     // Verify ownership
-    const { data: existing } = await (supabaseAdmin.from('team_announcements') as any)
+    const { data: existing } = await (
+      supabaseAdmin.from('team_announcements') as any
+    )
       .select('employer_id')
       .eq('id', id)
       .single();
@@ -100,7 +117,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    const { error: deleteError } = await (supabaseAdmin.from('team_announcements') as any)
+    const { error: deleteError } = await (
+      supabaseAdmin.from('team_announcements') as any
+    )
       .delete()
       .eq('id', id);
 
@@ -118,7 +137,9 @@ export async function DELETE(
     });
   } catch (error) {
     console.error('Error in announcement DELETE:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

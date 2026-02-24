@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -92,62 +98,89 @@ const reviewTypeLabels: Record<string, string> = {
   ad_hoc: 'Ad-hoc',
 };
 
-const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  draft: { label: 'Draft', color: 'text-gray-600', bg: 'bg-gray-100 dark:bg-gray-900/30' },
-  submitted: { label: 'Submitted', color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-  acknowledged: { label: 'Acknowledged', color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-  completed: { label: 'Completed', color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30' },
+const statusConfig: Record<
+  string,
+  { label: string; color: string; bg: string }
+> = {
+  draft: {
+    label: 'Draft',
+    color: 'text-gray-600',
+    bg: 'bg-gray-100 dark:bg-gray-900/30',
+  },
+  submitted: {
+    label: 'Submitted',
+    color: 'text-blue-600',
+    bg: 'bg-blue-100 dark:bg-blue-900/30',
+  },
+  acknowledged: {
+    label: 'Acknowledged',
+    color: 'text-amber-600',
+    bg: 'bg-amber-100 dark:bg-amber-900/30',
+  },
+  completed: {
+    label: 'Completed',
+    color: 'text-green-600',
+    bg: 'bg-green-100 dark:bg-green-900/30',
+  },
 };
 
-function RatingStars({ rating, max = 5 }: { rating: number | null; max?: number }) {
-  if (rating === null) return <span className="text-gray-400">Not rated</span>;
-  
+function RatingStars({
+  rating,
+  max = 5,
+}: {
+  rating: number | null;
+  max?: number;
+}) {
+  if (rating === null) return <span className='text-gray-400'>Not rated</span>;
+
   return (
-    <div className="flex items-center gap-1">
+    <div className='flex items-center gap-1'>
       {Array.from({ length: max }).map((_, i) => (
         <Star
           key={i}
           className={cn(
-            "h-4 w-4",
-            i < rating ? "text-amber-400 fill-amber-400" : "text-gray-300"
+            'h-4 w-4',
+            i < rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'
           )}
         />
       ))}
-      <span className="ml-2 text-sm font-medium">{rating.toFixed(1)}</span>
+      <span className='ml-2 text-sm font-medium'>{rating.toFixed(1)}</span>
     </div>
   );
 }
 
-function RatingInput({ 
-  label, 
-  value, 
-  onChange 
-}: { 
-  label: string; 
-  value: number; 
+function RatingInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
+    <div className='space-y-2'>
+      <div className='flex justify-between items-center'>
         <Label>{label}</Label>
-        <div className="flex items-center gap-1">
+        <div className='flex items-center gap-1'>
           {Array.from({ length: 5 }).map((_, i) => (
             <button
               key={i}
-              type="button"
+              type='button'
               onClick={() => onChange(i + 1)}
-              className="focus:outline-none"
+              className='focus:outline-none'
             >
               <Star
                 className={cn(
-                  "h-5 w-5 transition-colors",
-                  i < value ? "text-amber-400 fill-amber-400" : "text-gray-300 hover:text-amber-200"
+                  'h-5 w-5 transition-colors',
+                  i < value
+                    ? 'text-amber-400 fill-amber-400'
+                    : 'text-gray-300 hover:text-amber-200'
                 )}
               />
             </button>
           ))}
-          <span className="ml-2 text-sm font-medium w-8">{value}/5</span>
+          <span className='ml-2 text-sm font-medium w-8'>{value}/5</span>
         </div>
       </div>
     </div>
@@ -157,7 +190,12 @@ function RatingInput({
 export function PerformanceReviewsManagement() {
   const [reviews, setReviews] = useState<PerformanceReview[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [stats, setStats] = useState({ draft: 0, submitted: 0, acknowledged: 0, completed: 0 });
+  const [stats, setStats] = useState({
+    draft: 0,
+    submitted: 0,
+    acknowledged: 0,
+    completed: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -193,7 +231,14 @@ export function PerformanceReviewsManagement() {
 
       if (response.ok && data.success) {
         setReviews(data.reviews || []);
-        setStats(data.stats || { draft: 0, submitted: 0, acknowledged: 0, completed: 0 });
+        setStats(
+          data.stats || {
+            draft: 0,
+            submitted: 0,
+            acknowledged: 0,
+            completed: 0,
+          }
+        );
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -208,7 +253,9 @@ export function PerformanceReviewsManagement() {
       const data = await response.json();
 
       if (response.ok && data.team) {
-        setTeamMembers(data.team.filter((m: any) => m.employment_status === 'active'));
+        setTeamMembers(
+          data.team.filter((m: any) => m.employment_status === 'active')
+        );
       }
     } catch (error) {
       console.error('Error fetching team members:', error);
@@ -234,7 +281,10 @@ export function PerformanceReviewsManagement() {
 
       toast({
         title: '✅ Review Created',
-        description: formData.status === 'submitted' ? 'Employee has been notified' : 'Saved as draft',
+        description:
+          formData.status === 'submitted'
+            ? 'Employee has been notified'
+            : 'Saved as draft',
       });
 
       setDialogOpen(false);
@@ -273,7 +323,12 @@ export function PerformanceReviewsManagement() {
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'NA';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const calculateAverageRating = (review: PerformanceReview) => {
@@ -291,51 +346,61 @@ export function PerformanceReviewsManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className='flex items-center justify-center py-12'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Star className="h-6 w-6 text-amber-500" />
+          <h2 className='text-2xl font-bold flex items-center gap-2'>
+            <Star className='h-6 w-6 text-amber-500' />
             Performance Reviews
           </h2>
-          <p className="text-gray-500">Manage employee performance evaluations</p>
+          <p className='text-gray-500'>
+            Manage employee performance evaluations
+          </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) resetForm();
-        }}>
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={open => {
+            setDialogOpen(open);
+            if (!open) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className='h-4 w-4 mr-2' />
               New Review
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>Create Performance Review</DialogTitle>
               <DialogDescription>
                 Create a new performance evaluation for a team member
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className='space-y-6'>
               {/* Employee Selection */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
                   <Label>Employee</Label>
                   <Select
                     value={formData.employer_employee_id}
-                    onValueChange={(v) => setFormData(prev => ({ ...prev, employer_employee_id: v }))}
+                    onValueChange={v =>
+                      setFormData(prev => ({
+                        ...prev,
+                        employer_employee_id: v,
+                      }))
+                    }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select employee" />
+                      <SelectValue placeholder='Select employee' />
                     </SelectTrigger>
                     <SelectContent>
                       {teamMembers.map(member => (
@@ -346,18 +411,22 @@ export function PerformanceReviewsManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   <Label>Review Type</Label>
                   <Select
                     value={formData.review_type}
-                    onValueChange={(v) => setFormData(prev => ({ ...prev, review_type: v }))}
+                    onValueChange={v =>
+                      setFormData(prev => ({ ...prev, review_type: v }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(reviewTypeLabels).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -365,120 +434,172 @@ export function PerformanceReviewsManagement() {
               </div>
 
               {/* Review Period */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
                   <Label>Period Start</Label>
                   <Input
-                    type="date"
+                    type='date'
                     value={formData.review_period_start}
-                    onChange={(e) => setFormData(prev => ({ ...prev, review_period_start: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        review_period_start: e.target.value,
+                      }))
+                    }
                     required
                   />
                 </div>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   <Label>Period End</Label>
                   <Input
-                    type="date"
+                    type='date'
                     value={formData.review_period_end}
-                    onChange={(e) => setFormData(prev => ({ ...prev, review_period_end: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        review_period_end: e.target.value,
+                      }))
+                    }
                     required
                   />
                 </div>
               </div>
 
               {/* Ratings */}
-              <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <h4 className="font-medium">Performance Ratings</h4>
+              <div className='space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg'>
+                <h4 className='font-medium'>Performance Ratings</h4>
                 <RatingInput
-                  label="Overall Performance"
+                  label='Overall Performance'
                   value={formData.overall_rating}
-                  onChange={(v) => setFormData(prev => ({ ...prev, overall_rating: v }))}
+                  onChange={v =>
+                    setFormData(prev => ({ ...prev, overall_rating: v }))
+                  }
                 />
                 <RatingInput
-                  label="Job Performance"
+                  label='Job Performance'
                   value={formData.performance_rating}
-                  onChange={(v) => setFormData(prev => ({ ...prev, performance_rating: v }))}
+                  onChange={v =>
+                    setFormData(prev => ({ ...prev, performance_rating: v }))
+                  }
                 />
                 <RatingInput
-                  label="Attendance & Punctuality"
+                  label='Attendance & Punctuality'
                   value={formData.attendance_rating}
-                  onChange={(v) => setFormData(prev => ({ ...prev, attendance_rating: v }))}
+                  onChange={v =>
+                    setFormData(prev => ({ ...prev, attendance_rating: v }))
+                  }
                 />
                 <RatingInput
-                  label="Teamwork"
+                  label='Teamwork'
                   value={formData.teamwork_rating}
-                  onChange={(v) => setFormData(prev => ({ ...prev, teamwork_rating: v }))}
+                  onChange={v =>
+                    setFormData(prev => ({ ...prev, teamwork_rating: v }))
+                  }
                 />
                 <RatingInput
-                  label="Communication"
+                  label='Communication'
                   value={formData.communication_rating}
-                  onChange={(v) => setFormData(prev => ({ ...prev, communication_rating: v }))}
+                  onChange={v =>
+                    setFormData(prev => ({ ...prev, communication_rating: v }))
+                  }
                 />
                 <RatingInput
-                  label="Initiative"
+                  label='Initiative'
                   value={formData.initiative_rating}
-                  onChange={(v) => setFormData(prev => ({ ...prev, initiative_rating: v }))}
+                  onChange={v =>
+                    setFormData(prev => ({ ...prev, initiative_rating: v }))
+                  }
                 />
               </div>
 
               {/* Feedback */}
-              <div className="space-y-4">
-                <div className="space-y-2">
+              <div className='space-y-4'>
+                <div className='space-y-2'>
                   <Label>Strengths</Label>
                   <Textarea
-                    placeholder="Key strengths and achievements..."
+                    placeholder='Key strengths and achievements...'
                     value={formData.strengths}
-                    onChange={(e) => setFormData(prev => ({ ...prev, strengths: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        strengths: e.target.value,
+                      }))
+                    }
                     rows={2}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   <Label>Areas for Improvement</Label>
                   <Textarea
-                    placeholder="Areas that need development..."
+                    placeholder='Areas that need development...'
                     value={formData.areas_for_improvement}
-                    onChange={(e) => setFormData(prev => ({ ...prev, areas_for_improvement: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        areas_for_improvement: e.target.value,
+                      }))
+                    }
                     rows={2}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   <Label>Goals for Next Period</Label>
                   <Textarea
-                    placeholder="Objectives and goals..."
+                    placeholder='Objectives and goals...'
                     value={formData.goals_for_next_period}
-                    onChange={(e) => setFormData(prev => ({ ...prev, goals_for_next_period: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        goals_for_next_period: e.target.value,
+                      }))
+                    }
                     rows={2}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   <Label>Manager Comments</Label>
                   <Textarea
-                    placeholder="Additional comments..."
+                    placeholder='Additional comments...'
                     value={formData.manager_comments}
-                    onChange={(e) => setFormData(prev => ({ ...prev, manager_comments: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        manager_comments: e.target.value,
+                      }))
+                    }
                     rows={2}
                   />
                 </div>
               </div>
 
-              <DialogFooter className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+              <DialogFooter className='flex gap-2'>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => setDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
-                  variant="secondary"
+                  type='submit'
+                  variant='secondary'
                   disabled={submitting}
-                  onClick={() => setFormData(prev => ({ ...prev, status: 'draft' }))}
+                  onClick={() =>
+                    setFormData(prev => ({ ...prev, status: 'draft' }))
+                  }
                 >
                   Save Draft
                 </Button>
                 <Button
-                  type="submit"
+                  type='submit'
                   disabled={submitting}
-                  onClick={() => setFormData(prev => ({ ...prev, status: 'submitted' }))}
+                  onClick={() =>
+                    setFormData(prev => ({ ...prev, status: 'submitted' }))
+                  }
                 >
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  {submitting && (
+                    <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                  )}
                   Submit & Notify
                 </Button>
               </DialogFooter>
@@ -488,142 +609,183 @@ export function PerformanceReviewsManagement() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className='grid grid-cols-4 gap-4'>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className='pt-6'>
+            <div className='flex items-center justify-between'>
               <div>
-                <p className="text-sm text-gray-500">Drafts</p>
-                <p className="text-3xl font-bold text-gray-600">{stats.draft}</p>
+                <p className='text-sm text-gray-500'>Drafts</p>
+                <p className='text-3xl font-bold text-gray-600'>
+                  {stats.draft}
+                </p>
               </div>
-              <FileText className="h-8 w-8 text-gray-400 opacity-50" />
+              <FileText className='h-8 w-8 text-gray-400 opacity-50' />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className='pt-6'>
+            <div className='flex items-center justify-between'>
               <div>
-                <p className="text-sm text-gray-500">Submitted</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.submitted}</p>
+                <p className='text-sm text-gray-500'>Submitted</p>
+                <p className='text-3xl font-bold text-blue-600'>
+                  {stats.submitted}
+                </p>
               </div>
-              <Clock className="h-8 w-8 text-blue-400 opacity-50" />
+              <Clock className='h-8 w-8 text-blue-400 opacity-50' />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className='pt-6'>
+            <div className='flex items-center justify-between'>
               <div>
-                <p className="text-sm text-gray-500">Acknowledged</p>
-                <p className="text-3xl font-bold text-amber-600">{stats.acknowledged}</p>
+                <p className='text-sm text-gray-500'>Acknowledged</p>
+                <p className='text-3xl font-bold text-amber-600'>
+                  {stats.acknowledged}
+                </p>
               </div>
-              <Users className="h-8 w-8 text-amber-400 opacity-50" />
+              <Users className='h-8 w-8 text-amber-400 opacity-50' />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className='pt-6'>
+            <div className='flex items-center justify-between'>
               <div>
-                <p className="text-sm text-gray-500">Completed</p>
-                <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
+                <p className='text-sm text-gray-500'>Completed</p>
+                <p className='text-3xl font-bold text-green-600'>
+                  {stats.completed}
+                </p>
               </div>
-              <CheckCircle2 className="h-8 w-8 text-green-400 opacity-50" />
+              <CheckCircle2 className='h-8 w-8 text-green-400 opacity-50' />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Reviews List */}
-      <Card className="border-0 shadow-lg">
+      <Card className='border-0 shadow-lg'>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5" />
+          <CardTitle className='flex items-center gap-2'>
+            <Star className='h-5 w-5' />
             Review History
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             {reviews.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Star className="h-12 w-12 mx-auto mb-2 opacity-30" />
+              <div className='text-center py-8 text-gray-500'>
+                <Star className='h-12 w-12 mx-auto mb-2 opacity-30' />
                 <p>No performance reviews yet</p>
               </div>
             ) : (
               reviews.map(review => {
                 const employee = review.employer_employee?.employee;
-                const statusCfg = statusConfig[review.status] ?? statusConfig.draft;
+                const statusCfg =
+                  statusConfig[review.status] ?? statusConfig.draft;
                 const avgRating = calculateAverageRating(review);
                 const isExpanded = expandedReview === review.id;
 
                 return (
-                  <div key={review.id} className="border rounded-xl overflow-hidden">
+                  <div
+                    key={review.id}
+                    className='border rounded-xl overflow-hidden'
+                  >
                     <button
-                      onClick={() => setExpandedReview(isExpanded ? null : review.id)}
-                      className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
+                      onClick={() =>
+                        setExpandedReview(isExpanded ? null : review.id)
+                      }
+                      className='w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors'
                     >
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={employee?.avatar_url || undefined} />
-                          <AvatarFallback>{getInitials(employee?.full_name)}</AvatarFallback>
+                      <div className='flex items-center gap-4'>
+                        <Avatar className='h-12 w-12'>
+                          <AvatarImage
+                            src={employee?.avatar_url || undefined}
+                          />
+                          <AvatarFallback>
+                            {getInitials(employee?.full_name)}
+                          </AvatarFallback>
                         </Avatar>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-medium">{employee?.full_name || 'Unknown'}</h4>
-                            <Badge variant="outline">{reviewTypeLabels[review.review_type] || review.review_type}</Badge>
-                            <Badge className={cn(statusCfg.bg, statusCfg.color, "border-0")}>
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center gap-2 flex-wrap'>
+                            <h4 className='font-medium'>
+                              {employee?.full_name || 'Unknown'}
+                            </h4>
+                            <Badge variant='outline'>
+                              {reviewTypeLabels[review.review_type] ||
+                                review.review_type}
+                            </Badge>
+                            <Badge
+                              className={cn(
+                                statusCfg.bg,
+                                statusCfg.color,
+                                'border-0'
+                              )}
+                            >
                               {statusCfg.label}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {format(new Date(review.review_period_start), 'MMM d, yyyy')} - {format(new Date(review.review_period_end), 'MMM d, yyyy')}
+                          <p className='text-sm text-gray-500 mt-1'>
+                            {format(
+                              new Date(review.review_period_start),
+                              'MMM d, yyyy'
+                            )}{' '}
+                            -{' '}
+                            {format(
+                              new Date(review.review_period_end),
+                              'MMM d, yyyy'
+                            )}
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className='flex items-center gap-4'>
                           {avgRating !== null && (
-                            <div className="text-right">
-                              <p className="text-sm text-gray-500">Avg Rating</p>
+                            <div className='text-right'>
+                              <p className='text-sm text-gray-500'>
+                                Avg Rating
+                              </p>
                               <RatingStars rating={avgRating} />
                             </div>
                           )}
                           {isExpanded ? (
-                            <ChevronUp className="h-5 w-5 text-gray-400" />
+                            <ChevronUp className='h-5 w-5 text-gray-400' />
                           ) : (
-                            <ChevronDown className="h-5 w-5 text-gray-400" />
+                            <ChevronDown className='h-5 w-5 text-gray-400' />
                           )}
                         </div>
                       </div>
                     </button>
 
                     {isExpanded && (
-                      <div className="p-4 border-t bg-gray-50 dark:bg-gray-900/30 space-y-4">
+                      <div className='p-4 border-t bg-gray-50 dark:bg-gray-900/30 space-y-4'>
                         {/* Ratings Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
                           <div>
-                            <p className="text-sm text-gray-500">Overall</p>
+                            <p className='text-sm text-gray-500'>Overall</p>
                             <RatingStars rating={review.overall_rating} />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Performance</p>
+                            <p className='text-sm text-gray-500'>Performance</p>
                             <RatingStars rating={review.performance_rating} />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Attendance</p>
+                            <p className='text-sm text-gray-500'>Attendance</p>
                             <RatingStars rating={review.attendance_rating} />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Teamwork</p>
+                            <p className='text-sm text-gray-500'>Teamwork</p>
                             <RatingStars rating={review.teamwork_rating} />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Communication</p>
+                            <p className='text-sm text-gray-500'>
+                              Communication
+                            </p>
                             <RatingStars rating={review.communication_rating} />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-500">Initiative</p>
+                            <p className='text-sm text-gray-500'>Initiative</p>
                             <RatingStars rating={review.initiative_rating} />
                           </div>
                         </div>
@@ -631,32 +793,52 @@ export function PerformanceReviewsManagement() {
                         {/* Feedback Sections */}
                         {review.strengths && (
                           <div>
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Strengths</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{review.strengths}</p>
+                            <p className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                              Strengths
+                            </p>
+                            <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                              {review.strengths}
+                            </p>
                           </div>
                         )}
                         {review.areas_for_improvement && (
                           <div>
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Areas for Improvement</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{review.areas_for_improvement}</p>
+                            <p className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                              Areas for Improvement
+                            </p>
+                            <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                              {review.areas_for_improvement}
+                            </p>
                           </div>
                         )}
                         {review.goals_for_next_period && (
                           <div>
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Goals for Next Period</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{review.goals_for_next_period}</p>
+                            <p className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                              Goals for Next Period
+                            </p>
+                            <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                              {review.goals_for_next_period}
+                            </p>
                           </div>
                         )}
                         {review.manager_comments && (
                           <div>
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Manager Comments</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{review.manager_comments}</p>
+                            <p className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                              Manager Comments
+                            </p>
+                            <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                              {review.manager_comments}
+                            </p>
                           </div>
                         )}
                         {review.employee_comments && (
                           <div>
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Employee Comments</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{review.employee_comments}</p>
+                            <p className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                              Employee Comments
+                            </p>
+                            <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                              {review.employee_comments}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -671,4 +853,3 @@ export function PerformanceReviewsManagement() {
     </div>
   );
 }
-

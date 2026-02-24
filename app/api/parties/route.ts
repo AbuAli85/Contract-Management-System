@@ -192,9 +192,10 @@ async function handleGET(request: Request) {
     // Allow higher limits for specific use cases (e.g., fetching all employers)
     // Default max is 100, but allow up to 1000 if explicitly requested
     const requestedLimit = parseInt(url.searchParams.get('limit') || '20');
-    const limit = requestedLimit > 100 
-      ? Math.min(requestedLimit, 1000) // Allow up to 1000 for bulk operations
-      : Math.min(Math.max(1, requestedLimit), 100); // Default max 100
+    const limit =
+      requestedLimit > 100
+        ? Math.min(requestedLimit, 1000) // Allow up to 1000 for bulk operations
+        : Math.min(Math.max(1, requestedLimit), 100); // Default max 100
     const offset = (page - 1) * limit;
     const typeFilter = url.searchParams.get('type'); // Get type filter
 
@@ -221,9 +222,7 @@ async function handleGET(request: Request) {
           `[${requestId}] 📝 Database query attempt ${queryAttempts}`
         );
 
-        let query = supabase
-          .from('parties')
-          .select('*', { count: 'exact' });
+        let query = supabase.from('parties').select('*', { count: 'exact' });
 
         // Apply type filter if provided
         if (typeFilter) {
@@ -648,7 +647,10 @@ export async function POST(request: Request) {
       setTimeout(() => reject(new Error('Database operation timeout')), 10000);
     });
 
-    const { data: party, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
+    const { data: party, error } = (await Promise.race([
+      insertPromise,
+      timeoutPromise,
+    ])) as any;
 
     if (error) {
       console.error('Error creating party:', error);
@@ -678,7 +680,9 @@ export async function POST(request: Request) {
 
     console.error('API error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      {
+        error: error instanceof Error ? error.message : 'Internal server error',
+      },
       { status: 500 }
     );
   }

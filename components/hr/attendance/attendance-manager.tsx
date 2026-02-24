@@ -99,7 +99,7 @@ export function AttendanceManager() {
   const stats = (attendanceData?.stats || {}) as AttendanceStats;
 
   // Filter by search term
-  const filteredAttendance = attendance.filter((record) => {
+  const filteredAttendance = attendance.filter(record => {
     if (!searchTerm) return true;
     const name =
       record.employer_employee?.employee?.name_en ||
@@ -109,7 +109,10 @@ export function AttendanceManager() {
   });
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<
+      string,
+      'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
       present: 'default',
       absent: 'destructive',
       late: 'secondary',
@@ -126,77 +129,77 @@ export function AttendanceManager() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className='flex items-center justify-center py-12'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Attendance Management</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className='text-3xl font-bold'>Attendance Management</h1>
+          <p className='text-muted-foreground mt-1'>
             Track and manage employee attendance
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+        <div className='flex gap-2'>
+          <Button variant='outline'>
+            <Download className='h-4 w-4 mr-2' />
             Export Report
           </Button>
         </div>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Present Today</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Present Today</CardTitle>
+            <CheckCircle className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.present_today || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className='text-2xl font-bold'>{stats.present_today || 0}</div>
+            <p className='text-xs text-muted-foreground'>
               Out of {stats.total_employees || 0} employees
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
-            <XCircle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Absent Today</CardTitle>
+            <XCircle className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.absent_today || 0}</div>
-            <p className="text-xs text-muted-foreground">Employees absent</p>
+            <div className='text-2xl font-bold'>{stats.absent_today || 0}</div>
+            <p className='text-xs text-muted-foreground'>Employees absent</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Late Arrivals</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Late Arrivals</CardTitle>
+            <Clock className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.late_today || 0}</div>
-            <p className="text-xs text-muted-foreground">Late check-ins</p>
+            <div className='text-2xl font-bold'>{stats.late_today || 0}</div>
+            <p className='text-xs text-muted-foreground'>Late check-ins</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Hours</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Average Hours</CardTitle>
+            <TrendingUp className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {stats.average_hours?.toFixed(1) || '0.0'}h
             </div>
-            <p className="text-xs text-muted-foreground">Per day this month</p>
+            <p className='text-xs text-muted-foreground'>Per day this month</p>
           </CardContent>
         </Card>
       </div>
@@ -207,38 +210,38 @@ export function AttendanceManager() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+            <div className='relative'>
+              <Search className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
               <Input
-                placeholder="Search employees..."
+                placeholder='Search employees...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onChange={e => setSearchTerm(e.target.value)}
+                className='pl-10'
               />
             </div>
 
             <Input
-              type="month"
+              type='month'
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              onChange={e => setSelectedMonth(e.target.value)}
             />
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder='Status' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="present">Present</SelectItem>
-                <SelectItem value="absent">Absent</SelectItem>
-                <SelectItem value="late">Late</SelectItem>
-                <SelectItem value="leave">On Leave</SelectItem>
+                <SelectItem value='all'>All Status</SelectItem>
+                <SelectItem value='present'>Present</SelectItem>
+                <SelectItem value='absent'>Absent</SelectItem>
+                <SelectItem value='late'>Late</SelectItem>
+                <SelectItem value='leave'>On Leave</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
+            <Button variant='outline'>
+              <Filter className='h-4 w-4 mr-2' />
               Apply Filters
             </Button>
           </div>
@@ -250,12 +253,13 @@ export function AttendanceManager() {
         <CardHeader>
           <CardTitle>Attendance Records</CardTitle>
           <CardDescription>
-            {filteredAttendance.length} records for {format(new Date(selectedMonth + '-01'), 'MMMM yyyy')}
+            {filteredAttendance.length} records for{' '}
+            {format(new Date(`${selectedMonth}-01`), 'MMMM yyyy')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {filteredAttendance.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className='text-center py-8 text-muted-foreground'>
               No attendance records found
             </div>
           ) : (
@@ -273,16 +277,16 @@ export function AttendanceManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAttendance.map((record) => (
+                {filteredAttendance.map(record => (
                   <TableRow key={record.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">
+                        <div className='font-medium'>
                           {record.employer_employee?.employee?.name_en ||
                             record.employer_employee?.employee?.name_ar ||
                             'Unknown'}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className='text-sm text-muted-foreground'>
                           {record.employer_employee?.job_title || 'N/A'}
                         </div>
                       </div>
@@ -322,4 +326,3 @@ export function AttendanceManager() {
     </div>
   );
 }
-

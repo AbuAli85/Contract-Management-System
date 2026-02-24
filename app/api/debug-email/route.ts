@@ -12,7 +12,7 @@ export async function GET() {
       process.env.RESEND_FROM_NAME || 'SmartPro Contract Management System';
     const apiKeySet = !!process.env.RESEND_API_KEY;
     const apiKeyPreview = process.env.RESEND_API_KEY
-      ? process.env.RESEND_API_KEY.substring(0, 10) + '...'
+      ? `${process.env.RESEND_API_KEY.substring(0, 10)}...`
       : 'NOT SET';
 
     // Get test promoter email

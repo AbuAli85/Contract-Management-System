@@ -15,7 +15,9 @@ export async function getCompanyContext(): Promise<CompanyContext | null> {
   const supabase = await createClient();
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return null;
     }
@@ -65,15 +67,15 @@ export async function getCompanyContext(): Promise<CompanyContext | null> {
  */
 export async function requireCompanyContext(): Promise<CompanyContext> {
   const context = await getCompanyContext();
-  
+
   if (!context) {
     throw new Error('Unauthorized');
   }
-  
+
   if (!context.companyId) {
     throw new Error('No active company selected');
   }
-  
+
   return context;
 }
 
@@ -93,4 +95,3 @@ export function requireRole(context: CompanyContext, roles: string[]): void {
     throw new Error(`Access denied. Required roles: ${roles.join(', ')}`);
   }
 }
-

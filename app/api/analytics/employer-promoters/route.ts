@@ -9,7 +9,9 @@ export async function GET() {
     const supabase = await createClient();
 
     // ✅ COMPANY SCOPE: Get active company's party_id
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     let activePartyId: string | null = null;
 
     if (user) {

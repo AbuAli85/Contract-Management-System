@@ -65,7 +65,7 @@ export async function getContractMetrics(
         .select('party_id')
         .eq('id', companyId)
         .single();
-      
+
       if (company?.party_id) {
         query = query.eq('party_id', company.party_id);
       }
@@ -98,7 +98,7 @@ export async function getContractMetrics(
         .select('party_id')
         .eq('id', companyId)
         .single();
-      
+
       if (company?.party_id) {
         countQuery = countQuery.eq('party_id', company.party_id);
       }

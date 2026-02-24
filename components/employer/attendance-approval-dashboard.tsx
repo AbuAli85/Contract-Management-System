@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,7 +37,14 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
@@ -64,14 +77,19 @@ interface PendingAttendance {
 }
 
 export function AttendanceApprovalDashboard() {
-  const [pendingAttendance, setPendingAttendance] = useState<PendingAttendance[]>([]);
+  const [pendingAttendance, setPendingAttendance] = useState<
+    PendingAttendance[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState<string | null>(null);
-  const [selectedAttendance, setSelectedAttendance] = useState<PendingAttendance | null>(null);
+  const [selectedAttendance, setSelectedAttendance] =
+    useState<PendingAttendance | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | null>(null);
+  const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | null>(
+    null
+  );
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
@@ -197,11 +215,20 @@ export function AttendanceApprovalDashboard() {
 
   // Filter attendance
   const filteredAttendance = pendingAttendance.filter(attendance => {
-    const matchesStatus = statusFilter === 'all' || attendance.status === statusFilter;
-    const matchesSearch = !searchTerm || 
-      attendance.employer_employee.employee.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      attendance.employer_employee.employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      new Date(attendance.attendance_date).toLocaleDateString().toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' || attendance.status === statusFilter;
+    const matchesSearch =
+      !searchTerm ||
+      attendance.employer_employee.employee.full_name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      attendance.employer_employee.employee.email
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      new Date(attendance.attendance_date)
+        .toLocaleDateString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -239,7 +266,7 @@ export function AttendanceApprovalDashboard() {
     try {
       setApproving('bulk');
       const ids = Array.from(selectedIds);
-      
+
       // Approve all selected
       const promises = ids.map(id =>
         fetch('/api/employer/attendance/approve', {
@@ -282,77 +309,77 @@ export function AttendanceApprovalDashboard() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <CardContent className='flex items-center justify-center py-12'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary' />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className='space-y-6'>
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div>
-          <h2 className="text-2xl font-bold">Attendance Approval</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className='text-2xl font-bold'>Attendance Approval</h2>
+          <p className='text-sm text-muted-foreground'>
             Review and approve employee attendance records
           </p>
         </div>
-        <Badge variant="secondary" className="text-lg px-4 py-2 w-fit">
+        <Badge variant='secondary' className='text-lg px-4 py-2 w-fit'>
           {filteredAttendance.length} Pending
         </Badge>
       </div>
 
       {/* Filters and Bulk Actions */}
       {pendingAttendance.length > 0 && (
-        <Card className="border-0 shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <Card className='border-0 shadow-sm'>
+          <CardContent className='pt-6'>
+            <div className='flex flex-col sm:flex-row gap-4 items-start sm:items-center'>
               {/* Search */}
-              <div className="relative flex-1 w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <div className='relative flex-1 w-full sm:w-auto'>
+                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400' />
                 <Input
-                  type="text"
-                  placeholder="Search by name, email, or date..."
+                  type='text'
+                  placeholder='Search by name, email, or date...'
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-gray-50 dark:bg-gray-900"
+                  className='pl-10 bg-gray-50 dark:bg-gray-900'
                 />
               </div>
 
               {/* Status Filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
+                <SelectTrigger className='w-full sm:w-[180px]'>
+                  <Filter className='h-4 w-4 mr-2' />
+                  <SelectValue placeholder='Filter by status' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="present">Present</SelectItem>
-                  <SelectItem value="late">Late</SelectItem>
+                  <SelectItem value='all'>All Status</SelectItem>
+                  <SelectItem value='present'>Present</SelectItem>
+                  <SelectItem value='late'>Late</SelectItem>
                 </SelectContent>
               </Select>
 
               {/* Bulk Actions */}
               {selectedIds.size > 0 && (
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <Button
-                    variant="default"
-                    size="sm"
+                    variant='default'
+                    size='sm'
                     onClick={handleBulkApprove}
                     disabled={approving === 'bulk'}
-                    className="gap-2"
+                    className='gap-2'
                   >
                     {approving === 'bulk' ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className='h-4 w-4 animate-spin' />
                     ) : (
-                      <CheckCircle className="h-4 w-4" />
+                      <CheckCircle className='h-4 w-4' />
                     )}
                     Approve {selectedIds.size}
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => setSelectedIds(new Set())}
                   >
                     Clear
@@ -363,17 +390,19 @@ export function AttendanceApprovalDashboard() {
 
             {/* Select All */}
             {filteredAttendance.length > 0 && (
-              <div className="mt-4 flex items-center gap-2">
+              <div className='mt-4 flex items-center gap-2'>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={selectAll}
-                  className="text-xs"
+                  className='text-xs'
                 >
-                  {selectedIds.size === filteredAttendance.length ? 'Deselect All' : 'Select All'}
+                  {selectedIds.size === filteredAttendance.length
+                    ? 'Deselect All'
+                    : 'Select All'}
                 </Button>
                 {selectedIds.size > 0 && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className='text-sm text-muted-foreground'>
                     {selectedIds.size} selected
                   </span>
                 )}
@@ -385,20 +414,20 @@ export function AttendanceApprovalDashboard() {
 
       {filteredAttendance.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
+          <CardContent className='flex flex-col items-center justify-center py-12'>
             {pendingAttendance.length === 0 ? (
               <>
-                <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
-                <p className="text-lg font-medium">All Clear!</p>
-                <p className="text-sm text-muted-foreground">
+                <CheckCircle className='h-12 w-12 text-green-500 mb-4' />
+                <p className='text-lg font-medium'>All Clear!</p>
+                <p className='text-sm text-muted-foreground'>
                   No pending attendance records to review
                 </p>
               </>
             ) : (
               <>
-                <Search className="h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-lg font-medium">No matching records</p>
-                <p className="text-sm text-muted-foreground">
+                <Search className='h-12 w-12 text-gray-400 mb-4' />
+                <p className='text-lg font-medium'>No matching records</p>
+                <p className='text-sm text-muted-foreground'>
                   Try adjusting your filters or search term
                 </p>
               </>
@@ -406,59 +435,74 @@ export function AttendanceApprovalDashboard() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {filteredAttendance.map((attendance) => (
-            <Card key={attendance.id} className={cn(
-              "overflow-hidden transition-all",
-              selectedIds.has(attendance.id) && "ring-2 ring-primary border-primary"
-            )}>
+        <div className='grid gap-4'>
+          {filteredAttendance.map(attendance => (
+            <Card
+              key={attendance.id}
+              className={cn(
+                'overflow-hidden transition-all',
+                selectedIds.has(attendance.id) &&
+                  'ring-2 ring-primary border-primary'
+              )}
+            >
               {/* Selection Checkbox */}
-              <div className="absolute top-4 right-4 z-10">
+              <div className='absolute top-4 right-4 z-10'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={selectedIds.has(attendance.id)}
                   onChange={() => toggleSelection(attendance.id)}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  className='h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary'
                 />
               </div>
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
+              <CardHeader className='bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20'>
+                <div className='flex items-start justify-between'>
+                  <div className='flex-1'>
+                    <CardTitle className='flex items-center gap-2'>
+                      <User className='h-5 w-5' />
                       {attendance.employer_employee.employee.full_name}
                     </CardTitle>
-                    <CardDescription className="mt-1">
+                    <CardDescription className='mt-1'>
                       {attendance.employer_employee.employee.email}
                     </CardDescription>
                   </div>
                   <Badge
-                    variant={attendance.status === 'late' ? 'destructive' : 'default'}
-                    className="ml-2"
+                    variant={
+                      attendance.status === 'late' ? 'destructive' : 'default'
+                    }
+                    className='ml-2'
                   >
                     {attendance.status}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pt-6 space-y-4">
+              <CardContent className='pt-6 space-y-4'>
                 {/* Date and Time */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className='grid grid-cols-2 gap-4'>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Date</Label>
-                    <p className="font-medium">
-                      {format(parseISO(attendance.attendance_date), 'MMM dd, yyyy')}
+                    <Label className='text-xs text-muted-foreground'>
+                      Date
+                    </Label>
+                    <p className='font-medium'>
+                      {format(
+                        parseISO(attendance.attendance_date),
+                        'MMM dd, yyyy'
+                      )}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Check In</Label>
-                    <p className="font-medium">
+                    <Label className='text-xs text-muted-foreground'>
+                      Check In
+                    </Label>
+                    <p className='font-medium'>
                       {format(parseISO(attendance.check_in), 'hh:mm a')}
                     </p>
                   </div>
                   {attendance.check_out && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Check Out</Label>
-                      <p className="font-medium">
+                      <Label className='text-xs text-muted-foreground'>
+                        Check Out
+                      </Label>
+                      <p className='font-medium'>
                         {format(parseISO(attendance.check_out), 'hh:mm a')}
                       </p>
                     </div>
@@ -467,46 +511,62 @@ export function AttendanceApprovalDashboard() {
 
                 {/* Location Information */}
                 {attendance.latitude && attendance.longitude && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-xs text-muted-foreground">Location</Label>
+                  <div className='space-y-2'>
+                    <div className='flex items-center gap-2'>
+                      <MapPin className='h-4 w-4 text-muted-foreground' />
+                      <Label className='text-xs text-muted-foreground'>
+                        Location
+                      </Label>
                     </div>
-                    <div className="pl-6 space-y-1">
-                      <p className="text-sm">
-                        {attendance.latitude.toFixed(6)}, {attendance.longitude.toFixed(6)}
+                    <div className='pl-6 space-y-1'>
+                      <p className='text-sm'>
+                        {attendance.latitude.toFixed(6)},{' '}
+                        {attendance.longitude.toFixed(6)}
                       </p>
                       {attendance.location_accuracy && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className='text-xs text-muted-foreground'>
                           Accuracy: ±{Math.round(attendance.location_accuracy)}m
                         </p>
                       )}
                       {attendance.distance_from_office !== null && (
-                        <div className="flex items-center gap-2">
+                        <div className='flex items-center gap-2'>
                           <Badge
-                            variant={attendance.location_verified ? 'default' : 'destructive'}
-                            className="text-xs"
+                            variant={
+                              attendance.location_verified
+                                ? 'default'
+                                : 'destructive'
+                            }
+                            className='text-xs'
                           >
-                            {attendance.location_verified ? 'Verified' : 'Not Verified'}
+                            {attendance.location_verified
+                              ? 'Verified'
+                              : 'Not Verified'}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {Math.round(attendance.distance_from_office)}m from office
+                          <span className='text-xs text-muted-foreground'>
+                            {Math.round(attendance.distance_from_office)}m from
+                            office
                           </span>
                         </div>
                       )}
-                      {getLocationUrl(attendance.latitude, attendance.longitude) && (
+                      {getLocationUrl(
+                        attendance.latitude,
+                        attendance.longitude
+                      ) && (
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
+                          variant='outline'
+                          size='sm'
+                          className='mt-2'
                           onClick={() =>
                             window.open(
-                              getLocationUrl(attendance.latitude, attendance.longitude)!,
+                              getLocationUrl(
+                                attendance.latitude,
+                                attendance.longitude
+                              )!,
                               '_blank'
                             )
                           }
                         >
-                          <MapPin className="h-3 w-3 mr-1" />
+                          <MapPin className='h-3 w-3 mr-1' />
                           View on Map
                         </Button>
                       )}
@@ -515,37 +575,41 @@ export function AttendanceApprovalDashboard() {
                 )}
 
                 {/* Photos */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className='grid grid-cols-2 gap-4'>
                   {attendance.check_in_photo && (
                     <div>
-                      <Label className="text-xs text-muted-foreground mb-2 block">
+                      <Label className='text-xs text-muted-foreground mb-2 block'>
                         Check-In Photo
                       </Label>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <div className="relative cursor-pointer group">
+                          <div className='relative cursor-pointer group'>
                             <img
                               src={attendance.check_in_photo}
-                              alt="Check-in photo"
-                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-primary transition-colors"
+                              alt='Check-in photo'
+                              className='w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-primary transition-colors'
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
-                              <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className='absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center'>
+                              <Eye className='h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
                             </div>
                           </div>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-2xl">
+                        <DialogContent className='sm:max-w-2xl'>
                           <DialogHeader>
                             <DialogTitle>Check-In Photo</DialogTitle>
                             <DialogDescription>
-                              {attendance.employer_employee.employee.full_name} -{' '}
-                              {format(parseISO(attendance.check_in), 'MMM dd, yyyy hh:mm a')}
+                              {attendance.employer_employee.employee.full_name}{' '}
+                              -{' '}
+                              {format(
+                                parseISO(attendance.check_in),
+                                'MMM dd, yyyy hh:mm a'
+                              )}
                             </DialogDescription>
                           </DialogHeader>
                           <img
                             src={attendance.check_in_photo}
-                            alt="Check-in photo"
-                            className="w-full rounded-lg"
+                            alt='Check-in photo'
+                            className='w-full rounded-lg'
                           />
                         </DialogContent>
                       </Dialog>
@@ -553,35 +617,39 @@ export function AttendanceApprovalDashboard() {
                   )}
                   {attendance.check_out_photo && (
                     <div>
-                      <Label className="text-xs text-muted-foreground mb-2 block">
+                      <Label className='text-xs text-muted-foreground mb-2 block'>
                         Check-Out Photo
                       </Label>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <div className="relative cursor-pointer group">
+                          <div className='relative cursor-pointer group'>
                             <img
                               src={attendance.check_out_photo}
-                              alt="Check-out photo"
-                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-primary transition-colors"
+                              alt='Check-out photo'
+                              className='w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-primary transition-colors'
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
-                              <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className='absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center'>
+                              <Eye className='h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
                             </div>
                           </div>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-2xl">
+                        <DialogContent className='sm:max-w-2xl'>
                           <DialogHeader>
                             <DialogTitle>Check-Out Photo</DialogTitle>
                             <DialogDescription>
-                              {attendance.employer_employee.employee.full_name} -{' '}
+                              {attendance.employer_employee.employee.full_name}{' '}
+                              -{' '}
                               {attendance.check_out &&
-                                format(parseISO(attendance.check_out), 'MMM dd, yyyy hh:mm a')}
+                                format(
+                                  parseISO(attendance.check_out),
+                                  'MMM dd, yyyy hh:mm a'
+                                )}
                             </DialogDescription>
                           </DialogHeader>
                           <img
                             src={attendance.check_out_photo}
-                            alt="Check-out photo"
-                            className="w-full rounded-lg"
+                            alt='Check-out photo'
+                            className='w-full rounded-lg'
                           />
                         </DialogContent>
                       </Dialog>
@@ -590,19 +658,26 @@ export function AttendanceApprovalDashboard() {
                 </div>
 
                 {/* Additional Info */}
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                <div className='grid grid-cols-2 gap-4 pt-2 border-t'>
                   {attendance.ip_address && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">IP Address</Label>
-                      <p className="text-sm font-mono">{attendance.ip_address}</p>
+                      <Label className='text-xs text-muted-foreground'>
+                        IP Address
+                      </Label>
+                      <p className='text-sm font-mono'>
+                        {attendance.ip_address}
+                      </p>
                     </div>
                   )}
                   {attendance.device_info && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Device</Label>
-                      <p className="text-sm">
+                      <Label className='text-xs text-muted-foreground'>
+                        Device
+                      </Label>
+                      <p className='text-sm'>
                         {attendance.device_info.platform || 'Unknown'} -{' '}
-                        {attendance.device_info.screenWidth}x{attendance.device_info.screenHeight}
+                        {attendance.device_info.screenWidth}x
+                        {attendance.device_info.screenHeight}
                       </p>
                     </div>
                   )}
@@ -610,36 +685,37 @@ export function AttendanceApprovalDashboard() {
 
                 {/* Warnings */}
                 {!attendance.location_verified && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
+                  <Alert variant='destructive'>
+                    <AlertCircle className='h-4 w-4' />
                     <AlertDescription>
-                      Location verification failed. Employee may be outside allowed office area.
+                      Location verification failed. Employee may be outside
+                      allowed office area.
                     </AlertDescription>
                   </Alert>
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-2 pt-4 border-t">
+                <div className='flex gap-2 pt-4 border-t'>
                   <Button
                     onClick={() => handleApprove(attendance.id)}
                     disabled={approving === attendance.id}
-                    className="flex-1"
-                    variant="default"
+                    className='flex-1'
+                    variant='default'
                   >
                     {approving === attendance.id ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                     ) : (
-                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <CheckCircle className='h-4 w-4 mr-2' />
                     )}
                     Approve
                   </Button>
                   <Button
                     onClick={() => openRejectDialog(attendance)}
                     disabled={approving === attendance.id}
-                    variant="destructive"
-                    className="flex-1"
+                    variant='destructive'
+                    className='flex-1'
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
+                    <XCircle className='h-4 w-4 mr-2' />
                     Reject
                   </Button>
                 </div>
@@ -658,50 +734,53 @@ export function AttendanceApprovalDashboard() {
               Please provide a reason for rejecting this attendance record.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             {selectedAttendance && (
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium">
+              <div className='p-3 bg-gray-50 rounded-lg'>
+                <p className='text-sm font-medium'>
                   {selectedAttendance.employer_employee.employee.full_name}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {format(parseISO(selectedAttendance.attendance_date), 'MMM dd, yyyy')} -{' '}
-                  {format(parseISO(selectedAttendance.check_in), 'hh:mm a')}
+                <p className='text-xs text-muted-foreground'>
+                  {format(
+                    parseISO(selectedAttendance.attendance_date),
+                    'MMM dd, yyyy'
+                  )}{' '}
+                  - {format(parseISO(selectedAttendance.check_in), 'hh:mm a')}
                 </p>
               </div>
             )}
             <div>
-              <Label htmlFor="rejection-reason">Rejection Reason *</Label>
+              <Label htmlFor='rejection-reason'>Rejection Reason *</Label>
               <Textarea
-                id="rejection-reason"
+                id='rejection-reason'
                 value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="e.g., Location not verified, suspicious activity, incorrect time..."
-                className="mt-2 min-h-[100px]"
+                onChange={e => setRejectionReason(e.target.value)}
+                placeholder='e.g., Location not verified, suspicious activity, incorrect time...'
+                className='mt-2 min-h-[100px]'
               />
             </div>
-            <div className="flex gap-2">
+            <div className='flex gap-2'>
               <Button
                 onClick={handleReject}
                 disabled={!rejectionReason.trim() || approving !== null}
-                variant="destructive"
-                className="flex-1"
+                variant='destructive'
+                className='flex-1'
               >
                 {approving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                 ) : (
-                  <XCircle className="h-4 w-4 mr-2" />
+                  <XCircle className='h-4 w-4 mr-2' />
                 )}
                 Confirm Rejection
               </Button>
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => {
                   setShowRejectDialog(false);
                   setSelectedAttendance(null);
                   setRejectionReason('');
                 }}
-                className="flex-1"
+                className='flex-1'
               >
                 Cancel
               </Button>
@@ -712,4 +791,3 @@ export function AttendanceApprovalDashboard() {
     </div>
   );
 }
-

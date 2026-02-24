@@ -122,7 +122,17 @@ export function ClientManagementDashboard() {
   const handleExportReport = async () => {
     try {
       // Generate CSV report
-      const headers = ['Name (EN)', 'Name (AR)', 'CRN', 'Contact Person', 'Contact Email', 'Contact Phone', 'Status', 'Active Contracts', 'Total Spent'];
+      const headers = [
+        'Name (EN)',
+        'Name (AR)',
+        'CRN',
+        'Contact Person',
+        'Contact Email',
+        'Contact Phone',
+        'Status',
+        'Active Contracts',
+        'Total Spent',
+      ];
       const rows = clients.map(client => [
         client.name_en,
         client.name_ar,
@@ -137,14 +147,17 @@ export function ClientManagementDashboard() {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
       ].join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `clients-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute(
+        'download',
+        `clients-report-${new Date().toISOString().split('T')[0]}.csv`
+      );
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -808,16 +821,16 @@ export function ClientManagementDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className='flex items-center gap-1'>
-                          <Button 
-                            variant='ghost' 
+                          <Button
+                            variant='ghost'
                             size='sm'
                             onClick={() => handleViewClient(client.id)}
                             title='View client details'
                           >
                             <Eye className='h-4 w-4' />
                           </Button>
-                          <Button 
-                            variant='ghost' 
+                          <Button
+                            variant='ghost'
                             size='sm'
                             onClick={() => handleEditClient(client.id)}
                             title='Edit client'

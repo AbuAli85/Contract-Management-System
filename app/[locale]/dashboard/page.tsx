@@ -29,7 +29,6 @@ import {
   FileText,
   Users,
   TrendingUp,
-  TrendingDown,
   LogOut,
   Settings,
   Bell,
@@ -39,12 +38,10 @@ import {
   Activity,
   Clock,
   CheckCircle,
-  AlertTriangle,
   Building2,
   BarChart3,
   ArrowUpRight,
   ArrowDownRight,
-  Calendar,
   Shield,
   Zap,
   Eye,
@@ -72,32 +69,6 @@ interface User {
   last_name?: string;
 }
 
-interface DashboardStats {
-  totalContracts: number;
-  activeContracts: number;
-  pendingContracts: number;
-  scope: 'system-wide' | 'user-specific';
-  previousMonth?: {
-    totalContracts?: number;
-    activeContracts?: number;
-    pendingContracts?: number;
-  };
-}
-
-interface PromoterStats {
-  totalWorkforce: number;
-  activeOnContracts: number;
-  availableForWork: number;
-  onLeave: number;
-  inactive: number;
-  utilizationRate: number;
-  complianceRate: number;
-  previousMonth?: {
-    totalWorkforce?: number;
-    utilizationRate?: number;
-  };
-}
-
 interface QuickStat {
   label: string;
   value: number | string;
@@ -114,7 +85,7 @@ function DashboardContent() {
   const router = useRouter();
   const { toast } = useToast();
   const params = useParams();
-  
+
   // Safely get locale from params with fallback
   const locale = useMemo(() => {
     try {
@@ -123,7 +94,10 @@ function DashboardContent() {
         return 'en';
       }
       const paramLocale = params.locale;
-      if (typeof paramLocale === 'string' && ['en', 'ar'].includes(paramLocale)) {
+      if (
+        typeof paramLocale === 'string' &&
+        ['en', 'ar'].includes(paramLocale)
+      ) {
         return paramLocale;
       }
       return 'en';
@@ -132,7 +106,7 @@ function DashboardContent() {
       return 'en';
     }
   }, [params]);
-  
+
   // Validate locale is valid
   const validLocale = locale && ['en', 'ar'].includes(locale) ? locale : 'en';
 
@@ -175,16 +149,15 @@ function DashboardContent() {
 
   // Fetch dashboard statistics with React Query for real-time updates
   // ✅ COMPANY SCOPE: Get company context
-  const { company, companyId } = useCompany();
-  
+  const { _company, companyId } = useCompany();
   // ✅ COMPANY SWITCH: Automatically refresh data when company switches
   useCompanyDataRefresh();
 
   const {
     data: statsData,
     isLoading: statsLoading,
-    isError: statsError,
-    error: statsErrorDetails,
+    isError: _statsError,
+    error: _statsErrorDetails,
     refetch: refetchStats,
   } = useQuery({
     queryKey: ['dashboard-stats', companyId], // Include companyId in query key for proper caching
@@ -308,7 +281,10 @@ function DashboardContent() {
   const handleRefresh = useCallback(() => {
     refetchStats();
     toast({
-      title: validLocale === 'ar' ? '✅ تم تحديث لوحة التحكم' : '✅ Dashboard Refreshed',
+      title:
+        validLocale === 'ar'
+          ? '✅ تم تحديث لوحة التحكم'
+          : '✅ Dashboard Refreshed',
       description:
         validLocale === 'ar'
           ? 'تم تحديث جميع المقاييس والإحصائيات'
@@ -337,10 +313,9 @@ function DashboardContent() {
   // Get user role for filtering dashboard content
   const userRole = user?.role || authUser?.user_metadata?.role || 'user';
   const isPromoter = userRole === 'promoter' || userRole === 'user';
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
-  const isManager = userRole === 'manager';
-  const isEmployer = userRole === 'employer';
-
+  const _isAdmin = userRole === 'admin' || userRole === 'super_admin';
+  const _isManager = userRole === 'manager';
+  const _isEmployer = userRole === 'employer';
   // Build quick stats based on user role
   const quickStats: QuickStat[] = isPromoter
     ? [
@@ -494,7 +469,11 @@ function DashboardContent() {
                     {getTimeBasedGreeting()},
                   </span>
                   <span>{user.full_name || user.email}</span>
-                  <span className='text-2xl' role='img' aria-label='waving hand'>
+                  <span
+                    className='text-2xl'
+                    role='img'
+                    aria-label='waving hand'
+                  >
                     👋
                   </span>
                 </h2>
@@ -506,8 +485,8 @@ function DashboardContent() {
                       ? 'إليك ملخص عملك اليوم'
                       : "Here's your work summary today"
                     : validLocale === 'ar'
-                    ? 'إليك ما يحدث في عملك اليوم'
-                    : "Here's what's happening with your business today"}
+                      ? 'إليك ما يحدث في عملك اليوم'
+                      : "Here's what's happening with your business today"}
                 </span>
                 <span className='text-gray-400'>•</span>
                 <time dateTime={new Date().toISOString()}>
@@ -532,7 +511,10 @@ function DashboardContent() {
                       }
                     >
                       <RefreshCw
-                        className={cn('h-4 w-4', statsLoading && 'animate-spin')}
+                        className={cn(
+                          'h-4 w-4',
+                          statsLoading && 'animate-spin'
+                        )}
                         aria-hidden='true'
                       />
                       <span className='hidden sm:inline'>
@@ -598,7 +580,9 @@ function DashboardContent() {
                           🌐
                         </span>
                         <span>
-                          {validLocale === 'ar' ? 'عرض شامل' : 'System-wide view'}
+                          {validLocale === 'ar'
+                            ? 'عرض شامل'
+                            : 'System-wide view'}
                         </span>
                       </>
                     ) : (
@@ -723,314 +707,326 @@ function DashboardContent() {
           >
             <CardHeader>
               <CardTitle className='flex items-center gap-2 text-base'>
-              <Info className='h-5 w-5 text-blue-600' aria-hidden='true' />
-              {validLocale === 'ar'
-                ? 'فهم مقاييس التعيين'
-                : 'Understanding Assignment Metrics'}
+                <Info className='h-5 w-5 text-blue-600' aria-hidden='true' />
+                {validLocale === 'ar'
+                  ? 'فهم مقاييس التعيين'
+                  : 'Understanding Assignment Metrics'}
               </CardTitle>
             </CardHeader>
-          <CardContent>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className='p-4 bg-white rounded-lg border-2 border-blue-200 cursor-help'>
-                      <div className='flex items-center justify-between mb-2'>
-                        <span className='text-sm font-semibold text-blue-900'>
-                          Available for Work
-                        </span>
-                        <CheckCircle className='h-4 w-4 text-blue-600' />
+            <CardContent>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className='p-4 bg-white rounded-lg border-2 border-blue-200 cursor-help'>
+                        <div className='flex items-center justify-between mb-2'>
+                          <span className='text-sm font-semibold text-blue-900'>
+                            Available for Work
+                          </span>
+                          <CheckCircle className='h-4 w-4 text-blue-600' />
+                        </div>
+                        <div className='text-3xl font-bold text-blue-600'>
+                          {promoterStats?.availableForWork || 0}
+                        </div>
+                        <p className='text-xs text-gray-600 mt-2'>
+                          Promoters with status = "available"
+                        </p>
                       </div>
-                      <div className='text-3xl font-bold text-blue-600'>
-                        {promoterStats?.availableForWork || 0}
-                      </div>
-                      <p className='text-xs text-gray-600 mt-2'>
-                        Promoters with status = "available"
+                    </TooltipTrigger>
+                    <TooltipContent side='bottom' className='max-w-xs'>
+                      <p className='font-semibold mb-1'>Available for Work</p>
+                      <p className='text-sm'>
+                        Promoters specifically marked as "available" status -
+                        ready and actively seeking new assignments right now.
                       </p>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side='bottom' className='max-w-xs'>
-                    <p className='font-semibold mb-1'>Available for Work</p>
-                    <p className='text-sm'>
-                      Promoters specifically marked as "available" status -
-                      ready and actively seeking new assignments right now.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className='p-4 bg-white rounded-lg border-2 border-purple-200 cursor-help'>
-                      <div className='flex items-center justify-between mb-2'>
-                        <span className='text-sm font-semibold text-purple-900'>
-                          Awaiting Assignment
-                        </span>
-                        <Users className='h-4 w-4 text-purple-600' />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className='p-4 bg-white rounded-lg border-2 border-purple-200 cursor-help'>
+                        <div className='flex items-center justify-between mb-2'>
+                          <span className='text-sm font-semibold text-purple-900'>
+                            Awaiting Assignment
+                          </span>
+                          <Users className='h-4 w-4 text-purple-600' />
+                        </div>
+                        <div className='text-3xl font-bold text-purple-600'>
+                          {(promoterStats?.activeOnContracts || 0) === 0 &&
+                          promoterStats?.totalWorkforce
+                            ? promoterStats.totalWorkforce -
+                              (promoterStats.onLeave || 0) -
+                              (promoterStats.inactive || 0) -
+                              (promoterStats.terminated || 0)
+                            : (promoterStats?.totalWorkforce || 0) -
+                              (promoterStats?.activeOnContracts || 0) -
+                              (promoterStats?.onLeave || 0) -
+                              (promoterStats?.inactive || 0) -
+                              (promoterStats?.terminated || 0)}
+                        </div>
+                        <p className='text-xs text-gray-600 mt-2'>
+                          All promoters without active contracts
+                        </p>
                       </div>
-                      <div className='text-3xl font-bold text-purple-600'>
-                        {(promoterStats?.activeOnContracts || 0) === 0 &&
-                        promoterStats?.totalWorkforce
-                          ? promoterStats.totalWorkforce -
-                            (promoterStats.onLeave || 0) -
-                            (promoterStats.inactive || 0) -
-                            (promoterStats.terminated || 0)
-                          : (promoterStats?.totalWorkforce || 0) -
-                            (promoterStats?.activeOnContracts || 0) -
-                            (promoterStats?.onLeave || 0) -
-                            (promoterStats?.inactive || 0) -
-                            (promoterStats?.terminated || 0)}
-                      </div>
-                      <p className='text-xs text-gray-600 mt-2'>
-                        All promoters without active contracts
+                    </TooltipTrigger>
+                    <TooltipContent side='bottom' className='max-w-xs'>
+                      <p className='font-semibold mb-1'>Awaiting Assignment</p>
+                      <p className='text-sm'>
+                        Total promoters not currently on contracts - includes
+                        those with "active" status (employed) + "available"
+                        status. Excludes on leave, inactive, and terminated.
                       </p>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side='bottom' className='max-w-xs'>
-                    <p className='font-semibold mb-1'>Awaiting Assignment</p>
-                    <p className='text-sm'>
-                      Total promoters not currently on contracts - includes
-                      those with "active" status (employed) + "available"
-                      status. Excludes on leave, inactive, and terminated.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <div className='mt-4 p-3 bg-blue-100 rounded-lg border border-blue-300'>
-              <p className='text-xs text-blue-900'>
-                <strong>Key Difference:</strong> "Available for Work" (
-                {promoterStats?.availableForWork || 0}) shows promoters actively
-                seeking work, while "Awaiting Assignment" shows all employable
-                promoters not currently assigned to contracts, including those
-                with "active" employment status.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className='mt-4 p-3 bg-blue-100 rounded-lg border border-blue-300'>
+                <p className='text-xs text-blue-900'>
+                  <strong>Key Difference:</strong> "Available for Work" (
+                  {promoterStats?.availableForWork || 0}) shows promoters
+                  actively seeking work, while "Awaiting Assignment" shows all
+                  employable promoters not currently assigned to contracts,
+                  including those with "active" employment status.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Main Dashboard Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8'>
           {/* Workforce Overview - Only for Admin/Manager/Employer */}
           {!isPromoter && (
-          <Card
-            className='col-span-1 lg:col-span-2 border-0 shadow-lg'
-            role='region'
-            aria-label={
-              validLocale === 'ar'
-                ? 'نظرة عامة على القوى العاملة'
-                : 'Workforce overview'
-            }
-          >
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <BarChart3
-                  className='h-5 w-5 text-blue-600'
-                  aria-hidden='true'
-                />
-                {validLocale === 'ar' ? 'نظرة عامة على القوى العاملة' : 'Workforce Overview'}
-              </CardTitle>
-              <CardDescription>
-                {validLocale === 'ar' ? 'إجمالي القوى العاملة:' : 'Total workforce:'}{' '}
-                {promoterStats?.totalWorkforce || 0}{' '}
-                {validLocale === 'ar' ? 'مروج' : 'promoters'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <div className='space-y-4'>
-                  <div className='h-24 bg-gray-100 rounded-lg animate-pulse' />
-                  <div className='h-24 bg-gray-100 rounded-lg animate-pulse' />
-                </div>
-              ) : (
-                <div className='space-y-4'>
-                  {/* Active Workforce */}
-                  <div>
-                    <div className='text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide'>
-                      Active Workforce
-                    </div>
-                    <div className='grid grid-cols-2 gap-4'>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className='p-4 bg-green-50 rounded-lg border border-green-200 cursor-help'>
-                              <div className='flex items-center justify-between'>
-                                <span className='text-sm font-medium text-green-800'>
-                                  {validLocale === 'ar'
-                                    ? 'نشط في العقود'
-                                    : 'Active on Contracts'}
-                                </span>
-                                <CheckCircle
-                                  className='h-4 w-4 text-green-600'
-                                  aria-hidden='true'
+            <Card
+              className='col-span-1 lg:col-span-2 border-0 shadow-lg'
+              role='region'
+              aria-label={
+                validLocale === 'ar'
+                  ? 'نظرة عامة على القوى العاملة'
+                  : 'Workforce overview'
+              }
+            >
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2'>
+                  <BarChart3
+                    className='h-5 w-5 text-blue-600'
+                    aria-hidden='true'
+                  />
+                  {validLocale === 'ar'
+                    ? 'نظرة عامة على القوى العاملة'
+                    : 'Workforce Overview'}
+                </CardTitle>
+                <CardDescription>
+                  {validLocale === 'ar'
+                    ? 'إجمالي القوى العاملة:'
+                    : 'Total workforce:'}{' '}
+                  {promoterStats?.totalWorkforce || 0}{' '}
+                  {validLocale === 'ar' ? 'مروج' : 'promoters'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <div className='space-y-4'>
+                    <div className='h-24 bg-gray-100 rounded-lg animate-pulse' />
+                    <div className='h-24 bg-gray-100 rounded-lg animate-pulse' />
+                  </div>
+                ) : (
+                  <div className='space-y-4'>
+                    {/* Active Workforce */}
+                    <div>
+                      <div className='text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide'>
+                        Active Workforce
+                      </div>
+                      <div className='grid grid-cols-2 gap-4'>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className='p-4 bg-green-50 rounded-lg border border-green-200 cursor-help'>
+                                <div className='flex items-center justify-between'>
+                                  <span className='text-sm font-medium text-green-800'>
+                                    {validLocale === 'ar'
+                                      ? 'نشط في العقود'
+                                      : 'Active on Contracts'}
+                                  </span>
+                                  <CheckCircle
+                                    className='h-4 w-4 text-green-600'
+                                    aria-hidden='true'
+                                  />
+                                </div>
+                                <div className='text-2xl font-bold text-green-900 mt-2'>
+                                  {promoterStats?.activeOnContracts || 0}
+                                </div>
+                                <Progress
+                                  value={
+                                    ((promoterStats?.activeOnContracts || 0) /
+                                      (promoterStats?.totalWorkforce || 1)) *
+                                    100
+                                  }
+                                  className='mt-2 h-2'
+                                  aria-label={`${promoterStats?.activeOnContracts || 0} out of ${promoterStats?.totalWorkforce || 0} promoters active on contracts`}
                                 />
                               </div>
-                              <div className='text-2xl font-bold text-green-900 mt-2'>
-                                {promoterStats?.activeOnContracts || 0}
-                              </div>
-                              <Progress
-                                value={
-                                  ((promoterStats?.activeOnContracts || 0) /
-                                    (promoterStats?.totalWorkforce || 1)) *
-                                  100
-                                }
-                                className='mt-2 h-2'
-                                aria-label={`${promoterStats?.activeOnContracts || 0} out of ${promoterStats?.totalWorkforce || 0} promoters active on contracts`}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {validLocale === 'ar'
-                                ? 'المروجون الذين يعملون حاليًا في عقود نشطة'
-                                : 'Promoters currently working on active contracts'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {validLocale === 'ar'
+                                  ? 'المروجون الذين يعملون حاليًا في عقود نشطة'
+                                  : 'Promoters currently working on active contracts'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
 
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className='p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-help'>
-                              <div className='flex items-center justify-between'>
-                                <span className='text-sm font-medium text-blue-800'>
-                                  {validLocale === 'ar'
-                                    ? 'متاح للعمل'
-                                    : 'Available for Work'}
-                                </span>
-                                <Users
-                                  className='h-4 w-4 text-blue-600'
-                                  aria-hidden='true'
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className='p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-help'>
+                                <div className='flex items-center justify-between'>
+                                  <span className='text-sm font-medium text-blue-800'>
+                                    {validLocale === 'ar'
+                                      ? 'متاح للعمل'
+                                      : 'Available for Work'}
+                                  </span>
+                                  <Users
+                                    className='h-4 w-4 text-blue-600'
+                                    aria-hidden='true'
+                                  />
+                                </div>
+                                <div className='text-2xl font-bold text-blue-900 mt-2'>
+                                  {promoterStats?.availableForWork || 0}
+                                </div>
+                                <Progress
+                                  value={
+                                    ((promoterStats?.availableForWork || 0) /
+                                      (promoterStats?.totalWorkforce || 1)) *
+                                    100
+                                  }
+                                  className='mt-2 h-2 [&>div]:bg-blue-500'
+                                  aria-label={`${promoterStats?.availableForWork || 0} out of ${promoterStats?.totalWorkforce || 0} promoters available for work`}
                                 />
                               </div>
-                              <div className='text-2xl font-bold text-blue-900 mt-2'>
-                                {promoterStats?.availableForWork || 0}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {validLocale === 'ar'
+                                  ? 'المروجون الجاهزون والمتاحون للتعيينات الجديدة'
+                                  : 'Promoters ready and available for new assignments'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </div>
+
+                    {/* Other Status */}
+                    <div className='pt-4 border-t'>
+                      <div className='text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide'>
+                        {validLocale === 'ar' ? 'حالات أخرى' : 'Other Status'}
+                      </div>
+                      <div className='grid grid-cols-4 gap-3'>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className='text-center cursor-help'>
+                                <div className='text-xs text-gray-600 mb-1'>
+                                  {validLocale === 'ar'
+                                    ? 'في إجازة'
+                                    : 'On Leave'}
+                                </div>
+                                <div className='text-lg font-semibold'>
+                                  {promoterStats?.onLeave || 0}
+                                </div>
                               </div>
-                              <Progress
-                                value={
-                                  ((promoterStats?.availableForWork || 0) /
-                                    (promoterStats?.totalWorkforce || 1)) *
-                                  100
-                                }
-                                className='mt-2 h-2 [&>div]:bg-blue-500'
-                                aria-label={`${promoterStats?.availableForWork || 0} out of ${promoterStats?.totalWorkforce || 0} promoters available for work`}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {validLocale === 'ar'
-                                ? 'المروجون الجاهزون والمتاحون للتعيينات الجديدة'
-                                : 'Promoters ready and available for new assignments'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {validLocale === 'ar'
+                                  ? 'المروجون في إجازة مؤقتة'
+                                  : 'Promoters temporarily on leave'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className='text-center cursor-help'>
+                                <div className='text-xs text-gray-600 mb-1'>
+                                  {validLocale === 'ar'
+                                    ? 'غير نشط'
+                                    : 'Inactive'}
+                                </div>
+                                <div className='text-lg font-semibold'>
+                                  {promoterStats?.inactive || 0}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {validLocale === 'ar'
+                                  ? 'المروجون المميزون كغير نشطين'
+                                  : 'Promoters marked as inactive'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className='text-center cursor-help'>
+                                <div className='text-xs text-gray-600 mb-1'>
+                                  {validLocale === 'ar'
+                                    ? 'منتهي'
+                                    : 'Terminated'}
+                                </div>
+                                <div className='text-lg font-semibold'>
+                                  {promoterStats?.terminated || 0}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {validLocale === 'ar'
+                                  ? 'المروجون السابقون الذين غادروا الشركة'
+                                  : 'Former promoters who left the company'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className='text-center cursor-help bg-blue-50 rounded-lg p-2'>
+                                <div className='text-xs text-blue-600 mb-1 font-medium'>
+                                  {validLocale === 'ar'
+                                    ? 'الامتثال'
+                                    : 'Compliance'}
+                                </div>
+                                <div className='text-lg font-semibold text-blue-900'>
+                                  {promoterStats?.complianceRate || 0}%
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {validLocale === 'ar'
+                                  ? 'نسبة المروجين الذين لديهم جميع المستندات صالحة'
+                                  : 'Percentage of promoters with all documents valid'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Other Status */}
-                  <div className='pt-4 border-t'>
-                    <div className='text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide'>
-                      {validLocale === 'ar' ? 'حالات أخرى' : 'Other Status'}
-                    </div>
-                    <div className='grid grid-cols-4 gap-3'>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className='text-center cursor-help'>
-                              <div className='text-xs text-gray-600 mb-1'>
-                                {validLocale === 'ar' ? 'في إجازة' : 'On Leave'}
-                              </div>
-                              <div className='text-lg font-semibold'>
-                                {promoterStats?.onLeave || 0}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {validLocale === 'ar'
-                                ? 'المروجون في إجازة مؤقتة'
-                                : 'Promoters temporarily on leave'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className='text-center cursor-help'>
-                              <div className='text-xs text-gray-600 mb-1'>
-                                {validLocale === 'ar' ? 'غير نشط' : 'Inactive'}
-                              </div>
-                              <div className='text-lg font-semibold'>
-                                {promoterStats?.inactive || 0}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {validLocale === 'ar'
-                                ? 'المروجون المميزون كغير نشطين'
-                                : 'Promoters marked as inactive'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className='text-center cursor-help'>
-                              <div className='text-xs text-gray-600 mb-1'>
-                                {validLocale === 'ar' ? 'منتهي' : 'Terminated'}
-                              </div>
-                              <div className='text-lg font-semibold'>
-                                {promoterStats?.terminated || 0}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {validLocale === 'ar'
-                                ? 'المروجون السابقون الذين غادروا الشركة'
-                                : 'Former promoters who left the company'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className='text-center cursor-help bg-blue-50 rounded-lg p-2'>
-                              <div className='text-xs text-blue-600 mb-1 font-medium'>
-                                {validLocale === 'ar' ? 'الامتثال' : 'Compliance'}
-                              </div>
-                              <div className='text-lg font-semibold text-blue-900'>
-                                {promoterStats?.complianceRate || 0}%
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {validLocale === 'ar'
-                                ? 'نسبة المروجين الذين لديهم جميع المستندات صالحة'
-                                : 'Percentage of promoters with all documents valid'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
           )}
         </div>
 
@@ -1156,7 +1152,9 @@ function DashboardContent() {
                       variant='outline'
                       asChild
                     >
-                      <Link href={`/${locale}/manage-promoters/${user?.id || authUser?.id}`}>
+                      <Link
+                        href={`/${locale}/manage-promoters/${user?.id || authUser?.id}`}
+                      >
                         <User className='h-4 w-4' />
                         {validLocale === 'ar' ? 'ملفي الشخصي' : 'My Profile'}
                       </Link>
@@ -1202,7 +1200,9 @@ function DashboardContent() {
             <Card
               className='border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50'
               role='region'
-              aria-label={validLocale === 'ar' ? 'حالة النظام' : 'System status'}
+              aria-label={
+                validLocale === 'ar' ? 'حالة النظام' : 'System status'
+              }
             >
               <CardHeader>
                 <CardTitle className='flex items-center gap-2 text-base'>
@@ -1234,7 +1234,12 @@ function DashboardContent() {
                   <span className='text-gray-700'>
                     {validLocale === 'ar' ? 'آخر نسخة احتياطية' : 'Last Backup'}
                   </span>
-                  <time className='text-xs text-gray-600' dateTime={new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()}>
+                  <time
+                    className='text-xs text-gray-600'
+                    dateTime={new Date(
+                      Date.now() - 2 * 60 * 60 * 1000
+                    ).toISOString()}
+                  >
                     {formatDistanceToNow(
                       new Date(Date.now() - 2 * 60 * 60 * 1000),
                       { addSuffix: true }
@@ -1253,7 +1258,7 @@ function DashboardContent() {
 export default function DashboardPage() {
   return (
     <AuthGuard requireAuth={true}>
-      <ErrorBoundary section="Dashboard">
+      <ErrorBoundary section='Dashboard'>
         <DashboardContent />
       </ErrorBoundary>
     </AuthGuard>

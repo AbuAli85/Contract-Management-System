@@ -30,8 +30,6 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  ChevronLeft,
-  ChevronRight,
   Search,
   Download,
   Link as LinkIcon,

@@ -271,7 +271,7 @@ export class MFAService {
       const { error: signInError } =
         await this.supabase.auth.signInWithPassword({
           email: user.email!,
-          password: password,
+          password,
         });
 
       if (signInError) {

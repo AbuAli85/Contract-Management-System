@@ -240,7 +240,7 @@ export async function PATCH(request: Request) {
     try {
       await supabase.from('webhook_logs').insert({
         event_type: 'contract_pdf_ready',
-        payload: payload,
+        payload,
         contract_id: payload.contract_id,
         status: payload.status,
         make_request_id: requestId,

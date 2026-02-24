@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  useEnhancedRBAC,
-  RoleRedirect,
-} from '@/components/auth/enhanced-rbac-provider';
+import { RoleRedirect } from '@/components/auth/enhanced-rbac-provider';
 import { ProviderDashboard } from '@/components/dashboards/provider-dashboard';
 import { ProviderFeaturesShowcase } from '@/components/provider-features-showcase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

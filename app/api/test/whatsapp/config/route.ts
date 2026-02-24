@@ -8,14 +8,14 @@ export async function GET() {
   const config = {
     accountSid: process.env.TWILIO_ACCOUNT_SID ? '✅ Set' : '❌ Missing',
     authToken: process.env.TWILIO_AUTH_TOKEN ? '✅ Set' : '❌ Missing',
-    whatsappFrom: process.env.TWILIO_WHATSAPP_FROM 
-      ? `✅ Set: ${process.env.TWILIO_WHATSAPP_FROM}` 
+    whatsappFrom: process.env.TWILIO_WHATSAPP_FROM
+      ? `✅ Set: ${process.env.TWILIO_WHATSAPP_FROM}`
       : '❌ Missing',
-    templateSid: process.env.TWILIO_WHATSAPP_TEMPLATE_SID 
-      ? `✅ Set (Optional)` 
+    templateSid: process.env.TWILIO_WHATSAPP_TEMPLATE_SID
+      ? `✅ Set (Optional)`
       : '⚠️ Not Set (Optional)',
-    businessName: process.env.WHATSAPP_BUSINESS_NAME 
-      ? `✅ Set: ${process.env.WHATSAPP_BUSINESS_NAME}` 
+    businessName: process.env.WHATSAPP_BUSINESS_NAME
+      ? `✅ Set: ${process.env.WHATSAPP_BUSINESS_NAME}`
       : '⚠️ Not Set (Default: SmartPRO)',
   };
 
@@ -27,9 +27,10 @@ export async function GET() {
 
   // Validate format
   const formatValid = process.env.TWILIO_WHATSAPP_FROM?.startsWith('whatsapp:');
-  const formatError = process.env.TWILIO_WHATSAPP_FROM && !formatValid
-    ? '⚠️ Format should be: whatsapp:+14155238886'
-    : null;
+  const formatError =
+    process.env.TWILIO_WHATSAPP_FROM && !formatValid
+      ? '⚠️ Format should be: whatsapp:+14155238886'
+      : null;
 
   return NextResponse.json({
     configured: isConfigured && formatValid,
@@ -42,4 +43,3 @@ export async function GET() {
         : 'WhatsApp is configured. Use POST /api/test/whatsapp to send a test message.',
   });
 }
-

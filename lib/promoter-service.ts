@@ -269,8 +269,12 @@ export async function updatePromoter(
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(errorData.error || errorData.message || 'Failed to update promoter');
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: 'Unknown error' }));
+      throw new Error(
+        errorData.error || errorData.message || 'Failed to update promoter'
+      );
     }
 
     const responseData = await response.json();

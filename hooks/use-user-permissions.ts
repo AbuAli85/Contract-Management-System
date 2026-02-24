@@ -42,7 +42,9 @@ export function useUserPermissions() {
         }
       } catch (err) {
         console.error('Error fetching user permissions:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch permissions');
+        setError(
+          err instanceof Error ? err.message : 'Failed to fetch permissions'
+        );
         setPermissions([]);
       } finally {
         setLoading(false);
@@ -54,9 +56,7 @@ export function useUserPermissions() {
 
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
-    return permissions.some(
-      p => p.permission === permission && p.granted
-    );
+    return permissions.some(p => p.permission === permission && p.granted);
   };
 
   const hasAnyPermission = (permissionList: string[]): boolean => {
@@ -97,4 +97,3 @@ export function useUserPermissions() {
     refreshPermissions,
   };
 }
-

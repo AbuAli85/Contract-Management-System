@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -48,7 +48,9 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     // Get today's attendance record
-    const { data: existing } = await (supabaseAdmin.from('employee_attendance') as any)
+    const { data: existing } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
       .select('*')
       .eq('employer_employee_id', employeeLink.id)
       .eq('attendance_date', today)
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
     // Get or create break sessions table
     // For now, we'll store break data in the attendance record
     // In a professional system, you'd have a separate break_sessions table
-    
+
     if (action === 'start') {
       // Check if already on break
       if (existing.break_start_time) {
@@ -82,7 +84,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Start break
-      const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
+      const { data: updated, error: updateError } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
         .update({
           break_start_time: now,
           updated_at: now,
@@ -109,12 +113,16 @@ export async function POST(request: NextRequest) {
 
       const breakStart = new Date(existing.break_start_time);
       const breakEnd = new Date(now);
-      const breakDurationMinutes = Math.round((breakEnd.getTime() - breakStart.getTime()) / 1000 / 60);
-      
+      const breakDurationMinutes = Math.round(
+        (breakEnd.getTime() - breakStart.getTime()) / 1000 / 60
+      );
+
       const currentBreakMinutes = existing.break_duration_minutes || 0;
       const totalBreakMinutes = currentBreakMinutes + breakDurationMinutes;
 
-      const { data: updated, error: updateError } = await (supabaseAdmin.from('employee_attendance') as any)
+      const { data: updated, error: updateError } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
         .update({
           break_duration_minutes: totalBreakMinutes,
           break_start_time: null,
@@ -142,4 +150,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

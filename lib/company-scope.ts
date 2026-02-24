@@ -20,7 +20,9 @@ export async function getCompanyScope(): Promise<CompanyScope | null> {
   const supabase = await createClient();
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return null;
     }
@@ -70,15 +72,15 @@ export async function getCompanyScope(): Promise<CompanyScope | null> {
  */
 export async function requireCompanyScope(): Promise<CompanyScope> {
   const scope = await getCompanyScope();
-  
+
   if (!scope) {
     throw new Error('Unauthorized');
   }
-  
+
   if (!scope.companyId) {
     throw new Error('No active company selected');
   }
-  
+
   return scope;
 }
 
@@ -104,16 +106,12 @@ export function addCompanyFilter<T>(
   ];
 
   // Tables that use party_id (from parties table)
-  const partyIdTables = [
-    'promoters',
-    'contracts',
-    'parties',
-  ];
+  const partyIdTables = ['promoters', 'contracts', 'parties'];
 
   // Tables that might have both
   const hybridTables: Record<string, 'company' | 'party' | 'both'> = {
-    'employer_employees': 'both', // Can filter by company_id or employer_id (which maps to party)
-    'contracts': 'party', // Uses second_party_id which is a party
+    employer_employees: 'both', // Can filter by company_id or employer_id (which maps to party)
+    contracts: 'party', // Uses second_party_id which is a party
   };
 
   if (companyIdTables.includes(tableName)) {
@@ -170,4 +168,3 @@ export async function getScopedQuery<T>(
 
   return { query, scope };
 }
-

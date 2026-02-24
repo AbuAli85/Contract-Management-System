@@ -1,17 +1,39 @@
 /**
  * Workflow Automation Engine Service
- * 
+ *
  * Executes automated workflows based on triggers and conditions
  * Supports event-driven, scheduled, and manual workflows
  */
 
 import { createAdminClient } from '@/lib/supabase/server';
-import { notificationService, NotificationRecipient, NotificationContent } from './unified-notification.service';
+import {
+  notificationService,
+  NotificationRecipient,
+  NotificationContent,
+} from './unified-notification.service';
 
 export type WorkflowTrigger = 'event' | 'schedule' | 'manual' | 'condition';
-export type WorkflowStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused';
-export type StepType = 'notification' | 'data_update' | 'approval' | 'condition' | 'delay' | 'webhook' | 'script';
-export type StepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+export type WorkflowStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'paused';
+export type StepType =
+  | 'notification'
+  | 'data_update'
+  | 'approval'
+  | 'condition'
+  | 'delay'
+  | 'webhook'
+  | 'script';
+export type StepStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'skipped';
 
 export interface WorkflowStep {
   id: string;
@@ -124,39 +146,52 @@ export class WorkflowEngineService {
       }
 
       // Execute steps sequentially
-      let executionData = { ...triggerData };
+      const _executionData = { ...triggerData };
       let currentStepIndex = 0;
 
       while (currentStepIndex < steps.length) {
         const step = steps[currentStepIndex];
-        const stepResult = await this.executeStep(step, execution.id, executionData);
+        const stepResult = await this.executeStep(
+          step,
+          execution.id,
+          executionData
+        );
 
         // Record step execution
-        await this.supabase
-          .from('workflow_step_executions')
-          .insert({
-            execution_id: execution.id,
-            step_id: step.id,
-            step_order: step.step_order,
-            status: stepResult.success ? 'completed' : 'failed',
-            started_at: new Date().toISOString(),
-            completed_at: new Date().toISOString(),
-            result_data: stepResult.data || {},
-            error_message: stepResult.error,
-          });
+        await this.supabase.from('workflow_step_executions').insert({
+          execution_id: execution.id,
+          step_id: step.id,
+          step_order: step.step_order,
+          status: stepResult.success ? 'completed' : 'failed',
+          started_at: new Date().toISOString(),
+          completed_at: new Date().toISOString(),
+          result_data: stepResult.data || {},
+          error_message: stepResult.error,
+        });
 
         if (!stepResult.success) {
           // Handle failure
           if (step.on_failure_action === 'stop') {
-            await this.updateExecutionStatus(execution.id, 'failed', stepResult.error);
+            await this.updateExecutionStatus(
+              execution.id,
+              'failed',
+              stepResult.error
+            );
             return {
               success: false,
               executionId: execution.id,
               error: stepResult.error,
             };
-          } else if (step.on_failure_action === 'retry' && step.retry_count > 0) {
+          } else if (
+            step.on_failure_action === 'retry' &&
+            step.retry_count > 0
+          ) {
             // Retry logic would go here
-            await this.updateExecutionStatus(execution.id, 'failed', stepResult.error);
+            await this.updateExecutionStatus(
+              execution.id,
+              'failed',
+              stepResult.error
+            );
             return {
               success: false,
               executionId: execution.id,
@@ -173,7 +208,9 @@ export class WorkflowEngineService {
 
         // Determine next step
         if (stepResult.nextStep) {
-          const nextStepIndex = steps.findIndex(s => s.id === stepResult.nextStep);
+          const nextStepIndex = steps.findIndex(
+            s => s.id === stepResult.nextStep
+          );
           if (nextStepIndex !== -1) {
             currentStepIndex = nextStepIndex;
             continue;
@@ -205,13 +242,16 @@ export class WorkflowEngineService {
    */
   private async executeStep(
     step: WorkflowStep,
-    executionId: string,
-    executionData: Record<string, any>
+    _executionId: string,
+    _executionData: Record<string, any>
   ): Promise<StepExecutionResult> {
     try {
       // Check conditions
       if (step.conditions && step.conditions.length > 0) {
-        const conditionsMet = await this.evaluateConditions(step.conditions, executionData);
+        const conditionsMet = await this.evaluateConditions(
+          step.conditions,
+          executionData
+        );
         if (!conditionsMet) {
           return {
             success: true,
@@ -225,19 +265,19 @@ export class WorkflowEngineService {
       switch (step.step_type) {
         case 'notification':
           return await this.executeNotificationStep(step, executionData);
-        
+
         case 'data_update':
           return await this.executeDataUpdateStep(step, executionData);
-        
+
         case 'condition':
           return await this.executeConditionStep(step, executionData);
-        
+
         case 'delay':
           return await this.executeDelayStep(step);
-        
+
         case 'webhook':
           return await this.executeWebhookStep(step, executionData);
-        
+
         default:
           return {
             success: false,
@@ -257,7 +297,7 @@ export class WorkflowEngineService {
    */
   private async executeNotificationStep(
     step: WorkflowStep,
-    executionData: Record<string, any>
+    _executionData: Record<string, any>
   ): Promise<StepExecutionResult> {
     const config = step.step_config;
     const recipients: NotificationRecipient[] = [];
@@ -320,7 +360,8 @@ export class WorkflowEngineService {
     return {
       success: result.success,
       data: {
-        notificationsSent: result.sent.email + result.sent.sms + result.sent.inApp,
+        notificationsSent:
+          result.sent.email + result.sent.sms + result.sent.inApp,
       },
       error: result.errors.length > 0 ? result.errors.join(', ') : undefined,
     };
@@ -331,7 +372,7 @@ export class WorkflowEngineService {
    */
   private async executeDataUpdateStep(
     step: WorkflowStep,
-    executionData: Record<string, any>
+    _executionData: Record<string, any>
   ): Promise<StepExecutionResult> {
     const config = step.step_config;
     const action = config.action;
@@ -343,16 +384,14 @@ export class WorkflowEngineService {
           if (executionData.employeeId && executionData.employerId) {
             const tasks = config.tasks || [];
             for (const task of tasks) {
-              await this.supabase
-                .from('employee_tasks')
-                .insert({
-                  employer_employee_id: executionData.employerEmployeeId,
-                  title: task.title,
-                  description: task.description,
-                  priority: task.priority || 'medium',
-                  status: 'pending',
-                  task_type: 'training',
-                });
+              await this.supabase.from('employee_tasks').insert({
+                employer_employee_id: executionData.employerEmployeeId,
+                title: task.title,
+                description: task.description,
+                priority: task.priority || 'medium',
+                status: 'pending',
+                task_type: 'training',
+              });
             }
           }
           return { success: true, data: { tasksCreated: tasks.length } };
@@ -386,7 +425,7 @@ export class WorkflowEngineService {
    */
   private async executeConditionStep(
     step: WorkflowStep,
-    executionData: Record<string, any>
+    _executionData: Record<string, any>
   ): Promise<StepExecutionResult> {
     const config = step.step_config;
     const condition = config.condition;
@@ -394,7 +433,7 @@ export class WorkflowEngineService {
     try {
       switch (condition) {
         case 'check_expiring_documents':
-          const daysBefore = config.days_before || [30, 14, 7];
+          const _daysBefore = config.days_before || [30, 14, 7];
           // This would call the document expiry automation service
           return { success: true, data: { documentsChecked: true } };
 
@@ -428,7 +467,9 @@ export class WorkflowEngineService {
   /**
    * Execute delay step
    */
-  private async executeDelayStep(step: WorkflowStep): Promise<StepExecutionResult> {
+  private async executeDelayStep(
+    step: WorkflowStep
+  ): Promise<StepExecutionResult> {
     const delaySeconds = step.step_config.delay_seconds || 0;
     await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
     return { success: true };
@@ -439,7 +480,7 @@ export class WorkflowEngineService {
    */
   private async executeWebhookStep(
     step: WorkflowStep,
-    executionData: Record<string, any>
+    _executionData: Record<string, any>
   ): Promise<StepExecutionResult> {
     const config = step.step_config;
     const url = config.url;
@@ -479,7 +520,7 @@ export class WorkflowEngineService {
    */
   private async evaluateConditions(
     conditions: any[],
-    executionData: Record<string, any>
+    _executionData: Record<string, any>
   ): Promise<boolean> {
     // Simple condition evaluation
     // Can be enhanced with complex logic
@@ -518,7 +559,7 @@ export class WorkflowEngineService {
    * Update execution status
    */
   private async updateExecutionStatus(
-    executionId: string,
+    _executionId: string,
     status: WorkflowStatus,
     errorMessage?: string
   ): Promise<void> {
@@ -566,4 +607,3 @@ export class WorkflowEngineService {
 
 // Export singleton instance
 export const workflowEngine = new WorkflowEngineService();
-

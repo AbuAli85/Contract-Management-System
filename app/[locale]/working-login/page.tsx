@@ -22,7 +22,7 @@ export default function WorkingLoginPage() {
     'checking' | 'connected' | 'error'
   >('checking');
 
-  const router = useRouter();
+  const _router = useRouter();
   const supabase = createClient();
 
   // Test Supabase connection on component mount
@@ -35,7 +35,7 @@ export default function WorkingLoginPage() {
       }
       try {
         console.log('🔗 Testing Supabase connection...');
-        const { data, error } = await supabase
+        const { _data, error } = await supabase
           .from('users')
           .select('count')
           .limit(1);

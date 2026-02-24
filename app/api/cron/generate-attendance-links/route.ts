@@ -6,9 +6,9 @@ export const runtime = 'nodejs';
 
 /**
  * Cron job endpoint to generate daily attendance links
- * 
+ *
  * This should be called daily (e.g., via Vercel Cron, GitHub Actions, or external cron service)
- * 
+ *
  * Usage:
  * - Vercel Cron: Add to vercel.json
  * - External: Call this endpoint daily at a set time
@@ -18,17 +18,14 @@ export async function GET(request: NextRequest) {
   // Verify cron secret (optional but recommended)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
-  
+
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     // Get all active schedules
     const { data: schedules, error: schedulesError } = await (supabaseAdmin
       .from('attendance_link_schedules')
@@ -56,11 +53,13 @@ export async function GET(request: NextRequest) {
     let totalErrors = 0;
 
     // Process each schedule
-    for (const schedule of (schedules as any[])) {
+    for (const schedule of schedules as any[]) {
       try {
         const scheduleId: string = String((schedule as any)?.id || '');
-        const scheduleName: string = String((schedule as any)?.name || 'Unknown');
-        
+        const scheduleName: string = String(
+          (schedule as any)?.name || 'Unknown'
+        );
+
         if (!scheduleId || scheduleId === '') {
           results.push({
             schedule_id: 'unknown',
@@ -73,7 +72,7 @@ export async function GET(request: NextRequest) {
 
         // Check if schedule should run today
         const dayOfWeek = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
-        const shouldRun = 
+        const shouldRun =
           (dayOfWeek === 0 && (schedule as any).sunday) ||
           (dayOfWeek === 1 && (schedule as any).monday) ||
           (dayOfWeek === 2 && (schedule as any).tuesday) ||
@@ -127,7 +126,10 @@ export async function GET(request: NextRequest) {
         );
 
         if (generateError) {
-          console.error(`Error generating links for schedule ${scheduleId}:`, generateError);
+          console.error(
+            `Error generating links for schedule ${scheduleId}:`,
+            generateError
+          );
           results.push({
             schedule_id: scheduleId,
             schedule_name: scheduleName,
@@ -138,14 +140,21 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        const linksGenerated = (generatedLinks && Array.isArray(generatedLinks) && generatedLinks.length > 0) 
-          ? ((generatedLinks[0] as any)?.check_in_link_id ? 1 : 0) + ((generatedLinks[0] as any)?.check_out_link_id ? 1 : 0)
-          : 0;
+        const linksGenerated =
+          generatedLinks &&
+          Array.isArray(generatedLinks) &&
+          generatedLinks.length > 0
+            ? ((generatedLinks[0] as any)?.check_in_link_id ? 1 : 0) +
+              ((generatedLinks[0] as any)?.check_out_link_id ? 1 : 0)
+            : 0;
 
         totalGenerated += linksGenerated;
 
         // Send notifications if configured
-        if ((schedule as any)?.send_check_in_link || (schedule as any)?.send_check_out_link) {
+        if (
+          (schedule as any)?.send_check_in_link ||
+          (schedule as any)?.send_check_out_link
+        ) {
           await sendScheduleNotifications(scheduleId, supabaseAdmin);
         }
 
@@ -180,7 +189,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error in cron job:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
         details: error.message,
       },
@@ -192,7 +201,10 @@ export async function GET(request: NextRequest) {
 /**
  * Send notifications for a schedule
  */
-async function sendScheduleNotifications(scheduleId: string, supabaseAdmin: any) {
+async function sendScheduleNotifications(
+  scheduleId: string,
+  supabaseAdmin: any
+) {
   try {
     // Get schedule details
     const { data: schedule } = await (supabaseAdmin
@@ -225,31 +237,38 @@ async function sendScheduleNotifications(scheduleId: string, supabaseAdmin: any)
     // Get today's generated links
     const { data: todayLinks } = await (supabaseAdmin
       .from('scheduled_attendance_links')
-      .select(`
+      .select(
+        `
         *,
         attendance_link:attendance_link_id (
           link_code,
           url
         )
-      `)
+      `
+      )
       .eq('schedule_id', scheduleId)
       .eq('scheduled_date', new Date().toISOString().split('T')[0]) as any);
 
     if (!todayLinks || todayLinks.length === 0) return;
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io';
     let notificationsSent = 0;
 
     // Send notifications to each employee
     for (const employee of employees) {
-      const checkInLink = todayLinks.find((l: any) => l.link_type === 'check_in');
-      const checkOutLink = todayLinks.find((l: any) => l.link_type === 'check_out');
+      const checkInLink = todayLinks.find(
+        (l: any) => l.link_type === 'check_in'
+      );
+      const checkOutLink = todayLinks.find(
+        (l: any) => l.link_type === 'check_out'
+      );
 
       if (checkInLink && schedule.send_check_in_link) {
         // Default to 'en' locale for generated links (can be customized per employee)
         const locale = 'en';
         const linkUrl = `${baseUrl}/${locale}/attendance/check-in/${checkInLink.attendance_link.link_code}`;
-        
+
         // Send email if configured
         if (schedule.notification_method?.includes('email') && employee.email) {
           await sendEmailNotification(
@@ -266,7 +285,9 @@ async function sendScheduleNotifications(scheduleId: string, supabaseAdmin: any)
         // Send SMS if configured (implement SMS service integration)
         if (schedule.notification_method?.includes('sms') && employee.phone) {
           // TODO: Implement SMS sending
-          console.log(`Would send SMS to ${employee.phone} with link: ${linkUrl}`);
+          console.log(
+            `Would send SMS to ${employee.phone} with link: ${linkUrl}`
+          );
         }
       }
 
@@ -274,7 +295,7 @@ async function sendScheduleNotifications(scheduleId: string, supabaseAdmin: any)
         // Default to 'en' locale for generated links (can be customized per employee)
         const locale = 'en';
         const linkUrl = `${baseUrl}/${locale}/attendance/check-in/${checkOutLink.attendance_link.link_code}`;
-        
+
         if (schedule.notification_method?.includes('email') && employee.email) {
           await sendEmailNotification(
             employee.email,
@@ -294,7 +315,8 @@ async function sendScheduleNotifications(scheduleId: string, supabaseAdmin: any)
       .from('attendance_link_schedules')
       .update({
         last_sent_at: new Date().toISOString(),
-        total_notifications_sent: (schedule.total_notifications_sent || 0) + notificationsSent,
+        total_notifications_sent:
+          (schedule.total_notifications_sent || 0) + notificationsSent,
       })
       .eq('id', scheduleId);
 
@@ -343,4 +365,3 @@ async function sendEmailNotification(
   //   }),
   // });
 }
-

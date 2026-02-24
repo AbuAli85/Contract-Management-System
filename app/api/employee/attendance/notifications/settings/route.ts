@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // In a production system, you'd save to a user_settings table
     // For now, just return success
-    
+
     return NextResponse.json({
       success: true,
       message: 'Settings updated successfully',
@@ -70,4 +70,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

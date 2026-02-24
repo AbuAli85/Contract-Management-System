@@ -14,19 +14,17 @@ export async function POST(request: NextRequest) {
     // For now, we'll use a simple secret key check
     const authHeader = request.headers.get('authorization');
     const expectedSecret = process.env.EMAIL_QUEUE_SECRET || 'your-secret-key';
-    
+
     if (authHeader !== `Bearer ${expectedSecret}`) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     // Fetch pending emails that are scheduled for now or in the past
-    const { data: pendingEmails, error: fetchError } = await (supabaseAdmin
-      .from('email_queue') as any)
+    const { data: pendingEmails, error: fetchError } = await (
+      supabaseAdmin.from('email_queue') as any
+    )
       .select('*')
       .eq('status', 'pending')
       .lte('scheduled_for', new Date().toISOString())
@@ -37,7 +35,10 @@ export async function POST(request: NextRequest) {
     if (fetchError) {
       console.error('Error fetching pending emails:', fetchError);
       return NextResponse.json(
-        { error: 'Failed to fetch pending emails', details: fetchError.message },
+        {
+          error: 'Failed to fetch pending emails',
+          details: fetchError.message,
+        },
         { status: 500 }
       );
     }
@@ -61,8 +62,11 @@ export async function POST(request: NextRequest) {
     for (const emailItem of pendingEmails) {
       try {
         // Generate email content based on template
-        const emailContent = generateEmailContent(emailItem.template, emailItem.data);
-        
+        const emailContent = generateEmailContent(
+          emailItem.template,
+          emailItem.data
+        );
+
         if (!emailContent) {
           throw new Error(`Unknown template: ${emailItem.template}`);
         }
@@ -86,15 +90,18 @@ export async function POST(request: NextRequest) {
             .eq('id', emailItem.id);
 
           results.sent++;
-          console.log(`✅ Email sent successfully: ${emailItem.email} (${emailItem.template})`);
+          console.log(
+            `✅ Email sent successfully: ${emailItem.email} (${emailItem.template})`
+          );
         } else {
           throw new Error(emailResult.error || 'Failed to send email');
         }
       } catch (error: any) {
         // Update retry count and status
         const newRetryCount = (emailItem.retry_count || 0) + 1;
-        const newStatus = newRetryCount >= (emailItem.max_retries || 3) ? 'failed' : 'pending';
-        
+        const newStatus =
+          newRetryCount >= (emailItem.max_retries || 3) ? 'failed' : 'pending';
+
         await (supabaseAdmin.from('email_queue') as any)
           .update({
             status: newStatus,
@@ -108,9 +115,9 @@ export async function POST(request: NextRequest) {
         results.errors.push(`${emailItem.email}: ${error.message}`);
         console.error(`❌ Failed to send email: ${emailItem.email}`, error);
       }
-      
+
       results.processed++;
-      
+
       // Small delay to avoid rate limits
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -134,9 +141,13 @@ export async function POST(request: NextRequest) {
 /**
  * Generate email content based on template and data
  */
-function generateEmailContent(template: string, data: any): { subject: string; html: string; text: string } | null {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io';
-  
+function generateEmailContent(
+  template: string,
+  data: any
+): { subject: string; html: string; text: string } | null {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io';
+
   switch (template) {
     case 'company_invitation':
     case 'company_invitation_new_user': {
@@ -145,8 +156,9 @@ function generateEmailContent(template: string, data: any): { subject: string; h
       const role = data?.role || 'member';
       const inviterName = data?.inviter_name || 'Admin';
       const message = data?.message || '';
-      const invitationUrl = data?.invitation_url || `${baseUrl}/en/settings/company`;
-      
+      const invitationUrl =
+        data?.invitation_url || `${baseUrl}/en/settings/company`;
+
       const subject = isNewUser
         ? `You've been invited to join ${companyName} on SmartPro`
         : `You've been added to ${companyName} on SmartPro`;
@@ -165,25 +177,33 @@ function generateEmailContent(template: string, data: any): { subject: string; h
               <p>Hello,</p>
               <p>${inviterName} has ${isNewUser ? 'invited you to join' : 'added you to'} <strong>${companyName}</strong> as a <strong>${role}</strong>.</p>
               ${message ? `<p style="background-color: #e9ecef; padding: 15px; border-radius: 5px; border-left: 4px solid #2563eb; margin: 20px 0;">${message}</p>` : ''}
-              ${isNewUser ? `
+              ${
+                isNewUser
+                  ? `
                 <p>To accept this invitation, please sign up for an account using this email address:</p>
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${baseUrl}/en/auth/signup" style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Sign Up Now</a>
                 </div>
                 <p>Once you've signed up, you'll automatically have access to ${companyName}.</p>
-              ` : `
+              `
+                  : `
                 <p>You can now access the company dashboard and start collaborating with your team.</p>
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${invitationUrl}" style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">View Company</a>
                 </div>
-              `}
-              ${data?.department || data?.job_title ? `
+              `
+              }
+              ${
+                data?.department || data?.job_title
+                  ? `
                 <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 20px 0;">
                   <h3 style="margin-top: 0; color: #2563eb;">Your Details:</h3>
                   ${data?.department ? `<p><strong>Department:</strong> ${data.department}</p>` : ''}
                   ${data?.job_title ? `<p><strong>Job Title:</strong> ${data.job_title}</p>` : ''}
                 </div>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
             <div style="color: #6c757d; font-size: 12px; text-align: center;">
               <p>This is an automated email from SmartPro Contract Management System.</p>
@@ -202,21 +222,29 @@ ${inviterName} has ${isNewUser ? 'invited you to join' : 'added you to'} ${compa
 
 ${message ? `\nMessage from ${inviterName}:\n${message}\n` : ''}
 
-${isNewUser ? `
+${
+  isNewUser
+    ? `
 To accept this invitation, please sign up for an account using this email address:
 ${baseUrl}/en/auth/signup
 
 Once you've signed up, you'll automatically have access to ${companyName}.
-` : `
+`
+    : `
 You can now access the company dashboard and start collaborating with your team.
 View company: ${invitationUrl}
-`}
+`
+}
 
-${data?.department || data?.job_title ? `
+${
+  data?.department || data?.job_title
+    ? `
 Your Details:
 ${data?.department ? `Department: ${data.department}` : ''}
 ${data?.job_title ? `Job Title: ${data.job_title}` : ''}
-` : ''}
+`
+    : ''
+}
 
 ---
 This is an automated email from SmartPro Contract Management System.
@@ -230,4 +258,3 @@ If you have any questions, please contact ${inviterName} or your company adminis
       return null;
   }
 }
-

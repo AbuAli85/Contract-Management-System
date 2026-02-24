@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +33,9 @@ interface AdminDashboardUnifiedProps {
   className?: string;
 }
 
-export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps) {
+export function AdminDashboardUnified({
+  className,
+}: AdminDashboardUnifiedProps) {
   const { user } = useAuth();
   const { isAdmin, isManager } = usePermissions();
   const [activeTab, setActiveTab] = useState('overview');
@@ -39,12 +47,15 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
         <CardHeader>
           <div className='flex items-center gap-3'>
             <AlertTriangle className='h-6 w-6 text-red-600' />
-            <CardTitle className='text-red-800 dark:text-red-200'>Access Denied</CardTitle>
+            <CardTitle className='text-red-800 dark:text-red-200'>
+              Access Denied
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <p className='text-red-700 dark:text-red-300'>
-            You do not have permission to access the admin dashboard. Only administrators can view this page.
+            You do not have permission to access the admin dashboard. Only
+            administrators can view this page.
           </p>
         </CardContent>
       </Card>
@@ -64,11 +75,15 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                   Admin Control Center
                 </CardTitle>
                 <CardDescription className='mt-2 text-base'>
-                  Manage users, roles, and permissions for the Promoter Intelligence Hub
+                  Manage users, roles, and permissions for the Promoter
+                  Intelligence Hub
                 </CardDescription>
               </div>
               <div className='flex items-center gap-2'>
-                <Badge variant='outline' className='bg-purple-100 text-purple-700 border-purple-300'>
+                <Badge
+                  variant='outline'
+                  className='bg-purple-100 text-purple-700 border-purple-300'
+                >
                   <Shield className='h-3 w-3 mr-1' />
                   Admin Access
                 </Badge>
@@ -83,7 +98,9 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
             <CardContent className='p-4'>
               <div className='flex items-center justify-between'>
                 <div>
-                  <p className='text-sm text-blue-600 font-medium'>Total Users</p>
+                  <p className='text-sm text-blue-600 font-medium'>
+                    Total Users
+                  </p>
                   <p className='text-2xl font-bold text-blue-700 mt-1'>—</p>
                 </div>
                 <Users className='h-8 w-8 text-blue-500' />
@@ -94,7 +111,9 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
             <CardContent className='p-4'>
               <div className='flex items-center justify-between'>
                 <div>
-                  <p className='text-sm text-green-600 font-medium'>Active Users</p>
+                  <p className='text-sm text-green-600 font-medium'>
+                    Active Users
+                  </p>
                   <p className='text-2xl font-bold text-green-700 mt-1'>—</p>
                 </div>
                 <CheckCircle className='h-8 w-8 text-green-500' />
@@ -126,7 +145,11 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
         </div>
 
         {/* Main Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className='space-y-6'
+        >
           <TabsList className='grid w-full grid-cols-3'>
             <TabsTrigger value='overview' className='flex items-center gap-2'>
               <BarChart3 className='h-4 w-4' />
@@ -136,7 +159,10 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
               <UserCheck className='h-4 w-4' />
               Role Management
             </TabsTrigger>
-            <TabsTrigger value='permissions' className='flex items-center gap-2'>
+            <TabsTrigger
+              value='permissions'
+              className='flex items-center gap-2'
+            >
               <Key className='h-4 w-4' />
               Permissions
             </TabsTrigger>
@@ -153,25 +179,41 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-3'>
-                  <Button asChild className='w-full justify-start' variant='outline'>
+                  <Button
+                    asChild
+                    className='w-full justify-start'
+                    variant='outline'
+                  >
                     <Link href='/admin/permissions'>
                       <UserCheck className='h-4 w-4 mr-2' />
                       Manage User Roles
                     </Link>
                   </Button>
-                  <Button asChild className='w-full justify-start' variant='outline'>
+                  <Button
+                    asChild
+                    className='w-full justify-start'
+                    variant='outline'
+                  >
                     <Link href='/admin/permissions'>
                       <Key className='h-4 w-4 mr-2' />
                       Manage Permissions
                     </Link>
                   </Button>
-                  <Button asChild className='w-full justify-start' variant='outline'>
+                  <Button
+                    asChild
+                    className='w-full justify-start'
+                    variant='outline'
+                  >
                     <Link href='/admin/users'>
                       <Settings className='h-4 w-4 mr-2' />
                       User Management
                     </Link>
                   </Button>
-                  <Button asChild className='w-full justify-start' variant='outline'>
+                  <Button
+                    asChild
+                    className='w-full justify-start'
+                    variant='outline'
+                  >
                     <Link href='/promoters'>
                       <Building2 className='h-4 w-4 mr-2' />
                       Promoter Intelligence Hub
@@ -192,7 +234,10 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                     <span className='text-sm font-medium text-green-800 dark:text-green-200'>
                       Role-Based Access
                     </span>
-                    <Badge variant='outline' className='bg-green-100 text-green-700 border-green-300'>
+                    <Badge
+                      variant='outline'
+                      className='bg-green-100 text-green-700 border-green-300'
+                    >
                       Active
                     </Badge>
                   </div>
@@ -200,7 +245,10 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                     <span className='text-sm font-medium text-green-800 dark:text-green-200'>
                       Permission System
                     </span>
-                    <Badge variant='outline' className='bg-green-100 text-green-700 border-green-300'>
+                    <Badge
+                      variant='outline'
+                      className='bg-green-100 text-green-700 border-green-300'
+                    >
                       Active
                     </Badge>
                   </div>
@@ -208,7 +256,10 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                     <span className='text-sm font-medium text-green-800 dark:text-green-200'>
                       API Security
                     </span>
-                    <Badge variant='outline' className='bg-green-100 text-green-700 border-green-300'>
+                    <Badge
+                      variant='outline'
+                      className='bg-green-100 text-green-700 border-green-300'
+                    >
                       Active
                     </Badge>
                   </div>
@@ -230,8 +281,9 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                     Assign Roles
                   </h4>
                   <p className='text-sm text-muted-foreground'>
-                    Go to <strong>Role Management</strong> tab to assign roles (Employee, Employer, Admin) to users.
-                    For employers, you can select from existing employers in the system.
+                    Go to <strong>Role Management</strong> tab to assign roles
+                    (Employee, Employer, Admin) to users. For employers, you can
+                    select from existing employers in the system.
                   </p>
                 </div>
                 <div className='space-y-2'>
@@ -240,8 +292,9 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                     Grant Permissions
                   </h4>
                   <p className='text-sm text-muted-foreground'>
-                    Go to <strong>Permissions</strong> tab to grant or revoke specific permissions for users.
-                    You can toggle permissions by category or individually.
+                    Go to <strong>Permissions</strong> tab to grant or revoke
+                    specific permissions for users. You can toggle permissions
+                    by category or individually.
                   </p>
                 </div>
                 <div className='space-y-2'>
@@ -250,8 +303,9 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
                     Verify Access
                   </h4>
                   <p className='text-sm text-muted-foreground'>
-                    After assigning roles or permissions, users need to logout and login again for changes to take effect.
-                    You can verify access by checking their dashboard view.
+                    After assigning roles or permissions, users need to logout
+                    and login again for changes to take effect. You can verify
+                    access by checking their dashboard view.
                   </p>
                 </div>
               </CardContent>
@@ -272,4 +326,3 @@ export function AdminDashboardUnified({ className }: AdminDashboardUnifiedProps)
     </div>
   );
 }
-

@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     // Get employee information
     const { data: employeeLink } = await supabase
       .from('employer_employees')
-      .select(`
+      .select(
+        `
         *,
         employee:profiles!employer_employees_employee_id_fkey(
           id,
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest) {
           name_en,
           name_ar
         )
-      `)
+      `
+      )
       .eq('id', employer_employee_id)
       .single();
 
@@ -72,7 +74,8 @@ export async function POST(request: NextRequest) {
     const isEmployer = employeeLink.employer_id === user.id;
     const isAdmin = profile?.role === 'admin';
     const isHR = profile?.role === 'hr_manager' || profile?.role === 'manager';
-    const isSameCompany = profile?.active_company_id === employeeLink.company_id;
+    const isSameCompany =
+      profile?.active_company_id === employeeLink.company_id;
 
     if (!isEmployer && !isAdmin && !(isHR && isSameCompany)) {
       return NextResponse.json(
@@ -87,7 +90,11 @@ export async function POST(request: NextRequest) {
 
     if (!letterContent) {
       // Auto-generate content based on letter type
-      letterContent = generateLetterContent(letter_type, employeeLink, additional_data);
+      letterContent = generateLetterContent(
+        letter_type,
+        employeeLink,
+        additional_data
+      );
     }
 
     if (!letterSubject) {
@@ -95,7 +102,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create letter record
-    const { data: letter, error: createError } = await (supabaseAdmin.from('hr_letters') as any)
+    const { data: letter, error: createError } = await (
+      supabaseAdmin.from('hr_letters') as any
+    )
       .insert({
         letter_type,
         employer_employee_id,
@@ -274,8 +283,11 @@ For ${employerName}
 }
 
 function generateLetterSubject(letterType: string, employeeLink: any): string {
-  const employeeName = employeeLink.employee?.name_en || employeeLink.employee?.name_ar || 'Employee';
-  
+  const employeeName =
+    employeeLink.employee?.name_en ||
+    employeeLink.employee?.name_ar ||
+    'Employee';
+
   const subjects: Record<string, string> = {
     salary_certificate: `Salary Certificate - ${employeeName}`,
     official: `Official Letter - ${employeeName}`,
@@ -287,4 +299,3 @@ function generateLetterSubject(letterType: string, employeeLink: any): string {
 
   return subjects[letterType] || `Letter - ${employeeName}`;
 }
-

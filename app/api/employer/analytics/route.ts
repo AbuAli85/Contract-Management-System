@@ -21,8 +21,12 @@ export async function GET(request: NextRequest) {
 
     // Get current month for date filtering
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .slice(0, 10);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      .toISOString()
+      .slice(0, 10);
     const today = now.toISOString().slice(0, 10);
 
     // ✅ COMPANY SCOPE: Get user's active company and party_id
@@ -35,7 +39,7 @@ export async function GET(request: NextRequest) {
     // Get company's party_id and resolve employer profile ID
     let partyId: string | null = null;
     let employerProfileId: string | null = null;
-    
+
     if (profile?.active_company_id) {
       const { createAdminClient } = await import('@/lib/supabase/server');
       let adminClient;
@@ -50,24 +54,24 @@ export async function GET(request: NextRequest) {
         .select('party_id')
         .eq('id', profile.active_company_id)
         .single();
-      
+
       if (company?.party_id) {
         partyId = company.party_id;
-        
+
         // Find the profile ID that corresponds to this party
         const { data: party } = await adminClient
           .from('parties')
           .select('contact_email')
           .eq('id', partyId)
           .single();
-        
+
         if (party?.contact_email) {
           const { data: employerProfile } = await adminClient
             .from('profiles')
             .select('id')
             .eq('email', party.contact_email)
             .single();
-          
+
           if (employerProfile) {
             employerProfileId = employerProfile.id;
           }
@@ -77,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     // ✅ FIX: Get all team members from both employer_employees and promoters
     const effectiveEmployerId = employerProfileId || user.id;
-    
+
     // 1. Get team members from employer_employees
     let teamQuery = supabase
       .from('employer_employees')
@@ -86,7 +90,9 @@ export async function GET(request: NextRequest) {
       .neq('employee_id', effectiveEmployerId); // ✅ FIX: Exclude employer from their own employee list
 
     if (profile?.active_company_id) {
-      teamQuery = teamQuery.or(`company_id.eq.${profile.active_company_id},company_id.is.null`);
+      teamQuery = teamQuery.or(
+        `company_id.eq.${profile.active_company_id},company_id.is.null`
+      );
     }
 
     const { data: teamMembers, error: teamError } = await teamQuery;
@@ -105,22 +111,22 @@ export async function GET(request: NextRequest) {
         .select('contact_email, type')
         .eq('id', partyId)
         .single();
-      
+
       const employerEmail = party?.contact_email?.toLowerCase();
-      
+
       // ✅ FIX: Get all employer parties' emails to filter out employers
       const { data: allEmployerParties } = await supabase
         .from('parties')
         .select('contact_email')
         .eq('type', 'Employer')
         .not('contact_email', 'is', null);
-      
+
       const employerEmails = new Set(
         (allEmployerParties || [])
           .map((p: any) => p.contact_email?.toLowerCase())
           .filter(Boolean)
       );
-      
+
       const { data: partyPromoters } = await supabase
         .from('promoters')
         .select('id, status, created_at, email')
@@ -131,17 +137,17 @@ export async function GET(request: NextRequest) {
         // ✅ FIX: Filter out employer themselves AND any other employer parties
         promotersFromParty = partyPromoters.filter((promoter: any) => {
           const promoterEmail = promoter.email?.toLowerCase();
-          
+
           // Exclude if promoter email matches current employer email
           if (employerEmail && promoterEmail === employerEmail) {
             return false;
           }
-          
+
           // Exclude if promoter email matches any employer party (they're an employer, not employee)
           if (promoterEmail && employerEmails.has(promoterEmail)) {
             return false;
           }
-          
+
           return true;
         });
       }
@@ -149,7 +155,7 @@ export async function GET(request: NextRequest) {
 
     // Combine both sources - use employer_employee IDs for attendance/tasks
     const employerEmployeeIds = (teamMembers || []).map(m => m.id);
-    
+
     // For promoters not in employer_employees, we can't track their attendance/tasks yet
     // But we can count them in team stats
     const promoterIds = promotersFromParty
@@ -159,17 +165,23 @@ export async function GET(request: NextRequest) {
     // ✅ FIX: Team stats - include both employer_employees and promoters
     const teamStats = {
       total: (teamMembers || []).length + promotersFromParty.length,
-      active: (teamMembers || []).filter(m => m.employment_status === 'active').length + promotersFromParty.length,
-      onLeave: (teamMembers || []).filter(m => m.employment_status === 'on_leave').length,
-      newThisMonth: (teamMembers || []).filter(m => 
-        m.hire_date && m.hire_date >= startOfMonth
-      ).length + promotersFromParty.filter(p => 
-        p.created_at && p.created_at >= startOfMonth
+      active:
+        (teamMembers || []).filter(m => m.employment_status === 'active')
+          .length + promotersFromParty.length,
+      onLeave: (teamMembers || []).filter(
+        m => m.employment_status === 'on_leave'
       ).length,
+      newThisMonth:
+        (teamMembers || []).filter(
+          m => m.hire_date && m.hire_date >= startOfMonth
+        ).length +
+        promotersFromParty.filter(
+          p => p.created_at && p.created_at >= startOfMonth
+        ).length,
     };
 
     // 2. Attendance Analytics
-    let attendanceStats = {
+    const attendanceStats = {
       todayPresent: 0,
       todayAbsent: 0,
       todayLate: 0,
@@ -181,37 +193,59 @@ export async function GET(request: NextRequest) {
 
     if (employerEmployeeIds.length > 0) {
       // Today's attendance
-      const { data: todayAttendance } = await (supabaseAdmin.from('employee_attendance') as any)
+      const { data: todayAttendance } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
         .select('status, total_hours')
         .in('employer_employee_id', employerEmployeeIds)
         .eq('attendance_date', today);
 
       if (todayAttendance) {
-        attendanceStats.todayPresent = todayAttendance.filter((a: any) => a.status === 'present').length;
-        attendanceStats.todayLate = todayAttendance.filter((a: any) => a.status === 'late').length;
-        attendanceStats.todayAbsent = teamStats.active - (attendanceStats.todayPresent + attendanceStats.todayLate);
+        attendanceStats.todayPresent = todayAttendance.filter(
+          (a: any) => a.status === 'present'
+        ).length;
+        attendanceStats.todayLate = todayAttendance.filter(
+          (a: any) => a.status === 'late'
+        ).length;
+        attendanceStats.todayAbsent =
+          teamStats.active -
+          (attendanceStats.todayPresent + attendanceStats.todayLate);
       }
 
       // Monthly attendance
-      const { data: monthlyAttendance } = await (supabaseAdmin.from('employee_attendance') as any)
+      const { data: monthlyAttendance } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
         .select('status, total_hours')
         .in('employer_employee_id', employerEmployeeIds)
         .gte('attendance_date', startOfMonth)
         .lte('attendance_date', endOfMonth);
 
       if (monthlyAttendance) {
-        attendanceStats.monthlyPresent = monthlyAttendance.filter((a: any) => a.status === 'present').length;
-        attendanceStats.monthlyLate = monthlyAttendance.filter((a: any) => a.status === 'late').length;
-        attendanceStats.monthlyAbsent = monthlyAttendance.filter((a: any) => a.status === 'absent').length;
-        
-        const totalHours = monthlyAttendance.reduce((sum: number, a: any) => sum + (parseFloat(a.total_hours) || 0), 0);
-        const daysWithHours = monthlyAttendance.filter((a: any) => a.total_hours > 0).length;
-        attendanceStats.averageHours = daysWithHours > 0 ? totalHours / daysWithHours : 0;
+        attendanceStats.monthlyPresent = monthlyAttendance.filter(
+          (a: any) => a.status === 'present'
+        ).length;
+        attendanceStats.monthlyLate = monthlyAttendance.filter(
+          (a: any) => a.status === 'late'
+        ).length;
+        attendanceStats.monthlyAbsent = monthlyAttendance.filter(
+          (a: any) => a.status === 'absent'
+        ).length;
+
+        const totalHours = monthlyAttendance.reduce(
+          (sum: number, a: any) => sum + (parseFloat(a.total_hours) || 0),
+          0
+        );
+        const daysWithHours = monthlyAttendance.filter(
+          (a: any) => a.total_hours > 0
+        ).length;
+        attendanceStats.averageHours =
+          daysWithHours > 0 ? totalHours / daysWithHours : 0;
       }
     }
 
     // 3. Tasks Analytics
-    let taskStats = {
+    const taskStats = {
       total: 0,
       pending: 0,
       inProgress: 0,
@@ -221,26 +255,38 @@ export async function GET(request: NextRequest) {
     };
 
     if (employerEmployeeIds.length > 0) {
-      const { data: tasks } = await (supabaseAdmin.from('employee_tasks') as any)
+      const { data: tasks } = await (
+        supabaseAdmin.from('employee_tasks') as any
+      )
         .select('id, status, due_date, completed_at')
         .in('employer_employee_id', employerEmployeeIds);
 
       if (tasks) {
         taskStats.total = tasks.length;
-        taskStats.pending = tasks.filter((t: any) => t.status === 'pending').length;
-        taskStats.inProgress = tasks.filter((t: any) => t.status === 'in_progress').length;
-        taskStats.completed = tasks.filter((t: any) => t.status === 'completed').length;
-        taskStats.overdue = tasks.filter((t: any) => 
-          t.due_date && new Date(t.due_date) < now && t.status !== 'completed'
+        taskStats.pending = tasks.filter(
+          (t: any) => t.status === 'pending'
         ).length;
-        taskStats.completedThisMonth = tasks.filter((t: any) => 
-          t.status === 'completed' && t.completed_at && t.completed_at >= startOfMonth
+        taskStats.inProgress = tasks.filter(
+          (t: any) => t.status === 'in_progress'
+        ).length;
+        taskStats.completed = tasks.filter(
+          (t: any) => t.status === 'completed'
+        ).length;
+        taskStats.overdue = tasks.filter(
+          (t: any) =>
+            t.due_date && new Date(t.due_date) < now && t.status !== 'completed'
+        ).length;
+        taskStats.completedThisMonth = tasks.filter(
+          (t: any) =>
+            t.status === 'completed' &&
+            t.completed_at &&
+            t.completed_at >= startOfMonth
         ).length;
       }
     }
 
     // 4. Targets Analytics
-    let targetStats = {
+    const targetStats = {
       total: 0,
       active: 0,
       completed: 0,
@@ -249,23 +295,32 @@ export async function GET(request: NextRequest) {
     };
 
     if (employerEmployeeIds.length > 0) {
-      const { data: targets } = await (supabaseAdmin.from('employee_targets') as any)
+      const { data: targets } = await (
+        supabaseAdmin.from('employee_targets') as any
+      )
         .select('id, status, target_value, current_value, end_date')
         .in('employer_employee_id', employerEmployeeIds);
 
       if (targets) {
         targetStats.total = targets.length;
-        targetStats.active = targets.filter((t: any) => t.status === 'active').length;
-        targetStats.completed = targets.filter((t: any) => t.status === 'completed').length;
-        
+        targetStats.active = targets.filter(
+          (t: any) => t.status === 'active'
+        ).length;
+        targetStats.completed = targets.filter(
+          (t: any) => t.status === 'completed'
+        ).length;
+
         // Calculate behind schedule (active targets with less than expected progress)
         targetStats.behindSchedule = targets.filter((t: any) => {
           if (t.status !== 'active' || !t.end_date) return false;
           const progress = (t.current_value || 0) / (t.target_value || 1);
           const endDate = new Date(t.end_date);
-          const daysRemaining = Math.max(0, (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          const daysRemaining = Math.max(
+            0,
+            (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
           const totalDays = 30; // Assuming 30-day targets on average
-          const expectedProgress = 1 - (daysRemaining / totalDays);
+          const expectedProgress = 1 - daysRemaining / totalDays;
           return progress < expectedProgress;
         }).length;
 
@@ -285,8 +340,11 @@ export async function GET(request: NextRequest) {
 
     // Get recent attendance check-ins
     if (employerEmployeeIds.length > 0) {
-      const { data: recentAttendance } = await (supabaseAdmin.from('employee_attendance') as any)
-        .select(`
+      const { data: recentAttendance } = await (
+        supabaseAdmin.from('employee_attendance') as any
+      )
+        .select(
+          `
           id,
           check_in,
           status,
@@ -295,7 +353,8 @@ export async function GET(request: NextRequest) {
               full_name
             )
           )
-        `)
+        `
+        )
         .in('employer_employee_id', employerEmployeeIds)
         .not('check_in', 'is', null)
         .order('check_in', { ascending: false })
@@ -313,8 +372,11 @@ export async function GET(request: NextRequest) {
       }
 
       // Get recently completed tasks
-      const { data: recentTasks } = await (supabaseAdmin.from('employee_tasks') as any)
-        .select(`
+      const { data: recentTasks } = await (
+        supabaseAdmin.from('employee_tasks') as any
+      )
+        .select(
+          `
           id,
           title,
           completed_at,
@@ -323,7 +385,8 @@ export async function GET(request: NextRequest) {
               full_name
             )
           )
-        `)
+        `
+        )
         .in('employer_employee_id', employerEmployeeIds)
         .eq('status', 'completed')
         .not('completed_at', 'is', null)
@@ -342,8 +405,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Sort recent activity by timestamp
-    recentActivity.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    recentActivity.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
     return NextResponse.json({
@@ -356,7 +420,10 @@ export async function GET(request: NextRequest) {
         recentActivity: recentActivity.slice(0, 10),
       },
       period: {
-        month: now.toLocaleString('default', { month: 'long', year: 'numeric' }),
+        month: now.toLocaleString('default', {
+          month: 'long',
+          year: 'numeric',
+        }),
         startOfMonth,
         endOfMonth,
         today,
@@ -364,7 +431,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in analytics GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

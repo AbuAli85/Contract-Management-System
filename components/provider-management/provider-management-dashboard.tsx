@@ -130,7 +130,18 @@ export function ProviderManagementDashboard() {
   const handleExportReport = async () => {
     try {
       // Generate CSV report
-      const headers = ['Name (EN)', 'Name (AR)', 'CRN', 'Contact Person', 'Contact Email', 'Contact Phone', 'Status', 'Active Promoters', 'Active Clients', 'Total Revenue'];
+      const headers = [
+        'Name (EN)',
+        'Name (AR)',
+        'CRN',
+        'Contact Person',
+        'Contact Email',
+        'Contact Phone',
+        'Status',
+        'Active Promoters',
+        'Active Clients',
+        'Total Revenue',
+      ];
       const rows = providers.map(provider => [
         provider.name_en,
         provider.name_ar,
@@ -146,14 +157,17 @@ export function ProviderManagementDashboard() {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
       ].join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `providers-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute(
+        'download',
+        `providers-report-${new Date().toISOString().split('T')[0]}.csv`
+      );
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -240,9 +254,15 @@ export function ProviderManagementDashboard() {
               company_size: 'Medium', // Could be added to parties table
               service_categories: [], // Could be calculated from contract types
               certifications: [], // Could be added to parties table
-              capacity_utilization: activePromotersCount > 0 
-                ? Math.min(100, Math.round((activeContracts.length / activePromotersCount) * 100))
-                : 0,
+              capacity_utilization:
+                activePromotersCount > 0
+                  ? Math.min(
+                      100,
+                      Math.round(
+                        (activeContracts.length / activePromotersCount) * 100
+                      )
+                    )
+                  : 0,
             };
           }
         );

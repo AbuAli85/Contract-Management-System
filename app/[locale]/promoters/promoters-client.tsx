@@ -28,10 +28,13 @@ export function PromotersPageClient({
   locale,
   isDevelopment,
 }: PromotersPageClientProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const { user, loading: authLoading, mounted } = useAuth();
-  const { canRead, hasPermission, loading: permissionsLoading } =
-    usePermissions();
+  const {
+    canRead,
+    hasPermission,
+    loading: permissionsLoading,
+  } = usePermissions();
   const [isCheckingPermissions, setIsCheckingPermissions] = useState(true);
 
   // Check permissions once auth is loaded

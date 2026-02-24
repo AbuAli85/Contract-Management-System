@@ -4,11 +4,13 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 // GET: Fetch team members (employees/promoters/candidates) for the active company
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -59,7 +61,8 @@ export async function GET(request: NextRequest) {
       // Fetch promoters where employer_id matches the party_id
       const { data: promoters, error: promotersError } = await adminClient
         .from('promoters')
-        .select(`
+        .select(
+          `
           id,
           name_en,
           name_ar,
@@ -70,7 +73,8 @@ export async function GET(request: NextRequest) {
           profile_picture_url,
           employer_id,
           created_at
-        `)
+        `
+        )
         .eq('employer_id', company.party_id)
         .order('name_en', { ascending: true });
 
@@ -112,9 +116,11 @@ export async function GET(request: NextRequest) {
 
         if (employerUser) {
           // Fetch employer_employees records
-          const { data: employerEmployees, error: employeesError } = await adminClient
-            .from('employer_employees')
-            .select(`
+          const { data: employerEmployees, error: employeesError } =
+            await adminClient
+              .from('employer_employees')
+              .select(
+                `
               id,
               employee_id,
               job_title,
@@ -122,13 +128,16 @@ export async function GET(request: NextRequest) {
               employment_status,
               hire_date,
               reporting_manager_id
-            `)
-            .eq('employer_id', employerUser.id)
-            .eq('employment_status', 'active');
+            `
+              )
+              .eq('employer_id', employerUser.id)
+              .eq('employment_status', 'active');
 
           if (!employeesError && employerEmployees) {
             // Get employee profiles
-            const employeeIds = employerEmployees.map((ee: any) => ee.employee_id).filter(Boolean);
+            const employeeIds = employerEmployees
+              .map((ee: any) => ee.employee_id)
+              .filter(Boolean);
             if (employeeIds.length > 0) {
               const { data: employeeProfiles } = await adminClient
                 .from('profiles')
@@ -137,9 +146,11 @@ export async function GET(request: NextRequest) {
 
               // Merge with existing team members (avoid duplicates)
               const existingIds = new Set(teamMembers.map((tm: any) => tm.id));
-              
+
               employerEmployees.forEach((ee: any) => {
-                const profile = employeeProfiles?.find((p: any) => p.id === ee.employee_id);
+                const profile = employeeProfiles?.find(
+                  (p: any) => p.id === ee.employee_id
+                );
                 if (profile && !existingIds.has(profile.id)) {
                   teamMembers.push({
                     id: profile.id,
@@ -168,7 +179,8 @@ export async function GET(request: NextRequest) {
     // Also check company_members for additional team members (users with company access)
     const { data: companyMembers, error: membersError } = await adminClient
       .from('company_members')
-      .select(`
+      .select(
+        `
         user_id,
         role,
         status,
@@ -177,14 +189,15 @@ export async function GET(request: NextRequest) {
           full_name,
           email
         )
-      `)
+      `
+      )
       .eq('company_id', company.id)
       .eq('status', 'active');
 
     if (!membersError && companyMembers) {
       // Add company members who aren't already in the team list
       const existingIds = new Set(teamMembers.map((tm: any) => tm.id));
-      
+
       companyMembers.forEach((cm: any) => {
         const profile = cm.profiles;
         if (profile && !existingIds.has(profile.id)) {
@@ -218,4 +231,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

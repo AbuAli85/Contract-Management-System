@@ -3,7 +3,8 @@ import { AdminPermissionManager } from '@/components/admin/admin-permission-mana
 
 export const metadata: Metadata = {
   title: 'Permission Management | Admin',
-  description: 'Manage user roles and permissions for the Promoter Intelligence Hub',
+  description:
+    'Manage user roles and permissions for the Promoter Intelligence Hub',
 };
 
 export default function AdminPermissionsPage() {
@@ -13,4 +14,3 @@ export default function AdminPermissionsPage() {
     </div>
   );
 }
-

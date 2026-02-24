@@ -152,11 +152,14 @@ export const POST = withAnyRBAC(
         );
       }
 
-      return NextResponse.json({
-        success: true,
-        jobPosting,
-        message: 'Job posting created successfully',
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          success: true,
+          jobPosting,
+          message: 'Job posting created successfully',
+        },
+        { status: 201 }
+      );
     } catch (error: any) {
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
@@ -165,4 +168,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

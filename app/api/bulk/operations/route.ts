@@ -4,7 +4,7 @@ import { withAnyRBAC } from '@/lib/rbac/guard';
 
 /**
  * POST /api/bulk/operations
- * 
+ *
  * Execute bulk operations on multiple records
  * Supports: employees, documents, tasks, targets, attendance
  */
@@ -27,12 +27,20 @@ export const POST = withAnyRBAC(
         resource_type, // 'employees', 'documents', 'tasks', 'targets', 'attendance'
         record_ids,
         update_data,
-        filters,
+        _filters,
       } = body;
 
-      if (!operation_type || !resource_type || !record_ids || record_ids.length === 0) {
+      if (
+        !operation_type ||
+        !resource_type ||
+        !record_ids ||
+        record_ids.length === 0
+      ) {
         return NextResponse.json(
-          { error: 'Missing required fields: operation_type, resource_type, record_ids' },
+          {
+            error:
+              'Missing required fields: operation_type, resource_type, record_ids',
+          },
           { status: 400 }
         );
       }
@@ -267,4 +275,3 @@ async function bulkUpdateTargets(
   results.success = results.failed === 0;
   return results;
 }
-

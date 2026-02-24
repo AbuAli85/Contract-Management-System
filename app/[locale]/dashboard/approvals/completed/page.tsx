@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { CompletedReviewsList } from '@/components/approval/CompletedReviewsList';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import {
@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function CompletedReviewsPage() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Simulate loading completion

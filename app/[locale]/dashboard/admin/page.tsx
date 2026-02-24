@@ -12,29 +12,19 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { DashboardStats } from '@/components/dashboard/dashboard-stats-simple';
 import { DashboardNotifications } from '@/components/dashboard/dashboard-notifications-enhanced';
 import { DashboardActivities } from '@/components/dashboard/dashboard-activities';
-import { DashboardQuickActions } from '@/components/dashboard/dashboard-quick-actions';
 import { useToast } from '@/hooks/use-toast';
-import { useNotifications } from '@/hooks/use-notifications-enhanced';
 import {
   RefreshCw,
   Settings,
-  Download,
-  Calendar,
-  TrendingUp,
   AlertTriangle,
   Users,
   FileText,
   Activity,
   Building2,
-  Bell,
-  ChevronRight,
-  Plus,
   Shield,
   Database,
   UserCheck,
@@ -305,8 +295,8 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ params }: AdminDashboardProps) {
   const { locale } = params;
-  const { user, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
+  const { user, loading: _authLoading } = useAuth();
+  const { profile, loading: _profileLoading } = useUserProfile();
   const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
 

@@ -50,15 +50,17 @@ export async function getAllPermissions(): Promise<Permission[]> {
 function getServiceRoleClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  
+
   if (!serviceRoleKey || !supabaseUrl) {
     throw new Error('Service role key or Supabase URL not configured');
   }
-  
+
   return createServiceClient(supabaseUrl, serviceRoleKey);
 }
 
-export async function getUserPermissions(userId: string): Promise<UserPermission[]> {
+export async function getUserPermissions(
+  userId: string
+): Promise<UserPermission[]> {
   try {
     const serviceClient = getServiceRoleClient();
 
@@ -74,7 +76,7 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
       const permissions = Array.isArray(cacheData.permissions)
         ? cacheData.permissions
         : [];
-      
+
       return permissions.map((perm: string) => ({
         permission: perm,
         granted: true,
@@ -84,7 +86,8 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
     // Fallback: Get permissions from roles
     const { data: roleData, error: roleError } = await serviceClient
       .from('user_role_assignments')
-      .select(`
+      .select(
+        `
         roles:role_id (
           role_permissions (
             permissions:permission_id (
@@ -92,7 +95,8 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
             )
           )
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .eq('is_active', true);
 
@@ -153,7 +157,7 @@ export async function hasAnyPermission(
     const grantedPermissions = userPermissions
       .filter(up => up.granted)
       .map(up => up.permission);
-    
+
     return permissions.some(perm => grantedPermissions.includes(perm));
   } catch (error) {
     console.error('Error checking any permission:', error);
@@ -173,7 +177,7 @@ export async function hasAllPermissions(
     const grantedPermissions = userPermissions
       .filter(up => up.granted)
       .map(up => up.permission);
-    
+
     return permissions.every(perm => grantedPermissions.includes(perm));
   } catch (error) {
     console.error('Error checking all permissions:', error);
@@ -245,17 +249,9 @@ export function getDefaultPermissionsForRole(role: string): string[] {
       'contracts:create',
       'contracts:edit',
     ],
-    user: [
-      'promoter:read:own',
-      'promoter:update:own',
-      'contracts:view',
-    ],
-    promoter: [
-      'promoter:read:own',
-      'promoter:update:own',
-    ],
+    user: ['promoter:read:own', 'promoter:update:own', 'contracts:view'],
+    promoter: ['promoter:read:own', 'promoter:update:own'],
   };
 
   return rolePermissions[role] || [];
 }
-

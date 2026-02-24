@@ -7,13 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import type { Party } from '@/lib/types';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -40,18 +34,14 @@ import {
   Users,
   AlertTriangle,
   FileText,
-  Mail,
-  Phone,
-  MapPin,
   ChevronDown,
   ChevronUp,
   Eye,
-  Trash2,
   MoreHorizontal,
   Calendar,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format, parseISO, differenceInDays, isValid } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -59,7 +49,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';

@@ -22,7 +22,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, UserPlus, Mail, Phone, Building, Briefcase } from 'lucide-react';
+import {
+  Loader2,
+  UserPlus,
+  Mail,
+  Phone,
+  Building,
+  Briefcase,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserCreateFormProps {
@@ -82,7 +89,8 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
 
       toast({
         title: 'User created successfully',
-        description: 'The user has been created and will receive an email with login instructions.',
+        description:
+          'The user has been created and will receive an email with login instructions.',
       });
 
       // Reset form
@@ -116,10 +124,7 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
     }
   };
 
-  const handleChange = (
-    field: string,
-    value: string
-  ) => {
+  const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -127,11 +132,11 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
+          <UserPlus className='mr-2 h-4 w-4' />
           Create User
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className='sm:max-w-[600px]'>
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
           <DialogDescription>
@@ -140,22 +145,22 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className='space-y-4'>
           {error && (
-            <Alert variant="destructive">
+            <Alert variant='destructive'>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              <Mail className="mr-2 h-4 w-4 inline" />
+          <div className='space-y-2'>
+            <Label htmlFor='email'>
+              <Mail className='mr-2 h-4 w-4 inline' />
               Email Address *
             </Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="user@example.com"
+              id='email'
+              type='email'
+              placeholder='user@example.com'
               value={formData.email}
               onChange={e => handleChange('email', e.target.value)}
               required
@@ -163,15 +168,15 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="full_name">
-              <UserPlus className="mr-2 h-4 w-4 inline" />
+          <div className='space-y-2'>
+            <Label htmlFor='full_name'>
+              <UserPlus className='mr-2 h-4 w-4 inline' />
               Full Name *
             </Label>
             <Input
-              id="full_name"
-              type="text"
-              placeholder="John Doe"
+              id='full_name'
+              type='text'
+              placeholder='John Doe'
               value={formData.full_name}
               onChange={e => handleChange('full_name', e.target.value)}
               required
@@ -179,16 +184,16 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Role *</Label>
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='role'>Role *</Label>
               <Select
                 value={formData.role}
                 onValueChange={value => handleChange('role', value)}
                 disabled={loading}
               >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select role" />
+                <SelectTrigger id='role'>
+                  <SelectValue placeholder='Select role' />
                 </SelectTrigger>
                 <SelectContent>
                   {ROLE_OPTIONS.map(option => (
@@ -200,15 +205,15 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">
-                <Phone className="mr-2 h-4 w-4 inline" />
+            <div className='space-y-2'>
+              <Label htmlFor='phone'>
+                <Phone className='mr-2 h-4 w-4 inline' />
                 Phone
               </Label>
               <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
+                id='phone'
+                type='tel'
+                placeholder='+1 (555) 000-0000'
                 value={formData.phone}
                 onChange={e => handleChange('phone', e.target.value)}
                 disabled={loading}
@@ -216,31 +221,31 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="department">
-                <Building className="mr-2 h-4 w-4 inline" />
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='department'>
+                <Building className='mr-2 h-4 w-4 inline' />
                 Department
               </Label>
               <Input
-                id="department"
-                type="text"
-                placeholder="Engineering"
+                id='department'
+                type='text'
+                placeholder='Engineering'
                 value={formData.department}
                 onChange={e => handleChange('department', e.target.value)}
                 disabled={loading}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="position">
-                <Briefcase className="mr-2 h-4 w-4 inline" />
+            <div className='space-y-2'>
+              <Label htmlFor='position'>
+                <Briefcase className='mr-2 h-4 w-4 inline' />
                 Position
               </Label>
               <Input
-                id="position"
-                type="text"
-                placeholder="Software Engineer"
+                id='position'
+                type='text'
+                placeholder='Software Engineer'
                 value={formData.position}
                 onChange={e => handleChange('position', e.target.value)}
                 disabled={loading}
@@ -250,22 +255,22 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
 
           <DialogFooter>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={() => setOpen(false)}
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type='submit' disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Creating...
                 </>
               ) : (
                 <>
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <UserPlus className='mr-2 h-4 w-4' />
                   Create User
                 </>
               )}
@@ -276,4 +281,3 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
     </Dialog>
   );
 }
-

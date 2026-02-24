@@ -177,7 +177,7 @@ export function PromotersTable({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [deletePromoter, setDeletePromoter] = useState<Promoter | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // Inline editing state
   const [editingField, setEditingField] = useState<{
     promoterId: string;
@@ -242,7 +242,11 @@ export function PromotersTable({
   };
 
   // Inline editing handlers
-  const startEditing = (promoterId: string, field: string, currentValue: string | null) => {
+  const startEditing = (
+    promoterId: string,
+    field: string,
+    currentValue: string | null
+  ) => {
     setEditingField({ promoterId, field });
     setEditingValue(currentValue || '');
   };
@@ -261,13 +265,16 @@ export function PromotersTable({
         [editingField.field]: editingValue || null,
       };
 
-      const response = await fetch(`/api/promoters/${editingField.promoterId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
+      const response = await fetch(
+        `/api/promoters/${editingField.promoterId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -585,7 +592,11 @@ export function PromotersTable({
                             <div
                               className='flex items-center gap-1 text-sm cursor-pointer hover:opacity-80 transition-opacity'
                               onClick={() =>
-                                startEditing(promoter.id, 'email', promoter.email || null)
+                                startEditing(
+                                  promoter.id,
+                                  'email',
+                                  promoter.email || null
+                                )
                               }
                               title='Click to edit email'
                             >
@@ -636,14 +647,18 @@ export function PromotersTable({
                                 startEditing(
                                   promoter.id,
                                   'mobile_number',
-                                  promoter.mobile_number || promoter.phone || null
+                                  promoter.mobile_number ||
+                                    promoter.phone ||
+                                    null
                                 )
                               }
                               title='Click to edit phone'
                             >
                               <Phone className='h-3 w-3 text-muted-foreground' />
                               <span>
-                                {promoter.mobile_number || promoter.phone || 'Click to add phone'}
+                                {promoter.mobile_number ||
+                                  promoter.phone ||
+                                  'Click to add phone'}
                               </span>
                             </div>
                           )}
@@ -678,10 +693,17 @@ export function PromotersTable({
                                 <SelectValue placeholder='Select employer' />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value=''>Clear Assignment</SelectItem>
+                                <SelectItem value=''>
+                                  Clear Assignment
+                                </SelectItem>
                                 {employers.map(employer => (
-                                  <SelectItem key={employer.id} value={employer.id}>
-                                    {employer.name_en || employer.name_ar || employer.id}
+                                  <SelectItem
+                                    key={employer.id}
+                                    value={employer.id}
+                                  >
+                                    {employer.name_en ||
+                                      employer.name_ar ||
+                                      employer.id}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -725,7 +747,9 @@ export function PromotersTable({
                               <>
                                 <Building2 className='h-4 w-4 text-muted-foreground' />
                                 <span className='font-medium'>
-                                  {promoter.parties.name_en || promoter.parties.name_ar || 'Unknown'}
+                                  {promoter.parties.name_en ||
+                                    promoter.parties.name_ar ||
+                                    'Unknown'}
                                 </span>
                               </>
                             ) : (
@@ -764,10 +788,16 @@ export function PromotersTable({
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value='active'>Active</SelectItem>
-                                <SelectItem value='inactive'>Inactive</SelectItem>
+                                <SelectItem value='inactive'>
+                                  Inactive
+                                </SelectItem>
                                 <SelectItem value='pending'>Pending</SelectItem>
-                                <SelectItem value='suspended'>Suspended</SelectItem>
-                                <SelectItem value='on_leave'>On Leave</SelectItem>
+                                <SelectItem value='suspended'>
+                                  Suspended
+                                </SelectItem>
+                                <SelectItem value='on_leave'>
+                                  On Leave
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <Button
@@ -797,7 +827,11 @@ export function PromotersTable({
                           <div
                             className='cursor-pointer hover:opacity-80 transition-opacity'
                             onClick={() =>
-                              startEditing(promoter.id, 'status', promoter.status)
+                              startEditing(
+                                promoter.id,
+                                'status',
+                                promoter.status
+                              )
                             }
                             title='Click to edit status'
                           >
@@ -820,11 +854,15 @@ export function PromotersTable({
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value='excellent'>Excellent</SelectItem>
+                                <SelectItem value='excellent'>
+                                  Excellent
+                                </SelectItem>
                                 <SelectItem value='good'>Good</SelectItem>
                                 <SelectItem value='fair'>Fair</SelectItem>
                                 <SelectItem value='warning'>Warning</SelectItem>
-                                <SelectItem value='critical'>Critical</SelectItem>
+                                <SelectItem value='critical'>
+                                  Critical
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <Button
@@ -881,10 +919,16 @@ export function PromotersTable({
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value='available'>Available</SelectItem>
+                                <SelectItem value='available'>
+                                  Available
+                                </SelectItem>
                                 <SelectItem value='busy'>Busy</SelectItem>
-                                <SelectItem value='unavailable'>Unavailable</SelectItem>
-                                <SelectItem value='part_time'>Part Time</SelectItem>
+                                <SelectItem value='unavailable'>
+                                  Unavailable
+                                </SelectItem>
+                                <SelectItem value='part_time'>
+                                  Part Time
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <Button

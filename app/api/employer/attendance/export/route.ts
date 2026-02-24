@@ -36,12 +36,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (!activeCompanyId) {
-      return NextResponse.json({ error: 'Company ID required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Company ID required' },
+        { status: 400 }
+      );
     }
 
     // Build query
     let query = (supabaseAdmin.from('employee_attendance') as any)
-      .select(`
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           company_id,
@@ -51,7 +55,8 @@ export async function GET(request: NextRequest) {
             email
           )
         )
-      `)
+      `
+      )
       .eq('employer_employee.company_id', activeCompanyId);
 
     if (startDate) {
@@ -101,7 +106,7 @@ export async function GET(request: NextRequest) {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map((row: any[]) => row.map((cell) => `"${cell}"`).join(',')),
+        ...rows.map((row: any[]) => row.map(cell => `"${cell}"`).join(',')),
       ].join('\n');
 
       return new NextResponse(csvContent, {
@@ -126,4 +131,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

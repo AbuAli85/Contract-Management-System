@@ -28,9 +28,9 @@ if (typeof window !== 'undefined') {
   };
 
   console.error = (...args: any[]) => {
-    const message = args.map(arg => 
-      typeof arg === 'string' ? arg : JSON.stringify(arg)
-    ).join(' ');
+    const message = args
+      .map(arg => (typeof arg === 'string' ? arg : JSON.stringify(arg)))
+      .join(' ');
 
     if (!shouldFilter(message)) {
       originalError.apply(console, args);
@@ -38,13 +38,12 @@ if (typeof window !== 'undefined') {
   };
 
   console.warn = (...args: any[]) => {
-    const message = args.map(arg => 
-      typeof arg === 'string' ? arg : JSON.stringify(arg)
-    ).join(' ');
+    const message = args
+      .map(arg => (typeof arg === 'string' ? arg : JSON.stringify(arg)))
+      .join(' ');
 
     if (!shouldFilter(message)) {
       originalWarn.apply(console, args);
     }
   };
 }
-

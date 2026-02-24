@@ -250,9 +250,11 @@ export async function getContractMetrics(
 
     // ✅ COMPANY SCOPE: Apply party filter first if available
     if (partyId) {
-      query = query.or(`second_party_id.eq.${partyId},first_party_id.eq.${partyId}`);
+      query = query.or(
+        `second_party_id.eq.${partyId},first_party_id.eq.${partyId}`
+      );
     } else if (userRole !== 'admin' && userId) {
-    // RBAC: Non-admins see only their contracts
+      // RBAC: Non-admins see only their contracts
       query = query.or(
         `first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`
       );
@@ -279,7 +281,9 @@ export async function getContractMetrics(
 
     // ✅ COMPANY SCOPE: Apply same filter to count query
     if (partyId) {
-      countQuery = countQuery.or(`second_party_id.eq.${partyId},first_party_id.eq.${partyId}`);
+      countQuery = countQuery.or(
+        `second_party_id.eq.${partyId},first_party_id.eq.${partyId}`
+      );
     } else if (userRole !== 'admin' && userId) {
       countQuery = countQuery.or(
         `first_party_id.eq.${userId},second_party_id.eq.${userId},client_id.eq.${userId},employer_id.eq.${userId}`

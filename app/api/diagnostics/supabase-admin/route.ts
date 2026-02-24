@@ -13,12 +13,14 @@ export async function GET() {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     // Extract project reference from URL
-    const urlProjectRef = supabaseUrl?.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+    const urlProjectRef = supabaseUrl?.match(
+      /https?:\/\/([^.]+)\.supabase\.co/
+    )?.[1];
 
     // Try to decode JWT to get project reference from key
     let keyProjectRef: string | null = null;
     let jwtDecodeError: string | null = null;
-    
+
     if (supabaseServiceKey) {
       try {
         const jwtParts = supabaseServiceKey.split('.');
@@ -30,7 +32,9 @@ export async function GET() {
             base64 += '=';
           }
           // Decode the payload (second part of JWT)
-          const payload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
+          const payload = JSON.parse(
+            Buffer.from(base64, 'base64').toString('utf-8')
+          );
           keyProjectRef = payload.ref || null;
         } else {
           jwtDecodeError = 'JWT does not have 3 parts';
@@ -40,7 +44,8 @@ export async function GET() {
       }
     }
 
-    const isProjectMismatch = keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
+    const isProjectMismatch =
+      keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
 
     // Test the admin client
     let adminClientTest: {
@@ -53,7 +58,7 @@ export async function GET() {
     if (supabaseUrl && supabaseServiceKey) {
       try {
         const adminClient = createAdminClient();
-        
+
         // Test read access
         const { error: testError, data: testData } = await adminClient
           .from('company_members')
@@ -108,14 +113,14 @@ export async function GET() {
             '5. Redeploy your application',
           ]
         : adminClientTest.success
-        ? ['✅ Service role key is working correctly']
-        : [
-            '❌ Service role key test failed',
-            '1. Verify the key is correct in Supabase Dashboard',
-            '2. Ensure the key is for the correct project',
-            '3. Check that RLS policies allow service role access',
-            '4. Redeploy after updating the key',
-          ],
+          ? ['✅ Service role key is working correctly']
+          : [
+              '❌ Service role key test failed',
+              '1. Verify the key is correct in Supabase Dashboard',
+              '2. Ensure the key is for the correct project',
+              '3. Check that RLS policies allow service role access',
+              '4. Redeploy after updating the key',
+            ],
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -128,4 +133,3 @@ export async function GET() {
     );
   }
 }
-

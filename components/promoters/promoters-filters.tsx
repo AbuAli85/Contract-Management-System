@@ -345,18 +345,25 @@ export function PromotersFilters({
               <span className='whitespace-nowrap bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-100 dark:to-white bg-clip-text text-transparent'>
                 Advanced Filtering System
               </span>
-              <Badge variant='outline' className='bg-gradient-to-r from-primary/20 to-blue-500/20 text-primary border-primary/40 text-xs font-black px-3 py-1 shadow-lg'>
+              <Badge
+                variant='outline'
+                className='bg-gradient-to-r from-primary/20 to-blue-500/20 text-primary border-primary/40 text-xs font-black px-3 py-1 shadow-lg'
+              >
                 <Sparkles className='h-3 w-3 mr-1' />
                 Premium
               </Badge>
             </CardTitle>
             <CardDescription className='text-base mt-3 break-words font-semibold text-slate-700 dark:text-slate-300'>
               Refine the promoter roster by lifecycle stage, document health, or
-              assignment status with precision filtering and AI-powered suggestions.
+              assignment status with precision filtering and AI-powered
+              suggestions.
             </CardDescription>
           </div>
           {hasFiltersApplied && (
-            <Badge variant='secondary' className='bg-primary/10 text-primary whitespace-nowrap flex-shrink-0'>
+            <Badge
+              variant='secondary'
+              className='bg-primary/10 text-primary whitespace-nowrap flex-shrink-0'
+            >
               {Object.values({
                 search: searchTerm ? 1 : 0,
                 status: statusFilter !== 'all' ? 1 : 0,
@@ -614,7 +621,7 @@ export function PromotersFilters({
           )}
           <div className='grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full'>
             <div className='space-y-2 min-w-[160px] w-full'>
-              <Label 
+              <Label
                 htmlFor='lifecycle-select'
                 className='text-sm font-medium block overflow-visible whitespace-normal break-words leading-tight'
               >
@@ -626,7 +633,10 @@ export function PromotersFilters({
                   onStatusFilterChange(value as OverallStatus | 'all')
                 }
               >
-                <SelectTrigger id='lifecycle-select' className='w-full min-w-[140px]'>
+                <SelectTrigger
+                  id='lifecycle-select'
+                  className='w-full min-w-[140px]'
+                >
                   <SelectValue placeholder='All statuses' />
                 </SelectTrigger>
                 <SelectContent>
@@ -639,7 +649,7 @@ export function PromotersFilters({
               </Select>
             </div>
             <div className='space-y-2 min-w-[160px] w-full'>
-              <Label 
+              <Label
                 htmlFor='document-select'
                 className='text-sm font-medium block overflow-visible whitespace-normal break-words leading-tight'
               >
@@ -653,7 +663,10 @@ export function PromotersFilters({
                   )
                 }
               >
-                <SelectTrigger id='document-select' className='w-full min-w-[140px]'>
+                <SelectTrigger
+                  id='document-select'
+                  className='w-full min-w-[140px]'
+                >
                   <SelectValue placeholder='All documents' />
                 </SelectTrigger>
                 <SelectContent>
@@ -665,7 +678,7 @@ export function PromotersFilters({
               </Select>
             </div>
             <div className='space-y-2 min-w-[160px] w-full'>
-              <Label 
+              <Label
                 htmlFor='assignment-select'
                 className='text-sm font-medium block overflow-visible whitespace-normal break-words leading-tight'
               >
@@ -679,7 +692,10 @@ export function PromotersFilters({
                   )
                 }
               >
-                <SelectTrigger id='assignment-select' className='w-full min-w-[140px]'>
+                <SelectTrigger
+                  id='assignment-select'
+                  className='w-full min-w-[140px]'
+                >
                   <SelectValue placeholder='All assignments' />
                 </SelectTrigger>
                 <SelectContent>
@@ -809,13 +825,15 @@ export function PromotersFilters({
               <div className='flex-1'>
                 <div className='flex items-center justify-between mb-2'>
                   <p className='text-sm font-medium text-blue-900 dark:text-blue-100'>
-                    Active Filters ({[
+                    Active Filters (
+                    {[
                       searchTerm ? 1 : 0,
                       statusFilter !== 'all' ? 1 : 0,
                       documentFilter !== 'all' ? 1 : 0,
                       assignmentFilter !== 'all' ? 1 : 0,
                       advancedSearchCriteria.length > 0 ? 1 : 0,
-                    ].reduce((a, b) => a + b, 0)})
+                    ].reduce((a, b) => a + b, 0)}
+                    )
                   </p>
                   <Button
                     variant='ghost'
@@ -895,7 +913,9 @@ export function PromotersFilters({
                       variant='secondary'
                       className='group bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100 pr-1 flex items-center gap-1'
                     >
-                      <span>Advanced: {advancedSearchCriteria.length} criteria</span>
+                      <span>
+                        Advanced: {advancedSearchCriteria.length} criteria
+                      </span>
                       <button
                         onClick={handleClearAdvancedSearch}
                         className='ml-1 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-700 p-0.5 transition-colors'

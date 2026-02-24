@@ -18,7 +18,8 @@ export const GET = withAnyRBAC(
       // Get application with all related data
       const { data: application, error } = await supabase
         .from('work_permit_applications')
-        .select(`
+        .select(
+          `
           *,
           employer:profiles!work_permit_applications_employer_id_fkey(
             id,
@@ -60,7 +61,8 @@ export const GET = withAnyRBAC(
             city,
             country
           )
-        `)
+        `
+        )
         .eq('id', id)
         .single();
 
@@ -80,11 +82,17 @@ export const GET = withAnyRBAC(
 
         // Employer Information
         employer: {
-          name_en: application.employer_party?.name_en || application.employer?.full_name,
+          name_en:
+            application.employer_party?.name_en ||
+            application.employer?.full_name,
           name_ar: application.employer_party?.name_ar,
           crn: application.employer_party?.crn,
-          contact_email: application.employer_party?.contact_email || application.employer?.email,
-          contact_phone: application.employer_party?.contact_phone || application.employer?.phone,
+          contact_email:
+            application.employer_party?.contact_email ||
+            application.employer?.email,
+          contact_phone:
+            application.employer_party?.contact_phone ||
+            application.employer?.phone,
           address: application.employer_party?.address_en,
         },
 
@@ -93,13 +101,21 @@ export const GET = withAnyRBAC(
           name_en: application.employee_name_en,
           name_ar: application.employee_name_ar,
           national_id: application.national_id,
-          passport_number: application.passport_number || application.promoter?.passport_number,
+          passport_number:
+            application.passport_number ||
+            application.promoter?.passport_number,
           id_card_number: application.promoter?.id_card_number,
-          nationality: application.nationality || application.promoter?.nationality,
-          date_of_birth: application.promoter?.date_of_birth || application.employee?.date_of_birth,
+          nationality:
+            application.nationality || application.promoter?.nationality,
+          date_of_birth:
+            application.promoter?.date_of_birth ||
+            application.employee?.date_of_birth,
           gender: application.promoter?.gender || application.employee?.gender,
           email: application.promoter?.email || application.employee?.email,
-          phone: application.promoter?.mobile_number || application.promoter?.phone || application.employee?.phone,
+          phone:
+            application.promoter?.mobile_number ||
+            application.promoter?.phone ||
+            application.employee?.phone,
           address: application.promoter?.address,
           city: application.promoter?.city,
           country: application.promoter?.country,
@@ -129,16 +145,19 @@ export const GET = withAnyRBAC(
       };
 
       if (format === 'json') {
-        return NextResponse.json({
-          success: true,
-          data: ministryData,
-          message: 'Application data prepared for Ministry submission',
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Disposition': `attachment; filename="work-permit-${application.application_number}-ministry-data.json"`,
+        return NextResponse.json(
+          {
+            success: true,
+            data: ministryData,
+            message: 'Application data prepared for Ministry submission',
           },
-        });
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Disposition': `attachment; filename="work-permit-${application.application_number}-ministry-data.json"`,
+            },
+          }
+        );
       }
 
       if (format === 'csv') {
@@ -176,22 +195,33 @@ export const GET = withAnyRBAC(
           ['Job Title', ministryData.employment.job_title],
           ['Department', ministryData.employment.department || ''],
           ['Employment Type', ministryData.employment.employment_type || ''],
-          ['Work Permit Category', ministryData.employment.work_permit_category || ''],
+          [
+            'Work Permit Category',
+            ministryData.employment.work_permit_category || '',
+          ],
           ['Salary', ministryData.employment.salary?.toString() || ''],
           ['Currency', ministryData.employment.currency],
           ['Start Date', ministryData.employment.start_date || ''],
           ['End Date', ministryData.employment.end_date || ''],
           ['', ''],
           ['DOCUMENTS', ''],
-          ['Required Documents', (ministryData.documents.required || []).join('; ')],
-          ['Submitted Documents', (ministryData.documents.submitted || []).join('; ')],
+          [
+            'Required Documents',
+            (ministryData.documents.required || []).join('; '),
+          ],
+          [
+            'Submitted Documents',
+            (ministryData.documents.submitted || []).join('; '),
+          ],
           ['', ''],
           ['NOTES', ''],
           ['Internal Notes', ministryData.notes || ''],
         ];
 
         const csvContent = csvRows
-          .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+          .map(row =>
+            row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+          )
           .join('\n');
 
         return new NextResponse(csvContent, {
@@ -216,4 +246,3 @@ export const GET = withAnyRBAC(
     }
   }
 );
-

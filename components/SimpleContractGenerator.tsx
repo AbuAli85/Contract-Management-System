@@ -151,10 +151,13 @@ export default function SimpleContractGenerator({
 
   const loadData = async () => {
     setLoading(true);
-    
+
     // Create a timeout promise
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Data loading timeout - please try again')), 15000);
+      setTimeout(
+        () => reject(new Error('Data loading timeout - please try again')),
+        15000
+      );
     });
 
     try {
@@ -171,12 +174,16 @@ export default function SimpleContractGenerator({
         if (!partiesResponse.ok) {
           const errorData = await partiesResponse.json().catch(() => ({}));
           console.error('Error loading parties:', errorData);
-          throw new Error(errorData.error || `Failed to load parties: ${partiesResponse.status}`);
+          throw new Error(
+            errorData.error ||
+              `Failed to load parties: ${partiesResponse.status}`
+          );
         }
 
         const partiesResult = await partiesResponse.json();
-        const partiesData = partiesResult.data || partiesResult.parties || partiesResult || [];
-        
+        const partiesData =
+          partiesResult.data || partiesResult.parties || partiesResult || [];
+
         // Filter parties by type (case-insensitive to handle data inconsistencies)
         const allPartiesList = Array.isArray(partiesData) ? partiesData : [];
         const clientsList = allPartiesList.filter(
@@ -191,7 +198,9 @@ export default function SimpleContractGenerator({
           clients: clientsList.length,
           employers: employersList.length,
           pagination: partiesResult.pagination,
-          sampleTypes: allPartiesList.slice(0, 5).map((p: any) => ({ name: p.name_en, type: p.type })),
+          sampleTypes: allPartiesList
+            .slice(0, 5)
+            .map((p: any) => ({ name: p.name_en, type: p.type })),
         });
 
         setAllParties(allPartiesList);
@@ -202,11 +211,18 @@ export default function SimpleContractGenerator({
         if (!promotersResponse.ok) {
           const errorData = await promotersResponse.json().catch(() => ({}));
           console.error('Error loading promoters:', errorData);
-          throw new Error(errorData.error || `Failed to load promoters: ${promotersResponse.status}`);
+          throw new Error(
+            errorData.error ||
+              `Failed to load promoters: ${promotersResponse.status}`
+          );
         }
 
         const promotersResult = await promotersResponse.json();
-        const promotersData = promotersResult.data || promotersResult.promoters || promotersResult || [];
+        const promotersData =
+          promotersResult.data ||
+          promotersResult.promoters ||
+          promotersResult ||
+          [];
         const promotersList = Array.isArray(promotersData) ? promotersData : [];
 
         setPromoters(promotersList);
@@ -623,15 +639,20 @@ export default function SimpleContractGenerator({
                   >
                     <SelectTrigger>
                       <SelectValue placeholder='Select promoter'>
-                        {formData.promoter_id && (() => {
-                          const promoter = allPromoters.find(p => p.id === formData.promoter_id);
-                          return (
-                            <span className='flex items-center gap-2'>
-                              <User className='h-4 w-4' />
-                              {promoter?.name_en || promoter?.name_ar || `Promoter ${formData.promoter_id.slice(0, 8)}...`}
-                            </span>
-                          );
-                        })()}
+                        {formData.promoter_id &&
+                          (() => {
+                            const promoter = allPromoters.find(
+                              p => p.id === formData.promoter_id
+                            );
+                            return (
+                              <span className='flex items-center gap-2'>
+                                <User className='h-4 w-4' />
+                                {promoter?.name_en ||
+                                  promoter?.name_ar ||
+                                  `Promoter ${formData.promoter_id.slice(0, 8)}...`}
+                              </span>
+                            );
+                          })()}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -699,15 +720,24 @@ export default function SimpleContractGenerator({
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select client'>
-                      {formData.first_party_id && (() => {
-                        const party = clients.find(p => p.id === formData.first_party_id) || allParties.find(p => p.id === formData.first_party_id);
-                        return (
-                          <span className='flex items-center gap-2'>
-                            <Building className='h-4 w-4' />
-                            {party?.name_en || party?.name_ar || `Party ${formData.first_party_id.slice(0, 8)}...`}
-                          </span>
-                        );
-                      })()}
+                      {formData.first_party_id &&
+                        (() => {
+                          const party =
+                            clients.find(
+                              p => p.id === formData.first_party_id
+                            ) ||
+                            allParties.find(
+                              p => p.id === formData.first_party_id
+                            );
+                          return (
+                            <span className='flex items-center gap-2'>
+                              <Building className='h-4 w-4' />
+                              {party?.name_en ||
+                                party?.name_ar ||
+                                `Party ${formData.first_party_id.slice(0, 8)}...`}
+                            </span>
+                          );
+                        })()}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -747,15 +777,24 @@ export default function SimpleContractGenerator({
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select employer'>
-                      {formData.second_party_id && (() => {
-                        const party = employers.find(p => p.id === formData.second_party_id) || allParties.find(p => p.id === formData.second_party_id);
-                        return (
-                          <span className='flex items-center gap-2'>
-                            <Building className='h-4 w-4' />
-                            {party?.name_en || party?.name_ar || `Party ${formData.second_party_id.slice(0, 8)}...`}
-                          </span>
-                        );
-                      })()}
+                      {formData.second_party_id &&
+                        (() => {
+                          const party =
+                            employers.find(
+                              p => p.id === formData.second_party_id
+                            ) ||
+                            allParties.find(
+                              p => p.id === formData.second_party_id
+                            );
+                          return (
+                            <span className='flex items-center gap-2'>
+                              <Building className='h-4 w-4' />
+                              {party?.name_en ||
+                                party?.name_ar ||
+                                `Party ${formData.second_party_id.slice(0, 8)}...`}
+                            </span>
+                          );
+                        })()}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>

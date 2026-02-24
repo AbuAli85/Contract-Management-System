@@ -4,7 +4,14 @@ export const runtime = 'nodejs';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
-import { getMcpContext, assertRole, toMcpErrorResponse, createUserScopedClient, extractBearerToken, McpError } from '@/lib/mcp/context';
+import {
+  getMcpContext,
+  assertRole,
+  toMcpErrorResponse,
+  createUserScopedClient,
+  extractBearerToken,
+  McpError,
+} from '@/lib/mcp/context';
 import { generateContractPDF } from '@/lib/pdf-generator';
 
 const generatePdfSchema = z.object({
@@ -13,13 +20,14 @@ const generatePdfSchema = z.object({
 
 // Create Supabase service client for storage operations
 function createServiceClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  
+
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error('Missing Supabase environment variables');
   }
-  
+
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
@@ -32,19 +40,20 @@ export async function POST(req: NextRequest) {
   let correlationId: string;
   try {
     // Extract correlation ID for logging
-    correlationId = req.headers.get('x-correlation-id') || 
-                     `mcp-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    
+    correlationId =
+      req.headers.get('x-correlation-id') ||
+      `mcp-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
     // 1. Auth + context (DB-first)
     const context = await getMcpContext(req);
-    
+
     // Log with correlation ID
     console.log(`[${correlationId}] MCP endpoint: /api/mcp/contracts/pdf`, {
       user_id: context.user_id,
       tenant_id: context.tenant_id,
       role: context.role,
     });
-    
+
     // 2. RBAC: provider or admin only
     assertRole(context, ['provider', 'admin']);
 
@@ -62,7 +71,9 @@ export async function POST(req: NextRequest) {
     // We need to verify the contract's parties belong to the tenant
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
-      .select('id, contract_number, client_id, employer_id, first_party_id, second_party_id, status, pdf_url')
+      .select(
+        'id, contract_number, client_id, employer_id, first_party_id, second_party_id, status, pdf_url'
+      )
       .eq('id', validated.contract_id)
       .single();
 
@@ -77,20 +88,24 @@ export async function POST(req: NextRequest) {
     // Verify contract belongs to tenant (tenant isolation BEFORE generation)
     // Tenant isolation: contracts are linked to parties via employer_id/client_id
     // tenant_id is the company's party_id, so we verify contract's parties match it
-    const belongsToTenant = 
+    const belongsToTenant =
       contract.employer_id === context.tenant_id ||
       contract.client_id === context.tenant_id ||
       contract.first_party_id === context.tenant_id ||
       contract.second_party_id === context.tenant_id;
 
     if (!belongsToTenant) {
-      throw new McpError('FORBIDDEN', 'Contract does not belong to your company');
+      throw new McpError(
+        'FORBIDDEN',
+        'Contract does not belong to your company'
+      );
     }
 
     // 6. Fetch full contract data for PDF generation
     const { data: fullContract, error: fullContractError } = await supabase
       .from('contracts')
-      .select(`
+      .select(
+        `
         *,
         promoters:promoter_id (
           name_en,
@@ -116,7 +131,8 @@ export async function POST(req: NextRequest) {
           crn,
           logo_url
         )
-      `)
+      `
+      )
       .eq('id', validated.contract_id)
       .single();
 
@@ -162,9 +178,10 @@ export async function POST(req: NextRequest) {
     let pdfUrl: string;
     try {
       // Try to get signed URL (expires in 1 year)
-      const { data: signedUrlData, error: signedUrlError } = await serviceClient.storage
-        .from(bucketName)
-        .createSignedUrl(storagePath, 31536000); // 1 year expiry
+      const { data: signedUrlData, error: signedUrlError } =
+        await serviceClient.storage
+          .from(bucketName)
+          .createSignedUrl(storagePath, 31536000); // 1 year expiry
 
       if (signedUrlError || !signedUrlData) {
         // Fallback to public URL
@@ -191,7 +208,10 @@ export async function POST(req: NextRequest) {
 
     if (updateError) {
       // Log but don't fail - PDF was generated successfully
-      console.warn('[MCP PDF] Failed to update contract with PDF URL:', updateError);
+      console.warn(
+        '[MCP PDF] Failed to update contract with PDF URL:',
+        updateError
+      );
     }
 
     // 11. Return response with filename and URL (or base64 as fallback)

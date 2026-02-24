@@ -118,11 +118,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const safetyTimer = setTimeout(() => {
       if (loading || initialLoading) {
-        console.warn('⚠️ Auth initialization timeout - forcing completion');
+        console.warn(
+          '⚠️ Auth initialization timeout - forcing completion after 5s'
+        );
         setLoading(false);
         setInitialLoading(false);
       }
-    }, 15000); // 15 second safety timeout
+    }, 5000); // 5 second safety timeout (reduced from 15s)
 
     return () => clearTimeout(safetyTimer);
   }, [loading, initialLoading]);
@@ -418,7 +420,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshSession,
     }),
-    [user, session, loading, initialLoading, isProfileSynced] // Added new states to deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      user,
+      session,
+      loading,
+      initialLoading,
+      isProfileSynced,
+      supabase,
+      signOut,
+      refreshSession,
+    ]
   );
 
   return (
@@ -573,20 +585,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               <CompanyProvider>
                 <FormContextProvider>
                   {children}
-                <Toaster
-                  position='top-right'
-                  expand={false}
-                  richColors
-                  closeButton
-                  duration={4000}
-                  toastOptions={{
-                    style: {
-                      background: 'hsl(var(--background))',
-                      color: 'hsl(var(--foreground))',
-                      border: '1px solid hsl(var(--border))',
-                    },
-                  }}
-                />
+                  <Toaster
+                    position='top-right'
+                    expand={false}
+                    richColors
+                    closeButton
+                    duration={4000}
+                    toastOptions={{
+                      style: {
+                        background: 'hsl(var(--background))',
+                        color: 'hsl(var(--foreground))',
+                        border: '1px solid hsl(var(--border))',
+                      },
+                    }}
+                  />
                 </FormContextProvider>
               </CompanyProvider>
             </EnhancedRBACProvider>

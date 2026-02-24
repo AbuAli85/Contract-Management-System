@@ -6,12 +6,12 @@ import { ZodError } from 'zod';
 // This repo uses active_company_id in profiles -> companies.party_id for tenant isolation
 const CONFIG = {
   USE_MEMBERSHIPS_TABLE: false, // Profiles table contains role directly
-  
+
   PROFILES_TABLE: 'profiles',
   PROFILES_USER_ID_COLUMN: 'id', // Matches auth.users.id
   PROFILES_TENANT_COLUMN: 'active_company_id', // This repo uses active_company_id
   PROFILES_ROLE_COLUMN: 'role',
-  
+
   COMPANIES_TABLE: 'companies',
   COMPANIES_ID_COLUMN: 'id',
   COMPANIES_PARTY_ID_COLUMN: 'party_id', // party_id is the actual tenant identifier
@@ -25,7 +25,12 @@ export interface McpContext {
 
 export interface McpErrorResponse {
   error: {
-    code: 'UNAUTHORIZED' | 'FORBIDDEN' | 'VALIDATION_ERROR' | 'NOT_FOUND' | 'INTERNAL_ERROR';
+    code:
+      | 'UNAUTHORIZED'
+      | 'FORBIDDEN'
+      | 'VALIDATION_ERROR'
+      | 'NOT_FOUND'
+      | 'INTERNAL_ERROR';
     message: string;
   };
 }
@@ -37,7 +42,10 @@ export interface McpErrorResponse {
 export function extractBearerToken(req: NextRequest): string {
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
-    throw new McpError('UNAUTHORIZED', 'Missing or invalid Authorization header');
+    throw new McpError(
+      'UNAUTHORIZED',
+      'Missing or invalid Authorization header'
+    );
   }
   return authHeader.substring(7);
 }
@@ -52,14 +60,18 @@ const ALLOWED_ROLES = ['admin', 'provider', 'client', 'user', 'staff'] as const;
  * If role is not in allowlist, default to 'user' (safe fallback)
  */
 function normalizeRole(rawRole: unknown): string {
-  const normalized = String(rawRole || 'user').toLowerCase().trim();
-  
+  const normalized = String(rawRole || 'user')
+    .toLowerCase()
+    .trim();
+
   // Enforce allowlist - if role not recognized, default to 'user'
-  if (!ALLOWED_ROLES.includes(normalized as typeof ALLOWED_ROLES[number])) {
-    console.warn(`[Role Normalization] Unknown role "${rawRole}" normalized to "user"`);
+  if (!ALLOWED_ROLES.includes(normalized as (typeof ALLOWED_ROLES)[number])) {
+    console.warn(
+      `[Role Normalization] Unknown role "${rawRole}" normalized to "user"`
+    );
     return 'user';
   }
-  
+
   return normalized;
 }
 
@@ -69,9 +81,10 @@ function normalizeRole(rawRole: unknown): string {
  */
 async function verifyTokenAndGetUserId(token: string): Promise<string> {
   // Use service role client for token verification
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  
+
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
@@ -79,8 +92,11 @@ async function verifyTokenAndGetUserId(token: string): Promise<string> {
     },
   });
 
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  
+  const {
+    data: { user },
+    error,
+  } = await supabaseAdmin.auth.getUser(token);
+
   if (error || !user) {
     throw new McpError('UNAUTHORIZED', 'Invalid or expired token');
   }
@@ -91,7 +107,7 @@ async function verifyTokenAndGetUserId(token: string): Promise<string> {
 /**
  * Resolve tenant_id (party_id from companies) and role from database (DB-first)
  * Uses user-scoped client so RLS still applies
- * 
+ *
  * Flow: user_id -> profiles.active_company_id -> companies.party_id (tenant_id)
  */
 async function resolveTenantAndRole(
@@ -99,9 +115,11 @@ async function resolveTenantAndRole(
   token: string
 ): Promise<{ tenant_id: string; role: string }> {
   // Use user-scoped client (with token) so RLS applies
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey =
+    process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {
@@ -202,15 +220,19 @@ export class McpError extends Error {
   ) {
     super(message);
     this.name = 'McpError';
-    
+
     // Automatic status code mapping (prevents human error)
-    this.statusCode = statusCode ?? (
-      code === 'UNAUTHORIZED' ? 401 :
-      code === 'FORBIDDEN' ? 403 :
-      code === 'VALIDATION_ERROR' ? 400 :
-      code === 'NOT_FOUND' ? 404 :
-      500 // INTERNAL_ERROR
-    );
+    this.statusCode =
+      statusCode ??
+      (code === 'UNAUTHORIZED'
+        ? 401
+        : code === 'FORBIDDEN'
+          ? 403
+          : code === 'VALIDATION_ERROR'
+            ? 400
+            : code === 'NOT_FOUND'
+              ? 404
+              : 500); // INTERNAL_ERROR
   }
 
   toResponse(): Response {
@@ -227,7 +249,10 @@ export class McpError extends Error {
  * Includes Supabase error code mapping
  * Adds correlation ID to error response headers
  */
-export function toMcpErrorResponse(err: unknown, correlationId?: string): Response {
+export function toMcpErrorResponse(
+  err: unknown,
+  correlationId?: string
+): Response {
   // 1. If it's already an McpError, return its response with correlation ID
   if (err instanceof McpError) {
     const response = err.toResponse();
@@ -242,7 +267,7 @@ export function toMcpErrorResponse(err: unknown, correlationId?: string): Respon
     const messages = err.issues
       .map(i => `${i.path.join('.')}: ${i.message}`)
       .join(', ');
-    
+
     const response = Response.json(
       { error: { code: 'VALIDATION_ERROR', message: messages } },
       { status: 400 }
@@ -255,8 +280,12 @@ export function toMcpErrorResponse(err: unknown, correlationId?: string): Respon
 
   // 3. Check for Supabase errors (deterministic error code mapping)
   if (err && typeof err === 'object' && 'code' in err) {
-    const supabaseError = err as { code: string; message: string; details?: string };
-    
+    const supabaseError = err as {
+      code: string;
+      message: string;
+      details?: string;
+    };
+
     // PGRST116 = no rows returned from .single()
     if (supabaseError.code === 'PGRST116') {
       const response = Response.json(
@@ -268,14 +297,16 @@ export function toMcpErrorResponse(err: unknown, correlationId?: string): Respon
       }
       return response;
     }
-    
+
     // Permission/RLS errors
     // 42501 = insufficient privilege, PGRST301 = RLS policy violation
-    if (supabaseError.code === '42501' || 
-        supabaseError.code === 'PGRST301' ||
-        supabaseError.message?.includes('permission') || 
-        supabaseError.message?.includes('RLS') ||
-        supabaseError.message?.includes('row-level security')) {
+    if (
+      supabaseError.code === '42501' ||
+      supabaseError.code === 'PGRST301' ||
+      supabaseError.message?.includes('permission') ||
+      supabaseError.message?.includes('RLS') ||
+      supabaseError.message?.includes('row-level security')
+    ) {
       const response = Response.json(
         { error: { code: 'FORBIDDEN', message: 'Access denied' } },
         { status: 403 }
@@ -290,7 +321,11 @@ export function toMcpErrorResponse(err: unknown, correlationId?: string): Respon
   // 4. If it's a standard Error, check for known patterns (fallback only)
   if (err instanceof Error) {
     // Check for Supabase auth errors
-    if (err.message.includes('JWT') || err.message.includes('token') || err.message.includes('expired')) {
+    if (
+      err.message.includes('JWT') ||
+      err.message.includes('token') ||
+      err.message.includes('expired')
+    ) {
       const response = Response.json(
         { error: { code: 'UNAUTHORIZED', message: err.message } },
         { status: 401 }
@@ -300,9 +335,12 @@ export function toMcpErrorResponse(err: unknown, correlationId?: string): Respon
       }
       return response;
     }
-    
+
     // Check for not found patterns
-    if (err.message.includes('not found') || err.message.includes('does not exist')) {
+    if (
+      err.message.includes('not found') ||
+      err.message.includes('does not exist')
+    ) {
       const response = Response.json(
         { error: { code: 'NOT_FOUND', message: err.message } },
         { status: 404 }
@@ -317,7 +355,12 @@ export function toMcpErrorResponse(err: unknown, correlationId?: string): Respon
   // 5. Default to internal error
   console.error('[MCP Error]', err);
   const response = Response.json(
-    { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+    {
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred',
+      },
+    },
     { status: 500 }
   );
   if (correlationId) {
@@ -331,9 +374,11 @@ export function toMcpErrorResponse(err: unknown, correlationId?: string): Respon
  * This ensures RLS policies still apply
  */
 export function createUserScopedClient(token: string) {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey =
+    process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {

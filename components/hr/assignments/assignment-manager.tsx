@@ -80,12 +80,17 @@ interface AssignmentManagerProps {
   locale?: string;
 }
 
-export function AssignmentManager({ employerEmployeeId, locale = 'en' }: AssignmentManagerProps) {
+export function AssignmentManager({
+  employerEmployeeId,
+  locale = 'en',
+}: AssignmentManagerProps) {
   const { companyId } = useCompany();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(
+    null
+  );
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   // Fetch assignments
@@ -105,16 +110,16 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
       } else {
         params.append('active_only', 'false');
       }
-      
+
       const response = await fetch(`/api/hr/assignments?${params.toString()}`, {
         credentials: 'include',
         cache: 'no-store',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch assignments');
       }
-      
+
       return response.json();
     },
   });
@@ -130,26 +135,34 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ termination_reason: reason || 'Terminated by user' }),
+        body: JSON.stringify({
+          termination_reason: reason || 'Terminated by user',
+        }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete assignment');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assignments'] });
       toast({
         title: locale === 'ar' ? 'تم الإنهاء بنجاح' : 'Assignment Terminated',
-        description: locale === 'ar' ? 'تم إنهاء التعيين بنجاح' : 'Assignment has been terminated successfully',
+        description:
+          locale === 'ar'
+            ? 'تم إنهاء التعيين بنجاح'
+            : 'Assignment has been terminated successfully',
       });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: locale === 'ar' ? 'خطأ' : 'Error',
-        description: error instanceof Error ? error.message : 'Failed to terminate assignment',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to terminate assignment',
         variant: 'destructive',
       });
     },
@@ -159,34 +172,34 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
     switch (status) {
       case 'active':
         return (
-          <Badge className="bg-green-500 hover:bg-green-600">
-            <CheckCircle className="h-3 w-3 mr-1" />
+          <Badge className='bg-green-500 hover:bg-green-600'>
+            <CheckCircle className='h-3 w-3 mr-1' />
             {locale === 'ar' ? 'نشط' : 'Active'}
           </Badge>
         );
       case 'completed':
         return (
-          <Badge className="bg-blue-500 hover:bg-blue-600">
-            <CheckCircle className="h-3 w-3 mr-1" />
+          <Badge className='bg-blue-500 hover:bg-blue-600'>
+            <CheckCircle className='h-3 w-3 mr-1' />
             {locale === 'ar' ? 'مكتمل' : 'Completed'}
           </Badge>
         );
       case 'terminated':
         return (
-          <Badge className="bg-red-500 hover:bg-red-600">
-            <XCircle className="h-3 w-3 mr-1" />
+          <Badge className='bg-red-500 hover:bg-red-600'>
+            <XCircle className='h-3 w-3 mr-1' />
             {locale === 'ar' ? 'منتهي' : 'Terminated'}
           </Badge>
         );
       case 'on_hold':
         return (
-          <Badge className="bg-yellow-500 hover:bg-yellow-600">
-            <Clock className="h-3 w-3 mr-1" />
+          <Badge className='bg-yellow-500 hover:bg-yellow-600'>
+            <Clock className='h-3 w-3 mr-1' />
             {locale === 'ar' ? 'معلق' : 'On Hold'}
           </Badge>
         );
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant='outline'>{status}</Badge>;
     }
   };
 
@@ -198,7 +211,7 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
       consultation: { en: 'Consultation', ar: 'استشارة' },
       training: { en: 'Training', ar: 'تدريب' },
     };
-    
+
     return labels[type]?.[locale as 'en' | 'ar'] || type;
   };
 
@@ -207,7 +220,7 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
     const today = new Date();
     const startDate = new Date(assignment.start_date);
     const endDate = assignment.end_date ? new Date(assignment.end_date) : null;
-    
+
     return startDate <= today && (!endDate || endDate >= today);
   };
 
@@ -218,8 +231,8 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
           <CardTitle>{locale === 'ar' ? 'التعيينات' : 'Assignments'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className='flex items-center justify-center py-8'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
           </div>
         </CardContent>
       </Card>
@@ -233,8 +246,10 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
           <CardTitle>{locale === 'ar' ? 'التعيينات' : 'Assignments'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-red-600">
-            {locale === 'ar' ? 'فشل تحميل التعيينات' : 'Failed to load assignments'}
+          <div className='text-center py-8 text-red-600'>
+            {locale === 'ar'
+              ? 'فشل تحميل التعيينات'
+              : 'Failed to load assignments'}
           </div>
         </CardContent>
       </Card>
@@ -242,13 +257,13 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
   }
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className='flex items-center justify-between'>
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Users className='h-5 w-5' />
                 {locale === 'ar' ? 'إدارة التعيينات' : 'Assignment Management'}
               </CardTitle>
               <CardDescription>
@@ -257,74 +272,98 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
                   : `Total Assignments: ${assignments.length}`}
               </CardDescription>
             </div>
-            <Button onClick={() => {
-              setEditingAssignment(null);
-              setFormDialogOpen(true);
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button
+              onClick={() => {
+                setEditingAssignment(null);
+                setFormDialogOpen(true);
+              }}
+            >
+              <Plus className='h-4 w-4 mr-2' />
               {locale === 'ar' ? 'تعيين جديد' : 'New Assignment'}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {/* Status Filter */}
-          <div className="mb-6">
-            <div className="flex gap-2">
-              {['all', 'active', 'completed', 'terminated', 'on_hold'].map((status) => (
-                <Button
-                  key={status}
-                  variant={filterStatus === status ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterStatus(status)}
-                >
-                  {status === 'all' && (locale === 'ar' ? 'الكل' : 'All')}
-                  {status === 'active' && (locale === 'ar' ? 'نشط' : 'Active')}
-                  {status === 'completed' && (locale === 'ar' ? 'مكتمل' : 'Completed')}
-                  {status === 'terminated' && (locale === 'ar' ? 'منتهي' : 'Terminated')}
-                  {status === 'on_hold' && (locale === 'ar' ? 'معلق' : 'On Hold')}
-                </Button>
-              ))}
+          <div className='mb-6'>
+            <div className='flex gap-2'>
+              {['all', 'active', 'completed', 'terminated', 'on_hold'].map(
+                status => (
+                  <Button
+                    key={status}
+                    variant={filterStatus === status ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => setFilterStatus(status)}
+                  >
+                    {status === 'all' && (locale === 'ar' ? 'الكل' : 'All')}
+                    {status === 'active' &&
+                      (locale === 'ar' ? 'نشط' : 'Active')}
+                    {status === 'completed' &&
+                      (locale === 'ar' ? 'مكتمل' : 'Completed')}
+                    {status === 'terminated' &&
+                      (locale === 'ar' ? 'منتهي' : 'Terminated')}
+                    {status === 'on_hold' &&
+                      (locale === 'ar' ? 'معلق' : 'On Hold')}
+                  </Button>
+                )
+              )}
             </div>
           </div>
 
           {/* Assignments Table */}
           {assignments.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{locale === 'ar' ? 'لا توجد تعيينات' : 'No assignments found'}</p>
+            <div className='text-center py-12 text-gray-500'>
+              <Users className='h-12 w-12 mx-auto mb-4 opacity-50' />
+              <p>
+                {locale === 'ar' ? 'لا توجد تعيينات' : 'No assignments found'}
+              </p>
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className='rounded-md border'>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{locale === 'ar' ? 'الموظف' : 'Employee'}</TableHead>
-                    <TableHead>{locale === 'ar' ? 'العميل' : 'Client'}</TableHead>
-                    <TableHead>{locale === 'ar' ? 'المسمى الوظيفي' : 'Job Title'}</TableHead>
-                    <TableHead>{locale === 'ar' ? 'التواريخ' : 'Dates'}</TableHead>
-                    <TableHead>{locale === 'ar' ? 'الحالة' : 'Status'}</TableHead>
-                    <TableHead>{locale === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
+                    <TableHead>
+                      {locale === 'ar' ? 'الموظف' : 'Employee'}
+                    </TableHead>
+                    <TableHead>
+                      {locale === 'ar' ? 'العميل' : 'Client'}
+                    </TableHead>
+                    <TableHead>
+                      {locale === 'ar' ? 'المسمى الوظيفي' : 'Job Title'}
+                    </TableHead>
+                    <TableHead>
+                      {locale === 'ar' ? 'التواريخ' : 'Dates'}
+                    </TableHead>
+                    <TableHead>
+                      {locale === 'ar' ? 'الحالة' : 'Status'}
+                    </TableHead>
+                    <TableHead>
+                      {locale === 'ar' ? 'الإجراءات' : 'Actions'}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {assignments.map((assignment) => (
+                  {assignments.map(assignment => (
                     <TableRow
                       key={assignment.id}
                       className={cn(
-                        !isActive(assignment) && assignment.status === 'active' && 'bg-yellow-50'
+                        !isActive(assignment) &&
+                          assignment.status === 'active' &&
+                          'bg-yellow-50'
                       )}
                     >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-400" />
+                      <TableCell className='font-medium'>
+                        <div className='flex items-center gap-2'>
+                          <Users className='h-4 w-4 text-gray-400' />
                           {assignment.employer_employee?.employee?.name_en ||
                             assignment.employer_employee?.employee?.name_ar ||
                             'N/A'}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-gray-400" />
+                        <div className='flex items-center gap-2'>
+                          <Building2 className='h-4 w-4 text-gray-400' />
                           {assignment.client?.name_en ||
                             assignment.client?.name_ar ||
                             'N/A'}
@@ -332,64 +371,76 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{assignment.job_title}</div>
-                          {assignment.department && (
-                            <div className="text-xs text-gray-500">{assignment.department}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(assignment.start_date), 'MMM dd, yyyy')}
+                          <div className='font-medium'>
+                            {assignment.job_title}
                           </div>
-                          {assignment.end_date && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              {locale === 'ar' ? 'حتى' : 'Until'}{' '}
-                              {format(new Date(assignment.end_date), 'MMM dd, yyyy')}
+                          {assignment.department && (
+                            <div className='text-xs text-gray-500'>
+                              {assignment.department}
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(assignment.status)}
+                        <div className='text-sm'>
+                          <div className='flex items-center gap-1'>
+                            <Calendar className='h-3 w-3' />
+                            {format(
+                              new Date(assignment.start_date),
+                              'MMM dd, yyyy'
+                            )}
+                          </div>
+                          {assignment.end_date && (
+                            <div className='text-xs text-gray-500 mt-1'>
+                              {locale === 'ar' ? 'حتى' : 'Until'}{' '}
+                              {format(
+                                new Date(assignment.end_date),
+                                'MMM dd, yyyy'
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
+                      <TableCell>{getStatusBadge(assignment.status)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
+                        <div className='flex items-center gap-2'>
                           {assignment.deployment_letter && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              asChild
-                            >
-                              <Link href={`/en/contracts/${assignment.deployment_letter.id}`}>
-                                <FileText className="h-4 w-4" />
+                            <Button variant='ghost' size='sm' asChild>
+                              <Link
+                                href={`/en/contracts/${assignment.deployment_letter.id}`}
+                              >
+                                <FileText className='h-4 w-4' />
                               </Link>
                             </Button>
                           )}
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant='ghost'
+                            size='sm'
                             onClick={() => {
                               setEditingAssignment(assignment);
                               setFormDialogOpen(true);
                             }}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className='h-4 w-4' />
                           </Button>
                           {assignment.status === 'active' && (
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant='ghost'
+                              size='sm'
                               onClick={() => {
-                                if (confirm(locale === 'ar' ? 'هل أنت متأكد من إنهاء هذا التعيين؟' : 'Are you sure you want to terminate this assignment?')) {
+                                if (
+                                  confirm(
+                                    locale === 'ar'
+                                      ? 'هل أنت متأكد من إنهاء هذا التعيين؟'
+                                      : 'Are you sure you want to terminate this assignment?'
+                                  )
+                                ) {
                                   deleteMutation.mutate({ id: assignment.id });
                                 }
                               }}
-                              className="text-red-600 hover:text-red-700"
+                              className='text-red-600 hover:text-red-700'
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className='h-4 w-4' />
                             </Button>
                           )}
                         </div>
@@ -419,4 +470,3 @@ export function AssignmentManager({ employerEmployeeId, locale = 'en' }: Assignm
     </div>
   );
 }
-

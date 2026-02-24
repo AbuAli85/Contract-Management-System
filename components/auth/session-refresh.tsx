@@ -27,8 +27,11 @@ export function SessionRefresh() {
     setIsRefreshing(true);
     try {
       // Try to get current session
-      const { data: { session }, error: getError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: getError,
+      } = await supabase.auth.getSession();
+
       if (getError) {
         throw getError;
       }
@@ -45,32 +48,38 @@ export function SessionRefresh() {
 
       // Refresh the session
       const { error: refreshError } = await supabase.auth.refreshSession();
-      
+
       if (refreshError) {
         throw refreshError;
       }
 
       // Verify session is now in cookies
-      const { data: { session: verifySession } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session: verifySession },
+      } = await supabase.auth.getSession();
+
       if (verifySession && verifySession.user) {
         toast({
           title: 'Success',
           description: 'Session refreshed successfully',
         });
-        
+
         // Reload the page to ensure all components pick up the new session
         setTimeout(() => {
           window.location.reload();
         }, 500);
       } else {
-        throw new Error('Session refresh failed - session not found after refresh');
+        throw new Error(
+          'Session refresh failed - session not found after refresh'
+        );
       }
     } catch (error: any) {
       console.error('Session refresh error:', error);
       toast({
         title: 'Refresh Failed',
-        description: error.message || 'Failed to refresh session. Please try logging in again.',
+        description:
+          error.message ||
+          'Failed to refresh session. Please try logging in again.',
         variant: 'destructive',
       });
     } finally {
@@ -82,9 +91,9 @@ export function SessionRefresh() {
     <Button
       onClick={refreshSession}
       disabled={isRefreshing}
-      variant="outline"
-      size="sm"
-      className="text-xs"
+      variant='outline'
+      size='sm'
+      className='text-xs'
     >
       {isRefreshing ? 'Refreshing...' : '🔄 Refresh Session'}
     </Button>

@@ -12,7 +12,7 @@ export async function GET(
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -24,8 +24,11 @@ export async function GET(
 
     const { id } = await params;
 
-    const { data: assignment, error } = await (supabaseAdmin.from('client_assignments') as any)
-      .select(`
+    const { data: assignment, error } = await (
+      supabaseAdmin.from('client_assignments') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           id,
@@ -54,7 +57,8 @@ export async function GET(
           status,
           pdf_url
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -78,18 +82,12 @@ export async function GET(
         employee.employer_id !== user.id &&
         employee.employee_id !== user.id
       ) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       // Company scoping
       if (employee.company_id !== userProfile?.active_company_id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
@@ -114,7 +112,7 @@ export async function PUT(
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -128,15 +126,19 @@ export async function PUT(
     const body = await request.json();
 
     // Get existing assignment
-    const { data: existingAssignment } = await (supabaseAdmin.from('client_assignments') as any)
-      .select(`
+    const { data: existingAssignment } = await (
+      supabaseAdmin.from('client_assignments') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           id,
           employer_id,
           company_id
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -158,17 +160,17 @@ export async function PUT(
       const employee = existingAssignment.employer_employee;
       if (employee.employer_id !== user.id) {
         return NextResponse.json(
-          { error: 'Unauthorized - Only employer or admin can update assignments' },
+          {
+            error:
+              'Unauthorized - Only employer or admin can update assignments',
+          },
           { status: 403 }
         );
       }
 
       // Company scoping
       if (employee.company_id !== userProfile?.active_company_id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
@@ -180,13 +182,18 @@ export async function PUT(
     // Allow updating these fields
     if (body.job_title !== undefined) updateData.job_title = body.job_title;
     if (body.department !== undefined) updateData.department = body.department;
-    if (body.work_location !== undefined) updateData.work_location = body.work_location;
+    if (body.work_location !== undefined)
+      updateData.work_location = body.work_location;
     if (body.start_date !== undefined) updateData.start_date = body.start_date;
     if (body.end_date !== undefined) updateData.end_date = body.end_date;
-    if (body.assignment_terms !== undefined) updateData.assignment_terms = body.assignment_terms;
-    if (body.client_contact_person !== undefined) updateData.client_contact_person = body.client_contact_person;
-    if (body.client_contact_email !== undefined) updateData.client_contact_email = body.client_contact_email;
-    if (body.client_contact_phone !== undefined) updateData.client_contact_phone = body.client_contact_phone;
+    if (body.assignment_terms !== undefined)
+      updateData.assignment_terms = body.assignment_terms;
+    if (body.client_contact_person !== undefined)
+      updateData.client_contact_person = body.client_contact_person;
+    if (body.client_contact_email !== undefined)
+      updateData.client_contact_email = body.client_contact_email;
+    if (body.client_contact_phone !== undefined)
+      updateData.client_contact_phone = body.client_contact_phone;
     if (body.notes !== undefined) updateData.notes = body.notes;
 
     // Status updates
@@ -201,7 +208,9 @@ export async function PUT(
     }
 
     // Update assignment
-    const { data: updatedAssignment, error: updateError } = await (supabaseAdmin.from('client_assignments') as any)
+    const { data: updatedAssignment, error: updateError } = await (
+      supabaseAdmin.from('client_assignments') as any
+    )
       .update(updateData)
       .eq('id', id)
       .select()
@@ -237,7 +246,7 @@ export async function DELETE(
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -251,15 +260,19 @@ export async function DELETE(
     const body = await request.json();
 
     // Get existing assignment
-    const { data: existingAssignment } = await (supabaseAdmin.from('client_assignments') as any)
-      .select(`
+    const { data: existingAssignment } = await (
+      supabaseAdmin.from('client_assignments') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           id,
           employer_id,
           company_id
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -281,22 +294,24 @@ export async function DELETE(
       const employee = existingAssignment.employer_employee;
       if (employee.employer_id !== user.id) {
         return NextResponse.json(
-          { error: 'Unauthorized - Only employer or admin can delete assignments' },
+          {
+            error:
+              'Unauthorized - Only employer or admin can delete assignments',
+          },
           { status: 403 }
         );
       }
 
       // Company scoping
       if (employee.company_id !== userProfile?.active_company_id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
     // Soft delete by setting status to terminated
-    const { error: updateError } = await (supabaseAdmin.from('client_assignments') as any)
+    const { error: updateError } = await (
+      supabaseAdmin.from('client_assignments') as any
+    )
       .update({
         status: 'terminated',
         terminated_at: new Date().toISOString(),
@@ -324,4 +339,3 @@ export async function DELETE(
     );
   }
 }
-

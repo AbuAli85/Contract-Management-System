@@ -39,22 +39,34 @@ export function PromotersEmployerDashboard({
 
   // Calculate employer-specific metrics
   const employerMetrics = useMemo(() => {
-    const assignedPromoters = promoters.filter(p => p.employer_id === roleContext.employerId);
-    const activeCount = assignedPromoters.filter(p => p.overallStatus === 'active').length;
-    const criticalCount = assignedPromoters.filter(p => p.overallStatus === 'critical').length;
+    const assignedPromoters = promoters.filter(
+      p => p.employer_id === roleContext.employerId
+    );
+    const activeCount = assignedPromoters.filter(
+      p => p.overallStatus === 'active'
+    ).length;
+    const criticalCount = assignedPromoters.filter(
+      p => p.overallStatus === 'critical'
+    ).length;
     const expiringCount = assignedPromoters.filter(
-      p => p.idDocument.status === 'expiring' || p.passportDocument.status === 'expiring'
+      p =>
+        p.idDocument.status === 'expiring' ||
+        p.passportDocument.status === 'expiring'
     ).length;
     const expiredCount = assignedPromoters.filter(
-      p => p.idDocument.status === 'expired' || p.passportDocument.status === 'expired'
+      p =>
+        p.idDocument.status === 'expired' ||
+        p.passportDocument.status === 'expired'
     ).length;
 
     const validDocuments = assignedPromoters.filter(
-      p => p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
+      p =>
+        p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
     ).length;
-    const complianceRate = assignedPromoters.length > 0
-      ? Math.round((validDocuments / assignedPromoters.length) * 100)
-      : 100;
+    const complianceRate =
+      assignedPromoters.length > 0
+        ? Math.round((validDocuments / assignedPromoters.length) * 100)
+        : 100;
 
     return {
       total: assignedPromoters.length,
@@ -102,7 +114,11 @@ export function PromotersEmployerDashboard({
                 </Button>
               )}
               {onViewAnalytics && roleContext.canViewAnalytics && (
-                <Button variant='outline' onClick={onViewAnalytics} className='gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={onViewAnalytics}
+                  className='gap-2'
+                >
                   <BarChart3 className='h-4 w-4' />
                   Analytics
                 </Button>
@@ -113,19 +129,27 @@ export function PromotersEmployerDashboard({
         <CardContent className='p-6'>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             <div className='text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200'>
-              <div className='text-3xl font-bold text-blue-700'>{employerMetrics.total}</div>
+              <div className='text-3xl font-bold text-blue-700'>
+                {employerMetrics.total}
+              </div>
               <div className='text-sm text-blue-600 mt-1'>Total Promoters</div>
             </div>
             <div className='text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200'>
-              <div className='text-3xl font-bold text-green-700'>{employerMetrics.active}</div>
+              <div className='text-3xl font-bold text-green-700'>
+                {employerMetrics.active}
+              </div>
               <div className='text-sm text-green-600 mt-1'>Active</div>
             </div>
             <div className='text-center p-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg border border-amber-200'>
-              <div className='text-3xl font-bold text-amber-700'>{employerMetrics.expiring}</div>
+              <div className='text-3xl font-bold text-amber-700'>
+                {employerMetrics.expiring}
+              </div>
               <div className='text-sm text-amber-600 mt-1'>Expiring Docs</div>
             </div>
             <div className='text-center p-4 bg-gradient-to-br from-red-50 to-rose-50 rounded-lg border border-red-200'>
-              <div className='text-3xl font-bold text-red-700'>{employerMetrics.critical}</div>
+              <div className='text-3xl font-bold text-red-700'>
+                {employerMetrics.critical}
+              </div>
               <div className='text-sm text-red-600 mt-1'>Critical</div>
             </div>
           </div>
@@ -135,7 +159,7 @@ export function PromotersEmployerDashboard({
       {/* Metrics Cards */}
       <PromotersMetricsCards
         metrics={employerMetrics}
-        onCardClick={(filterType) => {
+        onCardClick={filterType => {
           // Handle filter clicks
         }}
         activeFilter={null}
@@ -143,7 +167,9 @@ export function PromotersEmployerDashboard({
 
       {/* Enhanced Charts */}
       <PromotersEnhancedCharts
-        promoters={promoters.filter(p => p.employer_id === roleContext.employerId)}
+        promoters={promoters.filter(
+          p => p.employer_id === roleContext.employerId
+        )}
         metrics={employerMetrics}
       />
 
@@ -154,7 +180,9 @@ export function PromotersEmployerDashboard({
             <div className='flex items-center justify-between'>
               <div>
                 <p className='text-sm text-muted-foreground'>Compliance Rate</p>
-                <p className='text-2xl font-bold text-green-700'>{employerMetrics.complianceRate}%</p>
+                <p className='text-2xl font-bold text-green-700'>
+                  {employerMetrics.complianceRate}%
+                </p>
               </div>
               <CheckCircle className='h-8 w-8 text-green-600' />
             </div>
@@ -165,8 +193,12 @@ export function PromotersEmployerDashboard({
           <CardContent className='p-4'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-sm text-muted-foreground'>Documents Expiring</p>
-                <p className='text-2xl font-bold text-blue-700'>{employerMetrics.expiring}</p>
+                <p className='text-sm text-muted-foreground'>
+                  Documents Expiring
+                </p>
+                <p className='text-2xl font-bold text-blue-700'>
+                  {employerMetrics.expiring}
+                </p>
               </div>
               <AlertTriangle className='h-8 w-8 text-blue-600' />
             </div>
@@ -177,8 +209,12 @@ export function PromotersEmployerDashboard({
           <CardContent className='p-4'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-sm text-muted-foreground'>Expired Documents</p>
-                <p className='text-2xl font-bold text-red-700'>{employerMetrics.expired}</p>
+                <p className='text-sm text-muted-foreground'>
+                  Expired Documents
+                </p>
+                <p className='text-2xl font-bold text-red-700'>
+                  {employerMetrics.expired}
+                </p>
               </div>
               <FileText className='h-8 w-8 text-red-600' />
             </div>
@@ -188,4 +224,3 @@ export function PromotersEmployerDashboard({
     </div>
   );
 }
-

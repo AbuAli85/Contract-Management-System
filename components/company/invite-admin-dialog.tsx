@@ -70,30 +70,36 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
           data,
           url: response.url,
         });
-        
+
         // Build a comprehensive error message
-        let errorMessage = data.message || data.error || 'Failed to send invitation';
-        
+        let errorMessage =
+          data.message || data.error || 'Failed to send invitation';
+
         // If there are details with steps, include them
         if (data.details && data.details.steps) {
-          errorMessage += '\n\n' + data.details.steps.join('\n');
+          errorMessage += `\n\n${data.details.steps.join('\n')}`;
         } else if (data.details && typeof data.details === 'string') {
-          errorMessage += '\n\n' + data.details;
+          errorMessage += `\n\n${data.details}`;
         }
-        
+
         // Include technical details in development
         if (process.env.NODE_ENV === 'development' && data.technicalDetails) {
-          console.error('[Invite Admin Dialog] Technical Details:', data.technicalDetails);
+          console.error(
+            '[Invite Admin Dialog] Technical Details:',
+            data.technicalDetails
+          );
         }
-        
+
         throw new Error(errorMessage);
       }
 
       toast({
         title: data.is_new_user ? '📧 Invitation Sent' : '✅ Member Added',
-        description: data.message || (data.is_new_user 
-          ? 'An invitation email has been sent to the user.'
-          : 'The member has been added to the company.'),
+        description:
+          data.message ||
+          (data.is_new_user
+            ? 'An invitation email has been sent to the user.'
+            : 'The member has been added to the company.'),
       });
 
       setOpen(false);
@@ -111,10 +117,12 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
         error,
         stack: error.stack,
       });
-      
+
       toast({
         title: 'Error',
-        description: error.message || 'An unexpected error occurred. Please check the console for details.',
+        description:
+          error.message ||
+          'An unexpected error occurred. Please check the console for details.',
         variant: 'destructive',
       });
     } finally {
@@ -125,114 +133,129 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <UserPlus className="h-4 w-4" />
+        <Button variant='outline' className='gap-2'>
+          <UserPlus className='h-4 w-4' />
           Invite Admin
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Shield className='h-5 w-5 text-blue-600' />
             Invite Admin or Manager
           </DialogTitle>
           <DialogDescription>
-            Invite someone to help manage this company. They'll get an email notification.
+            Invite someone to help manage this company. They'll get an email
+            notification.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='email' className='flex items-center gap-2'>
+              <Mail className='h-4 w-4' />
               Email Address *
             </Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="colleague@example.com"
+              id='email'
+              type='email'
+              placeholder='colleague@example.com'
               value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, email: e.target.value }))
+              }
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Role *</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='role'>Role *</Label>
             <Select
               value={formData.role}
-              onValueChange={(v) => setFormData(prev => ({ ...prev, role: v }))}
+              onValueChange={v => setFormData(prev => ({ ...prev, role: v }))}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">
-                  <div className="flex flex-col">
-                    <span className="font-medium">Admin</span>
+                <SelectItem value='admin'>
+                  <div className='flex flex-col'>
+                    <span className='font-medium'>Admin</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="manager">
-                  <span className="font-medium">Manager</span>
+                <SelectItem value='manager'>
+                  <span className='font-medium'>Manager</span>
                 </SelectItem>
-                <SelectItem value="hr">
-                  <span className="font-medium">HR Staff</span>
+                <SelectItem value='hr'>
+                  <span className='font-medium'>HR Staff</span>
                 </SelectItem>
-                <SelectItem value="accountant">
-                  <span className="font-medium">Accountant</span>
+                <SelectItem value='accountant'>
+                  <span className='font-medium'>Accountant</span>
                 </SelectItem>
-                <SelectItem value="member">
-                  <span className="font-medium">Team Member</span>
+                <SelectItem value='member'>
+                  <span className='font-medium'>Team Member</span>
                 </SelectItem>
-                <SelectItem value="viewer">
-                  <span className="font-medium">Viewer (Read-only)</span>
+                <SelectItem value='viewer'>
+                  <span className='font-medium'>Viewer (Read-only)</span>
                 </SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-gray-500">{roleDescriptions[formData.role]}</p>
+            <p className='text-xs text-gray-500'>
+              {roleDescriptions[formData.role]}
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='department'>Department</Label>
               <Input
-                id="department"
-                placeholder="e.g., Operations"
+                id='department'
+                placeholder='e.g., Operations'
                 value={formData.department}
-                onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, department: e.target.value }))
+                }
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="job_title" className="flex items-center gap-1">
-                <Briefcase className="h-3 w-3" />
+            <div className='space-y-2'>
+              <Label htmlFor='job_title' className='flex items-center gap-1'>
+                <Briefcase className='h-3 w-3' />
                 Job Title
               </Label>
               <Input
-                id="job_title"
-                placeholder="e.g., Operations Manager"
+                id='job_title'
+                placeholder='e.g., Operations Manager'
                 value={formData.job_title}
-                onChange={(e) => setFormData(prev => ({ ...prev, job_title: e.target.value }))}
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, job_title: e.target.value }))
+                }
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="message">Personal Message (Optional)</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='message'>Personal Message (Optional)</Label>
             <Textarea
-              id="message"
-              placeholder="Add a personal note to the invitation..."
+              id='message'
+              placeholder='Add a personal note to the invitation...'
               value={formData.message}
-              onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, message: e.target.value }))
+              }
               rows={2}
             />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.email}>
-              {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            <Button type='submit' disabled={loading || !formData.email}>
+              {loading && <Loader2 className='h-4 w-4 animate-spin mr-2' />}
               Send Invitation
             </Button>
           </DialogFooter>
@@ -241,4 +264,3 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
     </Dialog>
   );
 }
-

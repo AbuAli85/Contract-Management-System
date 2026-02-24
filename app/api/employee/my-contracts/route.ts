@@ -38,7 +38,8 @@ export async function GET(request: NextRequest) {
     // Build query for contracts
     let query = supabase
       .from('contracts')
-      .select(`
+      .select(
+        `
         id,
         contract_number,
         title,
@@ -70,7 +71,8 @@ export async function GET(request: NextRequest) {
           name_ar,
           logo_url
         )
-      `)
+      `
+      )
       .eq('promoter_id', promoter.id)
       .order('start_date', { ascending: false });
 
@@ -102,8 +104,8 @@ export async function GET(request: NextRequest) {
       const today = new Date();
       return startDate <= today && endDate >= today;
     });
-    const expiredContracts = allContracts.filter(c => 
-      new Date(c.end_date) < new Date()
+    const expiredContracts = allContracts.filter(
+      c => new Date(c.end_date) < new Date()
     );
 
     return NextResponse.json({
@@ -125,4 +127,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

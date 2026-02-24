@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,7 +18,7 @@ import { NotificationSettings } from '@/components/notifications/notification-se
 import { useNotifications } from '@/hooks/use-notifications-enhanced';
 
 export default function NotificationsPage() {
-  const { summary, loading, error, unreadCount, hasUnread, hasHighPriority } =
+  const { summary, _loading, _error, unreadCount, hasUnread, hasHighPriority } =
     useNotifications();
 
   const [activeTab, setActiveTab] = useState('center');

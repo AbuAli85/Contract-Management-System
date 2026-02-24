@@ -86,8 +86,12 @@ const api = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(errorData.error || errorData.message || 'Failed to update promoter');
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: 'Unknown error' }));
+      throw new Error(
+        errorData.error || errorData.message || 'Failed to update promoter'
+      );
     }
     const responseData = await response.json();
     return responseData.promoter || responseData;

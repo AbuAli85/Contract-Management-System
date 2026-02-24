@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
 import { withRBAC } from '@/lib/rbac/guard';
 
 export const POST = withRBAC(

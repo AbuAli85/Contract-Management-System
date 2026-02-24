@@ -207,9 +207,8 @@ export function QuickFixWorkflowDialog({
           for (const action of case_.actions) {
             if (action.type === 'reminder' && action.documentType) {
               // Send reminder
-              const { sendDocumentExpiryReminder } = await import(
-                '@/lib/services/promoter-notification.service'
-              );
+              const { sendDocumentExpiryReminder } =
+                await import('@/lib/services/promoter-notification.service');
 
               const expiryDate =
                 action.documentType === 'id_card'
@@ -234,9 +233,8 @@ export function QuickFixWorkflowDialog({
               action.documentType
             ) {
               // Request document
-              const { sendDocumentRequest } = await import(
-                '@/lib/services/promoter-notification.service'
-              );
+              const { sendDocumentRequest } =
+                await import('@/lib/services/promoter-notification.service');
 
               await sendDocumentRequest({
                 promoterId: case_.promoter.id,

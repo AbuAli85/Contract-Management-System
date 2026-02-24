@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -20,14 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import {
-  FileText,
-  Download,
-  Eye,
-  Plus,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { FileText, Download, Eye } from 'lucide-react';
 
 interface Employee {
   id: number;
@@ -62,7 +54,7 @@ export default function DocumentGenerationPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [additionalData, setAdditionalData] = useState<Record<string, any>>({});
   const [generatedDocs, setGeneratedDocs] = useState<GeneratedDocument[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {

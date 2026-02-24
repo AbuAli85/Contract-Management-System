@@ -17,7 +17,7 @@ export default function AddNewPromoterPage() {
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [_isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormSubmit = () => {
     setIsSubmitting(true);

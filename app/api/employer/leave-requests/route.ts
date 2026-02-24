@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -42,7 +42,8 @@ export async function GET(request: NextRequest) {
     // Try to get leave requests - handle case where table doesn't exist
     try {
       let query = (supabaseAdmin.from('employee_leave_requests') as any)
-        .select(`
+        .select(
+          `
           *,
           employer_employee:employer_employee_id (
             id,
@@ -58,7 +59,8 @@ export async function GET(request: NextRequest) {
           reviewed_by_user:reviewed_by (
             full_name
           )
-        `)
+        `
+        )
         .in('employer_employee_id', employerEmployeeIds)
         .order('created_at', { ascending: false });
 
@@ -67,7 +69,9 @@ export async function GET(request: NextRequest) {
       }
 
       if (employeeId) {
-        const employerEmployee = teamMembers.find(m => m.employee_id === employeeId);
+        const employerEmployee = teamMembers.find(
+          m => m.employee_id === employeeId
+        );
         if (employerEmployee) {
           query = query.eq('employer_employee_id', employerEmployee.id);
         }
@@ -77,7 +81,10 @@ export async function GET(request: NextRequest) {
 
       if (requestsError) {
         // If table doesn't exist, return empty state
-        if (requestsError.code === '42P01' || requestsError.message?.includes('does not exist')) {
+        if (
+          requestsError.code === '42P01' ||
+          requestsError.message?.includes('does not exist')
+        ) {
           return NextResponse.json({
             success: true,
             requests: [],
@@ -86,15 +93,20 @@ export async function GET(request: NextRequest) {
           });
         }
         console.error('Error fetching leave requests:', requestsError);
-        return NextResponse.json({ error: 'Failed to fetch leave requests' }, { status: 500 });
+        return NextResponse.json(
+          { error: 'Failed to fetch leave requests' },
+          { status: 500 }
+        );
       }
 
       // Calculate stats
       const allRequests = requests || [];
       const stats = {
         pending: allRequests.filter((r: any) => r.status === 'pending').length,
-        approved: allRequests.filter((r: any) => r.status === 'approved').length,
-        rejected: allRequests.filter((r: any) => r.status === 'rejected').length,
+        approved: allRequests.filter((r: any) => r.status === 'approved')
+          .length,
+        rejected: allRequests.filter((r: any) => r.status === 'rejected')
+          .length,
       };
 
       return NextResponse.json({
@@ -114,7 +126,9 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error in employer leave requests GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

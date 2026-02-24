@@ -3,12 +3,12 @@ import type { Database } from '@/types/supabase';
 
 /**
  * Supabase Client for Pages Directory
- * 
+ *
  * IMPORTANT for Single Sign-On (SSO):
  * - storageKey must match other platforms (BusinessHub, Contract-Management-System, business-services-hub)
  * - All platforms must use same Supabase project (same URL and anon key)
  * - This allows one login to work across all platforms
- * 
+ *
  * This client is safe to use in pages/ directory components
  */
 export function createClientForPages() {

@@ -12,7 +12,7 @@ export async function GET(
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -25,8 +25,11 @@ export async function GET(
     const { id } = await params;
 
     // Get document with employee info
-    const { data: document, error } = await (supabaseAdmin.from('employee_documents') as any)
-      .select(`
+    const { data: document, error } = await (
+      supabaseAdmin.from('employee_documents') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           id,
@@ -40,7 +43,8 @@ export async function GET(
             email
           )
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -64,18 +68,12 @@ export async function GET(
         employee.employer_id !== user.id &&
         employee.employee_id !== user.id
       ) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
       // Company scoping
       if (employee.company_id !== userProfile?.active_company_id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
@@ -100,7 +98,7 @@ export async function PUT(
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -114,8 +112,11 @@ export async function PUT(
     const body = await request.json();
 
     // Get existing document
-    const { data: existingDoc } = await (supabaseAdmin.from('employee_documents') as any)
-      .select(`
+    const { data: existingDoc } = await (
+      supabaseAdmin.from('employee_documents') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           id,
@@ -123,7 +124,8 @@ export async function PUT(
           company_id,
           employee_id
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -145,17 +147,16 @@ export async function PUT(
       const employee = existingDoc.employer_employee;
       if (employee.employer_id !== user.id) {
         return NextResponse.json(
-          { error: 'Unauthorized - Only employer or admin can update documents' },
+          {
+            error: 'Unauthorized - Only employer or admin can update documents',
+          },
           { status: 403 }
         );
       }
 
       // Company scoping
       if (employee.company_id !== userProfile?.active_company_id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
@@ -165,16 +166,24 @@ export async function PUT(
     };
 
     // Allow updating these fields
-    if (body.document_name !== undefined) updateData.document_name = body.document_name;
+    if (body.document_name !== undefined)
+      updateData.document_name = body.document_name;
     if (body.file_url !== undefined) updateData.file_url = body.file_url;
-    if (body.expiry_date !== undefined) updateData.expiry_date = body.expiry_date;
+    if (body.expiry_date !== undefined)
+      updateData.expiry_date = body.expiry_date;
     if (body.issue_date !== undefined) updateData.issue_date = body.issue_date;
-    if (body.issuing_authority !== undefined) updateData.issuing_authority = body.issuing_authority;
-    if (body.document_number !== undefined) updateData.document_number = body.document_number;
+    if (body.issuing_authority !== undefined)
+      updateData.issuing_authority = body.issuing_authority;
+    if (body.document_number !== undefined)
+      updateData.document_number = body.document_number;
     if (body.notes !== undefined) updateData.notes = body.notes;
 
     // Status updates (only employer/admin)
-    if (body.status !== undefined && (userProfile?.role === 'admin' || existingDoc.employer_employee.employer_id === user.id)) {
+    if (
+      body.status !== undefined &&
+      (userProfile?.role === 'admin' ||
+        existingDoc.employer_employee.employer_id === user.id)
+    ) {
       updateData.status = body.status;
       if (body.status === 'verified') {
         updateData.verified_by = user.id;
@@ -186,7 +195,9 @@ export async function PUT(
     }
 
     // Update document
-    const { data: updatedDoc, error: updateError } = await (supabaseAdmin.from('employee_documents') as any)
+    const { data: updatedDoc, error: updateError } = await (
+      supabaseAdmin.from('employee_documents') as any
+    )
       .update(updateData)
       .eq('id', id)
       .select()
@@ -222,7 +233,7 @@ export async function DELETE(
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -235,15 +246,19 @@ export async function DELETE(
     const { id } = await params;
 
     // Get existing document
-    const { data: existingDoc } = await (supabaseAdmin.from('employee_documents') as any)
-      .select(`
+    const { data: existingDoc } = await (
+      supabaseAdmin.from('employee_documents') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employee_id (
           id,
           employer_id,
           company_id
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -265,22 +280,23 @@ export async function DELETE(
       const employee = existingDoc.employer_employee;
       if (employee.employer_id !== user.id) {
         return NextResponse.json(
-          { error: 'Unauthorized - Only employer or admin can delete documents' },
+          {
+            error: 'Unauthorized - Only employer or admin can delete documents',
+          },
           { status: 403 }
         );
       }
 
       // Company scoping
       if (employee.company_id !== userProfile?.active_company_id) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
     }
 
     // Delete document
-    const { error: deleteError } = await (supabaseAdmin.from('employee_documents') as any)
+    const { error: deleteError } = await (
+      supabaseAdmin.from('employee_documents') as any
+    )
       .delete()
       .eq('id', id);
 
@@ -304,4 +320,3 @@ export async function DELETE(
     );
   }
 }
-

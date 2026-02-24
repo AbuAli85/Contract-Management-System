@@ -16,9 +16,11 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // ✅ COMPANY SCOPE: Get active company's party_id
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     let partyId: string | null = null;
 
     if (user) {

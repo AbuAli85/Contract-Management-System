@@ -25,15 +25,20 @@ async function getTasksHandler(
 
     // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
     try {
-      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(
+        id,
+        user.id
+      );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
       console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record',
-          input_id: id
+          details:
+            error.message ||
+            'Could not create or find employer_employee record',
+          input_id: id,
         },
         { status: 400 }
       );
@@ -65,7 +70,11 @@ async function getTasksHandler(
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
     // Allow if company_id is null (backwards compatibility) OR matches active company
-    if (profile?.active_company_id && teamMember.company_id && teamMember.company_id !== profile.active_company_id) {
+    if (
+      profile?.active_company_id &&
+      teamMember.company_id &&
+      teamMember.company_id !== profile.active_company_id
+    ) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }
@@ -115,10 +124,13 @@ async function getTasksHandler(
         .select('task_id')
         .in('task_id', taskIds);
 
-      commentsCount = (comments || []).reduce((acc, comment) => {
-        acc[comment.task_id] = (acc[comment.task_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      commentsCount = (comments || []).reduce(
+        (acc, comment) => {
+          acc[comment.task_id] = (acc[comment.task_id] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
     }
 
     const tasksWithComments = (tasks || []).map(task => ({
@@ -159,15 +171,20 @@ async function createTaskHandler(
 
     // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
     try {
-      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(
+        id,
+        user.id
+      );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
       console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record',
-          input_id: id
+          details:
+            error.message ||
+            'Could not create or find employer_employee record',
+          input_id: id,
         },
         { status: 400 }
       );
@@ -213,7 +230,11 @@ async function createTaskHandler(
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
     // Allow if company_id is null (backwards compatibility) OR matches active company
-    if (userProfile?.active_company_id && teamMember.company_id && teamMember.company_id !== userProfile.active_company_id) {
+    if (
+      userProfile?.active_company_id &&
+      teamMember.company_id &&
+      teamMember.company_id !== userProfile.active_company_id
+    ) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }
@@ -272,4 +293,3 @@ async function createTaskHandler(
 // Export handlers directly - internal authorization is already implemented
 export const GET = getTasksHandler;
 export const POST = createTaskHandler;
-

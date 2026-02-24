@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
 
     // Build query
     let query = (supabaseAdmin.from('employee_attendance') as any)
-      .select(`
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           id,
@@ -52,7 +53,8 @@ export async function GET(request: NextRequest) {
             avatar_url
           )
         )
-      `)
+      `
+      )
       .eq('employer_employee.company_id', profile.active_company_id);
 
     // Apply filter
@@ -63,7 +65,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Order by date descending
-    query = query.order('attendance_date', { ascending: false })
+    query = query
+      .order('attendance_date', { ascending: false })
       .order('check_in', { ascending: false });
 
     const { data: attendance, error } = await query;
@@ -94,4 +97,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

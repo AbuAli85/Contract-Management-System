@@ -23,9 +23,7 @@ export function PromotersNoResultsState({
 }: PromotersNoResultsStateProps) {
   const isArabic = locale === 'ar';
 
-  const title = isArabic
-    ? 'لم يتم العثور على مروجين'
-    : 'No promoters found';
+  const title = isArabic ? 'لم يتم العثور على مروجين' : 'No promoters found';
   const description = isArabic
     ? searchTerm
       ? `لا توجد نتائج تطابق "${searchTerm}". جرب تعديل مصطلحات البحث أو المرشحات الخاصة بك.`
@@ -152,4 +150,3 @@ export function PromotersNoResultsState({
     </div>
   );
 }
-

@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('salary_structures')
-      .select(`
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           id,
@@ -46,7 +47,8 @@ export async function GET(request: NextRequest) {
             name_ar
           )
         )
-      `)
+      `
+      )
       .order('effective_from', { ascending: false });
 
     // Filter by employer_employee_id if provided
@@ -61,7 +63,10 @@ export async function GET(request: NextRequest) {
 
     // Company scoping for non-admins
     if (profile?.role !== 'admin') {
-      query = query.eq('employer_employee.company_id', profile?.active_company_id);
+      query = query.eq(
+        'employer_employee.company_id',
+        profile?.active_company_id
+      );
     }
 
     const { data, error } = await query;
@@ -118,7 +123,10 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!employer_employee_id || !basic_salary || !effective_from) {
       return NextResponse.json(
-        { error: 'employer_employee_id, basic_salary, and effective_from are required' },
+        {
+          error:
+            'employer_employee_id, basic_salary, and effective_from are required',
+        },
         { status: 400 }
       );
     }
@@ -147,7 +155,8 @@ export async function POST(request: NextRequest) {
     const isEmployer = employeeLink.employer_id === user.id;
     const isAdmin = profile?.role === 'admin';
     const isHR = profile?.role === 'hr_manager' || profile?.role === 'manager';
-    const isSameCompany = profile?.active_company_id === employeeLink.company_id;
+    const isSameCompany =
+      profile?.active_company_id === employeeLink.company_id;
 
     if (!isEmployer && !isAdmin && !(isHR && isSameCompany)) {
       return NextResponse.json(
@@ -159,13 +168,18 @@ export async function POST(request: NextRequest) {
     // Deactivate existing active structure if creating new one
     if (effective_to === null || !effective_to) {
       await (supabaseAdmin.from('salary_structures') as any)
-        .update({ status: 'inactive', effective_to: new Date(effective_from).toISOString().split('T')[0] })
+        .update({
+          status: 'inactive',
+          effective_to: new Date(effective_from).toISOString().split('T')[0],
+        })
         .eq('employer_employee_id', employer_employee_id)
         .eq('status', 'active');
     }
 
     // Create new salary structure
-    const { data: salaryStructure, error: createError } = await (supabaseAdmin.from('salary_structures') as any)
+    const { data: salaryStructure, error: createError } = await (
+      supabaseAdmin.from('salary_structures') as any
+    )
       .insert({
         employer_employee_id,
         basic_salary: parseFloat(basic_salary),
@@ -186,23 +200,25 @@ export async function POST(request: NextRequest) {
     if (createError) {
       console.error('Error creating salary structure:', createError);
       return NextResponse.json(
-        { error: 'Failed to create salary structure', details: createError.message },
+        {
+          error: 'Failed to create salary structure',
+          details: createError.message,
+        },
         { status: 500 }
       );
     }
 
     // Create salary history entry
-    await (supabaseAdmin.from('salary_history') as any)
-      .insert({
-        employer_employee_id,
-        salary_structure_id: salaryStructure.id,
-        change_type: 'hiring',
-        new_salary: parseFloat(basic_salary),
-        change_amount: parseFloat(basic_salary),
-        effective_date: effective_from,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      });
+    await (supabaseAdmin.from('salary_history') as any).insert({
+      employer_employee_id,
+      salary_structure_id: salaryStructure.id,
+      change_type: 'hiring',
+      new_salary: parseFloat(basic_salary),
+      change_amount: parseFloat(basic_salary),
+      effective_date: effective_from,
+      approved_by: user.id,
+      approved_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,
@@ -217,4 +233,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -51,13 +51,41 @@ interface CompanyPermissionsManagerProps {
 }
 
 const PERMISSIONS = [
-  { value: 'company:create', label: 'Create Companies', description: 'Can create new companies' },
-  { value: 'company:edit', label: 'Edit Company', description: 'Can edit company details' },
-  { value: 'company:delete', label: 'Delete Company', description: 'Can delete company' },
-  { value: 'company:view', label: 'View Company', description: 'Can view company information' },
-  { value: 'company:settings', label: 'Company Settings', description: 'Can manage company settings' },
-  { value: 'company:manage_members', label: 'Manage Members', description: 'Can add/remove members' },
-  { value: 'company:invite_users', label: 'Invite Users', description: 'Can invite users to company' },
+  {
+    value: 'company:create',
+    label: 'Create Companies',
+    description: 'Can create new companies',
+  },
+  {
+    value: 'company:edit',
+    label: 'Edit Company',
+    description: 'Can edit company details',
+  },
+  {
+    value: 'company:delete',
+    label: 'Delete Company',
+    description: 'Can delete company',
+  },
+  {
+    value: 'company:view',
+    label: 'View Company',
+    description: 'Can view company information',
+  },
+  {
+    value: 'company:settings',
+    label: 'Company Settings',
+    description: 'Can manage company settings',
+  },
+  {
+    value: 'company:manage_members',
+    label: 'Manage Members',
+    description: 'Can add/remove members',
+  },
+  {
+    value: 'company:invite_users',
+    label: 'Invite Users',
+    description: 'Can invite users to company',
+  },
 ];
 
 export function CompanyPermissionsManager({
@@ -82,7 +110,9 @@ export function CompanyPermissionsManager({
 
   const fetchPermissions = async () => {
     try {
-      const response = await fetch(`/api/company/permissions?company_id=${companyId}`);
+      const response = await fetch(
+        `/api/company/permissions?company_id=${companyId}`
+      );
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -186,42 +216,49 @@ export function CompanyPermissionsManager({
   };
 
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const getUserPermissions = (userId: string) => {
-    return permissions.filter(p => p.user_id === userId && p.granted && p.is_active);
+    return permissions.filter(
+      p => p.user_id === userId && p.granted && p.is_active
+    );
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
+      <div className='flex items-center justify-center p-8'>
+        <Loader2 className='h-6 w-6 animate-spin' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
         <div>
-          <h3 className="text-lg font-semibold">Company Permissions</h3>
-          <p className="text-sm text-gray-500">{companyName}</p>
+          <h3 className='text-lg font-semibold'>Company Permissions</h3>
+          <p className='text-sm text-gray-500'>{companyName}</p>
         </div>
         <Button onClick={() => setIsDialogOpen(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <UserPlus className='h-4 w-4 mr-2' />
           Grant Permission
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {users.map((user) => {
+      <div className='space-y-4'>
+        {users.map(user => {
           const userPerms = getUserPermissions(user.id);
           return (
             <Card key={user.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-3'>
                     <Avatar>
                       {user.avatar_url ? (
                         <AvatarImage src={user.avatar_url} />
@@ -231,34 +268,41 @@ export function CompanyPermissionsManager({
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-base">{user.full_name || user.email}</CardTitle>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <CardTitle className='text-base'>
+                        {user.full_name || user.email}
+                      </CardTitle>
+                      <p className='text-sm text-gray-500'>{user.email}</p>
                     </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 {userPerms.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {userPerms.map((perm) => (
+                  <div className='flex flex-wrap gap-2'>
+                    {userPerms.map(perm => (
                       <Badge
                         key={perm.id}
-                        variant="secondary"
-                        className="flex items-center gap-1"
+                        variant='secondary'
+                        className='flex items-center gap-1'
                       >
-                        <Shield className="h-3 w-3" />
-                        {PERMISSIONS.find(p => p.value === perm.permission)?.label || perm.permission}
+                        <Shield className='h-3 w-3' />
+                        {PERMISSIONS.find(p => p.value === perm.permission)
+                          ?.label || perm.permission}
                         <button
-                          onClick={() => handleRevokePermission(user.id, perm.permission)}
-                          className="ml-1 hover:text-red-600"
+                          onClick={() =>
+                            handleRevokePermission(user.id, perm.permission)
+                          }
+                          className='ml-1 hover:text-red-600'
                         >
-                          <X className="h-3 w-3" />
+                          <X className='h-3 w-3' />
                         </button>
                       </Badge>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No special permissions assigned</p>
+                  <p className='text-sm text-gray-500'>
+                    No special permissions assigned
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -275,15 +319,15 @@ export function CompanyPermissionsManager({
               Grant a specific permission to a user for this company.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="user">User</Label>
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='user'>User</Label>
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a user" />
+                  <SelectValue placeholder='Select a user' />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((user) => (
+                  {users.map(user => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.full_name || user.email}
                     </SelectItem>
@@ -291,45 +335,50 @@ export function CompanyPermissionsManager({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="permission">Permission</Label>
-              <Select value={selectedPermission} onValueChange={setSelectedPermission}>
+            <div className='space-y-2'>
+              <Label htmlFor='permission'>Permission</Label>
+              <Select
+                value={selectedPermission}
+                onValueChange={setSelectedPermission}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a permission" />
+                  <SelectValue placeholder='Select a permission' />
                 </SelectTrigger>
                 <SelectContent>
-                  {PERMISSIONS.map((perm) => (
+                  {PERMISSIONS.map(perm => (
                     <SelectItem key={perm.value} value={perm.value}>
                       <div>
-                        <div className="font-medium">{perm.label}</div>
-                        <div className="text-xs text-gray-500">{perm.description}</div>
+                        <div className='font-medium'>{perm.label}</div>
+                        <div className='text-xs text-gray-500'>
+                          {perm.description}
+                        </div>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="expires_at">Expires At (Optional)</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='expires_at'>Expires At (Optional)</Label>
               <Input
-                id="expires_at"
-                type="datetime-local"
+                id='expires_at'
+                type='datetime-local'
                 value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
+                onChange={e => setExpiresAt(e.target.value)}
               />
-              <p className="text-xs text-gray-500">
+              <p className='text-xs text-gray-500'>
                 Leave empty for permanent permission
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant='outline' onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleGrantPermission} disabled={saving}>
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                   Granting...
                 </>
               ) : (
@@ -342,4 +391,3 @@ export function CompanyPermissionsManager({
     </div>
   );
 }
-

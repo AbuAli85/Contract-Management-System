@@ -127,7 +127,7 @@ export default function UnifiedLoginForm() {
       // Add CAPTCHA token if available
       if (captchaToken) {
         authOptions.options = {
-          captchaToken: captchaToken,
+          captchaToken,
         };
       }
 
@@ -198,7 +198,7 @@ export default function UnifiedLoginForm() {
       }
 
       // Check if user must change password (invited employee first login)
-      const mustChangePassword = 
+      const mustChangePassword =
         authData.user.user_metadata?.must_change_password === true ||
         profile?.must_change_password === true;
 
@@ -223,16 +223,16 @@ export default function UnifiedLoginForm() {
         .eq('employee_id', authData.user.id)
         .eq('employment_status', 'active')
         .maybeSingle();
-      
+
       const isEmployee = !!employeeRecord;
-      
+
       // Check if this user is an employer (has team members)
       const { data: employerRecord } = await supabase
         .from('employer_employees')
         .select('id')
         .eq('employer_id', authData.user.id)
         .maybeSingle();
-      
+
       const isEmployer = !!employerRecord || userRole === 'employer';
 
       switch (userRole) {

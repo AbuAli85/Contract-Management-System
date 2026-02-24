@@ -15,12 +15,12 @@ interface HtmlDirUpdaterProps {
 export function HtmlDirUpdater({ locale }: HtmlDirUpdaterProps) {
   useEffect(() => {
     const direction = getDirection(locale);
-    
+
     // Update HTML element attributes
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('dir', direction);
       document.documentElement.setAttribute('lang', locale);
-      
+
       // Add/remove RTL class for styling
       if (direction === 'rtl') {
         document.documentElement.classList.add('rtl');

@@ -58,7 +58,9 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
   useEffect(() => {
     const safetyTimer = setTimeout(() => {
       if (isLoading) {
-        console.warn('⚠️ RBAC loading timeout - forcing completion with default role');
+        console.warn(
+          '⚠️ RBAC loading timeout - forcing completion with default role'
+        );
         setUserRole('user');
         setUserPermissions(getUserPermissions('user'));
         setIsLoading(false);

@@ -34,13 +34,13 @@ export async function GET(request: NextRequest) {
       const parts = month.split('-');
       const year = parts[0];
       const monthNum = parts[1];
-      
+
       if (year && monthNum) {
         const yearStr: string = year;
         const monthStr: string = monthNum;
         const yearNum = parseInt(yearStr, 10);
         const monthNumParsed = parseInt(monthStr, 10);
-        
+
         if (!isNaN(yearNum) && !isNaN(monthNumParsed)) {
           startDate = `${yearStr}-${monthStr.padStart(2, '0')}-01`;
           const lastDay = new Date(yearNum, monthNumParsed, 0).getDate();
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     // Company scoping for non-admins - get employer_employee_ids first
     let employerEmployeeIds: string[] | null = null;
     let employerIds: string[] | null = null;
-    
+
     if (profile?.role !== 'admin' && profile?.active_company_id) {
       // Get employer profiles that belong to this company
       const { data: employerProfiles } = await supabase
@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
         .eq('active_company_id', profile.active_company_id);
 
       if (employerProfiles && employerProfiles.length > 0) {
-        employerIds = employerProfiles.map((p) => p.id);
-        
+        employerIds = employerProfiles.map(p => p.id);
+
         // Get employer_employee_ids for these employers
         const { data: employerEmployees } = await supabase
           .from('employer_employees')
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
           .in('employer_id', employerIds);
 
         if (employerEmployees && employerEmployees.length > 0) {
-          employerEmployeeIds = employerEmployees.map((ee) => ee.id);
+          employerEmployeeIds = employerEmployees.map(ee => ee.id);
         } else {
           // No employees found for this company, return empty result
           return NextResponse.json({
@@ -109,7 +109,8 @@ export async function GET(request: NextRequest) {
     // Note: We'll fetch employee profile data separately to avoid nested relationship issues
     let query = supabase
       .from('employee_attendance')
-      .select(`
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           id,
@@ -118,7 +119,8 @@ export async function GET(request: NextRequest) {
           job_title,
           department
         )
-      `)
+      `
+      )
       .order('attendance_date', { ascending: false });
 
     // Apply filters
@@ -168,11 +170,13 @@ export async function GET(request: NextRequest) {
 
     // Fetch employee profile data separately for each attendance record
     if (attendance && attendance.length > 0) {
-      const employeeIds = [...new Set(
-        attendance
-          .map((a: any) => a.employer_employee?.employee_id)
-          .filter(Boolean)
-      )];
+      const employeeIds = [
+        ...new Set(
+          attendance
+            .map((a: any) => a.employer_employee?.employee_id)
+            .filter(Boolean)
+        ),
+      ];
 
       if (employeeIds.length > 0) {
         const { data: employeeProfiles } = await supabase
@@ -187,9 +191,8 @@ export async function GET(request: NextRequest) {
 
         attendance.forEach((record: any) => {
           if (record.employer_employee?.employee_id) {
-            record.employer_employee.employee = employeeMap.get(
-              record.employer_employee.employee_id
-            ) || null;
+            record.employer_employee.employee =
+              employeeMap.get(record.employer_employee.employee_id) || null;
           }
         });
       }
@@ -197,7 +200,8 @@ export async function GET(request: NextRequest) {
 
     // Calculate stats
     const today = new Date().toISOString().split('T')[0];
-    const todayRecords = attendance?.filter((a) => a.attendance_date === today) || [];
+    const todayRecords =
+      attendance?.filter(a => a.attendance_date === today) || [];
 
     // Get total employees count
     let employeesQuery = supabase
@@ -213,10 +217,10 @@ export async function GET(request: NextRequest) {
 
     const stats = {
       total_employees: totalEmployees || 0,
-      present_today: todayRecords.filter((a) => a.status === 'present').length,
-      absent_today: todayRecords.filter((a) => a.status === 'absent').length,
-      late_today: todayRecords.filter((a) => a.status === 'late').length,
-      on_leave_today: todayRecords.filter((a) => a.status === 'leave').length,
+      present_today: todayRecords.filter(a => a.status === 'present').length,
+      absent_today: todayRecords.filter(a => a.status === 'absent').length,
+      late_today: todayRecords.filter(a => a.status === 'late').length,
+      on_leave_today: todayRecords.filter(a => a.status === 'leave').length,
       average_hours:
         attendance?.reduce((sum, a) => sum + (a.total_hours || 0), 0) /
           (attendance?.length || 1) || 0,
@@ -237,4 +241,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

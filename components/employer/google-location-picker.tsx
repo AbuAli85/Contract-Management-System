@@ -3,7 +3,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Loader2, X, Navigation, Clock, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  MapPin,
+  Loader2,
+  X,
+  Navigation,
+  Clock,
+  Building2,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -50,7 +59,7 @@ declare global {
       'gmpx-place-picker': React.DetailedHTMLProps<any, HTMLElement>;
     }
   }
-  
+
   interface Window {
     google?: {
       maps?: {
@@ -68,7 +77,12 @@ const STORAGE_KEY = 'google_location_picker_recent';
 const MAX_RECENT_LOCATIONS = 10;
 
 // Calculate distance between two coordinates (Haversine formula)
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const R = 6371e3; // Earth's radius in meters
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
@@ -110,11 +124,14 @@ export function GoogleLocationPicker({
   const [apiError, setApiError] = useState<string | null>(null);
   const [recentLocations, setRecentLocations] = useState<RecentLocation[]>([]);
   const [officeLocations, setOfficeLocations] = useState<OfficeLocation[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  
+
   const placePickerRef = useRef<any>(null);
   const apiLoaderRef = useRef<any>(null);
   const { toast } = useToast();
@@ -169,20 +186,21 @@ export function GoogleLocationPicker({
 
     setDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         setCurrentLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         });
         setDetectingLocation(false);
       },
-      (error) => {
+      error => {
         console.error('Error getting current location:', error);
         setDetectingLocation(false);
         if (error.code === error.PERMISSION_DENIED) {
           toast({
             title: 'Location Access Denied',
-            description: 'Please enable location permissions to use this feature.',
+            description:
+              'Please enable location permissions to use this feature.',
             variant: 'destructive',
           });
         }
@@ -195,25 +213,28 @@ export function GoogleLocationPicker({
     );
   }, [toast]);
 
-  const saveToRecent = useCallback((location: RecentLocation) => {
-    try {
-      const updated = [
-        location,
-        ...recentLocations.filter(
-          (loc) =>
-            !(
-              Math.abs(loc.latitude - location.latitude) < 0.0001 &&
-              Math.abs(loc.longitude - location.longitude) < 0.0001
-            )
-        ),
-      ].slice(0, MAX_RECENT_LOCATIONS);
+  const saveToRecent = useCallback(
+    (location: RecentLocation) => {
+      try {
+        const updated = [
+          location,
+          ...recentLocations.filter(
+            loc =>
+              !(
+                Math.abs(loc.latitude - location.latitude) < 0.0001 &&
+                Math.abs(loc.longitude - location.longitude) < 0.0001
+              )
+          ),
+        ].slice(0, MAX_RECENT_LOCATIONS);
 
-      setRecentLocations(updated);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error saving recent location:', error);
-    }
-  }, [recentLocations]);
+        setRecentLocations(updated);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch (error) {
+        console.error('Error saving recent location:', error);
+      }
+    },
+    [recentLocations]
+  );
 
   // Set API key on API loader element
   useEffect(() => {
@@ -228,12 +249,16 @@ export function GoogleLocationPicker({
   // Load Extended Component Library
   useEffect(() => {
     if (!apiKey) {
-      setApiError('Google Maps API key is not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.');
+      setApiError(
+        'Google Maps API key is not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.'
+      );
       return;
     }
 
     // Check if already loaded
-    const existingScript = document.querySelector('script[src*="extended-component-library"]');
+    const existingScript = document.querySelector(
+      'script[src*="extended-component-library"]'
+    );
     if (existingScript) {
       setMapsLoaded(true);
       setTimeout(() => {
@@ -245,7 +270,8 @@ export function GoogleLocationPicker({
     // Load the Extended Component Library
     const script = document.createElement('script');
     script.type = 'module';
-    script.src = 'https://ajax.googleapis.com/ajax/libs/@googlemaps/extended-component-library/0.6.11/index.min.js';
+    script.src =
+      'https://ajax.googleapis.com/ajax/libs/@googlemaps/extended-component-library/0.6.11/index.min.js';
     script.onload = () => {
       setMapsLoaded(true);
       // Ensure API loader has the key
@@ -253,19 +279,24 @@ export function GoogleLocationPicker({
       if (loader && apiKey) {
         loader.setAttribute('key', apiKey);
       }
-      customElements.whenDefined('gmpx-place-picker').then(() => {
-        setTimeout(() => {
-          initializePlacePicker();
-        }, 100);
-      }).catch((error) => {
-        console.error('Failed to define gmpx-place-picker:', error);
-        setApiError('Failed to initialize Google Maps place picker.');
-      });
+      customElements
+        .whenDefined('gmpx-place-picker')
+        .then(() => {
+          setTimeout(() => {
+            initializePlacePicker();
+          }, 100);
+        })
+        .catch(error => {
+          console.error('Failed to define gmpx-place-picker:', error);
+          setApiError('Failed to initialize Google Maps place picker.');
+        });
     };
     script.onerror = () => {
       console.error('Failed to load Google Maps Extended Component Library.');
       setMapsLoaded(false);
-      setApiError('Failed to load Google Maps. Please check your internet connection and try again.');
+      setApiError(
+        'Failed to load Google Maps. Please check your internet connection and try again.'
+      );
     };
     document.head.appendChild(script);
 
@@ -302,7 +333,9 @@ export function GoogleLocationPicker({
       }
 
       if (!place.location) {
-        setApiError(`No details available for: "${place.displayName || place.name || 'selected location'}"`);
+        setApiError(
+          `No details available for: "${place.displayName || place.name || 'selected location'}"`
+        );
         setSelectedLocation(null);
         return;
       }
@@ -315,7 +348,7 @@ export function GoogleLocationPicker({
         // Handle different location formats
         let lat = 0;
         let lng = 0;
-        
+
         if (typeof place.location.lat === 'function') {
           lat = place.location.lat();
           lng = place.location.lng();
@@ -327,12 +360,20 @@ export function GoogleLocationPicker({
         const location = {
           latitude: lat,
           longitude: lng,
-          address: place.formattedAddress || place.formatted_address || place.displayName || '',
-          name: place.displayName || place.name || (place.formattedAddress?.split(',')[0]) || '',
+          address:
+            place.formattedAddress ||
+            place.formatted_address ||
+            place.displayName ||
+            '',
+          name:
+            place.displayName ||
+            place.name ||
+            place.formattedAddress?.split(',')[0] ||
+            '',
         };
 
         setSelectedLocation(location);
-        
+
         // Save to recent locations
         saveToRecent({
           ...location,
@@ -341,14 +382,34 @@ export function GoogleLocationPicker({
 
         // Check distance to office locations
         if (officeLocations.length > 0) {
-          const nearestOffice = officeLocations.reduce((nearest, office) => {
-            const distance = calculateDistance(lat, lng, office.latitude, office.longitude);
-            const nearestDistance = nearest ? calculateDistance(lat, lng, nearest.latitude, nearest.longitude) : Infinity;
-            return distance < nearestDistance ? office : nearest;
-          }, null as OfficeLocation | null);
+          const nearestOffice = officeLocations.reduce(
+            (nearest, office) => {
+              const distance = calculateDistance(
+                lat,
+                lng,
+                office.latitude,
+                office.longitude
+              );
+              const nearestDistance = nearest
+                ? calculateDistance(
+                    lat,
+                    lng,
+                    nearest.latitude,
+                    nearest.longitude
+                  )
+                : Infinity;
+              return distance < nearestDistance ? office : nearest;
+            },
+            null as OfficeLocation | null
+          );
 
           if (nearestOffice) {
-            const distance = calculateDistance(lat, lng, nearestOffice.latitude, nearestOffice.longitude);
+            const distance = calculateDistance(
+              lat,
+              lng,
+              nearestOffice.latitude,
+              nearestOffice.longitude
+            );
             if (distance <= nearestOffice.radius_meters) {
               toast({
                 title: 'Location Verified',
@@ -381,10 +442,17 @@ export function GoogleLocationPicker({
     // Also listen for global errors
     const handleError = (event: ErrorEvent) => {
       const errorMessage = event.message || '';
-      if (errorMessage.includes('BillingNotEnabled') || errorMessage.includes('billing')) {
-        setApiError('Google Maps billing is not enabled. Please enable billing in Google Cloud Console.');
+      if (
+        errorMessage.includes('BillingNotEnabled') ||
+        errorMessage.includes('billing')
+      ) {
+        setApiError(
+          'Google Maps billing is not enabled. Please enable billing in Google Cloud Console.'
+        );
       } else if (errorMessage.includes('RefererNotAllowed')) {
-        setApiError('API key is not authorized for this domain. Please add your domain to API key restrictions.');
+        setApiError(
+          'API key is not authorized for this domain. Please add your domain to API key restrictions.'
+        );
       }
     };
 
@@ -429,7 +497,7 @@ export function GoogleLocationPicker({
       name: office.name,
     });
     setShowSuggestions(false);
-    
+
     // Set value in place picker
     if (placePickerRef.current) {
       placePickerRef.current.value = office.name;
@@ -463,7 +531,8 @@ export function GoogleLocationPicker({
             latitude: currentLocation.lat,
             longitude: currentLocation.lng,
             address: results[0].formatted_address || '',
-            name: results[0].formatted_address?.split(',')[0] || 'Current Location',
+            name:
+              results[0].formatted_address?.split(',')[0] || 'Current Location',
           };
           setSelectedLocation(location);
           saveToRecent({ ...location, timestamp: Date.now() });
@@ -500,71 +569,73 @@ export function GoogleLocationPicker({
   if (!apiKey) {
     return (
       <div className={cn('space-y-2', className)}>
-        <Label htmlFor="location-search">Search Location</Label>
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+        <Label htmlFor='location-search'>Search Location</Label>
+        <Alert variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
           <AlertDescription>
-            Google Maps API key is not configured. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.
+            Google Maps API key is not configured. Please set
+            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.
           </AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  const hasSuggestions = (showRecentLocations && recentLocations.length > 0) || 
-                        (showOfficeLocations && officeLocations.length > 0) ||
-                        (showCurrentLocation && currentLocation);
+  const hasSuggestions =
+    (showRecentLocations && recentLocations.length > 0) ||
+    (showOfficeLocations && officeLocations.length > 0) ||
+    (showCurrentLocation && currentLocation);
 
   return (
     <div className={cn('space-y-3', className)}>
-      <div className="flex items-center justify-between">
-        <Label htmlFor="location-search" className="text-sm font-semibold">
+      <div className='flex items-center justify-between'>
+        <Label htmlFor='location-search' className='text-sm font-semibold'>
           Search Location
         </Label>
         {showCurrentLocation && (
           <Button
-            type="button"
-            variant="ghost"
-            size="sm"
+            type='button'
+            variant='ghost'
+            size='sm'
             onClick={handleUseCurrentLocation}
             disabled={detectingLocation || loading}
-            className="h-7 text-xs"
+            className='h-7 text-xs'
           >
             {detectingLocation ? (
               <>
-                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                <Loader2 className='mr-1 h-3 w-3 animate-spin' />
                 Detecting...
               </>
             ) : (
               <>
-                <Navigation className="mr-1 h-3 w-3" />
+                <Navigation className='mr-1 h-3 w-3' />
                 Use Current
               </>
             )}
           </Button>
         )}
       </div>
-      
+
       {/* API Loader */}
       {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment, react/no-unknown-property */}
       <gmpx-api-loader
         ref={apiLoaderRef}
-        solution-channel="GMP_GE_mapsandplacesautocomplete_v2"
+        solution-channel='GMP_GE_mapsandplacesautocomplete_v2'
         // @ts-ignore - Web component requires inline style
         style={{ display: 'none' }}
       />
 
-      <div className="relative">
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-          
+      <div className='relative'>
+        <div className='relative'>
+          <MapPin className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none' />
+
           {/* Place Picker Component */}
-          <div className="relative">
+          <div className='relative'>
             {/* eslint-disable-next-line react/no-unknown-property */}
             <gmpx-place-picker
               ref={placePickerRef}
-              placeholder="Search for location (e.g., Grand Mall Muscat, City Center Muscat)"
-              className="w-full pl-10 pr-10"
+              placeholder='Search for location (e.g., Grand Mall Muscat, City Center Muscat)'
+              className='w-full pl-10 pr-10'
               onFocus={() => {
                 setIsFocused(true);
                 if (hasSuggestions) {
@@ -579,29 +650,31 @@ export function GoogleLocationPicker({
               }}
               // @ts-ignore - CSS custom properties for web component theming
               // eslint-disable-next-line react/forbid-dom-props
-              style={{
-                '--gmpx-color-surface': 'hsl(var(--background))',
-                '--gmpx-color-on-surface': 'hsl(var(--foreground))',
-                '--gmpx-color-outline': 'hsl(var(--input))',
-                '--gmpx-font-family-base': 'inherit',
-                '--gmpx-font-size-base': '0.875rem',
-              } as React.CSSProperties}
+              style={
+                {
+                  '--gmpx-color-surface': 'hsl(var(--background))',
+                  '--gmpx-color-on-surface': 'hsl(var(--foreground))',
+                  '--gmpx-color-outline': 'hsl(var(--input))',
+                  '--gmpx-font-family-base': 'inherit',
+                  '--gmpx-font-size-base': '0.875rem',
+                } as React.CSSProperties
+              }
             />
-            
+
             {loading && (
-              <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground pointer-events-none" />
+              <Loader2 className='absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground pointer-events-none' />
             )}
-            
+
             {selectedLocation && !loading && (
               <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 z-10"
+                type='button'
+                variant='ghost'
+                size='sm'
+                className='absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 z-10'
                 onClick={clearSelection}
-                aria-label="Clear selection"
+                aria-label='Clear selection'
               >
-                <X className="h-3 w-3" />
+                <X className='h-3 w-3' />
               </Button>
             )}
           </div>
@@ -609,27 +682,32 @@ export function GoogleLocationPicker({
 
         {/* Smart Suggestions Panel */}
         {showSuggestions && hasSuggestions && isFocused && (
-          <Card className="absolute z-50 w-full mt-2 shadow-lg border">
-            <CardContent className="p-3 space-y-3 max-h-80 overflow-auto">
+          <Card className='absolute z-50 w-full mt-2 shadow-lg border'>
+            <CardContent className='p-3 space-y-3 max-h-80 overflow-auto'>
               {/* Current Location */}
               {showCurrentLocation && currentLocation && (
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Navigation className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground">CURRENT LOCATION</span>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <Navigation className='h-3.5 w-3.5 text-primary' />
+                    <span className='text-xs font-semibold text-muted-foreground'>
+                      CURRENT LOCATION
+                    </span>
                   </div>
                   <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start h-auto p-2 hover:bg-accent"
+                    type='button'
+                    variant='ghost'
+                    className='w-full justify-start h-auto p-2 hover:bg-accent'
                     onClick={handleUseCurrentLocation}
                   >
-                    <div className="flex items-start gap-2 w-full">
-                      <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium">Use Current Location</p>
-                        <p className="text-xs text-muted-foreground">
-                          {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+                    <div className='flex items-start gap-2 w-full'>
+                      <MapPin className='h-4 w-4 text-primary mt-0.5 flex-shrink-0' />
+                      <div className='flex-1 text-left'>
+                        <p className='text-sm font-medium'>
+                          Use Current Location
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          {currentLocation.lat.toFixed(4)},{' '}
+                          {currentLocation.lng.toFixed(4)}
                         </p>
                       </div>
                     </div>
@@ -640,26 +718,35 @@ export function GoogleLocationPicker({
               {/* Office Locations */}
               {showOfficeLocations && officeLocations.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Building2 className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground">OFFICE LOCATIONS</span>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <Building2 className='h-3.5 w-3.5 text-primary' />
+                    <span className='text-xs font-semibold text-muted-foreground'>
+                      OFFICE LOCATIONS
+                    </span>
                   </div>
-                  <div className="space-y-1">
-                    {officeLocations.map((office) => (
+                  <div className='space-y-1'>
+                    {officeLocations.map(office => (
                       <Button
                         key={office.id}
-                        type="button"
-                        variant="ghost"
-                        className="w-full justify-start h-auto p-2 hover:bg-accent"
+                        type='button'
+                        variant='ghost'
+                        className='w-full justify-start h-auto p-2 hover:bg-accent'
                         onClick={() => handleSelectOfficeLocation(office)}
                       >
-                        <div className="flex items-start gap-2 w-full">
-                          <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 text-left min-w-0">
-                            <p className="text-sm font-medium truncate">{office.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{office.address}</p>
+                        <div className='flex items-start gap-2 w-full'>
+                          <Building2 className='h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0' />
+                          <div className='flex-1 text-left min-w-0'>
+                            <p className='text-sm font-medium truncate'>
+                              {office.name}
+                            </p>
+                            <p className='text-xs text-muted-foreground truncate'>
+                              {office.address}
+                            </p>
                           </div>
-                          <Badge variant="secondary" className="text-xs ml-auto flex-shrink-0">
+                          <Badge
+                            variant='secondary'
+                            className='text-xs ml-auto flex-shrink-0'
+                          >
                             {formatDistance(office.radius_meters)}
                           </Badge>
                         </div>
@@ -672,35 +759,41 @@ export function GoogleLocationPicker({
               {/* Recent Locations */}
               {showRecentLocations && recentLocations.length > 0 && (
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-xs font-semibold text-muted-foreground">RECENT LOCATIONS</span>
+                  <div className='flex items-center justify-between mb-2'>
+                    <div className='flex items-center gap-2'>
+                      <Clock className='h-3.5 w-3.5 text-primary' />
+                      <span className='text-xs font-semibold text-muted-foreground'>
+                        RECENT LOCATIONS
+                      </span>
                     </div>
                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 text-xs"
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='h-5 text-xs'
                       onClick={clearRecentLocations}
                     >
                       Clear
                     </Button>
                   </div>
-                  <div className="space-y-1">
+                  <div className='space-y-1'>
                     {recentLocations.map((location, index) => (
                       <Button
                         key={index}
-                        type="button"
-                        variant="ghost"
-                        className="w-full justify-start h-auto p-2 hover:bg-accent"
+                        type='button'
+                        variant='ghost'
+                        className='w-full justify-start h-auto p-2 hover:bg-accent'
                         onClick={() => handleSelectRecentLocation(location)}
                       >
-                        <div className="flex items-start gap-2 w-full">
-                          <Clock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 text-left min-w-0">
-                            <p className="text-sm font-medium truncate">{location.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{location.address}</p>
+                        <div className='flex items-start gap-2 w-full'>
+                          <Clock className='h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0' />
+                          <div className='flex-1 text-left min-w-0'>
+                            <p className='text-sm font-medium truncate'>
+                              {location.name}
+                            </p>
+                            <p className='text-xs text-muted-foreground truncate'>
+                              {location.address}
+                            </p>
                           </div>
                         </div>
                       </Button>
@@ -715,20 +808,24 @@ export function GoogleLocationPicker({
 
       {/* Selected Location Info */}
       {selectedLocation && (
-        <Alert className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-900">
-          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+        <Alert className='border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-900'>
+          <CheckCircle2 className='h-4 w-4 text-green-600 dark:text-green-400' />
           <AlertDescription>
-            <div className="space-y-1.5">
-              <p className="font-semibold text-sm text-green-900 dark:text-green-100">
+            <div className='space-y-1.5'>
+              <p className='font-semibold text-sm text-green-900 dark:text-green-100'>
                 {selectedLocation.name || 'Selected Location'}
               </p>
-              <p className="text-xs text-green-700 dark:text-green-300">{selectedLocation.address}</p>
-              <div className="flex items-center gap-4 text-xs text-green-600 dark:text-green-400">
+              <p className='text-xs text-green-700 dark:text-green-300'>
+                {selectedLocation.address}
+              </p>
+              <div className='flex items-center gap-4 text-xs text-green-600 dark:text-green-400'>
                 <span>
-                  <span className="font-medium">Lat:</span> {selectedLocation.latitude.toFixed(6)}
+                  <span className='font-medium'>Lat:</span>{' '}
+                  {selectedLocation.latitude.toFixed(6)}
                 </span>
                 <span>
-                  <span className="font-medium">Lng:</span> {selectedLocation.longitude.toFixed(6)}
+                  <span className='font-medium'>Lng:</span>{' '}
+                  {selectedLocation.longitude.toFixed(6)}
                 </span>
               </div>
             </div>
@@ -738,17 +835,17 @@ export function GoogleLocationPicker({
 
       {/* API Error Message */}
       {apiError && (
-        <Alert variant="destructive" className="mt-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="text-xs">
+        <Alert variant='destructive' className='mt-2'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription className='text-xs'>
             {apiError}
             {apiError.includes('billing') && (
-              <div className="mt-2">
+              <div className='mt-2'>
                 <a
-                  href="https://console.cloud.google.com/project/_/billing/enable"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs underline hover:no-underline font-medium"
+                  href='https://console.cloud.google.com/project/_/billing/enable'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-xs underline hover:no-underline font-medium'
                 >
                   Enable Billing in Google Cloud Console →
                 </a>
@@ -759,13 +856,17 @@ export function GoogleLocationPicker({
       )}
 
       {!mapsLoaded && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">Loading Google Maps...</p>
+        <div className='space-y-2'>
+          <div className='flex items-center gap-2'>
+            <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+            <p className='text-xs text-muted-foreground'>
+              Loading Google Maps...
+            </p>
           </div>
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            If loading persists, check browser console for API key errors. You may need to enable billing or add your domain to the API key restrictions in Google Cloud Console.
+          <p className='text-xs text-amber-600 dark:text-amber-400'>
+            If loading persists, check browser console for API key errors. You
+            may need to enable billing or add your domain to the API key
+            restrictions in Google Cloud Console.
           </p>
         </div>
       )}

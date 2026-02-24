@@ -37,7 +37,7 @@ export function LoginDebugger() {
 
       const requestBody = {
         email: email.trim(),
-        password: password,
+        password,
       };
 
       console.log('🔍 Debug Login - Request body:', {

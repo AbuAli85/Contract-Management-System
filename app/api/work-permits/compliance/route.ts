@@ -9,7 +9,7 @@ export const GET = withAnyRBAC(
     try {
       const supabase = await createClient();
       const { searchParams } = new URL(request.url);
-      
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -32,13 +32,16 @@ export const GET = withAnyRBAC(
       // Build query
       let query = supabase
         .from('work_permit_compliance')
-        .select(`
+        .select(
+          `
           *,
           employer:profiles!work_permit_compliance_employer_id_fkey(id, email, full_name),
           employee:profiles!work_permit_compliance_employee_id_fkey(id, email, full_name),
           employer_party:parties(id, name_en, name_ar),
           application:work_permit_applications(id, application_number, status)
-        `, { count: 'exact' })
+        `,
+          { count: 'exact' }
+        )
         .order('work_permit_expiry_date', { ascending: true });
 
       // Apply filters
@@ -91,11 +94,24 @@ export const GET = withAnyRBAC(
 
       // Calculate summary
       const summary = {
-        compliant: compliance?.filter((c: any) => c.compliance_status === 'compliant').length || 0,
-        expiring_soon: compliance?.filter((c: any) => c.compliance_status === 'expiring_soon').length || 0,
-        expired: compliance?.filter((c: any) => c.compliance_status === 'expired').length || 0,
-        non_compliant: compliance?.filter((c: any) => c.compliance_status === 'non_compliant').length || 0,
-        pending_renewal: compliance?.filter((c: any) => c.compliance_status === 'pending_renewal').length || 0,
+        compliant:
+          compliance?.filter((c: any) => c.compliance_status === 'compliant')
+            .length || 0,
+        expiring_soon:
+          compliance?.filter(
+            (c: any) => c.compliance_status === 'expiring_soon'
+          ).length || 0,
+        expired:
+          compliance?.filter((c: any) => c.compliance_status === 'expired')
+            .length || 0,
+        non_compliant:
+          compliance?.filter(
+            (c: any) => c.compliance_status === 'non_compliant'
+          ).length || 0,
+        pending_renewal:
+          compliance?.filter(
+            (c: any) => c.compliance_status === 'pending_renewal'
+          ).length || 0,
       };
 
       return NextResponse.json({
@@ -113,4 +129,3 @@ export const GET = withAnyRBAC(
     }
   }
 );
-

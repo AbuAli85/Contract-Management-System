@@ -86,17 +86,18 @@ export default function DocumentUploadEnhanced({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedDocument, setUploadedDocument] = useState<UploadedDocument | null>(
-    currentUrl && currentUrl.trim() !== ''
-      ? {
-          url: currentUrl,
-          name: `${documentType}_document`,
-          size: 0,
-          type: 'application/pdf',
-          uploadedAt: new Date().toISOString(),
-        }
-      : null
-  );
+  const [uploadedDocument, setUploadedDocument] =
+    useState<UploadedDocument | null>(
+      currentUrl && currentUrl.trim() !== ''
+        ? {
+            url: currentUrl,
+            name: `${documentType}_document`,
+            size: 0,
+            type: 'application/pdf',
+            uploadedAt: new Date().toISOString(),
+          }
+        : null
+    );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingName, setEditingName] = useState('');
@@ -141,7 +142,11 @@ export default function DocumentUploadEnhanced({
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
     let cleanPromoterName = 'Unknown_Promoter';
 
-    if (promoterName && promoterName.trim() !== '' && promoterName !== 'Unknown') {
+    if (
+      promoterName &&
+      promoterName.trim() !== '' &&
+      promoterName !== 'Unknown'
+    ) {
       cleanPromoterName = promoterName
         .trim()
         .replace(/[^a-zA-Z0-9\s]/g, '_')
@@ -219,7 +224,9 @@ export default function DocumentUploadEnhanced({
         const supabase = createClient();
         if (!supabase) {
           clearInterval(progressInterval);
-          throw new Error('Database connection unavailable. Please refresh the page.');
+          throw new Error(
+            'Database connection unavailable. Please refresh the page.'
+          );
         }
 
         const {
@@ -228,7 +235,9 @@ export default function DocumentUploadEnhanced({
         } = await supabase.auth.getSession();
         if (sessionError || !session) {
           clearInterval(progressInterval);
-          throw new Error('Your session has expired. Please log in again to upload files.');
+          throw new Error(
+            'Your session has expired. Please log in again to upload files.'
+          );
         }
 
         const fileName = createCleanFilename(file);
@@ -295,7 +304,7 @@ export default function DocumentUploadEnhanced({
 
             const oldUrl = uploadedDocument?.url;
             setUploadedDocument(uploadedDoc);
-            
+
             if (isReplacement && oldUrl && onReplace) {
               onReplace(oldUrl, result.url);
             } else {
@@ -303,7 +312,9 @@ export default function DocumentUploadEnhanced({
             }
 
             toast({
-              title: isReplacement ? 'Document replaced successfully' : 'Document uploaded successfully',
+              title: isReplacement
+                ? 'Document replaced successfully'
+                : 'Document uploaded successfully',
               description: `${file.name} has been ${isReplacement ? 'replaced' : 'uploaded'}`,
             });
 
@@ -338,13 +349,16 @@ export default function DocumentUploadEnhanced({
         }
 
         toast({
-          title: isReplacement ? 'Document replaced successfully' : 'Document uploaded successfully',
+          title: isReplacement
+            ? 'Document replaced successfully'
+            : 'Document uploaded successfully',
           description: `${file.name} has been ${isReplacement ? 'replaced' : 'uploaded'}`,
         });
       } catch (error) {
         clearInterval(progressInterval);
         console.error('Error uploading document:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to upload document';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to upload document';
         toast({
           title: 'Upload failed',
           description: errorMessage,
@@ -527,7 +541,9 @@ export default function DocumentUploadEnhanced({
                         <span>•</span>
                         <span>
                           Uploaded:{' '}
-                          {new Date(uploadedDocument.uploadedAt).toLocaleDateString()}
+                          {new Date(
+                            uploadedDocument.uploadedAt
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -638,7 +654,8 @@ export default function DocumentUploadEnhanced({
                       Drag and drop your file here, or click to browse
                     </p>
                     <p className='text-xs text-gray-500'>
-                      Accepted: JPEG, PNG, PDF • Max size: {config.maxSize / (1024 * 1024)}MB
+                      Accepted: JPEG, PNG, PDF • Max size:{' '}
+                      {config.maxSize / (1024 * 1024)}MB
                     </p>
                   </div>
                   <Button
@@ -684,8 +701,9 @@ export default function DocumentUploadEnhanced({
           <Alert className='bg-blue-50 border-blue-200'>
             <AlertCircle className='h-4 w-4 text-blue-600' />
             <AlertDescription className='text-blue-800'>
-              <strong>Important:</strong> Ensure the document is clearly visible and all
-              information is legible. The document will be used for verification purposes.
+              <strong>Important:</strong> Ensure the document is clearly visible
+              and all information is legible. The document will be used for
+              verification purposes.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -700,8 +718,8 @@ export default function DocumentUploadEnhanced({
               Delete Document?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this document? This action cannot be undone.
-              The document will be permanently removed from storage.
+              Are you sure you want to delete this document? This action cannot
+              be undone. The document will be permanently removed from storage.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -799,4 +817,3 @@ export default function DocumentUploadEnhanced({
     </>
   );
 }
-

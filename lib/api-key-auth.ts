@@ -82,9 +82,8 @@ export async function validateApiKey(
     const supabase = await createClient();
 
     // Use service role client to bypass RLS for API key lookup
-    const { createClient: createServiceClient } = await import(
-      '@supabase/supabase-js'
-    );
+    const { createClient: createServiceClient } =
+      await import('@supabase/supabase-js');
     const serviceClient = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -209,7 +208,7 @@ export function isOriginAllowed(
     // Allow subdomains (e.g., "*.example.com" matches "app.example.com")
     if (allowedOrigin.startsWith('*.')) {
       const domain = allowedOrigin.substring(2);
-      return origin.endsWith('.' + domain) || origin === domain;
+      return origin.endsWith(`.${domain}`) || origin === domain;
     }
     return false;
   });
@@ -307,9 +306,8 @@ export async function logApiKeyUsage(
   request: NextRequest
 ): Promise<void> {
   try {
-    const { createClient: createServiceClient } = await import(
-      '@supabase/supabase-js'
-    );
+    const { createClient: createServiceClient } =
+      await import('@supabase/supabase-js');
     const serviceClient = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

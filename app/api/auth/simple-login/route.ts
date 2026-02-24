@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       success: true,
       user: authData.user,
       session: authData.session,
-      profile: profile,
+      profile,
       redirectPath: getRedirectPath(
         (profile as any)?.role || authData.user.user_metadata?.role || 'user'
       ),
@@ -187,7 +187,7 @@ function getRedirectPath(role: string): string {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
     // Test Supabase client creation
     let supabaseStatus = 'Unknown';
     try {
-      const supabase = await createClient();
+      const _supabase = await createClient();
       supabaseStatus = '✅ Connected';
     } catch (error) {
       supabaseStatus = `❌ Failed: ${error instanceof Error ? error.message : 'Unknown error'}`;

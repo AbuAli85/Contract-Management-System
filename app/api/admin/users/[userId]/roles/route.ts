@@ -202,7 +202,7 @@ export async function POST(
     }
 
     // Get user's current roles for audit
-    const { data: currentRoles, error: currentRolesError } = await supabase
+    const { data: currentRoles, error: _currentRolesError } = await supabase
       .from('user_role_assignments')
       .select(
         `
@@ -358,7 +358,7 @@ export async function DELETE(
     }
 
     // Get user's current roles for audit
-    const { data: currentRoles, error: currentRolesError } = await supabase
+    const { data: currentRoles, error: _currentRolesError } = await supabase
       .from('user_role_assignments')
       .select(
         `
@@ -403,7 +403,7 @@ export async function DELETE(
     }
 
     // Get role name for audit
-    const { data: role, error: roleError } = await supabase
+    const { data: role, error: _roleError } = await supabase
       .from('roles')
       .select('name')
       .eq('id', roleId)

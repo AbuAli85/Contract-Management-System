@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -48,7 +54,14 @@ import {
   CheckSquare,
   Square,
 } from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth, isToday, isYesterday } from 'date-fns';
+import {
+  format,
+  parseISO,
+  startOfMonth,
+  endOfMonth,
+  isToday,
+  isYesterday,
+} from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -110,11 +123,17 @@ export function EmployerAttendanceDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'approval' | 'analytics' | 'reports'>('overview');
-  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'week' | 'month'>('today');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'approval' | 'analytics' | 'reports'
+  >('overview');
+  const [dateFilter, setDateFilter] = useState<
+    'today' | 'yesterday' | 'week' | 'month'
+  >('today');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(
+    null
+  );
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -122,8 +141,8 @@ export function EmployerAttendanceDashboard() {
   useEffect(() => {
     // Get company ID from profile
     fetch('/api/user/profile')
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         if (data.profile?.active_company_id) {
           setCompanyId(data.profile.active_company_id);
         }
@@ -186,7 +205,7 @@ export function EmployerAttendanceDashboard() {
     // Apply search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter((record) => {
+      filtered = filtered.filter(record => {
         const name = record.employee?.full_name || '';
         const email = record.employee?.email || '';
         return (
@@ -199,15 +218,17 @@ export function EmployerAttendanceDashboard() {
     // Apply date filter
     const now = new Date();
     if (dateFilter === 'today') {
-      filtered = filtered.filter((r) => isToday(parseISO(r.attendance_date)));
+      filtered = filtered.filter(r => isToday(parseISO(r.attendance_date)));
     } else if (dateFilter === 'yesterday') {
-      filtered = filtered.filter((r) => isYesterday(parseISO(r.attendance_date)));
+      filtered = filtered.filter(r => isYesterday(parseISO(r.attendance_date)));
     } else if (dateFilter === 'week') {
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter((r) => parseISO(r.attendance_date) >= weekAgo);
+      filtered = filtered.filter(r => parseISO(r.attendance_date) >= weekAgo);
     } else if (dateFilter === 'month') {
       const monthStart = startOfMonth(now);
-      filtered = filtered.filter((r) => parseISO(r.attendance_date) >= monthStart);
+      filtered = filtered.filter(
+        r => parseISO(r.attendance_date) >= monthStart
+      );
     }
 
     return filtered;
@@ -221,12 +242,16 @@ export function EmployerAttendanceDashboard() {
       leave: { variant: 'outline', label: 'On Leave', icon: Calendar },
     };
 
-    const configItem = config[status] || { variant: 'outline', label: status, icon: Clock };
+    const configItem = config[status] || {
+      variant: 'outline',
+      label: status,
+      icon: Clock,
+    };
     const Icon = configItem.icon;
 
     return (
-      <Badge variant={configItem.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
+      <Badge variant={configItem.variant} className='flex items-center gap-1'>
+        <Icon className='h-3 w-3' />
         {configItem.label}
       </Badge>
     );
@@ -261,42 +286,46 @@ export function EmployerAttendanceDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      <div className='flex items-center justify-center py-12'>
+        <RefreshCw className='h-8 w-8 animate-spin text-primary' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Attendance Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className='text-3xl font-bold'>Attendance Management</h1>
+          <p className='text-muted-foreground'>
             Monitor and manage employee attendance in real-time
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className='flex gap-2'>
           <Button
-            variant="outline"
-            size="sm"
+            variant='outline'
+            size='sm'
             onClick={() => fetchAttendanceData()}
             disabled={refreshing}
           >
-            <RefreshCw className={cn('h-4 w-4 mr-2', refreshing && 'animate-spin')} />
+            <RefreshCw
+              className={cn('h-4 w-4 mr-2', refreshing && 'animate-spin')}
+            />
             Refresh
           </Button>
           <Button
-            variant="outline"
-            size="sm"
+            variant='outline'
+            size='sm'
             onClick={async () => {
               try {
                 const params = new URLSearchParams({
                   format: 'csv',
                   company_id: companyId || '',
                 });
-                const response = await fetch(`/api/employer/attendance/export?${params}`);
+                const response = await fetch(
+                  `/api/employer/attendance/export?${params}`
+                );
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -319,33 +348,39 @@ export function EmployerAttendanceDashboard() {
               }
             }}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className='h-4 w-4 mr-2' />
             Export CSV
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-5 w-5 text-blue-500" />
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+        <Card className='border-l-4 border-l-blue-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Total Employees
+            </CardTitle>
+            <Users className='h-5 w-5 text-blue-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground mt-1">Active team members</p>
+            <div className='text-3xl font-bold'>{stats.totalEmployees}</div>
+            <p className='text-xs text-muted-foreground mt-1'>
+              Active team members
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Checked In Today</CardTitle>
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+        <Card className='border-l-4 border-l-green-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Checked In Today
+            </CardTitle>
+            <CheckCircle2 className='h-5 w-5 text-green-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.checkedInToday}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className='text-3xl font-bold'>{stats.checkedInToday}</div>
+            <p className='text-xs text-muted-foreground mt-1'>
               {stats.totalEmployees > 0
                 ? `${Math.round((stats.checkedInToday / stats.totalEmployees) * 100)}% attendance`
                 : 'No employees'}
@@ -353,86 +388,91 @@ export function EmployerAttendanceDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
+        <Card className='border-l-4 border-l-orange-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Pending Approvals
+            </CardTitle>
+            <AlertTriangle className='h-5 w-5 text-orange-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.pendingApprovals}</div>
-            <p className="text-xs text-muted-foreground mt-1">Requires review</p>
+            <div className='text-3xl font-bold'>{stats.pendingApprovals}</div>
+            <p className='text-xs text-muted-foreground mt-1'>
+              Requires review
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Late Today</CardTitle>
-            <Clock className="h-5 w-5 text-red-500" />
+        <Card className='border-l-4 border-l-red-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Late Today</CardTitle>
+            <Clock className='h-5 w-5 text-red-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.lateToday}</div>
-            <p className="text-xs text-muted-foreground mt-1">Late arrivals</p>
+            <div className='text-3xl font-bold'>{stats.lateToday}</div>
+            <p className='text-xs text-muted-foreground mt-1'>Late arrivals</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="approval">
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)}>
+        <TabsList className='grid w-full grid-cols-4'>
+          <TabsTrigger value='overview'>Overview</TabsTrigger>
+          <TabsTrigger value='approval'>
             Approval
             {stats.pendingApprovals > 0 && (
-              <Badge variant="destructive" className="ml-2">
+              <Badge variant='destructive' className='ml-2'>
                 {stats.pendingApprovals}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value='analytics'>Analytics</TabsTrigger>
+          <TabsTrigger value='reports'>Reports</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
+        <TabsContent value='overview' className='space-y-4'>
           {/* Smart Alerts */}
-          {companyId && (
-            <SmartAttendanceFeatures companyId={companyId} />
-          )}
+          {companyId && <SmartAttendanceFeatures companyId={companyId} />}
 
           {/* Filters */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <CardContent className='pt-6'>
+              <div className='flex flex-col sm:flex-row gap-4'>
+                <div className='relative flex-1'>
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
                   <Input
-                    placeholder="Search employees..."
+                    placeholder='Search employees...'
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className='pl-10'
                   />
                 </div>
-                <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as any)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Date range" />
+                <Select
+                  value={dateFilter}
+                  onValueChange={v => setDateFilter(v as any)}
+                >
+                  <SelectTrigger className='w-[180px]'>
+                    <SelectValue placeholder='Date range' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="yesterday">Yesterday</SelectItem>
-                    <SelectItem value="week">Last 7 Days</SelectItem>
-                    <SelectItem value="month">This Month</SelectItem>
+                    <SelectItem value='today'>Today</SelectItem>
+                    <SelectItem value='yesterday'>Yesterday</SelectItem>
+                    <SelectItem value='week'>Last 7 Days</SelectItem>
+                    <SelectItem value='month'>This Month</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Status" />
+                  <SelectTrigger className='w-[180px]'>
+                    <SelectValue placeholder='Status' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="present">Present</SelectItem>
-                    <SelectItem value="late">Late</SelectItem>
-                    <SelectItem value="absent">Absent</SelectItem>
-                    <SelectItem value="leave">On Leave</SelectItem>
+                    <SelectItem value='all'>All Status</SelectItem>
+                    <SelectItem value='present'>Present</SelectItem>
+                    <SelectItem value='late'>Late</SelectItem>
+                    <SelectItem value='absent'>Absent</SelectItem>
+                    <SelectItem value='leave'>On Leave</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -444,11 +484,12 @@ export function EmployerAttendanceDashboard() {
             <CardHeader>
               <CardTitle>Attendance Records</CardTitle>
               <CardDescription>
-                {filteredAttendance.length} record{filteredAttendance.length !== 1 ? 's' : ''} found
+                {filteredAttendance.length} record
+                {filteredAttendance.length !== 1 ? 's' : ''} found
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
+              <div className='rounded-md border'>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -465,75 +506,86 @@ export function EmployerAttendanceDashboard() {
                   <TableBody>
                     {filteredAttendance.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        <TableCell
+                          colSpan={8}
+                          className='text-center py-8 text-muted-foreground'
+                        >
                           No attendance records found
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredAttendance.map((record) => (
-                        <TableRow key={record.id} className="hover:bg-muted/50">
+                      filteredAttendance.map(record => (
+                        <TableRow key={record.id} className='hover:bg-muted/50'>
                           <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
+                            <div className='flex items-center gap-3'>
+                              <Avatar className='h-8 w-8'>
                                 {record.employee?.avatar_url ? (
-                                  <AvatarImage src={record.employee.avatar_url} />
+                                  <AvatarImage
+                                    src={record.employee.avatar_url}
+                                  />
                                 ) : null}
                                 <AvatarFallback>
                                   {record.employee?.full_name
                                     ?.split(' ')
-                                    .map((n) => n[0])
+                                    .map(n => n[0])
                                     .join('')
                                     .toUpperCase()
                                     .slice(0, 2) || '?'}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="font-medium">
+                                <div className='font-medium'>
                                   {record.employee?.full_name || 'Unknown'}
                                 </div>
-                                <div className="text-xs text-muted-foreground">
+                                <div className='text-xs text-muted-foreground'>
                                   {record.employee?.email}
                                 </div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            {format(parseISO(record.attendance_date), 'MMM dd, yyyy')}
+                            {format(
+                              parseISO(record.attendance_date),
+                              'MMM dd, yyyy'
+                            )}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
+                            <div className='flex items-center gap-2'>
+                              <Clock className='h-3 w-3 text-muted-foreground' />
                               {formatTime(record.check_in)}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
+                            <div className='flex items-center gap-2'>
+                              <Clock className='h-3 w-3 text-muted-foreground' />
                               {formatTime(record.check_out)}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1">
+                            <div className='flex items-center gap-1'>
                               {formatHours(record.total_hours)}
-                              {record.overtime_hours && record.overtime_hours > 0 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{formatHours(record.overtime_hours)} OT
-                                </Badge>
-                              )}
+                              {record.overtime_hours &&
+                                record.overtime_hours > 0 && (
+                                  <Badge variant='outline' className='text-xs'>
+                                    +{formatHours(record.overtime_hours)} OT
+                                  </Badge>
+                                )}
                             </div>
                           </TableCell>
                           <TableCell>{getStatusBadge(record.status)}</TableCell>
-                          <TableCell>{getApprovalBadge(record.approval_status)}</TableCell>
+                          <TableCell>
+                            {getApprovalBadge(record.approval_status)}
+                          </TableCell>
                           <TableCell>
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant='ghost'
+                              size='sm'
                               onClick={() => {
                                 setSelectedRecord(record);
                                 setShowDetailDialog(true);
                               }}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className='h-4 w-4' />
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -547,34 +599,38 @@ export function EmployerAttendanceDashboard() {
         </TabsContent>
 
         {/* Approval Tab */}
-        <TabsContent value="approval">
+        <TabsContent value='approval'>
           <ManagerApprovalWorkflow />
         </TabsContent>
 
         {/* Analytics Tab */}
-        <TabsContent value="analytics">
+        <TabsContent value='analytics'>
           <AttendanceReportsAnalytics />
         </TabsContent>
 
         {/* Reports Tab */}
-        <TabsContent value="reports">
+        <TabsContent value='reports'>
           <Card>
             <CardHeader>
               <CardTitle>Attendance Reports</CardTitle>
-              <CardDescription>Generate and download attendance reports</CardDescription>
+              <CardDescription>
+                Generate and download attendance reports
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <Button
-                  variant="outline"
-                  className="h-20 flex-col"
+                  variant='outline'
+                  className='h-20 flex-col'
                   onClick={async () => {
                     try {
                       const params = new URLSearchParams({
                         format: 'csv',
                         company_id: companyId || '',
                       });
-                      const response = await fetch(`/api/employer/attendance/export?${params}`);
+                      const response = await fetch(
+                        `/api/employer/attendance/export?${params}`
+                      );
                       const blob = await response.blob();
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement('a');
@@ -597,12 +653,12 @@ export function EmployerAttendanceDashboard() {
                     }
                   }}
                 >
-                  <Download className="h-6 w-6 mb-2" />
+                  <Download className='h-6 w-6 mb-2' />
                   Export to CSV
                 </Button>
                 <Button
-                  variant="outline"
-                  className="h-20 flex-col"
+                  variant='outline'
+                  className='h-20 flex-col'
                   onClick={() => {
                     toast({
                       title: 'Coming Soon',
@@ -610,7 +666,7 @@ export function EmployerAttendanceDashboard() {
                     });
                   }}
                 >
-                  <Download className="h-6 w-6 mb-2" />
+                  <Download className='h-6 w-6 mb-2' />
                   Export to PDF
                 </Button>
               </div>
@@ -621,7 +677,7 @@ export function EmployerAttendanceDashboard() {
 
       {/* Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className='max-w-2xl'>
           <DialogHeader>
             <DialogTitle>Attendance Details</DialogTitle>
             <DialogDescription>
@@ -629,55 +685,82 @@ export function EmployerAttendanceDashboard() {
             </DialogDescription>
           </DialogHeader>
           {selectedRecord && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4'>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Employee</Label>
-                  <p className="font-medium">{selectedRecord.employee?.full_name}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">Date</Label>
-                  <p className="font-medium">
-                    {format(parseISO(selectedRecord.attendance_date), 'MMM dd, yyyy')}
+                  <Label className='text-xs text-muted-foreground'>
+                    Employee
+                  </Label>
+                  <p className='font-medium'>
+                    {selectedRecord.employee?.full_name}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Check In</Label>
-                  <p className="font-medium">{formatTime(selectedRecord.check_in)}</p>
+                  <Label className='text-xs text-muted-foreground'>Date</Label>
+                  <p className='font-medium'>
+                    {format(
+                      parseISO(selectedRecord.attendance_date),
+                      'MMM dd, yyyy'
+                    )}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Check Out</Label>
-                  <p className="font-medium">{formatTime(selectedRecord.check_out)}</p>
+                  <Label className='text-xs text-muted-foreground'>
+                    Check In
+                  </Label>
+                  <p className='font-medium'>
+                    {formatTime(selectedRecord.check_in)}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Total Hours</Label>
-                  <p className="font-medium">{formatHours(selectedRecord.total_hours)}</p>
+                  <Label className='text-xs text-muted-foreground'>
+                    Check Out
+                  </Label>
+                  <p className='font-medium'>
+                    {formatTime(selectedRecord.check_out)}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Overtime</Label>
-                  <p className="font-medium">{formatHours(selectedRecord.overtime_hours)}</p>
+                  <Label className='text-xs text-muted-foreground'>
+                    Total Hours
+                  </Label>
+                  <p className='font-medium'>
+                    {formatHours(selectedRecord.total_hours)}
+                  </p>
+                </div>
+                <div>
+                  <Label className='text-xs text-muted-foreground'>
+                    Overtime
+                  </Label>
+                  <p className='font-medium'>
+                    {formatHours(selectedRecord.overtime_hours)}
+                  </p>
                 </div>
               </div>
               {selectedRecord.check_in_photo && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Check-In Photo</Label>
+                  <Label className='text-xs text-muted-foreground'>
+                    Check-In Photo
+                  </Label>
                   <img
                     src={selectedRecord.check_in_photo}
-                    alt="Check-in"
-                    className="mt-2 rounded-lg max-w-full h-auto"
+                    alt='Check-in'
+                    className='mt-2 rounded-lg max-w-full h-auto'
                   />
                 </div>
               )}
               {selectedRecord.latitude && selectedRecord.longitude && (
                 <div>
-                  <Label className="text-xs text-muted-foreground">Location</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <MapPin className="h-4 w-4" />
+                  <Label className='text-xs text-muted-foreground'>
+                    Location
+                  </Label>
+                  <div className='flex items-center gap-2 mt-2'>
+                    <MapPin className='h-4 w-4' />
                     <a
                       href={`https://maps.google.com/?q=${selectedRecord.latitude},${selectedRecord.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-blue-600 hover:underline'
                     >
                       View on Map
                     </a>
@@ -691,4 +774,3 @@ export function EmployerAttendanceDashboard() {
     </div>
   );
 }
-

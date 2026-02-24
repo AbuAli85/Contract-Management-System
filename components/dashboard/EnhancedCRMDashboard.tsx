@@ -150,10 +150,13 @@ export default function EnhancedCRMDashboard() {
         ?.from('contracts')
         .select('contract_value')
         .eq('status', 'active')) || { data: [] };
-      
-      const totalValue = (allContracts || []).reduce((sum: number, contract: any) => {
-        return sum + (parseFloat(contract.contract_value) || 0);
-      }, 0);
+
+      const totalValue = (allContracts || []).reduce(
+        (sum: number, contract: any) => {
+          return sum + (parseFloat(contract.contract_value) || 0);
+        },
+        0
+      );
 
       // Helper function to calculate time ago
       const getTimeAgo = (date: Date): string => {
@@ -162,7 +165,7 @@ export default function EnhancedCRMDashboard() {
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
-        
+
         if (diffMins < 60) return `${diffMins} minutes ago`;
         if (diffHours < 24) return `${diffHours} hours ago`;
         return `${diffDays} days ago`;
@@ -170,7 +173,7 @@ export default function EnhancedCRMDashboard() {
 
       // Generate real recent activity from contracts and promoters
       const recentActivity: RecentActivity[] = [];
-      
+
       // Add recent contracts
       if (contractsData && contractsData.length > 0) {
         contractsData.slice(0, 3).forEach((contract: any) => {
@@ -178,27 +181,40 @@ export default function EnhancedCRMDashboard() {
           recentActivity.push({
             id: `contract_${contract.id}`,
             type: 'contract',
-            title: contract.title || `Contract ${contract.contract_number || contract.id}`,
+            title:
+              contract.title ||
+              `Contract ${contract.contract_number || contract.id}`,
             description: `${contract.contract_type || 'Contract'} - ${contract.status}`,
             timestamp: timeAgo,
-            status: contract.status === 'completed' ? 'completed' : contract.status === 'pending' ? 'processing' : 'completed',
+            status:
+              contract.status === 'completed'
+                ? 'completed'
+                : contract.status === 'pending'
+                  ? 'processing'
+                  : 'completed',
           });
         });
       }
 
       // Add recent promoters if available
-      if (promotersData && promotersData.length > 0 && recentActivity.length < 3) {
-        promotersData.slice(0, 3 - recentActivity.length).forEach((promoter: any) => {
-          const timeAgo = getTimeAgo(new Date(promoter.created_at));
-          recentActivity.push({
-            id: `promoter_${promoter.id}`,
-            type: 'promoter',
-            title: 'New Promoter Added',
-            description: `${promoter.name_en || promoter.name_ar || 'Promoter'} registered`,
-            timestamp: timeAgo,
-            status: 'completed',
+      if (
+        promotersData &&
+        promotersData.length > 0 &&
+        recentActivity.length < 3
+      ) {
+        promotersData
+          .slice(0, 3 - recentActivity.length)
+          .forEach((promoter: any) => {
+            const timeAgo = getTimeAgo(new Date(promoter.created_at));
+            recentActivity.push({
+              id: `promoter_${promoter.id}`,
+              type: 'promoter',
+              title: 'New Promoter Added',
+              description: `${promoter.name_en || promoter.name_ar || 'Promoter'} registered`,
+              timestamp: timeAgo,
+              status: 'completed',
+            });
           });
-        });
       }
 
       setStats({
@@ -206,7 +222,7 @@ export default function EnhancedCRMDashboard() {
         activeContracts: activeContracts || 0,
         pendingDocuments: pendingDocuments || 0,
         completedThisMonth: completedThisMonth || 0,
-        totalValue: totalValue,
+        totalValue,
       });
 
       setPromoters(promotersData || []);

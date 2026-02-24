@@ -5,7 +5,7 @@ import { withAnyRBAC } from '@/lib/rbac/guard';
 // POST: Manually trigger contract status transitions
 export const POST = withAnyRBAC(
   ['system:admin', 'contract:admin'], // Only admins can trigger transitions
-  async (request: NextRequest) => {
+  async (_request: NextRequest) => {
     try {
       const supabase = await createClient();
 
@@ -173,7 +173,7 @@ export const POST = withAnyRBAC(
 // GET: Get status transition statistics
 export const GET = withAnyRBAC(
   ['system:admin', 'contract:admin'],
-  async (request: NextRequest) => {
+  async (_request: NextRequest) => {
     try {
       const supabase = await createClient();
       const today = new Date().toISOString().slice(0, 10);

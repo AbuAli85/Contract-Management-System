@@ -12,7 +12,7 @@ export async function GET(
   try {
     const { id: employerEmployeeId } = await params;
     const supabase = await createClient();
-    
+
     const {
       data: { user },
       error: authError,
@@ -24,12 +24,14 @@ export async function GET(
 
     const { data: employeeRecord, error: fetchError } = await supabase
       .from('employer_employees')
-      .select(`
+      .select(
+        `
         *,
         employee:profiles!employer_employees_employee_id_fkey(
           id, email, full_name, first_name, last_name, phone, avatar_url
         )
-      `)
+      `
+      )
       .eq('id', employerEmployeeId)
       .eq('employer_id', user.id)
       .single();
@@ -60,7 +62,7 @@ export async function PATCH(
     const { id: employerEmployeeId } = await params;
     const supabase = await createClient();
     const body = await request.json();
-    
+
     const {
       data: { user },
       error: authError,
@@ -112,7 +114,9 @@ export async function PATCH(
       if (last_name) profileUpdate.last_name = last_name;
       if (phone) profileUpdate.phone = phone;
 
-      const { error: profileError } = await (supabaseAdmin.from('profiles') as any)
+      const { error: profileError } = await (
+        supabaseAdmin.from('profiles') as any
+      )
         .update(profileUpdate)
         .eq('id', employeeRecord.employee_id);
 
@@ -126,10 +130,11 @@ export async function PATCH(
 
       // Also update email in Supabase Auth if changed
       if (email) {
-        const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
-          employeeRecord.employee_id,
-          { email: email.toLowerCase() }
-        );
+        const { error: authUpdateError } =
+          await supabaseAdmin.auth.admin.updateUserById(
+            employeeRecord.employee_id,
+            { email: email.toLowerCase() }
+          );
 
         if (authUpdateError) {
           console.error('Error updating auth email:', authUpdateError);
@@ -159,7 +164,12 @@ export async function PATCH(
     }
 
     // Update employer_employees if employment fields provided
-    if (job_title !== undefined || department !== undefined || employment_type || employee_code) {
+    if (
+      job_title !== undefined ||
+      department !== undefined ||
+      employment_type ||
+      employee_code
+    ) {
       const employmentUpdate: Record<string, any> = {
         updated_at: new Date().toISOString(),
       };
@@ -177,7 +187,10 @@ export async function PATCH(
       if (employmentError) {
         console.error('Error updating employment:', employmentError);
         return NextResponse.json(
-          { error: 'Failed to update employment details', details: employmentError.message },
+          {
+            error: 'Failed to update employment details',
+            details: employmentError.message,
+          },
           { status: 500 }
         );
       }

@@ -5,7 +5,7 @@ import { UserProfile } from '@/auth/components/user-profile';
 
 export default function ProfilePage() {
   const pathname = usePathname();
-  const locale =
+  const _locale =
     pathname && pathname.startsWith('/en/')
       ? 'en'
       : pathname && pathname.startsWith('/ar/')

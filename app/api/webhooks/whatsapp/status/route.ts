@@ -1,6 +1,6 @@
 /**
  * WhatsApp Status Callback Webhook
- * 
+ *
  * Handles delivery status updates from Twilio
  * Configure this URL in Twilio Console as "Status callback URL"
  */
@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    
+
     // Twilio sends status updates
     const messageSid = formData.get('MessageSid') as string;
     const messageStatus = formData.get('MessageStatus') as string; // queued, sent, delivered, failed, etc.
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Update message status in database (if you're tracking messages)
     const supabase = await createClient();
-    
+
     // You can create a whatsapp_messages table to track status
     // For now, we'll just log it
     try {
@@ -53,7 +53,12 @@ export async function POST(request: NextRequest) {
         console.log('✅ Message delivered:', messageSid);
         break;
       case 'failed':
-        console.error('❌ Message failed:', messageSid, errorCode, errorMessage);
+        console.error(
+          '❌ Message failed:',
+          messageSid,
+          errorCode,
+          errorMessage
+        );
         // You might want to:
         // - Retry sending
         // - Notify admin
@@ -94,4 +99,3 @@ export async function GET() {
     message: 'WhatsApp status callback webhook is active',
   });
 }
-

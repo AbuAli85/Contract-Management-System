@@ -20,7 +20,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Download, FileText, FileSpreadsheet, File, Loader2 } from 'lucide-react';
+import {
+  Download,
+  FileText,
+  FileSpreadsheet,
+  File,
+  Loader2,
+} from 'lucide-react';
 import type { DashboardPromoter } from './types';
 
 interface PromotersAdvancedExportProps {
@@ -152,7 +158,10 @@ export function PromotersAdvancedExport({
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    downloadBlob(blob, `promoters-export-${new Date().toISOString().split('T')[0]}.csv`);
+    downloadBlob(
+      blob,
+      `promoters-export-${new Date().toISOString().split('T')[0]}.csv`
+    );
   };
 
   const exportToJSON = () => {
@@ -197,7 +206,10 @@ export function PromotersAdvancedExport({
     const blob = new Blob([JSON.stringify(jsonData, null, 2)], {
       type: 'application/json',
     });
-    downloadBlob(blob, `promoters-export-${new Date().toISOString().split('T')[0]}.json`);
+    downloadBlob(
+      blob,
+      `promoters-export-${new Date().toISOString().split('T')[0]}.json`
+    );
   };
 
   const exportToExcel = async () => {
@@ -205,7 +217,8 @@ export function PromotersAdvancedExport({
     // In production, use xlsx library for proper Excel format
     toast({
       title: 'Excel Export',
-      description: 'Exporting as CSV (Excel-compatible). For full Excel support, install xlsx library.',
+      description:
+        'Exporting as CSV (Excel-compatible). For full Excel support, install xlsx library.',
     });
     exportToCSV();
   };
@@ -274,7 +287,10 @@ export function PromotersAdvancedExport({
     } catch (error) {
       toast({
         title: 'Export Failed',
-        description: error instanceof Error ? error.message : 'An error occurred during export',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'An error occurred during export',
         variant: 'destructive',
       });
     } finally {
@@ -291,7 +307,8 @@ export function PromotersAdvancedExport({
             Advanced Export
           </DialogTitle>
           <DialogDescription>
-            Export {dataToExport.length} promoter{dataToExport.length > 1 ? 's' : ''} with custom fields and format
+            Export {dataToExport.length} promoter
+            {dataToExport.length > 1 ? 's' : ''} with custom fields and format
           </DialogDescription>
         </DialogHeader>
 
@@ -299,7 +316,10 @@ export function PromotersAdvancedExport({
           {/* Format Selection */}
           <div className='space-y-2'>
             <Label className='text-base font-semibold'>Export Format</Label>
-            <Select value={format} onValueChange={(value: any) => setFormat(value)}>
+            <Select
+              value={format}
+              onValueChange={(value: any) => setFormat(value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -334,7 +354,9 @@ export function PromotersAdvancedExport({
 
           {/* Field Selection */}
           <div className='space-y-3'>
-            <Label className='text-base font-semibold'>Select Fields to Export</Label>
+            <Label className='text-base font-semibold'>
+              Select Fields to Export
+            </Label>
             <div className='grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-2 border rounded-lg'>
               {availableFields.map(field => (
                 <div key={field.id} className='flex items-center space-x-2'>
@@ -366,7 +388,9 @@ export function PromotersAdvancedExport({
                 }}
                 className='text-primary hover:underline'
               >
-                {includeFields.size === availableFields.length ? 'Deselect All' : 'Select All'}
+                {includeFields.size === availableFields.length
+                  ? 'Deselect All'
+                  : 'Select All'}
               </button>
             </div>
           </div>
@@ -376,7 +400,10 @@ export function PromotersAdvancedExport({
           <Button variant='outline' onClick={onClose} disabled={isExporting}>
             Cancel
           </Button>
-          <Button onClick={handleExport} disabled={isExporting || includeFields.size === 0}>
+          <Button
+            onClick={handleExport}
+            disabled={isExporting || includeFields.size === 0}
+          >
             {isExporting ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -385,7 +412,8 @@ export function PromotersAdvancedExport({
             ) : (
               <>
                 <Download className='mr-2 h-4 w-4' />
-                Export {dataToExport.length} Promoter{dataToExport.length > 1 ? 's' : ''}
+                Export {dataToExport.length} Promoter
+                {dataToExport.length > 1 ? 's' : ''}
               </>
             )}
           </Button>
@@ -394,4 +422,3 @@ export function PromotersAdvancedExport({
     </Dialog>
   );
 }
-

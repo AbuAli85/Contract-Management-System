@@ -19,10 +19,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // ✅ COMPANY SCOPE: Get active company's party_id
@@ -50,7 +47,10 @@ export async function GET(request: NextRequest) {
 
       if (company?.party_id) {
         partyId = company.party_id;
-        console.log('📊 Promoter Metrics: Filtering by company party_id:', partyId);
+        console.log(
+          '📊 Promoter Metrics: Filtering by company party_id:',
+          partyId
+        );
       }
     }
 
@@ -59,12 +59,17 @@ export async function GET(request: NextRequest) {
     const forceRefresh = searchParams.get('refresh') === 'true';
 
     // ✅ COMPANY SCOPE: Get promoter metrics filtered by company
-    const enhancedMetrics = await getEnhancedPromoterMetrics(forceRefresh, partyId);
+    const enhancedMetrics = await getEnhancedPromoterMetrics(
+      forceRefresh,
+      partyId
+    );
 
     // Transform to match expected format
     // active = activeOnContracts + availableForWork (all active promoters)
-    const activeCount = (enhancedMetrics.activeOnContracts || 0) + (enhancedMetrics.availableForWork || 0);
-    
+    const activeCount =
+      (enhancedMetrics.activeOnContracts || 0) +
+      (enhancedMetrics.availableForWork || 0);
+
     const metrics = {
       total: enhancedMetrics.totalWorkforce || 0,
       active: activeCount,

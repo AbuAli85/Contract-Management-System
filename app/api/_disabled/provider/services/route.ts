@@ -3,9 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { withRBAC } from '@/lib/rbac/guard';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const headersList = headers();
+    const _headersList = headers();
     const supabase = createClient();
 
     // Get current user

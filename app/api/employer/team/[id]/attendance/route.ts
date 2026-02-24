@@ -26,15 +26,20 @@ async function getAttendanceHandler(
 
     // ✅ AUTO-CONVERT: Ensure employer_employee record exists (auto-create for promoters)
     try {
-      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(id, user.id);
+      const { employerEmployeeId } = await ensureEmployerEmployeeRecord(
+        id,
+        user.id
+      );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
       console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to process employee record',
-          details: error.message || 'Could not create or find employer_employee record',
-          input_id: id
+          details:
+            error.message ||
+            'Could not create or find employer_employee record',
+          input_id: id,
         },
         { status: 400 }
       );
@@ -93,9 +98,9 @@ async function getAttendanceHandler(
           // Fix the record automatically
           const supabaseAdmin = getSupabaseAdmin();
           await (supabaseAdmin.from('employer_employees') as any)
-            .update({ 
+            .update({
               employee_id: correctProfile.id,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             })
             .eq('id', id);
 
@@ -103,18 +108,20 @@ async function getAttendanceHandler(
           teamMember.employee_id = correctProfile.id;
         } else {
           return NextResponse.json(
-            { 
+            {
               error: 'Employee profile not found',
-              details: 'The employee record has an invalid employee_id. Please try adding this person to your team again using "Add Team Member" - the system will automatically fix the record.'
+              details:
+                'The employee record has an invalid employee_id. Please try adding this person to your team again using "Add Team Member" - the system will automatically fix the record.',
             },
             { status: 404 }
           );
         }
       } else {
         return NextResponse.json(
-          { 
+          {
             error: 'Employee profile not found',
-            details: 'The employee record has an invalid employee_id. Please try adding this person to your team again using "Add Team Member" - the system will automatically fix the record.'
+            details:
+              'The employee record has an invalid employee_id. Please try adding this person to your team again using "Add Team Member" - the system will automatically fix the record.',
           },
           { status: 404 }
         );
@@ -123,7 +130,11 @@ async function getAttendanceHandler(
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
     // Allow if company_id is null (backwards compatibility) OR matches active company
-    if (profile?.active_company_id && teamMember.company_id && teamMember.company_id !== profile.active_company_id) {
+    if (
+      profile?.active_company_id &&
+      teamMember.company_id &&
+      teamMember.company_id !== profile.active_company_id
+    ) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }
@@ -170,8 +181,10 @@ async function getAttendanceHandler(
       absent: attendance?.filter(a => a.status === 'absent').length || 0,
       late: attendance?.filter(a => a.status === 'late').length || 0,
       leave: attendance?.filter(a => a.status === 'leave').length || 0,
-      total_hours: attendance?.reduce((sum, a) => sum + (a.total_hours || 0), 0) || 0,
-      overtime_hours: attendance?.reduce((sum, a) => sum + (a.overtime_hours || 0), 0) || 0,
+      total_hours:
+        attendance?.reduce((sum, a) => sum + (a.total_hours || 0), 0) || 0,
+      overtime_hours:
+        attendance?.reduce((sum, a) => sum + (a.overtime_hours || 0), 0) || 0,
     };
 
     return NextResponse.json({
@@ -195,7 +208,7 @@ async function recordAttendanceHandler(
 ) {
   try {
     const supabase = await createClient();
-    let { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
+    const { id } = await params; // employer_employee_id (may be prefixed with 'promoter_')
     const {
       data: { user },
       error: authError,
@@ -209,9 +222,11 @@ async function recordAttendanceHandler(
     // These are not actual employer_employee records, so we can't record attendance
     if (id.startsWith('promoter_')) {
       return NextResponse.json(
-        { 
-          error: 'Promoter-only records cannot have attendance. Please add this person to employer_employees first.',
-          details: 'This person exists in the promoters table but has no employer_employee record. Attendance tracking requires an employer_employee record.'
+        {
+          error:
+            'Promoter-only records cannot have attendance. Please add this person to employer_employees first.',
+          details:
+            'This person exists in the promoters table but has no employer_employee record. Attendance tracking requires an employer_employee record.',
         },
         { status: 404 }
       );
@@ -257,7 +272,11 @@ async function recordAttendanceHandler(
 
     // ✅ COMPANY SCOPE: Verify team member belongs to active company
     // Allow if company_id is null (backwards compatibility) OR matches active company
-    if (userProfile?.active_company_id && teamMember.company_id && teamMember.company_id !== userProfile.active_company_id) {
+    if (
+      userProfile?.active_company_id &&
+      teamMember.company_id &&
+      teamMember.company_id !== userProfile.active_company_id
+    ) {
       return NextResponse.json(
         { error: 'Team member does not belong to your active company' },
         { status: 403 }
@@ -338,4 +357,3 @@ async function recordAttendanceHandler(
 // Export handlers directly - internal authorization is already implemented
 export const GET = getAttendanceHandler;
 export const POST = recordAttendanceHandler;
-

@@ -73,7 +73,7 @@ export async function GET() {
     });
 
     // Test 3: Check RLS policies
-    const { data: policies, error: policiesError } = await supabase
+    const { data: _policies, error: policiesError } = await supabase
       .rpc('pg_policies')
       .eq('tablename', 'promoters')
       .select('*')

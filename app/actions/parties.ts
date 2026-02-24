@@ -59,8 +59,7 @@ export async function updateParty(id: string, partyData: Partial<Party>) {
   const supabase = await createClient();
 
   // Filter out fields that shouldn't be updated
-  const { created_at, ...updateData } = partyData;
-
+  const { _created_at, ...updateData } = partyData;
   const { data, error } = await supabase
     .from('parties')
     .update(updateData)

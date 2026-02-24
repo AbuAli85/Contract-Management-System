@@ -148,7 +148,7 @@ export function PromotersTable({
   // Column customization
   const { columns, visibleColumns, setColumns, resetColumns, isColumnVisible } =
     useColumnCustomization(DEFAULT_COLUMNS);
-  
+
   // Accessibility: Announce table updates
   const tableLabel = useMemo(() => {
     return `Promoters table with ${promoters.length} ${promoters.length === 1 ? 'promoter' : 'promoters'}. ${selectedPromoters.size > 0 ? `${selectedPromoters.size} selected.` : ''}`;
@@ -330,7 +330,9 @@ export function PromotersTable({
                             >
                               <div className='flex items-center gap-2 group/header px-2'>
                                 <Users className='h-4 w-4 text-indigo-500 flex-shrink-0' />
-                                <span className='text-sm whitespace-nowrap'>Team Member</span>
+                                <span className='text-sm whitespace-nowrap'>
+                                  Team Member
+                                </span>
                                 {sortField === 'name' ? (
                                   sortOrder === 'asc' ? (
                                     <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
@@ -354,7 +356,9 @@ export function PromotersTable({
                                 <Badge className='bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm whitespace-nowrap'>Documentation</span>
+                                <span className='text-sm whitespace-nowrap'>
+                                  Documentation
+                                </span>
                                 {sortField === 'documents' ? (
                                   sortOrder === 'asc' ? (
                                     <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0' />
@@ -375,7 +379,9 @@ export function PromotersTable({
                                 <Badge className='bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm whitespace-nowrap'>Assignment</span>
+                                <span className='text-sm whitespace-nowrap'>
+                                  Assignment
+                                </span>
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -384,7 +390,10 @@ export function PromotersTable({
                                       </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p className='text-xs'>You can filter promoters by assignment status</p>
+                                      <p className='text-xs'>
+                                        You can filter promoters by assignment
+                                        status
+                                      </p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -397,7 +406,9 @@ export function PromotersTable({
                                 <Badge className='bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm whitespace-nowrap'>Contact Info</span>
+                                <span className='text-sm whitespace-nowrap'>
+                                  Contact Info
+                                </span>
                               </div>
                             </TableHead>
                           )}
@@ -410,7 +421,9 @@ export function PromotersTable({
                                 <Badge className='bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm whitespace-nowrap'>Joined</span>
+                                <span className='text-sm whitespace-nowrap'>
+                                  Joined
+                                </span>
                                 {sortField === 'created' ? (
                                   sortOrder === 'asc' ? (
                                     <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
@@ -434,7 +447,9 @@ export function PromotersTable({
                                 <Badge className='bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 p-0.5 flex-shrink-0'>
                                   <Plus className='h-3 w-3' />
                                 </Badge>
-                                <span className='text-sm whitespace-nowrap'>Status</span>
+                                <span className='text-sm whitespace-nowrap'>
+                                  Status
+                                </span>
                                 {sortField === 'status' ? (
                                   sortOrder === 'asc' ? (
                                     <SortAsc className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
@@ -452,7 +467,9 @@ export function PromotersTable({
                           {isColumnVisible('actions') && (
                             <TableHead className='min-w-[110px] w-[130px] text-right font-bold text-slate-700 dark:text-slate-200 py-4'>
                               <div className='flex items-center justify-end gap-2 px-2'>
-                                <span className='text-sm whitespace-nowrap'>Actions</span>
+                                <span className='text-sm whitespace-nowrap'>
+                                  Actions
+                                </span>
                                 <MoreHorizontal className='h-4 w-4 text-slate-400 flex-shrink-0' />
                               </div>
                             </TableHead>
@@ -467,7 +484,11 @@ export function PromotersTable({
                             isSelected={selectedPromoters.has(promoter.id)}
                             onSelect={() => onSelectPromoter(promoter.id)}
                             onView={() => onViewPromoter(promoter)}
-                            onEdit={onEditPromoter ? () => onEditPromoter(promoter) : undefined}
+                            onEdit={
+                              onEditPromoter
+                                ? () => onEditPromoter(promoter)
+                                : undefined
+                            }
                             isColumnVisible={isColumnVisible}
                             onInlineUpdate={onInlineUpdate}
                             enableInlineEdit={enableInlineEdit}

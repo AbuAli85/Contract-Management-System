@@ -50,7 +50,15 @@ interface DateRange {
 interface AdvancedFilter {
   id: string;
   field: string;
-  operator: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'between' | 'in';
+  operator:
+    | 'equals'
+    | 'contains'
+    | 'startsWith'
+    | 'endsWith'
+    | 'greaterThan'
+    | 'lessThan'
+    | 'between'
+    | 'in';
   value: string | string[] | DateRange;
 }
 
@@ -75,12 +83,22 @@ const FILTER_FIELDS = [
   { value: 'phone', label: 'Phone', type: 'text' },
   { value: 'job_title', label: 'Job Title', type: 'text' },
   { value: 'nationality', label: 'Nationality', type: 'text' },
-  { value: 'status', label: 'Status', type: 'select', options: ['active', 'inactive', 'critical', 'warning'] },
+  {
+    value: 'status',
+    label: 'Status',
+    type: 'select',
+    options: ['active', 'inactive', 'critical', 'warning'],
+  },
   { value: 'created_at', label: 'Created Date', type: 'date' },
   { value: 'id_expiry', label: 'ID Expiry Date', type: 'date' },
   { value: 'passport_expiry', label: 'Passport Expiry Date', type: 'date' },
   { value: 'company', label: 'Company', type: 'text' },
-  { value: 'assignment', label: 'Assignment Status', type: 'select', options: ['assigned', 'unassigned'] },
+  {
+    value: 'assignment',
+    label: 'Assignment Status',
+    type: 'select',
+    options: ['assigned', 'unassigned'],
+  },
 ];
 
 const OPERATORS = {
@@ -129,11 +147,14 @@ export function PromotersAdvancedFilters({
     setFilters(prev => prev.filter(f => f.id !== id));
   }, []);
 
-  const updateFilter = useCallback((id: string, updates: Partial<AdvancedFilter>) => {
-    setFilters(prev =>
-      prev.map(f => (f.id === id ? { ...f, ...updates } : f))
-    );
-  }, []);
+  const updateFilter = useCallback(
+    (id: string, updates: Partial<AdvancedFilter>) => {
+      setFilters(prev =>
+        prev.map(f => (f.id === id ? { ...f, ...updates } : f))
+      );
+    },
+    []
+  );
 
   const handleApply = useCallback(() => {
     onApply(filters);
@@ -177,21 +198,27 @@ export function PromotersAdvancedFilters({
     });
   }, [filters, savedPresets.length, toast]);
 
-  const loadPreset = useCallback((preset: SavedFilterPreset) => {
-    setFilters(preset.filters);
-    toast({
-      title: 'Preset Loaded',
-      description: `Loaded "${preset.name}"`,
-    });
-  }, [toast]);
+  const loadPreset = useCallback(
+    (preset: SavedFilterPreset) => {
+      setFilters(preset.filters);
+      toast({
+        title: 'Preset Loaded',
+        description: `Loaded "${preset.name}"`,
+      });
+    },
+    [toast]
+  );
 
-  const deletePreset = useCallback((id: string) => {
-    setSavedPresets(prev => prev.filter(p => p.id !== id));
-    toast({
-      title: 'Preset Deleted',
-      description: 'Filter preset has been deleted',
-    });
-  }, [toast]);
+  const deletePreset = useCallback(
+    (id: string) => {
+      setSavedPresets(prev => prev.filter(p => p.id !== id));
+      toast({
+        title: 'Preset Deleted',
+        description: 'Filter preset has been deleted',
+      });
+    },
+    [toast]
+  );
 
   const activeCount = activeFilters.length;
 
@@ -240,7 +267,7 @@ export function PromotersAdvancedFilters({
                       <Bookmark className='h-3 w-3' />
                       {preset.name}
                       <button
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           deletePreset(preset.id);
                         }}
@@ -288,14 +315,20 @@ export function PromotersAdvancedFilters({
                 <div className='text-center py-8 text-muted-foreground'>
                   <Filter className='h-12 w-12 mx-auto mb-3 opacity-50' />
                   <p>No filters added yet</p>
-                  <p className='text-sm'>Click "Add Filter" to create your first filter</p>
+                  <p className='text-sm'>
+                    Click "Add Filter" to create your first filter
+                  </p>
                 </div>
               ) : (
                 <div className='space-y-3'>
                   {filters.map((filter, index) => {
-                    const fieldConfig = FILTER_FIELDS.find(f => f.value === filter.field);
+                    const fieldConfig = FILTER_FIELDS.find(
+                      f => f.value === filter.field
+                    );
                     const fieldType = fieldConfig?.type || 'text';
-                    const operators = OPERATORS[fieldType as keyof typeof OPERATORS] || OPERATORS.text;
+                    const operators =
+                      OPERATORS[fieldType as keyof typeof OPERATORS] ||
+                      OPERATORS.text;
 
                     return (
                       <div
@@ -322,7 +355,7 @@ export function PromotersAdvancedFilters({
                             <Label>Field</Label>
                             <Select
                               value={filter.field}
-                              onValueChange={(value) =>
+                              onValueChange={value =>
                                 updateFilter(filter.id, {
                                   field: value,
                                   operator: 'contains',
@@ -335,7 +368,10 @@ export function PromotersAdvancedFilters({
                               </SelectTrigger>
                               <SelectContent>
                                 {FILTER_FIELDS.map(field => (
-                                  <SelectItem key={field.value} value={field.value}>
+                                  <SelectItem
+                                    key={field.value}
+                                    value={field.value}
+                                  >
                                     {field.label}
                                   </SelectItem>
                                 ))}
@@ -377,32 +413,46 @@ export function PromotersAdvancedFilters({
                                         variant='outline'
                                         className={cn(
                                           'w-full justify-start text-left font-normal',
-                                          !(filter.value as DateRange)?.from && 'text-muted-foreground'
+                                          !(filter.value as DateRange)?.from &&
+                                            'text-muted-foreground'
                                         )}
                                       >
                                         <CalendarIcon className='mr-2 h-4 w-4' />
                                         {(filter.value as DateRange)?.from
-                                          ? format((filter.value as DateRange).from!, 'PPP')
+                                          ? format(
+                                              (filter.value as DateRange).from!,
+                                              'PPP'
+                                            )
                                           : 'From date'}
                                       </Button>
                                     </PopoverTrigger>
-                                  <PopoverContent className='w-auto p-0'>
-                                    {/* Calendar component - implement with date picker library */}
-                                    <div className='p-4'>
-                                      <Input
-                                        type='date'
-                                        value={(filter.value as DateRange)?.from ? format((filter.value as DateRange).from!, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) =>
-                                          updateFilter(filter.id, {
-                                            value: {
-                                              ...(filter.value as DateRange),
-                                              from: e.target.value ? new Date(e.target.value) : undefined,
-                                            },
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                  </PopoverContent>
+                                    <PopoverContent className='w-auto p-0'>
+                                      {/* Calendar component - implement with date picker library */}
+                                      <div className='p-4'>
+                                        <Input
+                                          type='date'
+                                          value={
+                                            (filter.value as DateRange)?.from
+                                              ? format(
+                                                  (filter.value as DateRange)
+                                                    .from!,
+                                                  'yyyy-MM-dd'
+                                                )
+                                              : ''
+                                          }
+                                          onChange={e =>
+                                            updateFilter(filter.id, {
+                                              value: {
+                                                ...(filter.value as DateRange),
+                                                from: e.target.value
+                                                  ? new Date(e.target.value)
+                                                  : undefined,
+                                              },
+                                            })
+                                          }
+                                        />
+                                      </div>
+                                    </PopoverContent>
                                   </Popover>
                                   <Popover>
                                     <PopoverTrigger asChild>
@@ -410,29 +460,35 @@ export function PromotersAdvancedFilters({
                                         variant='outline'
                                         className={cn(
                                           'w-full justify-start text-left font-normal',
-                                          !(filter.value as DateRange)?.to && 'text-muted-foreground'
+                                          !(filter.value as DateRange)?.to &&
+                                            'text-muted-foreground'
                                         )}
                                       >
                                         <CalendarIcon className='mr-2 h-4 w-4' />
                                         {(filter.value as DateRange)?.to
-                                          ? format((filter.value as DateRange).to!, 'PPP')
+                                          ? format(
+                                              (filter.value as DateRange).to!,
+                                              'PPP'
+                                            )
                                           : 'To date'}
                                       </Button>
                                     </PopoverTrigger>
-                                  <PopoverContent className='w-auto p-0'>
-                                    <Calendar
-                                      mode='single'
-                                      selected={(filter.value as DateRange)?.to}
-                                      onSelect={(date) =>
-                                        updateFilter(filter.id, {
-                                          value: {
-                                            ...(filter.value as DateRange),
-                                            to: date,
-                                          },
-                                        })
-                                      }
-                                    />
-                                  </PopoverContent>
+                                    <PopoverContent className='w-auto p-0'>
+                                      <Calendar
+                                        mode='single'
+                                        selected={
+                                          (filter.value as DateRange)?.to
+                                        }
+                                        onSelect={date =>
+                                          updateFilter(filter.id, {
+                                            value: {
+                                              ...(filter.value as DateRange),
+                                              to: date,
+                                            },
+                                          })
+                                        }
+                                      />
+                                    </PopoverContent>
                                   </Popover>
                                 </div>
                               ) : (
@@ -455,29 +511,42 @@ export function PromotersAdvancedFilters({
                                     <Calendar
                                       mode='single'
                                       selected={filter.value as Date}
-                                      onSelect={(date) =>
+                                      onSelect={date =>
                                         updateFilter(filter.id, { value: date })
                                       }
                                     />
                                   </PopoverContent>
                                 </Popover>
                               )
-                            ) : fieldType === 'select' && filter.operator === 'in' ? (
+                            ) : fieldType === 'select' &&
+                              filter.operator === 'in' ? (
                               <Input
                                 placeholder='Comma-separated values'
-                                value={Array.isArray(filter.value) ? filter.value.join(', ') : ''}
-                                onChange={(e) =>
+                                value={
+                                  Array.isArray(filter.value)
+                                    ? filter.value.join(', ')
+                                    : ''
+                                }
+                                onChange={e =>
                                   updateFilter(filter.id, {
-                                    value: e.target.value.split(',').map(v => v.trim()),
+                                    value: e.target.value
+                                      .split(',')
+                                      .map(v => v.trim()),
                                   })
                                 }
                               />
                             ) : (
                               <Input
                                 placeholder='Enter value'
-                                value={typeof filter.value === 'string' ? filter.value : ''}
-                                onChange={(e) =>
-                                  updateFilter(filter.id, { value: e.target.value })
+                                value={
+                                  typeof filter.value === 'string'
+                                    ? filter.value
+                                    : ''
+                                }
+                                onChange={e =>
+                                  updateFilter(filter.id, {
+                                    value: e.target.value,
+                                  })
                                 }
                               />
                             )}
@@ -492,7 +561,11 @@ export function PromotersAdvancedFilters({
           </div>
 
           <DialogFooter>
-            <Button variant='outline' onClick={handleClear} disabled={filters.length === 0}>
+            <Button
+              variant='outline'
+              onClick={handleClear}
+              disabled={filters.length === 0}
+            >
               Clear All
             </Button>
             <Button variant='outline' onClick={() => setIsOpen(false)}>
@@ -510,14 +583,13 @@ export function PromotersAdvancedFilters({
       {activeCount > 0 && (
         <div className='flex flex-wrap gap-2 mt-2'>
           {activeFilters.map(filter => {
-            const fieldConfig = FILTER_FIELDS.find(f => f.value === filter.field);
+            const fieldConfig = FILTER_FIELDS.find(
+              f => f.value === filter.field
+            );
             return (
-              <Badge
-                key={filter.id}
-                variant='secondary'
-                className='gap-1'
-              >
-                {fieldConfig?.label}: {typeof filter.value === 'string' ? filter.value : 'Set'}
+              <Badge key={filter.id} variant='secondary' className='gap-1'>
+                {fieldConfig?.label}:{' '}
+                {typeof filter.value === 'string' ? filter.value : 'Set'}
                 <button
                   onClick={() => removeFilter(filter.id)}
                   className='ml-1 hover:text-destructive'
@@ -532,4 +604,3 @@ export function PromotersAdvancedFilters({
     </>
   );
 }
-

@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle, XCircle, Clock, Filter } from 'lucide-react';
 
@@ -41,8 +40,7 @@ export default function IntegrationsPage() {
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const supabase = createClient();
-
+  const _supabase = createClient();
   useEffect(() => {
     fetchLogs();
   }, [filterType, showErrorsOnly]);

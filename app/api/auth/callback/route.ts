@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 
 // Handle OAuth callback (GET request)
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, _origin } = new URL(request.url);
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/en/dashboard';
 
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Legacy POST method for backward compatibility
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
   const cookieStore = cookies();
 
   const supabase = createServerClient(

@@ -63,7 +63,6 @@ function StatusBadge({ status }: { status?: string | undefined }) {
     </span>
   );
 }
-import { ErrorCard } from '@/components/ErrorCard';
 import { useAuth } from '@/lib/auth-service';
 import { OverviewTab } from '@/components/contract-tabs/OverviewTab';
 import {
@@ -273,7 +272,7 @@ export default function ContractDetailPage() {
     }
   };
 
-  const handleDownloadExistingPDF = async (pdfUrl?: string) => {
+  const handleDownloadExistingPDF = async (_pdfUrl?: string) => {
     setDownloading(true);
     setStatusMessage('Downloading PDF...');
 

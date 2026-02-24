@@ -82,47 +82,45 @@ export function SimplifiedNavigation({
 
   // Promoter/Employee specific items
   if (isPromoter) {
-    navigationSections.push(
-      {
-        title: 'My Information',
-        titleAr: 'معلوماتي',
-        roles: ['promoter', 'user'],
-        items: [
-          {
-            href: `/${locale}/manage-promoters/${user?.id}`,
-            label: 'My Profile',
-            labelAr: 'ملفي الشخصي',
-            icon: User,
-            description: 'View and edit your profile',
-            roles: ['promoter', 'user'],
-          },
-          {
-            href: `/${locale}/contracts`,
-            label: 'My Contracts',
-            labelAr: 'عقودي',
-            icon: FileText,
-            description: 'View your assigned contracts',
-            roles: ['promoter', 'user'],
-          },
-          {
-            href: `/${locale}/employee/dashboard`,
-            label: 'My Workplace',
-            labelAr: 'مكان عملي',
-            icon: Briefcase,
-            description: 'View tasks, targets, and attendance',
-            roles: ['promoter', 'user'],
-          },
-          {
-            href: `/${locale}/attendance`,
-            label: 'My Attendance',
-            labelAr: 'حضوري',
-            icon: Clock,
-            description: 'View and manage your attendance records',
-            roles: ['promoter', 'user'],
-          },
-        ],
-      }
-    );
+    navigationSections.push({
+      title: 'My Information',
+      titleAr: 'معلوماتي',
+      roles: ['promoter', 'user'],
+      items: [
+        {
+          href: `/${locale}/manage-promoters/${user?.id}`,
+          label: 'My Profile',
+          labelAr: 'ملفي الشخصي',
+          icon: User,
+          description: 'View and edit your profile',
+          roles: ['promoter', 'user'],
+        },
+        {
+          href: `/${locale}/contracts`,
+          label: 'My Contracts',
+          labelAr: 'عقودي',
+          icon: FileText,
+          description: 'View your assigned contracts',
+          roles: ['promoter', 'user'],
+        },
+        {
+          href: `/${locale}/employee/dashboard`,
+          label: 'My Workplace',
+          labelAr: 'مكان عملي',
+          icon: Briefcase,
+          description: 'View tasks, targets, and attendance',
+          roles: ['promoter', 'user'],
+        },
+        {
+          href: `/${locale}/attendance`,
+          label: 'My Attendance',
+          labelAr: 'حضوري',
+          icon: Clock,
+          description: 'View and manage your attendance records',
+          roles: ['promoter', 'user'],
+        },
+      ],
+    });
   }
 
   // Admin/Manager/Employer only sections
@@ -339,21 +337,28 @@ export function SimplifiedNavigation({
   const filteredSections = navigationSections
     .filter(section => {
       if (!section.roles) return true;
-      return section.roles.includes(userRole) ||
+      return (
+        section.roles.includes(userRole) ||
         (isAdmin && section.roles.includes('admin')) ||
         (isManager && section.roles.includes('manager')) ||
         (isEmployer && section.roles.includes('employer')) ||
-        (isPromoter && (section.roles.includes('promoter') || section.roles.includes('user')));
+        (isPromoter &&
+          (section.roles.includes('promoter') ||
+            section.roles.includes('user')))
+      );
     })
     .map(section => ({
       ...section,
       items: section.items.filter((item: any) => {
         if (!item.roles) return true;
-        return item.roles.includes(userRole) ||
+        return (
+          item.roles.includes(userRole) ||
           (isAdmin && item.roles.includes('admin')) ||
           (isManager && item.roles.includes('manager')) ||
           (isEmployer && item.roles.includes('employer')) ||
-          (isPromoter && (item.roles.includes('promoter') || item.roles.includes('user')));
+          (isPromoter &&
+            (item.roles.includes('promoter') || item.roles.includes('user')))
+        );
       }),
     }))
     .filter(section => section.items.length > 0); // Remove empty sections
@@ -363,7 +368,7 @@ export function SimplifiedNavigation({
   }
 
   const isActive = (href: string) => {
-    return pathname === href || pathname?.startsWith(href + '/');
+    return pathname === href || pathname?.startsWith(`${href}/`);
   };
 
   return (

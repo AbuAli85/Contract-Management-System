@@ -124,7 +124,10 @@ export const POST = withAnyRBAC(
 
       if (workflowError || !workflow) {
         return NextResponse.json(
-          { error: 'Failed to create workflow', details: workflowError?.message },
+          {
+            error: 'Failed to create workflow',
+            details: workflowError?.message,
+          },
           { status: 500 }
         );
       }
@@ -152,17 +155,23 @@ export const POST = withAnyRBAC(
           // Rollback workflow creation
           await supabase.from('workflows').delete().eq('id', workflow.id);
           return NextResponse.json(
-            { error: 'Failed to create workflow steps', details: stepsError.message },
+            {
+              error: 'Failed to create workflow steps',
+              details: stepsError.message,
+            },
             { status: 500 }
           );
         }
       }
 
-      return NextResponse.json({
-        success: true,
-        workflow,
-        message: 'Workflow created successfully',
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          success: true,
+          workflow,
+          message: 'Workflow created successfully',
+        },
+        { status: 201 }
+      );
     } catch (error: any) {
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
@@ -171,4 +180,3 @@ export const POST = withAnyRBAC(
     }
   }
 );
-

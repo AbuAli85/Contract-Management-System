@@ -1,6 +1,6 @@
 // app/api/contracts/makecom/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
+import { withAnyRBAC } from '@/lib/rbac/guard';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import {
@@ -303,8 +303,7 @@ export const POST = withAnyRBAC(
       // Using publicly accessible imgur placeholders instead of via.placeholder.com for better reliability
       const placeholderImage = 'https://i.imgur.com/7DrMrhN.png'; // 200x200 light gray placeholder
       const placeholderLogo = 'https://i.imgur.com/YlUKsz7.png'; // 300x100 blue placeholder
-      const placeholderSignature = 'https://i.imgur.com/zQeWKYc.png'; // 200x100 dark gray placeholder
-
+      const _placeholderSignature = 'https://i.imgur.com/zQeWKYc.png'; // 200x100 dark gray placeholder
       // Function to normalize Supabase storage URLs (convert partial URLs to full public URLs)
       const normalizeSupabaseUrl = (
         url: string | null | undefined,

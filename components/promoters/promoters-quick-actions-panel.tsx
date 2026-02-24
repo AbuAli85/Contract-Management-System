@@ -175,7 +175,7 @@ export function PromotersQuickActionsPanel({
       <CardContent className='p-4 space-y-3'>
         {/* Primary Actions */}
         <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-          {primaryActions.map((action) => {
+          {primaryActions.map(action => {
             const Icon = action.icon;
             return (
               <TooltipProvider key={action.id}>
@@ -191,7 +191,9 @@ export function PromotersQuickActionsPanel({
                     >
                       <Icon className='h-5 w-5' />
                       <div className='flex flex-col items-center gap-1'>
-                        <span className='font-semibold text-sm'>{action.label}</span>
+                        <span className='font-semibold text-sm'>
+                          {action.label}
+                        </span>
                         {action.shortcut && (
                           <Badge
                             variant='outline'
@@ -215,7 +217,7 @@ export function PromotersQuickActionsPanel({
         {/* Secondary Actions - Expandable */}
         {isExpanded && (
           <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-200 dark:border-slate-700'>
-            {secondaryActions.map((action) => {
+            {secondaryActions.map(action => {
               const Icon = action.icon;
               return (
                 <TooltipProvider key={action.id}>
@@ -233,7 +235,9 @@ export function PromotersQuickActionsPanel({
                       >
                         <div className='flex items-center gap-2'>
                           <Icon className='h-4 w-4' />
-                          <span className='font-medium text-sm'>{action.label}</span>
+                          <span className='font-medium text-sm'>
+                            {action.label}
+                          </span>
                         </div>
                         {action.badge && (
                           <Badge variant='secondary' className='text-xs'>
@@ -265,7 +269,8 @@ export function PromotersQuickActionsPanel({
                   <div className='flex items-center gap-2'>
                     <Users className='h-4 w-4' />
                     <span className='font-semibold'>
-                      {selectedCount} Promoter{selectedCount > 1 ? 's' : ''} Selected
+                      {selectedCount} Promoter{selectedCount > 1 ? 's' : ''}{' '}
+                      Selected
                     </span>
                   </div>
                   <ArrowRight className='h-4 w-4' />
@@ -298,4 +303,3 @@ export function PromotersQuickActionsPanel({
     </Card>
   );
 }
-

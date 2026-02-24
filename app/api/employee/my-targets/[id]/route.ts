@@ -259,7 +259,7 @@ export async function PATCH(
         );
       }
       updateData.current_value = newValue;
-      
+
       // Calculate progress percentage
       const targetValue = Number(target.target_value);
       if (targetValue > 0) {
@@ -321,4 +321,3 @@ export async function PATCH(
     );
   }
 }
-

@@ -8,7 +8,7 @@ import { withRBAC } from '@/lib/rbac/guard';
  *
  * ⚠️ PROTECTED: Admin-only access, disabled in production ⚠️
  */
-export const GET = withRBAC('admin:debug', async (request: Request) => {
+export const GET = withRBAC('admin:debug', async (_request: Request) => {
   // Completely disable in production
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -21,14 +21,11 @@ export const GET = withRBAC('admin:debug', async (request: Request) => {
     environment: {
       nodeEnv: process.env.NODE_ENV,
       hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseUrlPrefix:
-        process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 25) + '...',
+      supabaseUrlPrefix: `${process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 25)}...`,
       hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      anonKeyPrefix:
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...',
+      anonKeyPrefix: `${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20)}...`,
       hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      serviceRoleKeyPrefix:
-        process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...',
+      serviceRoleKeyPrefix: `${process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20)}...`,
     },
     status: 'checking',
     message: '',
@@ -69,7 +66,7 @@ export const GET = withRBAC('admin:debug', async (request: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Test query
-    const { data, error, count } = await supabase
+    const { _data, error, count } = await supabase
       .from('promoters')
       .select('*', { count: 'exact', head: true });
 

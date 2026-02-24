@@ -101,7 +101,7 @@ export function PromotersHeader({
       </div>
       {/* Subtle gradient overlay */}
       <div className='absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-blue-500/5 pointer-events-none' />
-      
+
       <CardHeader className='relative pb-6 overflow-visible'>
         <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between w-full'>
           <div className='space-y-4 flex-1 min-w-0 w-full lg:max-w-[calc(100%-400px)]'>
@@ -114,7 +114,10 @@ export function PromotersHeader({
                   Promoter Intelligence Hub
                 </CardTitle>
                 <div className='flex items-center gap-2 mt-1'>
-                  <Badge variant='outline' className='bg-white/10 text-white/90 border-white/20 text-xs font-medium'>
+                  <Badge
+                    variant='outline'
+                    className='bg-white/10 text-white/90 border-white/20 text-xs font-medium'
+                  >
                     Enterprise Edition
                   </Badge>
                   <span className='text-xs text-white/60 font-medium'>
@@ -126,35 +129,42 @@ export function PromotersHeader({
             <CardDescription className='max-w-3xl text-base text-white/90 leading-relaxed break-words font-medium'>
               Monitor workforce readiness, document compliance, and partner
               coverage in real-time to keep every engagement on track.{' '}
-              <span className='font-bold text-white text-lg'>{metrics.total}</span> active promoters in system.
+              <span className='font-bold text-white text-lg'>
+                {metrics.total}
+              </span>{' '}
+              active promoters in system.
             </CardDescription>
             <div className='flex flex-wrap items-center gap-3 text-sm text-white/90 pt-3 w-full'>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge 
+                    <Badge
                       className={cn(
                         'text-white border-white/30 cursor-pointer transition-all px-4 py-2',
                         'inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0',
                         'overflow-visible shadow-lg backdrop-blur-sm font-semibold',
-                        autoRefreshEnabled 
-                          ? 'bg-gradient-to-r from-emerald-500/30 to-green-500/30 hover:from-emerald-500/40 hover:to-green-500/40 border-emerald-400/50' 
+                        autoRefreshEnabled
+                          ? 'bg-gradient-to-r from-emerald-500/30 to-green-500/30 hover:from-emerald-500/40 hover:to-green-500/40 border-emerald-400/50'
                           : 'bg-white/15 hover:bg-white/25 border-white/20'
                       )}
                       onClick={() => onToggleAutoRefresh?.(!autoRefreshEnabled)}
                     >
-                      <Activity className={cn(
-                        'h-4 w-4 flex-shrink-0 transition-transform',
-                        autoRefreshEnabled && 'animate-pulse'
-                      )} />
+                      <Activity
+                        className={cn(
+                          'h-4 w-4 flex-shrink-0 transition-transform',
+                          autoRefreshEnabled && 'animate-pulse'
+                        )}
+                      />
                       <span className='whitespace-nowrap overflow-visible'>
-                        {autoRefreshEnabled ? 'Auto-refresh on' : 'Auto-refresh off'}
+                        {autoRefreshEnabled
+                          ? 'Auto-refresh on'
+                          : 'Auto-refresh off'}
                       </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='max-w-xs bg-slate-900 border-slate-700'>
                     <p className='text-xs text-white'>
-                      {autoRefreshEnabled 
+                      {autoRefreshEnabled
                         ? 'Data automatically refreshes every 60 seconds. Click to disable.'
                         : 'Auto-refresh is disabled. Click to enable automatic updates every 60 seconds.'}
                     </p>
@@ -166,12 +176,15 @@ export function PromotersHeader({
                   <TooltipTrigger asChild>
                     <Badge className='bg-gradient-to-r from-emerald-500/30 to-green-500/30 text-emerald-50 border-emerald-400/50 cursor-help px-4 py-2 inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 overflow-visible shadow-lg backdrop-blur-sm font-semibold'>
                       <CheckCircle className='h-4 w-4 flex-shrink-0' />
-                      <span className='whitespace-nowrap overflow-visible'>{Math.round(metrics.complianceRate || 0)}% compliant</span>
+                      <span className='whitespace-nowrap overflow-visible'>
+                        {Math.round(metrics.complianceRate || 0)}% compliant
+                      </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='bg-slate-900 border-slate-700'>
                     <p className='text-xs text-white'>
-                      {Math.round(metrics.complianceRate || 0)}% of promoters have all documents valid and up to date
+                      {Math.round(metrics.complianceRate || 0)}% of promoters
+                      have all documents valid and up to date
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -181,12 +194,15 @@ export function PromotersHeader({
                   <TooltipTrigger asChild>
                     <Badge className='bg-gradient-to-r from-amber-500/30 to-orange-500/30 text-amber-50 border-amber-400/50 cursor-help px-4 py-2 inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 overflow-visible shadow-lg backdrop-blur-sm font-semibold'>
                       <AlertTriangle className='h-4 w-4 flex-shrink-0' />
-                      <span className='whitespace-nowrap overflow-visible'>{metrics.critical || 0} critical</span>
+                      <span className='whitespace-nowrap overflow-visible'>
+                        {metrics.critical || 0} critical
+                      </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='bg-slate-900 border-slate-700'>
                     <p className='text-xs text-white'>
-                      {metrics.critical || 0} promoters have expired documents requiring immediate attention
+                      {metrics.critical || 0} promoters have expired documents
+                      requiring immediate attention
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -196,7 +212,9 @@ export function PromotersHeader({
                   <TooltipTrigger asChild>
                     <Badge className='bg-gradient-to-r from-blue-500/30 to-indigo-500/30 text-blue-50 border-blue-400/50 cursor-help px-4 py-2 inline-flex items-center gap-2 whitespace-nowrap flex-shrink-0 overflow-visible shadow-lg backdrop-blur-sm font-semibold'>
                       <Building2 className='h-4 w-4 flex-shrink-0' />
-                      <span className='whitespace-nowrap overflow-visible'>{metrics.companies || 0} companies</span>
+                      <span className='whitespace-nowrap overflow-visible'>
+                        {metrics.companies || 0} companies
+                      </span>
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent className='bg-slate-900 border-slate-700'>
@@ -228,7 +246,10 @@ export function PromotersHeader({
                     size='lg'
                     aria-label='Import promoters from CSV/Excel file'
                   >
-                    <Upload className='mr-2 h-5 w-5 flex-shrink-0' aria-hidden='true' />
+                    <Upload
+                      className='mr-2 h-5 w-5 flex-shrink-0'
+                      aria-hidden='true'
+                    />
                     <span>Import</span>
                   </Button>
                 </TooltipTrigger>

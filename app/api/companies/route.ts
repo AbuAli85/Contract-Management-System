@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       address: body.address,
       promoter_id: body.promoter_id,
       user_id: session.user.id,
-      role: role, // Include role in company data
+      role, // Include role in company data
       business_category: body.business_category,
       description: body.description,
       website: body.website,

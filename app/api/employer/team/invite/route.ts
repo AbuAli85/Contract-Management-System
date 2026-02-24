@@ -20,14 +20,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      email,
-      full_name,
-      phone,
-      job_title,
-      department,
-      employment_type,
-    } = body;
+    const { email, full_name, phone, job_title, department, employment_type } =
+      body;
 
     // Validate required fields
     if (!email || !full_name) {
@@ -53,9 +47,10 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    const isEmployer = profile?.role === 'employer' || 
-                       profile?.role === 'admin' || 
-                       profile?.role === 'manager';
+    const isEmployer =
+      profile?.role === 'employer' ||
+      profile?.role === 'admin' ||
+      profile?.role === 'manager';
 
     if (!isEmployer) {
       return NextResponse.json(
@@ -72,8 +67,12 @@ export async function POST(request: NextRequest) {
       .select('id, email, full_name')
       .eq('email', email.toLowerCase())
       .limit(1);
-    
-    const existingUsers = existingUsersRaw as Array<{ id: string; email: string; full_name: string }> | null;
+
+    const existingUsers = existingUsersRaw as Array<{
+      id: string;
+      email: string;
+      full_name: string;
+    }> | null;
 
     let employeeUserId: string;
     let isNewUser = false;
@@ -83,51 +82,63 @@ export async function POST(request: NextRequest) {
     if (firstUser) {
       // User exists - just add to team
       employeeUserId = firstUser.id;
-      
+
       // Upsert promoter record (in case user exists in profiles but not in promoters)
       // Note: employer_id references parties table, so we don't set it here
       // The employer-employee link is managed via employer_employees table
-      const { error: upsertPromoterError } = await supabaseAdmin.from('promoters').upsert({
-        id: employeeUserId,
-        email: email.toLowerCase(),
-        name_en: full_name,
-        name_ar: full_name,
-        status: 'active',
-        updated_at: new Date().toISOString(),
-      } as any, { onConflict: 'id' });
+      const { error: upsertPromoterError } = await supabaseAdmin
+        .from('promoters')
+        .upsert(
+          {
+            id: employeeUserId,
+            email: email.toLowerCase(),
+            name_en: full_name,
+            name_ar: full_name,
+            status: 'active',
+            updated_at: new Date().toISOString(),
+          } as any,
+          { onConflict: 'id' }
+        );
 
       if (upsertPromoterError) {
         console.error('Error upserting promoter:', upsertPromoterError);
         return NextResponse.json(
-          { error: 'Failed to link employee record', details: upsertPromoterError.message },
+          {
+            error: 'Failed to link employee record',
+            details: upsertPromoterError.message,
+          },
           { status: 500 }
         );
       }
     } else {
       // Create new user account
       isNewUser = true;
-      
+
       // Generate a temporary password
       temporaryPassword = generateTemporaryPassword();
 
       // Create the auth user
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: email.toLowerCase(),
-        password: temporaryPassword,
-        email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          full_name: full_name,
-          role: 'promoter',
-          must_change_password: true,
-          invited_by: user.id,
-          invited_at: new Date().toISOString(),
-        },
-      });
+      const { data: newUser, error: createError } =
+        await supabaseAdmin.auth.admin.createUser({
+          email: email.toLowerCase(),
+          password: temporaryPassword,
+          email_confirm: true, // Auto-confirm email
+          user_metadata: {
+            full_name,
+            role: 'promoter',
+            must_change_password: true,
+            invited_by: user.id,
+            invited_at: new Date().toISOString(),
+          },
+        });
 
       if (createError || !newUser.user) {
         console.error('Error creating user:', createError);
         return NextResponse.json(
-          { error: 'Failed to create employee account', details: createError?.message },
+          {
+            error: 'Failed to create employee account',
+            details: createError?.message,
+          },
           { status: 500 }
         );
       }
@@ -138,7 +149,7 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.from('profiles').upsert({
         id: employeeUserId,
         email: email.toLowerCase(),
-        full_name: full_name,
+        full_name,
         role: 'promoter',
         phone: phone || null,
         must_change_password: true,
@@ -149,22 +160,27 @@ export async function POST(request: NextRequest) {
       // Also create a promoter record
       // Note: employer_id references parties table, not profiles
       // The employer-employee link is managed via employer_employees table
-      const { error: promoterError } = await supabaseAdmin.from('promoters').upsert({
-        id: employeeUserId,
-        email: email.toLowerCase(),
-        name_en: full_name,
-        name_ar: full_name,
-        phone: phone || null,
-        status: 'active',
-        created_by: user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as any);
+      const { error: promoterError } = await supabaseAdmin
+        .from('promoters')
+        .upsert({
+          id: employeeUserId,
+          email: email.toLowerCase(),
+          name_en: full_name,
+          name_ar: full_name,
+          phone: phone || null,
+          status: 'active',
+          created_by: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as any);
 
       if (promoterError) {
         console.error('Error creating promoter record:', promoterError);
         return NextResponse.json(
-          { error: 'Failed to create employee record', details: promoterError.message },
+          {
+            error: 'Failed to create employee record',
+            details: promoterError.message,
+          },
           { status: 500 }
         );
       }
@@ -205,25 +221,31 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('Error adding to team:', insertError);
       return NextResponse.json(
-        { error: 'Failed to add employee to team', details: insertError.message },
+        {
+          error: 'Failed to add employee to team',
+          details: insertError.message,
+        },
         { status: 500 }
       );
     }
 
     // Send email notification to the employee
     try {
-      const { UnifiedNotificationService } = await import('@/lib/services/unified-notification.service');
+      const { UnifiedNotificationService } =
+        await import('@/lib/services/unified-notification.service');
       const notificationService = new UnifiedNotificationService();
-      
+
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`;
-      
+
       if (isNewUser && temporaryPassword) {
         // Send welcome email with credentials for new users
         await notificationService.sendNotification({
-          recipients: [{
-            email: email.toLowerCase(),
-            name: full_name,
-          }],
+          recipients: [
+            {
+              email: email.toLowerCase(),
+              name: full_name,
+            },
+          ],
           content: {
             title: 'Welcome to the Team!',
             message: `You've been added to the team. Your account has been created.`,
@@ -258,12 +280,14 @@ export async function POST(request: NextRequest) {
       } else {
         // Send notification for existing users
         await notificationService.sendNotification({
-          recipients: [{
-            email: email.toLowerCase(),
-            name: full_name,
-          }],
+          recipients: [
+            {
+              email: email.toLowerCase(),
+              name: full_name,
+            },
+          ],
           content: {
-            title: 'You\'ve Been Added to a Team',
+            title: "You've Been Added to a Team",
             message: `You've been added to a new team.`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -297,18 +321,20 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: isNewUser 
-        ? 'Employee account created and added to team. Email notification sent.' 
+      message: isNewUser
+        ? 'Employee account created and added to team. Email notification sent.'
         : 'Existing user added to team. Email notification sent.',
       team_member: teamMember,
       is_new_user: isNewUser,
       // Only return credentials for new users (as backup if email fails)
-      credentials: isNewUser ? {
-        email: email.toLowerCase(),
-        temporary_password: temporaryPassword,
-        login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`,
-        note: 'Employee must change password on first login. Email notification has been sent.',
-      } : null,
+      credentials: isNewUser
+        ? {
+            email: email.toLowerCase(),
+            temporary_password: temporaryPassword,
+            login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`,
+            note: 'Employee must change password on first login. Email notification has been sent.',
+          }
+        : null,
     });
   } catch (error) {
     console.error('Error in POST /api/employer/team/invite:', error);
@@ -326,23 +352,24 @@ function generateTemporaryPassword(): string {
   const lowercase = 'abcdefghjkmnpqrstuvwxyz';
   const numbers = '23456789';
   const special = '!@#$%';
-  
+
   const allChars = uppercase + lowercase + numbers + special;
-  
+
   // Ensure at least one of each type
   let password = '';
   password += uppercase[Math.floor(Math.random() * uppercase.length)];
   password += lowercase[Math.floor(Math.random() * lowercase.length)];
   password += numbers[Math.floor(Math.random() * numbers.length)];
   password += special[Math.floor(Math.random() * special.length)];
-  
+
   // Fill the rest randomly
   for (let i = password.length; i < length; i++) {
     password += allChars[Math.floor(Math.random() * allChars.length)];
   }
-  
+
   // Shuffle the password
-  return password.split('').sort(() => Math.random() - 0.5).join('');
+  return password
+    .split('')
+    .sort(() => Math.random() - 0.5)
+    .join('');
 }
-
-

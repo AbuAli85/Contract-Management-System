@@ -236,7 +236,8 @@ export function PromotersSmartInsights({
           <div className='flex flex-col items-center gap-3'>
             <CheckCircle className='h-12 w-12 text-green-500 opacity-50' />
             <p className='text-sm text-muted-foreground font-medium'>
-              All systems operating optimally. No critical insights at this time.
+              All systems operating optimally. No critical insights at this
+              time.
             </p>
           </div>
         </CardContent>
@@ -245,7 +246,12 @@ export function PromotersSmartInsights({
   }
 
   return (
-    <Card className={cn('shadow-2xl border-2 border-primary/30 bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900 backdrop-blur-sm', className)}>
+    <Card
+      className={cn(
+        'shadow-2xl border-2 border-primary/30 bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900 backdrop-blur-sm',
+        className
+      )}
+    >
       <CardHeader className='bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-b-2 border-primary/20 relative overflow-hidden'>
         <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer pointer-events-none' />
         <div className='relative flex items-center justify-between'>
@@ -263,13 +269,16 @@ export function PromotersSmartInsights({
               </p>
             </div>
           </div>
-          <Badge variant='outline' className='bg-gradient-to-r from-primary/20 to-blue-500/20 text-primary border-primary/40 font-bold shadow-lg px-4 py-1.5'>
+          <Badge
+            variant='outline'
+            className='bg-gradient-to-r from-primary/20 to-blue-500/20 text-primary border-primary/40 font-bold shadow-lg px-4 py-1.5'
+          >
             {insights.length} Active Insights
           </Badge>
         </div>
       </CardHeader>
       <CardContent className='p-6 space-y-4'>
-        {insights.map((insight) => (
+        {insights.map(insight => (
           <div
             key={insight.id}
             className={cn(
@@ -296,30 +305,44 @@ export function PromotersSmartInsights({
                     <h4 className='font-bold text-sm'>{insight.title}</h4>
                     <Badge
                       variant='outline'
-                      className={cn('text-xs font-semibold', getPriorityColor(insight.priority))}
+                      className={cn(
+                        'text-xs font-semibold',
+                        getPriorityColor(insight.priority)
+                      )}
                     >
                       {insight.priority}
                     </Badge>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Badge variant='outline' className='text-xs bg-slate-100 text-slate-700 border-slate-300'>
+                          <Badge
+                            variant='outline'
+                            className='text-xs bg-slate-100 text-slate-700 border-slate-300'
+                          >
                             {insight.confidence}% confidence
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className='text-xs'>AI confidence level for this insight</p>
+                          <p className='text-xs'>
+                            AI confidence level for this insight
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </div>
-                  <p className='text-sm text-muted-foreground'>{insight.description}</p>
+                  <p className='text-sm text-muted-foreground'>
+                    {insight.description}
+                  </p>
                   {insight.metrics && (
                     <div className='flex items-center gap-4 text-xs'>
                       <div className='flex items-center gap-1'>
                         <BarChart3 className='h-3 w-3' />
-                        <span className='font-semibold'>{insight.metrics.current}</span>
-                        <span className='text-muted-foreground'>/ {insight.metrics.target}</span>
+                        <span className='font-semibold'>
+                          {insight.metrics.current}
+                        </span>
+                        <span className='text-muted-foreground'>
+                          / {insight.metrics.target}
+                        </span>
                       </div>
                       <div className='flex items-center gap-1'>
                         {insight.metrics.trend === 'up' ? (
@@ -329,12 +352,17 @@ export function PromotersSmartInsights({
                         ) : (
                           <Clock className='h-3 w-3 text-blue-600' />
                         )}
-                        <span className='text-muted-foreground capitalize'>{insight.metrics.trend}</span>
+                        <span className='text-muted-foreground capitalize'>
+                          {insight.metrics.trend}
+                        </span>
                       </div>
                     </div>
                   )}
                   <div className='flex items-center gap-2'>
-                    <Badge variant='outline' className='text-xs bg-gradient-to-r from-primary/10 to-blue-500/10 text-primary border-primary/20'>
+                    <Badge
+                      variant='outline'
+                      className='text-xs bg-gradient-to-r from-primary/10 to-blue-500/10 text-primary border-primary/20'
+                    >
                       Impact: {insight.impact}
                     </Badge>
                   </div>
@@ -358,4 +386,3 @@ export function PromotersSmartInsights({
     </Card>
   );
 }
-

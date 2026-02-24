@@ -83,20 +83,25 @@ async function updateUserPermissionsHandler(
     }
 
     // Use the management API to assign permissions
-    const response = await fetch(`${request.nextUrl.origin}/api/users/management`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': request.headers.get('Cookie') || '',
-      },
-      body: JSON.stringify({
-        action: 'assign_permissions',
-        userId: id,
-        permissions: Array.isArray(permissions)
-          ? permissions.map((p: any) => typeof p === 'string' ? p : p.permission)
-          : [],
-      }),
-    });
+    const response = await fetch(
+      `${request.nextUrl.origin}/api/users/management`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: request.headers.get('Cookie') || '',
+        },
+        body: JSON.stringify({
+          action: 'assign_permissions',
+          userId: id,
+          permissions: Array.isArray(permissions)
+            ? permissions.map((p: any) =>
+                typeof p === 'string' ? p : p.permission
+              )
+            : [],
+        }),
+      }
+    );
 
     const data = await response.json();
 

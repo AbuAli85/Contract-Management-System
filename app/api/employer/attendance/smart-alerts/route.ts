@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { startOfDay, endOfDay, subDays, parseISO, differenceInMinutes } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  parseISO,
+  differenceInMinutes,
+} from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +29,10 @@ export async function GET(request: NextRequest) {
     const companyId = searchParams.get('company_id');
 
     if (!companyId) {
-      return NextResponse.json({ error: 'Company ID required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Company ID required' },
+        { status: 400 }
+      );
     }
 
     const today = new Date();
@@ -31,8 +40,11 @@ export async function GET(request: NextRequest) {
     const weekAgo = subDays(today, 7);
 
     // Get today's attendance
-    const { data: todayAttendance } = await (supabaseAdmin.from('employee_attendance') as any)
-      .select(`
+    const { data: todayAttendance } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           company_id,
@@ -41,14 +53,18 @@ export async function GET(request: NextRequest) {
             full_name
           )
         )
-      `)
+      `
+      )
       .eq('employer_employee.company_id', companyId)
       .gte('attendance_date', todayStart.split('T')[0])
       .lte('attendance_date', todayStart.split('T')[0]);
 
     // Get recent attendance for pattern detection
-    const { data: recentAttendance } = await (supabaseAdmin.from('employee_attendance') as any)
-      .select(`
+    const { data: recentAttendance } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
+      .select(
+        `
         *,
         employer_employee:employer_employees!inner(
           company_id,
@@ -57,7 +73,8 @@ export async function GET(request: NextRequest) {
             full_name
           )
         )
-      `)
+      `
+      )
       .eq('employer_employee.company_id', companyId)
       .gte('attendance_date', weekAgo.toISOString().split('T')[0]);
 
@@ -65,18 +82,23 @@ export async function GET(request: NextRequest) {
 
     // Analyze today's attendance for alerts
     (todayAttendance || []).forEach((record: any) => {
-      const employeeName = record.employer_employee?.employee?.full_name || 'Unknown';
+      const employeeName =
+        record.employer_employee?.employee?.full_name || 'Unknown';
       const checkInTime = record.check_in ? parseISO(record.check_in) : null;
       const expectedCheckIn = new Date(today);
       expectedCheckIn.setHours(9, 0, 0, 0); // 9:00 AM
 
       // Late check-in detection
-      if (checkInTime && differenceInMinutes(checkInTime, expectedCheckIn) > 15) {
+      if (
+        checkInTime &&
+        differenceInMinutes(checkInTime, expectedCheckIn) > 15
+      ) {
         const minutesLate = differenceInMinutes(checkInTime, expectedCheckIn);
         alerts.push({
           id: `late-${record.id}`,
           type: 'late',
-          severity: minutesLate > 60 ? 'high' : minutesLate > 30 ? 'medium' : 'low',
+          severity:
+            minutesLate > 60 ? 'high' : minutesLate > 30 ? 'medium' : 'low',
           title: 'Late Check-In Detected',
           description: `${employeeName} checked in ${minutesLate} minutes late today.`,
           employeeName,
@@ -128,9 +150,10 @@ export async function GET(request: NextRequest) {
 
     // Detect patterns (e.g., consistently late, frequent absences)
     employeePatterns.forEach((records, employeeId) => {
-      const employeeName = records[0]?.employer_employee?.employee?.full_name || 'Unknown';
-      const lateCount = records.filter((r) => r.status === 'late').length;
-      const absentCount = records.filter((r) => r.status === 'absent').length;
+      const employeeName =
+        records[0]?.employer_employee?.employee?.full_name || 'Unknown';
+      const lateCount = records.filter(r => r.status === 'late').length;
+      const absentCount = records.filter(r => r.status === 'absent').length;
 
       if (lateCount >= 3) {
         alerts.push({
@@ -172,4 +195,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

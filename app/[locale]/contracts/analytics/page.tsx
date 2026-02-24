@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   BarChart,
   Bar,
@@ -30,8 +29,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -40,14 +37,9 @@ import {
   TrendingUp,
   FileText,
   Clock,
-  CheckCircle,
-  XCircle,
   AlertCircle,
   Download,
   RefreshCw,
-  Calendar,
-  Users,
-  DollarSign,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -100,8 +92,7 @@ export default function ContractAnalyticsPage() {
   const supabase = createClient();
 
   // Color palette for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
-
+  const _COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
   useEffect(() => {
     fetchAnalytics();
   }, [dateRange, selectedPeriod]);

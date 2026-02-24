@@ -1,6 +1,13 @@
 'use client';
 
-import React, { memo, useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import React, {
+  memo,
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 /**
@@ -14,7 +21,8 @@ export function withPerformanceOptimization<P extends object>(
   displayName?: string
 ) {
   const MemoizedComponent = memo(Component);
-  MemoizedComponent.displayName = displayName || Component.displayName || 'MemoizedComponent';
+  MemoizedComponent.displayName =
+    displayName || Component.displayName || 'MemoizedComponent';
   return MemoizedComponent;
 }
 
@@ -83,17 +91,20 @@ export function usePerformanceMonitor(componentName: string) {
     };
   });
 
-  return useCallback((operation: string) => {
-    const start = performance.now();
-    return () => {
-      const duration = performance.now() - start;
-      if (process.env.NODE_ENV === 'development' && duration > 100) {
-        console.warn(
-          `[Performance] ${componentName}.${operation} took ${duration.toFixed(2)}ms`
-        );
-      }
-    };
-  }, [componentName]);
+  return useCallback(
+    (operation: string) => {
+      const start = performance.now();
+      return () => {
+        const duration = performance.now() - start;
+        if (process.env.NODE_ENV === 'development' && duration > 100) {
+          console.warn(
+            `[Performance] ${componentName}.${operation} took ${duration.toFixed(2)}ms`
+          );
+        }
+      };
+    },
+    [componentName]
+  );
 }
 
 // Optimized data fetching with caching
@@ -119,10 +130,7 @@ export function useOptimizedQuery<T>(
 }
 
 // Batch operations hook
-export function useBatchOperations<T>(
-  items: T[],
-  batchSize: number = 50
-) {
+export function useBatchOperations<T>(items: T[], batchSize: number = 50) {
   const [currentBatch, setCurrentBatch] = useState(0);
 
   const batches = useMemo(() => {
@@ -162,4 +170,3 @@ export function useBatchOperations<T>(
     loadPrevious,
   };
 }
-

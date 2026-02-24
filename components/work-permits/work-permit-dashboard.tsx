@@ -181,7 +181,7 @@ export function WorkPermitDashboard() {
     if (!expiryDate) return null;
     const expiry = parseISO(expiryDate);
     const days = differenceInDays(expiry, new Date());
-    
+
     if (days < 0) {
       return { label: 'Expired', color: 'text-red-600', days: Math.abs(days) };
     } else if (days <= 7) {
@@ -194,9 +194,11 @@ export function WorkPermitDashboard() {
     return { label: 'Valid', color: 'text-green-600', days };
   };
 
-  const filteredApplications = applications.filter((app) => {
+  const filteredApplications = applications.filter(app => {
     const matchesSearch =
-      app.application_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.application_number
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       app.employee_name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.job_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.work_permit_number?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -206,135 +208,144 @@ export function WorkPermitDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className='flex items-center justify-center min-h-[60vh]'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className='space-y-6 p-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Building2 className="h-8 w-8 text-blue-600" />
+          <h1 className='text-3xl font-bold flex items-center gap-3'>
+            <Building2 className='h-8 w-8 text-blue-600' />
             Work Permit Management
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className='text-muted-foreground mt-1'>
             Manage work permit applications and track compliance
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <Button
-            variant="outline"
-            onClick={() => window.open('https://sso.mol.gov.om/login.aspx?ReturnUrl=https://eservices.mol.gov.om/Wppa/list', '_blank')}
-            title="Open Ministry of Labour Portal"
+            variant='outline'
+            onClick={() =>
+              window.open(
+                'https://sso.mol.gov.om/login.aspx?ReturnUrl=https://eservices.mol.gov.om/Wppa/list',
+                '_blank'
+              )
+            }
+            title='Open Ministry of Labour Portal'
           >
-            <ExternalLink className="h-4 w-4 mr-2" />
+            <ExternalLink className='h-4 w-4 mr-2' />
             MOL Portal
           </Button>
           <Button onClick={() => router.push('/en/work-permits/new')}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className='h-4 w-4 mr-2' />
             New Application
           </Button>
         </div>
       </div>
 
       {/* Compliance Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliant</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
+      <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
+        <Card className='border-l-4 border-l-green-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Compliant</CardTitle>
+            <CheckCircle className='h-4 w-4 text-green-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.compliant}</div>
-            <p className="text-xs text-muted-foreground">Valid work permits</p>
+            <div className='text-2xl font-bold'>{summary.compliant}</div>
+            <p className='text-xs text-muted-foreground'>Valid work permits</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+        <Card className='border-l-4 border-l-yellow-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Expiring Soon</CardTitle>
+            <Clock className='h-4 w-4 text-yellow-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.expiring_soon}</div>
-            <p className="text-xs text-muted-foreground">Need renewal</p>
+            <div className='text-2xl font-bold'>{summary.expiring_soon}</div>
+            <p className='text-xs text-muted-foreground'>Need renewal</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expired</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-500" />
+        <Card className='border-l-4 border-l-red-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Expired</CardTitle>
+            <AlertTriangle className='h-4 w-4 text-red-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.expired}</div>
-            <p className="text-xs text-muted-foreground">Urgent action needed</p>
+            <div className='text-2xl font-bold'>{summary.expired}</div>
+            <p className='text-xs text-muted-foreground'>
+              Urgent action needed
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Renewal</CardTitle>
-            <FileText className="h-4 w-4 text-orange-500" />
+        <Card className='border-l-4 border-l-orange-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Pending Renewal
+            </CardTitle>
+            <FileText className='h-4 w-4 text-orange-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.pending_renewal}</div>
-            <p className="text-xs text-muted-foreground">Renewal in progress</p>
+            <div className='text-2xl font-bold'>{summary.pending_renewal}</div>
+            <p className='text-xs text-muted-foreground'>Renewal in progress</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-gray-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Non-Compliant</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-gray-500" />
+        <Card className='border-l-4 border-l-gray-500'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Non-Compliant</CardTitle>
+            <AlertTriangle className='h-4 w-4 text-gray-500' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.non_compliant}</div>
-            <p className="text-xs text-muted-foreground">Issues to resolve</p>
+            <div className='text-2xl font-bold'>{summary.non_compliant}</div>
+            <p className='text-xs text-muted-foreground'>Issues to resolve</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <CardContent className='p-4'>
+          <div className='flex flex-col md:flex-row gap-4'>
+            <div className='relative flex-1'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
               <Input
-                placeholder="Search by application number, employee name, or work permit number..."
+                placeholder='Search by application number, employee name, or work permit number...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onChange={e => setSearchTerm(e.target.value)}
+                className='pl-10'
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className='w-48'>
+                <SelectValue placeholder='Filter by status' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="submitted">Submitted</SelectItem>
-                <SelectItem value="under_review">Under Review</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value='all'>All Status</SelectItem>
+                <SelectItem value='draft'>Draft</SelectItem>
+                <SelectItem value='submitted'>Submitted</SelectItem>
+                <SelectItem value='under_review'>Under Review</SelectItem>
+                <SelectItem value='approved'>Approved</SelectItem>
+                <SelectItem value='rejected'>Rejected</SelectItem>
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by type" />
+              <SelectTrigger className='w-48'>
+                <SelectValue placeholder='Filter by type' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="renewal">Renewal</SelectItem>
-                <SelectItem value="transfer">Transfer</SelectItem>
-                <SelectItem value="cancellation">Cancellation</SelectItem>
+                <SelectItem value='all'>All Types</SelectItem>
+                <SelectItem value='new'>New</SelectItem>
+                <SelectItem value='renewal'>Renewal</SelectItem>
+                <SelectItem value='transfer'>Transfer</SelectItem>
+                <SelectItem value='cancellation'>Cancellation</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -344,7 +355,9 @@ export function WorkPermitDashboard() {
       {/* Applications Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Work Permit Applications ({filteredApplications.length})</CardTitle>
+          <CardTitle>
+            Work Permit Applications ({filteredApplications.length})
+          </CardTitle>
           <CardDescription>
             Track all work permit applications and their status
           </CardDescription>
@@ -366,35 +379,37 @@ export function WorkPermitDashboard() {
             <TableBody>
               {filteredApplications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No work permit applications found</p>
+                  <TableCell colSpan={8} className='text-center py-8'>
+                    <FileText className='h-12 w-12 text-gray-400 mx-auto mb-4' />
+                    <p className='text-gray-500'>
+                      No work permit applications found
+                    </p>
                     <Button
-                      variant="outline"
-                      className="mt-4"
+                      variant='outline'
+                      className='mt-4'
                       onClick={() => router.push('/en/work-permits/new')}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className='h-4 w-4 mr-2' />
                       Create First Application
                     </Button>
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredApplications.map((app) => {
+                filteredApplications.map(app => {
                   const expiryStatus = getExpiryStatus(
                     app.work_permit_end_date || app.work_permit_expiry_date
                   );
 
                   return (
                     <TableRow key={app.id}>
-                      <TableCell className="font-mono text-sm">
+                      <TableCell className='font-mono text-sm'>
                         {app.application_number}
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{app.employee_name_en}</p>
+                          <p className='font-medium'>{app.employee_name_en}</p>
                           {app.employee_name_ar && (
-                            <p className="text-sm text-muted-foreground">
+                            <p className='text-sm text-muted-foreground'>
                               {app.employee_name_ar}
                             </p>
                           )}
@@ -402,25 +417,35 @@ export function WorkPermitDashboard() {
                       </TableCell>
                       <TableCell>{app.job_title}</TableCell>
                       <TableCell>
-                        <Badge className={cn('text-xs', getTypeColor(app.application_type))}>
+                        <Badge
+                          className={cn(
+                            'text-xs',
+                            getTypeColor(app.application_type)
+                          )}
+                        >
                           {app.application_type}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn('text-xs', getStatusColor(app.status))}>
+                        <Badge
+                          className={cn('text-xs', getStatusColor(app.status))}
+                        >
                           {app.status.replace('_', ' ')}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-sm">
+                      <TableCell className='font-mono text-sm'>
                         {app.work_permit_number || '-'}
                       </TableCell>
                       <TableCell>
-                        {app.work_permit_end_date || app.work_permit_expiry_date ? (
+                        {app.work_permit_end_date ||
+                        app.work_permit_expiry_date ? (
                           <div>
-                            <p className="text-sm">
+                            <p className='text-sm'>
                               {format(
                                 parseISO(
-                                  app.work_permit_end_date || app.work_permit_expiry_date || ''
+                                  app.work_permit_end_date ||
+                                    app.work_permit_expiry_date ||
+                                    ''
                                 ),
                                 'MMM dd, yyyy'
                               )}
@@ -428,7 +453,8 @@ export function WorkPermitDashboard() {
                             {expiryStatus && (
                               <p className={cn('text-xs', expiryStatus.color)}>
                                 {expiryStatus.label}
-                                {expiryStatus.days !== undefined && ` (${expiryStatus.days} days)`}
+                                {expiryStatus.days !== undefined &&
+                                  ` (${expiryStatus.days} days)`}
                               </p>
                             )}
                           </div>
@@ -437,35 +463,43 @@ export function WorkPermitDashboard() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
+                        <div className='flex items-center gap-2'>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push(`/en/work-permits/${app.id}`)}
-                            title="View Details"
+                            variant='ghost'
+                            size='sm'
+                            onClick={() =>
+                              router.push(`/en/work-permits/${app.id}`)
+                            }
+                            title='View Details'
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className='h-4 w-4' />
                           </Button>
                           {app.status === 'draft' && (
                             <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => router.push(`/en/work-permits/${app.id}/edit`)}
-                              title="Edit Application"
+                              variant='ghost'
+                              size='sm'
+                              onClick={() =>
+                                router.push(`/en/work-permits/${app.id}/edit`)
+                              }
+                              title='Edit Application'
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className='h-4 w-4' />
                             </Button>
                           )}
-                          {(app.status === 'draft' || app.status === 'submitted') && (
+                          {(app.status === 'draft' ||
+                            app.status === 'submitted') && (
                             <Button
-                              variant="ghost"
-                              size="sm"
+                              variant='ghost'
+                              size='sm'
                               onClick={() => {
-                                window.open(`/api/work-permits/${app.id}/export?format=json`, '_blank');
+                                window.open(
+                                  `/api/work-permits/${app.id}/export?format=json`,
+                                  '_blank'
+                                );
                               }}
-                              title="Export for Ministry Submission"
+                              title='Export for Ministry Submission'
                             >
-                              <Download className="h-4 w-4" />
+                              <Download className='h-4 w-4' />
                             </Button>
                           )}
                         </div>
@@ -481,4 +515,3 @@ export function WorkPermitDashboard() {
     </div>
   );
 }
-

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -32,7 +32,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         expenses: [],
-        stats: { pending: 0, approved: 0, paid: 0, total: 0, pendingCount: 0, approvedCount: 0 },
+        stats: {
+          pending: 0,
+          approved: 0,
+          paid: 0,
+          total: 0,
+          pendingCount: 0,
+          approvedCount: 0,
+        },
       });
     }
 
@@ -41,7 +48,8 @@ export async function GET(request: NextRequest) {
     // Try to get expenses - handle case where table doesn't exist
     try {
       let query = (supabaseAdmin.from('employee_expenses') as any)
-        .select(`
+        .select(
+          `
           *,
           category:category_id (
             id,
@@ -59,7 +67,8 @@ export async function GET(request: NextRequest) {
           reviewed_by_user:reviewed_by (
             full_name
           )
-        `)
+        `
+        )
         .in('employer_employee_id', employerEmployeeIds)
         .order('created_at', { ascending: false });
 
@@ -71,27 +80,51 @@ export async function GET(request: NextRequest) {
 
       if (error) {
         // If table doesn't exist, return empty state
-        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        if (
+          error.code === '42P01' ||
+          error.message?.includes('does not exist')
+        ) {
           return NextResponse.json({
             success: true,
             expenses: [],
-            stats: { pending: 0, approved: 0, paid: 0, total: 0, pendingCount: 0, approvedCount: 0 },
+            stats: {
+              pending: 0,
+              approved: 0,
+              paid: 0,
+              total: 0,
+              pendingCount: 0,
+              approvedCount: 0,
+            },
             message: 'Expenses feature not yet configured',
           });
         }
         console.error('Error fetching expenses:', error);
-        return NextResponse.json({ error: 'Failed to fetch expenses' }, { status: 500 });
+        return NextResponse.json(
+          { error: 'Failed to fetch expenses' },
+          { status: 500 }
+        );
       }
 
       // Calculate stats
       const allExpenses = expenses || [];
       const stats = {
-        pending: allExpenses.filter((e: any) => e.status === 'pending').reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
-        approved: allExpenses.filter((e: any) => e.status === 'approved').reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
-        paid: allExpenses.filter((e: any) => e.status === 'paid').reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
-        total: allExpenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
-        pendingCount: allExpenses.filter((e: any) => e.status === 'pending').length,
-        approvedCount: allExpenses.filter((e: any) => e.status === 'approved').length,
+        pending: allExpenses
+          .filter((e: any) => e.status === 'pending')
+          .reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
+        approved: allExpenses
+          .filter((e: any) => e.status === 'approved')
+          .reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
+        paid: allExpenses
+          .filter((e: any) => e.status === 'paid')
+          .reduce((sum: number, e: any) => sum + parseFloat(e.amount || 0), 0),
+        total: allExpenses.reduce(
+          (sum: number, e: any) => sum + parseFloat(e.amount || 0),
+          0
+        ),
+        pendingCount: allExpenses.filter((e: any) => e.status === 'pending')
+          .length,
+        approvedCount: allExpenses.filter((e: any) => e.status === 'approved')
+          .length,
       };
 
       return NextResponse.json({
@@ -105,13 +138,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         expenses: [],
-        stats: { pending: 0, approved: 0, paid: 0, total: 0, pendingCount: 0, approvedCount: 0 },
+        stats: {
+          pending: 0,
+          approved: 0,
+          paid: 0,
+          total: 0,
+          pendingCount: 0,
+          approvedCount: 0,
+        },
         message: 'Expenses feature not yet configured',
       });
     }
   } catch (error) {
     console.error('Error in employer expenses GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

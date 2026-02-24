@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -19,32 +19,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: announcements, error: announcementsError } = await (supabaseAdmin.from('team_announcements') as any)
-      .select(`
+    const { data: announcements, error: announcementsError } = await (
+      supabaseAdmin.from('team_announcements') as any
+    )
+      .select(
+        `
         *,
         created_by_user:created_by (
           full_name
         )
-      `)
+      `
+      )
       .eq('employer_id', user.id)
       .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (announcementsError) {
       console.error('Error fetching announcements:', announcementsError);
-      return NextResponse.json({ error: 'Failed to fetch announcements' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch announcements' },
+        { status: 500 }
+      );
     }
 
     // Get read counts for each announcement
     const announcementIds = (announcements || []).map((a: any) => a.id);
-    const { data: readCounts } = await (supabaseAdmin.from('announcement_reads') as any)
+    const { data: readCounts } = await (
+      supabaseAdmin.from('announcement_reads') as any
+    )
       .select('announcement_id')
       .in('announcement_id', announcementIds);
 
     // Count reads per announcement
     const readCountMap: Record<string, number> = {};
     (readCounts || []).forEach((r: any) => {
-      readCountMap[r.announcement_id] = (readCountMap[r.announcement_id] || 0) + 1;
+      readCountMap[r.announcement_id] =
+        (readCountMap[r.announcement_id] || 0) + 1;
     });
 
     // Add read count to announcements
@@ -59,7 +69,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in employer announcements GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -68,7 +81,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -79,7 +92,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, priority, is_pinned, expires_at, target_departments } = body;
+    const {
+      title,
+      content,
+      priority,
+      is_pinned,
+      expires_at,
+      target_departments,
+    } = body;
 
     if (!title || !content) {
       return NextResponse.json(
@@ -88,7 +108,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: announcement, error: createError } = await (supabaseAdmin.from('team_announcements') as any)
+    const { data: announcement, error: createError } = await (
+      supabaseAdmin.from('team_announcements') as any
+    )
       .insert({
         employer_id: user.id,
         title,
@@ -105,7 +127,10 @@ export async function POST(request: NextRequest) {
     if (createError) {
       console.error('Error creating announcement:', createError);
       return NextResponse.json(
-        { error: 'Failed to create announcement', details: createError.message },
+        {
+          error: 'Failed to create announcement',
+          details: createError.message,
+        },
         { status: 500 }
       );
     }
@@ -117,7 +142,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in employer announcements POST:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

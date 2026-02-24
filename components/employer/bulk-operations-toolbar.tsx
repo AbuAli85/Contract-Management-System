@@ -111,7 +111,10 @@ export function BulkOperationsToolbar({
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update team members',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update team members',
         variant: 'destructive',
       });
     } finally {
@@ -170,7 +173,8 @@ export function BulkOperationsToolbar({
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to assign tasks',
+        description:
+          error instanceof Error ? error.message : 'Failed to assign tasks',
         variant: 'destructive',
       });
     } finally {
@@ -218,7 +222,8 @@ export function BulkOperationsToolbar({
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to export data',
+        description:
+          error instanceof Error ? error.message : 'Failed to export data',
         variant: 'destructive',
       });
     } finally {
@@ -232,43 +237,44 @@ export function BulkOperationsToolbar({
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium">
-            {selectedIds.length} {selectedIds.length === 1 ? 'member' : 'members'} selected
+      <div className='flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg'>
+        <div className='flex items-center gap-3'>
+          <span className='text-sm font-medium'>
+            {selectedIds.length}{' '}
+            {selectedIds.length === 1 ? 'member' : 'members'} selected
           </span>
           <Button
-            variant="ghost"
-            size="sm"
+            variant='ghost'
+            size='sm'
             onClick={onClearSelection}
-            className="h-7"
+            className='h-7'
           >
             Clear
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" disabled={loading}>
-                <MoreHorizontal className="h-4 w-4 mr-2" />
+              <Button variant='outline' size='sm' disabled={loading}>
+                <MoreHorizontal className='h-4 w-4 mr-2' />
                 Bulk Actions
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align='end'>
               <DropdownMenuLabel>Bulk Operations</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowBulkEdit(true)}>
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className='h-4 w-4 mr-2' />
                 Edit Selected
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowBulkAssign(true)}>
-                <Send className="h-4 w-4 mr-2" />
+                <Send className='h-4 w-4 mr-2' />
                 Assign Task
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowExport(true)}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className='h-4 w-4 mr-2' />
                 Export Selected
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -282,58 +288,65 @@ export function BulkOperationsToolbar({
           <DialogHeader>
             <DialogTitle>Bulk Edit Team Members</DialogTitle>
             <DialogDescription>
-              Update {selectedIds.length} selected team member(s). Leave fields empty to skip.
+              Update {selectedIds.length} selected team member(s). Leave fields
+              empty to skip.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
               <Label>Employment Status</Label>
               <Select
                 value={bulkEditData.employment_status}
-                onValueChange={(value) =>
+                onValueChange={value =>
                   setBulkEditData({ ...bulkEditData, employment_status: value })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status (optional)" />
+                  <SelectValue placeholder='Select status (optional)' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="on_leave">On Leave</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                  <SelectItem value="terminated">Terminated</SelectItem>
+                  <SelectItem value='active'>Active</SelectItem>
+                  <SelectItem value='on_leave'>On Leave</SelectItem>
+                  <SelectItem value='suspended'>Suspended</SelectItem>
+                  <SelectItem value='terminated'>Terminated</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className='space-y-2'>
               <Label>Department</Label>
               <Input
-                placeholder="Enter department (optional)"
+                placeholder='Enter department (optional)'
                 value={bulkEditData.department}
-                onChange={(e) =>
-                  setBulkEditData({ ...bulkEditData, department: e.target.value })
+                onChange={e =>
+                  setBulkEditData({
+                    ...bulkEditData,
+                    department: e.target.value,
+                  })
                 }
               />
             </div>
 
-            <div className="space-y-2">
+            <div className='space-y-2'>
               <Label>Job Title</Label>
               <Input
-                placeholder="Enter job title (optional)"
+                placeholder='Enter job title (optional)'
                 value={bulkEditData.job_title}
-                onChange={(e) =>
-                  setBulkEditData({ ...bulkEditData, job_title: e.target.value })
+                onChange={e =>
+                  setBulkEditData({
+                    ...bulkEditData,
+                    job_title: e.target.value,
+                  })
                 }
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkEdit(false)}>
+            <Button variant='outline' onClick={() => setShowBulkEdit(false)}>
               Cancel
             </Button>
             <Button onClick={handleBulkEdit} disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {loading && <Loader2 className='h-4 w-4 mr-2 animate-spin' />}
               Update {selectedIds.length} Member(s)
             </Button>
           </DialogFooter>
@@ -349,36 +362,42 @@ export function BulkOperationsToolbar({
               Assign a task to {selectedIds.length} selected team member(s).
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
               <Label>Task Title *</Label>
               <Input
-                placeholder="Enter task title"
+                placeholder='Enter task title'
                 value={bulkAssignData.task_title}
-                onChange={(e) =>
-                  setBulkAssignData({ ...bulkAssignData, task_title: e.target.value })
+                onChange={e =>
+                  setBulkAssignData({
+                    ...bulkAssignData,
+                    task_title: e.target.value,
+                  })
                 }
                 required
               />
             </div>
 
-            <div className="space-y-2">
+            <div className='space-y-2'>
               <Label>Description</Label>
               <textarea
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md"
-                placeholder="Enter task description"
+                className='w-full min-h-[100px] px-3 py-2 text-sm border rounded-md'
+                placeholder='Enter task description'
                 value={bulkAssignData.task_description}
-                onChange={(e) =>
-                  setBulkAssignData({ ...bulkAssignData, task_description: e.target.value })
+                onChange={e =>
+                  setBulkAssignData({
+                    ...bulkAssignData,
+                    task_description: e.target.value,
+                  })
                 }
               />
             </div>
 
-            <div className="space-y-2">
+            <div className='space-y-2'>
               <Label>Priority</Label>
               <Select
                 value={bulkAssignData.priority}
-                onValueChange={(value) =>
+                onValueChange={value =>
                   setBulkAssignData({ ...bulkAssignData, priority: value })
                 }
               >
@@ -386,31 +405,37 @@ export function BulkOperationsToolbar({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value='low'>Low</SelectItem>
+                  <SelectItem value='medium'>Medium</SelectItem>
+                  <SelectItem value='high'>High</SelectItem>
+                  <SelectItem value='urgent'>Urgent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className='space-y-2'>
               <Label>Due Date</Label>
               <Input
-                type="date"
+                type='date'
                 value={bulkAssignData.due_date}
-                onChange={(e) =>
-                  setBulkAssignData({ ...bulkAssignData, due_date: e.target.value })
+                onChange={e =>
+                  setBulkAssignData({
+                    ...bulkAssignData,
+                    due_date: e.target.value,
+                  })
                 }
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkAssign(false)}>
+            <Button variant='outline' onClick={() => setShowBulkAssign(false)}>
               Cancel
             </Button>
-            <Button onClick={handleBulkAssign} disabled={loading || !bulkAssignData.task_title}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            <Button
+              onClick={handleBulkAssign}
+              disabled={loading || !bulkAssignData.task_title}
+            >
+              {loading && <Loader2 className='h-4 w-4 mr-2 animate-spin' />}
               Assign to {selectedIds.length} Member(s)
             </Button>
           </DialogFooter>
@@ -423,53 +448,60 @@ export function BulkOperationsToolbar({
           <DialogHeader>
             <DialogTitle>Export Team Members</DialogTitle>
             <DialogDescription>
-              Export {selectedIds.length} selected team member(s) in your preferred format.
+              Export {selectedIds.length} selected team member(s) in your
+              preferred format.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid gap-3">
+          <div className='space-y-4 py-4'>
+            <div className='grid gap-3'>
               <Button
-                variant="outline"
-                className="justify-start h-auto py-4"
+                variant='outline'
+                className='justify-start h-auto py-4'
                 onClick={() => handleExport('csv')}
                 disabled={loading}
               >
-                <FileSpreadsheet className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <div className="font-medium">CSV Format</div>
-                  <div className="text-xs text-gray-500">Comma-separated values, compatible with Excel</div>
+                <FileSpreadsheet className='h-5 w-5 mr-3' />
+                <div className='text-left'>
+                  <div className='font-medium'>CSV Format</div>
+                  <div className='text-xs text-gray-500'>
+                    Comma-separated values, compatible with Excel
+                  </div>
                 </div>
               </Button>
 
               <Button
-                variant="outline"
-                className="justify-start h-auto py-4"
+                variant='outline'
+                className='justify-start h-auto py-4'
                 onClick={() => handleExport('excel')}
                 disabled={loading}
               >
-                <FileSpreadsheet className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <div className="font-medium">Excel Format</div>
-                  <div className="text-xs text-gray-500">Formatted Excel file with styling</div>
+                <FileSpreadsheet className='h-5 w-5 mr-3' />
+                <div className='text-left'>
+                  <div className='font-medium'>Excel Format</div>
+                  <div className='text-xs text-gray-500'>
+                    Formatted Excel file with styling
+                  </div>
                 </div>
               </Button>
 
               <Button
-                variant="outline"
-                className="justify-start h-auto py-4"
+                variant='outline'
+                className='justify-start h-auto py-4'
                 onClick={() => handleExport('pdf')}
                 disabled={loading}
               >
-                <FileText className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <div className="font-medium">PDF Format</div>
-                  <div className="text-xs text-gray-500">Professional PDF report</div>
+                <FileText className='h-5 w-5 mr-3' />
+                <div className='text-left'>
+                  <div className='font-medium'>PDF Format</div>
+                  <div className='text-xs text-gray-500'>
+                    Professional PDF report
+                  </div>
                 </div>
               </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExport(false)}>
+            <Button variant='outline' onClick={() => setShowExport(false)}>
               Cancel
             </Button>
           </DialogFooter>
@@ -478,4 +510,3 @@ export function BulkOperationsToolbar({
     </>
   );
 }
-

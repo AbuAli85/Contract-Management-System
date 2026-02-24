@@ -3,4 +3,3 @@ import { HoldingGroupsManager } from '@/components/holding-groups/holding-groups
 export default function HoldingGroupsPage() {
   return <HoldingGroupsManager />;
 }
-

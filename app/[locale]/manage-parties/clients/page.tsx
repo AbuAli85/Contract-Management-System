@@ -35,7 +35,6 @@ import {
   FileText,
   Mail,
   Phone,
-  MapPin,
   Eye,
   MoreHorizontal,
   Calendar,

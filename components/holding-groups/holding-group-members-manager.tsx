@@ -74,7 +74,9 @@ export function HoldingGroupMembersManager({
   const [isLoadingParties, setIsLoadingParties] = useState(false);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedMemberType, setSelectedMemberType] = useState<'party' | 'company'>('party');
+  const [selectedMemberType, setSelectedMemberType] = useState<
+    'party' | 'company'
+  >('party');
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -99,7 +101,9 @@ export function HoldingGroupMembersManager({
 
   async function fetchMembers() {
     try {
-      const response = await fetch(`/api/holding-groups/${holdingGroupId}/members`);
+      const response = await fetch(
+        `/api/holding-groups/${holdingGroupId}/members`
+      );
       const { data, error } = await response.json();
 
       if (error) throw new Error(error);
@@ -119,40 +123,60 @@ export function HoldingGroupMembersManager({
     setIsLoadingParties(true);
     try {
       const response = await fetch('/api/parties?type=Employer&limit=1000');
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[HoldingGroupMembers] HTTP error response:', response.status, errorText);
+        console.error(
+          '[HoldingGroupMembers] HTTP error response:',
+          response.status,
+          errorText
+        );
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       console.log('[HoldingGroupMembers] API response:', result);
-      
+
       if (!result.success) {
-        throw new Error(result.error || result.message || 'Failed to fetch parties');
+        throw new Error(
+          result.error || result.message || 'Failed to fetch parties'
+        );
       }
-      
+
       // API returns { success: true, parties: [...], ... }
       const data = result.parties || [];
-      console.log(`[HoldingGroupMembers] Fetched ${data.length} parties from API`);
-      
+      console.log(
+        `[HoldingGroupMembers] Fetched ${data.length} parties from API`
+      );
+
       // Filter out parties already in the holding group
-      const memberPartyIds = new Set(members.map(m => m.party_id).filter(Boolean));
+      const memberPartyIds = new Set(
+        members.map(m => m.party_id).filter(Boolean)
+      );
       const filtered = data.filter((p: Party) => !memberPartyIds.has(p.id));
-      
-      console.log(`[HoldingGroupMembers] Filtered to ${filtered.length} available parties (${memberPartyIds.size} already members)`);
-      console.log('[HoldingGroupMembers] Member party IDs:', Array.from(memberPartyIds));
-      console.log('[HoldingGroupMembers] Available parties:', filtered.map(p => ({ id: p.id, name: p.name_en })));
-      
+
+      console.log(
+        `[HoldingGroupMembers] Filtered to ${filtered.length} available parties (${memberPartyIds.size} already members)`
+      );
+      console.log(
+        '[HoldingGroupMembers] Member party IDs:',
+        Array.from(memberPartyIds)
+      );
+      console.log(
+        '[HoldingGroupMembers] Available parties:',
+        filtered.map(p => ({ id: p.id, name: p.name_en }))
+      );
+
       setAvailableParties(filtered);
     } catch (error: any) {
       console.error('[HoldingGroupMembers] Error fetching parties:', error);
       setAvailableParties([]);
       toast({
         title: 'Error fetching parties',
-        description: error.message || 'Failed to load available parties. Please check the console for details.',
+        description:
+          error.message ||
+          'Failed to load available parties. Please check the console for details.',
         variant: 'destructive',
       });
     } finally {
@@ -164,40 +188,60 @@ export function HoldingGroupMembersManager({
     setIsLoadingCompanies(true);
     try {
       const response = await fetch('/api/companies');
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[HoldingGroupMembers] HTTP error response:', response.status, errorText);
+        console.error(
+          '[HoldingGroupMembers] HTTP error response:',
+          response.status,
+          errorText
+        );
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       console.log('[HoldingGroupMembers] Companies API response:', result);
-      
+
       if (!result.success) {
-        throw new Error(result.error || result.message || 'Failed to fetch companies');
+        throw new Error(
+          result.error || result.message || 'Failed to fetch companies'
+        );
       }
-      
+
       // API returns { success: true, companies: [...], ... }
       const data = result.companies || [];
-      console.log(`[HoldingGroupMembers] Fetched ${data.length} companies from API`);
-      
+      console.log(
+        `[HoldingGroupMembers] Fetched ${data.length} companies from API`
+      );
+
       // Filter out companies already in the holding group
-      const memberCompanyIds = new Set(members.map(m => m.company_id).filter(Boolean));
+      const memberCompanyIds = new Set(
+        members.map(m => m.company_id).filter(Boolean)
+      );
       const filtered = data.filter((c: Company) => !memberCompanyIds.has(c.id));
-      
-      console.log(`[HoldingGroupMembers] Filtered to ${filtered.length} available companies (${memberCompanyIds.size} already members)`);
-      console.log('[HoldingGroupMembers] Member company IDs:', Array.from(memberCompanyIds));
-      console.log('[HoldingGroupMembers] Available companies:', filtered.map(c => ({ id: c.id, name: c.name })));
-      
+
+      console.log(
+        `[HoldingGroupMembers] Filtered to ${filtered.length} available companies (${memberCompanyIds.size} already members)`
+      );
+      console.log(
+        '[HoldingGroupMembers] Member company IDs:',
+        Array.from(memberCompanyIds)
+      );
+      console.log(
+        '[HoldingGroupMembers] Available companies:',
+        filtered.map(c => ({ id: c.id, name: c.name }))
+      );
+
       setAvailableCompanies(filtered);
     } catch (error: any) {
       console.error('[HoldingGroupMembers] Error fetching companies:', error);
       setAvailableCompanies([]);
       toast({
         title: 'Error fetching companies',
-        description: error.message || 'Failed to load available companies. Please check the console for details.',
+        description:
+          error.message ||
+          'Failed to load available companies. Please check the console for details.',
         variant: 'destructive',
       });
     } finally {
@@ -216,14 +260,17 @@ export function HoldingGroupMembersManager({
     }
 
     try {
-      const response = await fetch(`/api/holding-groups/${holdingGroupId}/members`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          member_ids: selectedMemberIds,
-          member_type: selectedMemberType,
-        }),
-      });
+      const response = await fetch(
+        `/api/holding-groups/${holdingGroupId}/members`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            member_ids: selectedMemberIds,
+            member_type: selectedMemberType,
+          }),
+        }
+      );
 
       const { error } = await response.json();
 
@@ -284,12 +331,13 @@ export function HoldingGroupMembersManager({
     }
   }
 
-  const availableItems = selectedMemberType === 'party' ? availableParties : availableCompanies;
+  const availableItems =
+    selectedMemberType === 'party' ? availableParties : availableCompanies;
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className='flex items-center justify-center p-8'>
+        <Loader2 className='h-8 w-8 animate-spin' />
       </div>
     );
   }
@@ -297,16 +345,16 @@ export function HoldingGroupMembersManager({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className='flex items-center justify-between'>
           <div>
             <CardTitle>Members of {holdingGroupName}</CardTitle>
             <CardDescription>
               Companies and parties belonging to this holding group
             </CardDescription>
           </div>
-          <Dialog 
-            open={isDialogOpen} 
-            onOpenChange={(open) => {
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={open => {
               setIsDialogOpen(open);
               if (open) {
                 // Reset selections when opening and refresh data
@@ -319,23 +367,23 @@ export function HoldingGroupMembersManager({
           >
             <DialogTrigger asChild>
               <Button>
-                <PlusIcon className="mr-2 h-4 w-4" />
+                <PlusIcon className='mr-2 h-4 w-4' />
                 Add Members
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className='max-w-2xl'>
               <DialogHeader>
                 <DialogTitle>Add Members to Holding Group</DialogTitle>
                 <DialogDescription>
                   Select companies or parties to add to this holding group
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Member Type</label>
+              <div className='space-y-4'>
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>Member Type</label>
                   <Select
                     value={selectedMemberType}
-                    onValueChange={(value) => {
+                    onValueChange={value => {
                       setSelectedMemberType(value as 'party' | 'company');
                       setSelectedMemberIds([]);
                     }}
@@ -344,39 +392,46 @@ export function HoldingGroupMembersManager({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="party">Parties (Employers)</SelectItem>
-                      <SelectItem value="company">Companies</SelectItem>
+                      <SelectItem value='party'>Parties (Employers)</SelectItem>
+                      <SelectItem value='company'>Companies</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Select {selectedMemberType === 'party' ? 'Parties' : 'Companies'}
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>
+                    Select{' '}
+                    {selectedMemberType === 'party' ? 'Parties' : 'Companies'}
                   </label>
                   <Select
-                    value=""
-                    onValueChange={(value) => {
+                    value=''
+                    onValueChange={value => {
                       if (!selectedMemberIds.includes(value)) {
                         setSelectedMemberIds([...selectedMemberIds, value]);
                       }
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={`Select ${selectedMemberType === 'party' ? 'a party' : 'a company'}`} />
+                      <SelectValue
+                        placeholder={`Select ${selectedMemberType === 'party' ? 'a party' : 'a company'}`}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {(selectedMemberType === 'party' ? isLoadingParties : isLoadingCompanies) ? (
-                        <SelectItem value="loading" disabled>
+                      {(
+                        selectedMemberType === 'party'
+                          ? isLoadingParties
+                          : isLoadingCompanies
+                      ) ? (
+                        <SelectItem value='loading' disabled>
                           Loading...
                         </SelectItem>
                       ) : availableItems.length === 0 ? (
-                        <SelectItem value="no-items" disabled>
+                        <SelectItem value='no-items' disabled>
                           {selectedMemberType === 'party'
                             ? 'No available parties (all parties are already members)'
                             : 'No available companies (all companies are already members)'}
                         </SelectItem>
                       ) : (
-                        availableItems.map((item) => (
+                        availableItems.map(item => (
                           <SelectItem key={item.id} value={item.id}>
                             {selectedMemberType === 'party'
                               ? `${(item as Party).name_en}${(item as Party).name_ar ? ` / ${(item as Party).name_ar}` : ''}`
@@ -388,23 +443,31 @@ export function HoldingGroupMembersManager({
                   </Select>
                 </div>
                 {selectedMemberIds.length > 0 && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Selected Members</label>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedMemberIds.map((id) => {
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>
+                      Selected Members
+                    </label>
+                    <div className='flex flex-wrap gap-2'>
+                      {selectedMemberIds.map(id => {
                         const item = availableItems.find(i => i.id === id);
                         return (
-                          <Badge key={id} variant="secondary" className="flex items-center gap-1">
+                          <Badge
+                            key={id}
+                            variant='secondary'
+                            className='flex items-center gap-1'
+                          >
                             {selectedMemberType === 'party'
                               ? (item as Party)?.name_en
                               : (item as Company)?.name}
                             <button
                               onClick={() => {
-                                setSelectedMemberIds(selectedMemberIds.filter(i => i !== id));
+                                setSelectedMemberIds(
+                                  selectedMemberIds.filter(i => i !== id)
+                                );
                               }}
-                              className="ml-1"
+                              className='ml-1'
                             >
-                              <XIcon className="h-3 w-3" />
+                              <XIcon className='h-3 w-3' />
                             </button>
                           </Badge>
                         );
@@ -412,9 +475,9 @@ export function HoldingGroupMembersManager({
                     </div>
                   </div>
                 )}
-                <div className="flex justify-end gap-2">
+                <div className='flex justify-end gap-2'>
                   <Button
-                    variant="outline"
+                    variant='outline'
                     onClick={() => {
                       setIsDialogOpen(false);
                       setSelectedMemberIds([]);
@@ -431,32 +494,32 @@ export function HoldingGroupMembersManager({
       </CardHeader>
       <CardContent>
         {members.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className='text-center py-8 text-muted-foreground'>
             No members in this holding group. Add members to get started.
           </div>
         ) : (
-          <div className="space-y-2">
-            {members.map((member) => (
+          <div className='space-y-2'>
+            {members.map(member => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
+                className='flex items-center justify-between p-3 border rounded-lg'
               >
                 <div>
-                  <div className="font-medium">
+                  <div className='font-medium'>
                     {member.member_type === 'party'
                       ? member.party?.name_en
                       : member.company?.name}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className='text-sm text-muted-foreground'>
                     {member.member_type === 'party' ? 'Party' : 'Company'}
                   </div>
                 </div>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={() => handleRemoveMember(member.id)}
                 >
-                  <XIcon className="h-4 w-4" />
+                  <XIcon className='h-4 w-4' />
                 </Button>
               </div>
             ))}
@@ -466,4 +529,3 @@ export function HoldingGroupMembersManager({
     </Card>
   );
 }
-

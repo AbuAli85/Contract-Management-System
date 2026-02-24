@@ -12,7 +12,9 @@ export async function GET(
     const supabase = await createClient();
 
     // ✅ COMPANY SCOPE: Get user and verify access
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -30,8 +36,20 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow, differenceInHours, differenceInMinutes, parseISO } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  format,
+  formatDistanceToNow,
+  differenceInHours,
+  differenceInMinutes,
+  parseISO,
+} from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AttendanceHistoryView } from './attendance-history-view';
@@ -74,18 +92,25 @@ interface BreakSession {
 }
 
 export function ProfessionalAttendanceDashboard() {
-  const [todayAttendance, setTodayAttendance] = useState<TodayAttendance | null>(null);
+  const [todayAttendance, setTodayAttendance] =
+    useState<TodayAttendance | null>(null);
   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [location, setLocation] = useState<{ latitude: number; longitude: number; accuracy?: number } | null>(null);
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [showPhotoDialog, setShowPhotoDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [activeTab, setActiveTab] = useState<'today' | 'history' | 'analytics'>('today');
-  
+  const [activeTab, setActiveTab] = useState<'today' | 'history' | 'analytics'>(
+    'today'
+  );
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -113,32 +138,44 @@ export function ProfessionalAttendanceDashboard() {
 
       if (!response.ok) {
         if (response.status !== 404) {
-          const errorMsg = typeof data.error === 'string' ? data.error : 'Failed to fetch attendance data';
+          const errorMsg =
+            typeof data.error === 'string'
+              ? data.error
+              : 'Failed to fetch attendance data';
           throw new Error(errorMsg);
         }
         return;
       }
 
       // Safely handle attendance array
-      const attendanceArray = Array.isArray(data.attendance) ? data.attendance : [];
-      
+      const attendanceArray = Array.isArray(data.attendance)
+        ? data.attendance
+        : [];
+
       const today = new Date().toISOString().slice(0, 10);
       const todayRecord = attendanceArray.find(
         (record: TodayAttendance) => record.attendance_date === today
       );
 
       setTodayAttendance(todayRecord || null);
-      
+
       // Ensure summary is not an empty object - safely handle API response
       const summaryData = data.summary;
-      if (summaryData && typeof summaryData === 'object' && !Array.isArray(summaryData)) {
+      if (
+        summaryData &&
+        typeof summaryData === 'object' &&
+        !Array.isArray(summaryData)
+      ) {
         const keys = Object.keys(summaryData);
         if (keys.length > 0) {
           // Validate all values are not objects themselves
           const isValid = keys.every(key => {
             const value = summaryData[key];
-            return value !== null && value !== undefined && 
-                   (typeof value !== 'object' || Array.isArray(value));
+            return (
+              value !== null &&
+              value !== undefined &&
+              (typeof value !== 'object' || Array.isArray(value))
+            );
           });
           setSummary(isValid ? summaryData : null);
         } else {
@@ -147,9 +184,13 @@ export function ProfessionalAttendanceDashboard() {
       } else {
         setSummary(null);
       }
-      
+
       // Check if on break (break_start_time exists and check_out is null)
-      if (todayRecord && (todayRecord as any).break_start_time && !todayRecord.check_out) {
+      if (
+        todayRecord &&
+        (todayRecord as any).break_start_time &&
+        !todayRecord.check_out
+      ) {
         // Break is active
       }
     } catch (error: any) {
@@ -164,7 +205,11 @@ export function ProfessionalAttendanceDashboard() {
     }
   };
 
-  const getCurrentLocation = (): Promise<{ latitude: number; longitude: number; accuracy?: number }> => {
+  const getCurrentLocation = (): Promise<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error('Geolocation is not supported by your browser'));
@@ -172,14 +217,14 @@ export function ProfessionalAttendanceDashboard() {
       }
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        position => {
           resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
           });
         },
-        (error) => {
+        error => {
           reject(new Error(`Location error: ${error.message}`));
         },
         {
@@ -206,7 +251,7 @@ export function ProfessionalAttendanceDashboard() {
         video: { facingMode: 'user' },
         audio: false,
       });
-      
+
       streamRef.current = stream;
       if (videoRef.current && videoRef.current.parentNode) {
         videoRef.current.srcObject = stream;
@@ -248,7 +293,7 @@ export function ProfessionalAttendanceDashboard() {
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        
+
         if (!video || !canvas) {
           reject(new Error('Video or canvas not available'));
           return;
@@ -463,9 +508,10 @@ export function ProfessionalAttendanceDashboard() {
 
       toast({
         title: action === 'start' ? '☕ Break Started' : '✅ Break Ended',
-        description: action === 'start' 
-          ? 'Your break time is now being tracked'
-          : `Break duration: ${data.break_duration_minutes || 0} minutes`,
+        description:
+          action === 'start'
+            ? 'Your break time is now being tracked'
+            : `Break duration: ${data.break_duration_minutes || 0} minutes`,
       });
 
       await fetchAttendance();
@@ -483,15 +529,18 @@ export function ProfessionalAttendanceDashboard() {
   // Calculate working hours
   const calculateWorkingHours = () => {
     if (!todayAttendance?.check_in) return null;
-    
+
     const checkInTime = parseISO(todayAttendance.check_in);
-    const checkOutTime = todayAttendance.check_out ? parseISO(todayAttendance.check_out) : currentTime;
+    const checkOutTime = todayAttendance.check_out
+      ? parseISO(todayAttendance.check_out)
+      : currentTime;
     const breakMinutes = todayAttendance.break_duration_minutes || 0;
-    
-    const totalMinutes = differenceInMinutes(checkOutTime, checkInTime) - breakMinutes;
+
+    const totalMinutes =
+      differenceInMinutes(checkOutTime, checkInTime) - breakMinutes;
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    
+
     return { hours, minutes, totalMinutes };
   };
 
@@ -503,63 +552,90 @@ export function ProfessionalAttendanceDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className='flex items-center justify-center h-64'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary' />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="today">Today</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+    <div className='space-y-6'>
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)}>
+        <TabsList className='grid w-full grid-cols-3'>
+          <TabsTrigger value='today'>Today</TabsTrigger>
+          <TabsTrigger value='history'>History</TabsTrigger>
+          <TabsTrigger value='analytics'>Analytics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="space-y-6">
+        <TabsContent value='today' className='space-y-6'>
           {/* Today's Status Card */}
-          <Card className="border-2">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
-              <div className="flex items-center justify-between">
+          <Card className='border-2'>
+            <CardHeader className='bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <CardTitle className="text-2xl">Today's Attendance</CardTitle>
-                  <CardDescription className="text-blue-100">
-                    {format(currentTime, 'EEEE, MMMM dd, yyyy')} • {format(currentTime, 'hh:mm:ss a')}
+                  <CardTitle className='text-2xl'>Today's Attendance</CardTitle>
+                  <CardDescription className='text-blue-100'>
+                    {format(currentTime, 'EEEE, MMMM dd, yyyy')} •{' '}
+                    {format(currentTime, 'hh:mm:ss a')}
                   </CardDescription>
                 </div>
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {isCheckedIn ? (isCheckedOut ? 'Checked Out' : 'Checked In') : 'Not Checked In'}
+                <Badge variant='secondary' className='text-lg px-4 py-2'>
+                  {isCheckedIn
+                    ? isCheckedOut
+                      ? 'Checked Out'
+                      : 'Checked In'
+                    : 'Not Checked In'}
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className='pt-6 space-y-6'>
               {/* Status Indicators */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 rounded-lg border-2 border-blue-200 bg-blue-50">
-                  <LogIn className={cn("h-8 w-8 mx-auto mb-2", isCheckedIn ? "text-green-600" : "text-gray-400")} />
-                  <div className="text-sm font-medium text-gray-600">Check In</div>
-                  <div className="text-lg font-bold">
-                    {todayAttendance?.check_in 
+              <div className='grid grid-cols-3 gap-4'>
+                <div className='text-center p-4 rounded-lg border-2 border-blue-200 bg-blue-50'>
+                  <LogIn
+                    className={cn(
+                      'h-8 w-8 mx-auto mb-2',
+                      isCheckedIn ? 'text-green-600' : 'text-gray-400'
+                    )}
+                  />
+                  <div className='text-sm font-medium text-gray-600'>
+                    Check In
+                  </div>
+                  <div className='text-lg font-bold'>
+                    {todayAttendance?.check_in
                       ? format(parseISO(todayAttendance.check_in), 'hh:mm a')
                       : '--:--'}
                   </div>
                 </div>
-                <div className="text-center p-4 rounded-lg border-2 border-purple-200 bg-purple-50">
-                  <Coffee className={cn("h-8 w-8 mx-auto mb-2", (todayAttendance as any)?.break_start_time && !todayAttendance?.check_out ? "text-orange-600" : "text-gray-400")} />
-                  <div className="text-sm font-medium text-gray-600">Break</div>
-                  <div className="text-lg font-bold">
-                    {todayAttendance?.break_duration_minutes 
+                <div className='text-center p-4 rounded-lg border-2 border-purple-200 bg-purple-50'>
+                  <Coffee
+                    className={cn(
+                      'h-8 w-8 mx-auto mb-2',
+                      (todayAttendance as any)?.break_start_time &&
+                        !todayAttendance?.check_out
+                        ? 'text-orange-600'
+                        : 'text-gray-400'
+                    )}
+                  />
+                  <div className='text-sm font-medium text-gray-600'>Break</div>
+                  <div className='text-lg font-bold'>
+                    {todayAttendance?.break_duration_minutes
                       ? `${Math.floor((todayAttendance.break_duration_minutes || 0) / 60)}h ${(todayAttendance.break_duration_minutes || 0) % 60}m`
                       : '0h 0m'}
                   </div>
                 </div>
-                <div className="text-center p-4 rounded-lg border-2 border-indigo-200 bg-indigo-50">
-                  <LogOut className={cn("h-8 w-8 mx-auto mb-2", isCheckedOut ? "text-green-600" : "text-gray-400")} />
-                  <div className="text-sm font-medium text-gray-600">Check Out</div>
-                  <div className="text-lg font-bold">
-                    {todayAttendance?.check_out 
+                <div className='text-center p-4 rounded-lg border-2 border-indigo-200 bg-indigo-50'>
+                  <LogOut
+                    className={cn(
+                      'h-8 w-8 mx-auto mb-2',
+                      isCheckedOut ? 'text-green-600' : 'text-gray-400'
+                    )}
+                  />
+                  <div className='text-sm font-medium text-gray-600'>
+                    Check Out
+                  </div>
+                  <div className='text-lg font-bold'>
+                    {todayAttendance?.check_out
                       ? format(parseISO(todayAttendance.check_out), 'hh:mm a')
                       : '--:--'}
                   </div>
@@ -568,15 +644,23 @@ export function ProfessionalAttendanceDashboard() {
 
               {/* Working Hours Timer */}
               {isCheckedIn && !isCheckedOut && (
-                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-2">Working Hours</div>
-                      <div className="text-4xl font-bold text-green-700 mb-2">
-                        {workingHours ? `${workingHours.hours}h ${workingHours.minutes}m` : '0h 0m'}
+                <Card className='bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'>
+                  <CardContent className='pt-6'>
+                    <div className='text-center'>
+                      <div className='text-sm text-gray-600 mb-2'>
+                        Working Hours
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {todayAttendance?.check_in && formatDistanceToNow(parseISO(todayAttendance.check_in), { addSuffix: false })}
+                      <div className='text-4xl font-bold text-green-700 mb-2'>
+                        {workingHours
+                          ? `${workingHours.hours}h ${workingHours.minutes}m`
+                          : '0h 0m'}
+                      </div>
+                      <div className='text-xs text-gray-500'>
+                        {todayAttendance?.check_in &&
+                          formatDistanceToNow(
+                            parseISO(todayAttendance.check_in),
+                            { addSuffix: false }
+                          )}
                       </div>
                     </div>
                   </CardContent>
@@ -584,34 +668,34 @@ export function ProfessionalAttendanceDashboard() {
               )}
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className='grid grid-cols-2 gap-4'>
                 {canCheckIn && (
                   <Button
                     onClick={handleCheckIn}
                     disabled={actionLoading}
-                    size="lg"
-                    className="h-16 text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                    size='lg'
+                    className='h-16 text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
                   >
                     {actionLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      <Loader2 className='h-5 w-5 animate-spin mr-2' />
                     ) : (
-                      <LogIn className="h-5 w-5 mr-2" />
+                      <LogIn className='h-5 w-5 mr-2' />
                     )}
                     Check In
                   </Button>
                 )}
-                
+
                 {canCheckOut && (
                   <Button
                     onClick={handleCheckOut}
                     disabled={actionLoading}
-                    size="lg"
-                    className="h-16 text-lg bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600"
+                    size='lg'
+                    className='h-16 text-lg bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600'
                   >
                     {actionLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      <Loader2 className='h-5 w-5 animate-spin mr-2' />
                     ) : (
-                      <LogOut className="h-5 w-5 mr-2" />
+                      <LogOut className='h-5 w-5 mr-2' />
                     )}
                     Check Out
                   </Button>
@@ -623,22 +707,22 @@ export function ProfessionalAttendanceDashboard() {
                       <Button
                         onClick={() => handleBreak('start')}
                         disabled={actionLoading}
-                        variant="outline"
-                        size="lg"
-                        className="h-16 text-lg"
+                        variant='outline'
+                        size='lg'
+                        className='h-16 text-lg'
                       >
-                        <Coffee className="h-5 w-5 mr-2" />
+                        <Coffee className='h-5 w-5 mr-2' />
                         Start Break
                       </Button>
                     ) : (
                       <Button
                         onClick={() => handleBreak('end')}
                         disabled={actionLoading}
-                        variant="outline"
-                        size="lg"
-                        className="h-16 text-lg"
+                        variant='outline'
+                        size='lg'
+                        className='h-16 text-lg'
                       >
-                        <RotateCcw className="h-5 w-5 mr-2" />
+                        <RotateCcw className='h-5 w-5 mr-2' />
                         End Break
                       </Button>
                     )}
@@ -649,39 +733,41 @@ export function ProfessionalAttendanceDashboard() {
               {/* Location Status */}
               {location && (
                 <Alert>
-                  <MapPin className="h-4 w-4" />
+                  <MapPin className='h-4 w-4' />
                   <AlertDescription>
-                    Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                    {location.accuracy && ` (±${Math.round(location.accuracy)}m)`}
+                    Location: {location.latitude.toFixed(6)},{' '}
+                    {location.longitude.toFixed(6)}
+                    {location.accuracy &&
+                      ` (±${Math.round(location.accuracy)}m)`}
                   </AlertDescription>
                 </Alert>
               )}
 
               {locationError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                <Alert variant='destructive'>
+                  <AlertCircle className='h-4 w-4' />
                   <AlertDescription>{locationError}</AlertDescription>
                 </Alert>
               )}
 
               {/* Photo Preview */}
               {capturedPhoto && showPreview && (
-                <div className="relative">
+                <div className='relative'>
                   <img
                     src={capturedPhoto}
-                    alt="Attendance photo"
-                    className="w-full rounded-lg border-2 border-gray-200"
+                    alt='Attendance photo'
+                    className='w-full rounded-lg border-2 border-gray-200'
                   />
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="absolute top-2 right-2"
+                    variant='outline'
+                    size='sm'
+                    className='absolute top-2 right-2'
                     onClick={() => {
                       setCapturedPhoto(null);
                       setShowPreview(false);
                     }}
                   >
-                    <XCircle className="h-4 w-4 mr-1" />
+                    <XCircle className='h-4 w-4 mr-1' />
                     Remove
                   </Button>
                 </div>
@@ -690,63 +776,77 @@ export function ProfessionalAttendanceDashboard() {
           </Card>
 
           {/* Summary Stats */}
-          {summary && typeof summary === 'object' && !Array.isArray(summary) && (
-            <div className="grid grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {typeof summary.presentDays === 'number' ? summary.presentDays : 
-                       typeof summary.presentDays === 'string' ? summary.presentDays : '0'}
+          {summary &&
+            typeof summary === 'object' &&
+            !Array.isArray(summary) && (
+              <div className='grid grid-cols-4 gap-4'>
+                <Card>
+                  <CardContent className='pt-6'>
+                    <div className='text-center'>
+                      <div className='text-2xl font-bold text-blue-600'>
+                        {typeof summary.presentDays === 'number'
+                          ? summary.presentDays
+                          : typeof summary.presentDays === 'string'
+                            ? summary.presentDays
+                            : '0'}
+                      </div>
+                      <div className='text-sm text-gray-600'>Present Days</div>
                     </div>
-                    <div className="text-sm text-gray-600">Present Days</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">
-                      {typeof summary.lateDays === 'number' ? summary.lateDays : 
-                       typeof summary.lateDays === 'string' ? summary.lateDays : '0'}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className='pt-6'>
+                    <div className='text-center'>
+                      <div className='text-2xl font-bold text-yellow-600'>
+                        {typeof summary.lateDays === 'number'
+                          ? summary.lateDays
+                          : typeof summary.lateDays === 'string'
+                            ? summary.lateDays
+                            : '0'}
+                      </div>
+                      <div className='text-sm text-gray-600'>Late Days</div>
                     </div>
-                    <div className="text-sm text-gray-600">Late Days</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {typeof summary.totalHours === 'number' ? summary.totalHours : 
-                       typeof summary.totalHours === 'string' ? summary.totalHours : '0'}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className='pt-6'>
+                    <div className='text-center'>
+                      <div className='text-2xl font-bold text-green-600'>
+                        {typeof summary.totalHours === 'number'
+                          ? summary.totalHours
+                          : typeof summary.totalHours === 'string'
+                            ? summary.totalHours
+                            : '0'}
+                      </div>
+                      <div className='text-sm text-gray-600'>Total Hours</div>
                     </div>
-                    <div className="text-sm text-gray-600">Total Hours</div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {typeof summary.overtimeHours === 'number' ? summary.overtimeHours : 
-                       typeof summary.overtimeHours === 'string' ? summary.overtimeHours : '0'}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className='pt-6'>
+                    <div className='text-center'>
+                      <div className='text-2xl font-bold text-purple-600'>
+                        {typeof summary.overtimeHours === 'number'
+                          ? summary.overtimeHours
+                          : typeof summary.overtimeHours === 'string'
+                            ? summary.overtimeHours
+                            : '0'}
+                      </div>
+                      <div className='text-sm text-gray-600'>Overtime</div>
                     </div>
-                    <div className="text-sm text-gray-600">Overtime</div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
         </TabsContent>
 
-        <TabsContent value="history">
+        <TabsContent value='history'>
           <AttendanceErrorBoundary>
             <AttendanceHistoryView />
           </AttendanceErrorBoundary>
         </TabsContent>
 
-        <TabsContent value="analytics">
+        <TabsContent value='analytics'>
           <AttendanceErrorBoundary>
             <AttendanceReportsAnalytics />
           </AttendanceErrorBoundary>
@@ -754,34 +854,37 @@ export function ProfessionalAttendanceDashboard() {
       </Tabs>
 
       {/* Photo Capture Dialog */}
-      <Dialog open={showPhotoDialog} onOpenChange={(open) => {
-        if (!open) stopCamera();
-        setShowPhotoDialog(open);
-      }}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog
+        open={showPhotoDialog}
+        onOpenChange={open => {
+          if (!open) stopCamera();
+          setShowPhotoDialog(open);
+        }}
+      >
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>Capture Attendance Photo</DialogTitle>
             <DialogDescription>
               Please position your face in the camera frame
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="relative bg-black rounded-lg overflow-hidden">
+          <div className='space-y-4'>
+            <div className='relative bg-black rounded-lg overflow-hidden'>
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className="w-full h-auto"
+                className='w-full h-auto'
               />
-              <canvas ref={canvasRef} className="hidden" />
+              <canvas ref={canvasRef} className='hidden' />
             </div>
-            <div className="flex gap-2">
-              <Button onClick={takePhoto} className="flex-1">
-                <Camera className="h-4 w-4 mr-2" />
+            <div className='flex gap-2'>
+              <Button onClick={takePhoto} className='flex-1'>
+                <Camera className='h-4 w-4 mr-2' />
                 Capture Photo
               </Button>
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => {
                   stopCamera();
                   setShowPhotoDialog(false);
@@ -796,4 +899,3 @@ export function ProfessionalAttendanceDashboard() {
     </div>
   );
 }
-

@@ -437,7 +437,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     try {
       // Use the API endpoint that includes proper promoter relationships
       // API automatically filters by active company
-      const url = companyId ? `/api/contracts?company_id=${companyId}` : '/api/contracts';
+      const url = companyId
+        ? `/api/contracts?company_id=${companyId}`
+        : '/api/contracts';
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -1,6 +1,6 @@
 /**
  * Production Security Checks
- * 
+ *
  * This module provides runtime security checks to ensure that
  * development-only features are disabled in production environments.
  */
@@ -24,12 +24,14 @@ export interface SecurityCheckReport {
  */
 export function checkTestAccountsDisabled(): SecurityCheckResult {
   const isProduction = process.env.NODE_ENV === 'production';
-  const testAccountsEnabled = process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true';
+  const testAccountsEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true';
 
   if (isProduction && testAccountsEnabled) {
     return {
       passed: false,
-      message: 'CRITICAL: Test accounts are enabled in production environment. This is a severe security risk.',
+      message:
+        'CRITICAL: Test accounts are enabled in production environment. This is a severe security risk.',
       severity: 'critical',
     };
   }
@@ -62,7 +64,8 @@ export function checkDebugModeDisabled(): SecurityCheckResult {
   if (isProduction && (debugEnabled || debugAuth || debugRBAC || debugAPI)) {
     return {
       passed: false,
-      message: 'ERROR: Debug mode is enabled in production. This can leak sensitive information.',
+      message:
+        'ERROR: Debug mode is enabled in production. This can leak sensitive information.',
       severity: 'error',
     };
   }
@@ -84,7 +87,8 @@ export function checkHTTPSEnforced(): SecurityCheckResult {
   if (isProduction && !appUrl.startsWith('https://')) {
     return {
       passed: false,
-      message: 'ERROR: HTTPS is not enforced. NEXT_PUBLIC_APP_URL should start with https:// in production.',
+      message:
+        'ERROR: HTTPS is not enforced. NEXT_PUBLIC_APP_URL should start with https:// in production.',
       severity: 'error',
     };
   }
@@ -106,7 +110,8 @@ export function checkRateLimitingConfigured(): SecurityCheckResult {
   if (!upstashUrl || !upstashToken) {
     return {
       passed: false,
-      message: 'WARNING: Upstash Redis is not configured. Rate limiting will use in-memory storage, which does not work in distributed environments.',
+      message:
+        'WARNING: Upstash Redis is not configured. Rate limiting will use in-memory storage, which does not work in distributed environments.',
       severity: 'warning',
     };
   }
@@ -128,7 +133,8 @@ export function checkCORSConfiguration(): SecurityCheckResult {
   if (isProduction && allowedOrigins.includes('localhost')) {
     return {
       passed: false,
-      message: 'ERROR: CORS configuration includes localhost in production. This should be removed.',
+      message:
+        'ERROR: CORS configuration includes localhost in production. This should be removed.',
       severity: 'error',
     };
   }
@@ -159,7 +165,8 @@ export function checkSupabaseConfiguration(): SecurityCheckResult {
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
     return {
       passed: false,
-      message: 'CRITICAL: Supabase credentials are not properly configured. The application will not function.',
+      message:
+        'CRITICAL: Supabase credentials are not properly configured. The application will not function.',
       severity: 'critical',
     };
   }
@@ -181,7 +188,8 @@ export function checkEmailConfiguration(): SecurityCheckResult {
   if (!resendApiKey || !fromEmail) {
     return {
       passed: false,
-      message: 'WARNING: Email service (Resend) is not configured. Email notifications will not be sent.',
+      message:
+        'WARNING: Email service (Resend) is not configured. Email notifications will not be sent.',
       severity: 'warning',
     };
   }
@@ -203,7 +211,8 @@ export function checkRBACEnforcement(): SecurityCheckResult {
   if (isProduction && rbacEnforcement !== 'true') {
     return {
       passed: false,
-      message: 'CRITICAL: RBAC enforcement is not enabled in production. This is a severe security risk.',
+      message:
+        'CRITICAL: RBAC enforcement is not enabled in production. This is a severe security risk.',
       severity: 'critical',
     };
   }
@@ -230,9 +239,13 @@ export function runAllSecurityChecks(): SecurityCheckReport {
     checkRBACEnforcement(),
   ];
 
-  const criticalIssues = checks.filter(c => c.severity === 'critical' && !c.passed).length;
+  const criticalIssues = checks.filter(
+    c => c.severity === 'critical' && !c.passed
+  ).length;
   const errors = checks.filter(c => c.severity === 'error' && !c.passed).length;
-  const warnings = checks.filter(c => c.severity === 'warning' && !c.passed).length;
+  const warnings = checks.filter(
+    c => c.severity === 'warning' && !c.passed
+  ).length;
   const allPassed = checks.every(c => c.passed);
 
   return {
@@ -268,11 +281,15 @@ export function logSecurityCheckResults(report: SecurityCheckReport): void {
   console.log(`Critical Issues: ${report.criticalIssues}`);
   console.log(`Errors: ${report.errors}`);
   console.log(`Warnings: ${report.warnings}`);
-  console.log(`Overall Status: ${report.allPassed ? '✅ PASSED' : '❌ FAILED'}`);
+  console.log(
+    `Overall Status: ${report.allPassed ? '✅ PASSED' : '❌ FAILED'}`
+  );
   console.log('========================================\n');
 
   if (report.criticalIssues > 0) {
-    console.error('🔥 CRITICAL SECURITY ISSUES DETECTED! Application startup should be blocked.');
+    console.error(
+      '🔥 CRITICAL SECURITY ISSUES DETECTED! Application startup should be blocked.'
+    );
   }
 }
 
@@ -287,13 +304,15 @@ export function enforceSecurityChecks(): void {
   // Allow bypassing security checks for initial deployment setup
   // Set SKIP_SECURITY_CHECKS=true in Railway to deploy without all env vars configured
   const skipChecks = process.env.SKIP_SECURITY_CHECKS === 'true';
-  
+
   if (report.criticalIssues > 0 && process.env.NODE_ENV === 'production') {
     if (skipChecks) {
       console.warn(
         `⚠️ SECURITY WARNING: Bypassing ${report.criticalIssues} critical security check(s) due to SKIP_SECURITY_CHECKS=true`
       );
-      console.warn('⚠️ Please configure all required environment variables and remove SKIP_SECURITY_CHECKS');
+      console.warn(
+        '⚠️ Please configure all required environment variables and remove SKIP_SECURITY_CHECKS'
+      );
       return;
     }
     throw new Error(
@@ -301,4 +320,3 @@ export function enforceSecurityChecks(): void {
     );
   }
 }
-

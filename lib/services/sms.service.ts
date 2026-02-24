@@ -1,6 +1,6 @@
 /**
  * SMS Notification Service
- * 
+ *
  * Handles SMS notifications via Twilio
  * Supports both individual and bulk SMS sending
  */
@@ -108,9 +108,9 @@ export async function sendBulkSMS(
   const batchSize = 10;
   for (let i = 0; i < messages.length; i += batchSize) {
     const batch = messages.slice(i, i + batchSize);
-    
+
     await Promise.all(
-      batch.map(async (message) => {
+      batch.map(async message => {
         const result = await sendSMS(message);
         if (result.success) {
           results.sent++;
@@ -125,7 +125,7 @@ export async function sendBulkSMS(
 
     // Rate limiting: wait 1 second between batches
     if (i + batchSize < messages.length) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
@@ -138,17 +138,17 @@ export async function sendBulkSMS(
 export function formatPhoneNumber(phone: string): string {
   // Remove all non-digit characters
   const digits = phone.replace(/\D/g, '');
-  
+
   // If starts with 0, replace with country code (Oman: +968)
   if (digits.startsWith('0')) {
     return `+968${digits.substring(1)}`;
   }
-  
+
   // If doesn't start with +, add country code
   if (!phone.startsWith('+')) {
     return `+968${digits}`;
   }
-  
+
   return phone;
 }
 
@@ -160,4 +160,3 @@ export function isValidPhoneNumber(phone: string): boolean {
   // E.164 format: +[country code][number]
   return /^\+[1-9]\d{1,14}$/.test(formatted);
 }
-

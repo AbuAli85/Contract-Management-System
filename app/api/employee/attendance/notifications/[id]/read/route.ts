@@ -11,7 +11,7 @@ export async function POST(
   try {
     const supabase = await createClient();
     const { id } = await params;
-    
+
     const {
       data: { user },
       error: authError,
@@ -23,7 +23,7 @@ export async function POST(
 
     // In a production system, you'd update a notifications table
     // For now, we'll just return success as notifications are generated on-the-fly
-    
+
     return NextResponse.json({
       success: true,
       message: 'Notification marked as read',
@@ -36,4 +36,3 @@ export async function POST(
     );
   }
 }
-

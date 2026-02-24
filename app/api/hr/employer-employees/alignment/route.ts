@@ -67,8 +67,11 @@ export async function GET(request: NextRequest) {
         const employerEmployeeId = employee.id;
 
         // Fetch assignments
-        const { data: assignments } = await (supabaseAdmin.from('client_assignments') as any)
-          .select(`
+        const { data: assignments } = await (
+          supabaseAdmin.from('client_assignments') as any
+        )
+          .select(
+            `
             id,
             client_party_id,
             job_title,
@@ -82,25 +85,33 @@ export async function GET(request: NextRequest) {
               name_en,
               name_ar
             )
-          `)
+          `
+          )
           .eq('employer_employee_id', employerEmployeeId)
           .eq('status', 'active');
 
         // Fetch tasks
-        const { data: tasks } = await (supabaseAdmin.from('employee_tasks') as any)
-          .select(`
+        const { data: tasks } = await (
+          supabaseAdmin.from('employee_tasks') as any
+        )
+          .select(
+            `
             id,
             title,
             status,
             priority,
             due_date
-          `)
+          `
+          )
           .eq('employer_employee_id', employerEmployeeId)
           .order('due_date', { ascending: true });
 
         // Fetch targets
-        const { data: targets } = await (supabaseAdmin.from('employee_targets') as any)
-          .select(`
+        const { data: targets } = await (
+          supabaseAdmin.from('employee_targets') as any
+        )
+          .select(
+            `
             id,
             title,
             target_value,
@@ -108,7 +119,8 @@ export async function GET(request: NextRequest) {
             progress_percentage,
             status,
             end_date
-          `)
+          `
+          )
           .eq('employer_employee_id', employerEmployeeId)
           .eq('status', 'active')
           .order('end_date', { ascending: true });
@@ -116,14 +128,17 @@ export async function GET(request: NextRequest) {
         // Calculate stats
         const stats = {
           activeAssignments: assignments?.length || 0,
-          completedTasks: tasks?.filter((t: any) => t.status === 'completed').length || 0,
+          completedTasks:
+            tasks?.filter((t: any) => t.status === 'completed').length || 0,
           totalTasks: tasks?.length || 0,
           activeTargets: targets?.length || 0,
           targetsProgress:
             targets && targets.length > 0
               ? Math.round(
-                  targets.reduce((sum: number, t: any) => sum + (t.progress_percentage || 0), 0) /
-                    targets.length
+                  targets.reduce(
+                    (sum: number, t: any) => sum + (t.progress_percentage || 0),
+                    0
+                  ) / targets.length
                 )
               : 0,
         };
@@ -151,4 +166,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

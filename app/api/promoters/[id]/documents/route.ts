@@ -15,7 +15,13 @@ async function createSupabaseClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+        setAll(
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options?: CookieOptions;
+          }>
+        ) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
@@ -41,17 +47,24 @@ export async function GET(
     if (!id || typeof id !== 'string' || id.trim() === '') {
       logger.error('Invalid promoter ID:', id);
       return NextResponse.json(
-        { error: 'Invalid promoter ID', details: 'Promoter ID is required and must be a valid UUID' },
+        {
+          error: 'Invalid promoter ID',
+          details: 'Promoter ID is required and must be a valid UUID',
+        },
         { status: 400 }
       );
     }
 
     // Validate UUID format (basic check)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       logger.error('Invalid UUID format for promoter ID:', id);
       return NextResponse.json(
-        { error: 'Invalid promoter ID format', details: 'Promoter ID must be a valid UUID' },
+        {
+          error: 'Invalid promoter ID format',
+          details: 'Promoter ID must be a valid UUID',
+        },
         { status: 400 }
       );
     }

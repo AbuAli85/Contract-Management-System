@@ -47,17 +47,17 @@ async function getTeamHandler(request: NextRequest) {
     // ✅ COMPANY SCOPE: Get company's party_id if active company exists
     let partyId: string | null = null;
     let employerProfileId: string | null = null; // Profile ID that corresponds to the party
-    
+
     if (profile.active_company_id) {
       const { data: company } = await supabase
         .from('companies')
         .select('party_id')
         .eq('id', profile.active_company_id)
         .single();
-      
+
       if (company?.party_id) {
         partyId = company.party_id;
-        
+
         // ✅ LINKING FIX: Find the profile ID that corresponds to this party
         // employer_employees.employer_id uses profile.id, not party.id
         // So we need to find the profile whose email matches the party's contact_email
@@ -66,14 +66,14 @@ async function getTeamHandler(request: NextRequest) {
           .select('contact_email')
           .eq('id', partyId)
           .single();
-        
+
         if (party?.contact_email) {
           const { data: employerProfile } = await supabase
             .from('profiles')
             .select('id')
             .eq('email', party.contact_email)
             .single();
-          
+
           if (employerProfile) {
             employerProfileId = employerProfile.id;
           }
@@ -88,7 +88,9 @@ async function getTeamHandler(request: NextRequest) {
     // First try to use party_id for better alignment with promoters
     let query = supabase
       .from('employer_employees')
-      .select('*, promoter:promoters(*), party:parties(*), company:companies(*)')
+      .select(
+        '*, promoter:promoters(*), party:parties(*), company:companies(*)'
+      )
       .order('created_at', { ascending: false });
 
     // ✅ ALIGNMENT FIX: Use party_id if available (better alignment with promoters)
@@ -98,13 +100,15 @@ async function getTeamHandler(request: NextRequest) {
       // Fallback to employer_id (profile.id)
       query = query.eq('employer_id', effectiveEmployerId);
     }
-    
+
     query = query.neq('employee_id', effectiveEmployerId); // ✅ FIX: Exclude employer from their own employee list
 
     // If user has an active company, filter by it
     // But also include employees with null company_id for backwards compatibility
     if (profile.active_company_id) {
-      query = query.or(`company_id.eq.${profile.active_company_id},company_id.is.null`);
+      query = query.or(
+        `company_id.eq.${profile.active_company_id},company_id.is.null`
+      );
     }
 
     // Fetch team members (base records)
@@ -128,33 +132,39 @@ async function getTeamHandler(request: NextRequest) {
         .select('id, contact_email, type, name_en')
         .eq('id', partyId)
         .single();
-      
+
       if (!employerParty) {
         console.warn('Employer party not found for party_id:', partyId);
       } else {
         const employerEmail = employerParty.contact_email?.toLowerCase();
-        
+
         // ✅ FIX: Fetch promoters but exclude employer themselves and other employer parties
-        const { data: partyPromoters, error: partyPromotersError } = await supabase
-          .from('promoters')
-          .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url, status, created_at')
-          .eq('employer_id', partyId) // ✅ Correct: promoters.employer_id = parties.id
-          .order('name_en', { ascending: true });
+        const { data: partyPromoters, error: partyPromotersError } =
+          await supabase
+            .from('promoters')
+            .select(
+              'id, email, name_en, name_ar, phone, mobile_number, profile_picture_url, status, created_at'
+            )
+            .eq('employer_id', partyId) // ✅ Correct: promoters.employer_id = parties.id
+            .order('name_en', { ascending: true });
 
         if (!partyPromotersError && partyPromoters) {
           // ✅ FIX: Filter out employers and ensure only actual employees/promoters
           promotersFromParty = partyPromoters.filter((promoter: any) => {
             // Exclude if promoter email matches employer email (they're the same person)
-            if (employerEmail && promoter.email?.toLowerCase() === employerEmail) {
+            if (
+              employerEmail &&
+              promoter.email?.toLowerCase() === employerEmail
+            ) {
               return false;
             }
-            
+
             // ✅ FIX: Also check if this promoter is actually an employer party
             // If a promoter's email matches any employer party's contact_email, exclude them
             // This prevents employer parties from showing as employees
             return true; // Will be filtered further if needed
           });
-          
+
           // ✅ ADDITIONAL FIX: Check if any promoters are actually employer parties
           // Get all employer parties' contact emails
           const { data: allEmployerParties } = await supabase
@@ -162,14 +172,14 @@ async function getTeamHandler(request: NextRequest) {
             .select('contact_email')
             .eq('type', 'Employer')
             .not('contact_email', 'is', null);
-          
+
           if (allEmployerParties && allEmployerParties.length > 0) {
             const employerEmails = new Set(
               allEmployerParties
                 .map((p: any) => p.contact_email?.toLowerCase())
                 .filter(Boolean)
             );
-            
+
             // Filter out any promoters whose email matches an employer party
             promotersFromParty = promotersFromParty.filter((promoter: any) => {
               const promoterEmail = promoter.email?.toLowerCase();
@@ -189,7 +199,7 @@ async function getTeamHandler(request: NextRequest) {
       .select('contact_email')
       .eq('type', 'Employer')
       .not('contact_email', 'is', null);
-    
+
     const employerEmails = new Set(
       (allEmployerParties || [])
         .map((p: any) => p.contact_email?.toLowerCase())
@@ -200,14 +210,23 @@ async function getTeamHandler(request: NextRequest) {
     // employee_id in employer_employees can be either:
     // 1. A promoter ID (from promoters table)
     // 2. A profile ID (from profiles table) - for employees created directly
-    const employeeIds = (teamMembers || []).map(m => m.employee_id).filter(Boolean);
-    
+    const employeeIds = (teamMembers || [])
+      .map(m => m.employee_id)
+      .filter(Boolean);
+
     // Fetch from promoters table
     const { data: promoters } = await supabase
       .from('promoters')
-      .select('id, email, name_en, name_ar, phone, mobile_number, profile_picture_url')
-      .in('id', employeeIds.length > 0 ? employeeIds : ['00000000-0000-0000-0000-000000000000']);
-    
+      .select(
+        'id, email, name_en, name_ar, phone, mobile_number, profile_picture_url'
+      )
+      .in(
+        'id',
+        employeeIds.length > 0
+          ? employeeIds
+          : ['00000000-0000-0000-0000-000000000000']
+      );
+
     // ✅ FIX: Filter out any promoters that are actually employers
     const filteredPromoters = (promoters || []).filter((promoter: any) => {
       const promoterEmail = promoter.email?.toLowerCase();
@@ -221,18 +240,30 @@ async function getTeamHandler(request: NextRequest) {
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, email, full_name, phone, avatar_url')
-      .in('id', employeeIds.length > 0 ? employeeIds : ['00000000-0000-0000-0000-000000000000']);
+      .in(
+        'id',
+        employeeIds.length > 0
+          ? employeeIds
+          : ['00000000-0000-0000-0000-000000000000']
+      );
 
     // Create lookup maps
     const promoterMap = new Map(filteredPromoters.map((p: any) => [p.id, p]));
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
     // Fetch manager details (from profiles since managers are system users)
-    const managerIds = (teamMembers || []).map(m => m.reporting_manager_id).filter(Boolean);
+    const managerIds = (teamMembers || [])
+      .map(m => m.reporting_manager_id)
+      .filter(Boolean);
     const { data: managers } = await supabase
       .from('profiles')
       .select('id, full_name, email')
-      .in('id', managerIds.length > 0 ? managerIds : ['00000000-0000-0000-0000-000000000000']);
+      .in(
+        'id',
+        managerIds.length > 0
+          ? managerIds
+          : ['00000000-0000-0000-0000-000000000000']
+      );
 
     // Create a lookup map for managers
     const managerMap = new Map((managers || []).map(m => [m.id, m]));
@@ -242,26 +273,31 @@ async function getTeamHandler(request: NextRequest) {
       const promoter = promoterMap.get(member.employee_id);
       const profile = profileMap.get(member.employee_id);
       const manager = managerMap.get(member.reporting_manager_id);
-      
+
       // Use promoter data if available, otherwise use profile data
-      const employeeData = promoter ? {
-        id: promoter.id,
-        email: promoter.email,
-        full_name: promoter.name_en || promoter.name_ar || 'Unknown',
-        first_name: promoter.name_en?.split(' ')[0] || null,
-        last_name: promoter.name_en?.split(' ').slice(1).join(' ') || null,
-        phone: promoter.phone || promoter.mobile_number,
-        avatar_url: promoter.profile_picture_url,
-      } : profile ? {
-        id: profile.id,
-        email: profile.email || '',
-        full_name: profile.full_name || 'Unknown',
-        first_name: profile.full_name?.split(' ')[0] || null,
-        last_name: profile.full_name?.split(' ').slice(1).join(' ') || null,
-        phone: profile.phone || null,
-        avatar_url: profile.avatar_url || null,
-      } : null;
-      
+      const employeeData = promoter
+        ? {
+            id: promoter.id,
+            email: promoter.email,
+            full_name: promoter.name_en || promoter.name_ar || 'Unknown',
+            first_name: promoter.name_en?.split(' ')[0] || null,
+            last_name: promoter.name_en?.split(' ').slice(1).join(' ') || null,
+            phone: promoter.phone || promoter.mobile_number,
+            avatar_url: promoter.profile_picture_url,
+          }
+        : profile
+          ? {
+              id: profile.id,
+              email: profile.email || '',
+              full_name: profile.full_name || 'Unknown',
+              first_name: profile.full_name?.split(' ')[0] || null,
+              last_name:
+                profile.full_name?.split(' ').slice(1).join(' ') || null,
+              phone: profile.phone || null,
+              avatar_url: profile.avatar_url || null,
+            }
+          : null;
+
       return {
         ...member,
         employee: employeeData,
@@ -270,7 +306,9 @@ async function getTeamHandler(request: NextRequest) {
     });
 
     // Add promoters from party that aren't already in employer_employees
-    const existingEmployeeIds = new Set((teamMembers || []).map(m => m.employee_id).filter(Boolean));
+    const existingEmployeeIds = new Set(
+      (teamMembers || []).map(m => m.employee_id).filter(Boolean)
+    );
     const additionalPromoters = promotersFromParty
       .filter((p: any) => !existingEmployeeIds.has(p.id))
       .map((promoter: any) => ({
@@ -283,7 +321,9 @@ async function getTeamHandler(request: NextRequest) {
         job_title: null,
         department: null,
         employment_type: 'full_time' as const,
-        employment_status: (promoter.status === 'active' ? 'active' : 'inactive') as string,
+        employment_status: (promoter.status === 'active'
+          ? 'active'
+          : 'inactive') as string,
         hire_date: null,
         termination_date: null,
         reporting_manager_id: null,
@@ -328,7 +368,7 @@ async function getTeamHandler(request: NextRequest) {
 
         return {
           ...member,
-          permissions: permissions,
+          permissions,
         };
       })
     );
@@ -376,7 +416,10 @@ async function addTeamMemberHandler(request: NextRequest) {
     } = body;
 
     // Validate employee_id is provided and not empty
-    if (!employee_id || (typeof employee_id === 'string' && employee_id.trim() === '')) {
+    if (
+      !employee_id ||
+      (typeof employee_id === 'string' && employee_id.trim() === '')
+    ) {
       return NextResponse.json(
         { error: 'Employee ID is required and cannot be empty' },
         { status: 400 }
@@ -411,9 +454,9 @@ async function addTeamMemberHandler(request: NextRequest) {
       } else {
         // No matching profile found - return helpful error
         return NextResponse.json(
-          { 
+          {
             error: 'Employee profile not found',
-            details: `Promoter "${promoter.name_en || promoter.email}" exists but has no matching profile. The promoter's email (${promoter.email}) must match a profile email. Please create a profile for this person first or ensure the email matches.`
+            details: `Promoter "${promoter.name_en || promoter.email}" exists but has no matching profile. The promoter's email (${promoter.email}) must match a profile email. Please create a profile for this person first or ensure the email matches.`,
           },
           { status: 404 }
         );
@@ -430,9 +473,9 @@ async function addTeamMemberHandler(request: NextRequest) {
         profileId = profile.id;
       } else {
         return NextResponse.json(
-          { 
+          {
             error: 'Employee not found',
-            details: `The employee ID "${employee_id}" was not found in either the promoters table or the profiles table.`
+            details: `The employee ID "${employee_id}" was not found in either the promoters table or the profiles table.`,
           },
           { status: 404 }
         );
@@ -496,7 +539,7 @@ async function addTeamMemberHandler(request: NextRequest) {
       .maybeSingle();
 
     // Also check if there's an old record with promoter ID that needs fixing
-    let existing = existingByProfile;
+    const existing = existingByProfile;
     if (!existing && promoterData) {
       const { data: existingByPromoter } = await supabase
         .from('employer_employees')
@@ -509,19 +552,23 @@ async function addTeamMemberHandler(request: NextRequest) {
       if (existingByPromoter) {
         // Found record with promoter ID - need to fix it
         const supabaseAdmin = getSupabaseAdmin();
-        const { error: updateError } = await (supabaseAdmin.from('employer_employees') as any)
-          .update({ 
+        const { error: updateError } = await (
+          supabaseAdmin.from('employer_employees') as any
+        )
+          .update({
             employee_id: profileId, // Fix: update to profile ID
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('id', existingByPromoter.id);
 
         if (updateError) {
           console.error('Error fixing employee_id:', updateError);
           return NextResponse.json(
-            { 
-              error: 'Employee exists but has invalid employee_id. Please contact support.',
-              details: 'The employee record needs to be updated to use profile ID instead of promoter ID.'
+            {
+              error:
+                'Employee exists but has invalid employee_id. Please contact support.',
+              details:
+                'The employee record needs to be updated to use profile ID instead of promoter ID.',
             },
             { status: 500 }
           );
@@ -530,7 +577,8 @@ async function addTeamMemberHandler(request: NextRequest) {
         // Return success - record was fixed
         return NextResponse.json({
           success: true,
-          message: 'Employee record has been fixed! The employee_id was updated from promoter ID to profile ID. Attendance tracking is now enabled.',
+          message:
+            'Employee record has been fixed! The employee_id was updated from promoter ID to profile ID. Attendance tracking is now enabled.',
           fixed: true,
           employee_id: profileId,
         });
@@ -553,11 +601,11 @@ async function addTeamMemberHandler(request: NextRequest) {
 
     // Add employee to team (use admin client to bypass RLS)
     // Helper to convert empty strings to null for UUID fields
-    const toNullIfEmpty = (val: string | null | undefined) => 
+    const toNullIfEmpty = (val: string | null | undefined) =>
       val && val.trim() !== '' ? val : null;
 
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     // Auto-generate employee code if not provided
     let finalEmployeeCode = toNullIfEmpty(employee_code);
     if (!finalEmployeeCode) {
@@ -617,4 +665,3 @@ async function addTeamMemberHandler(request: NextRequest) {
 // The handlers check: 1) user authentication, 2) profile role (admin/manager), 3) own team access
 export const GET = getTeamHandler;
 export const POST = addTeamMemberHandler;
-

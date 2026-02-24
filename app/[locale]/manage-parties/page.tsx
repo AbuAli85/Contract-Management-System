@@ -36,7 +36,7 @@ export default function ManagePartiesPage() {
 
   // Check if we're editing an existing party
   const partyId = searchParams?.get('id');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [_isSubmitting, _setIsSubmitting] = useState(false);
   const [isLoadingParty, setIsLoadingParty] = useState(false);
   const [partyData, setPartyData] = useState<Party | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);

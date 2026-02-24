@@ -22,11 +22,8 @@ import {
   Smartphone,
   CheckCircle,
   AlertTriangle,
-  Lock,
-  Unlock,
   Clock,
   Globe,
-  UserCheck,
 } from 'lucide-react';
 
 export default function ProfileSecurityPage() {

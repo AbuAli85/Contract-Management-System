@@ -68,7 +68,8 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
       to: Array.isArray(options.to) ? options.to : [options.to],
       subject: options.subject,
       html: options.html,
-      text: options.text || (options.html ? stripHtml(options.html) : undefined),
+      text:
+        options.text || (options.html ? stripHtml(options.html) : undefined),
       ...(options.replyTo && { replyTo: options.replyTo }),
       ...(options.cc && { cc: options.cc }),
       ...(options.bcc && { bcc: options.bcc }),

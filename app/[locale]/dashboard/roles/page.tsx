@@ -13,38 +13,17 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useToastHelpers } from '@/components/toast-notifications';
-import {
-  Shield,
-  Users,
-  UserPlus,
-  Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Eye,
-  Loader2,
-  Plus,
-  Settings,
-} from 'lucide-react';
+import { Shield, Edit, Trash2, XCircle, Loader2, Plus } from 'lucide-react';
 
 interface Role {
   id: string;
@@ -69,8 +48,7 @@ export default function RolesAndPermissionsPage() {
   const { canManageUsers } = usePermissions();
 
   // Use toast helpers at the top level (React Hooks rule)
-  const { success, error, warning } = useToastHelpers();
-
+  const { success, error, _warning } = useToastHelpers();
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);

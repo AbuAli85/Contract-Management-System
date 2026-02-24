@@ -11,7 +11,9 @@ export async function GET(
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -29,7 +31,7 @@ export async function GET(
 
     // Comprehensive access check - verify user has access through any valid source
     let userRole = null;
-    
+
     // 1. Check company_members first (primary source)
     const { data: myMembership } = await adminClient
       .from('company_members')
@@ -48,7 +50,7 @@ export async function GET(
         .select('id, owner_id, party_id')
         .eq('id', companyId)
         .maybeSingle();
-      
+
       if (ownedCompany && ownedCompany.owner_id === user.id) {
         userRole = 'owner';
       } else if (ownedCompany?.party_id) {
@@ -67,12 +69,20 @@ export async function GET(
             .maybeSingle();
 
           if (party) {
-            const emailMatch = party.contact_email?.toLowerCase() === userProfile.email.toLowerCase();
-            const nameMatch = party.contact_person && userProfile.full_name &&
-              party.contact_person.toLowerCase().includes(userProfile.full_name.toLowerCase());
+            const emailMatch =
+              party.contact_email?.toLowerCase() ===
+              userProfile.email.toLowerCase();
+            const nameMatch =
+              party.contact_person &&
+              userProfile.full_name &&
+              party.contact_person
+                .toLowerCase()
+                .includes(userProfile.full_name.toLowerCase());
 
             // Special case: Always allow Falcon Eye Modern Investments
-            const isFalconEyeModern = (party.name_en || '').toLowerCase().includes('falcon eye modern investment');
+            const isFalconEyeModern = (party.name_en || '')
+              .toLowerCase()
+              .includes('falcon eye modern investment');
 
             if (emailMatch || nameMatch || isFalconEyeModern) {
               userRole = 'owner'; // Default to owner for party-linked companies
@@ -80,7 +90,10 @@ export async function GET(
 
             // 4. Check if user is an employer via employer_employees
             if (!userRole && party.type === 'Employer') {
-              if (party.contact_email?.toLowerCase() === userProfile.email.toLowerCase()) {
+              if (
+                party.contact_email?.toLowerCase() ===
+                userProfile.email.toLowerCase()
+              ) {
                 userRole = 'owner'; // User is the employer
               }
             }
@@ -103,7 +116,8 @@ export async function GET(
     // First, get company_members records
     const { data: membersData, error: membersError } = await adminClient
       .from('company_members')
-      .select(`
+      .select(
+        `
         id,
         user_id,
         role,
@@ -113,7 +127,8 @@ export async function GET(
         joined_at,
         status,
         permissions
-      `)
+      `
+      )
       .eq('company_id', companyId)
       .neq('status', 'removed')
       .order('role');
@@ -129,16 +144,26 @@ export async function GET(
     }
 
     // Debug logging
-    console.log(`[Members API] Found ${membersData?.length || 0} company_members records for company ${companyId}`);
+    console.log(
+      `[Members API] Found ${membersData?.length || 0} company_members records for company ${companyId}`
+    );
     if (membersData && membersData.length > 0) {
-      console.log('[Members API] Member statuses:', membersData.map((m: any) => ({ id: m.id, user_id: m.user_id, role: m.role, status: m.status })));
+      console.log(
+        '[Members API] Member statuses:',
+        membersData.map((m: any) => ({
+          id: m.id,
+          user_id: m.user_id,
+          role: m.role,
+          status: m.status,
+        }))
+      );
     }
 
     // Then fetch profile data for each member
     const members: any[] = [];
     if (membersData && membersData.length > 0) {
       const userIds = membersData.map((m: any) => m.user_id).filter(Boolean);
-      
+
       // Fetch profiles if we have user IDs
       let profiles: any[] = [];
       if (userIds.length > 0) {
@@ -158,12 +183,16 @@ export async function GET(
       // Combine member data with profile data
       // IMPORTANT: Include ALL members, even if profile lookup failed
       for (const member of membersData) {
-        const profile = member.user_id ? profiles.find((p: any) => p.id === member.user_id) : null;
-        
+        const profile = member.user_id
+          ? profiles.find((p: any) => p.id === member.user_id)
+          : null;
+
         if (!profile && member.user_id) {
-          console.warn(`[Members API] Profile not found for user_id: ${member.user_id} (member_id: ${member.id})`);
+          console.warn(
+            `[Members API] Profile not found for user_id: ${member.user_id} (member_id: ${member.id})`
+          );
         }
-        
+
         members.push({
           id: member.id,
           user_id: member.user_id,
@@ -173,25 +202,31 @@ export async function GET(
           is_primary: member.is_primary,
           joined_at: member.joined_at,
           status: member.status,
-          user: profile ? {
-            id: profile.id,
-            full_name: profile.full_name,
-            email: profile.email,
-            avatar_url: profile.avatar_url,
-            phone: profile.phone,
-          } : (member.user_id ? null : {
-            // For invited users without user_id, show email from metadata if available
-            id: null,
-            full_name: null,
-            email: (member as any).permissions?.pending_email || null,
-            avatar_url: null,
-            phone: null,
-          }),
+          user: profile
+            ? {
+                id: profile.id,
+                full_name: profile.full_name,
+                email: profile.email,
+                avatar_url: profile.avatar_url,
+                phone: profile.phone,
+              }
+            : member.user_id
+              ? null
+              : {
+                  // For invited users without user_id, show email from metadata if available
+                  id: null,
+                  full_name: null,
+                  email: (member as any).permissions?.pending_email || null,
+                  avatar_url: null,
+                  phone: null,
+                },
         });
       }
     }
 
-    console.log(`[Members API] Returning ${members.length} members for company ${companyId}`);
+    console.log(
+      `[Members API] Returning ${members.length} members for company ${companyId}`
+    );
 
     return NextResponse.json({
       success: true,
@@ -217,7 +252,9 @@ export async function POST(
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -237,7 +274,7 @@ export async function POST(
 
     // Verify user has admin access
     let canEdit = false;
-    
+
     const { data: myMembership } = await adminClient
       .from('company_members')
       .select('role')
@@ -255,14 +292,17 @@ export async function POST(
         .select('id, owner_id')
         .eq('id', companyId)
         .single();
-      
+
       if (ownedCompany && ownedCompany.owner_id === user.id) {
         canEdit = true;
       }
     }
 
     if (!canEdit) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
     let targetUserId = user_id;
@@ -278,14 +318,20 @@ export async function POST(
       if (existingUser) {
         targetUserId = existingUser.id;
       } else {
-        return NextResponse.json({ 
-          error: 'User not found. They must create an account first.' 
-        }, { status: 404 });
+        return NextResponse.json(
+          {
+            error: 'User not found. They must create an account first.',
+          },
+          { status: 404 }
+        );
       }
     }
 
     if (!targetUserId) {
-      return NextResponse.json({ error: 'User ID or email required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'User ID or email required' },
+        { status: 400 }
+      );
     }
 
     // Check if already a member using admin client
@@ -298,26 +344,33 @@ export async function POST(
 
     if (existing) {
       if (existing.status === 'active') {
-        return NextResponse.json({ error: 'User is already a member' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'User is already a member' },
+          { status: 400 }
+        );
       }
       // Reactivate using admin client
       await adminClient
         .from('company_members')
-        .update({ status: 'active', role, department, job_title, updated_at: new Date().toISOString() })
+        .update({
+          status: 'active',
+          role,
+          department,
+          job_title,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', existing.id);
     } else {
       // Create new membership using admin client
-      await adminClient
-        .from('company_members')
-        .insert({
-          company_id: companyId,
-          user_id: targetUserId,
-          role: role || 'member',
-          department,
-          job_title,
-          invited_by: user.id,
-          status: 'active',
-        });
+      await adminClient.from('company_members').insert({
+        company_id: companyId,
+        user_id: targetUserId,
+        role: role || 'member',
+        department,
+        job_title,
+        invited_by: user.id,
+        status: 'active',
+      });
     }
 
     return NextResponse.json({
@@ -338,7 +391,9 @@ export async function DELETE(
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -353,7 +408,7 @@ export async function DELETE(
     }
 
     const { id: companyId } = await params;
-    
+
     // Get memberId from URL path
     const url = new URL(request.url);
     const pathParts = url.pathname.split('/');
@@ -361,12 +416,15 @@ export async function DELETE(
     const memberId = pathParts[memberIdIndex];
 
     if (!memberId) {
-      return NextResponse.json({ error: 'Member ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Member ID is required' },
+        { status: 400 }
+      );
     }
 
     // Verify user has admin access
     let canEdit = false;
-    
+
     const { data: myMembership } = await adminClient
       .from('company_members')
       .select('role')
@@ -384,14 +442,17 @@ export async function DELETE(
         .select('id, owner_id')
         .eq('id', companyId)
         .maybeSingle();
-      
+
       if (ownedCompany && ownedCompany.owner_id === user.id) {
         canEdit = true;
       }
     }
 
     if (!canEdit) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
     // Get the member to be removed
@@ -416,26 +477,33 @@ export async function DELETE(
         .eq('role', 'owner')
         .eq('status', 'active')
         .neq('id', memberId);
-      
+
       if (!otherOwners || otherOwners.length === 0) {
-        return NextResponse.json({ 
-          error: 'Cannot remove the only owner. Please transfer ownership first.' 
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            error:
+              'Cannot remove the only owner. Please transfer ownership first.',
+          },
+          { status: 400 }
+        );
       }
     }
 
     // Soft delete: Set status to 'removed' instead of hard delete
     const { error: updateError } = await adminClient
       .from('company_members')
-      .update({ 
+      .update({
         status: 'removed',
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', memberId);
 
     if (updateError) {
       console.error('Error removing member:', updateError);
-      return NextResponse.json({ error: 'Failed to remove member' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to remove member' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -444,7 +512,9 @@ export async function DELETE(
     });
   } catch (error: any) {
     console.error('Error removing member:', error);
-    return NextResponse.json({ error: error.message || 'Failed to remove member' }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || 'Failed to remove member' },
+      { status: 500 }
+    );
   }
 }
-

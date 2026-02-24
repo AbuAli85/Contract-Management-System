@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -43,7 +43,8 @@ export async function GET(request: NextRequest) {
     // Try to get reviews - handle case where table doesn't exist
     try {
       let query = (supabaseAdmin.from('employee_performance_reviews') as any)
-        .select(`
+        .select(
+          `
           *,
           employer_employee:employer_employee_id (
             employee:employee_id (
@@ -58,7 +59,8 @@ export async function GET(request: NextRequest) {
           reviewed_by_user:reviewed_by (
             full_name
           )
-        `)
+        `
+        )
         .in('employer_employee_id', employerEmployeeIds)
         .order('created_at', { ascending: false });
 
@@ -77,7 +79,10 @@ export async function GET(request: NextRequest) {
 
       if (error) {
         // If table doesn't exist, return empty state
-        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        if (
+          error.code === '42P01' ||
+          error.message?.includes('does not exist')
+        ) {
           return NextResponse.json({
             success: true,
             reviews: [],
@@ -86,16 +91,22 @@ export async function GET(request: NextRequest) {
           });
         }
         console.error('Error fetching reviews:', error);
-        return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+        return NextResponse.json(
+          { error: 'Failed to fetch reviews' },
+          { status: 500 }
+        );
       }
 
       // Calculate stats
       const allReviews = reviews || [];
       const stats = {
         draft: allReviews.filter((r: any) => r.status === 'draft').length,
-        submitted: allReviews.filter((r: any) => r.status === 'submitted').length,
-        acknowledged: allReviews.filter((r: any) => r.status === 'acknowledged').length,
-        completed: allReviews.filter((r: any) => r.status === 'completed').length,
+        submitted: allReviews.filter((r: any) => r.status === 'submitted')
+          .length,
+        acknowledged: allReviews.filter((r: any) => r.status === 'acknowledged')
+          .length,
+        completed: allReviews.filter((r: any) => r.status === 'completed')
+          .length,
       };
 
       return NextResponse.json({
@@ -115,7 +126,10 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error in performance reviews GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -124,7 +138,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -169,11 +183,16 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!employeeRecord) {
-      return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Employee not found' },
+        { status: 404 }
+      );
     }
 
     // Create review
-    const { data: review, error: createError } = await (supabaseAdmin.from('employee_performance_reviews') as any)
+    const { data: review, error: createError } = await (
+      supabaseAdmin.from('employee_performance_reviews') as any
+    )
       .insert({
         employer_employee_id,
         review_period_start,
@@ -191,7 +210,8 @@ export async function POST(request: NextRequest) {
         manager_comments: manager_comments || null,
         status: reviewStatus || 'draft',
         reviewed_by: user.id,
-        submitted_at: reviewStatus === 'submitted' ? new Date().toISOString() : null,
+        submitted_at:
+          reviewStatus === 'submitted' ? new Date().toISOString() : null,
       })
       .select()
       .single();
@@ -230,7 +250,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in performance reviews POST:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
-

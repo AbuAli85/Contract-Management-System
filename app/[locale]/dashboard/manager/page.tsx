@@ -12,7 +12,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -20,26 +19,20 @@ import { useToast } from '@/hooks/use-toast';
 import {
   RefreshCw,
   Settings,
-  Calendar,
-  TrendingUp,
   AlertTriangle,
   Users,
   FileText,
   Activity,
   Building2,
   Bell,
-  ChevronRight,
-  Plus,
   DollarSign,
   Clock,
   CheckCircle,
   UserCheck,
   Target,
   BarChart3,
-  Briefcase,
   Award,
   Eye,
-  Edit,
 } from 'lucide-react';
 
 // Manager-specific quick actions
@@ -426,8 +419,8 @@ export default function ManagerDashboard({
   params: { locale: string };
 }) {
   const { locale } = params;
-  const { user, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
+  const { user, loading: _authLoading } = useAuth();
+  const { profile, loading: _profileLoading } = useUserProfile();
   const { toast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
 

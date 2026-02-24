@@ -97,9 +97,13 @@ export async function getEnhancedPromoterMetrics(
 
   try {
     // ✅ COMPANY SCOPE: Build queries with company filter if available
-    let totalQuery = supabase.from('promoters').select('*', { count: 'exact', head: true });
+    let totalQuery = supabase
+      .from('promoters')
+      .select('*', { count: 'exact', head: true });
     let statusQuery = supabase.from('promoters').select('status, status_enum');
-    let documentQuery = supabase.from('promoters').select('id_card_expiry_date, passport_expiry_date, status, status_enum');
+    let documentQuery = supabase
+      .from('promoters')
+      .select('id_card_expiry_date, passport_expiry_date, status, status_enum');
     let contractsQuery = supabase
       .from('contracts')
       .select('promoter_id')
@@ -112,8 +116,13 @@ export async function getEnhancedPromoterMetrics(
       statusQuery = statusQuery.eq('employer_id', partyId);
       documentQuery = documentQuery.eq('employer_id', partyId);
       // Filter contracts by company's party_id
-      contractsQuery = contractsQuery.or(`second_party_id.eq.${partyId},first_party_id.eq.${partyId}`);
-      console.log('📊 Promoter Metrics: Filtering by company party_id:', partyId);
+      contractsQuery = contractsQuery.or(
+        `second_party_id.eq.${partyId},first_party_id.eq.${partyId}`
+      );
+      console.log(
+        '📊 Promoter Metrics: Filtering by company party_id:',
+        partyId
+      );
     }
 
     // Execute all queries in parallel for performance

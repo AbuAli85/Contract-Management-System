@@ -33,7 +33,8 @@ const alertVariants = cva(
 );
 
 export interface AccessibleAlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof alertVariants> {
   /**
    * Whether the alert is a live region that should announce changes

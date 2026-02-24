@@ -6,7 +6,12 @@ export const dynamic = 'force-dynamic';
 
 interface ActionItem {
   id: string;
-  type: 'leave_request' | 'document_expiry' | 'contract_approval' | 'task_overdue' | 'onboarding';
+  type:
+    | 'leave_request'
+    | 'document_expiry'
+    | 'contract_approval'
+    | 'task_overdue'
+    | 'onboarding';
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
@@ -19,7 +24,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -48,8 +53,10 @@ export async function GET(request: NextRequest) {
 
         if (teamMembers && teamMembers.length > 0) {
           const employerEmployeeIds = teamMembers.map(m => m.id);
-          
-          const { data: pendingLeaves } = await (supabaseAdmin.from('employee_leave_requests') as any)
+
+          const { data: pendingLeaves } = await (
+            supabaseAdmin.from('employee_leave_requests') as any
+          )
             .select('id, created_at')
             .in('employer_employee_id', employerEmployeeIds)
             .eq('status', 'pending');
@@ -63,7 +70,8 @@ export async function GET(request: NextRequest) {
               priority: pendingLeaves.length > 5 ? 'high' : 'medium',
               actionUrl: '/en/employer/team?tab=leave',
               count: pendingLeaves.length,
-              createdAt: pendingLeaves[0]?.created_at || new Date().toISOString(),
+              createdAt:
+                pendingLeaves[0]?.created_at || new Date().toISOString(),
             });
           }
         }
@@ -77,7 +85,9 @@ export async function GET(request: NextRequest) {
     try {
       const { data: expiringDocs } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, id_card_expiry_date, passport_expiry_date')
+        .select(
+          'id, name_en, name_ar, id_card_expiry_date, passport_expiry_date'
+        )
         .or('id_card_expiry_date.not.is.null,passport_expiry_date.not.is.null');
 
       if (expiringDocs) {
@@ -86,12 +96,18 @@ export async function GET(request: NextRequest) {
         thirtyDaysFromNow.setDate(today.getDate() + 30);
 
         const expiringCount = expiringDocs.filter(p => {
-          const idExpiry = p.id_card_expiry_date ? new Date(p.id_card_expiry_date) : null;
-          const passportExpiry = p.passport_expiry_date ? new Date(p.passport_expiry_date) : null;
-          
+          const idExpiry = p.id_card_expiry_date
+            ? new Date(p.id_card_expiry_date)
+            : null;
+          const passportExpiry = p.passport_expiry_date
+            ? new Date(p.passport_expiry_date)
+            : null;
+
           return (
             (idExpiry && idExpiry <= thirtyDaysFromNow && idExpiry >= today) ||
-            (passportExpiry && passportExpiry <= thirtyDaysFromNow && passportExpiry >= today)
+            (passportExpiry &&
+              passportExpiry <= thirtyDaysFromNow &&
+              passportExpiry >= today)
           );
         }).length;
 
@@ -131,7 +147,8 @@ export async function GET(request: NextRequest) {
             priority: pendingContracts.length > 5 ? 'high' : 'medium',
             actionUrl: '/en/contracts/pending',
             count: pendingContracts.length,
-            createdAt: pendingContracts[0]?.created_at || new Date().toISOString(),
+            createdAt:
+              pendingContracts[0]?.created_at || new Date().toISOString(),
           });
         }
       } catch (error) {
@@ -151,7 +168,9 @@ export async function GET(request: NextRequest) {
           const employerEmployeeIds = teamMembers.map(m => m.id);
           const today = new Date().toISOString().split('T')[0];
 
-          const { data: overdueTasks } = await (supabaseAdmin.from('employee_tasks') as any)
+          const { data: overdueTasks } = await (
+            supabaseAdmin.from('employee_tasks') as any
+          )
             .select('id, due_date')
             .in('employer_employee_id', employerEmployeeIds)
             .in('status', ['pending', 'in_progress'])
@@ -193,9 +212,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching action items:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch action items', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to fetch action items',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
 }
-

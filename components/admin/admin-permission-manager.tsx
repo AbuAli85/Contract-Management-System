@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -222,7 +228,9 @@ const SYSTEM_PERMISSIONS: Permission[] = [
 
 const ALL_PERMISSIONS = [...PROMOTER_PERMISSIONS, ...SYSTEM_PERMISSIONS];
 
-export function AdminPermissionManager({ className }: AdminPermissionManagerProps) {
+export function AdminPermissionManager({
+  className,
+}: AdminPermissionManagerProps) {
   const { supabase } = useSupabase();
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
@@ -231,7 +239,9 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
+  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
+    new Set()
+  );
   const [newRole, setNewRole] = useState<string>('');
   const [employerId, setEmployerId] = useState<string>('');
   const [companyId, setCompanyId] = useState<string>('');
@@ -323,9 +333,9 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
 
   // Handle category toggle
   const handleCategoryToggle = (category: string, checked: boolean) => {
-    const categoryPermissions = ALL_PERMISSIONS
-      .filter(p => p.category === category)
-      .map(p => p.id);
+    const categoryPermissions = ALL_PERMISSIONS.filter(
+      p => p.category === category
+    ).map(p => p.id);
 
     setSelectedPermissions(prev => {
       const newSet = new Set(prev);
@@ -393,8 +403,10 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
 
     try {
       setSaving(true);
-      let updates: any = {};
-      let metadataUpdates: Record<string, any> = { ...selectedUser.user_metadata };
+      const updates: any = {};
+      const metadataUpdates: Record<string, any> = {
+        ...selectedUser.user_metadata,
+      };
 
       switch (newRole) {
         case 'employee':
@@ -452,13 +464,16 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
 
   // Group permissions by category
   const permissionsByCategory = useMemo(() => {
-    return ALL_PERMISSIONS.reduce((acc, permission) => {
-      if (!acc[permission.category]) {
-        acc[permission.category] = [];
-      }
-      acc[permission.category].push(permission);
-      return acc;
-    }, {} as Record<string, Permission[]>);
+    return ALL_PERMISSIONS.reduce(
+      (acc, permission) => {
+        if (!acc[permission.category]) {
+          acc[permission.category] = [];
+        }
+        acc[permission.category].push(permission);
+        return acc;
+      },
+      {} as Record<string, Permission[]>
+    );
   }, []);
 
   // Filter users
@@ -472,8 +487,10 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
     const profileRole = user.role;
 
     if (profileRole === 'admin') return 'Admin';
-    if (profileRole === 'manager' || metadataRole === 'employer') return 'Employer';
-    if (metadataRole === 'promoter' || metadataRole === 'employee') return 'Employee';
+    if (profileRole === 'manager' || metadataRole === 'employer')
+      return 'Employer';
+    if (metadataRole === 'promoter' || metadataRole === 'employee')
+      return 'Employee';
     return 'Unassigned';
   };
 
@@ -502,7 +519,8 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
                 Admin Permission Management
               </CardTitle>
               <CardDescription className='mt-2'>
-                Manage user roles and granular permissions for the Promoter Intelligence Hub
+                Manage user roles and granular permissions for the Promoter
+                Intelligence Hub
               </CardDescription>
             </div>
             <Button onClick={fetchUsers} variant='outline' size='sm'>
@@ -519,7 +537,7 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
               <Input
                 placeholder='Search users by email...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className='pl-10'
               />
             </div>
@@ -531,32 +549,51 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
               <table className='w-full'>
                 <thead className='bg-slate-100 dark:bg-slate-800'>
                   <tr>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Email</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Role</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Profile Role</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Last Sign In</th>
-                    <th className='px-4 py-3 text-left text-sm font-semibold'>Actions</th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Email
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Role
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Profile Role
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Last Sign In
+                    </th>
+                    <th className='px-4 py-3 text-left text-sm font-semibold'>
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className='divide-y'>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className='px-4 py-8 text-center text-muted-foreground'>
+                      <td
+                        colSpan={5}
+                        className='px-4 py-8 text-center text-muted-foreground'
+                      >
                         <RefreshCw className='h-5 w-5 animate-spin mx-auto mb-2' />
                         Loading users...
                       </td>
                     </tr>
                   ) : filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className='px-4 py-8 text-center text-muted-foreground'>
+                      <td
+                        colSpan={5}
+                        className='px-4 py-8 text-center text-muted-foreground'
+                      >
                         No users found
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => {
+                    filteredUsers.map(user => {
                       const effectiveRole = getUserEffectiveRole(user);
                       return (
-                        <tr key={user.id} className='hover:bg-slate-50 dark:hover:bg-slate-800/50'>
+                        <tr
+                          key={user.id}
+                          className='hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        >
                           <td className='px-4 py-3'>
                             <div className='font-medium'>{user.email}</div>
                           </td>
@@ -573,7 +610,9 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
                           </td>
                           <td className='px-4 py-3 text-sm text-muted-foreground'>
                             {user.last_sign_in_at
-                              ? new Date(user.last_sign_in_at).toLocaleDateString()
+                              ? new Date(
+                                  user.last_sign_in_at
+                                ).toLocaleDateString()
                               : 'Never'}
                           </td>
                           <td className='px-4 py-3'>
@@ -610,7 +649,10 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
       </Card>
 
       {/* Permission Management Dialog */}
-      <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
+      <Dialog
+        open={isPermissionDialogOpen}
+        onOpenChange={setIsPermissionDialogOpen}
+      >
         <DialogContent className='sm:max-w-[700px] max-h-[80vh]'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
@@ -630,78 +672,109 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
               </div>
             ) : (
               <div className='space-y-6 py-4'>
-                {Object.entries(permissionsByCategory).map(([category, permissions]) => {
-                  const allSelected = permissions.every(p => selectedPermissions.has(p.id));
-                  const someSelected = permissions.some(p => selectedPermissions.has(p.id));
+                {Object.entries(permissionsByCategory).map(
+                  ([category, permissions]) => {
+                    const allSelected = permissions.every(p =>
+                      selectedPermissions.has(p.id)
+                    );
+                    const someSelected = permissions.some(p =>
+                      selectedPermissions.has(p.id)
+                    );
 
-                  return (
-                    <div key={category} className='space-y-3'>
-                      <div className='flex items-center justify-between'>
-                        <Label className='text-base font-semibold'>{category}</Label>
-                        <div className='flex items-center gap-2'>
-                          <Checkbox
-                            checked={allSelected}
-                            ref={(el) => {
-                              if (el) {
-                                (el as any).indeterminate = someSelected && !allSelected;
+                    return (
+                      <div key={category} className='space-y-3'>
+                        <div className='flex items-center justify-between'>
+                          <Label className='text-base font-semibold'>
+                            {category}
+                          </Label>
+                          <div className='flex items-center gap-2'>
+                            <Checkbox
+                              checked={allSelected}
+                              ref={el => {
+                                if (el) {
+                                  (el as any).indeterminate =
+                                    someSelected && !allSelected;
+                                }
+                              }}
+                              onCheckedChange={checked =>
+                                handleCategoryToggle(
+                                  category,
+                                  checked as boolean
+                                )
                               }
-                            }}
-                            onCheckedChange={(checked) =>
-                              handleCategoryToggle(category, checked as boolean)
-                            }
-                          />
-                          <span className='text-xs text-muted-foreground'>
-                            {permissions.filter(p => selectedPermissions.has(p.id)).length} / {permissions.length}
-                          </span>
+                            />
+                            <span className='text-xs text-muted-foreground'>
+                              {
+                                permissions.filter(p =>
+                                  selectedPermissions.has(p.id)
+                                ).length
+                              }{' '}
+                              / {permissions.length}
+                            </span>
+                          </div>
+                        </div>
+                        <div className='h-px bg-border my-2' />
+                        <div className='space-y-2 pl-4'>
+                          {permissions.map(permission => (
+                            <div
+                              key={permission.id}
+                              className='flex items-start justify-between rounded-lg border p-3 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            >
+                              <div className='flex-1'>
+                                <div className='flex items-center gap-2'>
+                                  <Checkbox
+                                    id={permission.id}
+                                    checked={selectedPermissions.has(
+                                      permission.id
+                                    )}
+                                    onCheckedChange={checked =>
+                                      handlePermissionToggle(
+                                        permission.id,
+                                        checked as boolean
+                                      )
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor={permission.id}
+                                    className='font-medium cursor-pointer'
+                                  >
+                                    {permission.name}
+                                  </Label>
+                                </div>
+                                <p className='text-sm text-muted-foreground mt-1 ml-6'>
+                                  {permission.description}
+                                </p>
+                                {permission.resource && permission.action && (
+                                  <Badge
+                                    variant='outline'
+                                    className='ml-6 mt-1 text-xs'
+                                  >
+                                    {permission.resource}:{permission.action}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className='h-px bg-border my-2' />
-                      <div className='space-y-2 pl-4'>
-                        {permissions.map(permission => (
-                          <div
-                            key={permission.id}
-                            className='flex items-start justify-between rounded-lg border p-3 hover:bg-slate-50 dark:hover:bg-slate-800'
-                          >
-                            <div className='flex-1'>
-                              <div className='flex items-center gap-2'>
-                                <Checkbox
-                                  id={permission.id}
-                                  checked={selectedPermissions.has(permission.id)}
-                                  onCheckedChange={(checked) =>
-                                    handlePermissionToggle(permission.id, checked as boolean)
-                                  }
-                                />
-                                <Label
-                                  htmlFor={permission.id}
-                                  className='font-medium cursor-pointer'
-                                >
-                                  {permission.name}
-                                </Label>
-                              </div>
-                              <p className='text-sm text-muted-foreground mt-1 ml-6'>
-                                {permission.description}
-                              </p>
-                              {permission.resource && permission.action && (
-                                <Badge variant='outline' className='ml-6 mt-1 text-xs'>
-                                  {permission.resource}:{permission.action}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             )}
           </ScrollArea>
 
           <DialogFooter>
-            <Button variant='outline' onClick={() => setIsPermissionDialogOpen(false)}>
+            <Button
+              variant='outline'
+              onClick={() => setIsPermissionDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSavePermissions} disabled={saving || loadingPermissions}>
+            <Button
+              onClick={handleSavePermissions}
+              disabled={saving || loadingPermissions}
+            >
               {saving ? (
                 <>
                   <RefreshCw className='h-4 w-4 mr-2 animate-spin' />
@@ -765,7 +838,7 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
                   <Input
                     placeholder='Enter employer UUID'
                     value={employerId}
-                    onChange={(e) => setEmployerId(e.target.value)}
+                    onChange={e => setEmployerId(e.target.value)}
                   />
                   <p className='text-xs text-muted-foreground'>
                     Get from parties table where type = 'Employer'
@@ -777,7 +850,7 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
                   <Input
                     placeholder='Enter company UUID'
                     value={companyId}
-                    onChange={(e) => setCompanyId(e.target.value)}
+                    onChange={e => setCompanyId(e.target.value)}
                   />
                 </div>
               </>
@@ -787,14 +860,18 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
               <div className='flex items-start gap-2'>
                 <AlertCircle className='h-4 w-4 text-blue-600 mt-0.5' />
                 <div className='text-sm text-blue-800 dark:text-blue-200'>
-                  <strong>Note:</strong> User will need to logout and login again for changes to take effect.
+                  <strong>Note:</strong> User will need to logout and login
+                  again for changes to take effect.
                 </div>
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant='outline' onClick={() => setIsRoleDialogOpen(false)}>
+            <Button
+              variant='outline'
+              onClick={() => setIsRoleDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleAssignRole} disabled={!newRole || saving}>
@@ -816,4 +893,3 @@ export function AdminPermissionManager({ className }: AdminPermissionManagerProp
     </div>
   );
 }
-

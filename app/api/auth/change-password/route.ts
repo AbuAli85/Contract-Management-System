@@ -192,9 +192,8 @@ async function sendPasswordChangeNotification(request: NextRequest, user: any) {
     const secureAccountUrl = `${process.env.NEXT_PUBLIC_APP_URL}/secure-account?userId=${user.id}&timestamp=${Date.now()}`;
 
     // Email content
-    const emailSubject = '🔐 Password Changed - Security Alert';
-    const emailBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    const _emailSubject = '🔐 Password Changed - Security Alert';
+    const _emailBody = `      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
           <h2 style="margin: 0; color: #1f2937;">Password Changed</h2>
         </div>

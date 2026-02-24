@@ -158,10 +158,10 @@ export class PerformanceMonitor {
           failed: completed.length - successful.length,
           successRate:
             completed.length > 0
-              ? ((successful.length / completed.length) * 100).toFixed(2) + '%'
+              ? `${((successful.length / completed.length) * 100).toFixed(2)}%`
               : 'N/A',
           avgDuration:
-            this.getAverageDuration(operation)?.toFixed(2) + 'ms' || 'N/A',
+            `${this.getAverageDuration(operation)?.toFixed(2)}ms` || 'N/A',
         };
 
         return summary;

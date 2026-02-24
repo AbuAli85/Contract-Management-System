@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -244,7 +243,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Also support GET for webhook URL verification
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return NextResponse.json({
     service: 'Contract Management System - Booking Webhook',
     status: 'active',

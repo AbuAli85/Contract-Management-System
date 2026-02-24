@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     const {
       data: { user },
       error: authError,
@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
 
     // Get query params
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get('month') || new Date().toISOString().slice(0, 7);
+    const month =
+      searchParams.get('month') || new Date().toISOString().slice(0, 7);
     const range = searchParams.get('range') || 'month';
 
     // Calculate date range
@@ -47,7 +48,9 @@ export async function GET(request: NextRequest) {
     const endDate = new Date(year, monthNum, 0).toISOString().slice(0, 10);
 
     // Fetch attendance records
-    const { data: attendance, error } = await (supabaseAdmin.from('employee_attendance') as any)
+    const { data: attendance, error } = await (
+      supabaseAdmin.from('employee_attendance') as any
+    )
       .select('*')
       .eq('employer_employee_id', employeeLink.id)
       .gte('attendance_date', startDate)
@@ -56,23 +59,37 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching attendance:', error);
-      return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch attendance' },
+        { status: 500 }
+      );
     }
 
     // Calculate statistics
     const records = attendance || [];
     const totalDays = records.length;
-    const presentDays = records.filter((a: any) => a.status === 'present' || a.status === 'late').length;
+    const presentDays = records.filter(
+      (a: any) => a.status === 'present' || a.status === 'late'
+    ).length;
     const lateDays = records.filter((a: any) => a.status === 'late').length;
     const absentDays = records.filter((a: any) => a.status === 'absent').length;
-    const totalHours = records.reduce((sum: number, a: any) => sum + (parseFloat(a.total_hours) || 0), 0);
-    const overtimeHours = records.reduce((sum: number, a: any) => sum + (parseFloat(a.overtime_hours) || 0), 0);
+    const totalHours = records.reduce(
+      (sum: number, a: any) => sum + (parseFloat(a.total_hours) || 0),
+      0
+    );
+    const overtimeHours = records.reduce(
+      (sum: number, a: any) => sum + (parseFloat(a.overtime_hours) || 0),
+      0
+    );
     const averageHours = presentDays > 0 ? totalHours / presentDays : 0;
     const attendanceRate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
     // Calculate weekly data
     const weeklyData: any[] = [];
-    const weeks: Record<string, { present: number; late: number; absent: number; hours: number }> = {};
+    const weeks: Record<
+      string,
+      { present: number; late: number; absent: number; hours: number }
+    > = {};
 
     records.forEach((record: any) => {
       const date = new Date(record.attendance_date);
@@ -118,4 +135,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

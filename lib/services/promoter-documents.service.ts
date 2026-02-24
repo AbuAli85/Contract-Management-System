@@ -197,7 +197,7 @@ export class PromoterDocumentsService {
       const fileName = `${promoterId}/${documentType}/${Date.now()}.${fileExt}`;
 
       // Upload file to storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('promoter-documents')
         .upload(fileName, file, {
           cacheControl: '3600',

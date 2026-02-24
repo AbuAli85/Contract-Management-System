@@ -71,4 +71,3 @@ export function formatIdForSuggestion(
 export function canSearchById(searchTerm: string): boolean {
   return searchTerm.length >= 4 && /\d/.test(searchTerm);
 }
-

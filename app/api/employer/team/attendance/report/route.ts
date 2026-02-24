@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
     // Verify employee belongs to user's company
     const { data: employee, error: employeeError } = await supabase
       .from('employer_employees')
-      .select(`
+      .select(
+        `
         id,
         employee_id,
         employee_code,
@@ -45,7 +46,8 @@ export async function GET(request: NextRequest) {
           email,
           full_name
         )
-      `)
+      `
+      )
       .eq('id', employeeId)
       .eq('employer_id', user.id)
       .single();
@@ -78,26 +80,37 @@ export async function GET(request: NextRequest) {
     const records = attendanceRecords || [];
     const presentDays = records.filter(r => r.status === 'present').length;
     const absentDays = records.filter(r => r.status === 'absent').length;
-    
+
     // Generate all dates in range (including week offs)
     const allDates: string[] = [];
     const start = new Date(startDate);
     const end = new Date(endDate);
     const current = new Date(start);
-    
+
     while (current <= end) {
       allDates.push(current.toISOString().split('T')[0]);
       current.setDate(current.getDate() + 1);
     }
-    
+
     const totalDays = allDates.length;
-    const totalHours = records.reduce((sum, r) => sum + (r.total_hours || 0), 0);
+    const totalHours = records.reduce(
+      (sum, r) => sum + (r.total_hours || 0),
+      0
+    );
     const averageHours = presentDays > 0 ? totalHours / presentDays : 0;
-    const lateCount = records.filter(r => r.status === 'present' && r.check_in_time && 
-      new Date(r.check_in_time).getHours() >= 13).length; // Late if after 1 PM
-    const approvedCount = records.filter(r => r.approval_status === 'approved').length;
-    const pendingCount = records.filter(r => r.approval_status === 'pending').length;
-    
+    const lateCount = records.filter(
+      r =>
+        r.status === 'present' &&
+        r.check_in_time &&
+        new Date(r.check_in_time).getHours() >= 13
+    ).length; // Late if after 1 PM
+    const approvedCount = records.filter(
+      r => r.approval_status === 'approved'
+    ).length;
+    const pendingCount = records.filter(
+      r => r.approval_status === 'pending'
+    ).length;
+
     // Create records for all dates (fill in week offs)
     const recordsMap = new Map(records.map((r: any) => [r.attendance_date, r]));
     const allRecords = allDates.map(date => {
@@ -207,7 +220,9 @@ export async function GET(request: NextRequest) {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map((row: any[]) => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+        ...rows.map((row: any[]) =>
+          row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+        ),
       ].join('\n');
 
       return new NextResponse(csvContent, {
@@ -240,14 +255,17 @@ export async function GET(request: NextRequest) {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map((row: any[]) => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+        ...rows.map((row: any[]) =>
+          row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+        ),
       ].join('\n');
 
       return new NextResponse(csvContent, {
         headers: {
-          'Content-Type': format === 'excel' 
-            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            : 'application/pdf',
+          'Content-Type':
+            format === 'excel'
+              ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              : 'application/pdf',
           'Content-Disposition': `attachment; filename="attendance-report-${startDate}-to-${endDate}.${format === 'excel' ? 'xlsx' : 'pdf'}"`,
         },
       });
@@ -265,4 +283,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

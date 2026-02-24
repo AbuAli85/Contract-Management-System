@@ -1,5 +1,20 @@
 import '@testing-library/jest-dom'
 
+// Polyfill Web APIs for API route tests (Next.js App Router uses Web APIs)
+if (typeof globalThis.Request === 'undefined') {
+  try {
+    const nodeFetch = require('node-fetch')
+    globalThis.Request = nodeFetch.Request
+    globalThis.Response = nodeFetch.Response
+    globalThis.Headers = nodeFetch.Headers
+    if (!globalThis.fetch) {
+      globalThis.fetch = nodeFetch.default
+    }
+  } catch {
+    // node-fetch not available, skip polyfill
+  }
+}
+
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
@@ -30,7 +45,8 @@ jest.mock('next/navigation', () => ({
   },
 }))
 
-// Mock window.matchMedia
+// Mock window.matchMedia (only in jsdom environment)
+if (typeof window !== 'undefined') {
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
@@ -44,8 +60,10 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 })
+} // end if window
 
-// Mock IntersectionObserver
+// Mock IntersectionObserver (only in jsdom environment)
+if (typeof window !== 'undefined') {
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
@@ -55,4 +73,4 @@ global.IntersectionObserver = class IntersectionObserver {
   }
   unobserve() {}
 }
-
+} // end if window

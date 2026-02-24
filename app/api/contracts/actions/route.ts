@@ -168,9 +168,9 @@ export const POST = async (request: NextRequest) => {
       await supabase.from('contract_activity_logs').insert({
         contract_id: contractId,
         user_id: user.id,
-        action: action,
+        action,
         details: {
-          reason: reason,
+          reason,
           previous_status: contract.status,
           new_status: updateData.status,
           timestamp: new Date().toISOString(),
@@ -353,7 +353,7 @@ export const PUT = async (request: NextRequest) => {
         user_id: user.id,
         action: `bulk_${action}`,
         details: {
-          reason: reason,
+          reason,
           bulk_action: true,
           total_contracts: contractIds.length,
           timestamp: new Date().toISOString(),

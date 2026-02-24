@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { format } from 'date-fns';
-import clsx from 'clsx';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 

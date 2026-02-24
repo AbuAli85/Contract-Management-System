@@ -42,10 +42,7 @@ export const POST = withRBAC(
       }
 
       if (!verification.payload) {
-        return NextResponse.json(
-          { error: 'Missing payload' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Missing payload' }, { status: 400 });
       }
 
       const body = verification.payload;
