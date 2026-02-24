@@ -16,7 +16,7 @@ import type React from 'react';
 
 export default function AdminTools() {
   const params = useParams();
-  const locale = params.locale as string;
+  const locale = params?.locale as string;
   const { toast } = useToast();
 
   const handleBulkImport = async (

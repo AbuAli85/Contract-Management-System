@@ -88,7 +88,7 @@ function DashboardContent() {
       if (!params || typeof params !== 'object' || Array.isArray(params)) {
         return 'en';
       }
-      const paramLocale = params.locale;
+      const paramLocale = params?.locale;
       if (
         typeof paramLocale === 'string' &&
         ['en', 'ar'].includes(paramLocale)

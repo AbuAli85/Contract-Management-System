@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 export default function EmployeePage() {
   const params = useParams();
-  const locale = params.locale || 'en';
+  const locale = params?.locale || 'en';
 
   useEffect(() => {
     // Redirect to employee dashboard
