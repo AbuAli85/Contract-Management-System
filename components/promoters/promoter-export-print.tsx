@@ -237,7 +237,7 @@ export function PromoterExportPrint({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `promoter_${(promoterData.name_en ?? "").replace(/\s+/g, '_')}_${new Date().getTime()}.${extension}`;
+    link.download = `promoter_${(promoterData.name_en ?? '').replace(/\s+/g, '_')}_${new Date().getTime()}.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

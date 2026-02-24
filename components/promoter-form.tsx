@@ -461,9 +461,9 @@ export default function PromoterForm(props: PromoterFormProps) {
       }
 
       const companyNames: string[] =
-        (data
+        data
           ?.map(party => party.name_en || party.name_ar)
-          .filter((name): name is string => Boolean(name)) || []);
+          .filter((name): name is string => Boolean(name)) || [];
       setCompanies(companyNames);
     } catch (error) {
       console.error('Error fetching companies:', error);

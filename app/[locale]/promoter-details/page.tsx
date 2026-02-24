@@ -77,8 +77,12 @@ export default function PromoterDetailsPage() {
     if (searchTerm) {
       filtered = filtered.filter(
         promoter =>
-          (promoter.name_en ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (promoter.name_ar ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (promoter.name_en ?? '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (promoter.name_ar ?? '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           promoter.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           promoter.phone.includes(searchTerm)
       );
@@ -186,7 +190,7 @@ export default function PromoterDetailsPage() {
                   <Avatar className='h-10 w-10'>
                     <AvatarImage src={undefined} alt={promoter.name_en || ''} />
                     <AvatarFallback>
-                      {(promoter.name_en ?? "").charAt(0)}
+                      {(promoter.name_en ?? '').charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>

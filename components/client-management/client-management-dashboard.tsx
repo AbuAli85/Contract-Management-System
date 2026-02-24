@@ -316,7 +316,7 @@ export function ClientManagementDashboard() {
 
   const filteredClients = clients.filter(client => {
     const matchesSearch =
-      (client.name_en ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.name_en ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || client.status.toLowerCase() === statusFilter;
@@ -771,7 +771,7 @@ export function ClientManagementDashboard() {
                         <div className='flex items-center gap-3'>
                           <Avatar>
                             <AvatarFallback className='bg-blue-100 text-blue-600'>
-                              {(client.name_en ?? "").charAt(0)}
+                              {(client.name_en ?? '').charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                           <div>

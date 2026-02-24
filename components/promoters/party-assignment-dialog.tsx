@@ -124,7 +124,7 @@ export function PartyAssignmentDialog({
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
-      (party.name_en ?? "").toLowerCase().includes(searchLower) ||
+      (party.name_en ?? '').toLowerCase().includes(searchLower) ||
       party.name_ar?.toLowerCase().includes(searchLower) ||
       party.crn?.toLowerCase().includes(searchLower)
     );
@@ -172,7 +172,7 @@ export function PartyAssignmentDialog({
   };
 
   const handleNewPartyCreate = async () => {
-    if (!(newPartyData.name_en ?? "").trim()) {
+    if (!(newPartyData.name_en ?? '').trim()) {
       toast({
         title: 'Validation Error',
         description: 'Party name is required.',
@@ -541,7 +541,7 @@ export function PartyAssignmentDialog({
               <div className='flex gap-2'>
                 <Button
                   onClick={handleNewPartyCreate}
-                  disabled={isUpdating || !(newPartyData.name_en ?? "").trim()}
+                  disabled={isUpdating || !(newPartyData.name_en ?? '').trim()}
                   className='flex-1'
                 >
                   {isUpdating ? (
