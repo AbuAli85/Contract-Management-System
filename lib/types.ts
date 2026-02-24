@@ -1,8 +1,8 @@
 export interface Party {
   id: string;
-  name_en: string;
-  name_ar: string;
-  crn: string;
+  name_en: string | null;
+  name_ar: string | null;
+  crn: string | null;
   type?: 'Employer' | 'Client' | 'Generic' | null;
   role?: string | null;
   designation_id?: string | null;
@@ -125,7 +125,7 @@ export interface Promoter {
   zip_code?: string;
   bio?: string;
   tags?: string[];
-  parties?: { name_en: string; name_ar: string } | null;
+  parties?: { name_en: string | null; name_ar: string | null } | null;
 }
 
 export interface Contract {
