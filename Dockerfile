@@ -33,6 +33,7 @@ RUN ls -la node_modules/tailwindcss 2>/dev/null || echo "WARNING: tailwindcss no
 # Create .next directory with proper permissions before build
 RUN mkdir -p .next && chmod -R 777 .next
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 # Production image, copy all the files and run next
