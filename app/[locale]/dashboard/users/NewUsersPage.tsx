@@ -42,7 +42,6 @@ import {
 import { debounce } from 'lodash';
 import { usePendingUsersCount } from '@/hooks/use-pending-users';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
-import { useAuth } from '@/lib/auth-service';
 import { useRolePermissions } from '@/components/user-role-display';
 import { useParams } from 'next/navigation';
 
@@ -247,7 +246,6 @@ export default function NewUsersPage() {
   });
 
   const { toast } = useToast();
-  const { _user } = useAuth();
   const { roleInfo } = useRolePermissions();
 
   // Get current user role from auth context

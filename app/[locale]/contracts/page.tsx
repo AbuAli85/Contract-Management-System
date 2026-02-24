@@ -340,7 +340,7 @@ function ContractsContent() {
   const searchParams = useSearchParams();
 
   // Add authentication check
-  const { _user, loading: _authLoading } = useAuth(); // Get user's preferred currency
+  const { loading: _authLoading } = useAuth(); // Get user's preferred currency
   const { preferredCurrency } = useCurrencyPreference();
 
   // Get pagination params from URL
