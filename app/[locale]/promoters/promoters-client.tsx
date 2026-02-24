@@ -28,7 +28,7 @@ export function PromotersPageClient({
   locale,
   isDevelopment,
 }: PromotersPageClientProps) {
-  const _router = useRouter();
+  const router = useRouter();
   const { user, loading: authLoading, mounted } = useAuth();
   const {
     canRead,
@@ -89,11 +89,17 @@ export function PromotersPageClient({
               </AlertDescription>
             </Alert>
             <div className='flex gap-2'>
-              <Button asChild className='flex-1'>
-                <Link href={`/${locale}/auth/login`}>Log In</Link>
+              <Button
+                className='flex-1'
+                onClick={() => router.push(`/${locale}/auth/login`)}
+              >
+                Log In
               </Button>
-              <Button variant='outline' asChild>
-                <Link href={`/${locale}/dashboard`}>Go to Dashboard</Link>
+              <Button
+                variant='outline'
+                onClick={() => router.push(`/${locale}/dashboard`)}
+              >
+                Go to Dashboard
               </Button>
             </div>
           </CardContent>

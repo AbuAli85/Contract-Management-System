@@ -27,7 +27,7 @@ export default function EditPromoterPage() {
 
   const [promoter, setPromoter] = useState<Promoter | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [_isSaving, _setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filter state
@@ -137,9 +137,10 @@ export default function EditPromoterPage() {
   }
 
   const handleFormSubmit = () => {
+    setIsSaving(false);
     toast({
-      title: 'Success',
-      description: 'Promoter updated successfully',
+      title: 'Profile Updated',
+      description: 'Promoter information has been saved successfully.',
     });
     router.push(`/${locale}/manage-promoters/${promoterId}`);
   };
@@ -148,7 +149,7 @@ export default function EditPromoterPage() {
     router.push(`/${locale}/manage-promoters/${promoterId}`);
   };
 
-  const _uniqueCompanies = employers.map(emp => ({
+  const uniqueCompanies = employers.map(emp => ({
     id: emp.id,
     name: emp.name_en || emp.name_ar || emp.id,
   }));
@@ -158,24 +159,43 @@ export default function EditPromoterPage() {
       <div className='mx-auto max-w-7xl'>
         {/* Header */}
         <div className='mb-6'>
-          <Button
-            variant='ghost'
-            onClick={() => router.back()}
-            className='mb-4'
-          >
-            <ArrowLeftIcon className='mr-2 h-4 w-4' />
-            Back to Promoter Details
-          </Button>
+          {/* Breadcrumb */}
+          <nav className='mb-4 flex items-center gap-1 text-sm text-muted-foreground'>
+            <button
+              onClick={() => router.push(`/${locale}/promoters`)}
+              className='hover:text-foreground transition-colors'
+            >
+              Promoters
+            </button>
+            <span>/</span>
+            <button
+              onClick={() =>
+                router.push(`/${locale}/manage-promoters/${promoterId}`)
+              }
+              className='hover:text-foreground transition-colors truncate max-w-[200px]'
+            >
+              {promoter?.name_en || promoterId}
+            </button>
+            <span>/</span>
+            <span className='text-foreground font-medium'>Edit</span>
+          </nav>
 
           <div className='flex items-center justify-between'>
             <div>
               <h1 className='text-2xl font-bold'>Edit Promoter</h1>
               <p className='text-muted-foreground'>
-                Update promoter information
+                {promoter?.name_en
+                  ? `Updating profile for ${promoter.name_en}`
+                  : 'Update promoter information'}
               </p>
             </div>
             <div className='flex items-center space-x-2'>
-              <Badge variant='secondary'>Edit Mode</Badge>
+              {isSaving && (
+                <Badge variant='secondary' className='animate-pulse'>
+                  Saving...
+                </Badge>
+              )}
+              <Badge variant='outline'>Edit Mode</Badge>
             </div>
           </div>
         </div>

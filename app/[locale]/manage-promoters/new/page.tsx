@@ -17,10 +17,10 @@ export default function AddNewPromoterPage() {
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
-  const [_isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormSubmit = () => {
-    setIsSubmitting(true);
+    setIsSubmitting(false);
     // Redirect back to promoters list after successful submission
     router.push(`/${locale}/promoters`);
   };
@@ -47,10 +47,17 @@ export default function AddNewPromoterPage() {
       <div className='mx-auto max-w-4xl'>
         {/* Header */}
         <div className='mb-8'>
-          <Button variant='outline' onClick={handleCancel} className='mb-4'>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Back to Promoters
-          </Button>
+          {/* Breadcrumb */}
+          <nav className='mb-4 flex items-center gap-1 text-sm text-muted-foreground'>
+            <button
+              onClick={() => router.push(`/${locale}/promoters`)}
+              className='hover:text-foreground transition-colors'
+            >
+              Promoters
+            </button>
+            <span>/</span>
+            <span className='text-foreground font-medium'>Add New</span>
+          </nav>
 
           <div className='flex items-center gap-3'>
             <PlusCircle className='h-8 w-8 text-primary' />
