@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ForcePasswordChange } from '@/components/auth/force-password-change';
 
 export default function ChangePasswordPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [email, setEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [mustChange, setMustChange] = useState(false);
@@ -24,7 +26,7 @@ export default function ChangePasswordPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push('/en/auth/login');
+        router.push(`/${locale}/auth/login`);
         return;
       }
 
@@ -44,7 +46,7 @@ export default function ChangePasswordPage() {
 
         if (!profile?.must_change_password) {
           // No need to change password, redirect to dashboard
-          router.push('/en/dashboard');
+          router.push(`/${locale}/dashboard`);
           return;
         }
       }

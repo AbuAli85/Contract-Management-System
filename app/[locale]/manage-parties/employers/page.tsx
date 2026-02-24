@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -82,6 +82,8 @@ interface EnhancedParty extends Party {
  * Displays all employer-type parties with their details
  */
 export default function EmployersPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const router = useRouter();
   const { toast } = useToast();
 
@@ -306,7 +308,7 @@ export default function EmployersPage() {
             <RefreshCw className='mr-2 h-4 w-4' />
             Refresh
           </Button>
-          <Link href='/en/manage-parties'>
+          <Link href={`/${locale}/manage-parties`}>
             <Button>
               <PlusCircleIcon className='mr-2 h-4 w-4' />
               Add New Employer
@@ -441,7 +443,7 @@ export default function EmployersPage() {
           description='No employers match your current filters'
           action={{
             label: 'Add New Employer',
-            onClick: () => router.push('/en/manage-parties'),
+            onClick: () => router.push(`/${locale}/manage-parties`),
           }}
         />
       ) : (

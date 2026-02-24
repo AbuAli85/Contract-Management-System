@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, CheckCircle, AlertCircle, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 // Removed direct webhook import - now using API route
 
 interface Provider {
@@ -210,7 +210,7 @@ export function ServiceForm({ providers }: ServiceFormProps) {
           <Button
             type='button'
             variant='outline'
-            onClick={() => router.push('/en/services')}
+            onClick={() => router.push(`/${locale}/services`)}
             disabled={status === 'saving'}
           >
             View Services

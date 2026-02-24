@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -244,7 +245,7 @@ export function ActionItemsSection({
         </div>
         {actionItems.length > maxItems && (
           <Button variant='outline' className='w-full mt-4' asChild>
-            <Link href='/en/dashboard/action-items'>
+            <Link href={`/${locale}/dashboard/action-items`}>
               {locale === 'ar'
                 ? `عرض جميع الإجراءات (${actionItems.length})`
                 : `View All Actions (${actionItems.length})`}

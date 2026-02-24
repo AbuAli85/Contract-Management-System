@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Factory,
@@ -124,7 +124,7 @@ export function ProviderManagementDashboard() {
 
   // Handler functions for interactivity
   const handleAddProvider = () => {
-    router.push('/en/manage-parties?type=Employer');
+    router.push(`/${locale}/manage-parties?type=Employer`);
   };
 
   const handleExportReport = async () => {

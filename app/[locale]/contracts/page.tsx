@@ -366,13 +366,6 @@ function ContractsContent() {
 
   // Debug: Log contract data to see promoter information
   if (contracts.length > 0 && contracts[0]) {
-    console.log('🔍 Frontend - Sample contract data:', {
-      contract_id: contracts[0].id,
-      contract_number: contracts[0].contract_number,
-      promoter_id: contracts[0].promoter_id,
-      promoters: contracts[0].promoters,
-      has_promoter_data: !!contracts[0].promoters,
-    });
   }
 
   // All hooks must be called at the top level, before any conditional returns
@@ -694,7 +687,6 @@ function ContractsContent() {
     try {
       // Use the internal API endpoint that fetches from storage
       const apiUrl = `/api/contracts/${contract.id}/pdf/view`;
-      console.log('📥 Downloading PDF via API:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -712,7 +704,6 @@ function ContractsContent() {
       }
 
       const blob = await response.blob();
-      console.log('✅ PDF blob received:', blob.size, 'bytes');
 
       if (blob.size === 0) {
         throw new Error('Downloaded file is empty');
@@ -1824,10 +1815,6 @@ function ContractsContent() {
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem
                                         onClick={() => {
-                                          console.log(
-                                            '📄 Navigating to contract:',
-                                            contract.id
-                                          );
                                           router.push(
                                             `/${locale}/contracts/${contract.id}`
                                           );
@@ -2013,10 +2000,6 @@ function ContractsContent() {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                       onClick={() => {
-                                        console.log(
-                                          '📄 Navigating to contract:',
-                                          contract.id
-                                        );
                                         router.push(
                                           `/${locale}/contracts/${contract.id}`
                                         );

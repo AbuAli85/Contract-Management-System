@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Building2,
@@ -116,7 +116,7 @@ export function ClientManagementDashboard() {
 
   // Handler functions for interactivity
   const handleAddClient = () => {
-    router.push('/en/manage-parties?type=Client');
+    router.push(`/${locale}/manage-parties?type=Client`);
   };
 
   const handleExportReport = async () => {

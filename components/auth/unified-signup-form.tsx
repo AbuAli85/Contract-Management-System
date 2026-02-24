@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +60,8 @@ const ROLE_OPTIONS = [
 ];
 
 export default function UnifiedSignupForm() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [formData, setFormData] = useState<SignupFormData>({
     email: '',
     password: '',
@@ -580,7 +582,7 @@ export default function UnifiedSignupForm() {
           <div className='mt-6 pt-4 border-t text-center'>
             <Button
               variant='ghost'
-              onClick={() => router.push('/en/auth/login')}
+              onClick={() => router.push(`/${locale}/auth/login`)}
             >
               Already have an account? Sign in
             </Button>

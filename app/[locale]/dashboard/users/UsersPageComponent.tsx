@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import Link from 'next/link';
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -63,6 +64,8 @@ function relativeTime(date: string | null) {
 }
 
 export default function UsersPageComponent() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   // Basic state
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -449,7 +452,7 @@ export default function UsersPageComponent() {
             </Button>
           )}
           <Button variant='secondary' size='sm' asChild>
-            <Link href='/en/admin/users' className='flex items-center gap-2'>
+            <Link href={`/${locale}/admin/users`} className='flex items-center gap-2'>
               <Shield className='h-4 w-4' />
               Advanced Permissions
             </Link>
@@ -698,7 +701,7 @@ export default function UsersPageComponent() {
             <DialogDescription className='text-sm text-muted-foreground'>
               Create an account, then manage granular permissions from{' '}
               <Link
-                href='/en/admin/users'
+                href={`/${locale}/admin/users`}
                 className='font-medium text-primary underline-offset-2 hover:underline'
               >
                 Advanced Permissions

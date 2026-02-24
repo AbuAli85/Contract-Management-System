@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Eye, EyeOff, Loader2, Mail, Lock, CheckCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 
@@ -347,7 +347,7 @@ export function EnhancedLoginForm() {
               <div className='text-sm'>
                 <button
                   type='button'
-                  onClick={() => router.push('/en/auth/forgot-password')}
+                  onClick={() => router.push(`/${locale}/auth/forgot-password`)}
                   className='font-medium text-blue-600 hover:text-blue-500'
                 >
                   Forgot password?
@@ -393,7 +393,7 @@ export function EnhancedLoginForm() {
                 Don't have an account?{' '}
                 <button
                   type='button'
-                  onClick={() => router.push('/en/auth/register')}
+                  onClick={() => router.push(`/${locale}/auth/register`)}
                   className='font-medium text-blue-600 hover:text-blue-500'
                 >
                   Create account

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 
 // Remove demo session dependency
 // import { demoSessionManager, type DemoUser } from '@/lib/auth/demo-session';
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
 
     // Redirect to home or login
-    router.push('/en/auth/login');
+    router.push(`/${locale}/auth/login`);
   };
 
   const updateUser = (updates: any) => {
@@ -80,7 +80,7 @@ export function useRequireAuth(requiredRole?: string) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Redirect to login if not authenticated
-      router.push('/en/auth/login');
+      router.push(`/${locale}/auth/login`);
       return;
     }
 

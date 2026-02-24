@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -445,7 +445,7 @@ export function AuthGuard({
             </div>
             <div className='flex space-x-3'>
               <Button
-                onClick={() => router.push('/en/auth/login')}
+                onClick={() => router.push(`/${locale}/auth/login`)}
                 className='flex-1'
               >
                 <LogIn className='h-4 w-4 mr-2' />

@@ -20,7 +20,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ServiceCardSkeletonList } from '@/components/services/service-card-skeleton';
@@ -38,6 +38,8 @@ interface Service {
 }
 
 export default function ServicesListPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   return (
     <ErrorBoundary>
       <Suspense fallback={<ServiceCardSkeletonList />}>
@@ -314,7 +316,7 @@ function ServicesListContent() {
             Refresh
           </Button>
           <Button
-            onClick={() => router.push('/en/services/new')}
+            onClick={() => router.push(`/${locale}/services/new`)}
             className='flex items-center gap-2'
           >
             <Plus className='h-4 w-4' />
@@ -361,7 +363,7 @@ function ServicesListContent() {
               <p className='mb-4'>
                 Get started by creating your first service.
               </p>
-              <Button onClick={() => router.push('/en/services/new')}>
+              <Button onClick={() => router.push(`/${locale}/services/new`)}>
                 <Plus className='h-4 w-4 mr-2' />
                 Create Service
               </Button>

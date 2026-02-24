@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams , useParams} from 'next/navigation';
 import PartyForm from '@/components/party-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +30,8 @@ import type { Party } from '@/lib/types';
  * Viewing parties is done through separate pages (Employers, Clients, Generic)
  */
 export default function ManagePartiesPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -113,7 +115,7 @@ export default function ManagePartiesPage() {
 
     // Redirect to the appropriate view based on party type
     // This will be handled by the form component
-    router.push('/en/manage-parties/employers');
+    router.push(`/${locale}/manage-parties/employers`);
   };
 
   // Show loading state while fetching party data
@@ -139,7 +141,7 @@ export default function ManagePartiesPage() {
             <div className='text-center'>
               <p className='text-red-600 font-semibold mb-4'>{loadError}</p>
               <Button
-                onClick={() => router.push('/en/manage-parties/employers')}
+                onClick={() => router.push(`/${locale}/manage-parties/employers`)}
               >
                 <ArrowLeft className='mr-2 h-4 w-4' />
                 Back to Parties
@@ -156,7 +158,7 @@ export default function ManagePartiesPage() {
       {/* Header Section */}
       <div className='mb-8'>
         <div className='flex items-center gap-4 mb-4'>
-          <Link href='/en/dashboard'>
+          <Link href={`/${locale}/dashboard`}>
             <Button variant='outline' size='icon'>
               <ArrowLeft className='h-4 w-4' />
             </Button>
@@ -186,7 +188,7 @@ export default function ManagePartiesPage() {
           </CardHeader>
           <CardContent>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
-              <Link href='/en/manage-parties/employers'>
+              <Link href={`/${locale}/manage-parties/employers`}>
                 <Button
                   variant='outline'
                   className='w-full h-auto py-4 flex flex-col items-start gap-2 hover:bg-blue-100 dark:hover:bg-blue-900'
@@ -201,7 +203,7 @@ export default function ManagePartiesPage() {
                 </Button>
               </Link>
 
-              <Link href='/en/manage-parties/clients'>
+              <Link href={`/${locale}/manage-parties/clients`}>
                 <Button
                   variant='outline'
                   className='w-full h-auto py-4 flex flex-col items-start gap-2 hover:bg-green-100 dark:hover:bg-green-900'
@@ -216,7 +218,7 @@ export default function ManagePartiesPage() {
                 </Button>
               </Link>
 
-              <Link href='/en/manage-parties/generic'>
+              <Link href={`/${locale}/manage-parties/generic`}>
                 <Button
                   variant='outline'
                   className='w-full h-auto py-4 flex flex-col items-start gap-2 hover:bg-purple-100 dark:hover:bg-purple-900'

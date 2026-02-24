@@ -29,7 +29,7 @@ import {
   Building,
   Phone,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 
@@ -237,7 +237,7 @@ export function RealTimeRegisterForm() {
 
       // Redirect to login after 3 seconds
       setTimeout(() => {
-        router.push('/en/auth/login');
+        router.push(`/${locale}/auth/login`);
       }, 3000);
     } catch (error) {
       console.error('🔐 Register Debug - Registration failed:', error);
@@ -543,7 +543,7 @@ export function RealTimeRegisterForm() {
                 Already have an account?{' '}
                 <button
                   type='button'
-                  onClick={() => router.push('/en/auth/login')}
+                  onClick={() => router.push(`/${locale}/auth/login`)}
                   className='font-medium text-blue-600 hover:text-blue-500'
                 >
                   Sign in

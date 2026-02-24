@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -127,6 +127,8 @@ const canDeleteCompany = (userRole: string, companyRole: string): boolean => {
 };
 
 export default function CrossCompanyDashboard() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [companies, setCompanies] = useState<CompanyData[]>([]);
   const [grouped, setGrouped] = useState<Record<string, CompanyData[]>>({});
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -240,7 +242,7 @@ export default function CrossCompanyDashboard() {
       });
 
       if (response.ok) {
-        router.push('/en/employer/team');
+        router.push(`/${locale}/employer/team`);
         router.refresh();
       }
     } catch (error) {

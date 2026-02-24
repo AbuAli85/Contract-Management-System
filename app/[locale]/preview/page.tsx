@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -42,6 +43,8 @@ import {
 } from 'lucide-react';
 
 export default function PreviewPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -299,13 +302,13 @@ export default function PreviewPage() {
             <CardContent className='space-y-4 text-center'>
               <div className='flex items-center justify-center gap-4'>
                 <Button asChild size='lg'>
-                  <a href='/en/login'>
+                  <a href={`/${locale}/login`}>
                     <ArrowRight className='mr-2 h-4 w-4' />
                     Login to Full System
                   </a>
                 </Button>
                 <Button asChild variant='outline' size='lg'>
-                  <a href='/en/dashboard'>
+                  <a href={`/${locale}/dashboard`}>
                     <Eye className='mr-2 h-4 w-4' />
                     Try Dashboard
                   </a>

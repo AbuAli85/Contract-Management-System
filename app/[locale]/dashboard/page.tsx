@@ -2,7 +2,6 @@
 // Version: 2025-01-09 - Fixed useMemo import and added ErrorBoundary
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
   Card,
@@ -29,9 +28,6 @@ import {
   FileText,
   Users,
   TrendingUp,
-  LogOut,
-  Settings,
-  Bell,
   Loader2,
   Info,
   RefreshCw,
@@ -82,7 +78,6 @@ function DashboardContent() {
   const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
   const { toast } = useToast();
   const params = useParams();
 
@@ -203,55 +198,8 @@ function DashboardContent() {
   const promoterStats = statsData?.promoters;
 
   useEffect(() => {
-    // LIMITED CLEANUP - Only clear demo/development data, preserve Supabase sessions
-    const limitedCleanup = () => {
-      try {
-        // Clear only demo session data
-        localStorage.removeItem('demo-user-session');
-        localStorage.removeItem('user-role');
-        localStorage.removeItem('auth-mode');
-        localStorage.removeItem('auth-token');
-        localStorage.removeItem('user-session');
-        localStorage.removeItem('admin-session');
-
-        console.log('🧹 Limited cleanup of demo auth data completed');
-      } catch (error) {
-        console.warn('Could not perform limited cleanup:', error);
-      }
-    };
-
-    // Perform limited cleanup first
-    limitedCleanup();
-
-    // Check for admin session without clearing Supabase data
-    const checkForAdminSession = () => {
-      try {
-        const hasAdminSession =
-          localStorage.getItem('demo-user-session') ||
-          sessionStorage.getItem('admin-session');
-
-        if (hasAdminSession) {
-          console.warn('🚫 Admin session detected - forcing redirect to login');
-          router.push('/en/auth/login');
-          return;
-        }
-      } catch (error) {
-        console.warn('Could not check for admin session:', error);
-      }
-    };
-
-    checkForAdminSession();
-
-    // Use auth context instead of API call
+    // Use auth context to set user state
     if (!authLoading && authUser) {
-      // Block admin@contractmanagement.com if needed
-      if (authUser.email === 'admin@contractmanagement.com') {
-        console.warn('🚫 Blocked admin@contractmanagement.com access');
-        router.push('/en/auth/login');
-        return;
-      }
-
-      // Set user from auth context
       setUser({
         id: authUser.id,
         email: authUser.email || '',
@@ -260,23 +208,12 @@ function DashboardContent() {
           full_name: authUser.user_metadata.full_name,
         }),
       });
-
       setLoading(false);
     } else if (!authLoading && !authUser) {
       // Not authenticated, will be handled by AuthenticatedLayout
       setLoading(false);
     }
-  }, [router, authUser, authLoading]);
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUser(null);
-      router.push('/en/auth/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
+  }, [authUser, authLoading]);
 
   const handleRefresh = useCallback(() => {
     refetchStats();
@@ -418,43 +355,8 @@ function DashboardContent() {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50'>
-      {/* Modern Header */}
-      <header className='bg-white/80 backdrop-blur-sm shadow-sm border-b border-slate-200/50 sticky top-0 z-50'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center h-16'>
-            <div className='flex items-center gap-3'>
-              <div className='p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg'>
-                <Building2 className='h-6 w-6 text-white' />
-              </div>
-              <div>
-                <h1 className='text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent'>
-                  Contract Management System
-                </h1>
-                <p className='text-xs text-slate-500'>Professional Dashboard</p>
-              </div>
-            </div>
-            <div className='flex items-center gap-2'>
-              <Badge variant='outline' className='gap-1.5'>
-                <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
-                <span className='text-xs'>Live</span>
-              </Badge>
-              <Button variant='ghost' size='sm' className='relative'>
-                <Bell className='h-5 w-5' />
-                <span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full' />
-              </Button>
-              <Button variant='ghost' size='sm'>
-                <Settings className='h-5 w-5' />
-              </Button>
-              <Button variant='ghost' size='sm' onClick={handleLogout}>
-                <LogOut className='h-5 w-5' />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <div className='bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50'>
+      {/* Main Content - header is provided by AuthenticatedLayout */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Welcome Section */}
         <div className='mb-8'>
@@ -1095,7 +997,7 @@ function DashboardContent() {
                     variant='outline'
                     asChild
                   >
-                    <Link href='/en/contracts/new'>
+                    <Link href={`/${locale}/contracts/new`}>
                       <FileText className='h-4 w-4' />
                       Create Contract
                     </Link>
@@ -1108,7 +1010,7 @@ function DashboardContent() {
                       variant='outline'
                       asChild
                     >
-                      <Link href='/en/manage-promoters/new'>
+                      <Link href={`/${locale}/manage-promoters/new`}>
                         <Users className='h-4 w-4' />
                         Add Promoter
                       </Link>
@@ -1118,7 +1020,7 @@ function DashboardContent() {
                       variant='outline'
                       asChild
                     >
-                      <Link href='/en/promoters'>
+                      <Link href={`/${locale}/promoters`}>
                         <Eye className='h-4 w-4' />
                         View Promoters
                       </Link>
@@ -1128,7 +1030,7 @@ function DashboardContent() {
                       variant='outline'
                       asChild
                     >
-                      <Link href='/en/analytics'>
+                      <Link href={`/${locale}/analytics`}>
                         <BarChart3 className='h-4 w-4' />
                         Analytics
                       </Link>
@@ -1138,7 +1040,7 @@ function DashboardContent() {
                       variant='outline'
                       asChild
                     >
-                      <Link href='/en/contracts'>
+                      <Link href={`/${locale}/contracts`}>
                         <FileText className='h-4 w-4' />
                         All Contracts
                       </Link>
@@ -1187,7 +1089,7 @@ function DashboardContent() {
                     variant='outline'
                     asChild
                   >
-                    <Link href='/en/manage-parties'>
+                    <Link href={`/${locale}/manage-parties`}>
                       <Building2 className='h-4 w-4' />
                       Manage Parties
                     </Link>

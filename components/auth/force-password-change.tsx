@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,7 +133,7 @@ export function ForcePasswordChange({
       onSuccess?.();
 
       // Redirect to dashboard
-      router.push('/en/dashboard');
+      router.push(`/${locale}/dashboard`);
     } catch (err: any) {
       console.error('Password change error:', err);
       setError(err.message || 'Failed to change password');

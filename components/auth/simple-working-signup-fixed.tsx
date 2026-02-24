@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,6 +56,8 @@ const ROLE_OPTIONS = [
 ];
 
 export default function SimpleWorkingSignupFixed() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [formData, setFormData] = useState<SignupFormData>({
     email: '',
     password: '',
@@ -406,7 +408,7 @@ export default function SimpleWorkingSignupFixed() {
           <div className='mt-6 pt-4 border-t text-center'>
             <Button
               variant='ghost'
-              onClick={() => router.push('/en/auth/login')}
+              onClick={() => router.push(`/${locale}/auth/login`)}
             >
               Already have an account? Sign in
             </Button>

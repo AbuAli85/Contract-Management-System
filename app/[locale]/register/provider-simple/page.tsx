@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +42,8 @@ const AVAILABLE_SERVICES = [
 ];
 
 export default function SimpleProviderRegistrationPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -110,7 +112,7 @@ export default function SimpleProviderRegistrationPage() {
 
       // Redirect after 3 seconds
       setTimeout(() => {
-        router.push('/en/auth/login?message=registration-success');
+        router.push(`/${locale}/auth/login?message=registration-success`);
       }, 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -147,7 +149,7 @@ export default function SimpleProviderRegistrationPage() {
               </AlertDescription>
             </Alert>
             <div className='mt-4 text-center'>
-              <Button onClick={() => router.push('/en/auth/login')}>
+              <Button onClick={() => router.push(`/${locale}/auth/login`)}>
                 Go to Login
               </Button>
             </div>
@@ -381,7 +383,7 @@ export default function SimpleProviderRegistrationPage() {
             <div className='mt-6 text-center text-sm text-gray-600'>
               Already have an account?{' '}
               <button
-                onClick={() => router.push('/en/auth/login')}
+                onClick={() => router.push(`/${locale}/auth/login`)}
                 className='text-blue-600 hover:underline'
               >
                 Sign in here

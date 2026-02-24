@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
@@ -730,13 +731,13 @@ function PendingContractsPageContent() {
             </ul>
             <div className='flex gap-2 mt-4'>
               <Button variant='outline' asChild>
-                <Link href='/en/dashboard'>
+                <Link href={`/${locale}/dashboard`}>
                   <Clock className='mr-2 h-4 w-4' />
                   Go to Dashboard
                 </Link>
               </Button>
               <Button variant='outline' asChild>
-                <Link href='/en/auth/unauthorized'>
+                <Link href={`/${locale}/auth/unauthorized`}>
                   <Mail className='mr-2 h-4 w-4' />
                   Request Access
                 </Link>
@@ -866,13 +867,13 @@ function PendingContractsPageContent() {
                 Retry Now
               </Button>
               <Button variant='outline' size='sm' asChild>
-                <Link href='/en/contracts'>
+                <Link href={`/${locale}/contracts`}>
                   <Eye className='mr-2 h-4 w-4' />
                   View All Contracts
                 </Link>
               </Button>
               <Button variant='outline' size='sm' asChild>
-                <Link href='/en/dashboard'>
+                <Link href={`/${locale}/dashboard`}>
                   <Clock className='mr-2 h-4 w-4' />
                   Go to Dashboard
                 </Link>
@@ -1045,7 +1046,7 @@ function PendingContractsPageContent() {
                   </Button>
                 )}
                 <Button variant='outline' size='sm' asChild>
-                  <Link href='/en/contracts'>
+                  <Link href={`/${locale}/contracts`}>
                     <Eye className='mr-2 h-4 w-4' />
                     View All Contracts
                   </Link>
@@ -1284,6 +1285,8 @@ function PendingContractsPageContent() {
 
 // Wrap the entire page with error boundary
 export default function PendingContractsPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   return (
     <ContractsErrorBoundary>
       <PendingContractsPageContent />

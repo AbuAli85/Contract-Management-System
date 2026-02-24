@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,8 @@ interface CaptchaConfig {
 }
 
 export default function ProductionLoginForm() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -453,14 +455,14 @@ export default function ProductionLoginForm() {
             <Button
               variant='ghost'
               className='w-full'
-              onClick={() => router.push('/en/auth/register')}
+              onClick={() => router.push(`/${locale}/auth/register`)}
             >
               Don't have an account? Sign up
             </Button>
             <Button
               variant='ghost'
               className='w-full'
-              onClick={() => router.push('/en/auth/forgot-password')}
+              onClick={() => router.push(`/${locale}/auth/forgot-password`)}
             >
               Forgot your password?
             </Button>

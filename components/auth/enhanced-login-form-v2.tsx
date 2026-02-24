@@ -1,559 +1,281 @@
 'use client';
-
-import React, { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter , useParams} from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Loader2,
-  Eye,
-  EyeOff,
-  CheckCircle,
-  AlertCircle,
-  ExternalLink,
-  Shield,
-  User,
-  Lock,
-  Mail,
-  ArrowRight,
-  RefreshCw,
+  Loader2, Eye, EyeOff, CheckCircle, AlertCircle,
+  Shield, Lock, Mail, ArrowRight,
 } from 'lucide-react';
 import { LoginErrorHandler } from './login-error-handler';
 import { authSessionManager } from '@/lib/auth-session-manager';
 import { useAuth } from '@/app/providers';
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
-interface UserProfile {
-  id: string;
-  email: string;
-  full_name: string;
-  role: string;
-  status: string;
-}
+interface LoginFormData { email: string; password: string; }
 
 export default function EnhancedLoginFormV2() {
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: '',
-  });
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
+  const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'error'>(
-    'checking'
-  );
   const [rememberMe, setRememberMe] = useState(false);
   const [showErrorHandler, setShowErrorHandler] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Partial<LoginFormData>>({});
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [lockCountdown, setLockCountdown] = useState(0);
+  const emailRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { refreshSession } = useAuth();
 
-  // Check API status on mount
+  useEffect(() => { emailRef.current?.focus(); }, []);
+
   useEffect(() => {
-    const checkApiStatus = async () => {
-      try {
-        const response = await fetch('/api/auth/simple-login', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setApiStatus(data.ready ? 'ready' : 'error');
-        } else {
-          setApiStatus('error');
-        }
-      } catch (error) {
-        console.error('API status check failed:', error);
-        setApiStatus('error');
-      }
-    };
-
-    checkApiStatus();
+    if (typeof window === 'undefined') return;
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) { setFormData(prev => ({ ...prev, email: rememberedEmail })); setRememberMe(true); }
+    const storedLockout = localStorage.getItem('loginLockoutUntil');
+    if (storedLockout) {
+      const lockoutTime = parseInt(storedLockout, 10);
+      if (lockoutTime > Date.now()) { setLockedUntil(lockoutTime); }
+      else { localStorage.removeItem('loginLockoutUntil'); localStorage.removeItem('loginAttemptCount'); }
+    }
+    const storedAttempts = localStorage.getItem('loginAttemptCount');
+    if (storedAttempts) setAttemptCount(parseInt(storedAttempts, 10));
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear errors when user starts typing
-    if (error) setError('');
+  useEffect(() => {
+    if (!lockedUntil) return;
+    const interval = setInterval(() => {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setLockedUntil(null); setAttemptCount(0); setLockCountdown(0);
+        localStorage.removeItem('loginLockoutUntil'); localStorage.removeItem('loginAttemptCount');
+        clearInterval(interval);
+      } else { setLockCountdown(remaining); }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockedUntil]);
+
+  const validateField = (name: keyof LoginFormData, value: string): string => {
+    if (name === 'email') {
+      if (!value.trim()) return 'Email is required';
+      if (!/\S+@\S+\.\S+/.test(value)) return 'Please enter a valid email address';
+    }
+    if (name === 'password') {
+      if (!value.trim()) return 'Password is required';
+      if (value.length < 6) return 'Password must be at least 6 characters';
+    }
+    return '';
   };
 
-  const validateForm = (): string | null => {
-    if (!formData.email.trim()) {
-      return 'Email is required';
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (error) setError('');
+    if (fieldErrors[name as keyof LoginFormData]) {
+      setFieldErrors(prev => ({ ...prev, [name]: validateField(name as keyof LoginFormData, value) }));
     }
-    if (!formData.password.trim()) {
-      return 'Password is required';
+  }, [error, fieldErrors]);
+
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFieldErrors(prev => ({ ...prev, [name]: validateField(name as keyof LoginFormData, value) }));
+  }, []);
+
+  const getRedirectPath = (role: string): string => {
+    switch (role) {
+      case 'provider': return '/en/dashboard/provider-comprehensive';
+      case 'client': return '/en/dashboard/client-comprehensive';
+      case 'admin': case 'super_admin': return '/en/dashboard';
+      case 'hr_admin': case 'hr_staff': return '/en/hr';
+      default: return '/en/dashboard';
     }
-    if (formData.password.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      return 'Please enter a valid email address';
-    }
-    return null;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
+    if (lockedUntil && lockedUntil > Date.now()) return;
+    const emailError = validateField('email', formData.email);
+    const passwordError = validateField('password', formData.password);
+    if (emailError || passwordError) { setFieldErrors({ email: emailError, password: passwordError }); return; }
+    setLoading(true); setError(''); setSuccess('');
     try {
-      console.log('🔐 Enhanced Login V2 - Starting login process...');
-      console.log('🔐 Enhanced Login V2 - Email:', formData.email);
-
-      // Use session manager for authentication
-      const result = await authSessionManager.signIn(
-        formData.email,
-        formData.password
-      );
-
+      const result = await authSessionManager.signIn(formData.email, formData.password);
       if (!result.success) {
-        console.error('🔐 Enhanced Login V2 - Auth error:', result.error);
-
-        // Enhanced error handling with detailed error handler
-        if (
-          result.error?.includes('captcha') ||
-          result.error?.includes('verification')
-        ) {
-          setShowErrorHandler(true);
+        const newCount = attemptCount + 1;
+        setAttemptCount(newCount);
+        localStorage.setItem('loginAttemptCount', newCount.toString());
+        if (newCount >= MAX_ATTEMPTS) {
+          const lockoutTime = Date.now() + LOCKOUT_DURATION_MS;
+          setLockedUntil(lockoutTime);
+          localStorage.setItem('loginLockoutUntil', lockoutTime.toString());
+          setError('Too many failed attempts. Account locked for 15 minutes.');
           return;
         }
-
-        // Handle specific error types
+        if (result.error?.includes('captcha') || result.error?.includes('verification')) { setShowErrorHandler(true); return; }
         if (result.error?.includes('Invalid login credentials')) {
-          setError(
-            'Invalid email or password. Please check your credentials and try again.'
-          );
+          setError(`Invalid email or password. ${MAX_ATTEMPTS - newCount} attempt(s) remaining.`);
         } else if (result.error?.includes('pending approval')) {
-          setError(
-            'Your account is pending approval. Please contact an administrator.'
-          );
+          setError('Your account is pending approval. Please contact an administrator.');
         } else if (result.error?.includes('deactivated')) {
-          setError(
-            'Your account has been deactivated. Please contact an administrator.'
-          );
+          setError('Your account has been deactivated. Please contact an administrator.');
+        } else if (result.error?.includes('Email not confirmed')) {
+          setError('Please verify your email address. Check your inbox for a confirmation link.');
         } else {
           setError(result.error || 'Login failed. Please try again.');
         }
         return;
       }
-
-      console.log(
-        '🔐 Enhanced Login V2 - Login successful:',
-        result.session?.user.id
-      );
+      setAttemptCount(0);
+      localStorage.removeItem('loginAttemptCount'); localStorage.removeItem('loginLockoutUntil');
       setSuccess('Login successful! Redirecting...');
-
-      if (result.session?.profile) {
-        setUserProfile(result.session.profile);
-      }
-
-      // Store login state if remember me is checked
-      if (typeof window !== 'undefined') {
-        if (rememberMe) {
-          localStorage.setItem('rememberedEmail', formData.email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
-        }
-      }
-
-      // Update last activity
+      if (rememberMe) { localStorage.setItem('rememberedEmail', formData.email); }
+      else { localStorage.removeItem('rememberedEmail'); }
       authSessionManager.updateLastActivity();
-
-      // Set flag to prevent AuthenticatedLayout from redirecting during auth state propagation
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('just_logged_in', Date.now().toString());
-      }
-
-      // Determine redirect path based on user role
-      const redirectPath = getRedirectPath(
-        result.session?.profile?.role || 'user'
-      );
-
-      // Force refresh the session in AuthProvider to update React context immediately
-      console.log('🔐 Forcing auth state refresh...');
-      try {
-        await refreshSession();
-        console.log('✅ Auth state refreshed successfully');
-      } catch (refreshError) {
-        console.warn(
-          '⚠️ Could not refresh session, proceeding anyway:',
-          refreshError
-        );
-      }
-
-      // Wait longer for session to fully propagate across all contexts
-      console.log('🔐 Redirecting to:', redirectPath);
-      setTimeout(() => {
-        window.location.replace(redirectPath);
-      }, 1000); // Increased from 500ms to 1000ms for better session propagation
-    } catch (error) {
-      console.error('🔐 Enhanced Login V2 - Exception:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-
-      // Show error handler for connection issues
-      if (
-        errorMessage.includes('fetch') ||
-        errorMessage.includes('network') ||
-        errorMessage.includes('connection')
-      ) {
-        setShowErrorHandler(true);
-      } else {
-        setError(`Connection error: ${errorMessage}`);
-      }
-    } finally {
-      setLoading(false);
-    }
+      localStorage.setItem('just_logged_in', Date.now().toString());
+      const redirectPath = getRedirectPath(result.session?.profile?.role || 'user');
+      try { await refreshSession(); } catch { /* non-fatal */ }
+      setTimeout(() => { window.location.replace(redirectPath); }, 800);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      if (msg.includes('fetch') || msg.includes('network') || msg.includes('connection')) { setShowErrorHandler(true); }
+      else { setError(`Connection error: ${msg}`); }
+    } finally { setLoading(false); }
   };
 
-  const quickLogin = async (email: string, password: string) => {
-    setFormData({ email, password });
-    setError('');
-    setSuccess('');
-
-    // Auto-submit after setting form data
-    setTimeout(() => {
-      const form = document.querySelector('form');
-      if (form) {
-        form.requestSubmit();
-      }
-    }, 100);
-  };
-
-  // Helper function to get redirect path based on role
-  const getRedirectPath = (role: string): string => {
-    switch (role) {
-      case 'provider':
-        return '/en/dashboard/provider-comprehensive';
-      case 'client':
-        return '/en/dashboard/client-comprehensive';
-      case 'admin':
-      case 'super_admin':
-        return '/en/dashboard';
-      case 'hr_admin':
-      case 'hr_staff':
-        return '/en/hr';
-      default:
-        return '/en/dashboard';
-    }
-  };
-
-  // Load remembered email
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const rememberedEmail = localStorage.getItem('rememberedEmail');
-      if (rememberedEmail) {
-        setFormData(prev => ({ ...prev, email: rememberedEmail }));
-        setRememberMe(true);
-      }
-    }
-  }, []);
-
-  // Show error handler for critical errors
   if (showErrorHandler) {
-    return (
-      <LoginErrorHandler
-        error={error || 'An error occurred during login'}
-        onRetry={() => {
-          setShowErrorHandler(false);
-          setError('');
-          setSuccess('');
-        }}
-        onContactSupport={() => {
-          // In a real app, this would open a support ticket or contact form
-          window.open(
-            'mailto:support@example.com?subject=Login Issue',
-            '_blank'
-          );
-        }}
-      />
-    );
+    return <LoginErrorHandler error={error || 'An error occurred during login'} onRetry={() => { setShowErrorHandler(false); setError(''); }} />;
   }
 
-  // Show API status error
-  if (apiStatus === 'error') {
-    return (
-      <div className='min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4'>
-        <Card className='w-full max-w-md'>
-          <CardHeader>
-            <CardTitle className='text-center text-red-600 flex items-center justify-center gap-2'>
-              <AlertCircle className='h-5 w-5' />
-              Service Unavailable
-            </CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <Alert variant='destructive'>
-              <AlertCircle className='h-4 w-4' />
-              <AlertDescription>
-                The authentication service is currently unavailable. Please try
-                again later.
-              </AlertDescription>
-            </Alert>
-            <Button
-              onClick={() => window.location.reload()}
-              className='w-full'
-              variant='outline'
-            >
-              <RefreshCw className='mr-2 h-4 w-4' />
-              Retry
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const isLocked = lockedUntil !== null && lockedUntil > Date.now();
+  const formatCountdown = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4'>
-      <div className='w-full max-w-md space-y-6'>
-        {/* Header */}
-        <div className='text-center space-y-2'>
-          <div className='flex items-center justify-center gap-2 mb-4'>
-            <div className='p-3 bg-blue-600 rounded-full'>
-              <Shield className='h-6 w-6 text-white' />
-            </div>
-            <h1 className='text-2xl font-bold text-gray-900'>Welcome Back</h1>
+    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4'>
+      <div className='absolute inset-0 overflow-hidden pointer-events-none'>
+        <div className='absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl' />
+        <div className='absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl' />
+      </div>
+      <div className='w-full max-w-md relative z-10'>
+        <div className='text-center mb-8'>
+          <div className='inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/30 mb-4'>
+            <Shield className='h-8 w-8 text-white' />
           </div>
-          <p className='text-gray-600'>Sign in to your account to continue</p>
+          <h1 className='text-2xl font-bold text-white'>SmartPro CMS</h1>
+          <p className='text-slate-400 text-sm mt-1'>Contract Management System</p>
         </div>
-
-        {/* API Status Badge */}
-        {apiStatus === 'ready' && (
-          <div className='flex justify-center'>
-            <Badge
-              variant='outline'
-              className='bg-green-50 text-green-700 border-green-200'
-            >
-              <CheckCircle className='mr-1 h-3 w-3' />
-              Service Ready
-            </Badge>
-          </div>
-        )}
-
-        {/* Login Form */}
-        <Card className='shadow-xl border-0'>
-          <CardHeader className='space-y-1 pb-4'>
-            <CardTitle className='text-xl font-semibold text-center'>
-              Sign In
-            </CardTitle>
-            <p className='text-sm text-gray-600 text-center'>
-              Enter your credentials to access your account
-            </p>
+        <Card className='border-0 shadow-2xl bg-white/95 backdrop-blur-sm'>
+          <CardHeader className='pb-4 pt-6 px-6'>
+            <h2 className='text-xl font-semibold text-slate-800'>Welcome back</h2>
+            <p className='text-slate-500 text-sm'>Sign in to your account to continue</p>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className='space-y-4'>
-              {/* Email Field */}
-              <div className='space-y-2'>
-                <Label htmlFor='email' className='text-sm font-medium'>
-                  Email Address
-                </Label>
+          <CardContent className='px-6 pb-6 space-y-5'>
+            <form onSubmit={handleLogin} className='space-y-4' noValidate>
+              <div className='space-y-1.5'>
+                <Label htmlFor='email' className='text-slate-700 font-medium text-sm'>Email address</Label>
                 <div className='relative'>
-                  <Mail className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
-                  <Input
-                    id='email'
-                    name='email'
-                    type='email'
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className='pl-10'
-                    placeholder='Enter your email'
-                    required
-                    disabled={loading}
-                    autoComplete='email'
+                  <Mail className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400' />
+                  <Input ref={emailRef} id='email' name='email' type='email' autoComplete='email'
+                    placeholder='you@company.com' value={formData.email}
+                    onChange={handleInputChange} onBlur={handleBlur}
+                    disabled={loading || isLocked} aria-invalid={!!fieldErrors.email}
+                    className={`pl-10 h-11 transition-colors ${fieldErrors.email ? 'border-red-400 focus-visible:ring-red-400' : 'border-slate-200 focus-visible:ring-blue-500'}`}
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className='text-xs text-red-500 flex items-center gap-1 mt-1'>
+                    <AlertCircle className='h-3 w-3' />{fieldErrors.email}
+                  </p>
+                )}
               </div>
-
-              {/* Password Field */}
-              <div className='space-y-2'>
-                <Label htmlFor='password' className='text-sm font-medium'>
-                  Password
-                </Label>
-                <div className='relative'>
-                  <Lock className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
-                  <Input
-                    id='password'
-                    name='password'
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className='pl-10 pr-10'
-                    placeholder='Enter your password'
-                    required
-                    disabled={loading}
-                    autoComplete='current-password'
-                  />
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='sm'
-                    className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
-                  >
-                    {showPassword ? (
-                      <EyeOff className='h-4 w-4 text-gray-400' />
-                    ) : (
-                      <Eye className='h-4 w-4 text-gray-400' />
-                    )}
+              <div className='space-y-1.5'>
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor='password' className='text-slate-700 font-medium text-sm'>Password</Label>
+                  <Button type='button' variant='link' className='text-xs text-blue-600 hover:text-blue-700 p-0 h-auto font-normal'
+                    onClick={() => router.push(`/${locale}/auth/forgot-password`)} disabled={loading}>
+                    Forgot password?
                   </Button>
                 </div>
-              </div>
-
-              {/* Remember Me */}
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center space-x-2'>
-                  <input
-                    id='remember'
-                    type='checkbox'
-                    checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
-                    className='rounded border-gray-300'
-                    disabled={loading}
-                    aria-label='Remember me'
-                    title='Remember my email for future logins'
+                <div className='relative'>
+                  <Lock className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400' />
+                  <Input id='password' name='password' type={showPassword ? 'text' : 'password'}
+                    autoComplete='current-password' placeholder='Enter your password'
+                    value={formData.password} onChange={handleInputChange} onBlur={handleBlur}
+                    disabled={loading || isLocked} aria-invalid={!!fieldErrors.password}
+                    className={`pl-10 pr-10 h-11 transition-colors ${fieldErrors.password ? 'border-red-400 focus-visible:ring-red-400' : 'border-slate-200 focus-visible:ring-blue-500'}`}
                   />
-                  <Label htmlFor='remember' className='text-sm text-gray-600'>
-                    Remember me
-                  </Label>
+                  <button type='button' onClick={() => setShowPassword(v => !v)}
+                    className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors'
+                    aria-label={showPassword ? 'Hide password' : 'Show password'} tabIndex={-1}>
+                    {showPassword ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
+                  </button>
                 </div>
-                <Button
-                  type='button'
-                  variant='link'
-                  className='text-sm text-blue-600 hover:text-blue-800 p-0 h-auto'
-                  disabled={loading}
-                >
-                  Forgot password?
-                </Button>
+                {fieldErrors.password && (
+                  <p className='text-xs text-red-500 flex items-center gap-1 mt-1'>
+                    <AlertCircle className='h-3 w-3' />{fieldErrors.password}
+                  </p>
+                )}
               </div>
-
-              {/* Error Message */}
-              {error && (
-                <Alert variant='destructive'>
+              <div className='flex items-center space-x-2'>
+                <Checkbox id='remember' checked={rememberMe} onCheckedChange={c => setRememberMe(c === true)} disabled={loading || isLocked} />
+                <Label htmlFor='remember' className='text-sm text-slate-600 cursor-pointer font-normal'>Remember me for 30 days</Label>
+              </div>
+              {isLocked && (
+                <Alert variant='destructive' className='border-red-300 bg-red-50'>
                   <AlertCircle className='h-4 w-4' />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {/* Success Message */}
-              {success && (
-                <Alert className='border-green-200 bg-green-50'>
-                  <CheckCircle className='h-4 w-4 text-green-600' />
-                  <AlertDescription className='text-green-800'>
-                    {success}
+                  <AlertDescription className='text-red-800'>
+                    Account temporarily locked. Try again in <span className='font-semibold'>{formatCountdown(lockCountdown)}</span>
                   </AlertDescription>
                 </Alert>
               )}
-
-              {/* Login Button */}
-              <Button
-                type='submit'
-                className='w-full'
-                disabled={loading || apiStatus !== 'ready'}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Signing In...
-                  </>
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className='ml-2 h-4 w-4' />
-                  </>
-                )}
+              {error && !isLocked && (
+                <Alert variant='destructive' className='border-red-300 bg-red-50'>
+                  <AlertCircle className='h-4 w-4' />
+                  <AlertDescription className='text-red-800'>{error}</AlertDescription>
+                </Alert>
+              )}
+              {success && (
+                <Alert className='border-green-300 bg-green-50'>
+                  <CheckCircle className='h-4 w-4 text-green-600' />
+                  <AlertDescription className='text-green-800'>{success}</AlertDescription>
+                </Alert>
+              )}
+              {attemptCount > 0 && attemptCount < MAX_ATTEMPTS && !isLocked && (
+                <p className='text-xs text-amber-600 text-center'>
+                  {MAX_ATTEMPTS - attemptCount} attempt(s) remaining before temporary lockout
+                </p>
+              )}
+              <Button type='submit'
+                className='w-full h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium shadow-md shadow-blue-500/20 transition-all'
+                disabled={loading || isLocked}>
+                {loading ? (<><Loader2 className='mr-2 h-4 w-4 animate-spin' />Signing in...</>) : (<>Sign in<ArrowRight className='ml-2 h-4 w-4' /></>)}
               </Button>
             </form>
-
-            {/* Test accounts are only available in development for testing purposes */}
-            {/* They are hidden in production for security reasons */}
-            {process.env.NODE_ENV === 'development' &&
-              process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true' && (
-                <div className='mt-6 pt-6 border-t border-gray-200'>
-                  <p className='text-xs text-gray-500 text-center mb-3'>
-                    Quick test accounts for development:
-                  </p>
-                  <div className='grid grid-cols-1 gap-2'>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      onClick={() =>
-                        quickLogin('provider@test.com', 'TestPass123!')
-                      }
-                      disabled={loading}
-                      className='text-xs'
-                    >
-                      <User className='mr-1 h-3 w-3' />
-                      Test Provider
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      onClick={() =>
-                        quickLogin('client@test.com', 'TestPass123!')
-                      }
-                      disabled={loading}
-                      className='text-xs'
-                    >
-                      <User className='mr-1 h-3 w-3' />
-                      Test Client
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      onClick={() =>
-                        quickLogin('admin@test.com', 'TestPass123!')
-                      }
-                      disabled={loading}
-                      className='text-xs'
-                    >
-                      <User className='mr-1 h-3 w-3' />
-                      Test Admin
-                    </Button>
-                  </div>
-                </div>
-              )}
+            <div className='pt-4 border-t border-slate-100 text-center'>
+              <p className='text-sm text-slate-500'>
+                Don&apos;t have an account?{' '}
+                <Button variant='link' className='p-0 h-auto text-blue-600 hover:text-blue-700 text-sm font-medium'
+                  onClick={() => router.push(`/${locale}/auth/register`)}>
+                  Contact your administrator
+                </Button>
+              </p>
+            </div>
           </CardContent>
         </Card>
-
-        {/* Footer */}
-        <div className='text-center text-sm text-gray-500'>
-          <p>
-            Don't have an account?{' '}
-            <Button
-              variant='link'
-              className='p-0 h-auto text-blue-600 hover:text-blue-800'
-            >
-              Contact administrator
-            </Button>
-          </p>
+        <div className='flex items-center justify-center gap-2 mt-6 text-slate-500 text-xs'>
+          <Shield className='h-3.5 w-3.5' />
+          <span>Secured with 256-bit SSL encryption</span>
         </div>
       </div>
     </div>

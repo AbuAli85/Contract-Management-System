@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Bell,
   Settings,
@@ -12,13 +13,14 @@ import {
   AlertTriangle,
   CheckCircle,
   BarChart3,
+  AlertCircle,
 } from 'lucide-react';
 import { NotificationsCenter } from '@/components/notifications/notifications-center';
 import { NotificationSettings } from '@/components/notifications/notification-settings';
 import { useNotifications } from '@/hooks/use-notifications-enhanced';
 
 export default function NotificationsPage() {
-  const { summary, _loading, _error, unreadCount, hasUnread, hasHighPriority } =
+  const { summary, loading, error, unreadCount, hasUnread, hasHighPriority } =
     useNotifications();
 
   const [activeTab, setActiveTab] = useState('center');
@@ -48,6 +50,35 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <Card className='border-destructive'>
+          <CardContent className='p-4'>
+            <div className='flex items-center gap-2 text-destructive'>
+              <AlertCircle className='h-4 w-4' />
+              <span className='text-sm'>{error}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Summary Cards Skeleton */}
+      {loading && !summary && (
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4'>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i} className='animate-pulse'>
+              <CardHeader className='pb-2'>
+                <Skeleton className='h-4 w-20' />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className='h-8 w-12 mb-1' />
+                <Skeleton className='h-3 w-24' />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Summary Cards */}
       {summary && (

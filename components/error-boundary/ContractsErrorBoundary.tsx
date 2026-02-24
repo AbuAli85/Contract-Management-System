@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import React, { Component } from 'react';
 import type { ReactNode } from 'react';
@@ -102,7 +103,7 @@ export class ContractsErrorBoundary extends Component<Props, State> {
                   Try Again
                 </Button>
                 <Button variant='outline' size='sm' asChild>
-                  <Link href='/en/dashboard'>
+                  <Link href={`/${locale}/dashboard`}>
                     <Home className='mr-2 h-4 w-4' />
                     Go to Dashboard
                   </Link>

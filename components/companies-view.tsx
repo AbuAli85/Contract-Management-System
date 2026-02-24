@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { safeRender } from '@/lib/utils/safe-render';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 
 interface Company {
   id: string;
@@ -186,7 +186,7 @@ export function CompaniesView() {
             Manage your company database ({companies.length} companies)
           </p>
         </div>
-        <Button onClick={() => router.push('/en/settings/company')}>
+        <Button onClick={() => router.push(`/${locale}/settings/company`)}>
           <Plus className='h-4 w-4 mr-2' />
           Add Company
         </Button>
@@ -295,7 +295,7 @@ export function CompaniesView() {
                   ? 'No companies match your search criteria.'
                   : 'Get started by adding your first company.'}
               </p>
-              <Button onClick={() => router.push('/en/settings/company')}>
+              <Button onClick={() => router.push(`/${locale}/settings/company`)}>
                 <Plus className='h-4 w-4 mr-2' />
                 Add Company
               </Button>

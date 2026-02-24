@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 
 import {
@@ -107,6 +108,7 @@ export default function ContractDetailPage() {
   });
   const [downloading, setDownloading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [pollProgress, setPollProgress] = useState(0);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
     null
   );
@@ -128,13 +130,13 @@ export default function ContractDetailPage() {
 
     let pollCount = 0;
     const maxPolls = 40; // 40 polls × 3 seconds = 120 seconds total
-
-    console.log('🔄 Starting PDF polling...');
+    setPollProgress(0);
     setPdfStatus(prev => ({ ...prev, is_processing: true }));
 
     const interval = setInterval(async () => {
       try {
         pollCount++;
+        setPollProgress(Math.round((pollCount / maxPolls) * 100));
 
         // Fetch updated contract data
         const response = await fetch(`/api/contracts/${contractId}`);
@@ -146,17 +148,13 @@ export default function ContractDetailPage() {
         const data = await response.json();
         const updatedContract = data?.contract || data;
 
-        console.log(`📊 PDF Poll ${pollCount}/${maxPolls}:`, {
-          status: updatedContract?.status,
-          has_pdf_url: !!updatedContract?.pdf_url,
-          pdf_url: updatedContract?.pdf_url,
-        });
 
         // Check if PDF is ready
         if (updatedContract?.pdf_url) {
-          console.log('✅ PDF Ready! Stopping polling.');
           clearInterval(interval);
           setPollingInterval(null);
+          setPollProgress(100);
+          setTimeout(() => setPollProgress(0), 2000);
           setPdfStatus(prev => ({
             ...prev,
             has_pdf: true,
@@ -170,9 +168,9 @@ export default function ContractDetailPage() {
 
         // Stop polling after max attempts
         if (pollCount >= maxPolls) {
-          console.log('⏱️ Polling timeout reached. Stopping.');
           clearInterval(interval);
           setPollingInterval(null);
+          setPollProgress(0);
           setPdfStatus(prev => ({ ...prev, is_processing: false }));
           setStatusMessage(
             'PDF generation is taking longer than expected. Please check your Make.com scenario or click "Generate PDF" to retry.'
@@ -192,9 +190,7 @@ export default function ContractDetailPage() {
     let timeoutId: NodeJS.Timeout | null = null;
 
     if (pollingInterval) {
-      console.log('⏰ Setting 2-minute timeout for polling');
       timeoutId = setTimeout(() => {
-        console.log('⏱️ 2-minute timeout reached. Force stopping polling.');
         if (pollingInterval) {
           clearInterval(pollingInterval);
           setPollingInterval(null);
@@ -208,7 +204,6 @@ export default function ContractDetailPage() {
 
     return () => {
       if (pollingInterval) {
-        console.log('🧹 Cleaning up polling interval');
         clearInterval(pollingInterval);
       }
       if (timeoutId) {
@@ -280,7 +275,6 @@ export default function ContractDetailPage() {
       // Use the internal API endpoint that generates/serves the PDF
       // This is more reliable than trying to download from storage directly
       const apiUrl = `/api/contracts/${contractId}/pdf/view`;
-      console.log('📥 Downloading PDF via API:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -302,20 +296,12 @@ export default function ContractDetailPage() {
 
       // Check content type
       const contentType = response.headers.get('content-type');
-      console.log('📄 Content-Type:', contentType);
 
       if (!contentType || !contentType.includes('application/pdf')) {
         console.warn('⚠️ Unexpected content type:', contentType);
       }
 
       const blob = await response.blob();
-      console.log(
-        '✅ PDF blob received:',
-        blob.size,
-        'bytes',
-        'type:',
-        blob.type
-      );
 
       if (blob.size === 0) {
         throw new Error('Downloaded file is empty');
@@ -705,8 +691,17 @@ export default function ContractDetailPage() {
                       </div>
                     </div>
 
+                    {pdfStatus.is_processing && pollProgress > 0 && (
+                      <div className='mt-3 space-y-1'>
+                        <div className='flex items-center justify-between text-xs text-muted-foreground'>
+                          <span>Generating PDF...</span>
+                          <span>{pollProgress}%</span>
+                        </div>
+                        <Progress value={pollProgress} className='h-2' />
+                      </div>
+                    )}
                     {statusMessage && (
-                      <Alert className='mt-3'>
+                      <Alert className={`mt-3 ${statusMessage.includes('successfully') ? 'border-green-200 bg-green-50' : ''}`}>
                         <AlertCircleIcon className='h-4 w-4' />
                         <AlertDescription>{statusMessage}</AlertDescription>
                       </Alert>

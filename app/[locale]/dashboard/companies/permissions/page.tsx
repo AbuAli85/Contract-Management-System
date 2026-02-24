@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams , useParams} from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -24,6 +24,8 @@ import {
 import { Label } from '@/components/ui/label';
 
 export default function CompanyPermissionsPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const router = useRouter();
   const searchParams = useSearchParams();
   const companyId = searchParams?.get('company_id') ?? null;
@@ -117,7 +119,7 @@ export default function CompanyPermissionsPage() {
               You need to have access to at least one company to manage
               permissions.
             </p>
-            <Button onClick={() => router.push('/en/dashboard/companies')}>
+            <Button onClick={() => router.push(`/${locale}/dashboard/companies`)}>
               <ArrowLeft className='h-4 w-4 mr-2' />
               Back to Companies
             </Button>
@@ -135,7 +137,7 @@ export default function CompanyPermissionsPage() {
           <Button
             variant='ghost'
             size='icon'
-            onClick={() => router.push('/en/dashboard/companies')}
+            onClick={() => router.push(`/${locale}/dashboard/companies`)}
           >
             <ArrowLeft className='h-4 w-4' />
           </Button>

@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
@@ -43,6 +44,8 @@ interface Contract {
 }
 
 export default function ApprovedContractsPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -388,13 +391,13 @@ export default function ApprovedContractsPage() {
             </ul>
             <div className='flex gap-2 mt-4'>
               <Button variant='outline' asChild>
-                <Link href='/en/dashboard'>
+                <Link href={`/${locale}/dashboard`}>
                   <CheckCircle className='mr-2 h-4 w-4' />
                   Go to Dashboard
                 </Link>
               </Button>
               <Button variant='outline' asChild>
-                <Link href='/en/auth/unauthorized'>
+                <Link href={`/${locale}/auth/unauthorized`}>
                   <Mail className='mr-2 h-4 w-4' />
                   Request Access
                 </Link>
@@ -524,13 +527,13 @@ export default function ApprovedContractsPage() {
                 Retry Now
               </Button>
               <Button variant='outline' size='sm' asChild>
-                <Link href='/en/contracts'>
+                <Link href={`/${locale}/contracts`}>
                   <Eye className='mr-2 h-4 w-4' />
                   View All Contracts
                 </Link>
               </Button>
               <Button variant='outline' size='sm' asChild>
-                <Link href='/en/dashboard'>
+                <Link href={`/${locale}/dashboard`}>
                   <CheckCircle className='mr-2 h-4 w-4' />
                   Go to Dashboard
                 </Link>
@@ -633,7 +636,7 @@ export default function ApprovedContractsPage() {
                   </Button>
                 )}
                 <Button variant='outline' size='sm' asChild>
-                  <Link href='/en/contracts'>
+                  <Link href={`/${locale}/contracts`}>
                     <Eye className='mr-2 h-4 w-4' />
                     View All Contracts
                   </Link>

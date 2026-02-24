@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -105,6 +105,8 @@ const STATUS_OPTIONS = [
 ];
 
 export default function UserManagementPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -502,7 +504,7 @@ export default function UserManagementPage() {
               </div>
               <div className='flex gap-2'>
                 <Button variant='outline' asChild>
-                  <Link href='/en/dashboard'>Dashboard</Link>
+                  <Link href={`/${locale}/dashboard`}>Dashboard</Link>
                 </Button>
                 <UserCreateForm onSuccess={() => fetchUsers()} />
                 <Button onClick={handleManualRefresh} disabled={loading}>

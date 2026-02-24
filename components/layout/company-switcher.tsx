@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { useAuth } from '@/lib/auth-service';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useCompany } from '@/components/providers/company-provider';
@@ -399,7 +399,7 @@ export function CompanySwitcher() {
 
           {activeCompany && (
             <DropdownMenuItem
-              onClick={() => router.push('/en/settings/company')}
+              onClick={() => router.push(`/${locale}/settings/company`)}
               className='flex items-center gap-2 p-3 cursor-pointer'
             >
               <div className='h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center'>

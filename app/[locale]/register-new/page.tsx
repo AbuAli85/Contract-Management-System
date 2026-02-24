@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import {
   Loader2,
   User,
@@ -37,6 +37,8 @@ interface FormData {
 }
 
 export default function RegisterNewUserPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -182,7 +184,7 @@ export default function RegisterNewUserPage() {
   };
 
   const handleLogin = () => {
-    router.push('/en/working-login');
+    router.push(`/${locale}/working-login`);
   };
 
   const goToDashboard = () => {
@@ -426,7 +428,7 @@ export default function RegisterNewUserPage() {
             <div className='text-center'>
               <Button
                 variant='link'
-                onClick={() => router.push('/en/working-login')}
+                onClick={() => router.push(`/${locale}/working-login`)}
                 className='text-sm'
               >
                 Already have an account? Login here

@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SimpleWorkingLogin() {
+  const params = useParams();
+  const locale = (params?.locale as string) || \'en\';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -235,13 +237,13 @@ export default function SimpleWorkingLogin() {
         <div className='border-t pt-4 mt-4 space-y-2'>
           <button
             className='w-full bg-transparent text-blue-600 py-2 px-4 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm'
-            onClick={() => router.push('/en/test-auth')}
+            onClick={() => router.push(`/${locale}/test-auth`)}
           >
             🧪 Open Diagnostic Page
           </button>
           <button
             className='w-full bg-transparent text-blue-600 py-2 px-4 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm'
-            onClick={() => router.push('/en/auth/register')}
+            onClick={() => router.push(`/${locale}/auth/register`)}
           >
             📝 Create New Account
           </button>

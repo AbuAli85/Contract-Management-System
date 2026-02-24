@@ -13,7 +13,7 @@ import { FilePlus, UserPlus, Sun, User, LogOut } from 'lucide-react';
 import GlobalSearch from '@/components/global-search';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import { CompanySwitcher } from '@/components/layout/company-switcher';
 import { isRTL } from '@/lib/i18n/rtl';
 
@@ -100,7 +100,7 @@ export function AuthenticatedLayout({
       // Redirect to login if not authenticated
       console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
       redirectingRef.current = true; // Mark that we're redirecting
-      router.push('/en/auth/login');
+      router.push(`/${locale}/auth/login`);
       return;
     }
 
@@ -182,10 +182,10 @@ export function AuthenticatedLayout({
           </div>
           <div className='space-y-3'>
             <Button asChild className='w-full'>
-              <Link href='/en/auth/login'>Sign In</Link>
+              <Link href={`/${locale}/auth/login`}>Sign In</Link>
             </Button>
             <Button variant='outline' asChild className='w-full'>
-              <Link href='/en/auth/signup'>Create Account</Link>
+              <Link href={`/${locale}/auth/signup`}>Create Account</Link>
             </Button>
           </div>
         </div>
@@ -262,7 +262,7 @@ export function AuthenticatedLayout({
                     return showActions && !pathname?.includes('/promoters') ? (
                       <div className='hidden md:flex items-center space-x-2'>
                         <Button size='sm' variant='outline' asChild>
-                          <Link href='/en/generate-contract'>
+                          <Link href={`/${locale}/generate-contract`}>
                             <FilePlus className='me-2 h-4 w-4' />
                             {rtl ? 'عقد جديد' : 'New Contract'}
                           </Link>
@@ -333,7 +333,7 @@ export function AuthenticatedLayout({
           </p>
           <div className='flex items-center space-x-4'>
             <span className='text-sm text-gray-600'>
-              Not signed in? <Link href='/en/auth/login'>Sign In</Link>
+              Not signed in? <Link href={`/${locale}/auth/login`}>Sign In</Link>
             </span>
           </div>
         </div>

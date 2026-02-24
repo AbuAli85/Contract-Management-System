@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter , useParams} from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -241,7 +241,7 @@ export function WorkPermitDashboard() {
             <ExternalLink className='h-4 w-4 mr-2' />
             MOL Portal
           </Button>
-          <Button onClick={() => router.push('/en/work-permits/new')}>
+          <Button onClick={() => router.push(`/${locale}/work-permits/new`)}>
             <Plus className='h-4 w-4 mr-2' />
             New Application
           </Button>
@@ -387,7 +387,7 @@ export function WorkPermitDashboard() {
                     <Button
                       variant='outline'
                       className='mt-4'
-                      onClick={() => router.push('/en/work-permits/new')}
+                      onClick={() => router.push(`/${locale}/work-permits/new`)}
                     >
                       <Plus className='h-4 w-4 mr-2' />
                       Create First Application

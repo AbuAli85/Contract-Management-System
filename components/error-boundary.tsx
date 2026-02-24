@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import React from 'react';
 import {
@@ -268,7 +269,7 @@ export class PartiesErrorBoundary extends React.Component<
                 </Button>
 
                 <Button variant='outline' asChild>
-                  <Link href='/en/dashboard'>
+                  <Link href={`/${locale}/dashboard`}>
                     <Home className='mr-2 h-4 w-4' />
                     Back to Dashboard
                   </Link>
@@ -478,7 +479,7 @@ export class ErrorBoundary extends React.Component<
                 </Button>
 
                 <Button variant='outline' asChild>
-                  <Link href='/en/dashboard'>
+                  <Link href={`/${locale}/dashboard`}>
                     <Home className='mr-2 h-4 w-4' />
                     Back to Dashboard
                   </Link>

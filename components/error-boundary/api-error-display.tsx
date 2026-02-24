@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
@@ -175,7 +176,7 @@ export function ApiErrorDisplay({
             </Button>
 
             <Button variant='outline' asChild>
-              <Link href='/en/dashboard'>
+              <Link href={`/${locale}/dashboard`}>
                 <Home className='mr-2 h-4 w-4' />
                 Back to Dashboard
               </Link>
