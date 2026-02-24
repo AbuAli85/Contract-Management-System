@@ -30,7 +30,7 @@
     "metrics:record": "tsx scripts/record-daily-metrics.ts",
     "metrics:migrate": "supabase db query < supabase/migrations/20251029_create_metrics_history_table.sql",
     "dev": "next dev",
-    "build": "NODE_OPTIONS=\"--max-old-space-size=4096\" next build",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=6144 --max-semi-space-size=128\" next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

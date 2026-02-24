@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "NODE_OPTIONS=\"--max-old-space-size=4096\" npm run build",
+  "buildCommand": "NODE_OPTIONS=\"--max-old-space-size=6144 --max-semi-space-size=128\" npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
@@ -138,6 +138,6 @@
     }
   ],
   "env": {
-    "NODE_OPTIONS": "--max-old-space-size=4096"
+    "NODE_OPTIONS": "--max-old-space-size=6144 --max-semi-space-size=128"
   }
 }
