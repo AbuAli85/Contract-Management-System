@@ -244,7 +244,7 @@ const nextConfig = {
 
   // TypeScript: strict checking re-enabled (TECHNICAL DEBT resolved 2026-02-24)
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // Image domains with security considerations and optimization
