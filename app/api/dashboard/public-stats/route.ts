@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import {
   extractApiKey,
   validateApiKey,
-  withApiKeyAuth,
 } from '@/lib/api-key-auth';
 
 // Force dynamic rendering to prevent static generation issues
@@ -32,7 +31,7 @@ export async function GET(request: NextRequest) {
   return getBasicStats(request);
 }
 
-async function getBasicStats(request: NextRequest) {
+async function getBasicStats(_request: NextRequest) {
   try {
     console.log('🔍 Public stats: Starting request...');
 

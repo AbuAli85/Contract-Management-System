@@ -60,7 +60,7 @@ export async function GET() {
         const adminClient = createAdminClient();
 
         // Test read access
-        const { error: testError, data: testData } = await adminClient
+        const { error: testError, data: _testData } = await adminClient
           .from('company_members')
           .select('id')
           .limit(1);

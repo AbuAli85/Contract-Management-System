@@ -151,7 +151,7 @@ export const POST = withRBAC(
 // GET - Get pending attendance records for approval
 export const GET = withRBAC(
   'attendance:read:all',
-  async (request: NextRequest) => {
+  async (_request: NextRequest) => {
     try {
       const supabase = await createClient();
       const supabaseAdmin = getSupabaseAdmin();

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'today';
+    const _period = searchParams.get('period') || 'today';
 
     // Mock data for the beautiful dashboard
     const mockMetrics = {

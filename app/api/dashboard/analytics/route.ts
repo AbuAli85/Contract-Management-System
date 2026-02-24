@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withRBAC(
   'analytics:read:all',
-  async (request: NextRequest) => {
+  async (_request: NextRequest) => {
     try {
       console.log('🔧 Dashboard analytics API called');
       const supabase = await createClient();

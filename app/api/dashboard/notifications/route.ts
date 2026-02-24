@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import {
   differenceInDays,
-  differenceInHours,
-  formatDistanceToNow,
 } from 'date-fns';
 
 // Force dynamic rendering to prevent static generation issues
@@ -35,7 +33,7 @@ function checkRateLimit(identifier: string): boolean {
 }
 
 // CORS preflight handler
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {
@@ -483,7 +481,7 @@ export async function GET(request: NextRequest) {
 // POST endpoint for marking notifications as read/unread
 export async function POST(request: NextRequest) {
   try {
-    const { action, notificationIds, markAll } = await request.json();
+    const { action, notificationIds, _markAll } = await request.json();
 
     // For now, we'll simulate marking as read
     // In a real implementation, you'd save this to a user_notifications table

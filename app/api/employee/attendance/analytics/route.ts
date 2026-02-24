@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const month =
       searchParams.get('month') || new Date().toISOString().slice(0, 7);
-    const range = searchParams.get('range') || 'month';
+    const _range = searchParams.get('range') || 'month';
 
     // Calculate date range
     const startDate = `${month}-01`;

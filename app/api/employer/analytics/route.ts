@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 export const dynamic = 'force-dynamic';
 
 // GET - Get comprehensive analytics for employer
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
     const supabaseAdmin = getSupabaseAdmin();
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     // For promoters not in employer_employees, we can't track their attendance/tasks yet
     // But we can count them in team stats
-    const promoterIds = promotersFromParty
+    const _promoterIds = promotersFromParty
       .filter(p => !(teamMembers || []).some(tm => tm.employee_id === p.id))
       .map(p => p.id);
 

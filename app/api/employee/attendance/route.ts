@@ -464,7 +464,7 @@ export async function POST(request: NextRequest) {
       const totalHours = (netMinutes / 60).toFixed(2);
 
       // Calculate overtime based on company settings
-      const standardWorkHours = parseFloat(
+      const _standardWorkHours = parseFloat(
         companySettings?.standard_work_hours?.toString() || '8.0'
       );
       const overtimeThreshold = parseFloat(
