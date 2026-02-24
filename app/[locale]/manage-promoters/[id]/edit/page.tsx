@@ -180,7 +180,6 @@ export default function EditPromoterPage() {
           </div>
         </div>
 
-
         {/* Loading State */}
         {isLoading && (
           <div className='flex items-center justify-center py-12'>

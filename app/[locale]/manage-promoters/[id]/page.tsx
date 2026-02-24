@@ -42,7 +42,9 @@ import {
   Monitor,
   Tablet,
   AlertTriangle,
+  Search,
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { format, parseISO, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
@@ -1199,23 +1201,51 @@ export default function PromoterDetailPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PromoterFilterSection
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterStatus={filterStatus}
-            setFilterStatus={setFilterStatus}
-            filterCompany={filterCompany}
-            setFilterCompany={setFilterCompany}
-            filterDocument={filterDocument}
-            setFilterDocument={setFilterDocument}
-            employers={employers}
-            employersLoading={employersLoading}
-            uniqueCompanies={employers.map(emp => ({
-              id: emp.id,
-              name: emp.name_en || emp.name_ar || emp.id,
-            }))}
-            showBulkActions={false}
-          />
+          <div className='space-y-3'>
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+              <Input
+                placeholder='Search promoters...'
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className='pl-9'
+              />
+            </div>
+            <div className='flex gap-2 flex-wrap'>
+              <select
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+                className='flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
+              >
+                <option value='all'>All Statuses</option>
+                <option value='active'>Active</option>
+                <option value='inactive'>Inactive</option>
+                <option value='pending'>Pending</option>
+              </select>
+              <select
+                value={filterCompany}
+                onChange={e => setFilterCompany(e.target.value)}
+                className='flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
+              >
+                <option value='all'>All Companies</option>
+                {employers.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name_en || emp.name_ar || emp.id}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filterDocument}
+                onChange={e => setFilterDocument(e.target.value)}
+                className='flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
+              >
+                <option value='all'>All Documents</option>
+                <option value='missing_id'>Missing ID Card</option>
+                <option value='missing_passport'>Missing Passport</option>
+                <option value='complete'>Complete</option>
+              </select>
+            </div>
+          </div>
 
           {/* Filtered Promoters List */}
           {filteredPromoters.length > 0 &&
@@ -1712,7 +1742,8 @@ export default function PromoterDetailPage() {
                                 toast({
                                   variant: 'destructive',
                                   title: 'Connection Error',
-                                  description: 'Failed to initialize database connection.',
+                                  description:
+                                    'Failed to initialize database connection.',
                                 });
                                 return;
                               }
@@ -1732,7 +1763,8 @@ export default function PromoterDetailPage() {
                                 } else {
                                   toast({
                                     title: 'Assignment Removed',
-                                    description: 'Employer assignment has been removed successfully.',
+                                    description:
+                                      'Employer assignment has been removed successfully.',
                                   });
                                   window.location.reload();
                                 }
