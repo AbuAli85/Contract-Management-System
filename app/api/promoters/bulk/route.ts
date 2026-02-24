@@ -46,6 +46,7 @@ export const POST = withRBAC(
         });
       }
 
+
       const cookieStore = await cookies();
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -90,6 +91,7 @@ export const POST = withRBAC(
           { status: 401 }
         );
       }
+
 
       // Parse and validate request body
       const body = await request.json();
@@ -347,6 +349,7 @@ export const POST = withRBAC(
             { status: 400 }
           );
       }
+
 
       // Add rate limit headers to response
       const responseHeaders = getRateLimitHeaders(rateLimitResult);

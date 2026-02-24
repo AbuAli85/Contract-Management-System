@@ -221,6 +221,9 @@ const nextConfig = {
     ],
     // Enable instrumentation for security checks
     instrumentationHook: true,
+    // Reduce memory usage during CI builds by limiting parallel workers
+    workerThreads: false,
+    cpus: 1,
   },
 
   // Enable SWC minification for better performance

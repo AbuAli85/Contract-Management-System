@@ -47,16 +47,6 @@ import { format, parseISO, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -228,7 +218,6 @@ export default function PromoterDetailPage() {
   const [education, setEducation] = useState<PromoterEducation[]>([]);
   const [documents, setDocuments] = useState<PromoterDocument[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [useEnhancedView, setUseEnhancedView] = useState(true);
@@ -250,7 +239,7 @@ export default function PromoterDetailPage() {
   const [employers, setEmployers] = useState<
     { id: string; name_en?: string; name_ar?: string }[]
   >([]);
-  const [_employersLoading, setEmployersLoading] = useState(true);
+  const [employersLoading, setEmployersLoading] = useState(true);
 
   // Get current user ID and check if viewing own profile
   useEffect(() => {
@@ -371,7 +360,14 @@ export default function PromoterDetailPage() {
   );
 
   async function handleDeletePromoter() {
-    setShowDeleteDialog(false);
+    if (
+      !confirm(
+        'Are you sure you want to delete this promoter? This action cannot be undone.'
+      )
+    ) {
+      return;
+    }
+
     setIsDeleting(true);
     try {
       const supabase = createClient();
@@ -914,12 +910,11 @@ export default function PromoterDetailPage() {
     setFilteredPromoters(filtered);
   }, [allPromoters, searchTerm, filterStatus, filterCompany, filterDocument]);
 
-  // Handle refresh - use Next.js router.refresh() to avoid full page reload
+  // Handle refresh - reload the page
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
-    router.refresh();
-    setTimeout(() => setIsRefreshing(false), 1000);
-  }, [router]);
+    window.location.reload();
+  }, []);
 
   // Pre-compute performance metrics for PromoterGoalWidget (extracted from JSX to fix react-hooks/rules-of-hooks)
   const goalWidgetMetrics = useMemo(() => {
@@ -1068,29 +1063,6 @@ export default function PromoterDetailPage() {
     <div
       className={`container mx-auto space-y-6 py-6 ${viewMode === 'mobile' ? 'px-4' : ''}`}
     >
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Promoter</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to permanently delete{' '}
-              <strong>{promoterDetails?.name_en}</strong>? This will also remove
-              all associated skills, experience, education, and documents. This
-              action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeletePromoter}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-            >
-              Delete Permanently
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       {/* Enhanced Header with Predictive Score */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div className='flex-1 min-w-0'>
@@ -1199,7 +1171,7 @@ export default function PromoterDetailPage() {
             </Button>
             <Button
               variant='destructive'
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={handleDeletePromoter}
               disabled={isDeleting}
               size={viewMode === 'mobile' ? 'sm' : 'default'}
             >
@@ -1227,50 +1199,23 @@ export default function PromoterDetailPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='flex flex-col gap-3'>
-            <input
-              type='text'
-              placeholder='Search promoters by name or ID...'
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-            />
-            <div className='flex gap-2 flex-wrap'>
-              <select
-                value={filterStatus}
-                onChange={e => setFilterStatus(e.target.value)}
-                className='rounded-md border border-input bg-background px-3 py-2 text-sm'
-              >
-                <option value='all'>All Statuses</option>
-                <option value='active'>Active</option>
-                <option value='inactive'>Inactive</option>
-                <option value='suspended'>Suspended</option>
-              </select>
-              <select
-                value={filterCompany}
-                onChange={e => setFilterCompany(e.target.value)}
-                className='rounded-md border border-input bg-background px-3 py-2 text-sm'
-              >
-                <option value='all'>All Companies</option>
-                {employers.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name_en || emp.name_ar || emp.id}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filterDocument}
-                onChange={e => setFilterDocument(e.target.value)}
-                className='rounded-md border border-input bg-background px-3 py-2 text-sm'
-              >
-                <option value='all'>All Documents</option>
-                <option value='valid'>Valid</option>
-                <option value='expiring'>Expiring Soon</option>
-                <option value='expired'>Expired</option>
-                <option value='missing'>Missing</option>
-              </select>
-            </div>
-          </div>
+          <PromoterFilterSection
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filterCompany={filterCompany}
+            setFilterCompany={setFilterCompany}
+            filterDocument={filterDocument}
+            setFilterDocument={setFilterDocument}
+            employers={employers}
+            employersLoading={employersLoading}
+            uniqueCompanies={employers.map(emp => ({
+              id: emp.id,
+              name: emp.name_en || emp.name_ar || emp.id,
+            }))}
+            showBulkActions={false}
+          />
 
           {/* Filtered Promoters List */}
           {filteredPromoters.length > 0 &&
@@ -1757,48 +1702,51 @@ export default function PromoterDetailPage() {
                           size='sm'
                           variant='outline'
                           onClick={async () => {
-                            const supabase = createClient();
-                            if (!supabase) {
-                              toast({
-                                variant: 'destructive',
-                                title: 'Connection Error',
-                                description:
-                                  'Failed to initialize database connection.',
-                              });
-                              return;
-                            }
-                            try {
-                              const { error } = await supabase
-                                .from('promoters')
-                                .update({ employer_id: null })
-                                .eq('id', promoterId);
-                              if (error) {
+                            if (
+                              confirm(
+                                'Remove employer assignment from this promoter?'
+                              )
+                            ) {
+                              const supabase = createClient();
+                              if (!supabase) {
+                                toast({
+                                  variant: 'destructive',
+                                  title: 'Connection Error',
+                                  description: 'Failed to initialize database connection.',
+                                });
+                                return;
+                              }
+
+                              try {
+                                const { error } = await supabase
+                                  .from('promoters')
+                                  .update({ employer_id: null })
+                                  .eq('id', promoterId);
+
+                                if (error) {
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Update Failed',
+                                    description: `Failed to update: ${error.message}`,
+                                  });
+                                } else {
+                                  toast({
+                                    title: 'Assignment Removed',
+                                    description: 'Employer assignment has been removed successfully.',
+                                  });
+                                  window.location.reload();
+                                }
+                              } catch (err: unknown) {
+                                const message =
+                                  err instanceof Error
+                                    ? err.message
+                                    : 'Unknown error';
                                 toast({
                                   variant: 'destructive',
                                   title: 'Update Failed',
-                                  description: `Failed to update: ${error.message}`,
+                                  description: `Failed to update: ${message}`,
                                 });
-                              } else {
-                                toast({
-                                  title: 'Assignment Removed',
-                                  description:
-                                    'Employer assignment has been removed successfully.',
-                                });
-                                setPromoterDetails(prev =>
-                                  prev ? { ...prev, employer_id: null } : null
-                                );
-                                router.refresh();
                               }
-                            } catch (err: unknown) {
-                              const message =
-                                err instanceof Error
-                                  ? err.message
-                                  : 'Unknown error';
-                              toast({
-                                variant: 'destructive',
-                                title: 'Update Failed',
-                                description: `Failed to update: ${message}`,
-                              });
                             }
                           }}
                         >
@@ -2225,66 +2173,22 @@ export default function PromoterDetailPage() {
                 <CardContent>
                   {role === 'admin' ? (
                     <div className='space-y-4'>
-                      {auditLogs.length === 0 && (
-                        <p className='text-sm text-muted-foreground text-center py-4'>
-                          No activity recorded yet.
-                        </p>
-                      )}
                       {auditLogs.map(log => (
                         <div
                           key={log.id}
                           className='flex items-start space-x-3 rounded-lg border p-3'
                         >
-                          <div className='mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500'></div>
-                          <div className='flex-1 min-w-0'>
-                            <p className='text-sm font-medium capitalize'>
-                              {(log.action || 'Unknown action')
-                                .replace(/_/g, ' ')
-                                .toLowerCase()}
-                            </p>
+                          <div className='mt-2 h-2 w-2 rounded-full bg-blue-500'></div>
+                          <div className='flex-1'>
+                            <p className='text-sm font-medium'>{log.action}</p>
                             <p className='text-xs text-muted-foreground'>
-                              {new Date(log.created_at).toLocaleString(
-                                undefined,
-                                {
-                                  dateStyle: 'medium',
-                                  timeStyle: 'short',
-                                }
-                              )}
+                              {new Date(log.created_at).toLocaleString()}
                             </p>
-                            {log.new_values &&
-                              typeof log.new_values === 'object' && (
-                                <div className='mt-1 space-y-0.5'>
-                                  {Object.entries(
-                                    log.new_values as Record<string, unknown>
-                                  )
-                                    .slice(0, 5)
-                                    .map(([key, value]) => (
-                                      <p
-                                        key={key}
-                                        className='text-xs text-muted-foreground truncate'
-                                      >
-                                        <span className='font-medium capitalize'>
-                                          {key.replace(/_/g, ' ')}:
-                                        </span>{' '}
-                                        {String(value ?? '—')}
-                                      </p>
-                                    ))}
-                                  {Object.keys(
-                                    log.new_values as Record<string, unknown>
-                                  ).length > 5 && (
-                                    <p className='text-xs text-muted-foreground'>
-                                      +
-                                      {Object.keys(
-                                        log.new_values as Record<
-                                          string,
-                                          unknown
-                                        >
-                                      ).length - 5}{' '}
-                                      more fields changed
-                                    </p>
-                                  )}
-                                </div>
-                              )}
+                            {log.new_values && (
+                              <p className='mt-1 text-xs text-muted-foreground'>
+                                Changes: {JSON.stringify(log.new_values)}
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}

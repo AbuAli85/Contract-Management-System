@@ -544,9 +544,7 @@ function EnhancedPromotersViewRefactoredContent({
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [showAdvancedExport, setShowAdvancedExport] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [availableCompanies, setAvailableCompanies] = useState<
-    Array<{ id: string; name_en: string; name_ar?: string }>
-  >([]);
+  const [availableCompanies, setAvailableCompanies] = useState<Array<{id: string; name_en: string; name_ar?: string}>>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [isAssigning, setIsAssigning] = useState(false);
 
@@ -1448,9 +1446,7 @@ function EnhancedPromotersViewRefactoredContent({
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || errorData.message || 'Assignment failed'
-        );
+        throw new Error(errorData.error || errorData.message || 'Assignment failed');
       }
       toast({
         title: 'Promoters Assigned',
@@ -1463,21 +1459,12 @@ function EnhancedPromotersViewRefactoredContent({
       toast({
         variant: 'destructive',
         title: 'Assignment Failed',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to assign promoters.',
+        description: error instanceof Error ? error.message : 'Failed to assign promoters.',
       });
     } finally {
       setIsAssigning(false);
     }
-  }, [
-    selectedCompanyId,
-    availableCompanies,
-    selectedPromoters,
-    toast,
-    refetch,
-  ]);
+  }, [selectedCompanyId, availableCompanies, selectedPromoters, toast, refetch]);
 
   const handleResetFilters = useCallback(() => {
     setSearchTerm('');
@@ -1992,7 +1979,7 @@ function EnhancedPromotersViewRefactoredContent({
           )}
         </header>
 
-        {/* Advanced Export Dialog */}
+         {/* Advanced Export Dialog */}
         <PromotersAdvancedExport
           promoters={sortedPromoters}
           selectedIds={selectedPromoters}
@@ -2070,14 +2057,13 @@ function EnhancedPromotersViewRefactoredContent({
 
         {/* Bulk Assign Company Dialog */}
         {showAssignDialog && (
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
-            <div className='bg-card border rounded-xl shadow-2xl p-6 w-full max-w-md mx-4'>
-              <h2 className='text-lg font-semibold mb-1'>Assign to Company</h2>
-              <p className='text-sm text-muted-foreground mb-4'>
-                Select a company to assign {selectedPromoters.size} promoter(s)
-                to.
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-card border rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+              <h2 className="text-lg font-semibold mb-1">Assign to Company</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select a company to assign {selectedPromoters.size} promoter(s) to.
               </p>
-              <div className='space-y-2 max-h-64 overflow-y-auto mb-4 border rounded-lg p-2'>
+              <div className="space-y-2 max-h-64 overflow-y-auto mb-4 border rounded-lg p-2">
                 {availableCompanies.map(company => (
                   <button
                     key={company.id}
@@ -2090,16 +2076,14 @@ function EnhancedPromotersViewRefactoredContent({
                   >
                     {company.name_en}
                     {company.name_ar && (
-                      <span className='block text-xs opacity-70'>
-                        {company.name_ar}
-                      </span>
+                      <span className="block text-xs opacity-70">{company.name_ar}</span>
                     )}
                   </button>
                 ))}
               </div>
-              <div className='flex gap-2 justify-end'>
+              <div className="flex gap-2 justify-end">
                 <Button
-                  variant='outline'
+                  variant="outline"
                   onClick={() => setShowAssignDialog(false)}
                   disabled={isAssigning}
                 >
@@ -2111,7 +2095,7 @@ function EnhancedPromotersViewRefactoredContent({
                 >
                   {isAssigning ? (
                     <>
-                      <RefreshCw className='h-4 w-4 mr-2 animate-spin' />
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                       Assigning...
                     </>
                   ) : (
