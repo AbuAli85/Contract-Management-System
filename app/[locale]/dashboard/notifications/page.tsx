@@ -315,7 +315,7 @@ export default function NotificationsPage() {
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
-        .neq('id', 0);
+        .not('id', 'is', null);
 
       if (error) throw error;
 
@@ -346,7 +346,7 @@ export default function NotificationsPage() {
       const { error } = await supabase
         .from('notifications')
         .delete()
-        .neq('id', 0);
+        .not('id', 'is', null);
       if (error) throw error;
 
       setNotifications([]);
