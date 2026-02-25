@@ -39,10 +39,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Load user roles from API or default to user role
   const loadUserRoles = useCallback(async () => {
-    console.log('🔐 RBACProvider: Loading user roles...');
 
     if (!user) {
-      console.log('🔐 RBACProvider: No user, setting empty roles');
       setUserRoles([]);
       setIsLoading(false);
       return;
@@ -51,11 +49,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     try {
       // Method 1: Try direct Supabase client first
       if (!supabase) {
-        console.log('🔐 RBACProvider: No Supabase client available');
         throw new Error('Failed to get Supabase client from context');
       }
 
-      console.log('🔐 RBACProvider: Checking users table...');
 
       // First try to find user by email (this handles admin user with fixed UUID)
       const { data: usersData, error: usersError } = await supabase
@@ -65,10 +61,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (!usersError && usersData?.role) {
-        console.log(
-          '✅ RBACProvider: Found user by email, role:',
-          usersData.role
-        );
         setUserRoles([usersData.role as Role]);
         setIsLoading(false);
         return;
@@ -76,9 +68,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
       // If not found by email, try by auth ID (for regular users)
       if (usersError) {
-        console.log(
-          '🔐 RBACProvider: User not found by email, trying auth ID...'
-        );
         const { data: authIdUser, error: authIdError } = await supabase
           .from('users')
           .select('role')
@@ -86,10 +75,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (!authIdError && authIdUser?.role) {
-          console.log(
-            '✅ RBACProvider: Found user by auth ID, role:',
-            authIdUser.role
-          );
           setUserRoles([authIdUser.role as Role]);
           setIsLoading(false);
           return;
@@ -102,9 +87,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         (usersError.message.includes('No rows found') ||
           usersError.message.includes('multiple (or no) rows returned'))
       ) {
-        console.log(
-          '🔐 RBACProvider: User not found in users table, attempting to create...'
-        );
 
         // SECURITY FIX: Standard user creation without hardcoded admin checks
         try {
@@ -128,28 +110,22 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
             .single();
 
           if (!createError && newUser?.role) {
-            console.log(
-              '✅ RBACProvider: Created/updated user and got role:',
-              newUser.role
-            );
             setUserRoles([newUser.role as Role]);
             setIsLoading(false);
             return;
           }
         } catch (createError) {
-          console.log('🔐 RBACProvider: User creation failed:', createError);
+          // Non-fatal: silently handled
         }
       }
 
       // Check profiles table as fallback
-      console.log('🔐 RBACProvider: Checking profiles table...');
       try {
         // First, try to ensure the user profile exists
         try {
           await supabase.rpc('ensure_user_profile', { user_id: user.id });
-          console.log('✅ RBACProvider: Ensured user profile exists');
         } catch (error) {
-          console.log('⚠️ RBACProvider: Could not ensure user profile:', error);
+          // Non-fatal: silently handled
         }
 
         const { data: profilesData, error: profilesError } = await supabase
@@ -163,20 +139,12 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           profilesData.length > 0 &&
           profilesData[0]?.role
         ) {
-          console.log(
-            '✅ RBACProvider: Role from profiles table:',
-            profilesData[0].role
-          );
           setUserRoles([profilesData[0].role as Role]);
           setIsLoading(false);
           return;
         } else {
-          console.log(
-            '🔐 RBACProvider: No role found in profiles table or table empty'
-          );
         }
       } catch (error) {
-        console.log('🔐 RBACProvider: Profiles table error:', error);
         // Try alternative approach - use the API route
         try {
           const response = await fetch('/api/get-user-role', {
@@ -189,21 +157,17 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
             const roleData = await response.json();
             const role = roleData.role?.value ?? roleData.role;
             if (role) {
-              console.log('✅ RBACProvider: Role from API route:', role);
               setUserRoles([role as Role]);
               setIsLoading(false);
               return;
             }
           }
         } catch (apiError) {
-          console.log('🔐 RBACProvider: API route also failed:', apiError);
+          // Non-fatal: silently handled
         }
       }
 
       // SECURITY FIX: Remove hardcoded admin email check - use database roles only
-      console.log(
-        '🔐 RBACProvider: No role found in tables, setting default user role'
-      );
       setUserRoles(['user']);
       setIsLoading(false);
     } catch (error) {
@@ -217,14 +181,12 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Refresh roles from server
   const refreshRoles = useCallback(async () => {
-    console.log('🔐 RBACProvider: Refreshing roles...');
     setIsLoading(true);
     await loadUserRoles();
   }, [loadUserRoles]);
 
   // Load roles when user changes
   useEffect(() => {
-    console.log('🔐 RBACProvider: User changed, loading roles...');
     loadUserRoles();
   }, [loadUserRoles]);
 

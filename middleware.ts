@@ -302,9 +302,6 @@ export async function middleware(request: NextRequest) {
 
     // Validate origin for cross-origin requests
     if (!isOriginAllowed(origin, allowedOrigins)) {
-      console.warn(
-        `🚫 CORS: Blocked request from unauthorized origin: ${origin} (IP: ${ip})`
-      );
       return new NextResponse(JSON.stringify({ error: 'Origin not allowed' }), {
         status: 403,
         headers: {
@@ -338,7 +335,6 @@ export async function middleware(request: NextRequest) {
         sessionToken &&
         csrfToken !== sessionToken
       ) {
-        console.warn(`🚫 CSRF: Invalid token for ${pathname} from IP: ${ip}`);
         return new NextResponse(JSON.stringify({ error: 'Invalid CSRF token' }), {
           status: 403,
           headers: {
@@ -371,10 +367,6 @@ export async function middleware(request: NextRequest) {
       const isLimited = await isRateLimitedDistributed(pathname, ip);
       
       if (isLimited) {
-        console.log(
-          `🚫 Middleware: Rate limit exceeded for ${pathname} from IP: ${ip}`
-        );
-
         return new NextResponse(
           JSON.stringify({
             error: 'Rate limit exceeded',

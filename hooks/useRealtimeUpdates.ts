@@ -53,7 +53,6 @@ export function useRealtimeUpdates(options: RealtimeOptions) {
         filter: options.filter,
       },
       payload => {
-        console.log('Realtime change detected:', payload);
 
         // Call specific event handler
         switch (payload.eventType) {
@@ -93,7 +92,6 @@ export function useRealtimeMetrics(onUpdate: () => void) {
   useRealtimeUpdates({
     table: 'contracts',
     onChange: () => {
-      console.log('📊 Contracts changed, updating metrics...');
       onUpdate();
     },
   });
@@ -102,7 +100,6 @@ export function useRealtimeMetrics(onUpdate: () => void) {
   useRealtimeUpdates({
     table: 'promoters',
     onChange: () => {
-      console.log('📊 Promoters changed, updating metrics...');
       onUpdate();
     },
   });
@@ -111,7 +108,6 @@ export function useRealtimeMetrics(onUpdate: () => void) {
   useRealtimeUpdates({
     table: 'parties',
     onChange: () => {
-      console.log('📊 Parties changed, updating metrics...');
       onUpdate();
     },
   });
@@ -152,7 +148,6 @@ export function useRealtimeData<T>(
   useRealtimeUpdates({
     ...options,
     onChange: payload => {
-      console.log('Data changed, refetching...', payload);
       fetchData();
     },
   });
@@ -182,10 +177,8 @@ export function useRealtimePresence(roomName: string) {
         setOnlineUsers(users);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        console.log('User joined:', key, newPresences);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        console.log('User left:', key, leftPresences);
       })
       .subscribe(async status => {
         if (status === 'SUBSCRIBED') {

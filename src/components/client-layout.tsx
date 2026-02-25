@@ -60,7 +60,6 @@ function AuthenticatedAppLayout({
   // Force show content after 5 seconds to prevent infinite loading
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.log('🔧 ClientLayout: Force showing content after timeout');
       setForceShow(true);
     }, 5000);
 
@@ -87,15 +86,6 @@ function AuthenticatedAppLayout({
   const shouldShowSidebar = !isAuthPage && !isPublicPage && !!authState.user;
   const isLoading = (authState.loading || !authState.mounted) && !forceShow;
 
-  console.log('🔧 ClientLayout: Auth state:', {
-    user: !!authState.user,
-    loading: authState.loading,
-    mounted: authState.mounted,
-    forceShow,
-    isLoading,
-    pathname,
-    isClient,
-  });
 
   // Show loading state only on client side
   if (isClient && isLoading) {

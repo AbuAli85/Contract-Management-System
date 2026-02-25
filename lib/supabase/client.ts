@@ -92,11 +92,8 @@ function createSupabaseClient() {
                 document.cookie = `${fixedName}=${value}; path=/; max-age=31536000${secureFlag}; SameSite=Lax`;
                 // Delete old cookie
                 document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-                console.debug(
-                  `[SSO] Auto-fixed cookie on read: ${name} → ${fixedName}`
-                );
               } catch (e) {
-                console.debug(`[SSO] Could not auto-fix cookie ${name}:`, e);
+                // Non-fatal: silently handled
               }
             }
 
@@ -123,9 +120,6 @@ function createSupabaseClient() {
               // Fix cookie names if they're missing the project reference
               const cookieName = fixCookieName(name);
               if (cookieName !== name) {
-                console.debug(
-                  `[SSO] Fixed cookie name on set: ${name} → ${cookieName}`
-                );
               }
 
               // Build cookie string with proper flags
@@ -167,16 +161,14 @@ function createSupabaseClient() {
                   }
                 } catch (storageError) {
                   // Silently fail if localStorage is not available
-                  console.debug(
-                    'Could not sync to localStorage for SSO:',
-                    storageError
-                  );
                 }
               }
             } catch (error) {
+              // Non-fatal: silently handled
             }
           });
         } catch (error) {
+          // Non-fatal: silently handled
         }
       },
     },
@@ -240,11 +232,9 @@ export const createClient = () => {
             }
           } else if (error) {
           } else {
-            console.debug('[SSO] No session found - user needs to log in');
           }
         })
         .catch(err => {
-          console.debug('[SSO] Error initializing session:', err);
         });
     } catch (error) {
       return null;
@@ -344,10 +334,10 @@ async function migrateLocalStorageToCookies() {
       } else {
       }
     } catch (parseError) {
-      console.debug('[SSO] Could not parse localStorage session:', parseError);
+      // Non-fatal: silently handled
     }
   } catch (error) {
-    console.debug('[SSO] Error migrating localStorage to cookies:', error);
+    // Non-fatal: silently handled
   }
 }
 
@@ -394,15 +384,12 @@ function fixOldFormatCookies() {
         document.cookie = `${oldName}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 
         fixed = true;
-        console.debug(
-          `[SSO] Auto-fixed cookie on page load: ${oldName} → ${newName}`
-        );
       }
     }
 
     if (fixed) {
     }
   } catch (error) {
-    console.debug('[SSO] Error fixing old-format cookies:', error);
+    // Non-fatal: silently handled
   }
 }

@@ -25,7 +25,6 @@ export function useSessionTimeout({
   const log = useCallback(
     (message: string, ...args: any[]) => {
       if (enableLogging) {
-        console.log(`🔒 Session Timeout: ${message}`, ...args);
       }
     },
     [enableLogging]

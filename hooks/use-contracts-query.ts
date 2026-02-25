@@ -61,18 +61,6 @@ async function fetchContracts(
   }
 
   // Debug: Log the response data
-  console.log('🔍 useContractsQuery - API Response:', {
-    success: data.success,
-    totalContracts: data.totalContracts,
-    contractsCount: data.contracts?.length || 0,
-    sampleContract: data.contracts?.[0]
-      ? {
-          id: data.contracts[0].id,
-          promoter_id: data.contracts[0].promoter_id,
-          promoters: data.contracts[0].promoters,
-        }
-      : null,
-  });
 
   return data;
 }

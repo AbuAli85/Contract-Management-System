@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-service';
 import { useUserProfile } from '@/hooks/use-user-profile';
-import { useCompany } from '@/components/providers/company-provider';
+import { useCompany, RawCompany } from '@/components/providers/company-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,35 +33,10 @@ import {
   Plus,
   Check,
   Settings,
-  Users,
   Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-
-interface Company {
-  company_id: string;
-  company_name: string;
-  company_logo: string | null;
-  user_role: string;
-  is_primary: boolean;
-  group_name: string | null;
-  stats?: {
-    employees: number;
-    attendance_today: number;
-    active_tasks: number;
-    contracts: number;
-  };
-  features?: {
-    team_management: boolean;
-    attendance: boolean;
-    tasks: boolean;
-    targets: boolean;
-    reports: boolean;
-    contracts: boolean;
-    analytics: boolean;
-  };
-}
 
 const roleColors: Record<string, string> = {
   owner: 'bg-purple-100 text-purple-700',
@@ -72,18 +47,19 @@ const roleColors: Record<string, string> = {
 };
 
 export function CompanySwitcher() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
   const [switching, setSwitching] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newCompany, setNewCompany] = useState({ name: '', description: '' });
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile: userProfile } = useUserProfile();
   const {
     company: activeCompanyFromProvider,
+    rawCompanies,
     switchCompany: switchCompanyFromProvider,
     isLoading: providerLoading,
     refreshCompany,
@@ -95,42 +71,9 @@ export function CompanySwitcher() {
   const isPromoter = userRole === 'promoter' || userRole === 'user';
   const canCreateCompany =
     !isPromoter &&
-    (companies.length > 0
-      ? !['promoter', 'user'].includes(companies[0]?.user_role || '')
-      : true); // If no companies, allow creation (will be checked by API)
-
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  // Listen for company switch events from provider
-  useEffect(() => {
-    const handleCompanySwitched = () => {
-      fetchCompanies();
-    };
-
-    window.addEventListener('company-switched', handleCompanySwitched);
-    return () => {
-      window.removeEventListener('company-switched', handleCompanySwitched);
-    };
-  }, []);
-
-  const fetchCompanies = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/user/companies', {
-        credentials: 'include', // Ensure cookies are sent with the request
-      });
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setCompanies(data.companies || []);
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+    (rawCompanies.length > 0
+      ? !['promoter', 'user'].includes(rawCompanies[0]?.user_role || '')
+      : true);
 
   const handleSwitch = async (companyId: string) => {
     const currentActiveId = activeCompanyFromProvider?.id;
@@ -138,13 +81,7 @@ export function CompanySwitcher() {
 
     setSwitching(true);
     try {
-      // Use the provider's switchCompany function to ensure synchronization
       await switchCompanyFromProvider(companyId);
-
-      // Refresh companies list
-      await fetchCompanies();
-
-      // The provider already handles router.refresh() and toast notifications
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -175,17 +112,17 @@ export function CompanySwitcher() {
       }
 
       toast({
-        title: '✅ Company Created',
+        title: 'Company Created',
         description: `${newCompany.name} has been created successfully`,
       });
 
       setCreateDialogOpen(false);
       setNewCompany({ name: '', description: '' });
-      fetchCompanies();
-
+      // Refresh context to pick up the new company
+      await refreshCompany();
       // Switch to the new company
       if (data.company?.id) {
-        handleSwitch(data.company.id);
+        await handleSwitch(data.company.id);
       }
     } catch (error: any) {
       toast({
@@ -198,19 +135,18 @@ export function CompanySwitcher() {
     }
   };
 
-  // Use active company from provider, fallback to finding from companies list
-  const activeCompanyId = activeCompanyFromProvider?.id || null;
-  const activeCompany = activeCompanyFromProvider
-    ? companies.find(c => c.company_id === activeCompanyFromProvider.id) || {
+  const activeCompanyId = activeCompanyFromProvider?.id ?? null;
+  const activeCompany: RawCompany | null = activeCompanyFromProvider
+    ? (rawCompanies.find(c => c.company_id === activeCompanyFromProvider.id) ?? {
         company_id: activeCompanyFromProvider.id,
         company_name: activeCompanyFromProvider.name,
-        company_logo: activeCompanyFromProvider.logo_url || null,
+        company_logo: activeCompanyFromProvider.logo_url ?? null,
         user_role: activeCompanyFromProvider.role,
         is_primary: false,
         group_name: null,
-      }
-    : companies.length > 0
-      ? companies[0]
+      })
+    : rawCompanies.length > 0
+      ? rawCompanies[0]
       : null;
 
   const getInitials = (name: string) => {
@@ -222,7 +158,7 @@ export function CompanySwitcher() {
       .slice(0, 2);
   };
 
-  if (loading || providerLoading) {
+  if (providerLoading) {
     return (
       <Button variant='ghost' className='gap-2' disabled>
         <Loader2 className='h-4 w-4 animate-spin' />
@@ -232,7 +168,7 @@ export function CompanySwitcher() {
   }
 
   // If no companies, show create button (only for admins, managers, employers)
-  if (companies.length === 0 && canCreateCompany) {
+  if (rawCompanies.length === 0 && canCreateCompany) {
     return (
       <>
         <Button
@@ -293,7 +229,7 @@ export function CompanySwitcher() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          {companies.map(company => (
+          {rawCompanies.map(company => (
             <DropdownMenuItem
               key={company.company_id}
               onClick={() => handleSwitch(company.company_id)}

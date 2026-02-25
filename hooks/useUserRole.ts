@@ -47,10 +47,6 @@ export function useUserRole() {
         try {
           const supabaseClient = createClient();
 
-          console.log(
-            '🔍 useUserRole: Fetching role for user:',
-            (user as any)?.email || (user as any)?.id
-          );
 
           // First try the API route since it's more reliable
           try {
@@ -63,14 +59,11 @@ export function useUserRole() {
             if (response.ok) {
               const roleData = await response.json();
               const fetchedRole = roleData.role?.value ?? roleData.role ?? null;
-              console.log('✅ useUserRole: Got role from API:', fetchedRole);
               setRole(fetchedRole);
               return; // Success, exit early
-            } else {
-              console.log('⚠️ useUserRole: API route failed:', response.status);
             }
           } catch (apiError) {
-            console.log('❌ useUserRole: API route error:', apiError);
+            // Non-fatal: silently handled
           }
 
           // Fallback: Try the RPC function
@@ -79,17 +72,11 @@ export function useUserRole() {
               'get_current_user_role'
             );
             if (!error && data) {
-              console.log('✅ useUserRole: Got role from RPC:', data);
               setRole(data);
               return; // Success, exit early
-            } else {
-              console.log(
-                '⚠️ useUserRole: RPC function error:',
-                error?.message
-              );
             }
           } catch (rpcError) {
-            console.log('❌ useUserRole: RPC function failed:', rpcError);
+            // Non-fatal: silently handled
           }
 
           // Final fallback: Use email-based role assignment
@@ -97,15 +84,8 @@ export function useUserRole() {
             const email = (user as { email: string }).email;
             const fallbackRole =
               email === 'luxsess2001@gmail.com' ? 'admin' : 'user';
-            console.log(
-              '🔄 useUserRole: Using email fallback role:',
-              fallbackRole,
-              'for',
-              email
-            );
             setRole(fallbackRole);
           } else {
-            console.log('🔄 useUserRole: Using default role: user');
             setRole('user');
           }
         } catch (error) {
@@ -115,7 +95,6 @@ export function useUserRole() {
             const email = (user as { email: string }).email;
             const fallbackRole =
               email === 'luxsess2001@gmail.com' ? 'admin' : 'user';
-            console.log('🔄 useUserRole: Final fallback role:', fallbackRole);
             setRole(fallbackRole);
           } else {
             setRole('user');

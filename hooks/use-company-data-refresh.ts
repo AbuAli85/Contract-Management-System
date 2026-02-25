@@ -23,9 +23,6 @@ export function useCompanyDataRefresh() {
       // Also clear all caches to ensure fresh data
       queryClient.clear();
 
-      console.log('Company switched - invalidated all queries', {
-        newCompanyId,
-      });
     };
 
     // Listen for company switch events
@@ -49,9 +46,6 @@ export function useCompanyDataRefresh() {
     if (companyId) {
       // Invalidate all queries when companyId changes
       queryClient.invalidateQueries();
-      console.log('Company ID changed - invalidated all queries', {
-        companyId,
-      });
     }
   }, [companyId, queryClient]);
 }

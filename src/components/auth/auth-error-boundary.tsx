@@ -287,7 +287,6 @@ export function AuthErrorBoundaryWrapper({
       error.message.includes('unauthorized');
 
     if (isAuthError) {
-      console.log('Authentication error detected, redirecting to login...');
       // Redirect to login page for auth errors
       setTimeout(() => {
         router.push(

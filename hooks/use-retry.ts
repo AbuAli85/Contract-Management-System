@@ -232,9 +232,6 @@ export function useRetryWithToast<T, TArgs extends any[]>(
     ...retryOptions,
     onRetry: (error, attempt, delay) => {
       // Users can import and use toast in their onRetry callback
-      console.log(
-        `${messages.retryMessage || 'Retrying...'} - Attempt ${attempt} failed. Retrying in ${Math.ceil(delay / 1000)}s...`
-      );
       retryOptions?.onRetry?.(error, attempt, delay);
     },
   });

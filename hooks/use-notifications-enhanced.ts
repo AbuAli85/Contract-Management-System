@@ -60,7 +60,6 @@ export function useNotifications() {
       const now = Date.now();
       if (lastFetch && now - lastFetch.getTime() < 30000) {
         // 30 second debounce (increased from 10)
-        console.log('Notifications: Skipping fetch (debounced)');
         return;
       }
 
@@ -86,7 +85,6 @@ export function useNotifications() {
 
         // Handle rate limiting gracefully
         if (data.rateLimited) {
-          console.log('Notifications: Rate limited, using cached data');
           return;
         }
 

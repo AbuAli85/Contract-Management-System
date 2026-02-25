@@ -55,7 +55,6 @@ export function useUserActivity() {
       if (!response.ok) {
         // If 403, permissions are being auto-fixed, retry after a short delay
         if (response.status === 403) {
-          console.log('🔄 Activity access denied, waiting for auto-fix...');
           await new Promise(resolve => setTimeout(resolve, 1000));
           const retryResponse = await fetch(
             '/api/users/activity?userId=' + targetUserId,

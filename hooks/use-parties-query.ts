@@ -58,7 +58,6 @@ async function fetchParties(
   const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
   try {
-    console.log(`🔄 Fetching parties: page=${page}, limit=${limit}`);
 
     const response = await fetch(`/api/parties?page=${page}&limit=${limit}`, {
       signal: controller.signal,
@@ -110,7 +109,6 @@ async function fetchParties(
       );
     }
 
-    console.log(`✅ Successfully fetched ${data.parties.length} parties`);
     return data;
   } catch (error) {
     clearTimeout(timeoutId);

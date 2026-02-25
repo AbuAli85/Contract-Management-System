@@ -36,7 +36,6 @@ export function usePendingUsersCount(): PendingUsersResult {
       const pendingUsers = data || [];
       setCount(pendingUsers.length);
       setUsers(pendingUsers);
-      console.log(`✅ Found ${pendingUsers.length} pending users`);
     } catch (error) {
       console.error('❌ Error fetching pending users:', error);
       setError('Failed to fetch pending users');

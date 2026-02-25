@@ -44,9 +44,6 @@ export function SignupForm() {
     }
 
     try {
-      console.log('📝 Signup Debug - Starting signup process...');
-      console.log('📝 Signup Debug - Email:', email);
-      console.log('📝 Signup Debug - Full Name:', fullName);
 
       // Use the API endpoint for signup instead of auth service
       const response = await fetch('/api/users', {
@@ -64,7 +61,6 @@ export function SignupForm() {
 
       const result = await response.json();
 
-      console.log('📝 Signup Debug - API response:', result);
 
       if (!response.ok) {
         console.error('📝 Signup Debug - Signup error:', result.error);
@@ -73,7 +69,6 @@ export function SignupForm() {
         return;
       }
 
-      console.log('📝 Signup Debug - Signup successful');
       setSuccess(
         result.message ||
           'Account created successfully! Please wait for admin approval before accessing the system.'

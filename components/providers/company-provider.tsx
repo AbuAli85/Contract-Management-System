@@ -13,16 +13,45 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { syncSessionToSSO } from '@/lib/sso-session-sync';
 
-interface Company {
+/** Minimal company shape used throughout the app */
+export interface Company {
   id: string;
   name: string;
   logo_url?: string | null;
   role: string;
 }
 
+/** Full enriched company shape returned by /api/user/companies */
+export interface RawCompany {
+  company_id: string;
+  company_name: string;
+  company_logo: string | null;
+  user_role: string;
+  is_primary: boolean;
+  group_name: string | null;
+  stats?: {
+    employees: number;
+    attendance_today: number;
+    active_tasks: number;
+    contracts: number;
+  };
+  features?: {
+    team_management: boolean;
+    attendance: boolean;
+    tasks: boolean;
+    targets: boolean;
+    reports: boolean;
+    contracts: boolean;
+    analytics: boolean;
+  };
+}
+
 interface CompanyContextType {
+  /** The currently active company (simplified shape) */
   company: Company | null;
   companyId: string | null;
+  /** Full enriched list of all companies — use this in CompanySwitcher */
+  rawCompanies: RawCompany[];
   isLoading: boolean;
   switchCompany: (companyId: string) => Promise<void>;
   refreshCompany: () => Promise<void>;
@@ -30,8 +59,62 @@ interface CompanyContextType {
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
+const INVALID_COMPANY_NAMES = new Set([
+  'digital morph',
+  'falcon eye group',
+  'cc',
+  'digital marketing pro',
+]);
+
+function isInvalidCompany(name: string): boolean {
+  const lower = name.toLowerCase().trim();
+  if (lower.includes('falcon eye modern investments')) return false;
+  if (INVALID_COMPANY_NAMES.has(lower)) return true;
+  if (lower.includes('digital morph')) return true;
+  if (lower.includes('falcon eye group') && !lower.includes('modern investments')) return true;
+  return false;
+}
+
+function toCompany(raw: RawCompany): Company {
+  return {
+    id: raw.company_id,
+    name: raw.company_name,
+    logo_url: raw.company_logo ?? null,
+    role: raw.user_role || 'member',
+  };
+}
+
+async function ensureSessionInCookies(): Promise<void> {
+  try {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session?.user) {
+      await syncSessionToSSO();
+      return;
+    }
+
+    const cookies = document.cookie.split(';').map(c => c.trim());
+    const hasAuthCookies = cookies.some(
+      c => c.includes('sb-') && (c.includes('auth-token') || c.includes('auth'))
+    );
+
+    if (!hasAuthCookies) {
+      await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
+    }
+  } catch {
+    // Non-fatal: the API will return 401 if session is truly missing
+  }
+}
+
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const [company, setCompany] = useState<Company | null>(null);
+  const [rawCompanies, setRawCompanies] = useState<RawCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
@@ -41,55 +124,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
 
-      // CRITICAL: Ensure session is in cookies before making API call
-      // The Supabase client should handle this, but we force it to be sure
-      try {
-        const supabase = createClient();
-        if (supabase) {
-          // Force getSession() which reads from localStorage and sets cookies
-          const {
-            data: { session },
-            error,
-          } = await supabase.auth.getSession();
+      await ensureSessionInCookies();
 
-          if (session && session.user && !error) {
-            // Session exists, verify cookies are set
-            const cookies = document.cookie.split(';').map(c => c.trim());
-            const hasAuthCookies = cookies.some(
-              c =>
-                c.includes('sb-') &&
-                (c.includes('auth-token') || c.includes('auth'))
-            );
-
-            if (!hasAuthCookies) {
-              // Force setSession to create cookies
-              await supabase.auth.setSession({
-                access_token: session.access_token,
-                refresh_token: session.refresh_token,
-              });
-            } else {
-              console.debug('[CompanyProvider] Session and cookies verified');
-            }
-          } else {
-            // Try to sync from localStorage as fallback
-            await syncSessionToSSO();
-
-            // Check again after sync
-            const {
-              data: { session: syncedSession },
-            } = await supabase.auth.getSession();
-            if (!syncedSession || !syncedSession.user) {
-            }
-          }
-        }
-      } catch (syncError) {
-        // Continue anyway - the API will return 401 if session is missing
-      }
-
-      // Add cache-busting to ensure fresh data
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
-
-      // Add timeout to prevent hanging (10 seconds)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -97,7 +134,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         const response = await fetch(`/api/user/companies${cacheBuster}`, {
           cache: 'no-store',
           signal: controller.signal,
-          credentials: 'include', // Ensure cookies are sent with the request
+          credentials: 'include',
           headers: {
             'Cache-Control': 'no-cache',
             Pragma: 'no-cache',
@@ -106,92 +143,49 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
         clearTimeout(timeoutId);
 
-        // Handle 401 Unauthorized - session might be expired
         if (response.status === 401) {
-          const data = await response.json().catch(() => ({}));
           setCompany(null);
+          setRawCompanies([]);
           setIsLoading(false);
-          // Don't show error toast for 401 - let the auth system handle it
           return;
         }
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-          const activeCompanyId = data.active_company_id;
+          const allRaw: RawCompany[] = data.companies ?? [];
+          const validRaw = allRaw.filter(c => !isInvalidCompany(c.company_name || ''));
+
+          setRawCompanies(validRaw);
+
+          const activeCompanyId: string | null = data.active_company_id ?? null;
 
           if (activeCompanyId) {
-            // Find the active company from the list
-            const activeCompany = data.companies?.find(
-              (c: any) => c.company_id === activeCompanyId
-            );
-
-            if (activeCompany) {
-              // Double-check: Ensure it's not an invalid/mock company (but allow valid Falcon Eye companies)
-              const isInvalidCompany = (name: string): boolean => {
-                const lower = name.toLowerCase().trim();
-                if (lower.includes('falcon eye modern investments'))
-                  return false; // Allow valid Falcon Eye companies
-                return (
-                  lower === 'digital morph' ||
-                  lower === 'falcon eye group' ||
-                  lower === 'cc' ||
-                  lower === 'digital marketing pro' ||
-                  lower.includes('digital morph') ||
-                  (lower.includes('falcon eye group') &&
-                    !lower.includes('modern investments'))
-                );
-              };
-
-              if (isInvalidCompany(activeCompany.company_name || '')) {
-                // Invalid company - clear it and use first valid company
-
-                // Find first valid company and set it directly (don't trigger full switch)
-                const firstValidCompany = data.companies?.find(
-                  (c: any) => !isInvalidCompany(c.company_name || '')
-                );
-                if (firstValidCompany) {
-                  // Set the company state directly without triggering switch
-                  setCompany({
-                    id: firstValidCompany.company_id,
-                    name: firstValidCompany.company_name,
-                    logo_url: firstValidCompany.company_logo,
-                    role: firstValidCompany.user_role || 'member',
-                  });
-                  // Note: We don't update the active_company_id in the database here
-                  // to avoid circular calls. The user can manually switch if needed.
-                } else {
-                  setCompany(null);
-                }
-              } else {
-                setCompany({
-                  id: activeCompany.company_id,
-                  name: activeCompany.company_name,
-                  logo_url: activeCompany.company_logo,
-                  role: activeCompany.user_role || 'member',
-                });
-              }
+            const activeRaw = allRaw.find(c => c.company_id === activeCompanyId);
+            if (activeRaw && !isInvalidCompany(activeRaw.company_name || '')) {
+              setCompany(toCompany(activeRaw));
             } else {
-              setCompany(null);
+              // Active company is invalid — fall back to first valid
+              setCompany(validRaw.length > 0 ? toCompany(validRaw[0]) : null);
             }
           } else {
-            setCompany(null);
+            setCompany(validRaw.length > 0 ? toCompany(validRaw[0]) : null);
           }
         } else {
           setCompany(null);
+          setRawCompanies([]);
         }
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          // Don't block rendering - set loading to false even on timeout
-          setCompany(null);
-        } else {
-          throw fetchError; // Re-throw other errors
+        if (fetchError.name !== 'AbortError') {
+          throw fetchError;
         }
+        setCompany(null);
+        setRawCompanies([]);
       }
-    } catch (error) {
+    } catch {
       setCompany(null);
-      // Always set loading to false even on error to prevent blocking
+      setRawCompanies([]);
     } finally {
       setIsLoading(false);
     }
@@ -206,31 +200,25 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           'Cache-Control': 'no-cache',
         },
         body: JSON.stringify({ company_id: companyId }),
-        cache: 'no-store', // Ensure we don't use cached response
+        cache: 'no-store',
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Immediately update state with the new company from the response
-        // This prevents the UI from being stuck with the old company
-        // We'll get full details from fetchActiveCompany, but this ensures immediate UI update
-        const tempCompany = {
-          id: companyId,
-          name: data.company_name || 'Company',
-          logo_url: null, // Will be updated by fetchActiveCompany
-          role: 'member', // Will be updated by fetchActiveCompany
-        };
-        setCompany(tempCompany);
+        // Optimistically update the active company from the existing list
+        const matchingRaw = rawCompanies.find(c => c.company_id === companyId);
+        const newActive: Company = matchingRaw
+          ? toCompany(matchingRaw)
+          : { id: companyId, name: data.company_name || 'Company', logo_url: null, role: 'member' };
 
-        // Invalidate all React Query caches to force data refresh
+        setCompany(newActive);
+
         queryClient.invalidateQueries();
         queryClient.clear();
 
-        // Refresh router to update all server components
         router.refresh();
 
-        // Trigger window event for client components to refresh
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('company-switched', {
@@ -239,14 +227,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           );
         }
 
-        // Fetch full company details after a short delay to ensure DB update has propagated
-        // The immediate state update above ensures UI is not stuck, this gets full details
-        setTimeout(async () => {
-          try {
-            await fetchActiveCompany(true); // Force refresh with cache busting
-          } catch (error) {
-            // If fetch fails, the temporary state above will still show the correct company
-          }
+        // Fetch full details after a short delay to ensure DB propagation
+        setTimeout(() => {
+          fetchActiveCompany(true).catch(() => {});
         }, 300);
 
         toast({
@@ -257,7 +240,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error || 'Failed to switch company');
       }
     } catch (error: any) {
-      // Re-fetch to restore correct state on error
       await fetchActiveCompany();
       toast({
         title: 'Error',
@@ -272,32 +254,25 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Fetch company data but don't block rendering
-    // Set a timeout to ensure loading state doesn't persist too long
-    fetchActiveCompany().catch(error => {
-      // Ensure loading is set to false even on error
+    fetchActiveCompany().catch(() => {
       setIsLoading(false);
     });
 
-    // Safety timeout: If loading takes more than 5 seconds, stop blocking
-    // Use functional setState to access current value
+    // Safety timeout: prevent loading state from blocking the UI indefinitely
     const safetyTimeout = setTimeout(() => {
-      setIsLoading(currentLoading => {
-        if (currentLoading) {
-          return false;
-        }
-        return currentLoading;
-      });
+      setIsLoading(current => (current ? false : current));
     }, 5000);
 
     return () => clearTimeout(safetyTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <CompanyContext.Provider
       value={{
         company,
-        companyId: company?.id || null,
+        companyId: company?.id ?? null,
+        rawCompanies,
         isLoading,
         switchCompany,
         refreshCompany,

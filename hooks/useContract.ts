@@ -72,7 +72,6 @@ const fetchContract = async (
   contractId: string
 ): Promise<ContractWithRelations | null> => {
   try {
-    console.log(`📋 Fetching contract: ${contractId}`);
 
     // Use API route for better reliability and server-side auth handling
     const response = await fetch(`/api/contracts/${contractId}`, {
@@ -118,7 +117,6 @@ const fetchContract = async (
       job_title: contract.job_title || contract.title,
     };
 
-    console.log('✅ Contract fetched successfully:', transformed.id);
     return transformed;
   } catch (error) {
     console.error('Error in fetchContract:', error);

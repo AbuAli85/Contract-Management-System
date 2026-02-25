@@ -87,7 +87,7 @@ export function logWithCorrelation(
     case 'warn':
       break;
     case 'debug':
-      console.debug(logMessage, logData);
+      // Debug logging suppressed in production
       break;
     default:
   }
