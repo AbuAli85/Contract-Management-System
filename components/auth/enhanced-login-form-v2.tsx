@@ -217,14 +217,23 @@ export default function EnhancedLoginFormV2() {
       const redirectPath = getRedirectPath(
         result.session?.profile?.role || 'user'
       );
+      // Refresh the Supabase session so the SSR cookie (sb-<project>-auth-token)
+      // is written to the browser BEFORE we navigate to the dashboard.
+      // Without this, CompanyProvider fires /api/user/companies before the
+      // server-side cookie exists, causing 401 responses.
       try {
         await refreshSession();
       } catch {
         /* non-fatal */
       }
+
+      // Wait 1 200 ms for the browser to flush the auth cookie, then navigate.
+      // We intentionally do NOT call setLoading(false) on the success path so
+      // the button stays in "Signing in..." state until the page changes —
+      // preventing the button from flickering back to "Sign in" for 1.2 s.
       setTimeout(() => {
         window.location.replace(redirectPath);
-      }, 800);
+      }, 1200);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       if (
@@ -236,7 +245,7 @@ export default function EnhancedLoginFormV2() {
       } else {
         setError(`Connection error: ${msg}`);
       }
-    } finally {
+      // Only clear loading on error — on success we keep it set until navigation
       setLoading(false);
     }
   };

@@ -4,6 +4,7 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from 'react';
@@ -119,6 +120,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  // Track whether we already have a successful fetch so we don't re-fetch
+  // on every auth-state event (e.g. TOKEN_REFRESHED).
+  const hasFetchedRef = useRef(false);
 
   const fetchActiveCompany = async (forceRefresh: boolean = false) => {
     try {
@@ -253,17 +257,116 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     await fetchActiveCompany();
   };
 
+  // Fetch with retry: if the API returns 401 (session cookie not yet
+  // propagated to the server), wait and retry up to 3 times with
+  // exponential backoff before giving up.
+  const fetchWithRetry = async (forceRefresh = false, attempt = 0): Promise<void> => {
+    await ensureSessionInCookies();
+    const cacheBuster = forceRefresh || attempt > 0 ? `?t=${Date.now()}` : '';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch(`/api/user/companies${cacheBuster}`, {
+        cache: 'no-store',
+        signal: controller.signal,
+        credentials: 'include',
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      });
+      clearTimeout(timeoutId);
+
+      if (response.status === 401) {
+        if (attempt < 3) {
+          // Exponential backoff: 600 ms, 1 200 ms, 2 400 ms
+          const delay = 600 * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return fetchWithRetry(true, attempt + 1);
+        }
+        // Exhausted retries — session is genuinely absent
+        setCompany(null);
+        setRawCompanies([]);
+        return;
+      }
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        hasFetchedRef.current = true;
+        const allRaw: RawCompany[] = data.companies ?? [];
+        const validRaw = allRaw.filter(c => !isInvalidCompany(c.company_name || ''));
+        setRawCompanies(validRaw);
+        const activeCompanyId: string | null = data.active_company_id ?? null;
+        if (activeCompanyId) {
+          const activeRaw = allRaw.find(c => c.company_id === activeCompanyId);
+          if (activeRaw && !isInvalidCompany(activeRaw.company_name || '')) {
+            setCompany(toCompany(activeRaw));
+          } else {
+            setCompany(validRaw.length > 0 ? toCompany(validRaw[0]) : null);
+          }
+        } else {
+          setCompany(validRaw.length > 0 ? toCompany(validRaw[0]) : null);
+        }
+      } else {
+        setCompany(null);
+        setRawCompanies([]);
+      }
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name !== 'AbortError') {
+        setCompany(null);
+        setRawCompanies([]);
+      }
+    }
+  };
+
   useEffect(() => {
-    fetchActiveCompany().catch(() => {
-      setIsLoading(false);
-    });
+    const supabase = createClient();
+    let unsubscribe: (() => void) | undefined;
+
+    const init = async () => {
+      if (!supabase) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Check whether a session already exists (e.g. page refresh with valid cookie)
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        // Session already present — fetch immediately
+        setIsLoading(true);
+        await fetchWithRetry().catch(() => {});
+        setIsLoading(false);
+      } else {
+        // No session yet — wait for SIGNED_IN event (post-login navigation)
+        // Keep isLoading=true so the UI shows a spinner rather than empty state
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event) => {
+            if (event === 'SIGNED_IN' && !hasFetchedRef.current) {
+              setIsLoading(true);
+              await fetchWithRetry().catch(() => {});
+              setIsLoading(false);
+            }
+          }
+        );
+        unsubscribe = () => subscription.unsubscribe();
+
+        // Safety: if SIGNED_IN never fires within 6 s, stop the spinner
+        setTimeout(() => {
+          setIsLoading(current => (current ? false : current));
+        }, 6000);
+      }
+    };
+
+    init();
 
     // Safety timeout: prevent loading state from blocking the UI indefinitely
     const safetyTimeout = setTimeout(() => {
       setIsLoading(current => (current ? false : current));
-    }, 5000);
+    }, 8000);
 
-    return () => clearTimeout(safetyTimeout);
+    return () => {
+      clearTimeout(safetyTimeout);
+      unsubscribe?.();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
