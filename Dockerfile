@@ -11,7 +11,8 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 # Install ALL dependencies (including devDependencies) for build
-RUN npm ci
+# --ignore-scripts prevents lifecycle scripts (e.g. husky) from running in CI/Docker
+RUN npm ci --ignore-scripts
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -52,7 +53,7 @@ RUN adduser --system --uid 1001 nextjs
 
 # Install only production dependencies for runtime
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts
 
 COPY --from=builder /app/public ./public
 
