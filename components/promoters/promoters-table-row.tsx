@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,8 @@ import {
   ShieldCheck,
   Clock,
   HelpCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 import type {
@@ -100,6 +102,87 @@ const OVERALL_STATUS_LABELS: Record<OverallStatus, string> = {
   critical: 'Critical',
   inactive: 'Inactive',
 };
+
+// Copy-to-clipboard contact cell
+function CopyableContactCell({
+  email,
+  phone,
+}: {
+  email?: string | null;
+  phone?: string | null;
+}) {
+  const { toast } = useToast();
+  const [copiedField, setCopiedField] = useState<'email' | 'phone' | null>(
+    null
+  );
+
+  const handleCopy = useCallback(
+    async (value: string | null | undefined, field: 'email' | 'phone') => {
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        setCopiedField(field);
+        toast({
+          title: `${field === 'email' ? 'Email' : 'Phone'} copied`,
+          description: value,
+        });
+        setTimeout(() => setCopiedField(null), 2000);
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Copy failed',
+          description: 'Could not copy to clipboard.',
+        });
+      }
+    },
+    [toast]
+  );
+
+  return (
+    <div className='space-y-1.5 text-sm'>
+      <div className='flex items-center gap-1.5 group'>
+        <Mail className='h-3.5 w-3.5 text-slate-400 flex-shrink-0' />
+        <span className='font-medium truncate min-w-0 flex-1 text-slate-700 dark:text-slate-300'>
+          {email || '—'}
+        </span>
+        {email && (
+          <button
+            type='button'
+            onClick={() => handleCopy(email, 'email')}
+            className='opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700'
+            title='Copy email'
+          >
+            {copiedField === 'email' ? (
+              <Check className='h-3 w-3 text-emerald-500' />
+            ) : (
+              <Copy className='h-3 w-3 text-slate-400' />
+            )}
+          </button>
+        )}
+      </div>
+      <div className='flex items-center gap-1.5 group'>
+        <Phone className='h-3.5 w-3.5 text-slate-400 flex-shrink-0' />
+        <span className='font-medium text-slate-700 dark:text-slate-300'>
+          {phone || '—'}
+        </span>
+        {phone && (
+          <button
+            type='button'
+            onClick={() => handleCopy(phone, 'phone')}
+            className='opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700'
+            title='Copy phone'
+          >
+            {copiedField === 'phone' ? (
+              <Check className='h-3 w-3 text-emerald-500' />
+            ) : (
+              <Copy className='h-3 w-3 text-slate-400' />
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface InfoLineProps {
   icon: LucideIcon;
@@ -693,20 +776,10 @@ export function PromotersTableRow({
               </div>
             </div>
           ) : (
-            <div className='space-y-2 text-sm'>
-              <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
-                <Mail className='h-4 w-4 text-slate-400' />
-                <span className='font-medium truncate min-w-0 flex-1'>
-                  {promoter.contactEmail || '—'}
-                </span>
-              </div>
-              <div className='flex items-center gap-2 text-slate-700 dark:text-slate-300'>
-                <Phone className='h-4 w-4 text-slate-400' />
-                <span className='font-medium'>
-                  {promoter.contactPhone || '—'}
-                </span>
-              </div>
-            </div>
+            <CopyableContactCell
+              email={promoter.contactEmail}
+              phone={promoter.contactPhone}
+            />
           )}
         </TableCell>
       )}

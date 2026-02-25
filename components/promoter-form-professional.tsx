@@ -145,6 +145,26 @@ export default function PromoterFormProfessional(
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showCustomNationality, setShowCustomNationality] = useState(false);
   const [customNationality, setCustomNationality] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Compute which tabs have validation errors for indicator dots
+  const tabHasErrors = useMemo(() => ({
+    personal: !!(validationErrors.full_name || validationErrors.name_ar || validationErrors.employer_id),
+    documents: !!(validationErrors.id_number || validationErrors.id_expiry_date || validationErrors.passport_expiry_date),
+    contact: !!(validationErrors.email || validationErrors.mobile_number || validationErrors.phone),
+  }), [validationErrors]);
+
+  // Warn user before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   // Safe initialization with fallbacks
   const safeGetValue = (obj: any, key: string, defaultValue: string = '') => {
@@ -559,9 +579,9 @@ export default function PromoterFormProfessional(
     }
   }, [promoterToEdit, fetchEmployers]);
 
-  const handleInputChange = (field: string, value: string) => {
+   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-
+    setIsDirty(true);
     // Clear validation error for this field
     if (validationErrors[field]) {
       setValidationErrors(prev => {
@@ -886,13 +906,13 @@ export default function PromoterFormProfessional(
         throw new Error(result.error.message);
       }
 
-      toast({
+       toast({
         title: isEditMode ? 'Promoter Updated' : 'Promoter Added',
         description: isEditMode
           ? 'Promoter details have been updated successfully.'
           : 'New promoter has been added successfully.',
       });
-
+      setIsDirty(false);
       onFormSubmit();
     } catch (error) {
       // Error saving promoter - error message shown to user via toast
@@ -962,14 +982,17 @@ export default function PromoterFormProfessional(
           aria-label='Promoter form sections'
         >
           <TabsList className='grid w-full grid-cols-6' role='tablist'>
-            <TabsTrigger value='personal' aria-label='Personal information tab'>
+            <TabsTrigger value='personal' aria-label='Personal information tab' className='relative'>
               Personal
+              {tabHasErrors.personal && <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive' aria-label='Has errors' />}
             </TabsTrigger>
-            <TabsTrigger value='documents' aria-label='Documents tab'>
+            <TabsTrigger value='documents' aria-label='Documents tab' className='relative'>
               Documents
+              {tabHasErrors.documents && <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive' aria-label='Has errors' />}
             </TabsTrigger>
-            <TabsTrigger value='contact' aria-label='Contact information tab'>
+            <TabsTrigger value='contact' aria-label='Contact information tab' className='relative'>
               Contact
+              {tabHasErrors.contact && <span className='absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive' aria-label='Has errors' />}
             </TabsTrigger>
             <TabsTrigger
               value='professional'
@@ -1390,8 +1413,13 @@ export default function PromoterFormProfessional(
                 </div>
               </CardContent>
             </Card>
+            {/* Tab navigation */}
+            <div className='flex justify-end pt-2'>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('documents')} className='gap-1'>
+                Documents <span aria-hidden>→</span>
+              </Button>
+            </div>
           </TabsContent>
-
           {/* Documents Tab */}
           <TabsContent value='documents' className='space-y-6'>
             <TooltipProvider>
@@ -1777,9 +1805,17 @@ export default function PromoterFormProfessional(
                   </div>
                 </CardContent>
               </Card>
-            </TooltipProvider>
+             </TooltipProvider>
+            {/* Tab navigation */}
+            <div className='flex justify-between pt-2'>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('personal')} className='gap-1'>
+                <span aria-hidden>←</span> Personal
+              </Button>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('contact')} className='gap-1'>
+                Contact <span aria-hidden>→</span>
+              </Button>
+            </div>
           </TabsContent>
-
           {/* Contact Information Tab */}
           <TabsContent value='contact' className='space-y-6'>
             <Card>
@@ -2003,8 +2039,16 @@ export default function PromoterFormProfessional(
                 </div>
               </CardContent>
             </Card>
+            {/* Tab navigation */}
+            <div className='flex justify-between pt-2'>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('documents')} className='gap-1'>
+                <span aria-hidden>←</span> Documents
+              </Button>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('professional')} className='gap-1'>
+                Professional <span aria-hidden>→</span>
+              </Button>
+            </div>
           </TabsContent>
-
           {/* Professional Information Tab */}
           <TabsContent value='professional' className='space-y-6'>
             <Card>
@@ -2634,8 +2678,16 @@ export default function PromoterFormProfessional(
                 </div>
               </CardContent>
             </Card>
+            {/* Tab navigation */}
+            <div className='flex justify-between pt-2'>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('contact')} className='gap-1'>
+                <span aria-hidden>←</span> Contact
+              </Button>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('financial')} className='gap-1'>
+                Financial <span aria-hidden>→</span>
+              </Button>
+            </div>
           </TabsContent>
-
           {/* Financial Information Tab */}
           <TabsContent value='financial' className='space-y-6'>
             <Card>
@@ -2781,10 +2833,18 @@ export default function PromoterFormProfessional(
                     />
                   </div>
                 </div>
-              </CardContent>
+               </CardContent>
             </Card>
+            {/* Tab navigation */}
+            <div className='flex justify-between pt-2'>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('professional')} className='gap-1'>
+                <span aria-hidden>←</span> Professional
+              </Button>
+              <Button type='button' variant='outline' size='sm' onClick={() => setActiveTab('settings')} className='gap-1'>
+                Settings <span aria-hidden>→</span>
+              </Button>
+            </div>
           </TabsContent>
-
           {/* Settings Tab */}
           <TabsContent value='settings' className='space-y-6'>
             <Card>

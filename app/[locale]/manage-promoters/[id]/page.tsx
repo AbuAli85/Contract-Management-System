@@ -42,9 +42,11 @@ import {
   Monitor,
   Tablet,
   AlertTriangle,
-  Search,
+  Send,
+  Archive,
+  Building2,
+  Activity,
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { format, parseISO, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
@@ -231,17 +233,7 @@ export default function PromoterDetailPage() {
   const [_currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isViewingOwnProfile, setIsViewingOwnProfile] = useState(false);
 
-  // Filter section state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCompany, setFilterCompany] = useState('all');
-  const [filterDocument, setFilterDocument] = useState('all');
-  const [allPromoters, setAllPromoters] = useState<Promoter[]>([]);
-  const [filteredPromoters, setFilteredPromoters] = useState<Promoter[]>([]);
-  const [employers, setEmployers] = useState<
-    { id: string; name_en?: string; name_ar?: string }[]
-  >([]);
-  const [employersLoading, setEmployersLoading] = useState(true);
+
 
   // Get current user ID and check if viewing own profile
   useEffect(() => {
@@ -287,79 +279,8 @@ export default function PromoterDetailPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Fetch all promoters for the filter
-  const fetchAllPromoters = useCallback(async () => {
-    try {
-      const supabase = createClient();
-      if (!supabase) {
-        logger.error('Failed to initialize Supabase client');
-        return;
-      }
 
-      const { data, error } = await supabase
-        .from('promoters')
-        .select('*')
-        .order('first_name');
 
-      if (error) {
-        logger.error('Error fetching all promoters:', error);
-        return;
-      }
-
-      const normalized = (data || []).map((p: any) => ({
-        ...p,
-        name_en:
-          p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
-      }));
-      setAllPromoters(normalized);
-      setFilteredPromoters(normalized);
-    } catch (error) {
-      logger.error('Error fetching all promoters:', error);
-    }
-  }, []);
-
-  // Fetch employers for the filter
-  const fetchEmployers = useCallback(async () => {
-    try {
-      const supabase = createClient();
-      if (!supabase) {
-        logger.error('Failed to initialize Supabase client');
-        setEmployersLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('parties')
-        .select('id, name_en, name_ar')
-        .eq('type', 'Employer')
-        .order('name_en', { nullsFirst: true });
-
-      if (error) {
-        logger.error('Error fetching employers:', error);
-        return;
-      }
-
-      const normalized = (data || []).map((p: any) => ({
-        ...p,
-        name_en: p.name_en || p.name_ar || p.id,
-      }));
-      setEmployers(normalized);
-    } catch (error) {
-      logger.error('Error fetching employers:', error);
-    } finally {
-      setEmployersLoading(false);
-    }
-  }, []);
-
-  // Handle promoter selection from filter
-  const handlePromoterSelect = useCallback(
-    (selectedPromoterId: string) => {
-      if (selectedPromoterId && selectedPromoterId !== promoterId) {
-        router.push(`/${locale}/manage-promoters/${selectedPromoterId}`);
-      }
-    },
-    [router, locale, promoterId]
-  );
 
   async function handleDeletePromoter() {
     if (
@@ -659,14 +580,12 @@ export default function PromoterDetailPage() {
     // Load main data first (blocking)
     fetchPromoterDetails();
     fetchAuditLogs();
-    fetchAllPromoters();
-    fetchEmployers();
 
     // Load CV data separately (non-blocking)
     setTimeout(() => {
       fetchCVData();
     }, 100);
-  }, [promoterId, role, fetchAllPromoters, fetchEmployers]);
+  }, [promoterId, role]);
 
   // Real-time subscriptions for live updates
   useEffect(() => {
@@ -816,101 +735,6 @@ export default function PromoterDetailPage() {
     return () => clearInterval(interval);
   }, [promoterId, isLoading]);
 
-  // Filter promoters based on search and filter criteria
-  useEffect(() => {
-    let filtered = allPromoters;
-
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(promoter => {
-        const nameMatch =
-          promoter.name_en?.toLowerCase().includes(searchLower) ||
-          promoter.name_ar?.toLowerCase().includes(searchLower);
-        const idMatch = promoter.id_card_number
-          ?.toLowerCase()
-          .includes(searchLower);
-        const passportMatch = promoter.passport_number
-          ?.toLowerCase()
-          .includes(searchLower);
-        const emailMatch = promoter.email?.toLowerCase().includes(searchLower);
-
-        return nameMatch || idMatch || passportMatch || emailMatch;
-      });
-    }
-
-    // Status filter
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(promoter => promoter.status === filterStatus);
-    }
-
-    // Company filter
-    if (filterCompany !== 'all') {
-      filtered = filtered.filter(
-        promoter => promoter.employer_id === filterCompany
-      );
-    }
-
-    // Document filter
-    if (filterDocument !== 'all') {
-      filtered = filtered.filter(promoter => {
-        switch (filterDocument) {
-          case 'id_valid':
-            return (
-              promoter.id_card_expiry_date &&
-              new Date(promoter.id_card_expiry_date) > new Date()
-            );
-          case 'id_expiring':
-            if (!promoter.id_card_expiry_date) return false;
-            const idExpiry = new Date(promoter.id_card_expiry_date);
-            const now = new Date();
-            const daysUntilExpiry = Math.ceil(
-              (idExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-            );
-            return (
-              daysUntilExpiry <= PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY &&
-              daysUntilExpiry > 0
-            );
-          case 'id_expired':
-            return (
-              promoter.id_card_expiry_date &&
-              new Date(promoter.id_card_expiry_date) <= new Date()
-            );
-          case 'id_missing':
-            return !promoter.id_card_number || !promoter.id_card_expiry_date;
-          case 'passport_valid':
-            return (
-              promoter.passport_expiry_date &&
-              new Date(promoter.passport_expiry_date) > new Date()
-            );
-          case 'passport_expiring':
-            if (!promoter.passport_expiry_date) return false;
-            const passportExpiry = new Date(promoter.passport_expiry_date);
-            const nowForPassport = new Date();
-            const daysUntilPassportExpiry = Math.ceil(
-              (passportExpiry.getTime() - nowForPassport.getTime()) /
-                (1000 * 60 * 60 * 24)
-            );
-            return (
-              daysUntilPassportExpiry <=
-                PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY &&
-              daysUntilPassportExpiry > 0
-            );
-          case 'passport_expired':
-            return (
-              promoter.passport_expiry_date &&
-              new Date(promoter.passport_expiry_date) <= new Date()
-            );
-          case 'passport_missing':
-            return !promoter.passport_number || !promoter.passport_expiry_date;
-          default:
-            return true;
-        }
-      });
-    }
-
-    setFilteredPromoters(filtered);
-  }, [allPromoters, searchTerm, filterStatus, filterCompany, filterDocument]);
 
   // Handle refresh - reload the page
   const handleRefresh = useCallback(() => {
@@ -1065,27 +889,60 @@ export default function PromoterDetailPage() {
     <div
       className={`container mx-auto space-y-6 py-6 ${viewMode === 'mobile' ? 'px-4' : ''}`}
     >
+      {/* Breadcrumb */}
+      <nav className='flex items-center gap-1.5 text-sm text-muted-foreground' aria-label='Breadcrumb'>
+        <button
+          onClick={() => router.push(`/${locale}/promoters`)}
+          className='hover:text-foreground transition-colors font-medium hover:underline'
+        >
+          Promoters
+        </button>
+        <span aria-hidden='true'>/</span>
+        <span className='text-foreground font-semibold truncate max-w-[240px]'>
+          {promoterDetails?.name_en || 'Profile'}
+        </span>
+      </nav>
+
       {/* Enhanced Header with Predictive Score */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-        <div className='flex-1 min-w-0'>
-          <div className='flex items-center gap-3'>
-            <h1
-              className={`font-bold text-gray-900 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}
-            >
-              {promoterDetails?.name_en}
-            </h1>
-            <Badge variant='outline' className='bg-purple-100 text-purple-700'>
-              Intelligence Hub
-            </Badge>
-          </div>
-          <div className='flex items-center gap-3 mt-2'>
-            <Badge
-              variant={
-                promoterDetails?.status === 'active' ? 'default' : 'secondary'
-              }
-            >
-              {promoterDetails?.status}
-            </Badge>
+        <div className='flex items-center gap-4 flex-1 min-w-0'>
+          <Avatar className='h-14 w-14 flex-shrink-0 ring-2 ring-offset-2 ring-primary/20'>
+            <AvatarImage
+              src={promoterDetails?.profile_picture_url || undefined}
+              alt={promoterDetails?.name_en || ''}
+            />
+            <AvatarFallback className='text-lg font-bold bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700'>
+              {promoterDetails?.name_en?.charAt(0)?.toUpperCase() || '?'}
+            </AvatarFallback>
+          </Avatar>
+          <div className='min-w-0'>
+            <div className='flex items-center gap-3 flex-wrap'>
+              <h1
+                className={`font-bold text-gray-900 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}
+              >
+                {promoterDetails?.name_en}
+              </h1>
+              {promoterDetails?.name_ar && (
+                <span className='text-base text-muted-foreground font-medium' dir='rtl'>
+                  {promoterDetails.name_ar}
+                </span>
+              )}
+            </div>
+            <div className='flex items-center gap-2 mt-1.5 flex-wrap'>
+              <Badge
+                variant={
+                  promoterDetails?.status === 'active' ? 'default' : 'secondary'
+                }
+                className='capitalize'
+              >
+                {promoterDetails?.status}
+              </Badge>
+              {promoterDetails?.job_title && (
+                <span className='text-sm text-muted-foreground'>
+                  {promoterDetails.job_title}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1188,119 +1045,6 @@ export default function PromoterDetailPage() {
         )}
       </div>
 
-      {/* Quick Promoter Search Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <FileTextIcon className='h-5 w-5' />
-            Quick Promoter Search
-          </CardTitle>
-          <CardDescription>
-            Quickly find and navigate to other promoters without going back to
-            the main list
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-3'>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-              <Input
-                placeholder='Search promoters...'
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className='pl-9'
-              />
-            </div>
-            <div className='flex gap-2 flex-wrap'>
-              <select
-                value={filterStatus}
-                onChange={e => setFilterStatus(e.target.value)}
-                className='flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
-              >
-                <option value='all'>All Statuses</option>
-                <option value='active'>Active</option>
-                <option value='inactive'>Inactive</option>
-                <option value='pending'>Pending</option>
-              </select>
-              <select
-                value={filterCompany}
-                onChange={e => setFilterCompany(e.target.value)}
-                className='flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
-              >
-                <option value='all'>All Companies</option>
-                {employers.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name_en || emp.name_ar || emp.id}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filterDocument}
-                onChange={e => setFilterDocument(e.target.value)}
-                className='flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm'
-              >
-                <option value='all'>All Documents</option>
-                <option value='missing_id'>Missing ID Card</option>
-                <option value='missing_passport'>Missing Passport</option>
-                <option value='complete'>Complete</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Filtered Promoters List */}
-          {filteredPromoters.length > 0 &&
-            (searchTerm ||
-              filterStatus !== 'all' ||
-              filterCompany !== 'all' ||
-              filterDocument !== 'all') && (
-              <div className='mt-4'>
-                <h4 className='text-sm font-medium mb-3'>
-                  Found {filteredPromoters.length} promoter
-                  {filteredPromoters.length !== 1 ? 's' : ''}:
-                </h4>
-                <div
-                  className={`grid grid-cols-1 gap-2 max-h-40 overflow-y-auto ${viewMode === 'mobile' ? 'grid-cols-1' : 'sm:grid-cols-2 lg:grid-cols-3'}`}
-                >
-                  {filteredPromoters
-                    .filter(p => p.id !== promoterId)
-                    .slice(0, 9)
-                    .map(promoter => (
-                      <Button
-                        key={promoter.id}
-                        variant='outline'
-                        size='sm'
-                        className='justify-start h-auto p-3 text-left'
-                        onClick={() => handlePromoterSelect(promoter.id)}
-                      >
-                        <div className='flex flex-col'>
-                          <span className='font-medium text-sm'>
-                            {promoter.name_en}
-                          </span>
-                          {promoter.name_ar && (
-                            <span className='text-xs text-muted-foreground'>
-                              {promoter.name_ar}
-                            </span>
-                          )}
-                          <span className='text-xs text-muted-foreground'>
-                            {promoter.id_card_number || 'No ID'}
-                          </span>
-                        </div>
-                      </Button>
-                    ))}
-                </div>
-                {filteredPromoters.filter(p => p.id !== promoterId).length >
-                  9 && (
-                  <p className='text-xs text-muted-foreground mt-2'>
-                    And{' '}
-                    {filteredPromoters.filter(p => p.id !== promoterId).length -
-                      9}{' '}
-                    more... Use filters to narrow down results.
-                  </p>
-                )}
-              </div>
-            )}
-        </CardContent>
-      </Card>
 
       {/* TWO-COLUMN INTELLIGENT DASHBOARD LAYOUT */}
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
@@ -1330,7 +1074,7 @@ export default function PromoterDetailPage() {
                 value='advanced'
                 className={viewMode === 'mobile' ? 'text-xs' : ''}
               >
-                {viewMode === 'mobile' ? 'Advanced' : 'Advanced'}
+                {viewMode === 'mobile' ? 'Performance' : 'Performance & Skills'}
               </TabsTrigger>
               <TabsTrigger
                 value='activity'
@@ -2205,6 +1949,17 @@ export default function PromoterDetailPage() {
                 <CardContent>
                   {role === 'admin' ? (
                     <div className='space-y-4'>
+                      {auditLogs.length === 0 && (
+                        <div className='flex flex-col items-center justify-center py-10 text-center gap-3'>
+                          <div className='h-12 w-12 rounded-full bg-muted flex items-center justify-center'>
+                            <Activity className='h-6 w-6 text-muted-foreground' />
+                          </div>
+                          <div>
+                            <p className='text-sm font-medium'>No activity recorded yet</p>
+                            <p className='text-xs text-muted-foreground mt-1'>Changes to this promoter&apos;s record will appear here.</p>
+                          </div>
+                        </div>
+                      )}
                       {auditLogs.map(log => (
                         <div
                           key={log.id}
@@ -2399,6 +2154,51 @@ export default function PromoterDetailPage() {
                 >
                   <FileTextIcon className='mr-2 h-4 w-4' />
                   View Analytics Dashboard
+                </Button>
+                <Separator className='my-1' />
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='w-full justify-start text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200'
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`/api/promoters/${promoterId}/notify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'standard', promoterName: promoterDetails?.name_en, email: promoterDetails?.email }),
+                      });
+                      if (!res.ok) throw new Error('Failed');
+                      toast({ title: 'Notification sent', description: `A notification was sent to ${promoterDetails?.name_en}.` });
+                    } catch {
+                      toast({ variant: 'destructive', title: 'Failed', description: 'Could not send notification.' });
+                    }
+                  }}
+                >
+                  <Send className='mr-2 h-4 w-4' />
+                  Send Notification
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30'
+                  onClick={async () => {
+                    if (!confirm(`Archive ${promoterDetails?.name_en}? They will be hidden from the active list.`)) return;
+                    try {
+                      const res = await fetch(`/api/promoters/${promoterId}/archive`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ archived: true }),
+                      });
+                      if (!res.ok) throw new Error('Failed');
+                      toast({ title: 'Archived', description: `${promoterDetails?.name_en} has been archived.` });
+                      router.push(`/${locale}/promoters`);
+                    } catch {
+                      toast({ variant: 'destructive', title: 'Failed', description: 'Could not archive this promoter.' });
+                    }
+                  }}
+                >
+                  <Archive className='mr-2 h-4 w-4' />
+                  Archive Promoter
                 </Button>
               </CardContent>
             </Card>

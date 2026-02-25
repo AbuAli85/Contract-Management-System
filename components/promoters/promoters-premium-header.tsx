@@ -50,6 +50,7 @@ interface PromotersPremiumHeaderProps {
   locale?: string;
   autoRefreshEnabled?: boolean;
   onToggleAutoRefresh?: (enabled: boolean) => void;
+  dataUpdatedAt?: number;
 }
 
 export function PromotersPremiumHeader({
@@ -61,6 +62,7 @@ export function PromotersPremiumHeader({
   locale,
   autoRefreshEnabled = true,
   onToggleAutoRefresh,
+  dataUpdatedAt,
 }: PromotersPremiumHeaderProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -167,6 +169,12 @@ export function PromotersPremiumHeader({
                     <Shield className='h-3 w-3' />
                     AI-Powered
                   </span>
+                  {dataUpdatedAt && dataUpdatedAt > 0 && (
+                    <span className='text-xs text-white/50 font-medium flex items-center gap-1'>
+                      <Zap className='h-3 w-3' />
+                      Updated {new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -297,7 +305,7 @@ export function PromotersPremiumHeader({
           <div className='flex flex-wrap items-center gap-3 flex-shrink-0'>
             <Button
               onClick={handleAddPromoter}
-              className='bg-gradient-to-r from-white via-white to-white/95 text-slate-900 hover:from-white hover:via-white hover:to-white shadow-2xl hover:shadow-3xl font-black transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap border-2 border-white/30 text-base px-6 py-6'
+              className='bg-gradient-to-r from-white via-white to-white/95 text-slate-900 hover:from-white hover:via-white hover:to-white shadow-lg hover:shadow-xl font-bold transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap border border-white/30 text-sm px-4 py-2.5'
               size='lg'
               aria-label='Add new promoter to the system'
             >
@@ -311,7 +319,7 @@ export function PromotersPremiumHeader({
                   <Button
                     onClick={handleImportPromoters}
                     variant='secondary'
-                    className='bg-gradient-to-r from-blue-500/40 to-indigo-500/40 text-white hover:from-blue-500/50 hover:to-indigo-500/50 border-blue-400/60 font-bold shadow-xl transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap backdrop-blur-sm text-base px-6 py-6'
+                    className='bg-gradient-to-r from-blue-500/40 to-indigo-500/40 text-white hover:from-blue-500/50 hover:to-indigo-500/50 border-blue-400/60 font-semibold shadow-md transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap backdrop-blur-sm text-sm px-4 py-2.5'
                     size='lg'
                     aria-label='Import promoters from CSV/Excel file'
                   >
@@ -336,7 +344,7 @@ export function PromotersPremiumHeader({
                   <Button
                     onClick={handleExport}
                     variant='secondary'
-                    className='bg-gradient-to-r from-emerald-500/40 to-green-500/40 text-white hover:from-emerald-500/50 hover:to-green-500/50 border-emerald-400/60 font-bold shadow-xl transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap backdrop-blur-sm text-base px-6 py-6'
+                    className='bg-gradient-to-r from-emerald-500/40 to-green-500/40 text-white hover:from-emerald-500/50 hover:to-green-500/50 border-emerald-400/60 font-semibold shadow-md transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap backdrop-blur-sm text-sm px-4 py-2.5'
                     size='lg'
                     aria-label='Export promoter data'
                   >
@@ -360,7 +368,7 @@ export function PromotersPremiumHeader({
                 <TooltipTrigger asChild>
                   <Button
                     variant='secondary'
-                    className='bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm border-white/30 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap shadow-xl transition-all duration-300 hover:scale-110 text-base px-6 py-6 font-bold'
+                    className='bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm border-white/30 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900 whitespace-nowrap shadow-md transition-all duration-200 hover:scale-105 text-sm px-4 py-2.5 font-semibold'
                     onClick={onRefresh}
                     disabled={isFetching}
                     aria-label={

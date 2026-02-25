@@ -779,6 +779,7 @@ function EnhancedPromotersViewRefactoredContent({
     isError,
     error,
     refetch,
+    dataUpdatedAt,
   } = useQuery<PromotersResponse, Error>({
     queryKey: [
       'promoters',
@@ -2000,6 +2001,7 @@ function EnhancedPromotersViewRefactoredContent({
               locale={derivedLocale}
               autoRefreshEnabled={autoRefreshEnabled}
               onToggleAutoRefresh={setAutoRefreshEnabled}
+              dataUpdatedAt={dataUpdatedAt}
             />
           )}
         </header>

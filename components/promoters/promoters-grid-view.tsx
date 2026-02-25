@@ -43,6 +43,10 @@ import {
   Send,
   Archive,
   Loader2,
+  Mail,
+  Phone,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type {
@@ -86,6 +90,40 @@ const OVERALL_STATUS_LABELS: Record<OverallStatus, string> = {
   critical: 'Critical',
   inactive: 'Inactive',
 };
+
+function CopyableInfo({
+  icon,
+  value,
+}: {
+  icon: React.ReactNode;
+  value: string;
+}) {
+  const [copied, setCopied] = React.useState(false);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className='flex items-center gap-1.5 text-muted-foreground hover:text-foreground w-full truncate group/copy'
+      title={`Copy: ${value}`}
+    >
+      <span className='flex-shrink-0 text-muted-foreground'>{icon}</span>
+      <span className='truncate text-xs'>{value}</span>
+      <span className='ml-auto flex-shrink-0 opacity-0 group-hover/copy:opacity-100 transition-opacity'>
+        {copied ? (
+          <Check className='h-3 w-3 text-green-500' />
+        ) : (
+          <Copy className='h-3 w-3' />
+        )}
+      </span>
+    </button>
+  );
+}
 
 function PromoterGridCard({
   promoter,
@@ -269,6 +307,23 @@ function PromoterGridCard({
             </Badge>
           </div>
 
+          {/* Contact Info */}
+          {(promoter.contactEmail || promoter.contactPhone) && (
+            <div className='space-y-1.5 mb-3 border-t pt-3'>
+              {promoter.contactEmail && (
+                <CopyableInfo
+                  icon={<Mail className='h-3 w-3' />}
+                  value={promoter.contactEmail}
+                />
+              )}
+              {promoter.contactPhone && (
+                <CopyableInfo
+                  icon={<Phone className='h-3 w-3' />}
+                  value={promoter.contactPhone}
+                />
+              )}
+            </div>
+          )}
           {/* Key Info */}
           <div className='space-y-2 text-xs'>
             <TooltipProvider>
@@ -317,6 +372,19 @@ function PromoterGridCard({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          </div>
+
+          {/* Quick View Button - appears on hover */}
+          <div className='mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150'>
+            <Button
+              size='sm'
+              variant='outline'
+              className='w-full h-7 text-xs gap-1.5'
+              onClick={e => { e.stopPropagation(); onView(); }}
+            >
+              <Eye className='h-3 w-3' />
+              View Profile
+            </Button>
           </div>
         </CardContent>
       </Card>
