@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import { Redis } from '@upstash/redis/cloudflare';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { retryWithBackoff } from '@/lib/auth/retry';
 import { extractCorrelationId, generateCorrelationId, logWithCorrelation } from '@/lib/utils/correlation';

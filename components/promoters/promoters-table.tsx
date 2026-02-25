@@ -109,6 +109,8 @@ interface PromotersTableProps {
   onAddPromoter?: () => void;
   onResetFilters: () => void;
   onPageChange: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  onRefetch?: () => void;
   onPartyAssignmentUpdate?: (
     promoterId: string,
     partyId: string | null
@@ -140,6 +142,8 @@ export function PromotersTable({
   onAddPromoter,
   onResetFilters,
   onPageChange,
+  onPageSizeChange,
+  onRefetch,
   onPartyAssignmentUpdate,
   enableEnhancedPartyManagement = false,
   onInlineUpdate,
@@ -493,6 +497,7 @@ export function PromotersTable({
                                 ? () => onEditPromoter(promoter)
                                 : undefined
                             }
+                            onRefetch={onRefetch}
                             isColumnVisible={isColumnVisible}
                             onInlineUpdate={onInlineUpdate}
                             enableInlineEdit={enableInlineEdit}
@@ -632,7 +637,7 @@ export function PromotersTable({
       </CardContent>
 
       {/* Pagination Controls */}
-      {pagination && pagination.totalPages > 1 && (
+      {pagination && (
         <CardContent className='border-t border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50 py-4 px-4 sm:py-6 sm:px-6'>
           <PaginationControls
             currentPage={pagination.page}
@@ -640,6 +645,7 @@ export function PromotersTable({
             pageSize={pagination.limit}
             totalItems={pagination.total}
             onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
           />
         </CardContent>
       )}

@@ -1082,11 +1082,22 @@ function EnhancedPromotersViewRefactoredContent({
       const organisationLabel =
         (promoter as any).parties?.name_en || 'Unassigned';
 
+      const contactEmail = promoter.email?.trim() || '—';
+      const contactPhone = (() => {
+        const phone =
+          (promoter as any).mobile_number ||
+          (promoter as any).phone ||
+          (promoter as any).contact_number;
+        return phone?.trim() || '—';
+      })();
       return {
         ...promoter,
         displayName,
         assignmentStatus,
         organisationLabel,
+        contactEmail,
+        contactPhone,
+        createdLabel: formatDisplayDate(promoter.created_at),
         idDocument,
         passportDocument,
         overallStatus: computeOverallStatus(
@@ -1288,15 +1299,22 @@ function EnhancedPromotersViewRefactoredContent({
               'ID Expiry',
               'Passport Expiry',
             ];
+            const escapeField = (v: string | null | undefined) => {
+              const s = String(v ?? '');
+              if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+                return `"${s.replace(/"/g, '""')}"`;
+              }
+              return s;
+            };
             const rows = selectedData.map(p => [
-              p.displayName,
-              p.contactEmail,
-              p.contactPhone,
-              p.overallStatus,
-              p.organisationLabel,
-              p.job_title || '—',
-              formatDisplayDate(p.id_card_expiry_date),
-              formatDisplayDate(p.passport_expiry_date),
+              escapeField(p.displayName),
+              escapeField(p.contactEmail),
+              escapeField(p.contactPhone),
+              escapeField(p.overallStatus),
+              escapeField(p.organisationLabel),
+              escapeField(p.job_title || '—'),
+              escapeField(formatDisplayDate(p.id_card_expiry_date)),
+              escapeField(formatDisplayDate(p.passport_expiry_date)),
             ]);
             const csv = [
               headers.join(','),
@@ -1373,38 +1391,18 @@ function EnhancedPromotersViewRefactoredContent({
               return;
             }
 
-            // For now, auto-assign to first available company (in production, show dialog)
-            const firstCompany = companies.parties[0];
-
-            const response = await fetch('/api/promoters/bulk', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                action: 'assign',
-                promoterIds: Array.from(selectedPromoters),
-                companyId: firstCompany.id,
-              }),
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(
-                errorData.error || errorData.message || 'Assignment failed'
-              );
-            }
-
-            const result = await response.json();
-
-            toast({
-              title: 'Success',
-              description: `Assigned ${selectedPromoters.size} promoters to ${firstCompany.name_en}`,
-            });
-
-            // Refetch data to update the UI
-            await refetch();
-            break;
+            // Populate dialog state and open it — actual assignment happens in handleConfirmAssign
+            setAvailableCompanies(
+              (companies.parties as Array<{id: string; name_en: string; name_ar?: string}>).map(p => ({
+                id: p.id,
+                name_en: p.name_en,
+                name_ar: p.name_ar,
+              }))
+            );
+            setSelectedCompanyId('');
+            setShowAssignDialog(true);
+            // Return early — isPerformingBulkAction is reset in finally
+            return;
           }
 
           default:
@@ -1487,7 +1485,15 @@ function EnhancedPromotersViewRefactoredContent({
     setDocumentFilter('all');
     setAssignmentFilter('all');
     setActiveMetricFilter(null);
-  }, []);
+    // Clear filter-related URL params so the URL stays clean after reset
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.delete('search');
+    params.delete('status');
+    params.delete('documents');
+    params.delete('assignment');
+    params.set('page', '1');
+    router.replace(`${window.location.pathname}?${params.toString()}`);
+  }, [searchParams, router]);
 
   const handleMetricCardClick = useCallback(
     (filterType: 'all' | 'active' | 'alerts' | 'compliance') => {
@@ -1578,14 +1584,18 @@ function EnhancedPromotersViewRefactoredContent({
 
   const handleSort = useCallback(
     (field: SortField) => {
-      if (sortField === field) {
-        setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
-      } else {
-        setSortField(field);
-        setSortOrder('asc');
-      }
+      const newOrder =
+        sortField === field ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc';
+      const newField = field;
+      setSortField(newField);
+      setSortOrder(newOrder);
+      // Persist sort state in URL so it survives page refresh
+      const params = new URLSearchParams(searchParams?.toString() || '');
+      params.set('sortField', newField);
+      params.set('sortOrder', newOrder);
+      router.replace(`${window.location.pathname}?${params.toString()}`);
     },
-    [sortField]
+    [sortField, sortOrder, searchParams, router]
   );
 
   const handleViewPromoter = useCallback(
@@ -2507,6 +2517,8 @@ function EnhancedPromotersViewRefactoredContent({
                 onAddPromoter={handleAddPromoter}
                 onResetFilters={handleResetFilters}
                 onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                onRefetch={refetch}
                 onPartyAssignmentUpdate={handlePartyAssignmentUpdate}
                 enableEnhancedPartyManagement={true}
                 onInlineUpdate={handleInlineUpdate}

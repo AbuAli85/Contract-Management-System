@@ -65,6 +65,7 @@ interface PromotersTableRowProps {
   onSelect: () => void;
   onView: () => void;
   onEdit?: () => void;
+  onRefetch?: () => void;
   isColumnVisible?: (columnId: string) => boolean;
   onInlineUpdate?:
     | ((promoterId: string, field: string, value: string) => Promise<void>)
@@ -182,12 +183,14 @@ interface EnhancedActionsMenuProps {
   promoter: DashboardPromoter;
   onView: () => void;
   onEdit: () => void;
+  onRefetch?: () => void;
 }
 
 function EnhancedActionsMenu({
   promoter,
   onView,
   onEdit,
+  onRefetch,
 }: EnhancedActionsMenuProps) {
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -296,6 +299,7 @@ function EnhancedActionsMenu({
         description: `${promoter.displayName} has been archived.`,
       });
       setShowArchiveDialog(false);
+      onRefetch?.();
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -508,6 +512,7 @@ export function PromotersTableRow({
   onSelect,
   onView,
   onEdit,
+  onRefetch,
   isColumnVisible = () => true, // Default to showing all columns
   onInlineUpdate,
   enableInlineEdit = false,
@@ -753,6 +758,7 @@ export function PromotersTableRow({
             promoter={promoter}
             onView={onView}
             onEdit={onEdit}
+            onRefetch={onRefetch}
           />
         </TableCell>
       )}
