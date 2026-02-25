@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
-import * as XLSX from 'xlsx';
+import * as XLSX from '@e965/xlsx';
 
 interface ExcelImportModalProps {
   isOpen: boolean;
