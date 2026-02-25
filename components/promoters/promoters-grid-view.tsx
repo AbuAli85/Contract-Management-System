@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,11 +19,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { SafeImage } from '@/components/ui/safe-image';
 import {
   Users,
-  Mail,
-  Phone,
   Building2,
   MoreHorizontal,
   Eye,
@@ -31,11 +40,14 @@ import {
   Clock,
   AlertTriangle,
   HelpCircle,
+  Send,
+  Archive,
+  Loader2,
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import type {
   DocumentStatus,
   OverallStatus,
-  DocumentHealth,
   DashboardPromoter,
 } from './types';
 
@@ -88,143 +100,257 @@ function PromoterGridCard({
   onView: () => void;
   onEdit: () => void;
 }) {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const StatusIcon = DOCUMENT_STATUS_ICONS[promoter.idDocument.status];
 
+  const handleNotify = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'standard' }),
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Notification failed');
+      }
+      toast({
+        title: '✓ Notification Sent',
+        description: `Notification sent to ${promoter.displayName}`,
+      });
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: '✗ Notification Failed',
+        description: 'Could not send the notification.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleArchive = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/promoters/${promoter.id}/archive`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: true }),
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Archive request failed');
+      }
+      toast({
+        title: '✓ Record Archived',
+        description: `${promoter.displayName} has been archived.`,
+      });
+      setShowArchiveDialog(false);
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: '✗ Archive Failed',
+        description: 'Could not archive the record.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Card
-      className={cn(
-        'group relative overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer',
-        promoter.overallStatus === 'critical' &&
-          'border-l-4 border-l-red-500 bg-red-50/10',
-        promoter.overallStatus === 'warning' &&
-          'border-l-4 border-l-amber-400 bg-amber-50/10',
-        isSelected && 'ring-2 ring-primary bg-primary/5'
-      )}
-      onClick={() => onView()}
-    >
-      <CardContent className='p-4'>
-        {/* Header with checkbox and actions */}
-        <div className='flex items-start justify-between mb-3'>
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onSelect}
-            onClick={(e: React.MouseEvent<HTMLInputElement>) =>
-              e.stopPropagation()
-            }
-            className='mt-1'
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='h-8 w-8 text-muted-foreground hover:text-foreground'
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                  e.stopPropagation()
-                }
-              >
-                <MoreHorizontal className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={onView}>
-                <Eye className='h-4 w-4 mr-2' />
-                View Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onEdit}>
-                <Edit className='h-4 w-4 mr-2' />
-                Edit Details
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <>
+      <Card
+        className={cn(
+          'group relative overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer',
+          promoter.overallStatus === 'critical' &&
+            'border-l-4 border-l-red-500 bg-red-50/10',
+          promoter.overallStatus === 'warning' &&
+            'border-l-4 border-l-amber-400 bg-amber-50/10',
+          isSelected && 'ring-2 ring-primary bg-primary/5'
+        )}
+        onClick={() => onView()}
+      >
+        <CardContent className='p-4'>
+          {/* Header with checkbox and actions */}
+          <div className='flex items-start justify-between mb-3'>
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={onSelect}
+              onClick={(e: React.MouseEvent<HTMLInputElement>) =>
+                e.stopPropagation()
+              }
+              className='mt-1'
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-8 w-8 text-muted-foreground hover:text-foreground'
+                  disabled={isLoading}
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                    e.stopPropagation()
+                  }
+                >
+                  {isLoading ? (
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                  ) : (
+                    <MoreHorizontal className='h-4 w-4' />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end' onClick={e => e.stopPropagation()}>
+                <DropdownMenuItem onClick={onView}>
+                  <Eye className='h-4 w-4 mr-2' />
+                  View Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className='h-4 w-4 mr-2' />
+                  Edit Details
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleNotify} disabled={isLoading}>
+                  <Send className='h-4 w-4 mr-2 text-green-500' />
+                  Send Notification
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={e => {
+                    e.stopPropagation();
+                    setShowArchiveDialog(true);
+                  }}
+                  disabled={isLoading}
+                  className='text-destructive focus:text-destructive'
+                >
+                  <Archive className='h-4 w-4 mr-2' />
+                  Archive Record
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
-        {/* Avatar and Name */}
-        <div className='flex flex-col items-center text-center mb-4'>
-          <SafeImage
-            src={promoter.profile_picture_url ?? null}
-            alt={promoter.displayName}
-            width={64}
-            height={64}
-            className='h-16 w-16 mb-3 transition-transform group-hover:scale-105'
-            fallback={
-              <div className='flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500'>
-                <Users className='h-8 w-8' />
-              </div>
-            }
-          />
-          <h3 className='font-semibold text-sm leading-tight mb-1 line-clamp-1'>
-            {promoter.displayName}
-          </h3>
-          <p className='text-xs text-muted-foreground line-clamp-1'>
-            {promoter.job_title || promoter.organisationLabel || '—'}
-          </p>
-        </div>
+          {/* Avatar and Name */}
+          <div className='flex flex-col items-center text-center mb-4'>
+            <SafeImage
+              src={promoter.profile_picture_url ?? null}
+              alt={promoter.displayName}
+              width={64}
+              height={64}
+              className='h-16 w-16 mb-3 transition-transform group-hover:scale-105'
+              fallback={
+                <div className='flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500'>
+                  <Users className='h-8 w-8' />
+                </div>
+              }
+            />
+            <h3 className='font-semibold text-sm leading-tight mb-1 line-clamp-1'>
+              {promoter.displayName}
+            </h3>
+            <p className='text-xs text-muted-foreground line-clamp-1'>
+              {promoter.job_title || promoter.organisationLabel || '—'}
+            </p>
+          </div>
 
-        {/* Status Badge */}
-        <div className='flex justify-center mb-3'>
-          <Badge
-            variant='outline'
-            className={cn(
-              'rounded-full px-2.5 py-0.5 text-xs font-medium',
-              OVERALL_STATUS_BADGES[promoter.overallStatus]
-            )}
-          >
-            {OVERALL_STATUS_LABELS[promoter.overallStatus]}
-          </Badge>
-        </div>
+          {/* Status Badge */}
+          <div className='flex justify-center mb-3'>
+            <Badge
+              variant='outline'
+              className={cn(
+                'rounded-full px-2.5 py-0.5 text-xs font-medium',
+                OVERALL_STATUS_BADGES[promoter.overallStatus]
+              )}
+            >
+              {OVERALL_STATUS_LABELS[promoter.overallStatus]}
+            </Badge>
+          </div>
 
-        {/* Key Info */}
-        <div className='space-y-2 text-xs'>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className='flex items-center gap-2 text-muted-foreground truncate'>
-                  <Building2 className='h-3.5 w-3.5 flex-shrink-0' />
-                  <span className='truncate'>
+          {/* Key Info */}
+          <div className='space-y-2 text-xs'>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className='flex items-center gap-2 text-muted-foreground truncate'>
+                    <Building2 className='h-3.5 w-3.5 flex-shrink-0' />
+                    <span className='truncate'>
+                      {promoter.assignmentStatus === 'assigned'
+                        ? promoter.organisationLabel
+                        : 'Unassigned'}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className='text-xs'>
                     {promoter.assignmentStatus === 'assigned'
                       ? promoter.organisationLabel
-                      : 'Unassigned'}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className='text-xs'>
-                  {promoter.assignmentStatus === 'assigned'
-                    ? promoter.organisationLabel
-                    : 'Not assigned to any company'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                      : 'Not assigned to any company'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className='flex items-center gap-2 text-muted-foreground truncate'>
-                  <StatusIcon className='h-3.5 w-3.5 flex-shrink-0' />
-                  <span className='truncate'>
-                    {promoter.idDocument.status === 'valid'
-                      ? 'Documents OK'
-                      : promoter.idDocument.status === 'expiring'
-                        ? 'Expiring Soon'
-                        : promoter.idDocument.status === 'expired'
-                          ? 'Expired Docs'
-                          : 'Missing Docs'}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className='text-xs space-y-1'>
-                  <p>ID: {promoter.idDocument.label}</p>
-                  <p>Passport: {promoter.passportDocument.label}</p>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </CardContent>
-    </Card>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className='flex items-center gap-2 text-muted-foreground truncate'>
+                    <StatusIcon className='h-3.5 w-3.5 flex-shrink-0' />
+                    <span className='truncate'>
+                      {promoter.idDocument.status === 'valid'
+                        ? 'Documents OK'
+                        : promoter.idDocument.status === 'expiring'
+                          ? 'Expiring Soon'
+                          : promoter.idDocument.status === 'expired'
+                            ? 'Expired Docs'
+                            : 'Missing Docs'}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className='text-xs space-y-1'>
+                    <p>ID: {promoter.idDocument.label}</p>
+                    <p>Passport: {promoter.passportDocument.label}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive this promoter?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will archive <strong>{promoter.displayName}</strong>. The
+              record will be hidden from the main list but can be restored later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleArchive}
+              disabled={isLoading}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                  Archiving...
+                </>
+              ) : (
+                'Archive'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

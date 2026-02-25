@@ -334,7 +334,7 @@ export async function POST(
                 actionItems: promoterDetails.actionItems,
               }),
             },
-            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
+            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/${process.env.DEFAULT_LOCALE || 'en'}/profile`,
           });
         } else if (
           validatedData.type === 'document_reminder' ||
@@ -390,7 +390,7 @@ export async function POST(
                   assignmentStatus: promoterDetails.assignmentStatus,
                 },
               },
-              actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
+              actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/${process.env.DEFAULT_LOCALE || 'en'}/profile`,
               actionText: 'View Your Profile',
             });
           }
@@ -433,7 +433,7 @@ export async function POST(
                 assignmentStatus: promoterDetails.assignmentStatus,
               },
             },
-            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/profile`,
+            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/${process.env.DEFAULT_LOCALE || 'en'}/profile`,
             actionText: 'View Your Profile',
           });
         }

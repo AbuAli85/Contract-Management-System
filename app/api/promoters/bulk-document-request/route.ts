@@ -75,8 +75,21 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // Get promoter information
+    // ✅ SECURITY: Verify authenticated user
     const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Get promoter information
     const { data: promoters, error: fetchError } = await supabase
       .from('promoters')
       .select('id, full_name, email, phone_number')

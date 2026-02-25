@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 // Validation schema for bulk actions
 const bulkActionSchema = z.object({
-  action: z.enum(['archive', 'delete', 'notify', 'assign', 'update_status']),
+  action: z.enum(['archive', 'delete', 'notify', 'assign', 'update_status', 'remind', 'request_documents']),
   promoterIds: z
     .array(z.string().uuid())
     .min(1, 'At least one promoter ID is required'),
@@ -300,12 +300,33 @@ export const POST = withRBAC(
         }
 
         case 'notify': {
-          // For notifications, we'll just log the action and return success
-          // The actual notification sending would be handled by a separate service
-          result.processed = promoterIds.length;
-          result.message = `Notification queued for ${result.processed} promoters`;
+          // Send notifications to selected promoters via individual notify endpoint
+          let notified = 0;
+          const { data: promotersToNotify } = await supabase
+            .from('promoters')
+            .select('id, name_en, name_ar, email')
+            .in('id', promoterIds);
 
-          // Create audit log
+          for (const promoter of promotersToNotify || []) {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+              await fetch(`${baseUrl}/api/promoters/${promoter.id}/notify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: notificationType || 'standard',
+                  promoterName: promoter.name_en || promoter.name_ar || 'Promoter',
+                  email: promoter.email,
+                }),
+              });
+              notified++;
+            } catch {
+              result.failed++;
+            }
+          }
+          result.processed = notified;
+          result.message = `Notifications sent to ${notified} promoters`;
+
           try {
             await supabase.from('audit_logs').insert({
               user_id: user.id,
@@ -315,12 +336,93 @@ export const POST = withRBAC(
               new_values: {
                 promoter_ids: promoterIds,
                 notification_type: notificationType || 'standard',
-                count: result.processed,
+                count: notified,
               },
               created_at: new Date().toISOString(),
             });
-          } catch (auditError) {
+          } catch {}
+          break;
+        }
+
+        case 'remind': {
+          // Send document renewal reminders to selected promoters
+          let reminded = 0;
+          const { data: promotersToRemind } = await supabase
+            .from('promoters')
+            .select('id, name_en, name_ar, email, id_card_expiry_date, passport_expiry_date')
+            .in('id', promoterIds);
+
+          for (const promoter of promotersToRemind || []) {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+              await fetch(`${baseUrl}/api/promoters/${promoter.id}/notify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'reminder',
+                  promoterName: promoter.name_en || promoter.name_ar || 'Promoter',
+                  email: promoter.email,
+                }),
+              });
+              reminded++;
+            } catch {
+              result.failed++;
+            }
           }
+          result.processed = reminded;
+          result.message = `Document renewal reminders sent to ${reminded} promoters`;
+
+          try {
+            await supabase.from('audit_logs').insert({
+              user_id: user.id,
+              action: 'bulk_remind',
+              table_name: 'promoters',
+              record_id: null,
+              new_values: { promoter_ids: promoterIds, count: reminded },
+              created_at: new Date().toISOString(),
+            });
+          } catch {}
+          break;
+        }
+
+        case 'request_documents': {
+          // Send document request notifications to selected promoters
+          let requested = 0;
+          const { data: promotersToRequest } = await supabase
+            .from('promoters')
+            .select('id, name_en, name_ar, email')
+            .in('id', promoterIds);
+
+          for (const promoter of promotersToRequest || []) {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+              await fetch(`${baseUrl}/api/promoters/${promoter.id}/notify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'document_reminder',
+                  promoterName: promoter.name_en || promoter.name_ar || 'Promoter',
+                  email: promoter.email,
+                }),
+              });
+              requested++;
+            } catch {
+              result.failed++;
+            }
+          }
+          result.processed = requested;
+          result.message = `Document requests sent to ${requested} promoters`;
+
+          try {
+            await supabase.from('audit_logs').insert({
+              user_id: user.id,
+              action: 'bulk_request_documents',
+              table_name: 'promoters',
+              record_id: null,
+              new_values: { promoter_ids: promoterIds, count: requested },
+              created_at: new Date().toISOString(),
+            });
+          } catch {}
           break;
         }
 

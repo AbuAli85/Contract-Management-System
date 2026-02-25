@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +43,7 @@ import { PromotersGridView } from './promoters-grid-view';
 import { PromotersCardsView } from './promoters-cards-view';
 import { DocumentStatusLegend } from './document-status-legend';
 import { EnhancedPromotersCardsViewWithPartyEdit } from './enhanced-promoter-card-with-party-edit';
+import { PromotersEnhancedCharts } from './promoters-enhanced-charts';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import {
@@ -526,6 +528,43 @@ export function PromotersTable({
               </>
             )}
 
+            {/* Analytics View */}
+            {viewMode === 'analytics' && (
+              <div className='p-4 sm:p-6 animate-in fade-in duration-300'>
+                <PromotersEnhancedCharts
+                  promoters={promoters}
+                  metrics={{
+                    total: promoters.length,
+                    active: promoters.filter(p => p.overallStatus === 'active').length,
+                    critical: promoters.filter(p => p.overallStatus === 'critical').length,
+                    expiring: promoters.filter(
+                      p =>
+                        p.idDocument.status === 'expiring' ||
+                        p.passportDocument.status === 'expiring'
+                    ).length,
+                    unassigned: promoters.filter(p => !p.employer_id).length,
+                    recentlyAdded: promoters.filter(p => {
+                      const d = new Date(p.created_at);
+                      return Date.now() - d.getTime() < 30 * 24 * 60 * 60 * 1000;
+                    }).length,
+                    companies: new Set(
+                      promoters.map(p => p.employer_id).filter(Boolean)
+                    ).size,
+                    complianceRate: promoters.length > 0
+                      ? Math.round(
+                          (promoters.filter(
+                            p =>
+                              p.idDocument.status === 'valid' &&
+                              p.passportDocument.status === 'valid'
+                          ).length /
+                            promoters.length) *
+                            100
+                        )
+                      : 0,
+                  }}
+                />
+              </div>
+            )}
             {/* Grid View */}
             {viewMode === 'grid' && (
               <>

@@ -1320,7 +1320,9 @@ function EnhancedPromotersViewRefactoredContent({
 
           case 'archive':
           case 'delete':
-          case 'notify': {
+          case 'notify':
+          case 'remind':
+          case 'request_documents': {
             // API call for these actions
             const response = await fetch('/api/promoters/bulk', {
               method: 'POST',
@@ -2418,7 +2420,7 @@ function EnhancedPromotersViewRefactoredContent({
                           description: `All data updated • ${allDashboardPromoters.length} workforce members loaded`,
                         });
                       }}
-                      onExport={format => logger.log(`Export ${format}`)}
+                      onExport={_format => handleQuickExport()}
                       onPrint={() => window.print()}
                       onFullScreen={() =>
                         document.documentElement.requestFullscreen()

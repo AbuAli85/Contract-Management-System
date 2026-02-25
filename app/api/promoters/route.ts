@@ -373,9 +373,10 @@ async function handleGET(request: Request) {
           `id_card_expiry_date.lt.${today},passport_expiry_date.lt.${today}`
         );
       } else if (documentFilter === 'expiring') {
-        // Documents expiring within 30 days
+        // Documents expiring within 30 days:
+        // (id_card between today and 30 days) OR (passport between today and 30 days)
         query = query.or(
-          `id_card_expiry_date.gte.${today},id_card_expiry_date.lte.${thirtyDaysFromNow},passport_expiry_date.gte.${today},passport_expiry_date.lte.${thirtyDaysFromNow}`
+          `and(id_card_expiry_date.gte.${today},id_card_expiry_date.lte.${thirtyDaysFromNow}),and(passport_expiry_date.gte.${today},passport_expiry_date.lte.${thirtyDaysFromNow})`
         );
       } else if (documentFilter === 'missing') {
         // Missing document information
@@ -394,18 +395,19 @@ async function handleGET(request: Request) {
       }
     }
 
-    // Apply sorting
-    const validSortFields = [
-      'name_en',
-      'name_ar',
-      'email',
-      'status',
-      'created_at',
-      'updated_at',
-    ];
-    const actualSortField = validSortFields.includes(sortField)
-      ? sortField
-      : 'created_at';
+    // Apply sorting - map UI sort field names to actual DB column names
+    const sortFieldMap: Record<string, string> = {
+      name: 'name_en',
+      name_en: 'name_en',
+      name_ar: 'name_ar',
+      status: 'status',
+      created: 'created_at',
+      created_at: 'created_at',
+      updated_at: 'updated_at',
+      email: 'email',
+      documents: 'id_card_expiry_date', // Sort by ID card expiry for document sort
+    };
+    const actualSortField = sortFieldMap[sortField] ?? 'created_at';
     const actualSortOrder = sortOrder === 'asc' ? true : false;
 
     query = query.order(actualSortField, { ascending: actualSortOrder });

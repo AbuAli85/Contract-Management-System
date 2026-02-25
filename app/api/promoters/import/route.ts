@@ -2,14 +2,20 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import {
+  ratelimitStrict,
+  getClientIdentifier,
+  getRateLimitHeaders,
+  createRateLimitResponse,
+} from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 // Validation schema for imported promoter data
 const importPromoterSchema = z.object({
-  name_en: z.string().min(1),
+  name_en: z.string().min(1, 'English name is required'),
   name_ar: z.string().optional(),
-  id_card_number: z.string().min(1),
+  id_card_number: z.string().min(1, 'ID card number is required'),
   passport_number: z.string().optional(),
   mobile_number: z.string().optional(),
   email: z.string().email().optional().nullable(),
@@ -23,39 +29,96 @@ const importPromoterSchema = z.object({
 });
 
 const importRequestSchema = z.object({
-  promoters: z.array(importPromoterSchema),
+  promoters: z
+    .array(importPromoterSchema)
+    .min(1, 'At least one promoter is required')
+    .max(500, 'Cannot import more than 500 promoters at once'),
 });
 
 export async function POST(request: Request) {
   try {
+    // ✅ SECURITY: Apply rate limiting
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await ratelimitStrict.limit(identifier);
+    if (!rateLimitResult.success) {
+      const headers = getRateLimitHeaders(rateLimitResult);
+      const body = createRateLimitResponse(rateLimitResult);
+      return NextResponse.json(body, {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', ...headers },
+      });
+    }
 
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json(
         { success: false, error: 'Server configuration error' },
         { status: 500 }
       );
     }
 
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    // ✅ SECURITY: Use anon key with RLS (not service role key)
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: any) {
+        setAll(
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options?: CookieOptions;
+          }>
+        ) {
           try {
-            cookiesToSet.forEach(({ name, value, options }: any) =>
+            cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options as CookieOptions)
             );
-          } catch {}
+          } catch {
+            // Ignore cookie setting errors in middleware
+          }
         },
-      } as any,
+      },
     });
+
+    // ✅ SECURITY: Verify authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication required',
+          details: 'Please log in to import promoters',
+        },
+        { status: 401 }
+      );
+    }
+
+    // ✅ SECURITY: Check user role — only admins and managers can import
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const allowedRoles = ['admin', 'manager', 'employer'];
+    if (!userProfile || !allowedRoles.includes(userProfile.role)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Insufficient permissions',
+          details: 'Only admins and managers can import promoters',
+        },
+        { status: 403 }
+      );
+    }
 
     // Parse and validate request body
     const body = await request.json();
@@ -79,82 +142,89 @@ export async function POST(request: Request) {
     const errors: string[] = [];
     let importedWithCompany = 0;
 
-    // Import promoters one by one (could be batched for better performance)
-    for (const promoter of promoters) {
-      try {
-        // Check if promoter with this ID card already exists
-        const { data: existing, error: checkError } = await supabase
-          .from('promoters')
-          .select('id')
-          .eq('id_card_number', promoter.id_card_number)
-          .single();
+    // Batch check for existing ID card numbers to avoid N+1 queries
+    const idCardNumbers = promoters.map(p => p.id_card_number);
+    const { data: existingPromoters } = await supabase
+      .from('promoters')
+      .select('id_card_number')
+      .in('id_card_number', idCardNumbers);
 
-        if (checkError && checkError.code !== 'PGRST116') {
-          // PGRST116 = no rows
-          errors.push(
-            `Error checking ${promoter.name_en}: ${checkError.message}`
-          );
-          continue;
-        }
+    const existingIdCards = new Set(
+      (existingPromoters || []).map(p => p.id_card_number)
+    );
 
-        if (existing) {
-          duplicates++;
-          continue;
-        }
-
-        // Insert the promoter
-        const { error: insertError } = await supabase.from('promoters').insert({
-          name_en: promoter.name_en,
-          name_ar: promoter.name_ar || promoter.name_en,
-          id_card_number: promoter.id_card_number,
-          passport_number: promoter.passport_number,
-          mobile_number: promoter.mobile_number,
-          email: promoter.email,
-          status: promoter.status || 'active',
-          employer_id: promoter.employer_id,
-          nationality: promoter.nationality,
-          id_card_expiry_date: promoter.id_card_expiry_date,
-          passport_expiry_date: promoter.passport_expiry_date,
-          notify_days_before_id_expiry:
-            promoter.notify_days_before_id_expiry || 100,
-          notify_days_before_passport_expiry:
-            promoter.notify_days_before_passport_expiry || 210,
-        });
-
-        if (insertError) {
-          errors.push(
-            `Error inserting ${promoter.name_en}: ${insertError.message}`
-          );
-          continue;
-        }
-
-        imported++;
-        if (promoter.employer_id) {
-          importedWithCompany++;
-        }
-      } catch (error: any) {
-        errors.push(
-          `Unexpected error for ${promoter.name_en}: ${error.message}`
-        );
+    // Filter out duplicates
+    const newPromoters = promoters.filter(p => {
+      if (existingIdCards.has(p.id_card_number)) {
+        duplicates++;
+        return false;
       }
+      return true;
+    });
+
+    // Batch insert new promoters in chunks of 50
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < newPromoters.length; i += BATCH_SIZE) {
+      const batch = newPromoters.slice(i, i + BATCH_SIZE);
+      const insertData = batch.map(promoter => ({
+        name_en: promoter.name_en,
+        name_ar: promoter.name_ar || promoter.name_en,
+        id_card_number: promoter.id_card_number,
+        passport_number: promoter.passport_number || null,
+        mobile_number: promoter.mobile_number || null,
+        email: promoter.email || null,
+        status: promoter.status || 'active',
+        employer_id: promoter.employer_id || null,
+        nationality: promoter.nationality || null,
+        id_card_expiry_date: promoter.id_card_expiry_date || null,
+        passport_expiry_date: promoter.passport_expiry_date || null,
+        notify_days_before_id_expiry:
+          promoter.notify_days_before_id_expiry || 100,
+        notify_days_before_passport_expiry:
+          promoter.notify_days_before_passport_expiry || 210,
+        created_by: user.id,
+      }));
+
+      const { error: insertError, data: insertedData } = await supabase
+        .from('promoters')
+        .insert(insertData)
+        .select('id, employer_id');
+
+      if (insertError) {
+        errors.push(
+          `Batch ${Math.floor(i / BATCH_SIZE) + 1} error: ${insertError.message}`
+        );
+        continue;
+      }
+
+      imported += insertedData?.length || batch.length;
+      importedWithCompany += (insertedData || []).filter(
+        p => p.employer_id
+      ).length;
     }
 
-
-    return NextResponse.json({
-      success: true,
-      imported,
-      duplicates,
-      errors,
-      importedWithCompany,
-      total: promoters.length,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: any) {
+    const responseHeaders = getRateLimitHeaders(rateLimitResult);
+    return NextResponse.json(
+      {
+        success: true,
+        imported,
+        duplicates,
+        errors,
+        importedWithCompany,
+        total: promoters.length,
+        timestamp: new Date().toISOString(),
+      },
+      { headers: responseHeaders }
+    );
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
-        details: error.message,
+        details:
+          process.env.NODE_ENV === 'development'
+            ? (error as Error).message
+            : undefined,
       },
       { status: 500 }
     );

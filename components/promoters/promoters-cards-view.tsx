@@ -36,7 +36,21 @@ import {
   AlertCircle,
   CheckCircle2,
   TrendingUp,
+  Send,
+  Archive,
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import type {
   DocumentStatus,
@@ -221,13 +235,59 @@ function PromoterCard({
   onView: () => void;
   onEdit: () => void;
 }) {
+  const { toast } = useToast();
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+
+  const handleNotify = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsActionLoading(true);
+    try {
+      const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'standard' }),
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Notification failed');
+      }
+      toast({ title: '✓ Notification Sent', description: `Notification sent to ${promoter.displayName}` });
+    } catch {
+      toast({ variant: 'destructive', title: '✗ Failed', description: 'Could not send the notification.' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleArchive = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsActionLoading(true);
+    try {
+      const response = await fetch(`/api/promoters/${promoter.id}/archive`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: true }),
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Archive request failed');
+      }
+      toast({ title: '✓ Record Archived', description: `${promoter.displayName} has been archived.` });
+      setShowArchiveDialog(false);
+    } catch {
+      toast({ variant: 'destructive', title: '✗ Archive Failed', description: 'Could not archive the record.' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
   const completeness = getDataCompleteness(promoter);
   const lastUpdate = getTimeSinceUpdate(
     promoter.updated_at,
     promoter.created_at
   );
-
   return (
+    <>
     <Card
       className={cn(
         'group relative overflow-hidden transition-all duration-200 hover:shadow-lg cursor-pointer',
@@ -362,7 +422,7 @@ function PromoterCard({
                     <MoreHorizontal className='h-4 w-4' />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
+                <DropdownMenuContent align='end' onClick={e => e.stopPropagation()}>
                   <DropdownMenuItem onClick={onView}>
                     <Eye className='h-4 w-4 mr-2' />
                     View Profile
@@ -370,6 +430,20 @@ function PromoterCard({
                   <DropdownMenuItem onClick={onEdit}>
                     <Edit className='h-4 w-4 mr-2' />
                     Edit Details
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleNotify} disabled={isActionLoading}>
+                    <Send className='h-4 w-4 mr-2 text-green-500' />
+                    Send Notification
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={e => { e.stopPropagation(); setShowArchiveDialog(true); }}
+                    disabled={isActionLoading}
+                    className='text-destructive focus:text-destructive'
+                  >
+                    <Archive className='h-4 w-4 mr-2' />
+                    Archive Record
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -483,9 +557,32 @@ function PromoterCard({
         )}
       </CardContent>
     </Card>
+
+    {/* Archive Confirmation Dialog */}
+    <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Archive this promoter?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will archive <strong>{promoter.displayName}</strong>. The record
+            will be hidden from the main list but can be restored later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isActionLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleArchive}
+            disabled={isActionLoading}
+            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+          >
+            {isActionLoading ? 'Archiving...' : 'Archive'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
-
 export function PromotersCardsView({
   promoters,
   selectedPromoters,

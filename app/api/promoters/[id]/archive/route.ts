@@ -3,85 +3,219 @@ import { createClient } from '@/lib/supabase/server';
 import { ratelimitSensitive, getClientIdentifier } from '@/lib/rate-limit';
 import { z } from 'zod';
 
-const archiveSchema = z.object({
-  reason: z.string().min(1).max(500),
+const archivePostSchema = z.object({
+  reason: z.string().min(1).max(500).optional().default('Archived by admin'),
   permanent: z.boolean().default(false),
 });
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    // Rate limiting
-    const identifier = getClientIdentifier(request);
-    const { success } = await ratelimitSensitive.limit(identifier);
+const archivePutSchema = z.object({
+  archived: z.boolean(),
+  reason: z.string().min(1).max(500).optional(),
+});
 
-    if (!success) {
-      return NextResponse.json(
+async function getAuthenticatedUser(request: NextRequest) {
+  const identifier = getClientIdentifier(request);
+  const { success } = await ratelimitSensitive.limit(identifier);
+  if (!success) {
+    return {
+      error: NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
-      );
-    }
+      ),
+    };
+  }
 
-    // Authentication and authorization
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (authError || !user) {
+    return {
+      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+    };
+  }
 
-    // Check user permissions (simplified for now)
-    // In a real implementation, you would check the user's role from the database
-    // For now, we'll allow authenticated users to archive promoters
+  return { user, supabase };
+}
+
+// POST: Full archive with reason (used by bulk operations and admin panel)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const auth = await getAuthenticatedUser(request);
+    if (auth.error) return auth.error;
+    const { user, supabase } = auth;
+
+    const { id } = await params;
 
     // Validate input
     const body = await request.json();
-    const validatedData = archiveSchema.parse(body);
+    const validatedData = archivePostSchema.parse(body);
 
-    // For now, we'll simulate the archive process
-    // In a real implementation, you would:
-    // 1. Verify the promoter exists in the database
-    // 2. Update the promoter's status to 'archived'
-    // 3. Archive related records if permanent
-    // 4. Log the action
+    // Verify promoter exists
+    const { data: promoter, error: fetchError } = await supabase
+      .from('promoters')
+      .select('id, name_en, name_ar, status')
+      .eq('id', id)
+      .single();
 
-    const archiveId = `archive_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    if (fetchError || !promoter) {
+      return NextResponse.json(
+        { error: 'Promoter not found' },
+        { status: 404 }
+      );
+    }
 
-    // Simulate archive creation
-    const archivedPromoter = {
-      id: params.id,
-      status: 'archived',
-      archived_at: new Date().toISOString(),
-      archived_by: user.id,
-      archive_reason: validatedData.reason,
-      permanent: validatedData.permanent,
-    };
+    // Update promoter status to archived
+    const newStatus = validatedData.permanent ? 'terminated' : 'inactive';
+    const { error: updateError } = await supabase
+      .from('promoters')
+      .update({
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: 'Failed to archive promoter', details: updateError.message },
+        { status: 500 }
+      );
+    }
+
+    // Log the action
+    try {
+      await supabase.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'archive_promoter',
+        table_name: 'promoters',
+        record_id: id,
+        old_values: { status: promoter.status },
+        new_values: {
+          status: newStatus,
+          reason: validatedData.reason,
+          permanent: validatedData.permanent,
+        },
+        created_at: new Date().toISOString(),
+      });
+    } catch {
+      // Audit log failure is non-critical
+    }
 
     return NextResponse.json({
       success: true,
       promoter: {
-        id: archivedPromoter.id,
-        status: archivedPromoter.status,
-        archived_at: archivedPromoter.archived_at,
-        archive_reason: archivedPromoter.archive_reason,
-        permanent: archivedPromoter.permanent,
+        id,
+        status: newStatus,
+        archived_at: new Date().toISOString(),
+        archive_reason: validatedData.reason,
+        permanent: validatedData.permanent,
       },
       message: `Promoter has been successfully archived.`,
     });
   } catch (error) {
-
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input data', details: error.errors },
         { status: 400 }
       );
     }
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
 
+// PUT: Quick archive toggle (used by table row action menu)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const auth = await getAuthenticatedUser(request);
+    if (auth.error) return auth.error;
+    const { user, supabase } = auth;
+
+    const { id } = await params;
+
+    // Validate input
+    const body = await request.json();
+    const validatedData = archivePutSchema.parse(body);
+
+    // Verify promoter exists
+    const { data: promoter, error: fetchError } = await supabase
+      .from('promoters')
+      .select('id, name_en, name_ar, status')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !promoter) {
+      return NextResponse.json(
+        { error: 'Promoter not found' },
+        { status: 404 }
+      );
+    }
+
+    // Toggle archive status
+    const newStatus = validatedData.archived ? 'inactive' : 'active';
+    const { error: updateError } = await supabase
+      .from('promoters')
+      .update({
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      return NextResponse.json(
+        {
+          error: validatedData.archived
+            ? 'Failed to archive promoter'
+            : 'Failed to restore promoter',
+          details: updateError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Log the action
+    try {
+      await supabase.from('audit_logs').insert({
+        user_id: user.id,
+        action: validatedData.archived ? 'archive_promoter' : 'restore_promoter',
+        table_name: 'promoters',
+        record_id: id,
+        old_values: { status: promoter.status },
+        new_values: {
+          status: newStatus,
+          reason: validatedData.reason || 'Quick archive via table action',
+        },
+        created_at: new Date().toISOString(),
+      });
+    } catch {
+      // Audit log failure is non-critical
+    }
+
+    const displayName = promoter.name_en || promoter.name_ar || 'Promoter';
+    return NextResponse.json({
+      success: true,
+      promoter: { id, status: newStatus },
+      message: validatedData.archived
+        ? `${displayName} has been archived.`
+        : `${displayName} has been restored.`,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid input data', details: error.errors },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -91,40 +225,56 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Rate limiting
-    const identifier = getClientIdentifier(request);
-    const { success } = await ratelimitSensitive.limit(identifier);
+    const auth = await getAuthenticatedUser(request);
+    if (auth.error) return auth.error;
+    const { user, supabase } = auth;
 
-    if (!success) {
+    const { id } = await params;
+
+    // Verify promoter exists
+    const { data: promoter, error: fetchError } = await supabase
+      .from('promoters')
+      .select('id, name_en, name_ar')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !promoter) {
       return NextResponse.json(
-        { error: 'Rate limit exceeded. Please try again later.' },
-        { status: 429 }
+        { error: 'Promoter not found' },
+        { status: 404 }
       );
     }
 
-    // Authentication and authorization
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Log before deletion
+    try {
+      await supabase.from('audit_logs').insert({
+        user_id: user.id,
+        action: 'delete_promoter',
+        table_name: 'promoters',
+        record_id: id,
+        old_values: { name_en: promoter.name_en, name_ar: promoter.name_ar },
+        new_values: null,
+        created_at: new Date().toISOString(),
+      });
+    } catch {
+      // Audit log failure is non-critical
     }
 
-    // Check user permissions (simplified for now)
-    // In a real implementation, you would check the user's role from the database
-    // For now, we'll allow authenticated users to delete promoters
+    // Delete the promoter
+    const { error: deleteError } = await supabase
+      .from('promoters')
+      .delete()
+      .eq('id', id);
 
-    // For now, we'll simulate the deletion process
-    // In a real implementation, you would:
-    // 1. Verify the promoter exists in the database
-    // 2. Log the action before deletion
-    // 3. Delete the promoter and related records
+    if (deleteError) {
+      return NextResponse.json(
+        { error: 'Failed to delete promoter', details: deleteError.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

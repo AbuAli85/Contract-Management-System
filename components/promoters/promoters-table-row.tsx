@@ -247,7 +247,7 @@ function EnhancedActionsMenu({
           promoterName: promoter.displayName,
           email: promoter.contactEmail,
         }),
-      }).catch(() => ({ ok: true }));
+      });
 
       const notificationText =
         type === 'urgent'
@@ -255,6 +255,11 @@ function EnhancedActionsMenu({
           : type === 'reminder'
             ? 'Renewal reminder sent'
             : 'Notification sent';
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Notification request failed');
+      }
 
       toast({
         title: `✓ ${notificationText}`,
@@ -279,7 +284,12 @@ function EnhancedActionsMenu({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ archived: true }),
-      }).catch(() => ({ ok: true }));
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Archive request failed');
+      }
 
       toast({
         title: '✓ Record Archived',
