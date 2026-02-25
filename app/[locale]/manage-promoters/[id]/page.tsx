@@ -520,7 +520,7 @@ export default function PromoterDetailPage() {
             const { data: tagsData, error: tagsError } = await supabase
               .from('promoter_tags')
               .select('tag')
-              .eq('promoter_id', parseInt(promoterId));
+              .eq('promoter_id', promoterId);
 
             if (!tagsError && tagsData) {
               tags = tagsData.map((t: any) => t.tag).filter(Boolean);
@@ -541,7 +541,7 @@ export default function PromoterDetailPage() {
               await supabase
                 .from('contracts')
                 .select('*')
-                .eq('promoter_id', parseInt(promoterId));
+                .eq('promoter_id', promoterId);
 
             if (!contractsError && contractsData) {
               contracts = contractsData;
@@ -731,7 +731,7 @@ export default function PromoterDetailPage() {
             supabaseClient
               .from('contracts')
               .select('*')
-              .eq('promoter_id', parseInt(promoterId))
+              .eq('promoter_id', promoterId)
               .then(({ data, error }) => {
                 if (!error && data) {
                   setPromoterDetails(prev =>
@@ -802,7 +802,7 @@ export default function PromoterDetailPage() {
         supabase
           .from('contracts')
           .select('*')
-          .eq('promoter_id', parseInt(promoterId))
+          .eq('promoter_id', promoterId)
           .then(({ data, error }) => {
             if (!error && data) {
               setPromoterDetails(prev =>
