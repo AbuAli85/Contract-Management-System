@@ -489,7 +489,6 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         }))
       );
     } catch (err) {
-      console.error('Error fetching contracts:', err);
       setError('Failed to fetch contracts');
       toast({
         title: 'Error',
@@ -578,7 +577,6 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           description: 'Contract duplicated successfully',
         });
       } catch (err) {
-        console.error('❌ Error duplicating contract:', err);
         setError('Failed to duplicate contract');
         toast({
           title: 'Error',
@@ -610,7 +608,6 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           description: 'Contract archived successfully',
         });
       } catch (err) {
-        console.error('❌ Error archiving contract:', err);
         setError('Failed to archive contract');
         toast({
           title: 'Error',
@@ -642,7 +639,6 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           description: 'Contract deleted successfully',
         });
       } catch (err) {
-        console.error('❌ Error deleting contract:', err);
         setError('Failed to delete contract');
         toast({
           title: 'Error',

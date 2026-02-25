@@ -167,7 +167,7 @@ function AdminStatsOverview() {
           pendingApprovals: 12,
         });
       } catch (error) {
-        console.error('Error fetching admin stats:', error);
+
       }
     };
 

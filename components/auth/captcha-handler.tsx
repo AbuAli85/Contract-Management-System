@@ -85,7 +85,6 @@ export default function CaptchaHandler({
         });
         widgetIdRef.current = widgetId;
       } catch (error) {
-        console.error('hCaptcha render error:', error);
         onCaptchaError?.('Failed to load CAPTCHA');
       }
     };
@@ -108,7 +107,6 @@ export default function CaptchaHandler({
         });
         widgetIdRef.current = widgetId;
       } catch (error) {
-        console.error('Turnstile render error:', error);
         onCaptchaError?.('Failed to load CAPTCHA');
       }
     };
@@ -134,7 +132,6 @@ export default function CaptchaHandler({
             window.turnstile.remove(widgetIdRef.current);
           }
         } catch (error) {
-          console.warn('CAPTCHA cleanup error:', error);
         }
       }
     };
@@ -150,7 +147,6 @@ export default function CaptchaHandler({
           window.turnstile.reset(widgetIdRef.current);
         }
       } catch (error) {
-        console.warn('CAPTCHA reset error:', error);
       }
     }
   };

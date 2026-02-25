@@ -272,9 +272,6 @@ export function logSecurityCheckResults(report: SecurityCheckReport): void {
   });
 
   if (report.criticalIssues > 0) {
-    console.error(
-      '🔥 CRITICAL SECURITY ISSUES DETECTED! Application startup should be blocked.'
-    );
   }
 }
 
@@ -292,12 +289,6 @@ export function enforceSecurityChecks(): void {
 
   if (report.criticalIssues > 0 && process.env.NODE_ENV === 'production') {
     if (skipChecks) {
-      console.warn(
-        `⚠️ SECURITY WARNING: Bypassing ${report.criticalIssues} critical security check(s) due to SKIP_SECURITY_CHECKS=true`
-      );
-      console.warn(
-        '⚠️ Please configure all required environment variables and remove SKIP_SECURITY_CHECKS'
-      );
       return;
     }
     throw new Error(

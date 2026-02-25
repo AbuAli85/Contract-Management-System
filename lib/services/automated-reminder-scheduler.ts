@@ -121,7 +121,6 @@ export async function getDocumentsNeedingReminders(): Promise<
     .or('passport_expiry_date.not.is.null');
 
   if (error) {
-    console.error('Error fetching promoters:', error);
     return [];
   }
 
@@ -300,7 +299,6 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
             result.errors.push(
               `Failed to send reminder to ${doc.promoterName}: ${reminderResult.error}`
             );
-            console.error(`❌ Failed to send reminder:`, reminderResult.error);
           }
         }
       } catch (error) {
@@ -309,7 +307,6 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
         result.errors.push(
           `Error processing promoter ${promoterId}: ${errorMessage}`
         );
-        console.error(`❌ Error processing promoter:`, error);
       }
     }
 
@@ -319,7 +316,6 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     result.errors.push(errorMessage);
-    console.error('❌ Error in automated reminder system:', error);
   }
 
   return result;
@@ -393,7 +389,6 @@ export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     result.errors.push(errorMessage);
-    console.error('❌ Error in bulk critical reminder system:', error);
   }
 
   return result;

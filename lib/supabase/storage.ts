@@ -23,7 +23,6 @@ export async function uploadImage(
     });
 
   if (error) {
-    console.error('Error uploading image:', error);
     return { success: false, message: `Image upload failed: ${error.message}` };
   }
 

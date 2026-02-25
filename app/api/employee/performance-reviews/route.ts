@@ -44,7 +44,6 @@ export async function GET() {
       .order('review_period_end', { ascending: false });
 
     if (error) {
-      console.error('Error fetching reviews:', error);
       return NextResponse.json(
         { error: 'Failed to fetch reviews' },
         { status: 500 }
@@ -56,7 +55,6 @@ export async function GET() {
       reviews: reviews || [],
     });
   } catch (error: any) {
-    console.error('Performance reviews fetch error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -31,11 +31,6 @@ export async function POST(req: NextRequest) {
     const context = await getMcpContext(req);
 
     // Log with correlation ID
-    console.log(`[${correlationId}] MCP endpoint: /api/mcp/contracts/draft`, {
-      user_id: context.user_id,
-      tenant_id: context.tenant_id,
-      role: context.role,
-    });
 
     // 2. RBAC: provider or admin only
     assertRole(context, ['provider', 'admin']);

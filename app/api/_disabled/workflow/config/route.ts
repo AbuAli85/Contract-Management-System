@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
     const { data: configs, error: configError } = await query;
 
     if (configError) {
-      console.error('Error fetching workflow config:', configError);
       return NextResponse.json(
         { error: 'Failed to fetch workflow configuration' },
         { status: 500 }
@@ -49,7 +48,6 @@ export async function GET(request: NextRequest) {
       configs: configs || [],
     });
   } catch (error) {
-    console.error('Error in workflow config GET:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -146,7 +144,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating workflow config:', createError);
       return NextResponse.json(
         { error: 'Failed to create workflow configuration' },
         { status: 500 }
@@ -159,7 +156,6 @@ export async function POST(request: NextRequest) {
       message: 'Workflow configuration created successfully',
     });
   } catch (error) {
-    console.error('Error in workflow config POST:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -223,7 +219,6 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error('Error updating workflow config:', updateError);
       return NextResponse.json(
         { error: 'Failed to update workflow configuration' },
         { status: 500 }
@@ -243,7 +238,6 @@ export async function PUT(request: NextRequest) {
       message: 'Workflow configuration updated successfully',
     });
   } catch (error) {
-    console.error('Error in workflow config PUT:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -298,7 +292,6 @@ export async function DELETE(request: NextRequest) {
       .eq('config_name', configName);
 
     if (deleteError) {
-      console.error('Error deleting workflow config:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete workflow configuration' },
         { status: 500 }
@@ -310,7 +303,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Workflow configuration deleted successfully',
     });
   } catch (error) {
-    console.error('Error in workflow config DELETE:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

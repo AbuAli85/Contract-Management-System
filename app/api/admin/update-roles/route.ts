@@ -38,14 +38,12 @@ export const POST = withRBAC(
         .select();
 
       if (error) {
-        console.error('Error updating user roles:', error);
         return NextResponse.json(
           { error: 'Failed to update roles' },
           { status: 500 }
         );
       }
 
-      console.log(`✅ Updated ${data.length} user roles to ${newRole}`);
 
       return NextResponse.json({
         success: true,
@@ -53,7 +51,6 @@ export const POST = withRBAC(
         updated: data,
       });
     } catch (error) {
-      console.error('Role update error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

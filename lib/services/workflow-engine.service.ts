@@ -229,7 +229,6 @@ export class WorkflowEngineService {
         executionId: execution.id,
       };
     } catch (error: any) {
-      console.error('Error executing workflow:', error);
       return {
         success: false,
         error: error.message || 'Workflow execution failed',
@@ -597,7 +596,6 @@ export class WorkflowEngineService {
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching execution history:', error);
       return [];
     }
 

@@ -43,7 +43,7 @@ export default function UserApprovalsPage() {
         throw new Error('Failed to fetch pending users');
       }
     } catch (error) {
-      console.error('Error fetching pending users:', error);
+
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -92,11 +92,11 @@ export default function UserApprovalsPage() {
         }, 500);
       } else {
         const errorData = await response.json();
-        console.error(`❌ Approval: API error:`, errorData);
+
         throw new Error(errorData.error || `Failed to ${action} user`);
       }
     } catch (error) {
-      console.error(`❌ Approval: ${action} error:`, error);
+
       toast({
         variant: 'destructive',
         title: 'Error',

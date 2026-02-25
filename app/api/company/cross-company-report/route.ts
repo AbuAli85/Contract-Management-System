@@ -92,7 +92,6 @@ export async function GET() {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -139,7 +138,6 @@ export async function GET() {
           .filter((c: any) => !isInvalidCompany(c.company_name || ''));
       }
     } catch (e) {
-      console.warn('Error fetching company_members:', e);
     }
 
     // Second: Get directly owned companies
@@ -171,7 +169,6 @@ export async function GET() {
         }
       }
     } catch (e) {
-      console.warn('Error fetching owned companies:', e);
     }
 
     // Third: Get companies linked to parties where user's email matches party contact_email
@@ -242,7 +239,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error fetching party-linked companies:', e);
       }
     }
 
@@ -298,7 +294,6 @@ export async function GET() {
         }
       }
     } catch (e) {
-      console.warn('Error fetching employer-linked companies:', e);
     }
 
     // Fifth: Get companies from parties table where type = 'Employer'
@@ -377,7 +372,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error fetching profile-party matched companies:', e);
       }
     }
 
@@ -551,7 +545,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error fetching employer parties:', e);
       }
     }
 
@@ -755,18 +748,8 @@ export async function GET() {
 
       // Debug logging (only in development)
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Cross-Company Report] Group fetching summary:', {
-          total_companies: allCompanies.length,
-          companies_with_groups: Array.from(companyGroupMap.keys()).length,
-          total_groups_found: allGroupIds.length,
-          group_names: Array.from(groupNameMap.values()),
-        });
       }
     } catch (groupError) {
-      console.warn(
-        'Error fetching group names in cross-company report:',
-        groupError
-      );
       // Continue without group names if there's an error
     }
 
@@ -815,13 +798,11 @@ export async function GET() {
         }
         const { count, error } = await query;
         if (error) {
-          console.warn(`Error counting ${table}:`, error);
           return 0;
         }
         return count || 0;
       } catch (e) {
         // Column may not exist, return 0
-        console.warn(`Exception counting ${table}:`, e);
         return 0;
       }
     };
@@ -866,7 +847,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching company party_ids:', e);
       }
     }
 
@@ -890,7 +870,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching employer_employees:', e);
       }
     }
 
@@ -916,7 +895,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching promoters:', e);
       }
     }
 
@@ -956,7 +934,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching attendance:', e);
       }
     }
 
@@ -985,7 +962,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching tasks:', e);
       }
     }
 
@@ -1008,7 +984,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching leaves:', e);
       }
     }
 
@@ -1031,7 +1006,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching expenses:', e);
       }
     }
 
@@ -1101,7 +1075,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching contracts:', e);
       }
     }
 
@@ -1124,7 +1097,6 @@ export async function GET() {
           }
         }
       } catch (e) {
-        console.warn('Error batch fetching reviews:', e);
       }
     }
 
@@ -1234,7 +1206,6 @@ export async function GET() {
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error in cross-company report:', errorMessage);
 
     // Return a proper error response with valid structure
     return NextResponse.json(

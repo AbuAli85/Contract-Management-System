@@ -94,7 +94,6 @@ export function TargetsView({
 
       setTargets(data.targets || []);
     } catch (error) {
-      console.error('Error fetching targets:', error);
       toast({
         title: 'Error',
         description: 'Failed to load targets',
@@ -170,7 +169,6 @@ export function TargetsView({
       // Refresh targets
       fetchTargets();
     } catch (error: any) {
-      console.error('Error creating target:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to create target',
@@ -254,7 +252,6 @@ export function TargetsView({
 
       fetchTargets();
     } catch (error: any) {
-      console.error('Error updating target:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to update target',

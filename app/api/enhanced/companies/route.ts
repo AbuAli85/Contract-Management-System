@@ -56,7 +56,6 @@ export const GET = withRBAC(
         ...result,
       });
     } catch (error: any) {
-      console.error('Error in companies GET API:', error);
       return NextResponse.json(
         {
           error: error.message || 'Internal server error',
@@ -133,7 +132,6 @@ export const POST = withRBAC(
         message: 'Company created/updated successfully',
       });
     } catch (error: any) {
-      console.error('Error in companies POST API:', error);
 
       // Handle specific errors
       if (error.message.includes('permissions')) {
@@ -199,7 +197,6 @@ export async function PUT(request: NextRequest) {
       message: 'Company updated successfully',
     });
   } catch (error: any) {
-    console.error('Error in companies PUT API:', error);
 
     if (error.message.includes('permissions')) {
       return NextResponse.json({ error: error.message }, { status: 403 });
@@ -253,7 +250,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Company deleted successfully',
     });
   } catch (error: any) {
-    console.error('Error in companies DELETE API:', error);
 
     if (error.message.includes('permissions')) {
       return NextResponse.json({ error: error.message }, { status: 403 });

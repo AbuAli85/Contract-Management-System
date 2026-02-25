@@ -186,7 +186,6 @@ export function PromoterExportPrint({
 
       alert(`Profile ${action}ed successfully!`);
     } catch (error) {
-      console.error('Export error:', error);
       alert('Export failed. Please try again.');
     } finally {
       setIsExporting(false);
@@ -270,7 +269,6 @@ export function PromoterExportPrint({
           url: window.location.href,
         });
       } catch (error) {
-        console.error('Share failed:', error);
       }
     } else {
       // Fallback: Copy to clipboard

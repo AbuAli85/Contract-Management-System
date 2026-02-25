@@ -57,7 +57,7 @@ export default function SettingsPage() {
           setIntegrationSettings(JSON.parse(savedIntegrations));
         }
       } catch (error) {
-        console.error('Failed to load settings:', error);
+
       }
     };
 

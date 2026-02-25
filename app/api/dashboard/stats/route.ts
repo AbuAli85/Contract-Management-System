@@ -12,19 +12,16 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Dashboard stats: Starting request...');
 
     const supabase = await createClient();
 
     // Get current user
-    console.log('🔍 Dashboard stats: Getting user...');
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.warn('🔍 Dashboard stats: User error:', userError.message);
     }
 
     // Get user role
@@ -37,7 +34,6 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (roleError) {
-        console.warn('🔍 Dashboard stats: Role fetch error:', roleError);
       }
 
       if (userData?.role) {
@@ -45,11 +41,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('🔍 Dashboard stats: Fetching metrics...', {
-      userId: user?.id,
-      userRole,
-      isAdmin: userRole === 'admin',
-    });
 
     // Get force refresh from query params
     const { searchParams } = new URL(request.url);
@@ -80,7 +71,6 @@ export async function GET(request: NextRequest) {
         end: previousMonthEnd,
       },
     }).catch(error => {
-      console.warn('Failed to fetch previous month metrics:', error);
       return null;
     });
 
@@ -95,7 +85,7 @@ export async function GET(request: NextRequest) {
       activePromoters: metrics.promoters.active,
       totalParties: metrics.parties.total,
       pendingApprovals: metrics.contracts.pending,
-      recentActivity: 0, // TODO: Add to metrics service if needed
+      recentActivity: (metrics.contracts as any).recentlyUpdated ?? 0,
 
       // Status breakdown
       contractsByStatus: metrics.contracts.byStatus,
@@ -133,15 +123,9 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    console.log('🔍 Dashboard stats: Final stats:', {
-      totalContracts: stats.totalContracts,
-      scope: stats.scope,
-      scopeLabel: stats.scopeLabel,
-    });
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('🔍 Dashboard stats: Unexpected error:', error);
 
     // Handle different error types
     let errorMessage = 'Unknown error';

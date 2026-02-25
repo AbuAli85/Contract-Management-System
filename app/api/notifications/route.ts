@@ -58,7 +58,6 @@ export const GET = withAnyRBAC(
       const { data: notifications, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching notifications:', error);
         return NextResponse.json(
           {
             success: false,
@@ -80,7 +79,6 @@ export const GET = withAnyRBAC(
         },
       });
     } catch (error) {
-      console.error('Notifications API error:', error);
       return NextResponse.json(
         {
           success: false,
@@ -131,7 +129,6 @@ export const POST = withRBAC(
         .single()) as { data: any; error: any };
 
       if (error) {
-        console.error('Error creating notification:', error);
         return NextResponse.json(
           {
             success: false,
@@ -161,7 +158,6 @@ export const POST = withRBAC(
         );
       }
 
-      console.error('Notifications API error:', error);
       return NextResponse.json(
         {
           success: false,
@@ -217,7 +213,6 @@ export async function PATCH(request: NextRequest) {
       .single()) as { data: any; error: any };
 
     if (error) {
-      console.error('Error updating notification:', error);
       return NextResponse.json(
         {
           success: false,
@@ -233,7 +228,6 @@ export async function PATCH(request: NextRequest) {
       data: notification,
     });
   } catch (error) {
-    console.error('Notifications API error:', error);
     return NextResponse.json(
       {
         success: false,

@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
       .order('attendance_date', { ascending: true });
 
     if (error) {
-      console.error('Error fetching attendance:', error);
       return NextResponse.json(
         { error: 'Failed to fetch attendance' },
         { status: 500 }
@@ -128,7 +127,6 @@ export async function GET(request: NextRequest) {
       weeklyData: weeklyData.sort((a, b) => a.week.localeCompare(b.week)),
     });
   } catch (error: any) {
-    console.error('Error in attendance analytics:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

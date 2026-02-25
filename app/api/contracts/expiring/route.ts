@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
       .order('end_date', { ascending: true });
 
     if (error) {
-      console.error('Error fetching expiring contracts:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch expiring contracts' },
         { status: 500 }
@@ -48,7 +47,6 @@ export async function GET(request: NextRequest) {
       contracts: contracts || [],
     });
   } catch (error) {
-    console.error('Expiring contracts GET error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
     const { data: employees, error: employeesError } = await employeesQuery;
 
     if (employeesError) {
-      console.error('Error fetching employees:', employeesError);
       return NextResponse.json(
         { error: 'Failed to fetch employees', details: employeesError.message },
         { status: 500 }
@@ -159,7 +158,6 @@ export async function GET(request: NextRequest) {
       count: employeesWithData.length,
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/employer-employees/alignment:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

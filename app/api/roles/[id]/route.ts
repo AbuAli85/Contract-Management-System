@@ -29,7 +29,6 @@ export async function PUT(
       .limit(1);
 
     if (checkError) {
-      console.error('Error checking existing role:', checkError);
       return NextResponse.json(
         {
           success: false,
@@ -58,7 +57,6 @@ export async function PUT(
         .limit(1);
 
       if (conflictError) {
-        console.error('Error checking role conflict:', conflictError);
         return NextResponse.json(
           {
             success: false,
@@ -86,7 +84,6 @@ export async function PUT(
       .eq('role', roleId);
 
     if (updateError) {
-      console.error('Error updating role:', updateError);
       return NextResponse.json(
         {
           success: false,
@@ -117,7 +114,6 @@ export async function PUT(
       role: updatedRole,
     });
   } catch (error) {
-    console.error('Update role error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -144,7 +140,6 @@ export async function DELETE(
       .limit(1);
 
     if (checkError) {
-      console.error('Error checking existing role:', checkError);
       return NextResponse.json(
         {
           success: false,
@@ -182,7 +177,6 @@ export async function DELETE(
       .eq('role', roleId);
 
     if (updateError) {
-      console.error('Error updating users after role deletion:', updateError);
       return NextResponse.json(
         {
           success: false,
@@ -197,7 +191,6 @@ export async function DELETE(
       message: 'Role deleted successfully',
     });
   } catch (error) {
-    console.error('Delete role error:', error);
     return NextResponse.json(
       {
         success: false,

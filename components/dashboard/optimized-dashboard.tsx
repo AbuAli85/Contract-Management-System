@@ -98,7 +98,6 @@ export default function OptimizedDashboard() {
         setLastUpdated(new Date());
       }
     } catch (error) {
-      console.error('Failed to fetch overview:', error);
     }
   }, [timeRange]);
 
@@ -137,7 +136,6 @@ export default function OptimizedDashboard() {
       alert(`PDF generation started for ${pendingContracts.length} contracts`);
       handleRefresh();
     } catch (error) {
-      console.error('Batch PDF generation failed:', error);
       alert('Failed to start batch PDF generation');
     }
   }, [contracts, batchGeneratePDFs, handleRefresh]);
@@ -148,7 +146,6 @@ export default function OptimizedDashboard() {
       try {
         await cleanupTempFiles(24 * 60 * 60 * 1000); // 24 hours
       } catch (error) {
-        console.error('Background cleanup failed:', error);
       }
     };
 

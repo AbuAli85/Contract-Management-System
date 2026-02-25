@@ -43,7 +43,6 @@ export function ApproveRejectButtons({
           setUserRole(profile?.role || null);
         }
       } catch (error) {
-        console.error('Error checking user role:', error);
       } finally {
         setCheckingRole(false);
       }
@@ -98,7 +97,6 @@ export function ApproveRejectButtons({
         variant: 'default',
       });
     } catch (error) {
-      console.error(`❌ Failed to ${newStatus} service:`, error);
 
       toast({
         title: 'Status Update Failed',

@@ -28,7 +28,6 @@ export async function GET(_request: NextRequest) {
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching dashboard layout:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch layout' },
         { status: 500 }
@@ -74,7 +73,6 @@ export async function GET(_request: NextRequest) {
       layout: layout ? formatLayout(layout) : null,
     });
   } catch (error) {
-    console.error('Dashboard layout GET error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -128,7 +126,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error saving dashboard layout:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to save layout' },
         { status: 500 }
@@ -151,7 +148,6 @@ export async function POST(request: NextRequest) {
         .insert(widgetConfigs);
 
       if (widgetError) {
-        console.error('Error saving widget configurations:', widgetError);
         // Continue anyway, layout is saved
       }
     }
@@ -162,7 +158,6 @@ export async function POST(request: NextRequest) {
       message: 'Layout saved successfully',
     });
   } catch (error) {
-    console.error('Dashboard layout POST error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -225,7 +220,6 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error updating dashboard layout:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to update layout' },
         { status: 500 }
@@ -255,7 +249,6 @@ export async function PUT(request: NextRequest) {
       message: 'Layout updated successfully',
     });
   } catch (error) {
-    console.error('Dashboard layout PUT error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

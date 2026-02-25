@@ -94,7 +94,6 @@ export function ContractReviewForm({
       }
     } catch (err) {
       setError('Failed to submit review');
-      console.error('Error submitting review:', err);
     } finally {
       setLoading(false);
     }

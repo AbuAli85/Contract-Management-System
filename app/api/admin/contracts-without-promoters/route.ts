@@ -50,7 +50,6 @@ export const GET = withRBAC(
       );
 
       if (statsError) {
-        console.error('Error fetching stats:', statsError);
       }
 
       // Get contracts without promoters using the view
@@ -70,7 +69,6 @@ export const GET = withRBAC(
       const { data: contracts, error: contractsError } = await query;
 
       if (contractsError) {
-        console.error('Error fetching contracts:', contractsError);
         return NextResponse.json(
           {
             success: false,
@@ -124,7 +122,6 @@ export const GET = withRBAC(
         },
       });
     } catch (error) {
-      console.error('Error in contracts-without-promoters API:', error);
       return NextResponse.json(
         {
           success: false,
@@ -187,7 +184,6 @@ export const POST = withRBAC(
       });
 
       if (suggestError) {
-        console.error('Error generating suggestions:', suggestError);
         return NextResponse.json(
           {
             success: false,
@@ -222,7 +218,6 @@ export const POST = withRBAC(
         },
       });
     } catch (error) {
-      console.error('Error generating suggestions:', error);
       return NextResponse.json(
         {
           success: false,
@@ -298,7 +293,6 @@ export const PUT = withRBAC(
       );
 
       if (assignError) {
-        console.error('Error bulk assigning promoters:', assignError);
         return NextResponse.json(
           {
             success: false,
@@ -324,7 +318,6 @@ export const PUT = withRBAC(
         },
       });
     } catch (error) {
-      console.error('Error in bulk assignment:', error);
       return NextResponse.json(
         {
           success: false,

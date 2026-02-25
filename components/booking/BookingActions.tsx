@@ -136,7 +136,6 @@ export function BookingActions({
       onStatusChange?.(newStatus);
     } catch (err) {
       // Error is already handled by the hook
-      console.error('Failed to update status:', err);
     }
   };
 

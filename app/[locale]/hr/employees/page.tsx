@@ -81,13 +81,11 @@ export default function EmployeesPage() {
         setEmployees(data.data || []);
         setTotalPages(data.pagination?.pages || 1);
       } else {
-        console.error('Error fetching employees:', data.error);
         // Show empty state on error - do not use mock data in production
         setEmployees([]);
         setTotalPages(1);
       }
     } catch (error) {
-      console.error('Error fetching employees:', error);
     } finally {
       setLoading(false);
     }

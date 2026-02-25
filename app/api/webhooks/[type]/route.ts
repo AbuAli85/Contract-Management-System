@@ -92,7 +92,6 @@ export const POST = withRBAC(
         return NextResponse.json({ error: result.error }, { status: 500 });
       }
     } catch (error) {
-      console.error('Webhook API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

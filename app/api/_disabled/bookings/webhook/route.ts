@@ -42,15 +42,12 @@ const WEBHOOK_URLS = {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== BOOKING WEBHOOK HANDLER START ===');
 
     // Parse the request body
     const payload: WebhookPayload = await request.json();
-    console.log('Webhook payload received:', payload);
 
     // Validate required fields
     if (!payload.event) {
-      console.error('❌ Missing event type in payload');
       return NextResponse.json(
         { error: 'Missing event type' },
         { status: 400 }
@@ -60,7 +57,6 @@ export async function POST(request: NextRequest) {
     // Get the appropriate webhook URL
     const webhookUrl = WEBHOOK_URLS[payload.event as keyof typeof WEBHOOK_URLS];
     if (!webhookUrl) {
-      console.error(`❌ No webhook URL configured for event: ${payload.event}`);
       return NextResponse.json(
         { error: `Unsupported event type: ${payload.event}` },
         { status: 400 }
@@ -130,12 +126,9 @@ export async function POST(request: NextRequest) {
             quoted_price: bookingData.quoted_price,
             status: bookingData.status,
           };
-          console.log('✅ Enriched booking data successfully');
         } else {
-          console.warn('⚠️ Could not enrich booking data:', bookingError);
         }
       } catch (enrichError) {
-        console.warn('⚠️ Error enriching booking data:', enrichError);
         // Continue with original payload if enrichment fails
       }
     }
@@ -145,8 +138,6 @@ export async function POST(request: NextRequest) {
     enrichedPayload.source = 'contract-management-system';
     enrichedPayload.environment = process.env.NODE_ENV || 'development';
 
-    console.log('Sending to Make.com webhook:', webhookUrl);
-    console.log('Enriched payload:', JSON.stringify(enrichedPayload, null, 2));
 
     // Send to Make.com webhook
     const makeResponse = await fetch(webhookUrl, {
@@ -160,10 +151,6 @@ export async function POST(request: NextRequest) {
 
     if (!makeResponse.ok) {
       const errorText = await makeResponse.text();
-      console.error(
-        `❌ Make.com webhook failed (${makeResponse.status}):`,
-        errorText
-      );
 
       // Log the failure to database for monitoring
       try {
@@ -176,7 +163,6 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
         });
       } catch (logError) {
-        console.error('Failed to log webhook error:', logError);
       }
 
       return NextResponse.json(
@@ -186,7 +172,6 @@ export async function POST(request: NextRequest) {
     }
 
     const makeResponseData = await makeResponse.text();
-    console.log('✅ Make.com webhook response:', makeResponseData);
 
     // Log successful webhook execution
     try {
@@ -199,12 +184,9 @@ export async function POST(request: NextRequest) {
         processed_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
       });
-      console.log('✅ Webhook execution logged successfully');
     } catch (logError) {
-      console.warn('⚠️ Failed to log webhook success:', logError);
     }
 
-    console.log('=== BOOKING WEBHOOK HANDLER COMPLETE ===');
 
     return NextResponse.json({
       success: true,
@@ -214,8 +196,6 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('=== BOOKING WEBHOOK HANDLER ERROR ===');
-    console.error('Unexpected error:', error);
 
     // Log the error to database
     try {
@@ -228,7 +208,6 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
       });
     } catch (logError) {
-      console.error('Failed to log general error:', logError);
     }
 
     return NextResponse.json(

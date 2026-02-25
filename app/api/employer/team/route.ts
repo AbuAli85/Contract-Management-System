@@ -115,7 +115,6 @@ async function getTeamHandler(request: NextRequest) {
     const { data: teamMembers, error: teamError } = await query;
 
     if (teamError) {
-      console.error('Error fetching team:', teamError);
       return NextResponse.json(
         { error: 'Failed to fetch team members' },
         { status: 500 }
@@ -134,7 +133,6 @@ async function getTeamHandler(request: NextRequest) {
         .single();
 
       if (!employerParty) {
-        console.warn('Employer party not found for party_id:', partyId);
       } else {
         const employerEmail = employerParty.contact_email?.toLowerCase();
 
@@ -379,7 +377,6 @@ async function getTeamHandler(request: NextRequest) {
       count: teamWithPermissions.length,
     });
   } catch (error) {
-    console.error('Error in GET /api/employer/team:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -562,7 +559,6 @@ async function addTeamMemberHandler(request: NextRequest) {
           .eq('id', existingByPromoter.id);
 
         if (updateError) {
-          console.error('Error fixing employee_id:', updateError);
           return NextResponse.json(
             {
               error:
@@ -640,7 +636,6 @@ async function addTeamMemberHandler(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Error adding team member:', insertError);
       return NextResponse.json(
         { error: 'Failed to add team member', details: insertError.message },
         { status: 500 }
@@ -653,7 +648,6 @@ async function addTeamMemberHandler(request: NextRequest) {
       team_member: teamMember,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

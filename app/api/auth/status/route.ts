@@ -35,7 +35,6 @@ export async function GET(_request: NextRequest) {
       auth: authStatus,
     });
   } catch (error) {
-    console.error('Auth status error:', error);
     return NextResponse.json(
       {
         success: false,

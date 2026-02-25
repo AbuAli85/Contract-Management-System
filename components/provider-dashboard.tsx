@@ -143,7 +143,6 @@ export function ProviderDashboard({ user }: ProviderDashboardProps) {
           avg_rating: 4.8, // This would come from reviews table
         });
       } catch (error) {
-        console.error('❌ Error loading dashboard:', error);
         toast({
           title: 'Failed to load dashboard',
           description: 'Please refresh the page to try again.',
@@ -232,7 +231,6 @@ export function ProviderDashboard({ user }: ProviderDashboardProps) {
         description: `The booking status has been updated to ${newStatus}.`,
       });
     } catch (error) {
-      console.error(`Error ${action}ing booking:`, error);
       toast({
         title: `Failed to ${action} booking`,
         description: 'Please try again.',

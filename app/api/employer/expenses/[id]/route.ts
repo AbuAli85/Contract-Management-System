@@ -117,7 +117,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Error updating expense:', updateError);
       return NextResponse.json(
         { error: 'Failed to update expense' },
         { status: 500 }
@@ -151,7 +150,6 @@ export async function PATCH(
       expense: updated,
     });
   } catch (error) {
-    console.error('Error in expense PATCH:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

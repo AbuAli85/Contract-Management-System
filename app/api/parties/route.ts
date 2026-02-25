@@ -43,7 +43,6 @@ async function handleGET(request: Request) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   try {
-    console.log(`[${requestId}] 🚀 Parties API Request started`);
 
     // Validate environment variables
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -104,13 +103,6 @@ async function handleGET(request: Request) {
         authError = authResult.error;
 
         if (authError) {
-          console.warn(
-            `[${requestId}] ⚠️ Auth attempt ${authAttempts} failed:`,
-            {
-              message: authError.message,
-              status: authError.status,
-            }
-          );
 
           // Wait before retry (exponential backoff)
           if (authAttempts < maxAuthAttempts) {
@@ -120,10 +112,6 @@ async function handleGET(request: Request) {
           }
         }
       } catch (error) {
-        console.error(
-          `[${requestId}] 💥 Auth attempt ${authAttempts} threw error:`,
-          error
-        );
         authError = error;
 
         if (authAttempts < maxAuthAttempts) {
@@ -135,19 +123,8 @@ async function handleGET(request: Request) {
     }
 
     const authDuration = Date.now() - authStartTime;
-    console.log(
-      `[${requestId}] 🔐 Auth check completed in ${authDuration}ms (${authAttempts} attempts)`
-    );
 
     if (authError) {
-      console.error(
-        `[${requestId}] ❌ Auth failed after ${authAttempts} attempts:`,
-        {
-          message: authError.message,
-          status: authError.status,
-          attempts: authAttempts,
-        }
-      );
       return NextResponse.json(
         {
           success: false,
@@ -166,9 +143,6 @@ async function handleGET(request: Request) {
     }
 
     if (!user) {
-      console.warn(
-        `[${requestId}] ⚠️ No authenticated user found after ${authAttempts} attempts`
-      );
       return NextResponse.json(
         {
           success: false,
@@ -199,13 +173,6 @@ async function handleGET(request: Request) {
     const offset = (page - 1) * limit;
     const typeFilter = url.searchParams.get('type'); // Get type filter
 
-    console.log(`[${requestId}] 📊 Query params:`, {
-      page,
-      limit,
-      offset,
-      type: typeFilter,
-      userId: user.id,
-    });
 
     // Fetch parties from the database with pagination and retry logic
     const queryStartTime = Date.now();
@@ -218,9 +185,6 @@ async function handleGET(request: Request) {
     while (queryAttempts < maxQueryAttempts && !parties && !queryError) {
       queryAttempts++;
       try {
-        console.log(
-          `[${requestId}] 📝 Database query attempt ${queryAttempts}`
-        );
 
         let query = supabase.from('parties').select('*', { count: 'exact' });
 
@@ -238,14 +202,6 @@ async function handleGET(request: Request) {
         queryError = queryResult.error;
 
         if (queryError) {
-          console.warn(
-            `[${requestId}] ⚠️ Query attempt ${queryAttempts} failed:`,
-            {
-              message: queryError.message,
-              code: queryError.code,
-              hint: queryError.hint,
-            }
-          );
 
           // Wait before retry (exponential backoff)
           if (queryAttempts < maxQueryAttempts) {
@@ -255,10 +211,6 @@ async function handleGET(request: Request) {
           }
         }
       } catch (error) {
-        console.error(
-          `[${requestId}] 💥 Query attempt ${queryAttempts} threw error:`,
-          error
-        );
         queryError = error;
 
         if (queryAttempts < maxQueryAttempts) {
@@ -270,21 +222,8 @@ async function handleGET(request: Request) {
     }
 
     const queryDuration = Date.now() - queryStartTime;
-    console.log(
-      `[${requestId}] 📝 Database query completed in ${queryDuration}ms (${queryAttempts} attempts)`
-    );
 
     if (queryError) {
-      console.error(
-        `[${requestId}] ❌ Database query failed after ${queryAttempts} attempts:`,
-        {
-          message: queryError.message,
-          details: queryError.details,
-          hint: queryError.hint,
-          code: queryError.code,
-          attempts: queryAttempts,
-        }
-      );
 
       return NextResponse.json(
         {
@@ -308,17 +247,10 @@ async function handleGET(request: Request) {
 
     // Validate and check results
     if (!parties) {
-      console.warn(
-        `[${requestId}] ⚠️ Parties data is null - this might indicate a database issue`
-      );
       parties = [];
     }
 
     if (!Array.isArray(parties)) {
-      console.error(
-        `[${requestId}] ❌ Parties data is not an array:`,
-        typeof parties
-      );
       return NextResponse.json(
         {
           success: false,
@@ -337,23 +269,10 @@ async function handleGET(request: Request) {
     }
 
     if (parties.length === 0) {
-      console.log(`[${requestId}] ℹ️ No parties found (empty result set)`);
     } else {
-      console.log(
-        `[${requestId}] ✅ Retrieved ${parties.length} parties successfully`
-      );
     }
 
     const totalDuration = Date.now() - startTime;
-    console.log(`[${requestId}] ✅ Request completed successfully`, {
-      resultCount: parties?.length || 0,
-      totalCount: count || 0,
-      duration: `${totalDuration}ms`,
-      breakdown: {
-        auth: `${authDuration}ms`,
-        query: `${queryDuration}ms`,
-      },
-    });
 
     // Fetch contract counts for all parties
     const contractCountsStartTime = Date.now();
@@ -361,7 +280,6 @@ async function handleGET(request: Request) {
       {};
 
     try {
-      console.log(`[${requestId}] 📊 Fetching contract counts for parties`);
 
       // Get party IDs from the current batch
       const partyIds = parties.map(p => p.id);
@@ -375,10 +293,6 @@ async function handleGET(request: Request) {
         );
 
       if (contractError) {
-        console.warn(
-          `[${requestId}] ⚠️ Failed to fetch contracts for counting:`,
-          contractError.message
-        );
       } else if (contractData) {
         // Count contracts for each party
         contractData.forEach((contract: any) => {
@@ -415,32 +329,20 @@ async function handleGET(request: Request) {
           });
         });
 
-        console.log(
-          `[${requestId}] ✅ Contract counts calculated for ${Object.keys(contractCounts).length} parties`
-        );
       }
     } catch (error) {
-      console.error(
-        `[${requestId}] ❌ Error fetching contract counts:`,
-        error instanceof Error ? error.message : 'Unknown error'
-      );
       // Continue with empty counts
     }
 
     const contractCountsDuration = Date.now() - contractCountsStartTime;
-    console.log(
-      `[${requestId}] 📊 Contract counts fetched in ${contractCountsDuration}ms`
-    );
 
     // Transform data to include contract counts with validation
     const partiesWithCounts = parties.map(party => {
       try {
         // Validate required fields
         if (!party.id) {
-          console.warn(`[${requestId}] ⚠️ Party missing ID:`, party);
         }
         if (!party.name_en && !party.name_ar) {
-          console.warn(`[${requestId}] ⚠️ Party missing names:`, party.id);
         }
 
         // Get contract counts for this party
@@ -452,10 +354,6 @@ async function handleGET(request: Request) {
           active_contracts: counts.active,
         };
       } catch (error) {
-        console.error(`[${requestId}] ❌ Error processing party:`, {
-          partyId: party.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
 
         // Return a safe fallback
         return {
@@ -501,11 +399,6 @@ async function handleGET(request: Request) {
           : undefined,
     };
 
-    console.log(`[${requestId}] ✅ Response prepared:`, {
-      partiesCount: partiesWithCounts.length,
-      totalCount: count,
-      duration: `${totalDuration}ms`,
-    });
 
     return NextResponse.json(response);
   } catch (error) {
@@ -524,15 +417,10 @@ async function handleGET(request: Request) {
       userAgent: request.headers.get('user-agent'),
     };
 
-    console.error(`[${requestId}] 💥 Unexpected error:`, errorDetails);
 
     // Log to external service if configured (e.g., Sentry, LogRocket)
     if (process.env.NODE_ENV === 'production') {
       // Example: Sentry.captureException(error, { extra: errorDetails });
-      console.error(
-        'Production error - consider logging to external service:',
-        errorDetails
-      );
     }
 
     return NextResponse.json(
@@ -569,7 +457,6 @@ async function handleGET(request: Request) {
 // Export GET with optional RBAC protection
 export const GET = RBAC_BYPASS
   ? async (request: Request) => {
-      console.log('⚠️ RBAC BYPASS ENABLED - Running without permission checks');
       return handleGET(request);
     }
   : withRBAC('party:read:own', handleGET);
@@ -631,7 +518,6 @@ export async function POST(request: Request) {
     try {
       adminClient = createAdminClient();
     } catch (adminError) {
-      console.error('Failed to create admin client:', adminError);
       // Fall back to regular client
       adminClient = supabase;
     }
@@ -653,7 +539,6 @@ export async function POST(request: Request) {
     ])) as any;
 
     if (error) {
-      console.error('Error creating party:', error);
       return NextResponse.json(
         {
           error: 'Failed to create party',
@@ -678,7 +563,6 @@ export async function POST(request: Request) {
       );
     }
 
-    console.error('API error:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Internal server error',

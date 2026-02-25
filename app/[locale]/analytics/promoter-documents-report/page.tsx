@@ -78,7 +78,7 @@ export default function PromoterDocumentsReportPage() {
           .order('name_en');
 
         if (promotersError) {
-          console.error('Error fetching promoters:', promotersError);
+
           setLoading(false);
           return;
         }
@@ -90,7 +90,7 @@ export default function PromoterDocumentsReportPage() {
           .eq('type', 'Employer');
 
         if (employersError) {
-          console.error('Error fetching employers:', employersError);
+
         }
 
         // Create employer lookup map
@@ -155,7 +155,7 @@ export default function PromoterDocumentsReportPage() {
 
         setPromoters(processedPromoters);
       } catch (error) {
-        console.error('Error in fetchPromoterDocuments:', error);
+
       } finally {
         setLoading(false);
       }

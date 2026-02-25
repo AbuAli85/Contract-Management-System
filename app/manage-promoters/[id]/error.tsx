@@ -23,7 +23,7 @@ export default function Error({
 
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error(error);
+
   }, [error]);
 
   // Redirect to the default locale version if accessed directly without locale

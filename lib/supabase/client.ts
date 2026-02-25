@@ -105,7 +105,6 @@ function createSupabaseClient() {
 
           return cookies;
         } catch (error) {
-          console.error('Error parsing cookies:', error);
           return [];
         }
       },
@@ -175,11 +174,9 @@ function createSupabaseClient() {
                 }
               }
             } catch (error) {
-              console.error('Error setting cookie:', error);
             }
           });
         } catch (error) {
-          console.error('Error in setAll cookies:', error);
         }
       },
     },
@@ -208,16 +205,6 @@ export const createClient = () => {
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !supabaseAnonKey) {
-        console.error('[Supabase Client] Missing environment variables:', {
-          hasUrl: !!supabaseUrl,
-          hasKey: !!supabaseAnonKey,
-          isProduction:
-            window.location.hostname.includes('thesmartpro.io') ||
-            window.location.hostname.includes('vercel.app'),
-        });
-        console.error(
-          '[Supabase Client] Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting platform (Vercel)'
-        );
         return null;
       }
 
@@ -239,9 +226,6 @@ export const createClient = () => {
             );
 
             if (!hasAuthCookies) {
-              console.warn(
-                '[SSO] Session found but cookies not set. Attempting to set session again...'
-              );
               // Force setSession to ensure cookies are created
               supabaseInstance.auth
                 .setSession({
@@ -250,19 +234,11 @@ export const createClient = () => {
                 })
                 .then(({ error: setError }) => {
                   if (setError) {
-                    console.error(
-                      '[SSO] Failed to set session in cookies:',
-                      setError
-                    );
                   } else {
                   }
                 });
             }
           } else if (error) {
-            console.warn(
-              '[SSO] No valid session found in localStorage:',
-              error.message
-            );
           } else {
             console.debug('[SSO] No session found - user needs to log in');
           }
@@ -271,7 +247,6 @@ export const createClient = () => {
           console.debug('[SSO] Error initializing session:', err);
         });
     } catch (error) {
-      console.error('Failed to create Supabase client:', error);
       return null;
     }
   }
@@ -329,15 +304,6 @@ async function migrateLocalStorageToCookies() {
       // Check if it's the storage key format (with uuid, version, domain, ts)
       // This is Supabase's internal storage metadata, not the actual session
       if (sessionData.uuid && sessionData.version && sessionData.domain) {
-        console.warn(
-          '[SSO] Found storage key metadata in localStorage (not actual session data)'
-        );
-        console.warn(
-          '[SSO] This format cannot be used directly. Supabase client should handle this.'
-        );
-        console.warn(
-          '[SSO] If cookies are missing, the session may be expired or corrupted.'
-        );
 
         // The createBrowserClient should read from its internal storage automatically
         // But if it's not working, the session might be expired
@@ -350,12 +316,6 @@ async function migrateLocalStorageToCookies() {
         if (session && session.user && !error) {
           return;
         } else {
-          console.warn(
-            '[SSO] Could not retrieve session. The storage key may point to an expired session.'
-          );
-          console.warn(
-            '[SSO] Recommendation: Clear localStorage and log in again.'
-          );
           // Optionally clear the invalid storage
           // localStorage.removeItem('sb-auth-token');
           return;
@@ -371,11 +331,6 @@ async function migrateLocalStorageToCookies() {
         });
 
         if (error) {
-          console.error(
-            '[SSO] Failed to set session from localStorage:',
-            error
-          );
-          console.warn('[SSO] Session may be expired. Please log in again.');
         } else {
         }
       } else if (sessionData.user) {
@@ -385,18 +340,8 @@ async function migrateLocalStorageToCookies() {
         } = await supabase.auth.getSession();
         if (refreshedSession) {
         } else {
-          console.warn(
-            '[SSO] Session in localStorage appears expired. Please log in again.'
-          );
         }
       } else {
-        console.warn(
-          '[SSO] localStorage session format not recognized:',
-          Object.keys(sessionData)
-        );
-        console.warn(
-          '[SSO] Expected: access_token, refresh_token, user OR uuid, version, domain, ts'
-        );
       }
     } catch (parseError) {
       console.debug('[SSO] Could not parse localStorage session:', parseError);

@@ -65,7 +65,6 @@ export class MFAService {
       });
 
       if (dbError) {
-        console.error('Failed to store MFA setup:', dbError);
         return { success: false, error: 'Failed to setup MFA' };
       }
 
@@ -85,7 +84,6 @@ export class MFAService {
         backupCodes,
       };
     } catch (error) {
-      console.error('MFA setup error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'MFA setup failed',
@@ -137,7 +135,6 @@ export class MFAService {
         .eq('user_id', user.id);
 
       if (updateError) {
-        console.error('Failed to enable MFA:', updateError);
         return { success: false, error: 'Failed to enable MFA' };
       }
 
@@ -151,7 +148,6 @@ export class MFAService {
 
       return { success: true };
     } catch (error) {
-      console.error('MFA verification error:', error);
       return {
         success: false,
         error:
@@ -244,7 +240,6 @@ export class MFAService {
 
       return { success: true };
     } catch (error) {
-      console.error('MFA login verification error:', error);
       return {
         success: false,
         error:
@@ -290,7 +285,6 @@ export class MFAService {
         .eq('user_id', user.id);
 
       if (updateError) {
-        console.error('Failed to disable MFA:', updateError);
         return { success: false, error: 'Failed to disable MFA' };
       }
 
@@ -304,7 +298,6 @@ export class MFAService {
 
       return { success: true };
     } catch (error) {
-      console.error('MFA disable error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to disable MFA',
@@ -346,7 +339,6 @@ export class MFAService {
         backupCodesRemaining: mfaData.backup_codes?.length || 0,
       };
     } catch (error) {
-      console.error('Get MFA status error:', error);
       return { enabled: false, verified: false, backupCodesRemaining: 0 };
     }
   }
@@ -380,7 +372,6 @@ export class MFAService {
         .eq('user_id', user.id);
 
       if (updateError) {
-        console.error('Failed to generate new backup codes:', updateError);
         return { success: false, error: 'Failed to generate backup codes' };
       }
 
@@ -392,7 +383,6 @@ export class MFAService {
 
       return { success: true, backupCodes: newBackupCodes };
     } catch (error) {
-      console.error('Generate backup codes error:', error);
       return {
         success: false,
         error:
@@ -457,7 +447,6 @@ export class MFAService {
       // Use otplib to verify the TOTP token against the secret
       return authenticator.verify({ token, secret });
     } catch (error) {
-      console.error('TOTP verification error:', error);
       return false;
     }
   }
@@ -476,7 +465,6 @@ export class MFAService {
         },
       });
     } catch (error) {
-      console.warn('Failed to log security event:', error);
     }
   }
 }

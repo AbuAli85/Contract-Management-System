@@ -99,7 +99,6 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query.range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Error fetching employees:', error);
       return NextResponse.json(
         { error: 'Failed to fetch employees' },
         { status: 500 }
@@ -116,7 +115,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/employees:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -169,7 +167,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating employee:', error);
       return NextResponse.json(
         { error: 'Failed to create employee' },
         { status: 500 }
@@ -178,7 +175,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/hr/employees:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

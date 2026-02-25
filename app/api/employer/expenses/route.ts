@@ -98,7 +98,6 @@ export async function GET(request: NextRequest) {
             message: 'Expenses feature not yet configured',
           });
         }
-        console.error('Error fetching expenses:', error);
         return NextResponse.json(
           { error: 'Failed to fetch expenses' },
           { status: 500 }
@@ -134,7 +133,6 @@ export async function GET(request: NextRequest) {
       });
     } catch (tableError: any) {
       // Handle case where employee_expenses table doesn't exist
-      console.error('Expenses table error:', tableError);
       return NextResponse.json({
         success: true,
         expenses: [],
@@ -150,7 +148,6 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Error in employer expenses GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

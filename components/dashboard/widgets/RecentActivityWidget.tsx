@@ -38,7 +38,6 @@ export function RecentActivityWidget(props: WidgetProps) {
       }
     } catch (err) {
       setError('Network error');
-      console.error('Failed to fetch activities:', err);
     } finally {
       setIsLoading(false);
     }

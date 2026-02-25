@@ -40,7 +40,6 @@ async function getUserActivityHandler(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (activitiesError) {
-      console.error('Error fetching activities:', activitiesError);
       return NextResponse.json(
         { error: 'Failed to fetch activities' },
         { status: 500 }
@@ -59,7 +58,6 @@ async function getUserActivityHandler(request: NextRequest) {
       .eq('user_id', userId);
 
     if (summaryError) {
-      console.error('Error fetching summary:', summaryError);
     }
 
     const allActivities = summaryData || [];
@@ -86,7 +84,6 @@ async function getUserActivityHandler(request: NextRequest) {
       summary,
     });
   } catch (error) {
-    console.error('User activity API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -148,7 +145,6 @@ async function logUserActivityHandler(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Error inserting activity:', insertError);
       return NextResponse.json(
         { error: 'Failed to log activity' },
         { status: 500 }
@@ -157,7 +153,6 @@ async function logUserActivityHandler(request: NextRequest) {
 
     return NextResponse.json({ success: true, activity });
   } catch (error) {
-    console.error('User activity POST error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

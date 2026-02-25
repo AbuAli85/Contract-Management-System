@@ -54,7 +54,6 @@ export async function GET() {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -83,7 +82,6 @@ export async function GET() {
       .single();
 
     if (error) {
-      console.error('Error fetching policies:', error);
       // Return default policies on error
       return NextResponse.json({
         success: true,
@@ -100,7 +98,6 @@ export async function GET() {
       policies,
     });
   } catch (error: any) {
-    console.error('Policies API Error:', error);
     // Return default policies even on error
     return NextResponse.json({
       success: true,
@@ -130,7 +127,6 @@ export async function PUT(request: Request) {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -209,7 +205,6 @@ export async function PUT(request: Request) {
       .eq('id', profile.active_company_id);
 
     if (error) {
-      console.error('Error updating policies:', error);
       return NextResponse.json(
         { error: 'Failed to update policies' },
         { status: 500 }
@@ -222,7 +217,6 @@ export async function PUT(request: Request) {
       message: 'Policies updated successfully',
     });
   } catch (error: any) {
-    console.error('Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

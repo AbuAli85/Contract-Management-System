@@ -76,7 +76,7 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    console.error('Enhanced Contract Form Error:', error, errorInfo);
+
   }
 
   render() {
@@ -124,12 +124,7 @@ const GenerateContractForm = lazy(
           default: module.default,
         }))
         .catch(error => {
-          console.error(
-            `Failed to load enhanced-contract-form (attempt ${
-              retryCount + 1
-            }):`,
-            error
-          );
+          
 
           if (retryCount < maxRetries) {
             retryCount++;
@@ -202,7 +197,7 @@ const FormLoadingFallback = () => (
 
 export default function DashboardGenerateContractPage() {
   const pathname = usePathname();
-  const _locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
+  const _locale = pathname ? pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en' : 'en';
   const [_progress, _setProgress] = useState(65);
   const [activeFeature, setActiveFeature] = useState(0);
   const [showForm, setShowForm] = useState(false);
@@ -287,7 +282,7 @@ export default function DashboardGenerateContractPage() {
   // Preload with error handling
   const preloadForm = () => {
     import('@/components/enhanced-contract-form').catch(error => {
-      console.warn('Failed to preload form:', error);
+
       setFormError('Form preload failed - it may not load properly');
     });
   };

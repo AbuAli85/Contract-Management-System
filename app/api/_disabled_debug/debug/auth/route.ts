@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
   try {
-    console.log('🔍 Debug Auth Endpoint Called');
 
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,7 +17,6 @@ export async function GET() {
       keyStart: supabaseAnonKey?.substring(0, 20) || 'N/A',
     };
 
-    console.log('🔧 Environment Check:', envCheck);
 
     if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json(
@@ -35,9 +33,7 @@ export async function GET() {
     let supabase;
     try {
       supabase = await createClient();
-      console.log('✅ Supabase client created successfully');
     } catch (clientError) {
-      console.error('❌ Failed to create Supabase client:', clientError);
       return NextResponse.json(
         {
           success: false,
@@ -56,13 +52,7 @@ export async function GET() {
     let sessionResult;
     try {
       sessionResult = await supabase.auth.getSession();
-      console.log('🔐 Session check result:', {
-        hasSession: !!sessionResult.data.session,
-        hasError: !!sessionResult.error,
-        errorMessage: sessionResult.error?.message,
-      });
     } catch (sessionError) {
-      console.error('❌ Session check failed:', sessionError);
       return NextResponse.json(
         {
           success: false,
@@ -81,14 +71,7 @@ export async function GET() {
     let userResult;
     try {
       userResult = await supabase.auth.getUser();
-      console.log('👤 User check result:', {
-        hasUser: !!userResult.data.user,
-        hasError: !!userResult.error,
-        errorMessage: userResult.error?.message,
-        userId: userResult.data.user?.id,
-      });
     } catch (userError) {
-      console.error('❌ User check failed:', userError);
       return NextResponse.json(
         {
           success: false,
@@ -114,9 +97,7 @@ export async function GET() {
         count: data?.[0]?.count || 0,
       };
 
-      console.log('🗄️ Database test result:', dbResult);
     } catch (dbError) {
-      console.error('❌ Database test failed:', dbError);
       dbResult = {
         success: false,
         error: dbError instanceof Error ? dbError.message : 'Unknown error',
@@ -142,7 +123,6 @@ export async function GET() {
       database: dbResult,
     });
   } catch (error) {
-    console.error('❌ Debug endpoint error:', error);
     return NextResponse.json(
       {
         success: false,

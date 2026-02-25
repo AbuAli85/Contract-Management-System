@@ -62,7 +62,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (empError || !employee) {
-      console.error('Error fetching employee:', empError);
       return NextResponse.json(
         { error: 'Employee not found' },
         { status: 404 }
@@ -78,7 +77,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (templateError || !template) {
-      console.error('Error fetching template:', templateError);
       return NextResponse.json(
         { error: 'Template not found' },
         { status: 404 }
@@ -91,7 +89,6 @@ export async function POST(request: NextRequest) {
       .download(template.storage_path);
 
     if (fileError || !templateFile) {
-      console.error('Error downloading template:', fileError);
       return NextResponse.json(
         { error: 'Template file not found' },
         { status: 404 }
@@ -179,7 +176,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('Error uploading generated document:', uploadError);
       return NextResponse.json(
         { error: 'Failed to save generated document' },
         { status: 500 }
@@ -206,7 +202,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (recordError) {
-      console.error('Error recording generated document:', recordError);
       return NextResponse.json(
         { error: 'Failed to record document generation' },
         { status: 500 }
@@ -227,7 +222,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/documents/generate:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

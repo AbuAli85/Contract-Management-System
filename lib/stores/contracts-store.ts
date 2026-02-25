@@ -63,7 +63,6 @@ const createContractStore = (set: any, get: any) => ({
       set({ contracts: transformedContracts, isLoading: false });
       get().updateStats();
     } catch (error) {
-      console.error('Error fetching contracts:', error);
       set({ isLoading: false });
     }
   },

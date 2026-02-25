@@ -30,9 +30,6 @@ export function useEnhancedRBAC(): EnhancedRBACContextType {
   if (!context) {
     // Development-only error logging
     if (process.env.NODE_ENV === 'development') {
-      console.error(
-        'useEnhancedRBAC must be used within an EnhancedRBACProvider'
-      );
       console.trace('Component stack trace:');
     }
     throw new Error(
@@ -58,9 +55,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
   useEffect(() => {
     const safetyTimer = setTimeout(() => {
       if (isLoading) {
-        console.warn(
-          '⚠️ RBAC loading timeout - forcing completion with default role'
-        );
         setUserRole('user');
         setUserPermissions(getUserPermissions('user'));
         setIsLoading(false);
@@ -136,9 +130,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
       }
 
       if (!userData) {
-        console.warn(
-          '⚠️ Enhanced RBAC: No user data found, using default user role'
-        );
         setUserRole('user' as EnhancedUserRole);
         setUserPermissions(getUserPermissions('user'));
         setCompanyId(null);
@@ -157,7 +148,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
       setCompanyId(userCompanyId);
       setIsCompanyMember(isCompanyMemberStatus);
     } catch (error) {
-      console.error('❌ Enhanced RBAC: Failed to load user roles:', error);
 
       // Fallback to basic user role
       setUserRole('user');
@@ -321,7 +311,7 @@ export function RoleRedirect({
   useEffect(() => {
     if (!isLoading && userRole && !allowedRoles.includes(userRole)) {
       // Use proper Next.js navigation
-      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      const currentLocale = window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
       const fullRedirectPath = `/${currentLocale}${redirectTo}`;
       window.location.href = fullRedirectPath;
     }

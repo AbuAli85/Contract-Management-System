@@ -162,7 +162,6 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      console.error('Invoice creation error:', error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
       });
@@ -174,7 +173,6 @@ export async function POST(req: Request) {
       message: 'Invoice created successfully',
     });
   } catch (error) {
-    console.error('Invoice API error:', error);
     if (error instanceof z.ZodError) {
       return new Response(
         JSON.stringify({ error: 'Invalid input', details: error.errors }),
@@ -278,7 +276,6 @@ export async function GET(req: Request) {
     const { data: invoices, error, count } = await query;
 
     if (error) {
-      console.error('Invoice query error:', error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
       });
@@ -294,7 +291,6 @@ export async function GET(req: Request) {
       },
     });
   } catch (error) {
-    console.error('Invoice list API error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
     });

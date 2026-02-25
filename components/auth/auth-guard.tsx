@@ -131,7 +131,6 @@ export function AuthGuard({
         }
       } catch (error) {
         if (isMountedRef.current) {
-          console.error('❌ AuthGuard: Error during auth check:', error);
           setError('Authentication error');
           setUser(null);
           globalAuthState.user = null;
@@ -167,7 +166,6 @@ export function AuthGuard({
       });
 
       if (response.status === 429) {
-        console.warn('⚠️ AuthGuard: Rate limited, will retry later');
         return {
           user: null,
           error: 'Too many requests. Please wait a moment and try again.',
@@ -184,7 +182,6 @@ export function AuthGuard({
             !allowedRoles.includes(data.user.role)
           ) {
             const errorMsg = `Access denied. Required role: ${allowedRoles.join(' or ')}`;
-            console.warn('🚫 AuthGuard:', errorMsg);
             return { user: null, error: errorMsg };
           } else {
             return { user: data.user, error: null };
@@ -194,10 +191,6 @@ export function AuthGuard({
           return { user: null, error: 'Authentication required' };
         }
       } else {
-        console.warn(
-          '⚠️ AuthGuard: Authentication check failed:',
-          response.status
-        );
         return { user: null, error: 'Authentication check failed' };
       }
     } catch (error) {
@@ -205,7 +198,6 @@ export function AuthGuard({
         return { user: null, error: 'Request aborted' };
       }
 
-      console.error('❌ AuthGuard: Error checking authentication:', error);
       return { user: null, error: 'Authentication error' };
     }
   };

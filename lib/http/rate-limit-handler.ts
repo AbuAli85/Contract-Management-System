@@ -35,7 +35,6 @@ export async function parseRateLimitError(
     const data = await response.json();
     return data as RateLimitError;
   } catch (error) {
-    console.error('Failed to parse rate limit error:', error);
     return {
       error: 'Rate limit exceeded',
       message: 'Too many requests. Please try again later.',

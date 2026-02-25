@@ -83,10 +83,8 @@ export function logWithCorrelation(
 
   switch (level) {
     case 'error':
-      console.error(logMessage, logData);
       break;
     case 'warn':
-      console.warn(logMessage, logData);
       break;
     case 'debug':
       console.debug(logMessage, logData);

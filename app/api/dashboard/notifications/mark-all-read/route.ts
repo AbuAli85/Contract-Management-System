@@ -16,7 +16,6 @@ export async function PATCH(_request: NextRequest) {
       count: 0, // Would return actual count
     });
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
     return NextResponse.json(
       { error: 'Failed to mark all notifications as read' },
       { status: 500 }

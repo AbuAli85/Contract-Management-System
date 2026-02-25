@@ -81,7 +81,6 @@ export function NotificationPanel({
     const supabase = createClient();
 
     if (!supabase) {
-      console.warn('Supabase client not available for real-time notifications');
       return;
     }
 
@@ -127,7 +126,6 @@ export function NotificationPanel({
         )
         .subscribe();
     } catch (error) {
-      console.error('Error setting up realtime subscriptions:', error);
     }
 
     // Cleanup subscriptions
@@ -168,7 +166,6 @@ export function NotificationPanel({
         throw new Error('Failed to fetch notifications');
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
       toast({
         title: 'Error',
         description: 'Failed to load notifications',
@@ -211,7 +208,6 @@ export function NotificationPanel({
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 
@@ -233,7 +229,6 @@ export function NotificationPanel({
         });
       }
     } catch (error) {
-      console.error('Error marking all as read:', error);
       toast({
         title: 'Error',
         description: 'Failed to mark all as read',
@@ -260,7 +255,6 @@ export function NotificationPanel({
         }
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete notification',
@@ -284,7 +278,6 @@ export function NotificationPanel({
         });
       }
     } catch (error) {
-      console.error('Error clearing notifications:', error);
       toast({
         title: 'Error',
         description: 'Failed to clear notifications',

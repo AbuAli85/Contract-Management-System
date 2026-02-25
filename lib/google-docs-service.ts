@@ -83,7 +83,6 @@ export class GoogleDocsService {
       this.docs = google.docs({ version: 'v1', auth: authClient });
       this.drive = google.drive({ version: 'v3', auth: authClient });
     } catch (error) {
-      console.error('❌ Failed to initialize Google Auth:', error);
       throw new Error(
         `Invalid Google Service Account configuration: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -122,7 +121,6 @@ export class GoogleDocsService {
         pdfUrl,
       };
     } catch (error) {
-      console.error('❌ Google Docs generation failed:', error);
       throw error;
     }
   }
@@ -159,7 +157,6 @@ export class GoogleDocsService {
           });
         }
       } catch (copyError) {
-        console.error('❌ Failed to copy template:', copyError);
 
         // If copying fails due to quota, provide a more helpful error message
         if (copyError instanceof Error && copyError.message.includes('quota')) {
@@ -197,7 +194,6 @@ Original error: ${copyError.message}`);
 
       return response.data.id;
     } catch (error) {
-      console.error('❌ Failed to copy template:', error);
 
       // Handle specific error cases
       if (error instanceof Error) {
@@ -328,7 +324,6 @@ Original error: ${error.message}`);
           requests.push(imageRequest);
         }
       } catch (error) {
-        console.warn('Failed to replace ID card image:', error);
       }
     }
 
@@ -345,7 +340,6 @@ Original error: ${error.message}`);
           requests.push(imageRequest);
         }
       } catch (error) {
-        console.warn('Failed to replace passport image:', error);
       }
     }
 
@@ -393,7 +387,6 @@ Original error: ${error.message}`);
       }
 
       if (placeholderIndex === -1) {
-        console.warn(`Placeholder ${placeholder} not found in document`);
         return null;
       }
 
@@ -420,10 +413,6 @@ Original error: ${error.message}`);
         },
       };
     } catch (error) {
-      console.error(
-        `Failed to create image replacement for ${placeholder}:`,
-        error
-      );
       return null;
     }
   }
@@ -454,7 +443,6 @@ Original error: ${error.message}`);
 
       return uploadResponse.data.id;
     } catch (error) {
-      console.error('Failed to upload image to Drive:', error);
       throw error;
     }
   }
@@ -500,7 +488,6 @@ Original error: ${error.message}`);
 
       return `https://drive.google.com/file/d/${pdfUploadResponse.data.id}/view`;
     } catch (error) {
-      console.error('Failed to generate PDF:', error);
       throw error;
     }
   }
@@ -513,7 +500,6 @@ Original error: ${error.message}`);
       const response = await this.docs.documents.get({ documentId });
       return response.data;
     } catch (error) {
-      console.error('Failed to get document content:', error);
       throw error;
     }
   }

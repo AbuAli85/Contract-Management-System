@@ -188,13 +188,11 @@ async function createNotificationRecord(
       .single();
 
     if (error) {
-      console.error('Error creating notification record:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true, notificationId: data.id };
   } catch (error) {
-    console.error('Unexpected error creating notification:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -213,7 +211,6 @@ async function updateNotificationStatus(
   try {
     const supabase = createClient();
     if (!supabase) {
-      console.error('Failed to initialize client');
       return;
     }
 
@@ -242,7 +239,6 @@ async function updateNotificationStatus(
       .update(updateData)
       .eq('id', notificationId);
   } catch (error) {
-    console.error('Error updating notification status:', error);
   }
 }
 
@@ -274,7 +270,6 @@ async function getPromoterContact(promoterId: string): Promise<{
       name: data.name_en || data.name_ar || 'Promoter',
     };
   } catch (error) {
-    console.error('Error fetching promoter contact:', error);
     return {};
   }
 }
@@ -377,7 +372,6 @@ export async function sendNotification(
       sent,
     };
   } catch (error) {
-    console.error('Error sending notification:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -625,7 +619,6 @@ export async function checkAndSendExpiryReminders(): Promise<{
       errors,
     };
   } catch (error) {
-    console.error('Error checking and sending expiry reminders:', error);
     return {
       success: false,
       remindersSent: 0,

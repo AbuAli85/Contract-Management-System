@@ -109,7 +109,6 @@ export function SocialLogin({
       }
     } catch (error) {
       const errorMessage = `An unexpected error occurred while signing in with ${provider}`;
-      console.error('Social login error:', error);
       setError(errorMessage);
       onError?.(errorMessage);
       toast.error(errorMessage);
@@ -249,7 +248,6 @@ export function SocialLoginWithStatus({
       }
     } catch (error) {
       const errorMessage = `An unexpected error occurred while signing in with ${provider}`;
-      console.error('Social login error:', error);
       setError(errorMessage);
       onError?.(errorMessage);
       toast.error(errorMessage);

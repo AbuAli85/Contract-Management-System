@@ -22,7 +22,6 @@ export async function POST(
     const { id: contractId } = await params;
     const supabase = createServiceClient();
 
-    console.log('🔧 Fixing PDF URL for contract:', contractId);
 
     // 1. Get contract data
     const { data: contract, error: contractError } = await supabase
@@ -45,10 +44,6 @@ export async function POST(
       );
     }
 
-    console.log('📋 Contract found:', {
-      contractNumber: contract.contract_number,
-      currentPdfUrl: contract.pdf_url,
-    });
 
     // 2. Search storage for files starting with contract number
     const bucketName = 'contracts';
@@ -63,7 +58,6 @@ export async function POST(
         });
 
       if (listError) {
-        console.error('❌ Error listing files:', listError);
         return NextResponse.json(
           { error: 'Failed to list storage files', details: listError.message },
           { status: 500 }
@@ -71,7 +65,6 @@ export async function POST(
       }
 
       allFiles = fileList || [];
-      console.log(`📁 Found ${allFiles.length} files in storage`);
 
       // Filter files that start with contract number and end with .pdf
       const matchingFiles = allFiles.filter(
@@ -80,10 +73,6 @@ export async function POST(
           file.name.endsWith('.pdf')
       );
 
-      console.log(
-        `🔍 Found ${matchingFiles.length} matching PDF files:`,
-        matchingFiles.map(f => f.name)
-      );
 
       if (matchingFiles.length === 0) {
         return NextResponse.json(
@@ -105,14 +94,12 @@ export async function POST(
         return bTime - aTime;
       })[0];
 
-      console.log('✅ Found matching PDF file:', matchingFile.name);
 
       // 4. Generate correct public URL
       const {
         data: { publicUrl },
       } = supabase.storage.from(bucketName).getPublicUrl(matchingFile.name);
 
-      console.log('📝 Correct PDF URL:', publicUrl);
 
       // 5. Update contract with correct URL
       const { error: updateError } = await supabase
@@ -124,7 +111,6 @@ export async function POST(
         .eq('id', contractId);
 
       if (updateError) {
-        console.error('❌ Failed to update contract:', updateError);
         return NextResponse.json(
           {
             error: 'Failed to update contract',
@@ -134,7 +120,6 @@ export async function POST(
         );
       }
 
-      console.log('✅ Contract PDF URL updated successfully');
 
       return NextResponse.json({
         success: true,
@@ -146,7 +131,6 @@ export async function POST(
         message: 'PDF URL fixed successfully',
       });
     } catch (error) {
-      console.error('❌ Error fixing PDF URL:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',
@@ -156,7 +140,6 @@ export async function POST(
       );
     }
   } catch (error) {
-    console.error('❌ Error in fix-pdf-url endpoint:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

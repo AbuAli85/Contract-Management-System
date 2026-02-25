@@ -89,7 +89,7 @@ export default function EditContractPage({
       if (error) throw error;
       setContract(data as Contract);
     } catch (error) {
-      console.error('Error fetching contract:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to load contract details',
@@ -111,7 +111,7 @@ export default function EditContractPage({
       if (error) throw error;
       setParties(data || []);
     } catch (error) {
-      console.error('Error fetching parties:', error);
+
     }
   };
 
@@ -132,7 +132,7 @@ export default function EditContractPage({
       }));
       setPromoters(normalized);
     } catch (error) {
-      console.error('Error fetching promoters:', error);
+
     }
   };
 
@@ -169,7 +169,7 @@ export default function EditContractPage({
         description: 'Contract updated successfully',
       });
     } catch (error) {
-      console.error('Error updating contract:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to update contract',

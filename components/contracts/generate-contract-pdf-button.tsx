@@ -77,7 +77,6 @@ export function GenerateContractPDFButton({
           error.message ||
           error.error ||
           'Failed to generate PDF';
-        console.error('PDF generation error response:', error);
         throw new Error(errorMessage);
       }
 
@@ -93,7 +92,6 @@ export function GenerateContractPDFButton({
 
       onSuccess?.();
     } catch (error) {
-      console.error('PDF generation error:', error);
       toast.error('Generation Failed', {
         description:
           error instanceof Error ? error.message : 'Failed to generate PDF',
@@ -128,7 +126,6 @@ export function GenerateContractPDFButton({
           });
         }
       } catch (error) {
-        console.error('Status poll error:', error);
       }
     }, 3000); // Poll every 3 seconds
 
@@ -211,7 +208,6 @@ export function GenerateContractPDFButton({
         description: 'Contract PDF downloaded successfully',
       });
     } catch (error) {
-      console.error('Download error:', error);
       toast.error('Download Failed', {
         description:
           error instanceof Error ? error.message : 'Failed to download PDF',

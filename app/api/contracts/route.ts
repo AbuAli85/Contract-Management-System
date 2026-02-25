@@ -258,13 +258,6 @@ async function handleContractsRequest(
       const { data: contracts, error: contractsError } = await query.limit(10);
 
       if (contractsError) {
-        console.warn(
-          '⚠️ Contracts API: Error fetching party contracts, returning empty:',
-          {
-            requestId,
-            error: contractsError.message,
-          }
-        );
         return {
           success: true,
           contracts: [],
@@ -281,9 +274,6 @@ async function handleContractsRequest(
         requestId,
       };
     } catch (error) {
-      console.warn('⚠️ Contracts API: Party query failed, returning empty', {
-        requestId,
-      });
       return {
         success: true,
         contracts: [],

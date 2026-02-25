@@ -114,7 +114,6 @@ export default function SimpleContractGeneratorWithValidation() {
         });
       }
     } catch (error) {
-      console.error('Error loading saved draft:', error);
     }
   };
 
@@ -148,7 +147,6 @@ export default function SimpleContractGeneratorWithValidation() {
         .order('name_en');
 
       if (partiesError) {
-        console.error('Error loading parties:', partiesError);
         throw new Error(`Failed to load parties: ${partiesError.message}`);
       }
 
@@ -174,14 +172,12 @@ export default function SimpleContractGeneratorWithValidation() {
         .order('name_en');
 
       if (promotersError) {
-        console.error('Error loading promoters:', promotersError);
         throw new Error(`Failed to load promoters: ${promotersError.message}`);
       }
 
       setPromoters(promotersData || []);
       setAllPromoters(promotersData || []);
     } catch (error) {
-      console.error('Failed to load data:', error);
       toast({
         title: 'Error',
         description:
@@ -306,7 +302,6 @@ export default function SimpleContractGeneratorWithValidation() {
         throw new Error(result.error || 'Contract generation failed');
       }
     } catch (error) {
-      console.error('Contract generation error:', error);
       toast({
         title: 'Error',
         description:

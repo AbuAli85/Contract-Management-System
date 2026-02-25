@@ -97,7 +97,6 @@ export default function BulkPromoterAssignment() {
         .limit(100);
 
       if (contractsError) {
-        console.error('Error fetching contracts:', contractsError);
         toast({
           title: 'Error',
           description: 'Failed to load contracts',
@@ -123,7 +122,6 @@ export default function BulkPromoterAssignment() {
         .order('name_en');
 
       if (promotersError) {
-        console.error('Error fetching promoters:', promotersError);
         toast({
           title: 'Error',
           description: 'Failed to load promoters',
@@ -133,7 +131,6 @@ export default function BulkPromoterAssignment() {
         setPromoters(promotersData || []);
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
@@ -202,7 +199,6 @@ export default function BulkPromoterAssignment() {
       setSelectedPromoter('');
       await loadData();
     } catch (error) {
-      console.error('Error assigning promoter:', error);
       toast({
         title: 'Error',
         description: 'Failed to assign promoter to contracts',

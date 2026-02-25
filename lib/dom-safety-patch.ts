@@ -25,24 +25,16 @@ export function patchReactDOM() {
     try {
       // Validate nodes before insertion
       if (!newNode || !this) {
-        console.warn('Invalid nodes for insertBefore:', {
-          newNode,
-          parent: this,
-        });
         return newNode;
       }
 
       // Check if reference node is still a child of this node
       if (referenceNode && !this.contains(referenceNode)) {
-        console.warn(
-          'Reference node is not a child of parent, appending instead'
-        );
         return this.appendChild(newNode);
       }
 
       return originalInsertBefore.call(this, newNode, referenceNode) as T;
     } catch (error) {
-      console.warn('insertBefore failed, falling back to appendChild:', error);
       return this.appendChild(newNode) as T;
     }
   };
@@ -53,19 +45,16 @@ export function patchReactDOM() {
     try {
       // Validate nodes before removal
       if (!child || !this) {
-        console.warn('Invalid nodes for removeChild:', { child, parent: this });
         return child;
       }
 
       // Check if child is still a child of this node
       if (!this.contains(child)) {
-        console.warn('Child node is not a child of parent, skipping removal');
         return child;
       }
 
       return originalRemoveChild.call(this, child) as T;
     } catch (error) {
-      console.warn('removeChild failed:', error);
       return child;
     }
   };
@@ -79,26 +68,17 @@ export function patchReactDOM() {
     try {
       // Validate nodes before replacement
       if (!newChild || !oldChild || !this) {
-        console.warn('Invalid nodes for replaceChild:', {
-          newChild,
-          oldChild,
-          parent: this,
-        });
         return oldChild;
       }
 
       // Check if old child is still a child of this node
       if (!this.contains(oldChild)) {
-        console.warn(
-          'Old child is not a child of parent, appending new child instead'
-        );
         this.appendChild(newChild);
         return oldChild;
       }
 
       return originalReplaceChild.call(this, newChild, oldChild) as T;
     } catch (error) {
-      console.warn('replaceChild failed, falling back to appendChild:', error);
       this.appendChild(newChild);
       return oldChild;
     }
@@ -110,13 +90,11 @@ export function patchReactDOM() {
     try {
       // Validate nodes before appending
       if (!child || !this) {
-        console.warn('Invalid nodes for appendChild:', { child, parent: this });
         return child;
       }
 
       return originalAppendChild.call(this, child) as T;
     } catch (error) {
-      console.warn('appendChild failed:', error);
       return child;
     }
   };
@@ -136,13 +114,11 @@ export function patchReactDOM() {
           try {
             return originalRender.call(this, element, container, callback);
           } catch (error) {
-            console.warn('ReactDOM.render failed, attempting recovery:', error);
             // Try to clear container and re-render
             try {
               container.innerHTML = '';
               return originalRender.call(this, element, container, callback);
             } catch (retryError) {
-              console.error('ReactDOM.render recovery failed:', retryError);
               throw retryError;
             }
           }

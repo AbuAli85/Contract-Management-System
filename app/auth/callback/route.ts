@@ -4,34 +4,34 @@ import { NextRequest, NextResponse } from 'next/server';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  const requestId = `auth_callback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+// Extract locale from referer header or use default
+function getLocaleFromRequest(request: NextRequest): string {
+  const referer = request.headers.get('referer') ?? '';
+  const match = referer.match(/\/([a-z]{2})\//);
+  return match ? match[1] : (process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en');
+}
 
+export async function GET(request: NextRequest) {
   try {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get('code');
-    const next = searchParams.get('next') ?? '/en/dashboard';
+    const next = searchParams.get('next');
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
+    const locale = getLocaleFromRequest(request);
+    const loginUrl = `${origin}/${locale}/auth/login`;
+    const dashboardUrl = `${origin}/${locale}/dashboard`;
 
     // Handle OAuth errors
     if (error) {
-      console.error(
-        `🔧 Auth Callback [${requestId}]: OAuth error:`,
-        error,
-        errorDescription
-      );
       return NextResponse.redirect(
-        `${origin}/en/auth/login?error=${error}&message=${errorDescription || 'OAuth authentication failed'}`
+        `${loginUrl}?error=${encodeURIComponent(error)}&message=${encodeURIComponent(errorDescription ?? 'OAuth authentication failed')}`
       );
     }
 
     if (!code) {
-      console.warn(
-        `🔧 Auth Callback [${requestId}]: No authorization code provided`
-      );
       return NextResponse.redirect(
-        `${origin}/en/auth/login?error=no_code&message=No authorization code provided`
+        `${loginUrl}?error=no_code&message=${encodeURIComponent('No authorization code provided')}`
       );
     }
 
@@ -40,29 +40,25 @@ export async function GET(request: NextRequest) {
       await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
-      console.error(
-        `🔧 Auth Callback [${requestId}]: Code exchange error:`,
-        exchangeError
-      );
       return NextResponse.redirect(
-        `${origin}/en/auth/login?error=exchange_failed&message=${exchangeError.message}`
+        `${loginUrl}?error=exchange_failed&message=${encodeURIComponent(exchangeError.message)}`
       );
     }
 
     if (!data.session) {
-      console.error(
-        `🔧 Auth Callback [${requestId}]: No session returned from code exchange`
-      );
       return NextResponse.redirect(
-        `${origin}/en/auth/login?error=no_session&message=Authentication failed`
+        `${loginUrl}?error=no_session&message=${encodeURIComponent('Authentication failed')}`
       );
     }
 
-    return NextResponse.redirect(`${origin}${next}`);
-  } catch (error) {
-    console.error(`🔧 Auth Callback [${requestId}]: Unexpected error:`, error);
+    // Redirect to the next URL if provided and valid, otherwise to dashboard
+    const redirectTo =
+      next && next.startsWith('/') ? `${origin}${next}` : dashboardUrl;
+    return NextResponse.redirect(redirectTo);
+  } catch {
+    const locale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en';
     return NextResponse.redirect(
-      `${request.nextUrl.origin}/en/auth/login?error=unexpected&message=An unexpected error occurred`
+      `${request.nextUrl.origin}/${locale}/auth/login?error=unexpected&message=${encodeURIComponent('An unexpected error occurred')}`
     );
   }
 }

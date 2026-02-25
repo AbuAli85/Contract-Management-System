@@ -120,7 +120,6 @@ export function OfflineLoginForm() {
         }
       }, 2000);
     } catch (error: any) {
-      console.error('🔒 Offline login failed:', error);
       setError(error.message);
 
       toast({

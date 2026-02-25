@@ -122,21 +122,21 @@ SELECT '✅ All tests completed!' as final_status;`,
 
   const openSimpleRegister = () => {
     window.open(
-      `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/simple-register`,
+      `/${(window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en')}/simple-register`,
       '_blank'
     );
   };
 
   const openWorkingLogin = () => {
     window.open(
-      `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/working-login`,
+      `/${(window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en')}/working-login`,
       '_blank'
     );
   };
 
   const openDashboardPreview = () => {
     window.open(
-      `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard-preview`,
+      `/${(window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en')}/dashboard-preview`,
       '_blank'
     );
   };

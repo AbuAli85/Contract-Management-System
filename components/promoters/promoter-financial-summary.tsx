@@ -162,7 +162,6 @@ export function PromoterFinancialSummary({
         payoutHistory: payoutHistory.slice(0, 10),
       });
     } catch (error) {
-      console.error('Error fetching financial data:', error);
       calculateFromContracts();
     }
   };

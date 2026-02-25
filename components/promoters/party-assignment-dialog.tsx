@@ -108,7 +108,6 @@ export function PartyAssignmentDialog({
       if (error) throw error;
       setParties(data || []);
     } catch (error) {
-      console.error('Error loading parties:', error);
       toast({
         title: 'Error',
         description: 'Failed to load parties. Please try again.',
@@ -160,7 +159,6 @@ export function PartyAssignmentDialog({
       onAssignmentUpdate(promoter.id, selectedPartyId);
       onClose();
     } catch (error) {
-      console.error('Error updating assignment:', error);
       toast({
         title: 'Error',
         description: 'Failed to update party assignment. Please try again.',
@@ -220,7 +218,6 @@ export function PartyAssignmentDialog({
         address_en: '',
       });
     } catch (error) {
-      console.error('Error creating party:', error);
       toast({
         title: 'Error',
         description: 'Failed to create new party. Please try again.',

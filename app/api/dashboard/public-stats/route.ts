@@ -30,11 +30,9 @@ export async function GET(request: NextRequest) {
 
 async function getBasicStats(_request: NextRequest) {
   try {
-    console.log('🔍 Public stats: Starting request...');
 
     const supabase = await createClient();
 
-    console.log('🔍 Public stats: Fetching data without authentication...');
 
     // Simple queries without authentication
     const queries = [
@@ -48,18 +46,12 @@ async function getBasicStats(_request: NextRequest) {
       supabase.from('parties').select('*', { count: 'exact', head: true }),
     ];
 
-    console.log('🔍 Public stats: Executing queries...');
     const results = await Promise.all(
       queries.map(async (query, index) => {
         try {
           const result = await query;
-          console.log(`🔍 Public stats: Query ${index} result:`, {
-            count: result.count,
-            error: result.error?.message,
-          });
           return result;
         } catch (error) {
-          console.error(`🔍 Public stats: Query ${index} failed:`, error);
           return {
             count: 0,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -78,7 +70,6 @@ async function getBasicStats(_request: NextRequest) {
       .filter((r: any) => r?.error)
       .map((r: any) => r.error);
     if (errors.length > 0) {
-      console.warn('🔍 Public stats: Some database errors:', errors);
     }
 
     // Build simple stats object
@@ -92,11 +83,9 @@ async function getBasicStats(_request: NextRequest) {
       },
     };
 
-    console.log('🔍 Public stats: Final stats:', stats);
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('🔍 Public stats: Unexpected error:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch public statistics',
@@ -114,7 +103,6 @@ async function getBasicStats(_request: NextRequest) {
 
 async function getEnhancedStats(request: NextRequest, apiKey: any) {
   try {
-    console.log('🔍 Enhanced stats: Starting request with API key...');
 
     const supabase = await createClient();
 
@@ -149,7 +137,6 @@ async function getEnhancedStats(request: NextRequest, apiKey: any) {
           const result = await query;
           return result;
         } catch (error) {
-          console.error(`🔍 Enhanced stats: Query ${index} failed:`, error);
           return {
             count: 0,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -181,11 +168,9 @@ async function getEnhancedStats(request: NextRequest, apiKey: any) {
       timestamp: new Date().toISOString(),
     };
 
-    console.log('🔍 Enhanced stats: Final stats:', stats);
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('🔍 Enhanced stats: Unexpected error:', error);
     // Fallback to basic stats on error
     return getBasicStats(request);
   }

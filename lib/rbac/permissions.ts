@@ -205,23 +205,14 @@ export function parsePermission(permission: string): ParsedPermission | null {
         const [resource, action, scope] = parts;
 
         if (!VALID_RESOURCES.includes(resource as PermissionResource)) {
-          console.warn(
-            `Invalid resource in permission: ${resource} (from ${permission})`
-          );
           return null;
         }
 
         if (!VALID_ACTIONS.includes(action as PermissionAction)) {
-          console.warn(
-            `Invalid action in permission: ${action} (from ${permission})`
-          );
           return null;
         }
 
         if (!VALID_SCOPES.includes(scope as PermissionScope)) {
-          console.warn(
-            `Invalid scope in permission: ${scope} (from ${permission})`
-          );
           return null;
         }
 
@@ -262,7 +253,6 @@ export function parsePermission(permission: string): ParsedPermission | null {
 
     return null;
   } catch (error) {
-    console.error('Error parsing permission:', permission, error);
     return null;
   }
 }

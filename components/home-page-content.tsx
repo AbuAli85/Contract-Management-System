@@ -79,7 +79,6 @@ export function HomePageContent({ locale }: HomePageContentProps) {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error fetching stats:', error);
         if (isMounted) {
           setLoading(false);
         }

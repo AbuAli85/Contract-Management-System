@@ -195,7 +195,6 @@ export function RealTimeProviderDashboard({
         loadProviderEarnings(),
       ]);
     } catch (error) {
-      console.error('Error loading provider data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -212,7 +211,6 @@ export function RealTimeProviderDashboard({
       const data = await response.json();
       setStats(data.stats);
     } catch (error) {
-      console.error('Error loading provider stats:', error);
       toast.error('Failed to load provider statistics');
     }
   };
@@ -227,7 +225,6 @@ export function RealTimeProviderDashboard({
       const data = await response.json();
       setServices(data.services);
     } catch (error) {
-      console.error('Error loading provider services:', error);
       toast.error('Failed to load services');
     }
   };
@@ -242,7 +239,6 @@ export function RealTimeProviderDashboard({
       const data = await response.json();
       setOrders(data.orders);
     } catch (error) {
-      console.error('Error loading provider orders:', error);
       toast.error('Failed to load orders');
     }
   };
@@ -299,7 +295,6 @@ export function RealTimeProviderDashboard({
 
       setEarnings(earningsData);
     } catch (error) {
-      console.error('Error loading provider earnings:', error);
     }
   };
 
@@ -413,7 +408,6 @@ export function RealTimeProviderDashboard({
         toast.success(`Service ${action} completed!`);
       }
     } catch (error) {
-      console.error(`Error ${action} service:`, error);
       toast.error(`Failed to ${action} service`);
     }
   };
@@ -449,7 +443,6 @@ export function RealTimeProviderDashboard({
         toast.success(`Order ${action} completed!`);
       }
     } catch (error) {
-      console.error(`Error ${action} order:`, error);
       toast.error(`Failed to ${action} order`);
     }
   };

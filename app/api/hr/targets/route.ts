@@ -72,7 +72,6 @@ export async function GET(request: NextRequest) {
     const { data: targets, error } = await query;
 
     if (error) {
-      console.error('Error fetching targets:', error);
       return NextResponse.json(
         { error: 'Failed to fetch targets', details: error.message },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(request: NextRequest) {
       targets: targets || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/targets:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -190,7 +188,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating target:', createError);
       return NextResponse.json(
         { error: 'Failed to create target', details: createError.message },
         { status: 500 }
@@ -203,7 +200,6 @@ export async function POST(request: NextRequest) {
       target,
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/targets:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

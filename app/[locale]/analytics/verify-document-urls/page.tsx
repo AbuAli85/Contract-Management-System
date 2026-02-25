@@ -158,7 +158,7 @@ export default function VerifyDocumentUrlsPage() {
           brokenIdCards + brokenPassports > 0 ? 'destructive' : 'default',
       });
     } catch (error) {
-      console.error('Verification error:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to verify URLs',
@@ -209,7 +209,7 @@ export default function VerifyDocumentUrlsPage() {
       // Re-verify after cleanup
       await verifyAllUrls();
     } catch (error) {
-      console.error('Cleanup error:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to cleanup broken URLs',

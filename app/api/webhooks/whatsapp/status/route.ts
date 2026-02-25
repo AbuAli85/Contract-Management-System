@@ -23,14 +23,6 @@ export async function POST(request: NextRequest) {
     const errorCode = formData.get('ErrorCode') as string;
     const errorMessage = formData.get('ErrorMessage') as string;
 
-    console.log('📊 WhatsApp Message Status Update:', {
-      messageSid,
-      messageStatus,
-      from,
-      to,
-      errorCode,
-      errorMessage,
-    });
 
     // Update message status in database (if you're tracking messages)
     const supabase = await createClient();
@@ -44,34 +36,23 @@ export async function POST(request: NextRequest) {
       //   .update({ status: messageStatus, updated_at: new Date().toISOString() })
       //   .eq('message_sid', messageSid);
     } catch (error) {
-      console.warn('Could not update message status:', error);
     }
 
     // Handle different statuses
     switch (messageStatus) {
       case 'delivered':
-        console.log('✅ Message delivered:', messageSid);
         break;
       case 'failed':
-        console.error(
-          '❌ Message failed:',
-          messageSid,
-          errorCode,
-          errorMessage
-        );
         // You might want to:
         // - Retry sending
         // - Notify admin
         // - Update user record
         break;
       case 'sent':
-        console.log('📤 Message sent:', messageSid);
         break;
       case 'queued':
-        console.log('⏳ Message queued:', messageSid);
         break;
       default:
-        console.log('📋 Message status:', messageStatus, messageSid);
     }
 
     return NextResponse.json({
@@ -79,7 +60,6 @@ export async function POST(request: NextRequest) {
       message: 'Status received',
     });
   } catch (error: any) {
-    console.error('Error handling status callback:', error);
     return NextResponse.json(
       {
         success: false,

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔧 Force logout API called');
 
     const response = NextResponse.json({
       success: true,
@@ -39,11 +38,9 @@ export async function GET(request: NextRequest) {
       response.cookies.set(cookieName, '', cookieOptions);
     });
 
-    console.log('🔧 Cleared auth cookies');
 
     return response;
   } catch (error) {
-    console.error('❌ Force logout API error:', error);
     return NextResponse.json(
       {
         success: false,

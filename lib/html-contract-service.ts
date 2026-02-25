@@ -40,7 +40,6 @@ export class HtmlContractService {
         documentUrl,
       };
     } catch (error) {
-      console.error('❌ HTML contract generation failed:', error);
       throw error;
     }
   }
@@ -307,7 +306,6 @@ startxref
 
       return Buffer.from(pdfContent);
     } catch (error) {
-      console.error('Failed to generate PDF:', error);
       throw error;
     }
   }
@@ -332,7 +330,6 @@ startxref
       // For now, return a placeholder URL
       return `https://your-domain.com/contracts/${fileName}.pdf`;
     } catch (error) {
-      console.error('Failed to save contract:', error);
       throw error;
     }
   }

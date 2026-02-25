@@ -208,7 +208,6 @@ export class DocumentService {
         },
       };
     } catch (error) {
-      console.error('Error uploading document:', error);
       onProgress?.({
         progress: 0,
         status: 'error',
@@ -250,7 +249,6 @@ export class DocumentService {
 
       return { data: documentsWithMetadata };
     } catch (error) {
-      console.error('Error fetching documents by company:', error);
       return {
         error:
           error instanceof Error ? error.message : 'Failed to fetch documents',
@@ -283,7 +281,6 @@ export class DocumentService {
 
       return { data: documentsWithMetadata };
     } catch (error) {
-      console.error('Error fetching all documents with expiry:', error);
       return {
         error:
           error instanceof Error ? error.message : 'Failed to fetch documents',
@@ -359,7 +356,6 @@ export class DocumentService {
 
       return { data: stats };
     } catch (error) {
-      console.error('Error getting expiry statistics:', error);
       return {
         error:
           error instanceof Error
@@ -379,7 +375,6 @@ export class DocumentService {
       // This would integrate with your notification system
       return { message: 'Notification sent successfully' };
     } catch (error) {
-      console.error('Error sending expiry notification:', error);
       return {
         error:
           error instanceof Error
@@ -413,7 +408,6 @@ export class DocumentService {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error downloading document:', error);
       throw error;
     }
   }

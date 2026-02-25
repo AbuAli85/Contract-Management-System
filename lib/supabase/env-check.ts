@@ -11,7 +11,6 @@ export function validateSupabaseEnv() {
     .map(([key]) => key);
 
   if (missingVars.length > 0) {
-    console.error('❌ Missing Supabase environment variables:', missingVars);
     return false;
   }
 

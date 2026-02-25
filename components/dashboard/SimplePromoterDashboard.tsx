@@ -99,7 +99,6 @@ export default function SimplePromoterDashboard() {
           setTasks(tasksData.tasks || []);
         }
       } catch (err) {
-        console.error('Error fetching promoter data:', err);
         setError('Failed to load promoter dashboard data');
       } finally {
         setLoading(false);

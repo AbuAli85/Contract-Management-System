@@ -4,7 +4,6 @@ export async function updateContractStatuses() {
   const supabase = await createClient();
 
   try {
-    console.log('🔄 Starting contract status transitions...');
 
     // Get current date
     const today = new Date().toISOString().slice(0, 10);
@@ -17,7 +16,6 @@ export async function updateContractStatuses() {
       .lte('start_date', today);
 
     if (activateError) {
-      console.error('❌ Error fetching contracts to activate:', activateError);
       return { success: false, error: activateError.message };
     }
 
@@ -32,11 +30,9 @@ export async function updateContractStatuses() {
         .lte('start_date', today);
 
       if (updateActivateError) {
-        console.error('❌ Error activating contracts:', updateActivateError);
         return { success: false, error: updateActivateError.message };
       }
 
-      console.log(`✅ Activated ${contractsToActivate.length} contracts`);
 
       // Log the transitions
       for (const contract of contractsToActivate) {
@@ -49,7 +45,6 @@ export async function updateContractStatuses() {
             timestamp: new Date().toISOString(),
           });
         } catch (err) {
-          console.warn('Failed to log contract activation:', err);
         }
       }
     }
@@ -62,7 +57,6 @@ export async function updateContractStatuses() {
       .lt('end_date', today);
 
     if (expireError) {
-      console.error('❌ Error fetching contracts to expire:', expireError);
       return { success: false, error: expireError.message };
     }
 
@@ -77,11 +71,9 @@ export async function updateContractStatuses() {
         .lt('end_date', today);
 
       if (updateExpireError) {
-        console.error('❌ Error expiring contracts:', updateExpireError);
         return { success: false, error: updateExpireError.message };
       }
 
-      console.log(`✅ Expired ${contractsToExpire.length} contracts`);
 
       // Log the transitions
       for (const contract of contractsToExpire) {
@@ -94,7 +86,6 @@ export async function updateContractStatuses() {
             timestamp: new Date().toISOString(),
           });
         } catch (err) {
-          console.warn('Failed to log contract expiration:', err);
         }
       }
     }
@@ -102,9 +93,6 @@ export async function updateContractStatuses() {
     const totalTransitions =
       (contractsToActivate?.length || 0) + (contractsToExpire?.length || 0);
 
-    console.log(
-      `🎉 Contract status transitions completed. Total transitions: ${totalTransitions}`
-    );
 
     return {
       success: true,
@@ -115,7 +103,6 @@ export async function updateContractStatuses() {
       },
     };
   } catch (error) {
-    console.error('❌ Contract status transition error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

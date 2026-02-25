@@ -27,16 +27,8 @@ async function refreshPermissionsCache(adminClient: ServiceClient) {
   try {
     const { error } = await adminClient.rpc('refresh_user_permissions_cache');
     if (error) {
-      console.warn(
-        '⚠️ Failed to refresh user_permissions_cache:',
-        error.message
-      );
     }
   } catch (refreshError) {
-    console.warn(
-      '⚠️ Exception refreshing user_permissions_cache:',
-      refreshError
-    );
   }
 }
 
@@ -110,7 +102,6 @@ async function deactivateOtherRoles(
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 User Management API: GET');
 
     const serviceClient = getServiceRoleClient();
     const currentUser = await getAuthenticatedUser();
@@ -170,7 +161,6 @@ export async function GET(request: NextRequest) {
         .contains('roles', [roleFilter]);
 
       if (roleMatchError) {
-        console.error('❌ Failed to apply role filter:', roleMatchError);
         return NextResponse.json(
           {
             error: 'Failed to apply role filter',
@@ -237,7 +227,6 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (profilesError) {
-      console.error('❌ Failed to fetch profiles:', profilesError);
       return NextResponse.json(
         {
           error: 'Failed to fetch users',
@@ -261,10 +250,6 @@ export async function GET(request: NextRequest) {
           .in('user_id', userIds);
 
       if (permissionsError) {
-        console.warn(
-          '⚠️ Unable to join permissions cache:',
-          permissionsError.message
-        );
       } else if (permissionsData) {
         permissionsByUser = permissionsData.reduce(
           (acc, entry) => {
@@ -340,7 +325,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('❌ User management GET error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     const status =
       message === 'Unauthorized'
@@ -360,7 +344,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔧 User Management API: POST');
 
     const serviceClient = getServiceRoleClient();
     const currentUser = await getAuthenticatedUser();
@@ -521,10 +504,6 @@ export async function POST(request: NextRequest) {
             .in('name', normalizedPermissions);
 
         if (permissionLookupError) {
-          console.error(
-            '❌ Error fetching permissions:',
-            permissionLookupError
-          );
           return NextResponse.json(
             {
               error: 'Failed to fetch permissions',
@@ -563,7 +542,6 @@ export async function POST(request: NextRequest) {
             .single();
 
         if (roleLookupError && roleLookupError.code !== 'PGRST116') {
-          console.error('❌ Error reading custom role:', roleLookupError);
           return NextResponse.json(
             {
               error: 'Failed to fetch custom role',
@@ -590,7 +568,6 @@ export async function POST(request: NextRequest) {
               .single();
 
           if (roleCreateError || !createdRole) {
-            console.error('❌ Error creating custom role:', roleCreateError);
             return NextResponse.json(
               { error: 'Failed to create custom role' },
               { status: 500 }
@@ -606,10 +583,6 @@ export async function POST(request: NextRequest) {
           .eq('role_id', roleId);
 
         if (clearPermissionsError) {
-          console.error(
-            '❌ Error clearing custom role permissions:',
-            clearPermissionsError
-          );
           return NextResponse.json(
             {
               error: 'Failed to reset custom role permissions',
@@ -630,10 +603,6 @@ export async function POST(request: NextRequest) {
             .insert(rolePermissionPayload);
 
           if (assignmentError) {
-            console.error(
-              '❌ Error assigning permissions to custom role:',
-              assignmentError
-            );
             return NextResponse.json(
               {
                 error: 'Failed to assign permissions',
@@ -662,7 +631,6 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('❌ User management POST error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     const status =
       message === 'Unauthorized'

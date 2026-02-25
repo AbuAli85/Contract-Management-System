@@ -81,7 +81,6 @@ export default function ContractAnalyticsDashboard() {
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -100,7 +99,6 @@ export default function ContractAnalyticsDashboard() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error exporting analytics:', error);
     }
   };
 

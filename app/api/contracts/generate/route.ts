@@ -5,10 +5,8 @@ import { SimplePdfService } from '@/lib/simple-pdf-service';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔄 Starting multi-option contract generation...');
 
     const body = await request.json();
-    console.log('📋 Request body:', body);
 
     // Validate required fields
     const requiredFields = ['promoter_id', 'first_party_id', 'second_party_id'];
@@ -102,7 +100,6 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
     };
 
-    console.log('📝 Creating contract record...');
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
       .insert(contractData as any)
@@ -110,7 +107,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (contractError) {
-      console.error('❌ Failed to create contract:', contractError);
       return NextResponse.json(
         {
           error: 'Failed to create contract record',
@@ -123,7 +119,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Contract created:', (contract as any)?.id);
 
     // Fetch all required data
     const [promoterResult, firstPartyResult, secondPartyResult] =
@@ -150,11 +145,6 @@ export async function POST(request: NextRequest) {
       firstPartyResult.error ||
       secondPartyResult.error
     ) {
-      console.error('❌ Failed to fetch data:', {
-        promoterResult,
-        firstPartyResult,
-        secondPartyResult,
-      });
       return NextResponse.json(
         { error: 'Failed to fetch required data' },
         { status: 500 }
@@ -214,7 +204,6 @@ export async function POST(request: NextRequest) {
 
     switch (generationMethod) {
       case 'html':
-        console.log('🔄 Using HTML generation method...');
         const htmlService = new HtmlContractService({
           templatePath: '/templates/contract.html',
           outputPath: '/output/contracts',
@@ -225,7 +214,6 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'pdf':
-        console.log('🔄 Using simple PDF generation method...');
         const pdfService = new SimplePdfService({
           outputPath: '/output/contracts',
         });
@@ -235,7 +223,6 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'makecom':
-        console.log('🔄 Using Make.com generation method...');
         // Redirect to Make.com endpoint
         const makecomResponse = await fetch(
           `${process.env.NEXT_PUBLIC_APP_URL}/api/contracts/makecom-generate`,
@@ -283,10 +270,8 @@ export async function POST(request: NextRequest) {
         .eq('id', (contract as any)?.id);
 
       if (updateError) {
-        console.error('❌ Failed to update contract:', updateError);
       }
     } catch (updateErr) {
-      console.error('❌ Update error:', updateErr);
     }
 
     return NextResponse.json({
@@ -303,7 +288,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('❌ Contract generation error:', error);
     return NextResponse.json(
       {
         error: 'Contract generation failed',

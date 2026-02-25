@@ -265,7 +265,6 @@ export function AddTeamMemberDialog({ onSuccess }: AddTeamMemberDialogProps) {
       setAvailableEmployees(employees);
       setFilteredEmployees(employees);
     } catch (err) {
-      console.error('Error fetching available employees:', err);
       setError('Failed to load available employees');
       toast({
         title: 'Error',

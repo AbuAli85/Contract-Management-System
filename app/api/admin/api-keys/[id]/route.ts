@@ -89,7 +89,6 @@ export const PUT = withRBAC(
         .single()) as { data: ApiKey | null; error: Error | null };
 
       if (error) {
-        console.error('Error updating API key:', error);
         return NextResponse.json(
           { error: 'Failed to update API key', details: error.message },
           { status: 500 }
@@ -119,7 +118,6 @@ export const PUT = withRBAC(
         },
       });
     } catch (error) {
-      console.error('Error in PUT /api/admin/api-keys/[id]:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',
@@ -179,7 +177,6 @@ export const DELETE = withRBAC(
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting API key:', error);
         return NextResponse.json(
           { error: 'Failed to delete API key', details: error.message },
           { status: 500 }
@@ -191,7 +188,6 @@ export const DELETE = withRBAC(
         message: 'API key deactivated successfully',
       });
     } catch (error) {
-      console.error('Error in DELETE /api/admin/api-keys/[id]:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

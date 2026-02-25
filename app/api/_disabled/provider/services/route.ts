@@ -56,7 +56,6 @@ export async function GET(_request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (servicesError) {
-      console.error('Error fetching provider services:', servicesError);
       return NextResponse.json(
         { error: 'Failed to fetch services' },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({ services: formattedServices });
   } catch (error) {
-    console.error('Error in provider services API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -162,7 +160,6 @@ export const POST = withRBAC(
         .single();
 
       if (createError) {
-        console.error('Error creating service:', createError);
         return NextResponse.json(
           { error: 'Failed to create service' },
           { status: 500 }
@@ -174,7 +171,6 @@ export const POST = withRBAC(
         service: newService,
       });
     } catch (error) {
-      console.error('Error in create service API:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -220,7 +216,6 @@ export const PUT = withRBAC(
         .single();
 
       if (updateError) {
-        console.error('Error updating service:', updateError);
         return NextResponse.json(
           { error: 'Failed to update service' },
           { status: 500 }
@@ -239,7 +234,6 @@ export const PUT = withRBAC(
         service: updatedService,
       });
     } catch (error) {
-      console.error('Error in update service API:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

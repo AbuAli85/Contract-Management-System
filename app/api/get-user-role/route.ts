@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('=== GET USER ROLE START ===');
 
     // Create server component client that properly reads cookies
     const supabase = await createServerComponentClient();
@@ -19,24 +18,19 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getSession();
 
     if (sessionError) {
-      console.error('❌ Session error:', sessionError);
       return NextResponse.json({ error: 'Session error' }, { status: 401 });
     }
 
     if (!session) {
-      console.log('❌ No session found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = session.user;
-    console.log('✅ User authenticated:', { id: user.id, email: user.email });
 
     // First, ensure the user profile exists
     try {
       await (supabase as any).rpc('ensure_user_profile', { user_id: user.id });
-      console.log('✅ Ensured user profile exists');
     } catch (error) {
-      console.log('⚠️ Could not ensure user profile:', error);
       // Continue anyway, we'll try to get the role from existing data
     }
 
@@ -55,10 +49,8 @@ export async function GET(request: NextRequest) {
       if (!usersError && usersData?.role) {
         currentRole = usersData.role;
         roleSource = 'users';
-        console.log('✅ Role from users table:', currentRole);
       }
     } catch (error) {
-      console.log('Users table error:', error);
     }
 
     // Check profiles table if users didn't have role
@@ -73,10 +65,8 @@ export async function GET(request: NextRequest) {
         if (!profilesError && profilesData?.role) {
           currentRole = profilesData.role;
           roleSource = 'profiles';
-          console.log('✅ Role from profiles table:', currentRole);
         }
       } catch (error) {
-        console.log('Profiles table error:', error);
       }
     }
 
@@ -92,21 +82,17 @@ export async function GET(request: NextRequest) {
         if (!appUsersError && appUsersData?.role) {
           currentRole = appUsersData.role;
           roleSource = 'app_users';
-          console.log('✅ Role from app_users table:', currentRole);
         }
       } catch (error) {
-        console.log('App_users table error:', error);
       }
     }
 
     // If no role found, set admin role
     if (roleSource === 'default') {
-      console.log('⚠️ No role found, setting admin role...');
       currentRole = 'admin';
       roleSource = 'default (admin)';
     }
 
-    console.log('=== GET USER ROLE COMPLETE ===');
 
     return NextResponse.json({
       success: true,
@@ -126,8 +112,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('=== GET USER ROLE ERROR ===');
-    console.error('Unexpected error:', error);
 
     return NextResponse.json(
       {

@@ -31,7 +31,6 @@ async function getTargetsHandler(
       );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
-      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         {
           error: 'Failed to process employee record',
@@ -103,7 +102,6 @@ async function getTargetsHandler(
     const { data: targets, error: targetsError } = await query;
 
     if (targetsError) {
-      console.error('Error fetching targets:', targetsError);
       return NextResponse.json(
         { error: 'Failed to fetch targets' },
         { status: 500 }
@@ -163,7 +161,6 @@ async function getTargetsHandler(
       count: targetsWithProgress.length,
     });
   } catch (error) {
-    console.error('Error in GET /api/employer/team/[id]/targets:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -196,7 +193,6 @@ async function createTargetHandler(
       );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
-      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         {
           error: 'Failed to process employee record',
@@ -294,7 +290,6 @@ async function createTargetHandler(
       .single();
 
     if (createError) {
-      console.error('Error creating target:', createError);
       return NextResponse.json(
         { error: 'Failed to create target', details: createError.message },
         { status: 500 }
@@ -307,7 +302,6 @@ async function createTargetHandler(
       target,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/[id]/targets:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

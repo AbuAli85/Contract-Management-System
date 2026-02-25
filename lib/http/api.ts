@@ -59,12 +59,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
       }
 
       // Log rate limit info
-      console.warn('⚠️ Rate limit exceeded on client:', {
-        path,
-        ...rateLimitInfo,
-      });
     } catch (e) {
-      console.error('Failed to parse rate limit error:', e);
     }
   }
 

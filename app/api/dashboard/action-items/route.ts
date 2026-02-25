@@ -68,7 +68,7 @@ export async function GET(_request: NextRequest) {
               title: 'Pending Leave Requests',
               description: `${pendingLeaves.length} leave request${pendingLeaves.length > 1 ? 's' : ''} awaiting your approval`,
               priority: pendingLeaves.length > 5 ? 'high' : 'medium',
-              actionUrl: '/en/employer/team?tab=leave',
+              actionUrl: '/employer/team?tab=leave',
               count: pendingLeaves.length,
               createdAt:
                 pendingLeaves[0]?.created_at || new Date().toISOString(),
@@ -77,7 +77,6 @@ export async function GET(_request: NextRequest) {
         }
       } catch (error) {
         // Table might not exist, skip
-        console.log('Leave requests table not available');
       }
     }
 
@@ -118,14 +117,13 @@ export async function GET(_request: NextRequest) {
             title: 'Documents Expiring Soon',
             description: `${expiringCount} document${expiringCount > 1 ? 's' : ''} expiring in the next 30 days`,
             priority: expiringCount > 10 ? 'high' : 'medium',
-            actionUrl: '/en/promoters?filter=expiring_documents',
+            actionUrl: '/promoters?filter=expiring_documents',
             count: expiringCount,
             createdAt: new Date().toISOString(),
           });
         }
       }
     } catch (error) {
-      console.log('Document expiry check not available');
     }
 
     // 3. Pending Contract Approvals (for admins/managers)
@@ -145,14 +143,13 @@ export async function GET(_request: NextRequest) {
             title: 'Pending Contract Approvals',
             description: `${pendingContracts.length} contract${pendingContracts.length > 1 ? 's' : ''} awaiting approval`,
             priority: pendingContracts.length > 5 ? 'high' : 'medium',
-            actionUrl: '/en/contracts/pending',
+            actionUrl: '/contracts/pending',
             count: pendingContracts.length,
             createdAt:
               pendingContracts[0]?.created_at || new Date().toISOString(),
           });
         }
       } catch (error) {
-        console.log('Contract approvals check not available');
       }
     }
 
@@ -183,14 +180,13 @@ export async function GET(_request: NextRequest) {
               title: 'Overdue Tasks',
               description: `${overdueTasks.length} task${overdueTasks.length > 1 ? 's' : ''} past their due date`,
               priority: 'high',
-              actionUrl: '/en/employer/team?tab=tasks&filter=overdue',
+              actionUrl: '/employer/team?tab=tasks&filter=overdue',
               count: overdueTasks.length,
               createdAt: new Date().toISOString(),
             });
           }
         }
       } catch (error) {
-        console.log('Tasks check not available');
       }
     }
 
@@ -210,7 +206,6 @@ export async function GET(_request: NextRequest) {
       highPriority: actionItems.filter(item => item.priority === 'high').length,
     });
   } catch (error) {
-    console.error('Error fetching action items:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch action items',

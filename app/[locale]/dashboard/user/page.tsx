@@ -161,7 +161,7 @@ function UserStatsOverview() {
           accountAge: 6,
         });
       } catch (error) {
-        console.error('Error fetching user stats:', error);
+
       }
     };
 
@@ -313,7 +313,7 @@ function RecentContracts() {
           },
         ]);
       } catch (error) {
-        console.error('Error fetching contracts:', error);
+
       }
     };
 

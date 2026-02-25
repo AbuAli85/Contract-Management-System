@@ -240,7 +240,7 @@ export default function UsersPageComponent() {
 
       // Ensure result is always an array
       if (!Array.isArray(result)) {
-        console.error('Result is not an array after processing:', result);
+
         setFilteredUsers([]);
         setPaginatedUsers([]);
       } else {
@@ -252,7 +252,7 @@ export default function UsersPageComponent() {
         setPaginatedUsers(Array.isArray(paginated) ? paginated : []);
       }
     } catch (error) {
-      console.error('Error in filtering effect:', error);
+
       setFilteredUsers([]);
       setPaginatedUsers([]);
     }
@@ -288,7 +288,7 @@ export default function UsersPageComponent() {
           let usersArray = data.users || data || [];
 
           if (!Array.isArray(usersArray)) {
-            console.warn('API returned non-array users data:', usersArray);
+
             usersArray = [];
           }
 
@@ -309,7 +309,7 @@ export default function UsersPageComponent() {
           setUsers([]);
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
+
         setError(
           'Failed to fetch users. Please check your connection and try again.'
         );
@@ -391,7 +391,7 @@ export default function UsersPageComponent() {
       resetAddForm();
       fetchUsers();
     } catch (error) {
-      console.error('Error creating user:', error);
+
       setFormError('Unexpected error creating user. Please try again.');
     } finally {
       setAddLoading(false);

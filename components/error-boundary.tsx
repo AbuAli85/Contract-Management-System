@@ -56,7 +56,6 @@ export class PartiesErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Parties Error Boundary caught an error:', error, errorInfo);
 
     this.setState({ error, errorInfo });
 
@@ -68,14 +67,6 @@ export class PartiesErrorBoundary extends React.Component<
     // Log to external service in production
     if (process.env.NODE_ENV === 'production') {
       // Example: Sentry.captureException(error, { extra: errorInfo });
-      console.error(
-        'Production error - consider logging to external service:',
-        {
-          error: error.message,
-          stack: error.stack,
-          componentStack: errorInfo.componentStack,
-        }
-      );
     }
   }
 
@@ -334,11 +325,6 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     const { componentName } = this.props;
-    console.error(
-      `${componentName || 'Component'} Error Boundary caught an error:`,
-      error,
-      errorInfo
-    );
 
     this.setState({ error, errorInfo });
 
@@ -349,15 +335,6 @@ export class ErrorBoundary extends React.Component<
 
     // Log to external service in production
     if (process.env.NODE_ENV === 'production') {
-      console.error(
-        'Production error - consider logging to external service:',
-        {
-          component: componentName || 'Unknown',
-          error: error.message,
-          stack: error.stack,
-          componentStack: errorInfo.componentStack,
-        }
-      );
     }
   }
 

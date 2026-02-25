@@ -202,7 +202,6 @@ ${index + 1}. ${emp.employee?.full_name || 'N/A'}
       { status: 400 }
     );
   } catch (error) {
-    console.error('Error in GET /api/employer/team/bulk/export:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

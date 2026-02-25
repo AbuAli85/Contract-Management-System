@@ -74,7 +74,6 @@ export default function ReviewPanel() {
 
       setReviewItems(items);
     } catch (error: any) {
-      console.error('Error in review panel:', error);
       setReviewItems([]);
       toast({
         title: 'Error',
@@ -126,7 +125,6 @@ export default function ReviewPanel() {
       // Refresh the list
       fetchReviewItems();
     } catch (error) {
-      console.error('Error processing action:', error);
       toast({
         title: 'Error',
         description: `Failed to ${action} contract`,

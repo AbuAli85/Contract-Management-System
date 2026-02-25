@@ -202,7 +202,6 @@ export function SystemStatus() {
 
       setLastUpdate(new Date());
     } catch (error) {
-      console.error('Error refreshing system status:', error);
     } finally {
       setIsRefreshing(false);
     }

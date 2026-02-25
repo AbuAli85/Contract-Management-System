@@ -57,7 +57,6 @@ export async function getCompanyContext(): Promise<CompanyContext | null> {
       isAdmin,
     };
   } catch (error) {
-    console.error('Error getting company context:', error);
     return null;
   }
 }

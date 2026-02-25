@@ -15,11 +15,6 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors
     if (error) {
-      console.error(
-        `🔐 Enhanced Auth Callback [${requestId}]: OAuth error:`,
-        error,
-        errorDescription
-      );
 
       const errorDetails = SupabaseErrorHandler.handleError(
         { message: errorDescription || error, code: error },
@@ -30,7 +25,7 @@ export async function GET(request: NextRequest) {
       SupabaseErrorHandler.logError(errorDetails);
 
       // Redirect to login with error
-      const loginUrl = new URL('/en/auth/login', origin);
+      const loginUrl = new URL(`/${locale}/auth/login`, origin);
       loginUrl.searchParams.set('error', errorDetails.code);
       loginUrl.searchParams.set('message', errorDetails.message);
 
@@ -38,9 +33,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!code) {
-      console.warn(
-        `🔐 Enhanced Auth Callback [${requestId}]: No authorization code provided`
-      );
 
       const errorDetails = SupabaseErrorHandler.createError(
         'No authorization code provided',
@@ -54,7 +46,7 @@ export async function GET(request: NextRequest) {
 
       // Redirect to login
       return NextResponse.redirect(
-        `${origin}/en/auth/login?error=no_code&message=No authorization code provided`
+        `${origin}/${locale}/auth/login?error=no_code&message=No authorization code provided`
       );
     }
 
@@ -65,10 +57,6 @@ export async function GET(request: NextRequest) {
       await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
-      console.error(
-        `🔐 Enhanced Auth Callback [${requestId}]: Code exchange error:`,
-        exchangeError
-      );
 
       const errorDetails = SupabaseErrorHandler.handleError(
         exchangeError,
@@ -79,7 +67,7 @@ export async function GET(request: NextRequest) {
       SupabaseErrorHandler.logError(errorDetails);
 
       // Redirect to login with specific error
-      const loginUrl = new URL('/en/auth/login', origin);
+      const loginUrl = new URL(`/${locale}/auth/login`, origin);
       loginUrl.searchParams.set('error', errorDetails.code);
       loginUrl.searchParams.set('message', errorDetails.message);
 
@@ -87,9 +75,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!data.session) {
-      console.error(
-        `🔐 Enhanced Auth Callback [${requestId}]: No session returned from code exchange`
-      );
 
       const errorDetails = SupabaseErrorHandler.createError(
         'No session returned from authentication',
@@ -102,7 +87,7 @@ export async function GET(request: NextRequest) {
       SupabaseErrorHandler.logError(errorDetails);
 
       return NextResponse.redirect(
-        `${origin}/en/auth/login?error=no_session&message=Authentication failed`
+        `${origin}/${locale}/auth/login?error=no_session&message=Authentication failed`
       );
     }
 
@@ -114,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     if (needsProfileSetup) {
       return NextResponse.redirect(
-        `${origin}/en/onboarding?user_id=${data.session.user.id}`
+        `${origin}/${locale}/onboarding?user_id=${data.session.user.id}`
       );
     }
 
@@ -126,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     if (mfaRequired) {
       return NextResponse.redirect(
-        `${origin}/en/auth/mfa-setup?user_id=${data.session.user.id}`
+        `${origin}/${locale}/auth/mfa-setup?user_id=${data.session.user.id}`
       );
     }
 
@@ -142,10 +127,6 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error(
-      `🔐 Enhanced Auth Callback [${requestId}]: Unexpected error:`,
-      error
-    );
 
     const errorDetails = SupabaseErrorHandler.handleError(
       error,
@@ -157,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     // Redirect to login with generic error
     return NextResponse.redirect(
-      `${request.nextUrl.origin}/en/auth/login?error=callback_error&message=Authentication callback failed`
+      `${request.nextUrl.origin}/${locale}/auth/login?error=callback_error&message=Authentication callback failed`
     );
   }
 }
@@ -175,7 +156,7 @@ async function checkProfileSetup(
       .single();
 
     if (error) {
-      console.warn('Profile not found, user needs setup:', error.message);
+
       return true;
     }
 
@@ -183,7 +164,7 @@ async function checkProfileSetup(
     const hasRequiredFields = data.full_name && data.phone && data.department;
     return !hasRequiredFields;
   } catch (error) {
-    console.error('Error checking profile setup:', error);
+
     return true;
   }
 }
@@ -201,14 +182,14 @@ async function checkMFARequirement(
       .single();
 
     if (error) {
-      console.warn('MFA status not found:', error.message);
+
       return false;
     }
 
     // MFA is required if enabled but not verified
     return data.two_factor_enabled && !data.two_factor_verified;
   } catch (error) {
-    console.error('Error checking MFA requirement:', error);
+
     return false;
   }
 }
@@ -229,8 +210,8 @@ function validateRedirectUrl(url: string, origin: string): string {
   }
 
   // Default to dashboard if URL is invalid
-  console.warn('Invalid redirect URL, defaulting to dashboard:', url);
-  return '/en/dashboard';
+
+  return `/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/dashboard`; // locale-specific redirect handled by caller
 }
 
 // POST method for handling OAuth state verification
@@ -266,10 +247,6 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      console.error(
-        `🔐 Enhanced Auth Callback POST [${requestId}]: Code exchange error:`,
-        error
-      );
 
       const errorDetails = SupabaseErrorHandler.handleError(
         error,
@@ -322,10 +299,6 @@ export async function POST(request: NextRequest) {
       requestId,
     });
   } catch (error) {
-    console.error(
-      `🔐 Enhanced Auth Callback POST [${requestId}]: Unexpected error:`,
-      error
-    );
 
     const errorDetails = SupabaseErrorHandler.handleError(
       error,

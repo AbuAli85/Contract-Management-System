@@ -26,7 +26,6 @@ export function ContractMetricsWidget(props: WidgetProps) {
       }
     } catch (err) {
       setError('Network error');
-      console.error('Failed to fetch contract metrics:', err);
     } finally {
       setIsLoading(false);
     }

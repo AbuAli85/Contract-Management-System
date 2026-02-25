@@ -200,7 +200,6 @@ export function ExpiryTracker({
         }
       );
     } catch (err) {
-      console.error('Failed to load expiry data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load documents');
     } finally {
       setLoading(false);

@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(_request: NextRequest) {
   try {
-    console.log('🔄 Refresh session API called');
 
     const supabase = await createClient();
 
@@ -17,7 +16,6 @@ export async function POST(_request: NextRequest) {
     } = await supabase.auth.getSession();
 
     if (sessionError) {
-      console.error('🔄 Session error:', sessionError);
       return NextResponse.json({
         success: false,
         error: sessionError.message,
@@ -26,7 +24,6 @@ export async function POST(_request: NextRequest) {
     }
 
     if (!session) {
-      console.log('🔄 No session found, attempting to refresh...');
 
       // Try to refresh the session
       const {
@@ -35,7 +32,6 @@ export async function POST(_request: NextRequest) {
       } = await supabase.auth.refreshSession();
 
       if (refreshError) {
-        console.error('🔄 Refresh error:', refreshError);
         return NextResponse.json({
           success: false,
           error: refreshError.message,
@@ -44,7 +40,6 @@ export async function POST(_request: NextRequest) {
       }
 
       if (refreshedSession) {
-        console.log('🔄 Session refreshed successfully');
         return NextResponse.json({
           success: true,
           hasSession: true,
@@ -54,7 +49,6 @@ export async function POST(_request: NextRequest) {
           },
         });
       } else {
-        console.log('🔄 No session after refresh attempt');
         return NextResponse.json({
           success: true,
           hasSession: false,
@@ -62,7 +56,6 @@ export async function POST(_request: NextRequest) {
         });
       }
     } else {
-      console.log('🔄 Session already exists');
       return NextResponse.json({
         success: true,
         hasSession: true,
@@ -73,7 +66,6 @@ export async function POST(_request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('🔄 Refresh session API error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -87,7 +79,6 @@ export async function POST(_request: NextRequest) {
 
 export async function GET(_request: NextRequest) {
   try {
-    console.log('🔄 Get session status API called');
 
     const supabase = await createClient();
     const {
@@ -96,7 +87,6 @@ export async function GET(_request: NextRequest) {
     } = await supabase.auth.getSession();
 
     if (sessionError) {
-      console.error('🔄 Session status error:', sessionError);
       return NextResponse.json({
         success: false,
         hasSession: false,
@@ -106,11 +96,6 @@ export async function GET(_request: NextRequest) {
 
     const hasValidSession = !!session && !!session.user;
 
-    console.log('🔄 Session status:', {
-      hasSession: hasValidSession,
-      userId: session?.user?.id || null,
-      userEmail: session?.user?.email || null,
-    });
 
     return NextResponse.json({
       success: true,
@@ -123,7 +108,6 @@ export async function GET(_request: NextRequest) {
         : null,
     });
   } catch (error) {
-    console.error('🔄 Session status API error:', error);
     return NextResponse.json(
       {
         success: false,

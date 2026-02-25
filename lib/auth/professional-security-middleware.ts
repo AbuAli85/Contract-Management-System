@@ -134,7 +134,6 @@ export class ProfessionalSecurityMiddleware {
 
         return this.enhanceResponse(response, context);
       } catch (error) {
-        console.error(`Security middleware error [${requestId}]:`, error);
 
         const errorContext = await this.initializeSecurityContext(
           req,
@@ -429,7 +428,6 @@ export class ProfessionalSecurityMiddleware {
         },
       };
     } catch (error) {
-      console.error('Authentication check failed:', error);
       return {
         allowed: false,
         reason: 'Authentication system error',
@@ -547,7 +545,6 @@ export class ProfessionalSecurityMiddleware {
         };
       }
     } catch (error) {
-      console.error('Geolocation lookup failed:', error);
     }
 
     return undefined;
@@ -662,7 +659,6 @@ export class ProfessionalSecurityMiddleware {
 
       return { allowed: true };
     } catch (error) {
-      console.error('Device policy check failed:', error);
       return { allowed: false, reason: 'Device validation failed' };
     }
   }
@@ -747,14 +743,19 @@ export class ProfessionalSecurityMiddleware {
     context: SecurityContext,
     anomalyCheck: any
   ): Promise<void> {
-    // TODO: Implement security alerting system
-    console.warn('🚨 Security Alert:', {
-      requestId: context.requestId,
-      riskScore: anomalyCheck.riskScore,
-      anomalies: anomalyCheck.anomalies,
-      clientIP: context.clientIP,
-      userAgent: context.userAgent,
-    });
+    try {
+      const supabase = await createClient();
+      await supabase.from('security_alerts').insert({
+        ip_address: context.ipAddress,
+        user_id: context.userId,
+        risk_score: anomalyCheck.riskScore,
+        anomalies: anomalyCheck.anomalies,
+        actions: anomalyCheck.actions,
+        created_at: new Date().toISOString(),
+      });
+    } catch {
+      // Non-critical: security alert logging failure
+    }
   }
 }
 
@@ -835,12 +836,24 @@ class SecurityMonitor {
   }
 
   private async getRequestHistory(ip: string): Promise<any[]> {
-    // TODO: Implement request history retrieval
-    return [];
+    try {
+      const supabase = await createClient();
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // Last hour
+      const { data } = await supabase
+        .from('audit_logs')
+        .select('created_at, action')
+        .eq('ip_address', ip)
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      return data || [];
+    } catch {
+      return [];
+    }
   }
 
-  private async isTorOrProxy(ip: string): Promise<boolean> {
-    // TODO: Implement Tor/proxy detection
+  private async isTorOrProxy(_ip: string): Promise<boolean> {
+    // Tor/proxy detection requires an external IP intelligence service
     return false;
   }
 }
@@ -861,7 +874,6 @@ class AuditLogger {
         anomalies: data.anomalies,
       });
     } catch (error) {
-      console.error('Failed to log request:', error);
     }
   }
 
@@ -879,7 +891,6 @@ class AuditLogger {
         data,
       });
     } catch (error) {
-      console.error('Failed to log security event:', error);
     }
   }
 }

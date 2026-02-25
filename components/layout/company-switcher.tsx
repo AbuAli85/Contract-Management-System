@@ -127,7 +127,6 @@ export function CompanySwitcher() {
         setCompanies(data.companies || []);
       }
     } catch (error) {
-      console.error('Error fetching companies:', error);
     } finally {
       setLoading(false);
     }

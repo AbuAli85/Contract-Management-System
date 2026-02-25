@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userData) {
-      console.log(`🔐 Password reset requested for: ${email}`);
 
       // Generate password reset link using Supabase Auth
       const { _data, error: resetError } =
@@ -41,7 +40,6 @@ export async function POST(request: NextRequest) {
         });
 
       if (resetError) {
-        console.error('❌ Supabase reset error:', resetError);
         throw resetError;
       }
 
@@ -68,33 +66,15 @@ export async function POST(request: NextRequest) {
           });
 
           if (emailResult.success) {
-            console.log(
-              '✅ Custom password reset email sent via Resend:',
-              emailResult.messageId
-            );
           } else {
-            console.warn(
-              '⚠️ Failed to send custom email, Supabase email will be used:',
-              emailResult.error
-            );
           }
         } catch (emailError) {
-          console.error(
-            '⚠️ Custom email error (Supabase email will still be sent):',
-            emailError
-          );
           // Don't fail the request if custom email fails
           // User will still receive Supabase's default email
         }
       } else {
-        console.log(
-          '📧 RESEND_API_KEY not configured, using Supabase default email'
-        );
       }
     } else {
-      console.log(
-        `⚠️ Password reset attempted for non-existent email: ${email}`
-      );
       // Don't log this as an error to prevent email enumeration
     }
 
@@ -106,7 +86,6 @@ export async function POST(request: NextRequest) {
         'If an account with that email exists, a password reset link has been sent. Please check your email inbox (and spam folder).',
     });
   } catch (error) {
-    console.error('❌ Forgot password error:', error);
 
     // Don't expose internal errors to the client
     // Always return the same message to prevent email enumeration

@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
     const cronSecret = process.env.CRON_SECRET;
 
     if (!cronSecret) {
-      console.error('CRON_SECRET not configured');
       return NextResponse.json(
         { error: 'Cron job not configured' },
         { status: 500 }
@@ -28,21 +27,17 @@ export async function GET(request: NextRequest) {
     }
 
     if (authHeader !== `Bearer ${cronSecret}`) {
-      console.error('Unauthorized cron job attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Starting alert generation...', new Date().toISOString());
 
     // Generate all alerts
     const results = await ContractAlertsService.generateAllAlerts();
 
-    console.log('Alert generation complete:', results);
 
     // Process and send pending alerts
     const sentCount = await ContractAlertsService.processPendingAlerts();
 
-    console.log(`Sent ${sentCount} alerts`);
 
     return NextResponse.json({
       success: true,
@@ -54,7 +49,6 @@ export async function GET(request: NextRequest) {
       message: `Generated ${results.total} new alerts and sent ${sentCount} pending alerts`,
     });
   } catch (error) {
-    console.error('Error in alert generation cron:', error);
     return NextResponse.json(
       {
         error: 'Failed to generate alerts',

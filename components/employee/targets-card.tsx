@@ -229,7 +229,6 @@ export function TargetsCard() {
 
       setTargets(data.targets || []);
     } catch (error) {
-      console.error('Error fetching targets:', error);
     } finally {
       setLoading(false);
     }

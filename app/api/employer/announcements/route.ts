@@ -35,7 +35,6 @@ export async function GET(_request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (announcementsError) {
-      console.error('Error fetching announcements:', announcementsError);
       return NextResponse.json(
         { error: 'Failed to fetch announcements' },
         { status: 500 }
@@ -68,7 +67,6 @@ export async function GET(_request: NextRequest) {
       announcements: announcementsWithCounts,
     });
   } catch (error) {
-    console.error('Error in employer announcements GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -125,7 +123,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating announcement:', createError);
       return NextResponse.json(
         {
           error: 'Failed to create announcement',
@@ -141,7 +138,6 @@ export async function POST(request: NextRequest) {
       announcement,
     });
   } catch (error) {
-    console.error('Error in employer announcements POST:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

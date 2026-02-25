@@ -75,7 +75,7 @@ export default function DocumentGenerationPage() {
         setEmployees([]);
       }
     } catch (error) {
-      console.error('Error fetching employees:', error);
+
     }
   };
 
@@ -117,7 +117,7 @@ export default function DocumentGenerationPage() {
         },
       ]);
     } catch (error) {
-      console.error('Error fetching templates:', error);
+
     }
   };
 
@@ -141,7 +141,7 @@ export default function DocumentGenerationPage() {
         },
       ]);
     } catch (error) {
-      console.error('Error fetching generated documents:', error);
+
     }
   };
 
@@ -175,7 +175,7 @@ export default function DocumentGenerationPage() {
         alert(`Error: ${data.error}`);
       }
     } catch (error) {
-      console.error('Error generating document:', error);
+
       alert('Error generating document');
     } finally {
       setGenerating(false);

@@ -18,12 +18,16 @@ interface ErrorPageProps {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error('Page Error:', error);
-
-    // You can send this to your error reporting service here
+    // Error captured - integrate with error reporting service if needed
     // Example: Sentry.captureException(error);
   }, [error]);
+
+  // Extract locale from current URL path using regex
+  const getLocale = (): string => {
+    if (typeof window === 'undefined') return 'en';
+    const match = window.location.pathname.match(/^\/([a-z]{2})\//);
+    return match ? match[1] : 'en';
+  };
 
   const handleRetry = () => {
     reset();
@@ -146,7 +150,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               </p>
             )}
             <p>If this problem persists, please contact our support team.</p>
-            <p>We're here to help you get back on track.</p>
+            <p>We&apos;re here to help you get back on track.</p>
           </div>
 
           {/* Quick Links */}
@@ -158,36 +162,27 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               <Button
                 variant='ghost'
                 size='sm'
-                onClick={() =>
-                  (window.location.href =
-                    (window.location.pathname.startsWith('/ar/')
-                      ? '/ar'
-                      : '/en') + '/dashboard')
-                }
+                onClick={() => {
+                  window.location.href = `/${getLocale()}/dashboard`;
+                }}
               >
                 Dashboard
               </Button>
               <Button
                 variant='ghost'
                 size='sm'
-                onClick={() =>
-                  (window.location.href =
-                    (window.location.pathname.startsWith('/ar/')
-                      ? '/ar'
-                      : '/en') + '/contracts')
-                }
+                onClick={() => {
+                  window.location.href = `/${getLocale()}/contracts`;
+                }}
               >
                 Contracts
               </Button>
               <Button
                 variant='ghost'
                 size='sm'
-                onClick={() =>
-                  (window.location.href =
-                    (window.location.pathname.startsWith('/ar/')
-                      ? '/ar'
-                      : '/en') + '/profile')
-                }
+                onClick={() => {
+                  window.location.href = `/${getLocale()}/profile`;
+                }}
               >
                 Profile
               </Button>

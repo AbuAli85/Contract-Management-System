@@ -83,15 +83,34 @@ export function SettingsView() {
   );
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('app-settings');
-      if (saved) {
-        const parsed = JSON.parse(saved) as Partial<SettingsState>;
-        setSettings(prev => ({ ...prev, ...parsed }));
+    const loadSettings = async () => {
+      // Try server-side settings first (authenticated users)
+      try {
+        const res = await fetch('/api/user-settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.settings) {
+            setSettings(prev => ({ ...prev, ...data.settings }));
+            // Sync to localStorage for offline use
+            localStorage.setItem('app-settings', JSON.stringify(data.settings));
+            return;
+          }
+        }
+      } catch {
+        // Fall through to localStorage
       }
-    } catch {
-      // ignore
-    }
+      // Fallback to localStorage
+      try {
+        const saved = localStorage.getItem('app-settings');
+        if (saved) {
+          const parsed = JSON.parse(saved) as Partial<SettingsState>;
+          setSettings(prev => ({ ...prev, ...parsed }));
+        }
+      } catch {
+        // ignore
+      }
+    };
+    loadSettings();
   }, []);
 
   useEffect(() => {
@@ -116,7 +135,9 @@ export function SettingsView() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Save to localStorage for immediate effect
       localStorage.setItem('app-settings', JSON.stringify(settings));
+      // Apply theme immediately
       const root = document.documentElement;
       if (settings.theme === 'dark') {
         root.classList.add('dark');
@@ -128,6 +149,12 @@ export function SettingsView() {
         ).matches;
         root.classList.toggle('dark', prefersDark);
       }
+      // Persist to server for cross-device sync
+      await fetch('/api/user-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings }),
+      });
       toast({
         title: 'Settings Saved',
         description: 'Your preferences have been updated successfully.',

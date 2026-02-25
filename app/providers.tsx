@@ -118,9 +118,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const safetyTimer = setTimeout(() => {
       if (loading || initialLoading) {
-        console.warn(
-          '⚠️ Auth initialization timeout - forcing completion after 5s'
-        );
         setLoading(false);
         setInitialLoading(false);
       }
@@ -138,7 +135,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       const locale = localeMatch ? localeMatch[1] : 'en';
       return `/${locale}/auth/login`;
     }
-    return '/en/auth/login';
+    return `/${(typeof window !== 'undefined' ? window.location.pathname.match(/^\/([a-z]{2})\//) : null)?.[1] ?? 'en'}/auth/login`;
   };
 
   // Initialize Supabase on client side only
@@ -150,7 +147,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const client = createClient();
 
         if (!client) {
-          console.error('Failed to create Supabase client');
           setLoading(false);
           setInitialLoading(false);
           return;
@@ -188,7 +184,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
             }
           } catch (error) {
-            console.warn('Could not check existing sessions:', error);
           }
         }
 
@@ -199,7 +194,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('auth-mode');
           // Don't clear Supabase auth tokens - let Supabase handle them
         } catch (error) {
-          console.warn('Could not clean localStorage:', error);
         }
 
         // Get initial session with error handling
@@ -210,15 +204,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           } = await client.auth.getSession();
 
           if (error) {
-            console.error('Error getting session:', error);
             // If there's a session error, try to clear corrupted data
             try {
               await client.auth.signOut();
             } catch (signOutError) {
-              console.warn(
-                'Could not sign out after session error:',
-                signOutError
-              );
             }
             setSession(null);
             setUser(null);
@@ -227,9 +216,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session.user.id && session.user.email) {
               // Check if this is the blocked admin account
               if (session.user.email === 'admin@contractmanagement.com') {
-                console.warn(
-                  '🚫 Detected admin@contractmanagement.com - forcing logout'
-                );
                 await client.auth.signOut();
                 setSession(null);
                 setUser(null);
@@ -241,11 +227,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 try {
                   await syncSessionToSSO();
                 } catch (syncError) {
-                  console.error('⚠️ Error syncing session to SSO:', syncError);
                 }
               }
             } else {
-              console.warn('⚠️ Invalid session data, clearing session');
               setSession(null);
               setUser(null);
             }
@@ -254,18 +238,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
           }
         } catch (sessionError) {
-          console.error(
-            'Critical session error, clearing all auth data:',
-            sessionError
-          );
           // Clear all auth data and force fresh start
           try {
             await client.auth.signOut();
           } catch (signOutError) {
-            console.warn(
-              'Could not sign out after critical error:',
-              signOutError
-            );
           }
           setSession(null);
           setUser(null);
@@ -283,9 +259,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session.user.id && session.user.email) {
               // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
               if (session.user.email === 'admin@contractmanagement.com') {
-                console.warn(
-                  '🚫 Blocked admin@contractmanagement.com login - forcing logout'
-                );
                 await client.auth.signOut();
                 setSession(null);
                 setUser(null);
@@ -297,7 +270,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 try {
                   await syncSessionToSSO();
                 } catch (syncError) {
-                  console.error('⚠️ Error syncing session to SSO:', syncError);
                 }
               }
             }
@@ -308,9 +280,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session.user.id && session.user.email) {
               // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
               if (session.user.email === 'admin@contractmanagement.com') {
-                console.warn(
-                  '🚫 Blocked admin@contractmanagement.com token refresh - forcing logout'
-                );
                 await client.auth.signOut();
                 setSession(null);
                 setUser(null);
@@ -321,7 +290,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 try {
                   await syncSessionToSSO();
                 } catch (syncError) {
-                  console.error('⚠️ Error syncing session to SSO:', syncError);
                 }
               }
             }
@@ -335,7 +303,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setInitialLoading(false); // Mark initial auth check as complete
         return () => subscription.unsubscribe();
       } catch (error) {
-        console.error('Error initializing Supabase:', error);
         setSession(null);
         setUser(null);
         setLoading(false);
@@ -355,7 +322,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(null);
       }
     } catch (error) {
-      console.error('Error signing out:', error);
     }
   }, [supabase]);
 
@@ -367,14 +333,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           error,
         } = await supabase.auth.refreshSession();
         if (error) {
-          console.error('Error refreshing session:', error);
         } else if (session && session.user) {
           if (session.user.id && session.user.email) {
             // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
             if (session.user.email === 'admin@contractmanagement.com') {
-              console.warn(
-                '🚫 Blocked admin@contractmanagement.com token refresh - forcing logout'
-              );
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);
@@ -386,7 +348,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('Error refreshing session:', error);
     }
   }, [supabase]);
 
@@ -545,7 +506,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           mutations: {
             retry: 1,
             onError: error => {
-              console.error('Mutation error:', error);
             },
           },
         },

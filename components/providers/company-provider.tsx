@@ -62,9 +62,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
             );
 
             if (!hasAuthCookies) {
-              console.warn(
-                '[CompanyProvider] Session exists but cookies missing. Forcing setSession...'
-              );
               // Force setSession to create cookies
               await supabase.auth.setSession({
                 access_token: session.access_token,
@@ -75,9 +72,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
             }
           } else {
             // Try to sync from localStorage as fallback
-            console.warn(
-              '[CompanyProvider] No session in Supabase client, trying sync from localStorage...'
-            );
             await syncSessionToSSO();
 
             // Check again after sync
@@ -85,17 +79,10 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
               data: { session: syncedSession },
             } = await supabase.auth.getSession();
             if (!syncedSession || !syncedSession.user) {
-              console.warn(
-                '[CompanyProvider] No session found after sync. User may need to log in again.'
-              );
             }
           }
         }
       } catch (syncError) {
-        console.warn(
-          '[CompanyProvider] Error ensuring session before API call:',
-          syncError
-        );
         // Continue anyway - the API will return 401 if session is missing
       }
 
@@ -122,10 +109,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         // Handle 401 Unauthorized - session might be expired
         if (response.status === 401) {
           const data = await response.json().catch(() => ({}));
-          console.warn(
-            '[CompanyProvider] 401 Unauthorized - session may have expired:',
-            data
-          );
           setCompany(null);
           setIsLoading(false);
           // Don't show error toast for 401 - let the auth system handle it
@@ -162,7 +145,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
               if (isInvalidCompany(activeCompany.company_name || '')) {
                 // Invalid company - clear it and use first valid company
-                console.warn('Active company is invalid, clearing it');
 
                 // Find first valid company and set it directly (don't trigger full switch)
                 const firstValidCompany = data.companies?.find(
@@ -201,7 +183,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
-          console.warn('Company fetch timed out after 10 seconds');
           // Don't block rendering - set loading to false even on timeout
           setCompany(null);
         } else {
@@ -209,7 +190,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('Error fetching active company:', error);
       setCompany(null);
       // Always set loading to false even on error to prevent blocking
     } finally {
@@ -265,7 +245,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           try {
             await fetchActiveCompany(true); // Force refresh with cache busting
           } catch (error) {
-            console.error('Error fetching active company after switch:', error);
             // If fetch fails, the temporary state above will still show the correct company
           }
         }, 300);
@@ -278,7 +257,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error || 'Failed to switch company');
       }
     } catch (error: any) {
-      console.error('Error switching company:', error);
       // Re-fetch to restore correct state on error
       await fetchActiveCompany();
       toast({
@@ -297,7 +275,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     // Fetch company data but don't block rendering
     // Set a timeout to ensure loading state doesn't persist too long
     fetchActiveCompany().catch(error => {
-      console.error('Failed to fetch active company:', error);
       // Ensure loading is set to false even on error
       setIsLoading(false);
     });
@@ -307,9 +284,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     const safetyTimeout = setTimeout(() => {
       setIsLoading(currentLoading => {
         if (currentLoading) {
-          console.warn(
-            'CompanyProvider: Loading timeout after 5s - allowing page to render'
-          );
           return false;
         }
         return currentLoading;

@@ -64,7 +64,7 @@ export default function PromoterDetailsPage() {
 
       setPromoters(data || []);
     } catch (error) {
-      console.error('Error fetching promoters:', error);
+
     } finally {
       setIsLoading(false);
     }

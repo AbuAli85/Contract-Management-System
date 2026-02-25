@@ -50,13 +50,11 @@ export class SimpleNotificationService {
       ]);
 
       if (error) {
-        console.error('Error creating notification:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in createNotification:', error);
       return { success: false, error: 'Failed to create notification' };
     }
   }
@@ -80,13 +78,11 @@ export class SimpleNotificationService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching notifications:', error);
         return { data: [], error: error.message };
       }
 
       return { data: data || [], error: null };
     } catch (error) {
-      console.error('Error in getUserNotifications:', error);
       return { data: [], error: 'Failed to fetch notifications' };
     }
   }
@@ -105,13 +101,11 @@ export class SimpleNotificationService {
         .eq('id', notificationId);
 
       if (error) {
-        console.error('Error marking notification as read:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in markAsRead:', error);
       return { success: false, error: 'Failed to mark notification as read' };
     }
   }
@@ -131,13 +125,11 @@ export class SimpleNotificationService {
         .eq('is_read', false);
 
       if (error) {
-        console.error('Error marking all notifications as read:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in markAllAsRead:', error);
       return {
         success: false,
         error: 'Failed to mark all notifications as read',
@@ -159,7 +151,6 @@ export class SimpleNotificationService {
       const { data: notifications, error } = await query;
 
       if (error) {
-        console.error('Error fetching notification stats:', error);
         return { data: null, error: error.message };
       }
 
@@ -204,7 +195,6 @@ export class SimpleNotificationService {
         error: null,
       };
     } catch (error) {
-      console.error('Error in getNotificationStats:', error);
       return { data: null, error: 'Failed to get notification statistics' };
     }
   }
@@ -239,7 +229,6 @@ export class SimpleNotificationService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in sendContractNotification:', error);
       return { success: false, error: 'Failed to send contract notification' };
     }
   }
@@ -288,7 +277,6 @@ export class SimpleNotificationService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in sendDocumentExpiryNotification:', error);
       return {
         success: false,
         error: 'Failed to send document expiry notification',
@@ -320,7 +308,6 @@ export class SimpleNotificationService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in sendSystemAnnouncement:', error);
       return { success: false, error: 'Failed to send system announcement' };
     }
   }

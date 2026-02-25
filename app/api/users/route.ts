@@ -7,14 +7,12 @@ import { withRBAC } from '@/lib/rbac/guard';
 // GET - Fetch all users
 async function getUsersHandler(request: NextRequest) {
   try {
-    console.log('🔍 API Users GET: Starting request');
 
     // For admin operations, use service role client
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
     if (!serviceRoleKey || !supabaseUrl) {
-      console.error('❌ API Users: Missing service role credentials');
       return NextResponse.json(
         {
           error: 'Server configuration error',
@@ -44,12 +42,10 @@ async function getUsersHandler(request: NextRequest) {
           data: { user: authUser },
         } = await supabase.auth.getUser();
         if (authUser) {
-          console.log('✅ API Users: Found authenticated user:', authUser.id);
           user = authUser;
         }
       }
     } catch (authError) {
-      console.log('⚠️ API Users: Auth check failed:', authError);
     }
 
     // ✅ SECURITY FIX: Removed dangerous admin fallback
@@ -77,7 +73,6 @@ async function getUsersHandler(request: NextRequest) {
         userProfile = profileData;
       }
     } catch (error) {
-      console.log('⚠️ API Users: Profiles table error:', error);
     }
 
     // If no profile found, try users table
@@ -93,7 +88,6 @@ async function getUsersHandler(request: NextRequest) {
           userProfile = userData;
         }
       } catch (error) {
-        console.log('⚠️ API Users: Users table error:', error);
       }
     }
 
@@ -124,13 +118,8 @@ async function getUsersHandler(request: NextRequest) {
       if (!profilesError && profilesData) {
         users = profilesData;
       } else {
-        console.error(
-          '❌ API Users: Error fetching from profiles:',
-          profilesError
-        );
       }
     } catch (error) {
-      console.log('⚠️ API Users: Profiles fetch failed, trying users table');
     }
 
     // If profiles table failed, try users table
@@ -144,14 +133,11 @@ async function getUsersHandler(request: NextRequest) {
         if (!usersError && usersData) {
           users = usersData;
         } else {
-          console.error('❌ API Users: Error fetching from users:', usersError);
         }
       } catch (error) {
-        console.log('⚠️ API Users: Users table fetch also failed');
       }
     }
 
-    console.log('✅ API Users: Successfully fetched users:', users.length);
 
     return NextResponse.json({
       success: true,
@@ -164,7 +150,6 @@ async function getUsersHandler(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/users:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -303,7 +288,6 @@ async function createUserHandler(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating profile:', createError);
       createErrorDetails = createError.message;
       // Roll back auth user so we don't leave orphaned accounts
       await adminSupabase.auth.admin.deleteUser(authUserId);
@@ -327,7 +311,29 @@ async function createUserHandler(request: NextRequest) {
       );
     }
 
-    // TODO: send onboarding email with generated password + reset instructions
+    // Send onboarding email with temporary password via Resend
+    try {
+      const { sendEmail } = await import('@/lib/services/email.service');
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+      await sendEmail({
+        to: email,
+        subject: 'Welcome - Your Account Has Been Created',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+            <h2 style="color: #1a1a1a;">Welcome, ${full_name}!</h2>
+            <p>Your account has been created. Use the credentials below to log in:</p>
+            <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Temporary Password:</strong> <code>${generatedPassword}</code></p>
+            </div>
+            <p style="color: #666;">Please change your password after your first login for security.</p>
+            ${appUrl ? `<a href="${appUrl}/auth/login" style="background: #0070f3; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; margin-top: 8px;">Log In Now</a>` : ''}
+          </div>
+        `,
+      });
+    } catch {
+      // Do not fail user creation if email notification fails
+    }
 
     return NextResponse.json({
       success: true,
@@ -338,7 +344,6 @@ async function createUserHandler(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in POST /api/users:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

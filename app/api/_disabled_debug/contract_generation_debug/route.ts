@@ -15,8 +15,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       ? PDF_API_URL
       : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${PDF_API_URL}`;
 
-    console.log('Calling PDF API:', apiUrl);
-    console.log('Request body:', body);
 
     // Use debug PDF generation endpoint instead
     const debugApiUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/pdf-generation/debug`;
@@ -29,7 +27,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (!pdfRes.ok) {
       const errorText = await pdfRes.text();
-      console.error('PDF generation failed:', errorText);
       return NextResponse.json(
         {
           error: 'Failed to generate PDF',
@@ -66,7 +63,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    console.error('Debug endpoint error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

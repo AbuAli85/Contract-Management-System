@@ -328,7 +328,6 @@ export function TasksCard() {
 
       setTasks(data.tasks || []);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
     } finally {
       setLoading(false);
     }

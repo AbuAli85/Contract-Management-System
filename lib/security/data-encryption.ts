@@ -12,15 +12,6 @@ export class DataEncryption {
     this.encryptionKey = process.env.DATA_ENCRYPTION_KEY || this.generateKey();
 
     if (!process.env.DATA_ENCRYPTION_KEY) {
-      console.warn(
-        '⚠️ No DATA_ENCRYPTION_KEY found in environment. Using generated key.'
-      );
-      console.warn('🔐 Generated encryption key:', this.encryptionKey);
-      console.warn(
-        `📝 Add this to your .env.local: DATA_ENCRYPTION_KEY=${
-          this.encryptionKey
-        }`
-      );
     }
   }
 
@@ -33,7 +24,6 @@ export class DataEncryption {
       ).toString();
       return encrypted;
     } catch (error) {
-      console.error('Encryption failed:', error);
       throw new Error('Failed to encrypt data');
     }
   }
@@ -47,7 +37,6 @@ export class DataEncryption {
       ).toString(CryptoJS.enc.Utf8);
       return decrypted;
     } catch (error) {
-      console.error('Decryption failed:', error);
       throw new Error('Failed to decrypt data');
     }
   }
@@ -123,7 +112,6 @@ export class DatabaseSecurity {
           decrypted[field] = this.dataEncryption.decrypt(decrypted[field]);
           delete decrypted[`${field}_encrypted`];
         } catch (error) {
-          console.error(`Failed to decrypt field ${field}:`, error);
           decrypted[field] = '[DECRYPTION_FAILED]';
         }
       }
@@ -156,7 +144,6 @@ export class DatabaseSecurity {
         user_agent: 'system',
       });
     } catch (error) {
-      console.error('Failed to create audit trail:', error);
     }
   }
 
@@ -197,7 +184,6 @@ export class DatabaseSecurity {
       // Return decrypted data
       return await this.decryptSensitiveFields(result, sensitiveFields);
     } catch (error) {
-      console.error('Secure insert failed:', error);
       throw error;
     }
   }
@@ -231,7 +217,6 @@ export class DatabaseSecurity {
 
       return decryptedData;
     } catch (error) {
-      console.error('Secure select failed:', error);
       throw error;
     }
   }
@@ -282,7 +267,6 @@ export class DatabaseSecurity {
       // Return decrypted data
       return await this.decryptSensitiveFields(result, sensitiveFields);
     } catch (error) {
-      console.error('Secure update failed:', error);
       throw error;
     }
   }

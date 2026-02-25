@@ -196,7 +196,6 @@ export const GET = withAnyRBAC(
           if (record.status === 'late') existing.late++;
           attendanceByDate.set(date, existing);
         } catch (error) {
-          console.warn('Invalid attendance date:', record.attendance_date);
         }
       });
 
@@ -491,7 +490,6 @@ export const GET = withAnyRBAC(
         },
       });
     } catch (error: any) {
-      console.error('Error in HR analytics:', error);
       return NextResponse.json(
         {
           success: false,

@@ -31,7 +31,7 @@ export default function CRMPage() {
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching promoters:', error);
+
           setError(error.message);
           return;
         }
@@ -40,7 +40,7 @@ export default function CRMPage() {
           setPromoters(data);
         }
       } catch (err) {
-        console.error('Exception fetching promoters:', err);
+
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
       } finally {
         setPromotersLoading(false);

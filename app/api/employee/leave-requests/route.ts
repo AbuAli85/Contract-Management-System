@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
     const { data: requests, error: requestsError } = await requestsQuery;
 
     if (requestsError) {
-      console.error('Error fetching leave requests:', requestsError);
       return NextResponse.json(
         { error: 'Failed to fetch leave requests' },
         { status: 500 }
@@ -76,7 +75,6 @@ export async function GET(request: NextRequest) {
       .eq('year', parseInt(year));
 
     if (balancesError) {
-      console.error('Error fetching leave balances:', balancesError);
     }
 
     // Calculate stats
@@ -108,7 +106,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in leave requests GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -211,7 +208,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating leave request:', createError);
       return NextResponse.json(
         {
           error: 'Failed to create leave request',
@@ -244,7 +240,6 @@ export async function POST(request: NextRequest) {
       request: leaveRequest,
     });
   } catch (error) {
-    console.error('Error in leave requests POST:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

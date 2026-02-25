@@ -8,22 +8,13 @@ export const validateEnvironment = () => {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     if (isBuildTime) {
-      console.warn(
-        '⚠️ Supabase environment variables missing during build. Using mock mode.'
-      );
       return { isValid: false, isBuildTime: true };
     }
 
     if (isDevelopment) {
-      console.warn(
-        '⚠️ Supabase environment variables missing in development. Check your .env.local file.'
-      );
       return { isValid: false, isDevelopment: true };
     }
 
-    console.error(
-      '❌ Supabase environment variables are required for production.'
-    );
     return { isValid: false, isProduction: true };
   }
 

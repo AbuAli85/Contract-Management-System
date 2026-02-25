@@ -33,7 +33,7 @@ export default function NotAuthorizedPage() {
 
             <div className='flex flex-col gap-2'>
               <Button asChild>
-                <Link href='/en/dashboard'>
+                <Link href={`/${typeof window !== 'undefined' ? (window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en') : 'en'}/dashboard`}>
                   <Home className='mr-2 h-4 w-4' />
                   Go to Dashboard
                 </Link>

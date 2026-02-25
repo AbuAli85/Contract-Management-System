@@ -35,10 +35,6 @@ export async function POST(request: NextRequest) {
         remaining: rateLimitResult.remaining,
         retryInMinutes: Math.ceil((rateLimitResult.reset - Date.now()) / 60000),
       };
-      console.warn(
-        '⚠️ Registration rate limit exceeded:',
-        JSON.stringify(violation)
-      );
 
       return NextResponse.json(
         {
@@ -123,7 +119,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Register API - Starting registration for:', email);
 
     // Step 1: Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -140,7 +135,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
-      console.error('🔐 Register API - Auth error:', authError);
       return NextResponse.json(
         { error: `Registration failed: ${authError.message}` },
         { status: 400 }
@@ -154,7 +148,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Register API - Auth user created:', authData.user.id);
 
     // Step 2: Create user profile
     const { error: profileError } = await supabase.from('users').insert({
@@ -169,13 +162,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (profileError) {
-      console.error('🔐 Register API - Profile error:', profileError);
       // Don't fail the registration if profile creation fails
-      console.warn(
-        'Profile creation failed, but auth user was created successfully'
-      );
     } else {
-      console.log('🔐 Register API - Profile created successfully');
     }
 
     // Step 3: Add password to history
@@ -190,16 +178,10 @@ export async function POST(request: NextRequest) {
         });
 
       if (historyError) {
-        console.error(
-          '🔐 Register API - Password history error:',
-          historyError
-        );
         // Don't fail registration if history save fails
       } else {
-        console.log('🔐 Register API - Password added to history');
       }
     } catch (histError) {
-      console.error('🔐 Register API - Password history exception:', histError);
       // Don't fail registration
     }
 
@@ -214,9 +196,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (companyError) {
-        console.warn('Company creation failed:', companyError);
       } else {
-        console.log('Company created successfully');
       }
     }
 
@@ -232,7 +212,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('🔐 Register API - Exception:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

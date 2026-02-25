@@ -28,108 +28,110 @@ interface SimpleSidebarProps {
 }
 
 export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
+  const pathname = usePathname();
+  const locale = pathname?.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
   const navigationItems = [
     {
       label: 'Dashboard',
-      href: '/en/dashboard',
+      href: `/${locale}/dashboard`,
       icon: Home,
       description: 'Overview and metrics',
     },
     {
       label: 'Advanced Dashboard',
-      href: '/en/dashboard/advanced',
+      href: `/${locale}/dashboard/advanced`,
       icon: TrendingUp,
       description: 'Professional analytics',
       badge: 'NEW',
     },
     {
       label: 'eXtra Contracts',
-      href: '/en/generate-contract',
+      href: `/${locale}/generate-contract`,
       icon: FileText,
       description: 'Employment contracts',
     },
     {
       label: 'General Contracts',
-      href: '/en/contracts/general',
+      href: `/${locale}/contracts/general`,
       icon: Users,
       description: 'Business contracts',
       badge: 'NEW',
     },
     {
       label: 'Sharaf DG Deployment',
-      href: '/en/contracts/sharaf-dg',
+      href: `/${locale}/contracts/sharaf-dg`,
       icon: Building2,
       description: 'Deployment letters with PDF',
       badge: 'PDF',
     },
     {
       label: 'Contracts',
-      href: '/en/contracts',
+      href: `/${locale}/contracts`,
       icon: FileText,
       description: 'Manage all contracts',
     },
     {
       label: 'Booking System',
-      href: '/en/booking-system',
+      href: `/${locale}/booking-system`,
       icon: Briefcase,
       description: 'Resource booking & scheduling',
       badge: 'PRO',
     },
     {
       label: 'Tracking Dashboard',
-      href: '/en/tracking',
+      href: `/${locale}/tracking`,
       icon: Target,
       description: 'Real-time project tracking',
       badge: 'LIVE',
     },
     {
       label: 'Promoters',
-      href: '/en/promoters',
+      href: `/${locale}/promoters`,
       icon: Users,
       description: 'Manage promoters',
       // Badge removed - should be dynamically populated with real data if needed
     },
     {
       label: 'Companies',
-      href: '/en/companies',
+      href: `/${locale}/companies`,
       icon: Building2,
       description: 'Manage companies',
       // Badge removed - should be dynamically populated with real data if needed
     },
     {
       label: 'Analytics',
-      href: '/en/analytics',
+      href: `/${locale}/analytics`,
       icon: BarChart3,
       description: 'Performance metrics',
     },
     {
       label: 'Reports',
-      href: '/en/dashboard/reports',
+      href: `/${locale}/dashboard/reports`,
       icon: FileBarChart,
       description: 'Generate reports',
     },
     {
       label: 'User Management',
-      href: '/en/dashboard/users',
+      href: `/${locale}/dashboard/users`,
       icon: UserPlus,
       description: 'Manage users',
     },
     {
       label: 'Notifications',
-      href: '/en/notifications',
+      href: `/${locale}/notifications`,
       icon: Bell,
       description: 'View notifications',
       // Badge removed - should be dynamically populated with real notification count if needed
     },
     {
       label: 'Profile',
-      href: '/en/profile',
+      href: `/${locale}/profile`,
       icon: User,
       description: 'User profile',
     },
     {
       label: 'Settings',
-      href: '/en/settings',
+      href: `/${locale}/settings`,
       icon: Settings,
       description: 'System settings',
     },

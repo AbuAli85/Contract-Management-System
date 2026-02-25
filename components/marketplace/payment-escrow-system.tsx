@@ -386,7 +386,6 @@ export function PaymentEscrowSystem({
       setTransactions(mockTransactions);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading transactions:', error);
       toast.error('Failed to load transactions');
       setLoading(false);
     }

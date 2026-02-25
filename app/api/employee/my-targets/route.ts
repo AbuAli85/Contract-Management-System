@@ -62,7 +62,6 @@ export async function GET(request: NextRequest) {
     const { data: targets, error: targetsError } = await query;
 
     if (targetsError) {
-      console.error('Error fetching targets:', targetsError);
       return NextResponse.json(
         { error: 'Failed to fetch targets' },
         { status: 500 }
@@ -94,7 +93,6 @@ export async function GET(request: NextRequest) {
       count: filteredTargets.length,
     });
   } catch (error) {
-    console.error('Error in GET /api/employee/my-targets:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

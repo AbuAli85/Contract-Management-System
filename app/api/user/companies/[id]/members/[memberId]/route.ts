@@ -23,7 +23,6 @@ export async function DELETE(
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -113,7 +112,6 @@ export async function DELETE(
       .eq('id', memberId);
 
     if (updateError) {
-      console.error('Error removing member:', updateError);
       return NextResponse.json(
         { error: 'Failed to remove member' },
         { status: 500 }
@@ -125,7 +123,6 @@ export async function DELETE(
       message: 'Member removed successfully',
     });
   } catch (error: any) {
-    console.error('Error removing member:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to remove member' },
       { status: 500 }

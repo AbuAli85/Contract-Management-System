@@ -66,7 +66,6 @@ export default function GlobalSearch() {
       try {
         setRecentSearches(JSON.parse(saved));
       } catch (error) {
-        console.warn('Failed to parse recent searches:', error);
       }
     }
   }, []);
@@ -104,7 +103,6 @@ export default function GlobalSearch() {
         setResults([]);
       }
     } catch (error) {
-      console.error('Search error:', error);
       setResults([]);
     } finally {
       setIsLoading(false);

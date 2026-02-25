@@ -84,9 +84,6 @@ export function usePerformanceMonitor(componentName: string) {
     return () => {
       const renderTime = performance.now() - renderStartTime.current;
       if (process.env.NODE_ENV === 'development' && renderTime > 16) {
-        console.warn(
-          `[Performance] ${componentName} render took ${renderTime.toFixed(2)}ms (target: <16ms)`
-        );
       }
     };
   });
@@ -97,9 +94,6 @@ export function usePerformanceMonitor(componentName: string) {
       return () => {
         const duration = performance.now() - start;
         if (process.env.NODE_ENV === 'development' && duration > 100) {
-          console.warn(
-            `[Performance] ${componentName}.${operation} took ${duration.toFixed(2)}ms`
-          );
         }
       };
     },

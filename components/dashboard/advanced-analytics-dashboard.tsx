@@ -244,7 +244,6 @@ export function AdvancedAnalyticsDashboard() {
 
       setAnalytics(analyticsData);
     } catch (error) {
-      console.error('Error fetching advanced analytics:', error);
       toast({
         title: 'Error',
         description: 'Failed to load analytics data',

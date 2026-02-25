@@ -39,7 +39,7 @@ export default function ApprovalSetupPage() {
       }
     } catch (err) {
       setError('Failed to test database');
-      console.error('Test error:', err);
+
     } finally {
       setLoading(false);
     }

@@ -133,7 +133,7 @@ function useContractConfig() {
           error: null,
         });
       } catch (error) {
-        console.error('Config loading error:', error);
+
         const errorMessage =
           error instanceof Error ? error.message : 'Config loading failed';
         setConfig({
@@ -433,7 +433,7 @@ export default function GenerateContractPage() {
           } contract template.`,
         });
       } catch (error) {
-        console.error('Error selecting contract type:', error);
+
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';
         setError(`Failed to select contract type: ${errorMessage}`);
@@ -479,7 +479,7 @@ export default function GenerateContractPage() {
           setInsights(initialInsights);
         }
       } catch (error) {
-        console.error('Error updating insights:', error);
+
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';
         setError(`Failed to update contract insights: ${errorMessage}`);
@@ -526,7 +526,7 @@ export default function GenerateContractPage() {
           });
         }
       } catch (error) {
-        console.error('Error updating form progress:', error);
+
         const errorMessage =
           error instanceof Error ? error.message : 'An unknown error occurred.';
         setError(`Failed to update form progress: ${errorMessage}`);
@@ -550,7 +550,7 @@ export default function GenerateContractPage() {
     try {
       return getAllEnhancedContractTypes();
     } catch (error) {
-      console.error('Failed to load contract types:', error);
+
       setError('Failed to load contract types. Please refresh the page.');
       return [];
     }
@@ -1342,7 +1342,7 @@ const GeneratorSection = ({
               });
             }}
             onError={(error: any) => {
-              console.error('Enhanced form error:', error);
+
               const errorMessage =
                 error instanceof Error
                   ? error.message

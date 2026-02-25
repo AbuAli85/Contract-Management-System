@@ -62,7 +62,6 @@ export class WebhookService {
 
       return result;
     } catch (error) {
-      console.error('❌ Main webhook error:', error);
       throw error;
     }
   }
@@ -78,9 +77,6 @@ export class WebhookService {
     employer_name?: string;
   }) {
     if (!this.SLACK_WEBHOOK_URL) {
-      console.warn(
-        '⚠️ Slack webhook URL not configured, skipping notification'
-      );
       return null;
     }
 
@@ -117,7 +113,6 @@ export class WebhookService {
 
       return result;
     } catch (error) {
-      console.error('❌ Slack webhook error:', error);
       // Don't throw - Slack notification failure shouldn't break the main flow
       return null;
     }
@@ -157,14 +152,12 @@ export class WebhookService {
             }),
           });
         } catch (pdfReadyError) {
-          console.error('❌ PDF Ready webhook error:', pdfReadyError);
           // Don't fail the main process if PDF Ready webhook fails
         }
       }
 
       return mainResult;
     } catch (error) {
-      console.error('❌ Contract processing failed:', error);
       throw error;
     }
   }
@@ -195,7 +188,6 @@ export class WebhookService {
 
       return { success: true, message: 'All webhooks working' };
     } catch (error) {
-      console.error('❌ Webhook test failed:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

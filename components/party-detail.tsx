@@ -78,7 +78,6 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
         .select('id, full_name')
         .then(({ data, error }) => {
           if (error) {
-            console.error('Error fetching profiles:', error);
             setUsers([]);
           } else {
             setUsers(
@@ -90,7 +89,6 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
           }
         })
         .catch(error => {
-          console.error('Error fetching profiles:', error);
           setUsers([]);
         });
       supabase
@@ -148,7 +146,6 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
       .from('party-files')
       .upload(filePath, file);
     if (error) {
-      console.error('Error uploading file:', error);
       return;
     }
     const {

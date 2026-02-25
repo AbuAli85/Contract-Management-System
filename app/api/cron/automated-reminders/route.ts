@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('📊 Fetching reminder statistics...');
 
     const stats = await getReminderStatistics();
 
@@ -52,7 +51,6 @@ export async function GET(request: NextRequest) {
       message: 'Reminder statistics retrieved successfully',
     });
   } catch (error) {
-    console.error('Error fetching reminder statistics:', error);
     return NextResponse.json(
       {
         success: false,
@@ -74,17 +72,14 @@ export async function POST(request: NextRequest) {
     const urlSecret = request.nextUrl.searchParams.get('secret');
 
     if (authHeader !== `Bearer ${CRON_SECRET}` && urlSecret !== CRON_SECRET) {
-      console.warn('🚫 Unauthorized cron attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('🤖 Starting automated reminder cron job...');
 
     const startTime = Date.now();
     const result = await sendAutomatedReminders();
     const duration = Date.now() - startTime;
 
-    console.log(`✅ Cron job completed in ${duration}ms`);
 
     // Return detailed results
     return NextResponse.json({
@@ -106,7 +101,6 @@ export async function POST(request: NextRequest) {
       errors: result.errors.length > 0 ? result.errors : undefined,
     });
   } catch (error) {
-    console.error('❌ Error in automated reminder cron job:', error);
     return NextResponse.json(
       {
         success: false,

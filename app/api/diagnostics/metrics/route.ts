@@ -92,7 +92,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Diagnostics error:', error);
     return NextResponse.json(
       {
         success: false,

@@ -8,7 +8,6 @@ export const dynamic = 'force-dynamic';
 // 🔧 TEMPORARY TEST ENDPOINT - No RBAC protection
 export async function GET() {
   try {
-    console.log('🔧 TEST: API /api/promoters/test called (NO RBAC)');
 
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,15 +15,8 @@ export async function GET() {
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    console.log('🔧 TEST: Supabase config:', {
-      hasUrl: !!supabaseUrl,
-      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      usingKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON',
-    });
 
     if (!supabaseUrl || !supabaseKey) {
-      console.error('❌ TEST: Missing Supabase credentials');
       return NextResponse.json(
         { success: false, error: 'Server configuration error' },
         { status: 500 }
@@ -50,10 +42,8 @@ export async function GET() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    console.log('🔧 TEST: Authenticated user:', user?.email);
 
     // Execute query - SERVICE_ROLE key bypasses RLS
-    console.log('🔧 TEST: Executing Supabase query...');
     const {
       data: promoters,
       error,
@@ -65,7 +55,6 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ TEST: Database error:', error);
       return NextResponse.json(
         {
           success: false,
@@ -77,12 +66,8 @@ export async function GET() {
       );
     }
 
-    console.log(
-      `✅ TEST: Fetched ${promoters?.length || 0} promoters (total: ${count})`
-    );
 
     if (promoters && promoters.length > 0) {
-      console.log('🔧 TEST: First promoter:', promoters[0].name_en);
     }
 
     return NextResponse.json({
@@ -98,7 +83,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('❌ TEST: API error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

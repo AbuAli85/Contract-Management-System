@@ -57,7 +57,6 @@ export class PromoterDocumentsService {
       const data = await response.json();
       return data.documents || [];
     } catch (error) {
-      console.error('Error fetching documents:', error);
       throw error;
     }
   }
@@ -86,7 +85,6 @@ export class PromoterDocumentsService {
       const data = await response.json();
       return data.document;
     } catch (error) {
-      console.error('Error creating document:', error);
       throw error;
     }
   }
@@ -115,7 +113,6 @@ export class PromoterDocumentsService {
       const data = await response.json();
       return data.document;
     } catch (error) {
-      console.error('Error updating document:', error);
       throw error;
     }
   }
@@ -143,7 +140,6 @@ export class PromoterDocumentsService {
         throw new Error(error.error || 'Failed to delete document');
       }
     } catch (error) {
-      console.error('Error deleting document:', error);
       throw error;
     }
   }
@@ -169,7 +165,6 @@ export class PromoterDocumentsService {
         throw new Error(error.error || 'Failed to delete document');
       }
     } catch (error) {
-      console.error('Error deleting document:', error);
       throw error;
     }
   }
@@ -231,7 +226,6 @@ export class PromoterDocumentsService {
 
       return document;
     } catch (error) {
-      console.error('Error uploading document:', error);
       throw error;
     }
   }
@@ -255,9 +249,6 @@ export class PromoterDocumentsService {
           const supabase = createClient();
 
           if (!supabase) {
-            console.warn(
-              'Failed to create Supabase client for storage deletion'
-            );
             return;
           }
 
@@ -271,12 +262,10 @@ export class PromoterDocumentsService {
               .remove([storageFileName]);
           }
         } catch (storageError) {
-          console.warn('Could not delete file from storage:', storageError);
           // Don't throw error if storage deletion fails
         }
       }
     } catch (error) {
-      console.error('Error deleting document with file:', error);
       throw error;
     }
   }

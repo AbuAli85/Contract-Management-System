@@ -67,7 +67,6 @@ export async function GET(
       .single();
 
     if (error) {
-      console.error('Error fetching employee:', error);
       return NextResponse.json(
         { error: 'Employee not found' },
         { status: 404 }
@@ -76,7 +75,6 @@ export async function GET(
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in GET /api/hr/employees/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -127,7 +125,6 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating employee:', error);
       return NextResponse.json(
         { error: 'Failed to update employee' },
         { status: 500 }
@@ -136,7 +133,6 @@ export async function PUT(
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in PUT /api/hr/employees/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -171,7 +167,6 @@ export async function DELETE(
       .single();
 
     if (error) {
-      console.error('Error deleting employee:', error);
       return NextResponse.json(
         { error: 'Failed to delete employee' },
         { status: 500 }
@@ -183,7 +178,6 @@ export async function DELETE(
       data,
     });
   } catch (error) {
-    console.error('Error in DELETE /api/hr/employees/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

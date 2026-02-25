@@ -108,7 +108,6 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    console.error('❌ Make.com API error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -127,25 +126,8 @@ export const POST = withAnyRBAC(
       const body = await request.json();
       const { contractType, contractData, triggerMakecom = true } = body;
 
-      console.log('🔄 Make.com contract generation request:', {
-        contractType,
-        triggerMakecom,
-        contractDataKeys: Object.keys(contractData),
-        contractDataSample: {
-          promoter_id: contractData.promoter_id,
-          first_party_id: contractData.first_party_id,
-          second_party_id: contractData.second_party_id,
-          contract_type: contractData.contract_type,
-          job_title: contractData.job_title,
-          basic_salary: contractData.basic_salary,
-        },
-      });
 
       if (!contractType || !contractData) {
-        console.error('❌ Missing required data:', {
-          contractType,
-          hasContractData: !!contractData,
-        });
         return NextResponse.json(
           {
             success: false,
@@ -168,10 +150,6 @@ export const POST = withAnyRBAC(
       );
 
       if (missingFields.length > 0) {
-        console.error(
-          '❌ Missing required contract data fields:',
-          missingFields
-        );
         return NextResponse.json(
           {
             success: false,
@@ -205,26 +183,10 @@ export const POST = withAnyRBAC(
           .single();
 
         if (!promoterError && promoter) {
-          console.log(
-            '✅ Fetched promoter data for contract generation:',
-            promoter.name_en
-          );
 
           // Log passport URL details for debugging
           if (promoter.passport_url) {
-            console.log('📸 Passport URL from database:', {
-              raw_url: promoter.passport_url,
-              is_full_url: promoter.passport_url.startsWith('http'),
-              contains_placeholder:
-                promoter.passport_url.includes('NO_PASSPORT') ||
-                promoter.passport_url.toLowerCase().includes('placeholder'),
-              url_length: promoter.passport_url.length,
-            });
           } else {
-            console.warn(
-              '⚠️ No passport URL found for promoter:',
-              promoter.name_en
-            );
           }
 
           // Add promoter image URLs to contract data for webhook
@@ -244,7 +206,6 @@ export const POST = withAnyRBAC(
             passport_number: promoter.passport_number, // Alias for promoter_passport_number
           };
         } else {
-          console.warn('⚠️ Could not fetch promoter data:', promoterError);
         }
       }
 
@@ -258,7 +219,6 @@ export const POST = withAnyRBAC(
             .single();
 
         if (!firstPartyError && firstParty) {
-          console.log('✅ Fetched first party data:', firstParty.name_en);
           enrichedContractData = {
             ...enrichedContractData,
             first_party_name_en: firstParty.name_en,
@@ -268,7 +228,6 @@ export const POST = withAnyRBAC(
             first_party_logo_url: firstParty.logo_url,
           };
         } else {
-          console.warn('⚠️ Could not fetch first party data:', firstPartyError);
         }
       }
 
@@ -282,7 +241,6 @@ export const POST = withAnyRBAC(
             .single();
 
         if (!secondPartyError && secondParty) {
-          console.log('✅ Fetched second party data:', secondParty.name_en);
           enrichedContractData = {
             ...enrichedContractData,
             second_party_name_en: secondParty.name_en,
@@ -292,10 +250,6 @@ export const POST = withAnyRBAC(
             second_party_logo_url: secondParty.logo_url,
           };
         } else {
-          console.warn(
-            '⚠️ Could not fetch second party data:',
-            secondPartyError
-          );
         }
       }
 
@@ -349,7 +303,6 @@ export const POST = withAnyRBAC(
       ): string | undefined => {
         // If URL is null/undefined/empty, return undefined to skip this image in the template
         if (!url || url.toString().trim() === '') {
-          console.warn(`⚠️ Empty URL detected, skipping ${type} replacement`);
           return undefined;
         }
 
@@ -358,7 +311,6 @@ export const POST = withAnyRBAC(
         const normalizedUrl = normalizeSupabaseUrl(urlString);
         if (normalizedUrl) {
           urlString = normalizedUrl;
-          console.log(`✅ Normalized ${type} URL: ${urlString}`);
         }
 
         try {
@@ -368,9 +320,6 @@ export const POST = withAnyRBAC(
             parsedUrl.protocol !== 'http:' &&
             parsedUrl.protocol !== 'https:'
           ) {
-            console.warn(
-              `⚠️ Invalid protocol: ${parsedUrl.protocol}, skipping ${type}`
-            );
             return undefined;
           }
 
@@ -385,9 +334,6 @@ export const POST = withAnyRBAC(
             urlString.includes('NO_PASSPORT') ||
             urlString.includes('NO_ID_CARD')
           ) {
-            console.warn(
-              `⚠️ Placeholder document detected in URL (${urlString}), skipping ${type}`
-            );
             return undefined;
           }
 
@@ -408,15 +354,9 @@ export const POST = withAnyRBAC(
                 /\d{7,}/.test(filenameLower) ||
                 /[a-z]{2}\d{7}/i.test(filenameLower);
               if (!hasPassportNumber) {
-                console.warn(
-                  `⚠️ REAL_PASSPORT marker found but no passport number pattern detected in ${filename}, skipping ${type}`
-                );
                 return undefined;
               } else {
                 // REAL_PASSPORT file exists but has passport number - this is valid, allow it
-                console.log(
-                  `✅ REAL_PASSPORT file with passport number detected: ${filename}, allowing ${type}`
-                );
               }
             }
           }
@@ -433,9 +373,6 @@ export const POST = withAnyRBAC(
 
           for (const pattern of brokenImagePatterns) {
             if (pattern.test(urlString)) {
-              console.warn(
-                `⚠️ Potential broken image URL detected (matches pattern: ${pattern}), skipping ${type}`
-              );
               return undefined;
             }
           }
@@ -449,13 +386,9 @@ export const POST = withAnyRBAC(
               new URL(normalized); // Validate the normalized URL
               return normalized;
             } catch {
-              console.warn(
-                `⚠️ Invalid URL format even after normalization: ${urlString}, skipping ${type}`
-              );
               return undefined;
             }
           }
-          console.warn(`⚠️ Invalid URL format: ${urlString}, skipping ${type}`);
           return undefined;
         }
       };
@@ -598,63 +531,13 @@ export const POST = withAnyRBAC(
       };
 
       // Log the enriched data for debugging
-      console.log('🔍 Enriched contract data with ALL image URLs:', {
-        promoter_id_card_url: enrichedContractData.promoter_id_card_url,
-        promoter_passport_url: enrichedContractData.promoter_passport_url,
-        stored_promoter_id_card_image_url:
-          enrichedContractData.stored_promoter_id_card_image_url,
-        stored_promoter_passport_image_url:
-          enrichedContractData.stored_promoter_passport_image_url,
-        stored_first_party_logo_url:
-          enrichedContractData.stored_first_party_logo_url,
-        stored_second_party_logo_url:
-          enrichedContractData.stored_second_party_logo_url,
-        first_party_logo: enrichedContractData.first_party_logo,
-        image_12: enrichedContractData.image_12,
-      });
 
       // Special logging for passport URL processing
       if (enrichedContractData.promoter_passport_url) {
-        console.log('✅ Passport URL after validation:', {
-          final_url: enrichedContractData.promoter_passport_url,
-          is_valid: !!enrichedContractData.promoter_passport_url,
-          url_type: enrichedContractData.promoter_passport_url.startsWith(
-            'https://'
-          )
-            ? 'full_url'
-            : 'partial_url',
-        });
       } else {
-        console.warn(
-          '⚠️ Passport URL was filtered out during validation - will use placeholder or skip'
-        );
       }
 
       // Log enriched data before webhook generation
-      console.log('📊 Enriched contract data before webhook generation:', {
-        promoterData: {
-          name_en: enrichedContractData.promoter_name_en,
-          name_ar: enrichedContractData.promoter_name_ar,
-          id_card_url: enrichedContractData.promoter_id_card_url,
-          passport_url: enrichedContractData.promoter_passport_url,
-        },
-        firstPartyData: {
-          name_en: enrichedContractData.first_party_name_en,
-          name_ar: enrichedContractData.first_party_name_ar,
-          logo_url: enrichedContractData.first_party_logo_url,
-        },
-        secondPartyData: {
-          name_en: enrichedContractData.second_party_name_en,
-          name_ar: enrichedContractData.second_party_name_ar,
-          logo_url: enrichedContractData.second_party_logo_url,
-        },
-        contractData: {
-          job_title: enrichedContractData.job_title,
-          basic_salary: enrichedContractData.basic_salary,
-          contract_start_date: enrichedContractData.contract_start_date,
-          contract_end_date: enrichedContractData.contract_end_date,
-        },
-      });
 
       // Remove undefined image URLs before sending to Make.com
       // This prevents the "problem retrieving image" error for invalid/missing images
@@ -663,7 +546,6 @@ export const POST = withAnyRBAC(
         .map(([key]) => key);
 
       if (undefinedKeys.length > 0) {
-        console.log('🔍 Skipping undefined image URLs:', undefinedKeys);
       }
 
       const cleanedContractData = Object.fromEntries(
@@ -712,25 +594,8 @@ export const POST = withAnyRBAC(
       const { webhookPayload, templateConfig, validation } =
         generateContractWithMakecom(contractType, sanitizedContractData);
 
-      console.log('🔧 Generated webhook payload:', {
-        hasWebhookPayload: !!webhookPayload,
-        webhookPayloadKeys: webhookPayload ? Object.keys(webhookPayload) : [],
-        templateConfig: templateConfig
-          ? {
-              id: templateConfig.id,
-              name: templateConfig.name,
-              googleDocsTemplateId: templateConfig.googleDocsTemplateId,
-            }
-          : null,
-        validation: {
-          isValid: validation.isValid,
-          errors: validation.errors,
-          warnings: validation.warnings,
-        },
-      });
 
       if (!validation.isValid) {
-        console.error('❌ Contract validation failed:', validation.errors);
         return NextResponse.json(
           {
             success: false,
@@ -752,7 +617,6 @@ export const POST = withAnyRBAC(
       } = await supabaseServer.auth.getUser();
 
       if (authError || !currentUser) {
-        console.error('❌ Authentication error:', authError);
         return NextResponse.json(
           {
             success: false,
@@ -792,7 +656,6 @@ export const POST = withAnyRBAC(
         .single();
 
       if (contractError) {
-        console.error('❌ Contract creation error:', contractError);
         return NextResponse.json(
           {
             success: false,
@@ -807,7 +670,6 @@ export const POST = withAnyRBAC(
       (contract as any).first_party_id = contractData.first_party_id;
       (contract as any).second_party_id = contractData.second_party_id;
 
-      console.log('✅ Contract created:', contract.id);
 
       // If triggerMakecom is true, send webhook to Make.com
       let makecomResponse = null;
@@ -854,77 +716,11 @@ export const POST = withAnyRBAC(
             process.env.MAKECOM_WEBHOOK_URL;
 
           if (makecomWebhookUrl) {
-            console.log('📤 Triggering Make.com webhook:', makecomWebhookUrl);
-            console.log('📋 Enhanced payload - checking critical fields:', {
-              contract_id: enhancedPayload.contract_id,
-              contract_number: enhancedPayload.contract_number,
-              has_stored_id_card:
-                !!enhancedPayload.stored_promoter_id_card_image_url,
-              has_stored_passport:
-                !!enhancedPayload.stored_promoter_passport_image_url,
-              has_stored_logo: !!enhancedPayload.stored_first_party_logo_url,
-              stored_promoter_id_card_image_url:
-                enhancedPayload.stored_promoter_id_card_image_url,
-              stored_promoter_passport_image_url:
-                enhancedPayload.stored_promoter_passport_image_url,
-              stored_first_party_logo_url:
-                enhancedPayload.stored_first_party_logo_url,
-            });
 
             // Log comprehensive payload data for debugging
-            console.log('🔍 Make.com webhook payload details:', {
-              contractInfo: {
-                id: enhancedPayload.contract_id,
-                number: enhancedPayload.contract_number,
-                type: enhancedPayload.contract_type,
-              },
-              promoterInfo: {
-                name_en: enhancedPayload.promoter_name_en,
-                name_ar: enhancedPayload.promoter_name_ar,
-                id_card_url: enhancedPayload.promoter_id_card_url,
-                passport_url: enhancedPayload.promoter_passport_url,
-                stored_id_card:
-                  enhancedPayload.stored_promoter_id_card_image_url,
-                stored_passport:
-                  enhancedPayload.stored_promoter_passport_image_url,
-              },
-              firstPartyInfo: {
-                name_en: enhancedPayload.first_party_name_en,
-                name_ar: enhancedPayload.first_party_name_ar,
-                logo_url: enhancedPayload.first_party_logo_url,
-                stored_logo: enhancedPayload.stored_first_party_logo_url,
-              },
-              secondPartyInfo: {
-                name_en: enhancedPayload.second_party_name_en,
-                name_ar: enhancedPayload.second_party_name_ar,
-                logo_url: enhancedPayload.second_party_logo_url,
-                stored_logo: enhancedPayload.stored_second_party_logo_url,
-              },
-              contractDetails: {
-                job_title: enhancedPayload.job_title,
-                basic_salary: enhancedPayload.basic_salary,
-                start_date: enhancedPayload.contract_start_date,
-                end_date: enhancedPayload.contract_end_date,
-                work_location: enhancedPayload.work_location,
-                location_en: enhancedPayload.location_en,
-                location_ar: enhancedPayload.location_ar,
-              },
-              imageFields: {
-                image_1: enhancedPayload.image_1,
-                image_2: enhancedPayload.image_2,
-                image_12: enhancedPayload.image_12,
-                totalImageFields: Object.keys(enhancedPayload).filter(key =>
-                  key.startsWith('image_')
-                ).length,
-              },
-            });
 
             // Log full payload in development for debugging
             if (process.env.NODE_ENV === 'development') {
-              console.log(
-                '🔍 Full enhanced payload:',
-                JSON.stringify(enhancedPayload, null, 2)
-              );
             }
 
             // Retry up to 3 times with exponential backoff
@@ -936,7 +732,6 @@ export const POST = withAnyRBAC(
               let timeoutId: NodeJS.Timeout | null = null;
 
               try {
-                console.log(`🔄 Webhook attempt ${attempt}/3...`);
 
                 timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
@@ -955,19 +750,12 @@ export const POST = withAnyRBAC(
 
                 const responseText = await response.text();
 
-                console.log('📥 Webhook response:', {
-                  status: response.status,
-                  statusText: response.statusText,
-                  ok: response.ok,
-                  body: responseText.substring(0, 200),
-                });
 
                 // Parse response body for better handling
                 let parsedResponse = null;
                 try {
                   parsedResponse = JSON.parse(responseText);
                 } catch (e) {
-                  console.log('ℹ️ Response is not JSON, using as plain text');
                   parsedResponse = responseText;
                 }
 
@@ -981,10 +769,6 @@ export const POST = withAnyRBAC(
                 };
 
                 if (response.ok) {
-                  console.log(
-                    `✅ Make.com webhook triggered successfully on attempt ${attempt}`
-                  );
-                  console.log('📊 Make.com response data:', parsedResponse);
 
                   // Update contract status to processing
                   const { error: updateError } = await supabaseService
@@ -996,25 +780,12 @@ export const POST = withAnyRBAC(
                     .eq('id', contract.id);
 
                   if (updateError) {
-                    console.error(
-                      '❌ Failed to update contract status:',
-                      updateError
-                    );
                   } else {
-                    console.log('✅ Contract status updated to processing');
                   }
 
                   retrySucceeded = true;
                   break; // Success, exit retry loop
                 } else {
-                  console.error(
-                    `❌ Make.com webhook failed (attempt ${attempt}):`,
-                    {
-                      status: response.status,
-                      statusText: response.statusText,
-                      body: responseText,
-                    }
-                  );
 
                   lastError = {
                     status: response.status,
@@ -1029,7 +800,6 @@ export const POST = withAnyRBAC(
                       1000 * Math.pow(2, attempt),
                       10000
                     );
-                    console.log(`⏳ Waiting ${waitTime}ms before retry...`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                   }
                 }
@@ -1038,10 +808,6 @@ export const POST = withAnyRBAC(
                   clearTimeout(timeoutId);
                 }
 
-                console.error(
-                  `❌ Webhook request error (attempt ${attempt}):`,
-                  fetchError
-                );
 
                 lastError = {
                   error:
@@ -1054,14 +820,12 @@ export const POST = withAnyRBAC(
                 // Wait before retry
                 if (attempt < 3) {
                   const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
-                  console.log(`⏳ Waiting ${waitTime}ms before retry...`);
                   await new Promise(resolve => setTimeout(resolve, waitTime));
                 }
               }
             }
 
             if (!retrySucceeded) {
-              console.error('❌ All 3 webhook attempts failed');
               makecomResponse = {
                 status: 500,
                 success: false,
@@ -1071,7 +835,6 @@ export const POST = withAnyRBAC(
               };
             }
           } else {
-            console.warn('⚠️ MAKECOM_WEBHOOK_URL not configured');
             makecomResponse = {
               status: 0,
               success: false,
@@ -1080,7 +843,6 @@ export const POST = withAnyRBAC(
             };
           }
         } catch (makecomError) {
-          console.error('❌ Make.com webhook error:', makecomError);
           makecomResponse = {
             status: 500,
             success: false,
@@ -1151,7 +913,6 @@ export const POST = withAnyRBAC(
         },
       });
     } catch (error) {
-      console.error('❌ Contract generation error:', error);
       return NextResponse.json(
         {
           success: false,

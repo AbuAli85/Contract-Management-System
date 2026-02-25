@@ -37,23 +37,16 @@ export class DemoSessionManager {
   createSession(
     user: Omit<DemoUser, 'id' | 'authenticated' | 'authMode' | 'loginTime'>
   ): null {
-    console.warn(
-      '🚫 Demo mode is completely disabled. Cannot create demo session.'
-    );
     return null;
   }
 
   // Get current session - COMPLETELY DISABLED
   getSession(): null {
-    console.warn(
-      '🚫 Demo mode is completely disabled. Cannot get demo session.'
-    );
     return null;
   }
 
   // Get current user - COMPLETELY DISABLED
   getCurrentUser(): null {
-    console.warn('🚫 Demo mode is completely disabled. Cannot get demo user.');
     return null;
   }
 
@@ -79,15 +72,11 @@ export class DemoSessionManager {
       localStorage.removeItem(this.roleKey);
       localStorage.removeItem(this.authModeKey);
     } catch (error) {
-      console.warn('Could not clear demo sessions:', error);
     }
   }
 
   // Update session - COMPLETELY DISABLED
   updateSession(updates: Partial<DemoUser>): false {
-    console.warn(
-      '🚫 Demo mode is completely disabled. Cannot update demo session.'
-    );
     return false;
   }
 
@@ -111,9 +100,6 @@ export class DemoSessionManager {
 
   // Enable demo mode (for development only) - DISABLED
   enableDemoMode(): void {
-    console.warn(
-      '🚫 Demo mode cannot be enabled - completely disabled for security'
-    );
     this.demoModeEnabled = false;
   }
 
@@ -137,7 +123,6 @@ export class DemoSessionManager {
       localStorage.removeItem('supabase.auth.expires_at');
       localStorage.removeItem('supabase.auth.refresh_token');
     } catch (error) {
-      console.warn('Could not clear all data:', error);
     }
   }
 }
@@ -167,6 +152,5 @@ if (typeof window !== 'undefined') {
     localStorage.removeItem('supabase.auth.expires_at');
     localStorage.removeItem('supabase.auth.refresh_token');
   } catch (error) {
-    console.warn('Could not perform immediate cleanup:', error);
   }
 }

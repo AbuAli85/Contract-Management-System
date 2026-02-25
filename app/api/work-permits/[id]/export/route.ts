@@ -238,7 +238,6 @@ export const GET = withAnyRBAC(
         { status: 400 }
       );
     } catch (error: any) {
-      console.error('Error exporting work permit application:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

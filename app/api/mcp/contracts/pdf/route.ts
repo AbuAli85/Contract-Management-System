@@ -48,11 +48,6 @@ export async function POST(req: NextRequest) {
     const context = await getMcpContext(req);
 
     // Log with correlation ID
-    console.log(`[${correlationId}] MCP endpoint: /api/mcp/contracts/pdf`, {
-      user_id: context.user_id,
-      tenant_id: context.tenant_id,
-      role: context.role,
-    });
 
     // 2. RBAC: provider or admin only
     assertRole(context, ['provider', 'admin']);
@@ -149,7 +144,6 @@ export async function POST(req: NextRequest) {
     try {
       pdfBuffer = await generateContractPDF(fullContract as any);
     } catch (pdfGenError) {
-      console.error('[MCP PDF] PDF generation failed:', pdfGenError);
       throw new McpError(
         'INTERNAL_ERROR',
         `PDF generation failed: ${pdfGenError instanceof Error ? pdfGenError.message : 'Unknown error'}`
@@ -208,10 +202,6 @@ export async function POST(req: NextRequest) {
 
     if (updateError) {
       // Log but don't fail - PDF was generated successfully
-      console.warn(
-        '[MCP PDF] Failed to update contract with PDF URL:',
-        updateError
-      );
     }
 
     // 11. Return response with filename and URL (or base64 as fallback)

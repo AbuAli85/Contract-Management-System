@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { BaseWidget } from '../BaseWidget';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
@@ -18,6 +19,8 @@ interface ExpiringContract {
 }
 
 export function UpcomingExpiriesWidget(props: WidgetProps) {
+  const pathname = usePathname();
+  const locale = pathname?.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
   const [contracts, setContracts] = useState<ExpiringContract[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +52,6 @@ export function UpcomingExpiriesWidget(props: WidgetProps) {
       }
     } catch (err) {
       setError('Network error');
-      console.error('Failed to fetch expiring contracts:', err);
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +105,7 @@ export function UpcomingExpiriesWidget(props: WidgetProps) {
           {contracts.map(contract => (
             <Link
               key={contract.id}
-              href={`/en/contracts/${contract.id}`}
+              href={`/${locale ?? 'en'}/contracts/${contract.id}`}
               className='block p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors'
             >
               <div className='flex items-start justify-between gap-2 mb-2'>

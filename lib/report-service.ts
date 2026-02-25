@@ -279,7 +279,6 @@ export class ReportService {
 
       return { data: reportData };
     } catch (error) {
-      console.error('Error generating company overview report:', error);
       return {
         error:
           error instanceof Error ? error.message : 'Failed to generate report',
@@ -381,7 +380,6 @@ export class ReportService {
 
       return { data: complianceData };
     } catch (error) {
-      console.error('Error generating compliance report:', error);
       return {
         error:
           error instanceof Error
@@ -522,7 +520,6 @@ export class ReportService {
 
       return { data: reportData };
     } catch (error) {
-      console.error('Error generating expiry analysis report:', error);
       return {
         error:
           error instanceof Error
@@ -619,7 +616,6 @@ export class ReportService {
 
       return { data: reportData };
     } catch (error) {
-      console.error('Error generating activity summary report:', error);
       return {
         error:
           error instanceof Error
@@ -651,7 +647,6 @@ export class ReportService {
 
       return { data };
     } catch (error) {
-      console.error('Error saving report config:', error);
       return {
         error:
           error instanceof Error
@@ -685,7 +680,6 @@ export class ReportService {
 
       return { data: data || [] };
     } catch (error) {
-      console.error('Error fetching report configs:', error);
       return {
         error:
           error instanceof Error
@@ -717,7 +711,6 @@ export class ReportService {
           throw new Error(`Unsupported format: ${format}`);
       }
     } catch (error) {
-      console.error('Error exporting report:', error);
       return {
         success: false,
         error:

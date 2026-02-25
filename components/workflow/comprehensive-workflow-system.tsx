@@ -321,7 +321,6 @@ export function ComprehensiveWorkflowSystem({
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error loading projects:', error);
       toast.error('Failed to load projects');
       setLoading(false);
     }

@@ -407,7 +407,7 @@ export function AssignmentManager({
                           {assignment.deployment_letter && (
                             <Button variant='ghost' size='sm' asChild>
                               <Link
-                                href={`/en/contracts/${assignment.deployment_letter.id}`}
+                                href={`/${locale ?? 'en'}/contracts/${assignment.deployment_letter.id}`}
                               >
                                 <FileText className='h-4 w-4' />
                               </Link>

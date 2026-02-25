@@ -270,7 +270,6 @@ export function setCompressedStorage(key: string, data: any): boolean {
     localStorage.setItem(key, jsonString);
     return true;
   } catch (error) {
-    console.warn(`Failed to store ${key}:`, error);
     return false;
   }
 }
@@ -281,7 +280,6 @@ export function getCompressedStorage<T>(key: string): T | null {
     if (!stored) return null;
     return JSON.parse(stored) as T;
   } catch (error) {
-    console.warn(`Failed to retrieve ${key}:`, error);
     return null;
   }
 }
@@ -303,7 +301,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       return success;
     }
   } catch (error) {
-    console.error('Failed to copy to clipboard:', error);
     return false;
   }
 }

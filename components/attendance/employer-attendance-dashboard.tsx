@@ -147,7 +147,7 @@ export function EmployerAttendanceDashboard() {
           setCompanyId(data.profile.active_company_id);
         }
       })
-      .catch(console.error);
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -185,7 +185,6 @@ export function EmployerAttendanceDashboard() {
         setStats(statsData.stats || stats);
       }
     } catch (error: any) {
-      console.error('Error fetching attendance:', error);
       if (!silent) {
         toast({
           title: 'Error',

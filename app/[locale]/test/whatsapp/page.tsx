@@ -43,7 +43,7 @@ export default function TestWhatsAppPage() {
       const data = await response.json();
       setConfigStatus(data);
     } catch (error) {
-      console.error('Error checking config:', error);
+      
     }
   };
 

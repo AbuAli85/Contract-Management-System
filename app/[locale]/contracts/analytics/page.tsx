@@ -99,7 +99,7 @@ export default function ContractAnalyticsPage() {
 
   const fetchAnalytics = async () => {
     if (!supabase) {
-      console.error('Supabase client not available');
+
       return;
     }
 
@@ -143,7 +143,7 @@ export default function ContractAnalyticsPage() {
         summary,
       });
     } catch (error) {
-      console.error('Failed to fetch analytics:', error);
+
       toast({
         title: 'Analytics Error',
         description: 'Failed to load contract analytics data.',

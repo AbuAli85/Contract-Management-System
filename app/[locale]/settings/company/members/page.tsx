@@ -114,7 +114,7 @@ export default function CompanyMembersPage() {
         setMyRole(membersData.my_role || 'member');
       }
     } catch (error) {
-      console.error('Error fetching members:', error);
+
     } finally {
       setLoading(false);
     }

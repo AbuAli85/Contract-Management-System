@@ -62,7 +62,6 @@ export async function getCompanyScope(): Promise<CompanyScope | null> {
       userId: user.id,
     };
   } catch (error) {
-    console.error('Error getting company scope:', error);
     return null;
   }
 }

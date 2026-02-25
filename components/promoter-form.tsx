@@ -416,7 +416,6 @@ export default function PromoterForm(props: PromoterFormProps) {
         description: `${file.name} has been uploaded`,
       });
     } catch (error) {
-      console.error('Error uploading document:', error);
       toast({
         title: 'Upload failed',
         description:
@@ -463,7 +462,6 @@ export default function PromoterForm(props: PromoterFormProps) {
           .filter((name): name is string => Boolean(name)) || [];
       setCompanies(companyNames);
     } catch (error) {
-      console.error('Error fetching companies:', error);
       toast({
         title: 'Error',
         description: 'Failed to load companies',
@@ -597,7 +595,6 @@ export default function PromoterForm(props: PromoterFormProps) {
 
       onFormSubmit();
     } catch (error) {
-      console.error('Error saving promoter:', error);
       toast({
         title: 'Error',
         description:

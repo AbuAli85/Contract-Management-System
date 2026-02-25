@@ -224,7 +224,6 @@ export default function PromoterProfileForm({
       }
       onFormSubmitSuccess?.(values);
     } catch (error) {
-      console.error('Form submission error:', error);
       toast({
         title: 'Error',
         description:

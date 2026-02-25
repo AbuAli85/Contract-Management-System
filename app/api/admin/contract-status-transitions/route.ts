@@ -22,10 +22,6 @@ export const POST = withAnyRBAC(
         );
       }
 
-      console.log(
-        '🔄 Manual contract status transitions triggered by:',
-        user.email
-      );
 
       // Get current date
       const today = new Date().toISOString().slice(0, 10);
@@ -38,10 +34,6 @@ export const POST = withAnyRBAC(
         .lte('start_date', today);
 
       if (activateError) {
-        console.error(
-          '❌ Error fetching contracts to activate:',
-          activateError
-        );
         return NextResponse.json(
           { success: false, error: activateError.message },
           { status: 500 }
@@ -60,7 +52,6 @@ export const POST = withAnyRBAC(
           .lte('start_date', today);
 
         if (updateActivateError) {
-          console.error('❌ Error activating contracts:', updateActivateError);
           return NextResponse.json(
             { success: false, error: updateActivateError.message },
             { status: 500 }
@@ -68,7 +59,6 @@ export const POST = withAnyRBAC(
         }
 
         activatedCount = contractsToActivate.length;
-        console.log(`✅ Activated ${activatedCount} contracts`);
 
         // Log the transitions
         for (const contract of contractsToActivate) {
@@ -81,7 +71,6 @@ export const POST = withAnyRBAC(
               timestamp: new Date().toISOString(),
             });
           } catch (err) {
-            console.warn('Failed to log contract activation:', err);
           }
         }
       }
@@ -94,7 +83,6 @@ export const POST = withAnyRBAC(
         .lt('end_date', today);
 
       if (expireError) {
-        console.error('❌ Error fetching contracts to expire:', expireError);
         return NextResponse.json(
           { success: false, error: expireError.message },
           { status: 500 }
@@ -113,7 +101,6 @@ export const POST = withAnyRBAC(
           .lt('end_date', today);
 
         if (updateExpireError) {
-          console.error('❌ Error expiring contracts:', updateExpireError);
           return NextResponse.json(
             { success: false, error: updateExpireError.message },
             { status: 500 }
@@ -121,7 +108,6 @@ export const POST = withAnyRBAC(
         }
 
         expiredCount = contractsToExpire.length;
-        console.log(`✅ Expired ${expiredCount} contracts`);
 
         // Log the transitions
         for (const contract of contractsToExpire) {
@@ -134,16 +120,12 @@ export const POST = withAnyRBAC(
               timestamp: new Date().toISOString(),
             });
           } catch (err) {
-            console.warn('Failed to log contract expiration:', err);
           }
         }
       }
 
       const totalTransitions = activatedCount + expiredCount;
 
-      console.log(
-        `🎉 Manual contract status transitions completed. Total transitions: ${totalTransitions}`
-      );
 
       return NextResponse.json({
         success: true,
@@ -157,7 +139,6 @@ export const POST = withAnyRBAC(
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('❌ Manual contract status transition error:', error);
       return NextResponse.json(
         {
           success: false,
@@ -204,7 +185,6 @@ export const GET = withAnyRBAC(
         lastChecked: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('❌ Get transition statistics error:', error);
       return NextResponse.json(
         {
           success: false,

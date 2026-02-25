@@ -23,7 +23,6 @@ export async function GET(
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -134,7 +133,6 @@ export async function GET(
       .order('role');
 
     if (membersError) {
-      console.error('Error fetching members:', membersError);
       return NextResponse.json({
         success: true,
         members: [],
@@ -144,19 +142,7 @@ export async function GET(
     }
 
     // Debug logging
-    console.log(
-      `[Members API] Found ${membersData?.length || 0} company_members records for company ${companyId}`
-    );
     if (membersData && membersData.length > 0) {
-      console.log(
-        '[Members API] Member statuses:',
-        membersData.map((m: any) => ({
-          id: m.id,
-          user_id: m.user_id,
-          role: m.role,
-          status: m.status,
-        }))
-      );
     }
 
     // Then fetch profile data for each member
@@ -175,7 +161,6 @@ export async function GET(
         if (!profilesError && profilesData) {
           profiles = profilesData;
         } else if (profilesError) {
-          console.warn('Error fetching profiles for members:', profilesError);
           // Continue without profiles - we'll include members anyway
         }
       }
@@ -188,9 +173,6 @@ export async function GET(
           : null;
 
         if (!profile && member.user_id) {
-          console.warn(
-            `[Members API] Profile not found for user_id: ${member.user_id} (member_id: ${member.id})`
-          );
         }
 
         members.push({
@@ -224,9 +206,6 @@ export async function GET(
       }
     }
 
-    console.log(
-      `[Members API] Returning ${members.length} members for company ${companyId}`
-    );
 
     return NextResponse.json({
       success: true,
@@ -234,7 +213,6 @@ export async function GET(
       my_role: userRole,
     });
   } catch (error: any) {
-    console.error('Error:', error);
     return NextResponse.json({
       success: true,
       members: [],
@@ -264,7 +242,6 @@ export async function POST(
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -378,7 +355,6 @@ export async function POST(
       message: 'Member added successfully',
     });
   } catch (error: any) {
-    console.error('Error adding member:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -403,7 +379,6 @@ export async function DELETE(
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -499,7 +474,6 @@ export async function DELETE(
       .eq('id', memberId);
 
     if (updateError) {
-      console.error('Error removing member:', updateError);
       return NextResponse.json(
         { error: 'Failed to remove member' },
         { status: 500 }
@@ -511,7 +485,6 @@ export async function DELETE(
       message: 'Member removed successfully',
     });
   } catch (error: any) {
-    console.error('Error removing member:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to remove member' },
       { status: 500 }

@@ -25,7 +25,7 @@ export default function PromoterDetailError({ error, reset }: ErrorProps) {
   const locale = (params?.locale as string) || 'en';
 
   useEffect(() => {
-    console.error('Promoter detail page error:', error);
+
   }, [error]);
 
   const isNotFound =

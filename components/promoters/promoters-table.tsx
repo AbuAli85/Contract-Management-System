@@ -143,6 +143,8 @@ export function PromotersTable({
   onInlineUpdate,
   enableInlineEdit = false,
 }: PromotersTableProps) {
+  const pathname = usePathname();
+  const locale = pathname?.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
   const parentRef = useRef<HTMLDivElement>(null);
 
   // Column customization
@@ -269,7 +271,7 @@ export function PromotersTable({
               }}
               secondaryAction={{
                 label: 'Import CSV',
-                href: '/en/manage-promoters/import',
+                href: `/${locale}/manage-promoters/import`,
               }}
               quickTips={[
                 'Add individual promoters with the form above',

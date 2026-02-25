@@ -30,7 +30,6 @@ export function generateNonce(): string {
   }
 
   // Fallback for environments without crypto (should not happen)
-  console.warn('⚠️ Crypto API unavailable, using fallback nonce generation');
   return (
     Math.random().toString(36).substring(2) +
     Math.random().toString(36).substring(2)

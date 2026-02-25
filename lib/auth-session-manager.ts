@@ -53,7 +53,6 @@ export class AuthSessionManager {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('🔐 Session retrieval error:', error);
         return null;
       }
 
@@ -77,7 +76,6 @@ export class AuthSessionManager {
         lastActivity: this.getLastActivity(),
       };
     } catch (error) {
-      console.error('🔐 Session check error:', error);
       return null;
     }
   }
@@ -102,12 +100,6 @@ export class AuthSessionManager {
           (window.location.hostname.includes('thesmartpro.io') ||
             window.location.hostname.includes('vercel.app'));
 
-        console.error('🔐 Supabase client not initialized', {
-          hasEnvVars,
-          isProduction,
-          hostname:
-            typeof window !== 'undefined' ? window.location.hostname : 'server',
-        });
 
         const errorMessage =
           isProduction && !hasEnvVars
@@ -132,12 +124,6 @@ export class AuthSessionManager {
       });
 
       if (error) {
-        console.error('🔐 Sign in error:', {
-          message: error.message,
-          status: error.status,
-          code: error.code,
-          timestamp: new Date().toISOString(),
-        });
         return {
           success: false,
           error: error.message,
@@ -151,7 +137,6 @@ export class AuthSessionManager {
       }
 
       if (!data.session) {
-        console.error('🔐 No session created after successful sign in');
         return {
           success: false,
           error: 'No session created',
@@ -180,11 +165,6 @@ export class AuthSessionManager {
 
       return { success: true, session: userSession };
     } catch (error) {
-      console.error('🔐 Sign in exception:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString(),
-      });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -203,7 +183,6 @@ export class AuthSessionManager {
       await this.supabase.auth.signOut();
       this.clearSession();
     } catch (error) {
-      console.error('🔐 Sign out error:', error);
     }
   }
 
@@ -227,7 +206,6 @@ export class AuthSessionManager {
         })
       );
     } catch (error) {
-      console.error('🔐 Session storage error:', error);
     }
   }
 
@@ -236,7 +214,6 @@ export class AuthSessionManager {
       localStorage.removeItem('userSession');
       localStorage.removeItem('lastActivity');
     } catch (error) {
-      console.error('🔐 Session clear error:', error);
     }
   }
 
@@ -260,7 +237,6 @@ export class AuthSessionManager {
         await this.signOut();
       }
     } catch (error) {
-      console.error('🔐 Session validity check error:', error);
     }
   }
 
@@ -274,13 +250,11 @@ export class AuthSessionManager {
         .single();
 
       if (error) {
-        console.warn('🔐 Profile fetch error:', error);
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error('🔐 Profile fetch exception:', error);
       return null;
     }
   }

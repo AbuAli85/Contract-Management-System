@@ -42,7 +42,6 @@ export async function GET(
       .single();
 
     if (roleError) {
-      console.error('Error fetching role:', roleError);
       return NextResponse.json({ error: 'Role not found' }, { status: 404 });
     }
 
@@ -61,7 +60,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/users/roles/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -153,7 +151,6 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Error updating role:', updateError);
       return NextResponse.json(
         { error: 'Failed to update role' },
         { status: 500 }
@@ -182,7 +179,6 @@ export async function PUT(
       },
     });
   } catch (error) {
-    console.error('Error in PUT /api/users/roles/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -256,7 +252,6 @@ export async function DELETE(
       .eq('id', id);
 
     if (deleteError) {
-      console.error('Error deleting role:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete role' },
         { status: 500 }
@@ -280,7 +275,6 @@ export async function DELETE(
       message: 'Role deleted successfully',
     });
   } catch (error) {
-    console.error('Error in DELETE /api/users/roles/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

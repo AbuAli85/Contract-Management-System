@@ -88,7 +88,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Error updating leave request:', updateError);
       return NextResponse.json(
         { error: 'Failed to update leave request' },
         { status: 500 }
@@ -146,7 +145,6 @@ export async function PATCH(
       request: updated,
     });
   } catch (error) {
-    console.error('Error in leave request PATCH:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

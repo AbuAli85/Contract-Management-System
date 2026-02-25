@@ -89,7 +89,6 @@ export async function GET(request: NextRequest) {
     const { data: contracts, error: contractsError } = await query;
 
     if (contractsError) {
-      console.error('Error fetching contracts:', contractsError);
       return NextResponse.json(
         { error: 'Failed to fetch contracts' },
         { status: 500 }
@@ -120,7 +119,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/employee/my-contracts:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

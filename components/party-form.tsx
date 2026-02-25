@@ -88,7 +88,6 @@ export default function PartyForm({
         if (error) throw error;
         setDesignations(data || []);
       } catch (error: any) {
-        console.error('Error fetching designations:', error);
         toast.error('Failed to load designations');
       } finally {
         setIsLoadingDesignations(false);

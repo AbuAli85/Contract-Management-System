@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
     const { data: roles, error: rolesError } = await query;
 
     if (rolesError) {
-      console.error('Error fetching reviewer roles:', rolesError);
       return NextResponse.json(
         { error: 'Failed to fetch reviewer roles' },
         { status: 500 }
@@ -64,7 +63,6 @@ export async function GET(request: NextRequest) {
       roles: roles || [],
     });
   } catch (error) {
-    console.error('Error in reviewer roles GET:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -160,7 +158,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (updateError) {
-        console.error('Error updating reviewer role:', updateError);
         return NextResponse.json(
           { error: 'Failed to update reviewer role' },
           { status: 500 }
@@ -186,7 +183,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating reviewer role:', createError);
       return NextResponse.json(
         { error: 'Failed to create reviewer role' },
         { status: 500 }
@@ -199,7 +195,6 @@ export async function POST(request: NextRequest) {
       message: 'Reviewer role assigned successfully',
     });
   } catch (error) {
-    console.error('Error in reviewer roles POST:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -259,7 +254,6 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error('Error updating reviewer role:', updateError);
       return NextResponse.json(
         { error: 'Failed to update reviewer role' },
         { status: 500 }
@@ -279,7 +273,6 @@ export async function PUT(request: NextRequest) {
       message: 'Reviewer role updated successfully',
     });
   } catch (error) {
-    console.error('Error in reviewer roles PUT:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -334,7 +327,6 @@ export async function DELETE(request: NextRequest) {
       .eq('id', roleId);
 
     if (deleteError) {
-      console.error('Error deleting reviewer role:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete reviewer role' },
         { status: 500 }
@@ -346,7 +338,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Reviewer role deleted successfully',
     });
   } catch (error) {
-    console.error('Error in reviewer roles DELETE:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

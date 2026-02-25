@@ -15,7 +15,6 @@ export default function AuthStatus() {
       await signOut();
       router.push('/login');
     } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 

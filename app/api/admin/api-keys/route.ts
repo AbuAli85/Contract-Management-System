@@ -65,7 +65,6 @@ export const GET = withRBAC(
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching API keys:', error);
         return NextResponse.json(
           { error: 'Failed to fetch API keys', details: error.message },
           { status: 500 }
@@ -93,7 +92,6 @@ export const GET = withRBAC(
         count: sanitizedKeys.length,
       });
     } catch (error) {
-      console.error('Error in GET /api/admin/api-keys:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',
@@ -173,7 +171,6 @@ export const POST = withRBAC(
       try {
         adminClient = getSupabaseAdmin();
       } catch (error) {
-        console.error('Failed to get admin client:', error);
         return NextResponse.json(
           {
             error: 'Server configuration error',
@@ -204,12 +201,6 @@ export const POST = withRBAC(
         .single();
 
       if (insertError) {
-        console.error('Error creating API key:', {
-          message: insertError.message,
-          code: insertError.code,
-          details: insertError.details,
-          hint: insertError.hint,
-        });
         return NextResponse.json(
           {
             error: 'Failed to create API key',
@@ -242,7 +233,6 @@ export const POST = withRBAC(
         { status: 201 }
       );
     } catch (error) {
-      console.error('Error in POST /api/admin/api-keys:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

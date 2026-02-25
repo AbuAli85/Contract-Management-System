@@ -32,7 +32,6 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('UnifiedContractGeneratorForm Error:', error, errorInfo);
   }
 
   render() {
@@ -624,7 +623,6 @@ function UnifiedContractGeneratorForm({
   // Handle data loading errors with auth context
   useEffect(() => {
     if (clientError) {
-      console.error('Error loading client parties:', clientError);
       // Only show error toast if not an auth error
       if (
         !clientError.message.includes('Auth') &&
@@ -634,7 +632,6 @@ function UnifiedContractGeneratorForm({
       }
     }
     if (employerError) {
-      console.error('Error loading employer parties:', employerError);
       if (
         !employerError.message.includes('Auth') &&
         !employerError.message.includes('session')
@@ -643,7 +640,6 @@ function UnifiedContractGeneratorForm({
       }
     }
     if (promotersError) {
-      console.error('Error loading promoters:', promotersError);
       if (
         !promotersError.message.includes('Auth') &&
         !promotersError.message.includes('session')

@@ -38,13 +38,11 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching scores:', error);
       return NextResponse.json({ scores: [] }, { status: 200 });
     }
 
     return NextResponse.json({ scores: data || [] }, { status: 200 });
   } catch (error) {
-    console.error('Scores API error:', error);
     return NextResponse.json({ scores: [] }, { status: 200 });
   }
 }

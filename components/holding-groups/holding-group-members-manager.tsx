@@ -126,11 +126,6 @@ export function HoldingGroupMembersManager({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          '[HoldingGroupMembers] HTTP error response:',
-          response.status,
-          errorText
-        );
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -153,7 +148,6 @@ export function HoldingGroupMembersManager({
 
       setAvailableParties(filtered);
     } catch (error: any) {
-      console.error('[HoldingGroupMembers] Error fetching parties:', error);
       setAvailableParties([]);
       toast({
         title: 'Error fetching parties',
@@ -174,11 +168,6 @@ export function HoldingGroupMembersManager({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          '[HoldingGroupMembers] HTTP error response:',
-          response.status,
-          errorText
-        );
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -201,7 +190,6 @@ export function HoldingGroupMembersManager({
 
       setAvailableCompanies(filtered);
     } catch (error: any) {
-      console.error('[HoldingGroupMembers] Error fetching companies:', error);
       setAvailableCompanies([]);
       toast({
         title: 'Error fetching companies',

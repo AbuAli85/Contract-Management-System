@@ -108,7 +108,6 @@ export const POST = withAnyRBAC(
 
       return NextResponse.json(results);
     } catch (error: any) {
-      console.error('Error in bulk operation:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

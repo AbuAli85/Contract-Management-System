@@ -163,7 +163,6 @@ export class ApiErrorHandler {
 
   static handleGenericError(error: any): ApiError {
     // Log the error for debugging
-    console.error('Unhandled error:', error);
 
     // Return a generic error message to avoid exposing internal details
     return this.createError(

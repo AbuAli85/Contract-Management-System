@@ -55,7 +55,6 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (entriesError) {
-      console.error('Error fetching payroll entries:', entriesError);
     }
 
     return NextResponse.json({
@@ -64,7 +63,6 @@ export async function GET(
       entries: entries || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/payroll/runs/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -154,7 +152,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Error updating payroll run:', updateError);
       return NextResponse.json(
         { error: 'Failed to update payroll run', details: updateError.message },
         { status: 500 }
@@ -167,7 +164,6 @@ export async function PATCH(
       payroll_run: updated,
     });
   } catch (error) {
-    console.error('Error in PATCH /api/hr/payroll/runs/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -188,7 +188,6 @@ export async function GET(request: NextRequest) {
       count: alerts.length,
     });
   } catch (error: any) {
-    console.error('Error fetching smart alerts:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

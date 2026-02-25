@@ -73,7 +73,6 @@ export async function hasCompanyPermission(
 
     return explicitPermission?.granted === true;
   } catch (error) {
-    console.error('Error checking company permission:', error);
     return false;
   }
 }
@@ -156,7 +155,6 @@ export async function getUserCompanyPermissions(
 
     return permissions;
   } catch (error) {
-    console.error('Error getting user company permissions:', error);
     return [];
   }
 }

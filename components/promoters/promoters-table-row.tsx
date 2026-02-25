@@ -210,7 +210,6 @@ function EnhancedActionsMenu({
       });
       onView();
     } catch (error) {
-      console.error('Error viewing profile:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -228,7 +227,6 @@ function EnhancedActionsMenu({
       });
       onEdit?.();
     } catch (error) {
-      console.error('Error editing details:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -263,7 +261,6 @@ function EnhancedActionsMenu({
         description: `${notificationText} to ${promoter.displayName}.`,
       });
     } catch (error) {
-      console.error('Notification error:', error);
       toast({
         variant: 'destructive',
         title: '✗ Notification Failed',
@@ -290,7 +287,6 @@ function EnhancedActionsMenu({
       });
       setShowArchiveDialog(false);
     } catch (error) {
-      console.error('Archive error:', error);
       toast({
         variant: 'destructive',
         title: '✗ Archive Failed',

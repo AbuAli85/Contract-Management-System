@@ -96,7 +96,6 @@ export function ServiceForm({ providers }: ServiceFormProps) {
         setStatus('idle');
       }, 2000);
     } catch (error) {
-      console.error('❌ Service creation failed:', error);
       setStatus('error');
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to create service'

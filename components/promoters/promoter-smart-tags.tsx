@@ -276,7 +276,6 @@ export function PromoterSmartTags({
         );
       }
     } catch (error) {
-      console.error('Error initializing tags:', error);
       // Use library tags as fallback
       setTags(
         tagLibrary.map((t, i) => ({
@@ -331,7 +330,6 @@ export function PromoterSmartTags({
 
       setAiSuggestions(suggestions);
     } catch (error) {
-      console.error('Error generating AI suggestions:', error);
     } finally {
       setIsLoadingSuggestions(false);
     }
@@ -425,7 +423,6 @@ export function PromoterSmartTags({
         );
       }
     } catch (error) {
-      console.error('Error saving tags:', error);
     }
   };
 

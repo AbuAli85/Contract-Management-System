@@ -170,7 +170,7 @@ function ManagerStatsOverview() {
           clientSatisfaction: 4.6,
         });
       } catch (error) {
-        console.error('Error fetching manager stats:', error);
+
       }
     };
 
@@ -335,7 +335,7 @@ function RecentTeamActivities() {
           },
         ]);
       } catch (error) {
-        console.error('Error fetching activities:', error);
+
       }
     };
 

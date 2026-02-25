@@ -13,7 +13,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Employer analytics error:', error);
+
   }, [error]);
 
   return (

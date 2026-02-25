@@ -23,8 +23,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Simple Login - Starting login process...');
-    console.log('🔐 Simple Login - Email:', email);
 
     // Create Supabase client
     const supabase = await createClient();
@@ -37,7 +35,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (authError) {
-      console.error('🔐 Simple Login - Auth error:', authError);
 
       // Check if it's a CAPTCHA error
       if (
@@ -79,7 +76,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Simple Login - Auth successful:', authData.user.id);
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
@@ -89,7 +85,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError) {
-      console.warn('Profile fetch error:', profileError);
     }
 
     // Check user status
@@ -125,15 +120,9 @@ export async function POST(request: NextRequest) {
       ),
     });
   } catch (error) {
-    console.error('🔐 Simple Login - Exception:', error);
 
     // Enhanced error logging for debugging
     if (error instanceof Error) {
-      console.error('🔐 Simple Login - Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
 
       // Check for specific Supabase client errors
       if (error.message.includes('Supabase client initialization failed')) {
@@ -220,7 +209,6 @@ export async function GET(_request: NextRequest) {
       ready: supabaseUrl && supabaseAnonKey && supabaseStatus.includes('✅'),
     });
   } catch (error) {
-    console.error('Simple login config error:', error);
     return NextResponse.json(
       {
         error: 'Failed to get configuration',

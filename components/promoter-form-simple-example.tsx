@@ -56,7 +56,6 @@ export function PromoterFormSimpleExample() {
       // Optional: Redirect or reset form
       // router.push('/manage-promoters');
     } catch (error) {
-      console.error('Error creating promoter:', error);
       toast.error(
         error instanceof Error ? error.message : 'Failed to create promoter'
       );

@@ -80,7 +80,6 @@ export async function getContractMetrics(
     const { data: contracts, error } = await query;
 
     if (error) {
-      console.error('Error fetching contracts for metrics:', error);
       throw new Error(`Failed to fetch contracts: ${error.message}`);
     }
 
@@ -111,7 +110,6 @@ export async function getContractMetrics(
     const { count: totalCount, error: countError } = await countQuery;
 
     if (countError) {
-      console.error('Error counting contracts:', countError);
       throw new Error(`Failed to count contracts: ${countError.message}`);
     }
 
@@ -205,7 +203,6 @@ export async function getContractMetrics(
 
     return metrics;
   } catch (error) {
-    console.error('Error calculating contract metrics:', error);
     throw error;
   }
 }

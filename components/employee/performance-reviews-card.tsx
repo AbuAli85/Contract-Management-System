@@ -151,7 +151,6 @@ export function PerformanceReviewsCard({
         }
       }
     } catch (error) {
-      console.error('Error fetching reviews:', error);
     } finally {
       setLoading(false);
     }

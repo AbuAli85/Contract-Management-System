@@ -46,7 +46,6 @@ export const GET = withRBAC(
         .order('name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching office locations:', error);
         return NextResponse.json(
           { error: 'Failed to fetch office locations' },
           { status: 500 }
@@ -59,7 +58,6 @@ export const GET = withRBAC(
         count: locations?.length || 0,
       });
     } catch (error) {
-      console.error('Error in GET /api/employer/office-locations:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

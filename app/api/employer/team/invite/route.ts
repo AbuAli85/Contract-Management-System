@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
         );
 
       if (upsertPromoterError) {
-        console.error('Error upserting promoter:', upsertPromoterError);
         return NextResponse.json(
           {
             error: 'Failed to link employee record',
@@ -133,7 +132,6 @@ export async function POST(request: NextRequest) {
         });
 
       if (createError || !newUser.user) {
-        console.error('Error creating user:', createError);
         return NextResponse.json(
           {
             error: 'Failed to create employee account',
@@ -175,7 +173,6 @@ export async function POST(request: NextRequest) {
         } as any);
 
       if (promoterError) {
-        console.error('Error creating promoter record:', promoterError);
         return NextResponse.json(
           {
             error: 'Failed to create employee record',
@@ -219,7 +216,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Error adding to team:', insertError);
       return NextResponse.json(
         {
           error: 'Failed to add employee to team',
@@ -235,7 +231,7 @@ export async function POST(request: NextRequest) {
         await import('@/lib/services/unified-notification.service');
       const notificationService = new UnifiedNotificationService();
 
-      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`;
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/auth/login`;
 
       if (isNewUser && temporaryPassword) {
         // Send welcome email with credentials for new users
@@ -315,7 +311,6 @@ export async function POST(request: NextRequest) {
       }
     } catch (emailError) {
       // Log error but don't fail the request
-      console.error('Failed to send email notification:', emailError);
       // Continue with response - email failure shouldn't block team addition
     }
 
@@ -331,13 +326,12 @@ export async function POST(request: NextRequest) {
         ? {
             email: email.toLowerCase(),
             temporary_password: temporaryPassword,
-            login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`,
+            login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/auth/login`,
             note: 'Employee must change password on first login. Email notification has been sent.',
           }
         : null,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/invite:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

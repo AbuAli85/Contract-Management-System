@@ -189,7 +189,6 @@ export async function GET(request: NextRequest) {
       permissions,
     });
   } catch (error) {
-    console.error('Permissions API error:', error);
     return NextResponse.json(
       {
         success: false,

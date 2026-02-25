@@ -209,7 +209,7 @@ export function DocumentDashboard({
                   <CompanyDocumentUpload
                     companyId={companyId}
                     onUploadComplete={handleUploadComplete}
-                    onError={error => console.error('Upload error:', error)}
+                    onError={_error => {}}
                     maxFiles={5}
                     showPreview={true}
                   />

@@ -192,7 +192,6 @@ export function ReportBuilder({
         setSavedReports(result.data);
       }
     } catch (error) {
-      console.error('Failed to load saved reports:', error);
     }
   };
 
@@ -304,7 +303,6 @@ export function ReportBuilder({
         onReportGenerated?.(`report-${Date.now()}`, exportResult.downloadUrl);
       }
     } catch (error) {
-      console.error('Error generating report:', error);
       onError?.(
         error instanceof Error ? error.message : 'Failed to generate report'
       );
@@ -327,7 +325,6 @@ export function ReportBuilder({
       await loadSavedReports();
       setIsDialogOpen(false);
     } catch (error) {
-      console.error('Error saving report config:', error);
       onError?.(
         error instanceof Error
           ? error.message

@@ -112,7 +112,6 @@ export function AttendanceApprovalDashboard() {
 
       setPendingAttendance(data.attendance || []);
     } catch (error: any) {
-      console.error('Error fetching pending attendance:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to load pending attendance',

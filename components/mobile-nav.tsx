@@ -36,7 +36,6 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
       router.push('/login');
       setIsOpen(false);
     } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 

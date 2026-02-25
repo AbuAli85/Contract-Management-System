@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -40,12 +39,6 @@ export async function POST(request: NextRequest) {
     let companyName = '';
 
     // Log the company_id being checked for debugging
-    console.log('[Company Switch] ===== START ACCESS CHECK =====');
-    console.log('[Company Switch] Checking access for:', {
-      company_id,
-      user_id: user.id,
-      user_email: user.email,
-    });
 
     // DIRECT CONSISTENCY CHECK: If company_id appears in user's company_members, grant access immediately
     // This is the most direct way to ensure consistency with the companies list
@@ -59,18 +52,11 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (directMembership) {
-        console.log(
-          '[Company Switch] DIRECT CHECK: Access granted via company_members (consistency with companies list)'
-        );
         hasAccess = true;
         userRole = directMembership.role || 'member';
         companyName = directMembership.company?.name || 'Company';
       }
     } catch (directCheckError) {
-      console.warn(
-        '[Company Switch] Error in direct consistency check:',
-        directCheckError
-      );
     }
 
     // ULTRA-PERMISSIVE PRE-CHECK: If company_id exists in parties OR companies table, grant access
@@ -96,15 +82,6 @@ export async function POST(request: NextRequest) {
         // If it's an active employer party, grant access (very permissive)
         const isActiveEmployer = partyResult.data.type === 'Employer';
 
-        console.log(
-          '[Company Switch] PRE-CHECK: company_id is a party - GRANTING ACCESS IMMEDIATELY:',
-          {
-            party_id: company_id,
-            party_name: partyResult.data.name_en,
-            party_type: partyResult.data.type,
-            is_active_employer: isActiveEmployer,
-          }
-        );
         hasAccess = true;
         userRole = 'owner';
         companyName =
@@ -112,32 +89,14 @@ export async function POST(request: NextRequest) {
       }
       // Check for company
       else if (companyResult.data && !companyResult.error) {
-        console.log(
-          '[Company Switch] PRE-CHECK: company_id is a company - GRANTING ACCESS IMMEDIATELY:',
-          {
-            company_id,
-            company_name: companyResult.data.name,
-          }
-        );
         hasAccess = true;
         userRole = 'owner';
         companyName = companyResult.data.name || 'Company';
       }
       // If queries had errors but no data, log them but continue with other checks
       else if (partyResult.error || companyResult.error) {
-        console.warn(
-          '[Company Switch] PRE-CHECK: Query errors (continuing with other checks):',
-          {
-            party_error: partyResult.error,
-            company_error: companyResult.error,
-          }
-        );
       }
     } catch (preCheckError) {
-      console.warn(
-        '[Company Switch] PRE-CHECK: Exception in pre-check (continuing with other checks):',
-        preCheckError
-      );
     }
 
     // If pre-check didn't grant access, verify it's not in the user's companies list
@@ -156,9 +115,6 @@ export async function POST(request: NextRequest) {
           hasAccess = true;
           userRole = quickMembership.role || 'member';
           companyName = quickMembership.company?.name || 'Company';
-          console.log(
-            '[Company Switch] PRE-CHECK FALLBACK: Access granted via company_members'
-          );
         } else {
           // Check if this is a parties_employer_direct company (company_id is actually a party_id)
           // This matches the logic in /api/user/companies for parties_employer_direct source
@@ -211,35 +167,17 @@ export async function POST(request: NextRequest) {
                 userRole = 'owner';
                 companyName =
                   employerParty.name_en || employerParty.name_ar || 'Company';
-                console.log(
-                  '[Company Switch] PRE-CHECK FALLBACK: Access granted for parties_employer_direct',
-                  {
-                    party_id: company_id,
-                    party_name: employerParty.name_en,
-                    reason: emailMatch
-                      ? 'email_match'
-                      : nameMatch
-                        ? 'name_match'
-                        : isFalconEyeModern
-                          ? 'falcon_eye'
-                          : 'active_employer_party',
-                  }
-                );
               }
             }
           }
         }
       } catch (e) {
-        console.warn('[Company Switch] Error in pre-check fallback:', e);
       }
     }
 
     // 0. Special case: Check if this is Falcon Eye Modern Investments party_id first
     // This handles the specific case where company_id is a party_id for parties_employer_direct
     if (company_id === '8776a032-5dad-4cd0-b0f8-c3cdd64e2831') {
-      console.log(
-        '[Company Switch] Special case detected for Falcon Eye Modern Investments'
-      );
       try {
         const { data: falconEyeParty, error: partyError } = await adminClient
           .from('parties')
@@ -248,10 +186,6 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (partyError) {
-          console.error(
-            '[Company Switch] Error fetching Falcon Eye party:',
-            partyError
-          );
         }
 
         if (falconEyeParty) {
@@ -261,38 +195,17 @@ export async function POST(request: NextRequest) {
             falconEyeParty.name_en ||
             falconEyeParty.name_ar ||
             'Falcon Eye Modern Investments SPC';
-          console.log(
-            '[Company Switch] Access granted for Falcon Eye Modern Investments (special case)',
-            {
-              party_id: falconEyeParty.id,
-              name: companyName,
-            }
-          );
         } else {
-          console.warn(
-            '[Company Switch] Falcon Eye party not found in database for ID:',
-            company_id
-          );
           // Even if party not found, grant access for this specific ID
           hasAccess = true;
           userRole = 'owner';
           companyName = 'Falcon Eye Modern Investments SPC';
-          console.log(
-            '[Company Switch] Access granted for Falcon Eye Modern Investments (fallback - party not found)'
-          );
         }
       } catch (error) {
-        console.error(
-          '[Company Switch] Exception in special case check:',
-          error
-        );
         // Grant access anyway for this specific ID
         hasAccess = true;
         userRole = 'owner';
         companyName = 'Falcon Eye Modern Investments SPC';
-        console.log(
-          '[Company Switch] Access granted for Falcon Eye Modern Investments (exception fallback)'
-        );
       }
     }
 
@@ -309,10 +222,6 @@ export async function POST(request: NextRequest) {
       hasAccess = true;
       userRole = membership.role;
       companyName = membership.company?.name || '';
-      console.log('[Company Switch] Access granted via company_members:', {
-        companyName,
-        userRole,
-      });
     }
 
     // 2. Check if user owns the company directly
@@ -541,9 +450,6 @@ export async function POST(request: NextRequest) {
               hasAccess = true;
               userRole = 'owner';
               companyName = partyAsCompany.name_en || '';
-              console.log(
-                '[Company Switch] Access granted for Falcon Eye Modern Investments (party type check bypassed)'
-              );
             }
           }
 
@@ -567,9 +473,6 @@ export async function POST(request: NextRequest) {
                 hasAccess = true;
                 userRole = 'owner';
                 companyName = partyAsCompany.name_en || '';
-                console.log(
-                  '[Company Switch] Access granted for Falcon Eye Modern Investments (status check bypassed)'
-                );
               }
             }
           }
@@ -599,9 +502,6 @@ export async function POST(request: NextRequest) {
               hasAccess = true;
               userRole = 'owner';
               companyName = partyAsCompany.name_en || '';
-              console.log(
-                '[Company Switch] Access granted for Falcon Eye Modern Investments (main check)'
-              );
             } else if (emailMatch || nameMatch || isActiveEmployer) {
               // For active employer parties, be more permissive - allow if email/name matches OR if it's an active employer party
               // This handles cases where the party appears in the user's companies list
@@ -653,20 +553,6 @@ export async function POST(request: NextRequest) {
                 hasAccess = true;
                 userRole = 'owner';
                 companyName = partyAsCompany.name_en || '';
-                console.log(
-                  '[Company Switch] Access granted via party association (no linked company)',
-                  {
-                    party_id: company_id,
-                    company_name: companyName,
-                    reason: emailMatch
-                      ? 'email_match'
-                      : nameMatch
-                        ? 'name_match'
-                        : isActiveEmployer
-                          ? 'active_employer'
-                          : 'falcon_eye',
-                  }
-                );
               }
             } else {
               // Even if email/name don't match, check if it's an active employer party
@@ -682,13 +568,6 @@ export async function POST(request: NextRequest) {
                 hasAccess = true;
                 userRole = 'owner';
                 companyName = partyAsCompany.name_en || '';
-                console.log(
-                  '[Company Switch] Access granted for active employer party (permissive check)',
-                  {
-                    party_id: company_id,
-                    company_name: companyName,
-                  }
-                );
               } else {
                 // Check if it's Falcon Eye Modern Investments as fallback
                 const isFalconEyeModern = (partyAsCompany.name_en || '')
@@ -791,7 +670,6 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (e) {
-        console.warn('Error in comprehensive employer party check:', e);
       }
     }
 
@@ -872,7 +750,6 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (fallbackError) {
-        console.warn('Error in fallback access check:', fallbackError);
       }
     }
 
@@ -892,9 +769,6 @@ export async function POST(request: NextRequest) {
           hasAccess = true;
           userRole = anyMembership.role || 'member';
           companyName = anyMembership.company?.name || '';
-          console.log(
-            '[Company Switch] Access granted via company_members (any status)'
-          );
         } else {
           // Check if it's a party and user email matches (very permissive check)
           const { data: userProfile } = await adminClient
@@ -924,15 +798,11 @@ export async function POST(request: NextRequest) {
                 hasAccess = true;
                 userRole = 'owner';
                 companyName = partyCheck.name_en || '';
-                console.log(
-                  '[Company Switch] Access granted via party association (ultimate fallback)'
-                );
               }
             }
           }
         }
       } catch (ultimateError) {
-        console.warn('Error in ultimate fallback check:', ultimateError);
       }
     }
 
@@ -953,21 +823,8 @@ export async function POST(request: NextRequest) {
           hasAccess = true;
           userRole = 'owner';
           companyName = partyCheck.name_en || partyCheck.name_ar || 'Company';
-          console.log(
-            '[Company Switch] Final safety check: Access granted for party (most permissive)',
-            {
-              party_id: company_id,
-              company_name: companyName,
-              party_type: partyCheck.type,
-              party_status: partyCheck.overall_status,
-            }
-          );
         }
       } catch (finalCheckError) {
-        console.warn(
-          '[Company Switch] Error in final safety check:',
-          finalCheckError
-        );
       }
     }
 
@@ -987,14 +844,6 @@ export async function POST(request: NextRequest) {
           hasAccess = true;
           userRole = 'owner';
           companyName = finalPartyCheck.name_en || 'Company';
-          console.log(
-            '[Company Switch] Absolute final check: Access granted for party',
-            {
-              party_id: company_id,
-              company_name: companyName,
-              party_type: finalPartyCheck.type,
-            }
-          );
         } else {
           // Check if it's a company
           const { data: finalCompanyCheck } = await adminClient
@@ -1008,30 +857,13 @@ export async function POST(request: NextRequest) {
             hasAccess = true;
             userRole = 'owner';
             companyName = finalCompanyCheck.name || 'Company';
-            console.log(
-              '[Company Switch] Absolute final check: Access granted for company',
-              {
-                company_id,
-                company_name: companyName,
-              }
-            );
           }
         }
       } catch (absoluteFinalError) {
-        console.warn(
-          '[Company Switch] Error in absolute final check:',
-          absoluteFinalError
-        );
       }
     }
 
     // Log final state before validation
-    console.log('[Company Switch] ===== ACCESS CHECK COMPLETE =====', {
-      hasAccess,
-      userRole,
-      companyName,
-      company_id,
-    });
 
     if (!hasAccess) {
       // Final attempt: Check if company_id exists in companies table at all
@@ -1051,22 +883,10 @@ export async function POST(request: NextRequest) {
       // If party exists, grant access as absolute last resort
       // This ensures any party that exists can be switched to (very permissive)
       if (partyExists) {
-        console.log('[Company Switch] LAST RESORT: Granting access for party', {
-          party_id: company_id,
-          party_name: partyExists.name_en,
-          party_type: partyExists.type,
-        });
         hasAccess = true;
         userRole = 'owner';
         companyName = partyExists.name_en || partyExists.name_ar || 'Company';
       } else if (companyExists) {
-        console.log(
-          '[Company Switch] LAST RESORT: Granting access for company',
-          {
-            company_id,
-            company_name: companyExists.name,
-          }
-        );
         hasAccess = true;
         userRole = 'owner';
         companyName = companyExists.name || 'Company';
@@ -1096,9 +916,6 @@ export async function POST(request: NextRequest) {
             hasAccess = true;
             userRole = membershipCheck.role || 'member';
             companyName = membershipCheck.company?.name || 'Company';
-            console.log(
-              '[Company Switch] ULTIMATE FALLBACK: Access granted via company_members check'
-            );
           } else if (userProfile?.email) {
             // Check if it's a party where user email matches
             const { data: partyCheck } = await adminClient
@@ -1117,16 +934,9 @@ export async function POST(request: NextRequest) {
               userRole = 'owner';
               companyName =
                 partyCheck.name_en || partyCheck.name_ar || 'Company';
-              console.log(
-                '[Company Switch] ULTIMATE FALLBACK: Access granted via party email/type match'
-              );
             }
           }
         } catch (ultimateError) {
-          console.warn(
-            '[Company Switch] Error in ultimate fallback check:',
-            ultimateError
-          );
         }
       }
 
@@ -1135,9 +945,6 @@ export async function POST(request: NextRequest) {
         // If the company would appear in the user's companies list, grant access
         // This ensures 100% consistency between list and switch endpoints
         try {
-          console.log(
-            '[Company Switch] FINAL CONSISTENCY CHECK: Verifying against companies list logic'
-          );
 
           // Check all the same sources as /api/user/companies endpoint
           const { data: finalMembershipCheck } = await adminClient
@@ -1152,9 +959,6 @@ export async function POST(request: NextRequest) {
             hasAccess = true;
             userRole = finalMembershipCheck.role || 'member';
             companyName = finalMembershipCheck.company.name || 'Company';
-            console.log(
-              '[Company Switch] FINAL CHECK: Access granted via company_members (consistency check)'
-            );
           } else {
             // Check if user owns the company
             const { data: ownedCheck } = await adminClient
@@ -1169,9 +973,6 @@ export async function POST(request: NextRequest) {
               hasAccess = true;
               userRole = 'owner';
               companyName = ownedCheck.name || 'Company';
-              console.log(
-                '[Company Switch] FINAL CHECK: Access granted via ownership (consistency check)'
-              );
             } else if (user.email) {
               // Check party-linked companies (same as companies list endpoint)
               const { data: partyLinkedCheck } = await adminClient
@@ -1194,9 +995,6 @@ export async function POST(request: NextRequest) {
                   userRole = 'owner';
                   companyName =
                     partyLinkedCheck.name || party.name_en || 'Company';
-                  console.log(
-                    '[Company Switch] FINAL CHECK: Access granted via party-linked (consistency check)'
-                  );
                 }
               }
 
@@ -1224,18 +1022,11 @@ export async function POST(request: NextRequest) {
                     employerPartyCheck.name_en ||
                     employerPartyCheck.name_ar ||
                     'Company';
-                  console.log(
-                    '[Company Switch] FINAL CHECK: Access granted via employer party (consistency check)'
-                  );
                 }
               }
             }
           }
         } catch (finalConsistencyError) {
-          console.warn(
-            '[Company Switch] Error in final consistency check:',
-            finalConsistencyError
-          );
         }
       }
 
@@ -1250,14 +1041,6 @@ export async function POST(request: NextRequest) {
             .maybeSingle();
 
           if (absoluteLastPartyCheck) {
-            console.log(
-              '[Company Switch] ABSOLUTE LAST RESORT: Granting access for party',
-              {
-                party_id: company_id,
-                party_name: absoluteLastPartyCheck.name_en,
-                party_type: absoluteLastPartyCheck.type,
-              }
-            );
             hasAccess = true;
             userRole = 'owner';
             companyName =
@@ -1266,40 +1049,10 @@ export async function POST(request: NextRequest) {
               'Company';
           }
         } catch (absoluteLastError) {
-          console.warn(
-            '[Company Switch] Error in absolute last resort check:',
-            absoluteLastError
-          );
         }
       }
 
       if (!hasAccess) {
-        console.error('Company switch access denied (all checks failed):', {
-          company_id,
-          user_id: user.id,
-          user_email: user.email,
-          company_exists: !!companyExists,
-          party_exists: !!partyExists,
-          company_name:
-            companyExists?.name || partyExists?.name_en || 'unknown',
-          checked_sources: [
-            'direct_consistency_check',
-            'pre_check',
-            'company_members',
-            'direct_ownership',
-            'party_linked',
-            'employer_employees',
-            'party_association',
-            'employer_parties',
-            'falcon_eye_special_case',
-            'final_fallback',
-            'ultimate_fallback',
-            'final_safety_check',
-            'absolute_final_check',
-            'last_resort',
-            'final_consistency_check',
-          ],
-        });
         return NextResponse.json(
           { error: 'You do not have access to this company' },
           { status: 403 }
@@ -1384,10 +1137,6 @@ export async function POST(request: NextRequest) {
         // Use the linked company's ID
         activeCompanyIdToSet = linkedCompany.id;
         companyName = linkedCompany.name || companyName;
-        console.log('[Company Switch] Using linked company ID:', {
-          party_id: company_id,
-          company_id: linkedCompany.id,
-        });
       } else {
         // No linked company - this is a parties_employer_direct case
         // Check if there's a company with the same ID as the party_id
@@ -1417,13 +1166,6 @@ export async function POST(request: NextRequest) {
             // If FK constraint fails, we'll handle it in the update
             activeCompanyIdToSet = company_id;
             companyName = partyData.name_en || partyData.name_ar || 'Company';
-            console.log(
-              '[Company Switch] Using party_id as company_id (parties_employer_direct):',
-              {
-                party_id: company_id,
-                company_name: companyName,
-              }
-            );
           }
         }
       }
@@ -1458,9 +1200,6 @@ export async function POST(request: NextRequest) {
           // No company exists - can't set active_company_id to party_id due to FK constraint
           // For now, we'll set it to null and log a warning
           // The user can still access the company through the party_id in other ways
-          console.warn(
-            '[Company Switch] No company exists for party_id, setting active_company_id to null'
-          );
           activeCompanyIdToSet = null;
         }
       }
@@ -1476,7 +1215,6 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Error updating active company:', updateError);
       // If it's a FK constraint error, we've already handled it above
       // But if it's another error, return it
       if (
@@ -1489,9 +1227,6 @@ export async function POST(request: NextRequest) {
         );
       }
       // For FK errors, we'll continue - the access was granted, just couldn't update active_company_id
-      console.warn(
-        '[Company Switch] FK constraint error (expected for party_id), continuing anyway'
-      );
     }
 
     // If we still don't have a company name, fetch it
@@ -1513,7 +1248,6 @@ export async function POST(request: NextRequest) {
       message: `Switched to ${companyName}`,
     });
   } catch (error: any) {
-    console.error('Error in switch company:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error.message },
       { status: 500 }

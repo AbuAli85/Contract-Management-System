@@ -353,7 +353,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Analytics API error:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch analytics data',
@@ -431,7 +430,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Analytics GET API error:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch overview data',

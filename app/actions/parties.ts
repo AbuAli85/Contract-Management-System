@@ -13,7 +13,7 @@ export async function getParties(): Promise<Party[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching parties:', error);
+
     return [];
   }
 
@@ -30,7 +30,7 @@ export async function getPartyById(id: string): Promise<Party | null> {
     .single();
 
   if (error) {
-    console.error('Error fetching party:', error);
+
     return null;
   }
 
@@ -47,7 +47,7 @@ export async function createParty(partyData: Omit<Party, 'id' | 'created_at'>) {
     .single();
 
   if (error) {
-    console.error('Error creating party:', error);
+
     throw new Error('Failed to create party');
   }
 
@@ -68,7 +68,7 @@ export async function updateParty(id: string, partyData: Partial<Party>) {
     .single();
 
   if (error) {
-    console.error('Error updating party:', error);
+
     throw new Error('Failed to update party');
   }
 
@@ -84,7 +84,7 @@ export async function deleteParty(
   const { error } = await supabase.from('parties').delete().eq('id', id);
 
   if (error) {
-    console.error('Error deleting party:', error);
+
     return { success: false, message: 'Failed to delete party' };
   }
 

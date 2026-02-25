@@ -14,7 +14,6 @@ export const GET = withRBAC('admin:debug', async (_request: Request) => {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  console.log('🔍 Debug endpoint accessed (development only)');
 
   const diagnostics = {
     timestamp: new Date().toISOString(),

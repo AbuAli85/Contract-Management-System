@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true);
 
     if (error) {
-      console.error('Error fetching permissions:', error);
       return NextResponse.json(
         { error: 'Failed to fetch permissions' },
         { status: 500 }
@@ -77,7 +76,6 @@ export async function GET(request: NextRequest) {
       permissions: permissions || [],
     });
   } catch (error: any) {
-    console.error('Error in GET /api/company/permissions:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -154,7 +152,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error granting permission:', error);
       return NextResponse.json(
         { error: 'Failed to grant permission' },
         { status: 500 }
@@ -167,7 +164,6 @@ export async function POST(request: NextRequest) {
       message: 'Permission granted successfully',
     });
   } catch (error: any) {
-    console.error('Error in POST /api/company/permissions:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -234,7 +230,6 @@ export async function DELETE(request: NextRequest) {
       .eq('permission', permission);
 
     if (error) {
-      console.error('Error revoking permission:', error);
       return NextResponse.json(
         { error: 'Failed to revoke permission' },
         { status: 500 }
@@ -246,7 +241,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Permission revoked successfully',
     });
   } catch (error: any) {
-    console.error('Error in DELETE /api/company/permissions:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

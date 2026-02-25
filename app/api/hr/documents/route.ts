@@ -90,7 +90,6 @@ export async function GET(request: NextRequest) {
     const { data: documents, error } = await query;
 
     if (error) {
-      console.error('Error fetching documents:', error);
       return NextResponse.json(
         { error: 'Failed to fetch documents', details: error.message },
         { status: 500 }
@@ -103,7 +102,6 @@ export async function GET(request: NextRequest) {
       count: documents?.length || 0,
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/documents:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -225,7 +223,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating document:', createError);
       return NextResponse.json(
         { error: 'Failed to create document', details: createError.message },
         { status: 500 }
@@ -238,7 +235,6 @@ export async function POST(request: NextRequest) {
       document,
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/documents:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

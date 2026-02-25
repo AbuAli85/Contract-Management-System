@@ -502,7 +502,6 @@ export default function EnhancedContractForm({
         });
       }
     } catch (error) {
-      console.warn('Error calculating salary recommendations:', error);
     }
 
     return recommendations;
@@ -572,7 +571,6 @@ export default function EnhancedContractForm({
         issues.push('Please enter a valid email address');
       }
     } catch (error) {
-      console.warn('Error checking compliance issues:', error);
       issues.push('Error validating form data');
     }
 
@@ -779,7 +777,6 @@ export default function EnhancedContractForm({
         await createMutation.mutateAsync(data);
       }
     } catch (error) {
-      console.error('Form submission error:', error);
       toast.error(
         'Failed to save contract. Please check your data and try again.'
       );
@@ -814,7 +811,6 @@ export default function EnhancedContractForm({
     try {
       await generateMutation.mutateAsync(data);
     } catch (error) {
-      console.error('Contract generation error:', error);
       toast.error(
         'Failed to generate contract. Please verify all required information is provided.'
       );

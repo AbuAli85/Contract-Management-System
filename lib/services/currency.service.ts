@@ -123,7 +123,6 @@ class CurrencyService {
     try {
       const supabase = createClient();
       if (!supabase) {
-        console.error('Supabase client not available');
         return null;
       }
 
@@ -143,7 +142,6 @@ class CurrencyService {
       const { data, error } = await query.single();
 
       if (error || !data) {
-        console.error('Error fetching exchange rate:', error);
         return null;
       }
 
@@ -153,7 +151,6 @@ class CurrencyService {
 
       return data.rate;
     } catch (error) {
-      console.error('Error in getExchangeRate:', error);
       return null;
     }
   }
@@ -283,7 +280,6 @@ class CurrencyService {
     try {
       const supabase = createClient();
       if (!supabase) {
-        console.error('Supabase client not available');
         return false;
       }
       const today = new Date().toISOString().split('T')[0];
@@ -303,7 +299,6 @@ class CurrencyService {
       );
 
       if (error) {
-        console.error('Error updating exchange rate:', error);
         return false;
       }
 
@@ -311,7 +306,6 @@ class CurrencyService {
       this.clearCache();
       return true;
     } catch (error) {
-      console.error('Error in updateExchangeRate:', error);
       return false;
     }
   }
@@ -394,7 +388,6 @@ class CurrencyService {
       const parsed = parseFloat(cleaned);
       return isNaN(parsed) ? null : parsed;
     } catch (error) {
-      console.error('Error parsing currency string:', error);
       return null;
     }
   }

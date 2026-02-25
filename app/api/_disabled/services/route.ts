@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating service:', error);
       return NextResponse.json(
         { error: 'Failed to create service' },
         { status: 500 }
@@ -45,7 +44,6 @@ export async function POST(request: NextRequest) {
       message: 'Service created successfully and pending approval',
     });
   } catch (error) {
-    console.error('Service creation error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -73,7 +71,6 @@ export async function GET(_request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching services:', error);
       return NextResponse.json(
         { error: 'Failed to fetch services' },
         { status: 500 }
@@ -85,7 +82,6 @@ export async function GET(_request: NextRequest) {
       services: data,
     });
   } catch (error) {
-    console.error('Service fetch error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

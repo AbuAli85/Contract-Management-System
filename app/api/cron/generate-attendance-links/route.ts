@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true) as any);
 
     if (schedulesError) {
-      console.error('Error fetching schedules:', schedulesError);
       return NextResponse.json(
         { error: 'Failed to fetch schedules', details: schedulesError.message },
         { status: 500 }
@@ -126,10 +125,6 @@ export async function GET(request: NextRequest) {
         );
 
         if (generateError) {
-          console.error(
-            `Error generating links for schedule ${scheduleId}:`,
-            generateError
-          );
           results.push({
             schedule_id: scheduleId,
             schedule_name: scheduleName,
@@ -167,7 +162,6 @@ export async function GET(request: NextRequest) {
       } catch (error: any) {
         const scheduleId = (schedule as any)?.id || 'unknown';
         const scheduleName = (schedule as any)?.name || 'Unknown';
-        console.error(`Error processing schedule ${scheduleId}:`, error);
         results.push({
           schedule_id: scheduleId,
           schedule_name: scheduleName,
@@ -187,7 +181,6 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('Error in cron job:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -285,9 +278,6 @@ async function sendScheduleNotifications(
         // Send SMS if configured (implement SMS service integration)
         if (schedule.notification_method?.includes('sms') && employee.phone) {
           // TODO: Implement SMS sending
-          console.log(
-            `Would send SMS to ${employee.phone} with link: ${linkUrl}`
-          );
         }
       }
 
@@ -331,12 +321,11 @@ async function sendScheduleNotifications(
         .eq('id', link.id);
     }
   } catch (error) {
-    console.error('Error sending notifications:', error);
   }
 }
 
 /**
- * Send email notification (placeholder - implement with your email service)
+ * Send email notification for attendance link
  */
 async function sendEmailNotification(
   email: string,
@@ -344,24 +333,29 @@ async function sendEmailNotification(
   linkUrl: string,
   linkType: 'check_in' | 'check_out',
   schedule: any,
-  supabaseAdmin: any
+  _supabaseAdmin: any
 ) {
-  // TODO: Implement email sending using your email service (SendGrid, Resend, etc.)
-  // For now, just log it
-  console.log(`Email notification to ${email}:`, {
-    subject: `${linkType === 'check_in' ? 'Check-In' : 'Check-Out'} Link - ${schedule.name}`,
-    link: linkUrl,
-    name,
-  });
-
-  // Example with Supabase Edge Function or external email service:
-  // await fetch('https://your-email-service.com/send', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     to: email,
-  //     subject: `${linkType === 'check_in' ? 'Check-In' : 'Check-Out'} Link - ${schedule.name}`,
-  //     html: generateEmailTemplate(name, linkUrl, linkType, schedule),
-  //   }),
-  // });
+  try {
+    const { sendEmail } = await import('@/lib/services/email.service');
+    const actionLabel = linkType === 'check_in' ? 'Check-In' : 'Check-Out';
+    await sendEmail({
+      to: email,
+      subject: `${actionLabel} Link - ${schedule.name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+          <h2>Attendance ${actionLabel}</h2>
+          <p>Hello <strong>${name}</strong>,</p>
+          <p>Please use the link below to record your ${actionLabel.toLowerCase()} for <strong>${schedule.name}</strong>.</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${linkUrl}" style="background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+              ${actionLabel} Now
+            </a>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;">This link is valid for a limited time. Do not share it with others.</p>
+        </div>
+      `,
+    });
+  } catch {
+    // Email sending is non-critical; attendance link was still generated
+  }
 }

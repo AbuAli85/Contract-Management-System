@@ -61,7 +61,6 @@ export async function GET(
       task,
     });
   } catch (error) {
-    console.error('Error in GET /api/employee/my-tasks/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -157,7 +156,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Error updating task:', updateError);
       return NextResponse.json(
         { error: 'Failed to update task', details: updateError.message },
         { status: 500 }
@@ -170,7 +168,6 @@ export async function PATCH(
       task: updatedTask,
     });
   } catch (error) {
-    console.error('Error in PATCH /api/employee/my-tasks/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

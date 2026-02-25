@@ -173,7 +173,6 @@ export function ProviderManagementDashboard() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error exporting report:', error);
       alert('Failed to export report. Please try again.');
     }
   };
@@ -320,7 +319,6 @@ export function ProviderManagementDashboard() {
           setProviders(transformedProviders);
         }
       } catch (err) {
-        console.error('Error loading provider data:', err);
         if (isMounted) {
           setError(
             err instanceof Error ? err.message : 'Failed to load provider data'

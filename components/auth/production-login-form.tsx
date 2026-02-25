@@ -77,7 +77,6 @@ export default function ProductionLoginForm() {
         setCaptchaRequired(data.captchaRequired);
       }
     } catch (error) {
-      console.error('Failed to load CAPTCHA config:', error);
     }
   };
 
@@ -245,7 +244,6 @@ export default function ProductionLoginForm() {
         router.push(redirectPath);
       }, 1500);
     } catch (error) {
-      console.error('🔐 Production Login - Exception:', error);
       setError(
         `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

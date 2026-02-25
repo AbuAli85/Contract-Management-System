@@ -177,7 +177,6 @@ export async function POST(request: NextRequest) {
         : 'Failed to send WhatsApp notification. Check errors for details.',
     });
   } catch (error: any) {
-    console.error('Error testing WhatsApp:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

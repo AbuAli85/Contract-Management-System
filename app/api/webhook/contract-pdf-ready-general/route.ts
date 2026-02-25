@@ -3,7 +3,6 @@ import { generalContractService } from '@/lib/general-contract-service';
 
 export async function PATCH(request: NextRequest) {
   try {
-    console.log('🔗 General Contract PDF Ready Webhook received');
 
     // Get the webhook secret from headers
     const webhookSecret = request.headers.get('x-webhook-secret');
@@ -11,18 +10,15 @@ export async function PATCH(request: NextRequest) {
 
     // Verify webhook secret
     if (!webhookSecret || !expectedSecret || webhookSecret !== expectedSecret) {
-      console.log('❌ Webhook secret verification failed');
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Invalid webhook secret' },
         { status: 401 }
       );
     }
 
-    console.log('✅ Webhook secret verified');
 
     // Parse the request body
     const body = await request.json();
-    console.log('📤 PDF Ready payload:', body);
 
     // Validate required fields
     const { contract_id, contract_number, pdf_url, google_drive_url, status } =
@@ -49,7 +45,6 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    console.log('✅ General contract updated with PDF results');
 
     return NextResponse.json({
       success: true,
@@ -59,10 +54,6 @@ export async function PATCH(request: NextRequest) {
       status: 'completed',
     });
   } catch (error) {
-    console.error(
-      '❌ General contract PDF ready webhook processing failed:',
-      error
-    );
     return NextResponse.json(
       {
         success: false,

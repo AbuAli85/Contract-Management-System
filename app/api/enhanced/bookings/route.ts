@@ -107,7 +107,6 @@ export async function GET(request: NextRequest) {
     const { data: bookings, error } = await query;
 
     if (error) {
-      console.error('Error fetching bookings:', error);
       return NextResponse.json(
         { error: 'Failed to fetch bookings' },
         { status: 500 }
@@ -154,7 +153,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in bookings API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -165,7 +163,7 @@ export async function GET(request: NextRequest) {
 // POST - Create new booking (clients only)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get authentication
     const {
@@ -328,7 +326,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating booking:', error);
       return NextResponse.json(
         { error: 'Failed to create booking' },
         { status: 500 }
@@ -346,8 +343,34 @@ export async function POST(request: NextRequest) {
       },
     ]);
 
-    // TODO: Send notifications to provider
-    // TODO: Trigger webhook for external integrations
+    // Send notification email to provider
+    try {
+      const providerEmail = (booking as any).service?.provider?.email;
+      const clientName =
+        (booking as any).client?.full_name ?? 'A client';
+      const serviceName = (booking as any).service?.name ?? 'your service';
+      if (providerEmail) {
+        const { sendEmail } = await import('@/lib/services/email.service');
+        await sendEmail({
+          to: providerEmail,
+          subject: `New Booking ${booking.status === 'pending' ? 'Request' : 'Confirmed'} - ${serviceName}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+              <h2>New Booking ${booking.status === 'pending' ? 'Request' : 'Confirmed'}</h2>
+              <p><strong>${clientName}</strong> has ${booking.status === 'pending' ? 'requested' : 'booked'} <strong>${serviceName}</strong>.</p>
+              <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                <p><strong>Date:</strong> ${new Date(booking.scheduled_start).toLocaleString()}</p>
+                <p><strong>Total:</strong> ${booking.total_price} ${booking.currency}</p>
+                <p><strong>Status:</strong> ${booking.status}</p>
+              </div>
+              ${booking.status === 'pending' ? '<p>Please log in to review and approve this booking request.</p>' : ''}
+            </div>
+          `,
+        });
+      }
+    } catch {
+      // Do not fail booking creation if notification fails
+    }
 
     return NextResponse.json({
       success: true,
@@ -357,7 +380,6 @@ export async function POST(request: NextRequest) {
         : 'Booking confirmed successfully',
     });
   } catch (error) {
-    console.error('Error in create booking API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

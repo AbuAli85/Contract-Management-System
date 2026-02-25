@@ -55,7 +55,7 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
       return parsed;
     }
   } catch (error) {
-    console.warn('Invalid ISO date string:', dateString, error);
+
   }
 
   // Try alternative parsing for common formats
@@ -68,11 +68,7 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
       }
     }
   } catch (error) {
-    console.warn(
-      'Failed to parse date with alternative formats:',
-      dateString,
-      error
-    );
+
   }
 
   return null;
@@ -177,9 +173,7 @@ export default function NotificationsPage() {
     // Real-time subscription
     const supabase = createClient();
     if (!supabase) {
-      console.error(
-        'Failed to initialize Supabase client for real-time subscription'
-      );
+
       return;
     }
     const channel = supabase

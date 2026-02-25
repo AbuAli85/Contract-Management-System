@@ -194,7 +194,6 @@ export function ProfessionalAttendanceDashboard() {
         // Break is active
       }
     } catch (error: any) {
-      console.error('Error fetching attendance:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to fetch attendance data',

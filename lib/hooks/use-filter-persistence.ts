@@ -52,7 +52,6 @@ export function useFilterPersistence(
         return { ...initialState, ...parsed };
       }
     } catch (error) {
-      console.error('Failed to parse stored filters:', error);
     }
 
     return initialState;
@@ -64,7 +63,6 @@ export function useFilterPersistence(
       try {
         localStorage.setItem(key, JSON.stringify(filters));
       } catch (error) {
-        console.error('Failed to save filters:', error);
       }
     }, debounceMs);
 
@@ -112,7 +110,6 @@ export function useFilterPersistence(
         const imported = JSON.parse(jsonString);
         setFilters({ ...initialState, ...imported });
       } catch (error) {
-        console.error('Failed to import filters:', error);
         throw new Error('Invalid filter configuration');
       }
     },

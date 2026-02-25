@@ -96,13 +96,11 @@ export const POST = withRBAC(
               .insert([partyData]);
 
             if (error) {
-              console.error('Error inserting party:', error);
               errors++;
             } else {
               processed++;
             }
           } catch (error) {
-            console.error('Error processing row:', error);
             errors++;
           }
         }
@@ -130,13 +128,11 @@ export const POST = withRBAC(
               .insert([promoterData]);
 
             if (error) {
-              console.error('Error inserting promoter:', error);
               errors++;
             } else {
               processed++;
             }
           } catch (error) {
-            console.error('Error processing row:', error);
             errors++;
           }
         }
@@ -158,7 +154,6 @@ export const POST = withRBAC(
         message: `Successfully processed ${processed} records with ${errors} errors`,
       });
     } catch (error) {
-      console.error('Bulk import API error:', error);
       return NextResponse.json(
         {
           success: false,

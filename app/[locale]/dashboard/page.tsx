@@ -184,7 +184,6 @@ function DashboardContent() {
           scope: contractsData.scope || 'user-specific',
         };
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
         throw error;
       }
     },

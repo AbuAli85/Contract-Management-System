@@ -313,12 +313,9 @@ export default function EditContractPage() {
         } else {
         }
       } else if (refetchResult.error) {
-        console.warn(
-          '⚠️ Refetch had an error, but continuing:',
-          refetchResult.error
-        );
+
       } else {
-        console.warn('⚠️ Refetch returned no data');
+
       }
 
       // Reset the flag after refetch completes
@@ -328,7 +325,7 @@ export default function EditContractPage() {
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);
     } catch (err) {
-      console.error('❌ Save operation failed:', err);
+
       setSaveError(
         err instanceof Error ? err.message : 'Failed to save contract'
       );

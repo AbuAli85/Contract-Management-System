@@ -325,13 +325,11 @@ export async function upsertBooking(
       .single();
 
     if (error) {
-      console.error('Error upserting booking:', error);
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (error) {
-    console.error('Exception in upsertBooking:', error);
     return { success: false, error };
   }
 }

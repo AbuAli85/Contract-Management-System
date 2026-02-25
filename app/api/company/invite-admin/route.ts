@@ -47,18 +47,7 @@ export async function POST(request: Request) {
 
     // Note: We skip the test query here since the diagnostic endpoint confirms the admin client works.
     // If there are permission issues, they will be caught and handled in the actual operations below.
-    console.log('[Invite Admin] Admin client created successfully');
   } catch (e: any) {
-    console.error('[Invite Admin] Admin client initialization failed:', {
-      message: e.message,
-      stack: e.stack,
-      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
-      serviceKeyPrefix:
-        process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'NOT_SET',
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    });
     return NextResponse.json(
       {
         error: 'Server configuration error',
@@ -98,7 +87,6 @@ export async function POST(request: Request) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error('[Invite Admin] Error parsing request body:', jsonError);
       return NextResponse.json(
         {
           error: 'Invalid request body',
@@ -154,7 +142,6 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (profileError) {
-      console.error('[Invite Admin] Error fetching profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to fetch user profile' },
         { status: 500 }
@@ -172,17 +159,9 @@ export async function POST(request: Request) {
 
     const activeCompanyId = profile.active_company_id;
 
-    console.log('[Invite Admin] Adding member to company:', {
-      company_id: activeCompanyId,
-      inviter_id: user.id,
-      inviter_email: user.email,
-      target_email: email,
-      role,
-    });
 
     // Ensure admin client is available
     if (!supabaseAdmin) {
-      console.error('[Invite Admin] Admin client is not available');
       return NextResponse.json(
         {
           error: 'Server configuration error',
@@ -203,10 +182,6 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (companyError) {
-      console.error(
-        '[Invite Admin] Error checking company ownership:',
-        companyError
-      );
       return NextResponse.json(
         {
           error: 'Failed to verify company access',
@@ -230,12 +205,6 @@ export async function POST(request: Request) {
 
       // If there's a permission error, it's unexpected but we'll handle it gracefully
       if (membershipError) {
-        console.error('[Invite Admin] Error checking membership:', {
-          error: membershipError.message,
-          code: membershipError.code,
-          company_id: activeCompanyId,
-          user_id: user.id,
-        });
 
         // If it's a permission error and user doesn't own company, deny access
         if (membershipError.code === '42501') {
@@ -311,10 +280,6 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (companyNameError) {
-      console.warn(
-        '[Invite Admin] Could not fetch company name:',
-        companyNameError
-      );
     }
 
     const company = companyData as Company | null;
@@ -342,10 +307,6 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (userCheckError) {
-      console.error(
-        '[Invite Admin] Error checking for existing user:',
-        userCheckError
-      );
       // Don't fail if user doesn't exist - that's expected for new users
       if (userCheckError.code !== 'PGRST116') {
         // PGRST116 = no rows returned (expected)
@@ -393,10 +354,6 @@ export async function POST(request: Request) {
           .eq('id', existingMembership.id);
 
         if (updateError) {
-          console.error(
-            '[Invite Admin] Error reactivating membership:',
-            updateError
-          );
           throw new Error(
             `Failed to reactivate membership: ${updateError.message}`
           );
@@ -435,31 +392,10 @@ export async function POST(request: Request) {
             }
           } catch (e) {
             // Ignore JWT decode errors
-            console.warn(
-              '[Invite Admin] Could not decode JWT to verify project:',
-              (e as Error).message
-            );
           }
           const isProjectMismatch =
             keyProjectRef && urlProjectRef && keyProjectRef !== urlProjectRef;
 
-          console.error(
-            '[Invite Admin] Admin client cannot read from company_members - service role key may be invalid or for wrong project:',
-            {
-              error: readTestError.message,
-              code: readTestError.code,
-              details: readTestError.details,
-              hint: readTestError.hint,
-              hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-              serviceKeyPrefix:
-                process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) ||
-                'NOT_SET',
-              supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-              urlProjectRef,
-              keyProjectRef,
-              isProjectMismatch,
-            }
-          );
 
           // Return a detailed error response
           return NextResponse.json(
@@ -498,9 +434,6 @@ export async function POST(request: Request) {
 
         // Log successful read test for debugging
         if (!readTestError) {
-          console.log(
-            '[Invite Admin] Admin client read test successful - service role key is working'
-          );
         }
 
         // Use the same pattern as the working route - insert without select
@@ -517,20 +450,6 @@ export async function POST(request: Request) {
           });
 
         if (insertError) {
-          console.error('[Invite Admin] Error creating membership:', {
-            error: insertError,
-            message: insertError.message,
-            code: insertError.code,
-            details: insertError.details,
-            hint: insertError.hint,
-            company_id: activeCompanyId,
-            user_id: targetUserId,
-            hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-            serviceKeyPrefix:
-              process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) ||
-              'NOT_SET',
-            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-          });
 
           // Check if it's a permission error and provide more context
           if (
@@ -596,12 +515,6 @@ export async function POST(request: Request) {
           );
         }
 
-        console.log('[Invite Admin] Successfully created membership:', {
-          company_id: activeCompanyId,
-          user_id: targetUserId,
-          role,
-          target_email: email,
-        });
       }
     } else {
       // User doesn't exist - this is a new user invitation
@@ -613,14 +526,6 @@ export async function POST(request: Request) {
       // When the user signs up with this email, they can be added to the company
       // through a separate process (e.g., checking for pending invitations by email).
 
-      console.log(
-        '[Invite Admin] New user invitation - skipping membership creation, will queue email only:',
-        {
-          email: email.toLowerCase(),
-          company_id: activeCompanyId,
-          role,
-        }
-      );
     }
 
     // Queue email notification
@@ -657,21 +562,11 @@ export async function POST(request: Request) {
       });
 
       if (emailQueueError) {
-        console.error('[Invite Admin] Error queuing email:', emailQueueError);
         // Don't fail the entire request if email queue fails
         // The invitation is still created successfully
       } else {
-        console.log(
-          '[Invite Admin] Email queued successfully for:',
-          email.toLowerCase()
-        );
       }
     } catch (e: any) {
-      console.error('[Invite Admin] Exception queuing email:', {
-        message: e?.message,
-        stack: e?.stack,
-        error: e,
-      });
       // Don't fail the entire request if email queue fails
     }
 
@@ -679,9 +574,6 @@ export async function POST(request: Request) {
     if (existingUser) {
       try {
         if (!supabaseAdmin) {
-          console.warn(
-            '[Invite Admin] Admin client not available for notification, skipping...'
-          );
         } else {
           await (supabaseAdmin.from('notifications') as any).insert({
             user_id: existingUser.id,
@@ -689,16 +581,11 @@ export async function POST(request: Request) {
             title: `Invited to ${(company as any)?.name || 'Company'}`,
             message: `You've been invited to join ${(company as any)?.name || 'Company'} as ${role}.${normalizedMessage ? ` ${normalizedMessage}` : ''}`,
             priority: 'high',
-            action_url: '/en/settings/company',
+            action_url: '/settings/company',
             action_label: 'View Company',
           });
         }
       } catch (e: any) {
-        console.error('[Invite Admin] Notification creation failed:', {
-          message: e?.message,
-          stack: e?.stack,
-          error: e,
-        });
       }
     }
 
@@ -715,11 +602,6 @@ export async function POST(request: Request) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('[Invite Admin] Error inviting admin:', {
-      message: errorMessage,
-      stack: errorStack,
-      error,
-    });
 
     // Provide more helpful error messages
     let userFriendlyError = errorMessage;

@@ -81,7 +81,6 @@ export async function GET(
       .maybeSingle();
 
     if (employeeError) {
-      console.error('Error fetching employee record:', employeeError);
       return NextResponse.json(
         {
           error: 'Failed to verify employee authorization',
@@ -198,17 +197,6 @@ export async function GET(
       .maybeSingle();
 
     // Enhanced logging for debugging
-    console.error('Employee authorization failed:', {
-      user_id: user.id,
-      user_email: user.email,
-      user_active_company_id: userProfile?.active_company_id,
-      link_code: code,
-      link_company_id: link.company_id,
-      employee_record: allEmployeeRecords || null,
-      link_company_record: linkCompanyRecords || null,
-      has_company_access: hasCompanyAccess,
-      user_role: userRole,
-    });
 
     if (!allEmployeeRecords) {
       return NextResponse.json(
@@ -288,7 +276,6 @@ export async function GET(
       { status: 403 }
     );
   } catch (error) {
-    console.error('Error in GET /api/attendance/check-in/[code]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -399,7 +386,6 @@ export async function POST(
           photoUrl = urlData?.publicUrl || null;
         }
       } catch (error) {
-        console.warn('Photo upload failed:', error);
       }
     }
 
@@ -521,7 +507,6 @@ export async function POST(
       attendance: attendanceRecord,
     });
   } catch (error) {
-    console.error('Error in POST /api/attendance/check-in/[code]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

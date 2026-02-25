@@ -115,7 +115,6 @@ export function BookingFormWithWebhook({
         participants: 1,
       });
     } catch (error) {
-      console.error('❌ Booking creation error:', error);
       setWebhookStatus('failed');
 
       toast({

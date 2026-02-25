@@ -163,7 +163,6 @@ export function ClientManagementDashboard() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error exporting report:', error);
       alert('Failed to export report. Please try again.');
     }
   };
@@ -294,7 +293,6 @@ export function ClientManagementDashboard() {
           setClients(transformedClients);
         }
       } catch (err) {
-        console.error('Error loading client data:', err);
         if (isMounted) {
           setError(
             err instanceof Error ? err.message : 'Failed to load client data'

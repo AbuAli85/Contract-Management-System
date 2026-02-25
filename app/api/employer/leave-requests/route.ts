@@ -92,7 +92,6 @@ export async function GET(request: NextRequest) {
             message: 'Leave requests feature not yet configured',
           });
         }
-        console.error('Error fetching leave requests:', requestsError);
         return NextResponse.json(
           { error: 'Failed to fetch leave requests' },
           { status: 500 }
@@ -116,7 +115,6 @@ export async function GET(request: NextRequest) {
       });
     } catch (tableError: any) {
       // Handle case where employee_leave_requests table doesn't exist
-      console.error('Leave requests table error:', tableError);
       return NextResponse.json({
         success: true,
         requests: [],
@@ -125,7 +123,6 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Error in employer leave requests GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

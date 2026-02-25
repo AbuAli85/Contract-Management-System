@@ -88,7 +88,6 @@ export function CompanyUpsertForm({
         resetForm();
       }
     } catch (error) {
-      console.error('Error saving company:', error);
     }
   };
 

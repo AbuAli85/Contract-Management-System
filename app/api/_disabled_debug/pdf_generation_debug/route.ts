@@ -5,7 +5,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
 
-    console.log('🔍 PDF Generation Debug - Received request:', body);
 
     // Generate actual PDF content using HTML template
     const pdfBuffer = await generateContractPDF(
@@ -24,7 +23,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       message: 'PDF generated successfully (debug mode)',
     });
   } catch (error) {
-    console.error('PDF Generation Debug error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

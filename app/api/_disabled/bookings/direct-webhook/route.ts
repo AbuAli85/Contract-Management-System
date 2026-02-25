@@ -8,7 +8,6 @@ const MAKE_WEBHOOK_URL =
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔄 Creating new booking with immediate Make.com webhook...');
 
     const supabase = await createClient();
 
@@ -66,7 +65,6 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    console.log('📝 Inserting booking into database...');
 
     // 1) Insert the booking into Supabase
     const { data: booking, error: insertError } = await supabase
@@ -76,7 +74,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('❌ Database insert failed:', insertError);
       return NextResponse.json(
         {
           success: false,
@@ -87,11 +84,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Booking created successfully:', booking.id);
 
     // 2) Immediately call Make.com webhook with the new booking data
     try {
-      console.log('🔔 Calling Make.com webhook directly...');
 
       const webhookPayload = {
         event: 'booking.created',
@@ -121,10 +116,6 @@ export async function POST(request: NextRequest) {
 
       if (makeResponse.ok) {
         const makeResponseData = await makeResponse.text();
-        console.log(
-          '✅ Make.com webhook called successfully:',
-          makeResponseData
-        );
 
         // Optionally log the successful webhook call
         try {
@@ -138,11 +129,9 @@ export async function POST(request: NextRequest) {
             created_at: new Date().toISOString(),
           });
         } catch (logError) {
-          console.warn('⚠️ Could not log successful webhook:', logError);
         }
       } else {
         const errorText = await makeResponse.text();
-        console.error('❌ Make.com webhook failed:', errorText);
 
         // Log the webhook failure
         try {
@@ -155,14 +144,11 @@ export async function POST(request: NextRequest) {
             created_at: new Date().toISOString(),
           });
         } catch (logError) {
-          console.warn('⚠️ Could not log webhook error:', logError);
         }
 
         // Note: We don't fail the booking creation if webhook fails
-        console.warn('⚠️ Booking created but webhook notification failed');
       }
     } catch (webhookError) {
-      console.error('❌ Make.com webhook error:', webhookError);
 
       // Log the webhook error
       try {
@@ -178,12 +164,10 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
         });
       } catch (logError) {
-        console.warn('⚠️ Could not log webhook error:', logError);
       }
 
       // You can decide whether this should block your API response
       // In this case, we'll proceed since the booking was created successfully
-      console.warn('⚠️ Booking created but webhook notification failed');
     }
 
     // Return the successful booking creation
@@ -194,7 +178,6 @@ export async function POST(request: NextRequest) {
       message: 'Booking created successfully and Make.com notified',
     });
   } catch (error) {
-    console.error('❌ Booking creation error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -209,7 +192,6 @@ export async function POST(request: NextRequest) {
 // Also keep the GET method for fetching bookings
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Fetching bookings...');
 
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
@@ -246,7 +228,6 @@ export async function GET(request: NextRequest) {
     const { data: bookings, error } = await query.limit(50);
 
     if (error) {
-      console.error('❌ Error fetching bookings:', error);
       return NextResponse.json(
         {
           success: false,
@@ -257,7 +238,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Successfully fetched ${bookings?.length || 0} bookings`);
 
     return NextResponse.json({
       success: true,
@@ -265,7 +245,6 @@ export async function GET(request: NextRequest) {
       count: bookings?.length || 0,
     });
   } catch (error) {
-    console.error('❌ Fetch bookings error:', error);
     return NextResponse.json(
       {
         success: false,

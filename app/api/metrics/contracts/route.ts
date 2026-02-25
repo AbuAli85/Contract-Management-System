@@ -12,7 +12,6 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log('📊 Metrics API: Starting request...');
 
     const supabase = await createClient();
 
@@ -23,7 +22,6 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.warn('📊 Metrics API: User error:', userError.message);
     }
 
     // Get user role from users table (proper source)
@@ -53,11 +51,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('📊 Metrics API: Calculating metrics for user:', {
-      userId: user?.id,
-      userRole,
-      isAdmin: userRole === 'admin',
-    });
 
     // ✅ COMPANY SCOPE: Get active company's party_id
     let partyId: string | null = null;
@@ -123,20 +116,11 @@ export async function GET(request: NextRequest) {
     const validation = validateContractMetrics(metrics);
 
     if (!validation.isValid) {
-      console.error('📊 Metrics API: Validation failed:', validation.errors);
     }
 
     if (validation.warnings.length > 0) {
-      console.warn('📊 Metrics API: Validation warnings:', validation.warnings);
     }
 
-    console.log('📊 Metrics API: Metrics calculated successfully:', {
-      total: metrics.total,
-      active: metrics.active,
-      pending: metrics.pending,
-      scope,
-      valid: validation.isValid,
-    });
 
     return NextResponse.json({
       success: true,
@@ -152,7 +136,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('📊 Metrics API: Error:', error);
     return NextResponse.json(
       {
         success: false,

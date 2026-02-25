@@ -242,7 +242,6 @@ export function UserManagementDashboard() {
         }
         setSelectedUsers([]);
       } catch (error) {
-        console.error('Bulk action error:', error);
       }
     },
     [selectedUsers, bulkUpdateUsers, bulkDeleteUsers, toast]

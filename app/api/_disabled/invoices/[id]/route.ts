@@ -117,7 +117,6 @@ export async function GET(
 
     return Response.json({ data: invoiceWithTotals });
   } catch (error) {
-    console.error('Invoice get API error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
     });
@@ -227,7 +226,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Invoice update error:', updateError);
       return new Response(JSON.stringify({ error: updateError.message }), {
         status: 400,
       });
@@ -260,7 +258,6 @@ export async function PATCH(
       message: 'Invoice updated successfully',
     });
   } catch (error) {
-    console.error('Invoice update API error:', error);
     if (error instanceof z.ZodError) {
       return new Response(
         JSON.stringify({ error: 'Invalid input', details: error.errors }),
@@ -352,7 +349,6 @@ export async function DELETE(
       .eq('id', invoiceId);
 
     if (deleteError) {
-      console.error('Invoice deletion error:', deleteError);
       return new Response(JSON.stringify({ error: deleteError.message }), {
         status: 400,
       });
@@ -363,7 +359,6 @@ export async function DELETE(
       message: 'Invoice deleted successfully',
     });
   } catch (error) {
-    console.error('Invoice delete API error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
     });

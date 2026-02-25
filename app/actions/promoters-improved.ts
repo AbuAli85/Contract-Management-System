@@ -119,7 +119,7 @@ export async function getPromoters(filters?: {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching promoters:', error);
+
       return {
         success: false,
         error: error.message,
@@ -133,7 +133,7 @@ export async function getPromoters(filters?: {
       message: `Retrieved ${data?.length || 0} promoters`,
     };
   } catch (error) {
-    console.error('Unexpected error fetching promoters:', error);
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -158,7 +158,7 @@ export async function getPromoterById(
       .single();
 
     if (error) {
-      console.error('Error fetching promoter:', error);
+
       return {
         success: false,
         error: error.message,
@@ -172,7 +172,7 @@ export async function getPromoterById(
       message: 'Promoter retrieved successfully',
     };
   } catch (error) {
-    console.error('Unexpected error fetching promoter:', error);
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -254,7 +254,7 @@ export async function createPromoter(
       .single();
 
     if (error) {
-      console.error('Error creating promoter:', error);
+
       return {
         success: false,
         error: error.message,
@@ -272,7 +272,7 @@ export async function createPromoter(
       message: 'Promoter created successfully',
     };
   } catch (error) {
-    console.error('Unexpected error creating promoter:', error);
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -340,7 +340,7 @@ export async function updatePromoter(
       .single();
 
     if (error) {
-      console.error('Error updating promoter:', error);
+
       return {
         success: false,
         error: error.message,
@@ -378,7 +378,7 @@ export async function updatePromoter(
       message: 'Promoter updated successfully',
     };
   } catch (error) {
-    console.error('Unexpected error updating promoter:', error);
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -401,7 +401,7 @@ export async function deletePromoter(id: string): Promise<ActionResult<void>> {
     const { error } = await supabase.from('promoters').delete().eq('id', id);
 
     if (error) {
-      console.error('Error deleting promoter:', error);
+
       return {
         success: false,
         error: error.message,
@@ -418,7 +418,7 @@ export async function deletePromoter(id: string): Promise<ActionResult<void>> {
       message: 'Promoter deleted successfully',
     };
   } catch (error) {
-    console.error('Unexpected error deleting promoter:', error);
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -521,7 +521,7 @@ export async function revalidateAllPromoterCaches(): Promise<
       message: 'All promoter caches revalidated successfully',
     };
   } catch (error) {
-    console.error('Error revalidating caches:', error);
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -544,7 +544,7 @@ export async function revalidatePromoterCache(
       message: 'Promoter cache revalidated successfully',
     };
   } catch (error) {
-    console.error('Error revalidating promoter cache:', error);
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

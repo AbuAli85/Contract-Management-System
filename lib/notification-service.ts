@@ -44,7 +44,6 @@ export class NotificationService {
 
       return notification;
     } catch (error) {
-      console.error('❌ Error creating notification:', error);
       throw error;
     }
   }
@@ -188,7 +187,6 @@ export class NotificationService {
 
       if (error) throw error;
     } catch (error) {
-      console.error('❌ Error marking notification as read:', error);
       throw error;
     }
   }
@@ -206,7 +204,6 @@ export class NotificationService {
 
       if (error) throw error;
     } catch (error) {
-      console.error('❌ Error marking all notifications as read:', error);
       throw error;
     }
   }
@@ -223,7 +220,6 @@ export class NotificationService {
 
       if (error) throw error;
     } catch (error) {
-      console.error('❌ Error deleting notification:', error);
       throw error;
     }
   }
@@ -244,7 +240,6 @@ export class NotificationService {
 
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching notifications:', error);
       throw error;
     }
   }
@@ -264,7 +259,6 @@ export class NotificationService {
 
       return count || 0;
     } catch (error) {
-      console.error('❌ Error fetching unread count:', error);
       throw error;
     }
   }
@@ -281,7 +275,6 @@ export class NotificationService {
 
       if (error) throw error;
     } catch (error) {
-      console.error('❌ Error cleaning up expired notifications:', error);
       throw error;
     }
   }
@@ -340,6 +333,5 @@ export const createTestNotifications = async (userId: string) => {
       'New features have been added to your dashboard. Check out the updated booking management tools!'
     );
   } catch (error) {
-    console.error('❌ Error creating test notifications:', error);
   }
 };

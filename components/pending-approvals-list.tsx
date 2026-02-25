@@ -52,7 +52,6 @@ export function PendingApprovalsList() {
       if (data.success) {
         setPendingUsers(data.pendingUsers);
       } else {
-        console.error('❌ Failed to fetch pending users:', data.error);
         toast({
           title: 'Error',
           description: 'Failed to fetch pending users',
@@ -60,7 +59,6 @@ export function PendingApprovalsList() {
         });
       }
     } catch (err) {
-      console.error('❌ Error fetching pending users:', err);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',

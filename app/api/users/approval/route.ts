@@ -70,7 +70,6 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching pending users:', error);
       return NextResponse.json(
         { error: 'Failed to fetch pending users' },
         { status: 500 }
@@ -82,7 +81,6 @@ export async function GET(request: NextRequest) {
       pendingUsers: pendingUsers || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/users/approval:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -176,7 +174,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error('Error updating user:', updateError);
       return NextResponse.json(
         { error: 'Failed to update user status' },
         { status: 500 }
@@ -212,7 +209,6 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (authError) {
-        console.warn('Failed to update auth user metadata:', authError);
       }
     }
 
@@ -222,7 +218,6 @@ export async function POST(request: NextRequest) {
       user: updatedUser,
     });
   } catch (error) {
-    console.error('Error in POST /api/users/approval:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

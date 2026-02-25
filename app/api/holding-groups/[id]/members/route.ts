@@ -89,10 +89,6 @@ export const POST = withAnyRBAC(
         .eq('holding_group_id', id);
 
       if (existingError) {
-        console.error(
-          '[HoldingGroupMembers] Error checking existing members:',
-          existingError
-        );
       }
 
       const existingIds = new Set(
@@ -145,9 +141,6 @@ export const POST = withAnyRBAC(
         if (error) {
           // Check if it's a unique constraint violation (already exists)
           if (error.code === '23505' || error.message.includes('unique')) {
-            console.warn(
-              `Member ${member.party_id || member.company_id} already exists, skipping`
-            );
             continue;
           }
           errors.push({
@@ -178,7 +171,6 @@ export const POST = withAnyRBAC(
         { status: 201 }
       );
     } catch (error: any) {
-      console.error('[HoldingGroupMembers] POST error:', error);
       return NextResponse.json(
         {
           error: error.message || 'Internal server error',

@@ -182,7 +182,6 @@ export function ComprehensiveHRAnalyticsDashboard() {
         throw new Error(result.error || 'Failed to fetch analytics');
       }
     } catch (error: any) {
-      console.error('Error fetching analytics:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to load analytics',

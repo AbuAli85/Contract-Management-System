@@ -147,7 +147,6 @@ export async function addRoleToUser(userId: string, newRole: MultipleUserRole) {
 
     return { success: true, data: user, message: 'Role already assigned' };
   } catch (error) {
-    console.error('Error adding role to user:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -189,7 +188,6 @@ export async function removeRoleFromUser(userId: string, roleToRemove: string) {
 
     return { success: true, data };
   } catch (error) {
-    console.error('Error removing role from user:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

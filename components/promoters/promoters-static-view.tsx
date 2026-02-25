@@ -103,7 +103,6 @@ export function PromotersStaticView({
         setLastFetchTime(new Date());
         setManualRefresh(false);
       } catch (err) {
-        console.error('❌ Error fetching promoters:', err);
         setError(
           err instanceof Error ? err.message : 'Failed to fetch promoters'
         );

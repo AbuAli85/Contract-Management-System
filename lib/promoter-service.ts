@@ -142,7 +142,6 @@ function createSupabaseClient() {
   try {
     return createClient();
   } catch (error) {
-    console.error('Failed to create Supabase client:', error);
     throw new Error('Database connection failed');
   }
 }
@@ -190,7 +189,6 @@ export async function fetchPromotersWithPagination(
       hasPrev: page > 1,
     };
   } catch (error) {
-    console.error('Error fetching promoters:', error);
     return {
       data: [],
       total: 0,
@@ -225,7 +223,6 @@ export async function fetchPromoterById(id: string): Promise<Promoter | null> {
 
     return data;
   } catch (error) {
-    console.error(`Error fetching promoter ${id}:`, error);
     return null;
   }
 }
@@ -249,7 +246,6 @@ export async function createPromoter(
 
     return data;
   } catch (error) {
-    console.error('Error creating promoter:', error);
     return null;
   }
 }
@@ -279,7 +275,6 @@ export async function updatePromoter(
     const responseData = await response.json();
     return responseData.promoter || responseData;
   } catch (error) {
-    console.error(`Error updating promoter ${id}:`, error);
     return null;
   }
 }
@@ -297,7 +292,6 @@ export async function deletePromoter(id: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error(`Error deleting promoter ${id}:`, error);
     return false;
   }
 }
@@ -337,7 +331,6 @@ export async function searchPromoters(
 
     return data || [];
   } catch (error) {
-    console.error('Error searching promoters:', error);
     return [];
   }
 }
@@ -391,7 +384,6 @@ export async function getPromoterPerformanceStats(
 
     return { data: stats, error: null };
   } catch (error) {
-    console.error('Error getting promoter performance stats:', error);
     return {
       data: null,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -440,7 +432,6 @@ export async function exportPromotersToCSV(
 
     return [headers, ...rows].join('\n');
   } catch (error) {
-    console.error('Error exporting promoters to CSV:', error);
     throw new Error(
       `Failed to export promoters to CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
@@ -519,7 +510,6 @@ export async function importPromotersFromCSV(
       total: promoters.length,
     };
   } catch (error) {
-    console.error('Error importing promoters from CSV:', error);
     throw new Error(
       `Failed to import promoters from CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
@@ -562,7 +552,6 @@ export async function getPromoterCVData(promoterId: string) {
       education: educationResult.data || [],
     };
   } catch (error) {
-    console.error(`Error fetching CV data for promoter ${promoterId}:`, error);
     throw error;
   }
 }
@@ -649,7 +638,6 @@ export async function fetchPromotersAnalytics(
       error: null,
     };
   } catch (error) {
-    console.error('Error fetching promoter analytics:', error);
     return {
       data: {
         total_promoters: 0,
@@ -717,10 +705,6 @@ export async function getPromoterIndividualPerformanceStats(
       error: null,
     };
   } catch (error) {
-    console.error(
-      `Error fetching performance stats for promoter ${promoterId}:`,
-      error
-    );
     return {
       data: null,
       error: {

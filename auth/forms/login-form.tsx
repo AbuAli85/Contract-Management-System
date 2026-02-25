@@ -31,7 +31,6 @@ export function LoginForm() {
   // Force show after timeout to prevent infinite loading
   React.useEffect(() => {
     const timeoutId = setTimeout(() => {
-      console.warn('🔐 Login Form: Force showing form after timeout');
       setForceShow(true);
     }, 8000); // 8 second timeout
 
@@ -48,7 +47,7 @@ export function LoginForm() {
   // Get the current locale from the URL or default to 'en'
   const pathname =
     typeof window !== 'undefined' ? window.location.pathname : '';
-  const locale = pathname.split('/')[1] || 'en';
+  const locale = pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
 
   // Get redirect URL from query parameters or default to dashboard
   const redirectTo = React.useMemo(() => {
@@ -64,15 +63,11 @@ export function LoginForm() {
 
   // Only log once when component mounts
   React.useEffect(() => {
-    console.log('🔐 Login Debug - Initial redirect URL:', redirectTo);
   }, [redirectTo]);
 
   // Handle redirect when user is authenticated
   React.useEffect(() => {
     if (user && !authLoading && mounted && !isSubmittingRef.current) {
-      console.log(
-        '🔐 Login Form: User authenticated, allowing page-level redirect to handle navigation'
-      );
       // Let the page-level redirect handle the navigation
       // Don't add our own redirect here to avoid conflicts
     }
@@ -111,11 +106,8 @@ export function LoginForm() {
       isSubmittingRef.current = true;
 
       try {
-        console.log('🔐 Login Debug - Starting login process...');
-        console.log('🔐 Login Debug - Email:', email);
 
         // Use client-side authentication with enhanced error handling
-        console.log('🔐 Login Debug - Calling signIn function...');
         const {
           success: loginSuccess,
           error: clientError,
@@ -123,13 +115,9 @@ export function LoginForm() {
         } = await signIn(email, password);
 
         if (!loginSuccess) {
-          console.error('🔐 Login Debug - Client login failed:', clientError);
 
           // Handle pending approval status
           if (status === 'pending') {
-            console.log(
-              '🔐 Login Debug - User is pending approval, redirecting to pending page'
-            );
             setError(
               'Your account is pending approval. Redirecting to approval status page...'
             );
@@ -195,7 +183,6 @@ export function LoginForm() {
           return;
         }
 
-        console.log('🔐 Login Debug - Client login successful');
         setSuccess('Login successful! Redirecting...');
 
         // Show success toast
@@ -207,16 +194,11 @@ export function LoginForm() {
         // Add a backup redirect in case the page-level redirect fails
         setTimeout(() => {
           if (typeof window !== 'undefined') {
-            console.log('🔐 Login Form: Backup redirect triggered');
             window.location.replace('/' + locale + '/dashboard');
           }
         }, 2000); // 2 second delay for backup redirect
 
-        console.log(
-          '🔐 Login Debug - Login successful, redirect will be handled by page component'
-        );
       } catch (error) {
-        console.error('🔐 Login Debug - Unexpected error:', error);
         const errorMessage = 'An unexpected error occurred. Please try again.';
         setError(errorMessage);
 

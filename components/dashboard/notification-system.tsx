@@ -95,7 +95,6 @@ export default function NotificationSystem() {
         setNotifications([]);
       }
     } catch (error: any) {
-      console.error('Error fetching notifications:', error);
       toast({
         title: 'Error Fetching Notifications',
         description: error.message,

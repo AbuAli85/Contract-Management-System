@@ -91,7 +91,6 @@ export async function GET(request: NextRequest) {
     const { data: assignments, error } = await query;
 
     if (error) {
-      console.error('Error fetching assignments:', error);
       return NextResponse.json(
         { error: 'Failed to fetch assignments', details: error.message },
         { status: 500 }
@@ -104,7 +103,6 @@ export async function GET(request: NextRequest) {
       count: assignments?.length || 0,
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/assignments:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -240,7 +238,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating assignment:', createError);
       return NextResponse.json(
         { error: 'Failed to create assignment', details: createError.message },
         { status: 500 }
@@ -262,7 +259,6 @@ export async function POST(request: NextRequest) {
       deployment_letter_id: deploymentLetterId,
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/assignments:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

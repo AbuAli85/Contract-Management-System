@@ -60,7 +60,6 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
           );
         }
       } catch (err) {
-        console.error('Admin check error:', err);
         setError('Error checking admin status');
       } finally {
         setChecking(false);

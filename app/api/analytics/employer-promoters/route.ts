@@ -57,7 +57,6 @@ export async function GET() {
     const { data: employers, error: employersError } = await employersQuery;
 
     if (employersError) {
-      console.error('Error fetching employers:', employersError);
       return NextResponse.json(
         { error: 'Failed to fetch employers', details: employersError.message },
         { status: 500 }
@@ -77,7 +76,6 @@ export async function GET() {
     const { data: allPromoters, error: promotersError } = await promotersQuery;
 
     if (promotersError) {
-      console.error('Error fetching promoters:', promotersError);
       return NextResponse.json(
         { error: 'Failed to fetch promoters', details: promotersError.message },
         { status: 500 }
@@ -90,7 +88,6 @@ export async function GET() {
       .select('promoter_id, employer_id, first_party_id');
 
     if (contractsError) {
-      console.error('Error fetching contracts:', contractsError);
       return NextResponse.json(
         { error: 'Failed to fetch contracts', details: contractsError.message },
         { status: 500 }
@@ -147,7 +144,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error in employer-promoters analytics API:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

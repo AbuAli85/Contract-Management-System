@@ -66,7 +66,6 @@ export const GET = withRBAC(
       const { data: schedules, error } = await query;
 
       if (error) {
-        console.error('Error fetching attendance schedules:', error);
         return NextResponse.json(
           { error: 'Failed to fetch attendance schedules' },
           { status: 500 }
@@ -79,7 +78,6 @@ export const GET = withRBAC(
         count: schedules?.length || 0,
       });
     } catch (error) {
-      console.error('Error in GET /api/employer/attendance-schedules:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -261,7 +259,6 @@ export const POST = withRBAC(
         .single();
 
       if (createError) {
-        console.error('Error creating attendance schedule:', createError);
         return NextResponse.json(
           {
             error: 'Failed to create attendance schedule',
@@ -276,7 +273,6 @@ export const POST = withRBAC(
         schedule,
       });
     } catch (error) {
-      console.error('Error in POST /api/employer/attendance-schedules:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

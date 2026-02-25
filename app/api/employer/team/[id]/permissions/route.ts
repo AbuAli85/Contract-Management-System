@@ -31,7 +31,6 @@ async function getEmployeePermissionsHandler(
       );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
-      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         {
           error: 'Failed to process employee record',
@@ -76,7 +75,6 @@ async function getEmployeePermissionsHandler(
       .eq('employer_employee_id', id);
 
     if (permError) {
-      console.error('Error fetching permissions:', permError);
       return NextResponse.json(
         { error: 'Failed to fetch permissions' },
         { status: 500 }
@@ -88,7 +86,6 @@ async function getEmployeePermissionsHandler(
       permissions: permissions || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/employer/team/[id]/permissions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -121,7 +118,6 @@ async function assignPermissionsHandler(
       );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
-      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         {
           error: 'Failed to process employee record',
@@ -188,7 +184,6 @@ async function assignPermissionsHandler(
         .insert(permissionRecords);
 
       if (insertError) {
-        console.error('Error assigning permissions:', insertError);
         return NextResponse.json(
           {
             error: 'Failed to assign permissions',
@@ -205,7 +200,6 @@ async function assignPermissionsHandler(
       permissions,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/[id]/permissions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -113,7 +113,7 @@ export default function RegisterNewUserPage() {
       });
 
       if (authError) {
-        console.error('❌ Auth signup error:', authError);
+
         setError(`Registration failed: ${authError.message}`);
         return;
       }
@@ -147,7 +147,7 @@ export default function RegisterNewUserPage() {
       });
 
       if (publicUserError) {
-        console.error('❌ Public user creation error:', publicUserError);
+
         // Continue anyway - the auth user was created successfully
       } else {
       }
@@ -161,7 +161,7 @@ export default function RegisterNewUserPage() {
       );
       setStep('success');
     } catch (error) {
-      console.error('❌ Registration error:', error);
+
       setError(
         `❌ Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

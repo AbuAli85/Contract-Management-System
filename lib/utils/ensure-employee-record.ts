@@ -35,7 +35,6 @@ export async function ensureEmployerEmployeeRecord(
       .maybeSingle();
 
     if (existingError) {
-      console.error('Error checking employer_employee record:', existingError);
       throw new Error(
         `Error checking employer employee record: ${existingError.message}`
       );
@@ -81,7 +80,6 @@ export async function ensureEmployerEmployeeRecord(
     .maybeSingle();
 
   if (partyError) {
-    console.error('Error fetching employer party:', partyError);
     throw new Error(`Error fetching employer party: ${partyError.message}`);
   }
 
@@ -99,7 +97,6 @@ export async function ensureEmployerEmployeeRecord(
     .maybeSingle();
 
   if (employerProfileError) {
-    console.error('Error fetching employer profile:', employerProfileError);
     throw new Error(
       `Error fetching employer profile: ${employerProfileError.message}`
     );
@@ -119,7 +116,6 @@ export async function ensureEmployerEmployeeRecord(
     .maybeSingle();
 
   if (employeeProfileError) {
-    console.error('Error fetching employee profile:', employeeProfileError);
     throw new Error(
       `Error fetching employee profile: ${employeeProfileError.message}`
     );
@@ -143,10 +139,6 @@ export async function ensureEmployerEmployeeRecord(
 
   if (existingError && existingError.code !== 'PGRST116') {
     // PGRST116 is "not found" which is OK
-    console.error(
-      'Error checking existing employer_employee record:',
-      existingError
-    );
     throw new Error(
       `Error checking existing employer_employee record: ${existingError.message}`
     );
@@ -208,7 +200,6 @@ export async function ensureEmployerEmployeeRecord(
   const insertError = insertResult.error;
 
   if (insertError || !newRecord) {
-    console.error('Error creating employer_employee record:', insertError);
     throw new Error(
       `Failed to create employer_employee record: ${insertError?.message || 'Unknown error'}`
     );

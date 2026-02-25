@@ -37,13 +37,11 @@ export async function GET(
       .eq('promoter_id', id);
 
     if (error) {
-      console.error('Error fetching education:', error);
       return NextResponse.json({ education: [] }, { status: 200 });
     }
 
     return NextResponse.json({ education: data || [] }, { status: 200 });
   } catch (error) {
-    console.error('Education API error:', error);
     return NextResponse.json({ education: [] }, { status: 200 });
   }
 }

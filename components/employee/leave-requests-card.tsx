@@ -132,7 +132,6 @@ export function LeaveRequestsCard() {
         setBalances(data.balances || []);
       }
     } catch (error) {
-      console.error('Error fetching leave data:', error);
     } finally {
       setLoading(false);
     }

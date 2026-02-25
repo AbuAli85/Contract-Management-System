@@ -173,7 +173,7 @@ export default function CompanySettingsPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching company:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to load company settings',
@@ -193,7 +193,7 @@ export default function CompanySettingsPage() {
         setPolicies(data.policies);
       }
     } catch (error) {
-      console.error('Error fetching policies:', error);
+
     }
   };
 
@@ -213,7 +213,7 @@ export default function CompanySettingsPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching team:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to load team members',

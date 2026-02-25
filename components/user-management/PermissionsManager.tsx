@@ -298,7 +298,6 @@ export default function PermissionsManager({
         });
       }
     } catch (error) {
-      console.error('Error updating user role:', error);
       toast({
         title: 'Error',
         description: 'Failed to update user role. Please try again.',

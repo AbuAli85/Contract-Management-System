@@ -48,7 +48,6 @@ export async function POST(req: Request) {
     try {
       payload = JSON.parse(rawBody);
     } catch (error) {
-      console.error('Invalid JSON payload:', error);
       return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
         status: 400,
       });
@@ -64,7 +63,6 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET || process.env.PAYMENT_WEBHOOK_SECRET;
 
     if (!signature || !webhookSecret) {
-      console.error('Missing webhook signature or secret');
       return new Response(
         JSON.stringify({ error: 'Missing signature or secret' }),
         { status: 401 }
@@ -78,7 +76,6 @@ export async function POST(req: Request) {
       webhookSecret
     );
     if (!isValidSignature) {
-      console.error('Invalid webhook signature');
       return new Response(JSON.stringify({ error: 'Invalid signature' }), {
         status: 401,
       });
@@ -86,20 +83,13 @@ export async function POST(req: Request) {
 
     // Check for replay attacks
     if (isWebhookReplay(signature)) {
-      console.error('Webhook replay detected');
       return new Response(
         JSON.stringify({ error: 'Webhook replay detected' }),
         { status: 409 }
       );
     }
 
-    console.log('✅ Webhook signature verified successfully');
 
-    console.log('Processing payment success webhook:', {
-      booking_id: body.booking_id,
-      amount: body.payment_amount,
-      method: body.payment_method,
-    });
 
     // Check if booking exists
     const { data: booking, error: bookingError } = await supabase
@@ -118,7 +108,6 @@ export async function POST(req: Request) {
       .single();
 
     if (bookingError || !booking) {
-      console.error('Booking not found:', body.booking_id);
       return new Response(JSON.stringify({ error: 'Booking not found' }), {
         status: 404,
       });
@@ -132,7 +121,6 @@ export async function POST(req: Request) {
       .single();
 
     if (!invoice) {
-      console.log('Creating invoice for booking:', body.booking_id);
 
       // Generate invoice number
       const { data: lastInvoice } = await supabase
@@ -179,7 +167,6 @@ export async function POST(req: Request) {
         .single();
 
       if (invoiceError) {
-        console.error('Invoice creation error:', invoiceError);
         return new Response(
           JSON.stringify({ error: 'Failed to create invoice' }),
           { status: 500 }
@@ -213,7 +200,6 @@ export async function POST(req: Request) {
       .single();
 
     if (paymentError) {
-      console.error('Payment creation error:', paymentError);
       return new Response(
         JSON.stringify({ error: 'Failed to record payment' }),
         { status: 500 }
@@ -232,7 +218,6 @@ export async function POST(req: Request) {
       .eq('id', invoice.id);
 
     if (invoiceUpdateError) {
-      console.error('Invoice update error:', invoiceUpdateError);
     }
 
     // Update booking status to completed
@@ -245,7 +230,6 @@ export async function POST(req: Request) {
       .eq('id', body.booking_id);
 
     if (bookingUpdateError) {
-      console.error('Booking update error:', bookingUpdateError);
     }
 
     // Update tracking status if exists
@@ -259,17 +243,9 @@ export async function POST(req: Request) {
       .eq('booking_id', body.booking_id);
 
     if (trackingUpdateError) {
-      console.log('Tracking update error (non-critical):', trackingUpdateError);
     }
 
     // Log the successful payment processing
-    console.log('Payment processed successfully:', {
-      booking_id: body.booking_id,
-      invoice_id: invoice.id,
-      payment_id: payment.id,
-      amount: body.payment_amount,
-      method: body.payment_method,
-    });
 
     // Trigger notifications (this will be handled by the database triggers)
     // The invoice update trigger will automatically send webhooks to Make.com
@@ -287,7 +263,6 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error('Payment webhook error:', error);
 
     if (error instanceof z.ZodError) {
       return new Response(

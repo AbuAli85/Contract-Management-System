@@ -33,13 +33,11 @@ export function SampleDataButton() {
           window.location.reload();
         }, 1000);
       } else {
-        console.error('❌ API Error:', result);
         toast.error('Failed to create sample contract', {
           description: result.error || 'Unknown error occurred',
         });
       }
     } catch (error) {
-      console.error('❌ Request failed:', error);
       toast.error('Failed to create sample contract', {
         description: error instanceof Error ? error.message : 'Network error',
       });

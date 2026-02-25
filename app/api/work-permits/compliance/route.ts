@@ -85,7 +85,6 @@ export const GET = withAnyRBAC(
       const { data: compliance, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching work permit compliance:', error);
         return NextResponse.json(
           { error: 'Failed to fetch compliance data', details: error.message },
           { status: 500 }
@@ -121,7 +120,6 @@ export const GET = withAnyRBAC(
         summary,
       });
     } catch (error: any) {
-      console.error('Error in GET /api/work-permits/compliance:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

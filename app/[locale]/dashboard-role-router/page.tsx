@@ -111,7 +111,7 @@ export default function DashboardRoleRouter() {
           }, 1000);
         }, 2000);
       } catch (error) {
-        console.error('Failed to fetch user role:', error);
+
         setUserRole('user'); // Default to user role
         toast({
           title: 'Error',

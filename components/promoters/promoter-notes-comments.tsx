@@ -109,7 +109,6 @@ export function PromoterNotesComments({
         setNotes(getSampleNotes());
       }
     } catch (error) {
-      console.error('Error fetching notes:', error);
       setNotes(getSampleNotes());
     } finally {
       setIsLoading(false);
@@ -203,7 +202,6 @@ export function PromoterNotesComments({
           .insert([newNoteObj]);
 
         if (error) {
-          console.warn('Database insert failed, using local state:', error);
         }
       }
 
@@ -217,7 +215,6 @@ export function PromoterNotesComments({
       setSelectedCategory('general');
       setSelectedPriority('medium');
     } catch (error) {
-      console.error('Error adding note:', error);
     } finally {
       setIsSaving(false);
     }
@@ -235,7 +232,6 @@ export function PromoterNotesComments({
 
       setNotes(prev => prev.filter(note => note.id !== noteId));
     } catch (error) {
-      console.error('Error deleting note:', error);
       setNotes(prev => prev.filter(note => note.id !== noteId));
     }
   };
@@ -258,7 +254,6 @@ export function PromoterNotesComments({
         prev.map(n => (n.id === noteId ? { ...n, is_pinned: !n.is_pinned } : n))
       );
     } catch (error) {
-      console.error('Error toggling pin:', error);
       setNotes(prev =>
         prev.map(n => (n.id === noteId ? { ...n, is_pinned: !n.is_pinned } : n))
       );
@@ -301,7 +296,6 @@ export function PromoterNotesComments({
       setEditingNoteId(null);
       setEditContent('');
     } catch (error) {
-      console.error('Error updating note:', error);
     }
   };
 

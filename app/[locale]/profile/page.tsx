@@ -231,7 +231,7 @@ export default function ProfilePage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching profile data:', error);
+
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to load profile data';
       toast({
@@ -268,7 +268,7 @@ export default function ProfilePage() {
         throw new Error('Failed to update profile');
       }
     } catch (error) {
-      console.error('Error saving profile:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to save profile changes',
@@ -327,7 +327,7 @@ export default function ProfilePage() {
         throw new Error('Upload failed');
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to upload avatar',
@@ -367,7 +367,7 @@ export default function ProfilePage() {
         });
       }
     } catch (error) {
-      console.error('Error changing password:', error);
+
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',

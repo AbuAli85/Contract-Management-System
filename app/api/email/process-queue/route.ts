@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
       .limit(50); // Process 50 at a time
 
     if (fetchError) {
-      console.error('Error fetching pending emails:', fetchError);
       return NextResponse.json(
         {
           error: 'Failed to fetch pending emails',
@@ -90,9 +89,6 @@ export async function POST(request: NextRequest) {
             .eq('id', emailItem.id);
 
           results.sent++;
-          console.log(
-            `✅ Email sent successfully: ${emailItem.email} (${emailItem.template})`
-          );
         } else {
           throw new Error(emailResult.error || 'Failed to send email');
         }
@@ -113,7 +109,6 @@ export async function POST(request: NextRequest) {
 
         results.failed++;
         results.errors.push(`${emailItem.email}: ${error.message}`);
-        console.error(`❌ Failed to send email: ${emailItem.email}`, error);
       }
 
       results.processed++;
@@ -130,7 +125,6 @@ export async function POST(request: NextRequest) {
       errors: results.errors,
     });
   } catch (error: any) {
-    console.error('Error processing email queue:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error.message },
       { status: 500 }
@@ -182,7 +176,7 @@ function generateEmailContent(
                   ? `
                 <p>To accept this invitation, please sign up for an account using this email address:</p>
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="${baseUrl}/en/auth/signup" style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Sign Up Now</a>
+                  <a href="${baseUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/auth/signup" style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Sign Up Now</a>
                 </div>
                 <p>Once you've signed up, you'll automatically have access to ${companyName}.</p>
               `
@@ -226,7 +220,7 @@ ${
   isNewUser
     ? `
 To accept this invitation, please sign up for an account using this email address:
-${baseUrl}/en/auth/signup
+${baseUrl}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/auth/signup
 
 Once you've signed up, you'll automatically have access to ${companyName}.
 `

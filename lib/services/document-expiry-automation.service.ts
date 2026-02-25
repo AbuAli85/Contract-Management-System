@@ -120,7 +120,6 @@ export class DocumentExpiryAutomationService {
     const { data: documents, error } = await query;
 
     if (error) {
-      console.error('Error fetching documents:', error);
       throw new Error('Failed to fetch documents');
     }
 
@@ -507,7 +506,6 @@ export class DocumentExpiryAutomationService {
       );
     } catch (error) {
       // Table might not exist, that's okay
-      console.warn('Could not update document_reminders:', error);
     }
   }
 

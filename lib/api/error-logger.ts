@@ -124,59 +124,31 @@ class APIErrorLogger {
     const icon = this.getCategoryIcon(context.category);
     const color = this.getCategoryColor(context.category);
 
-    console.error(`\n${'='.repeat(80)}`);
-    console.error(`${icon} API ERROR - ${context.category.toUpperCase()}`);
-    console.error('='.repeat(80));
-    console.error(`\n📍 Endpoint: ${context.method} ${context.endpoint}`);
-    console.error(`⏰ Time: ${context.timestamp}`);
-    console.error(`🆔 Request ID: ${context.requestId}`);
 
     if (context.userId) {
-      console.error(`👤 User: ${context.userEmail || context.userId}`);
     }
 
-    console.error(`🌐 IP: ${context.ip}`);
-    console.error(`\n❌ Error: ${context.error.message}`);
 
     if (context.error.code) {
-      console.error(`📋 Code: ${context.error.code}`);
     }
 
     if (context.error.details) {
-      console.error(
-        `📄 Details:`,
-        JSON.stringify(context.error.details, null, 2)
-      );
     }
 
     if (context.error.stack && this.isDevelopment) {
-      console.error(`\n📚 Stack Trace:\n${context.error.stack}`);
     }
 
     if (context.request) {
       if (context.request.params) {
-        console.error(
-          `\n🔍 Params:`,
-          JSON.stringify(context.request.params, null, 2)
-        );
       }
 
       if (context.request.query) {
-        console.error(
-          `❓ Query:`,
-          JSON.stringify(context.request.query, null, 2)
-        );
       }
 
       if (context.request.body && this.isDevelopment) {
-        console.error(
-          `📦 Body:`,
-          JSON.stringify(context.request.body, null, 2)
-        );
       }
     }
 
-    console.error(`\n${'='.repeat(80)}\n`);
   }
 
   /**
@@ -382,9 +354,6 @@ class APIErrorLogger {
 
     // For now, just log that we would send to monitoring
     if (this.isProduction) {
-      console.log(
-        `[Monitoring] Would send error to external service: ${context.requestId}`
-      );
     }
   }
 }

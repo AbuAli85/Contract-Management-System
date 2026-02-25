@@ -19,7 +19,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Generate Contract page error:', error);
+
   }, [error]);
 
   return (

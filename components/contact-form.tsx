@@ -113,7 +113,6 @@ export default function ContactForm({
 
       onFormSubmit();
     } catch (error) {
-      console.error('Error saving contact:', error);
       toast({
         title: 'Error',
         description:

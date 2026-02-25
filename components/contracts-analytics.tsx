@@ -150,13 +150,18 @@ export function ContractsAnalyticsDashboard() {
         draftContracts: statusCounts.draft || 0,
         statusDistribution,
         monthlyTrends: monthlyData,
-        recentActivity: [], // TODO: Implement activity tracking
+        recentActivity: contracts.slice(0, 10).map((c: any) => ({
+          id: c.id,
+          type: 'contract',
+          action: c.status === 'active' ? 'activated' : c.status,
+          title: c.title || c.contract_number,
+          date: c.updated_at || c.created_at,
+        })),
         upcomingExpirations,
         averageContractValue: averageValue,
         totalContractValue: totalValue,
       });
     } catch (error) {
-      console.error('Error fetching analytics:', error);
     } finally {
       setLoading(false);
     }

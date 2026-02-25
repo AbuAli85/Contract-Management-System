@@ -54,7 +54,6 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (roleError) {
-      console.error('🔐 RBAC: Error fetching user roles:', roleError);
       return NextResponse.json(
         { error: 'Failed to fetch user roles' },
         { status: 500 }
@@ -69,7 +68,6 @@ export async function GET(
       .single();
 
     if (userError) {
-      console.error('🔐 RBAC: Error fetching user:', userError);
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
@@ -96,10 +94,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error(
-      '🔐 RBAC: Error in GET /api/admin/users/[userId]/roles:',
-      error
-    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -184,10 +178,6 @@ export async function POST(
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error(
-        '🔐 RBAC: Error checking existing role assignment:',
-        checkError
-      );
       return NextResponse.json(
         { error: 'Failed to check existing role assignment' },
         { status: 500 }
@@ -244,7 +234,6 @@ export async function POST(
       .single();
 
     if (createError) {
-      console.error('🔐 RBAC: Error creating role assignment:', createError);
       return NextResponse.json(
         { error: 'Failed to assign role' },
         { status: 500 }
@@ -265,24 +254,18 @@ export async function POST(
         user_agent: auditLogger.constructor.getUserAgent(request),
       });
     } catch (auditError) {
-      console.warn('🔐 RBAC: Failed to audit role change:', auditError);
     }
 
     // Invalidate user's permission cache
     try {
       await permissionCache.invalidateUser(userId);
     } catch (cacheError) {
-      console.warn('🔐 RBAC: Failed to invalidate user cache:', cacheError);
     }
 
     // Refresh materialized view
     try {
       await (supabase as any).rpc('refresh_user_permissions');
     } catch (refreshError) {
-      console.warn(
-        '🔐 RBAC: Failed to refresh materialized view:',
-        refreshError
-      );
     }
 
     return NextResponse.json(
@@ -305,10 +288,6 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error(
-      '🔐 RBAC: Error in POST /api/admin/users/[userId]/roles:',
-      error
-    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -385,10 +364,6 @@ export async function DELETE(
       .single();
 
     if (updateError) {
-      console.error(
-        '🔐 RBAC: Error deactivating role assignment:',
-        updateError
-      );
       return NextResponse.json(
         { error: 'Failed to remove role' },
         { status: 500 }
@@ -423,24 +398,18 @@ export async function DELETE(
         user_agent: auditLogger.constructor.getUserAgent(request),
       });
     } catch (auditError) {
-      console.warn('🔐 RBAC: Failed to audit role change:', auditError);
     }
 
     // Invalidate user's permission cache
     try {
       await permissionCache.invalidateUser(userId);
     } catch (cacheError) {
-      console.warn('🔐 RBAC: Failed to invalidate user cache:', cacheError);
     }
 
     // Refresh materialized view
     try {
       await (supabase as any).rpc('refresh_user_permissions');
     } catch (refreshError) {
-      console.warn(
-        '🔐 RBAC: Failed to refresh materialized view:',
-        refreshError
-      );
     }
 
     return NextResponse.json({
@@ -452,10 +421,6 @@ export async function DELETE(
       message: 'Role removed successfully',
     });
   } catch (error) {
-    console.error(
-      '🔐 RBAC: Error in DELETE /api/admin/users/[userId]/roles:',
-      error
-    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -44,7 +44,6 @@ export class AuthErrorHandler {
   }
 
   static handleGenericError(error: any): AuthErrorResponse {
-    console.error('Auth error:', error);
     return this.createError('Internal server error', 'INTERNAL_ERROR');
   }
 }

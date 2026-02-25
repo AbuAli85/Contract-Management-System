@@ -86,7 +86,7 @@ export default function ApprovedContractsPage() {
 
     let timeoutId: NodeJS.Timeout | null = null;
     timeoutId = setTimeout(() => {
-      console.warn('⏱️ Request timeout - aborting after 10 seconds');
+
       controller.abort();
     }, 10000); // 10 second timeout
 
@@ -128,14 +128,14 @@ export default function ApprovedContractsPage() {
 
         setPermissionError(true);
         setError('Insufficient permissions to view approved contracts');
-        console.error('❌ Permission denied for approved contracts:', data);
+
       } else if (response.status === 401) {
         // ✅ FIX: Clear timeouts on auth error
         if (timeoutId) clearTimeout(timeoutId);
         clearTimeout(slowLoadingTimeoutId);
 
         setError('Please log in to view approved contracts');
-        console.error('❌ Authentication required for approved contracts');
+
       } else if (response.status === 504) {
         // ✅ FIX: Clear timeouts on server timeout
         if (timeoutId) clearTimeout(timeoutId);
@@ -144,11 +144,7 @@ export default function ApprovedContractsPage() {
         setError(
           'Server timeout - the request took too long. Please try again.'
         );
-        console.error('❌ Server timeout for approved contracts:', {
-          status: response.status,
-          data,
-          queryTime: `${queryTime}ms`,
-        });
+
       } else if (response.ok && data.success !== false) {
         // ✅ FIX: Clear timeouts on success
         if (timeoutId) clearTimeout(timeoutId);
@@ -168,11 +164,7 @@ export default function ApprovedContractsPage() {
         setError(
           data.error || data.message || 'Failed to fetch approved contracts'
         );
-        console.error('❌ Error fetching approved contracts:', {
-          status: response.status,
-          data,
-          queryTime: `${queryTime}ms`,
-        });
+
       }
     } catch (err: any) {
       if (timeoutId) clearTimeout(timeoutId);
@@ -185,21 +177,12 @@ export default function ApprovedContractsPage() {
         setError(
           'Request timeout - the server took too long to respond. Please try again.'
         );
-        console.error('❌ Request timeout after 10 seconds:', {
-          queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString(),
-        });
+        
       } else {
         setError(
           `Network error: ${err.message || 'Please check your connection and try again.'}`
         );
-        console.error('❌ Exception fetching approved contracts:', {
-          error: err,
-          message: err.message,
-          name: err.name,
-          queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString(),
-        });
+        
       }
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
@@ -220,9 +203,7 @@ export default function ApprovedContractsPage() {
     // ✅ FIX: Force load after 4 seconds regardless of permissions (safety net)
     const forceLoadTimeout = setTimeout(() => {
       if (!fetchAttemptedRef.current) {
-        console.warn(
-          '⚠️ Force loading after 4 seconds - permissions check may be stuck'
-        );
+
         forceLoadRef.current = true;
         setForceLoad(true);
       }
@@ -231,9 +212,7 @@ export default function ApprovedContractsPage() {
     // ✅ FIX: Add timeout to prevent infinite loading if permissions never load
     const permissionTimeout = setTimeout(() => {
       if (permissions.isLoading && !fetchAttemptedRef.current) {
-        console.warn(
-          '⚠️ Permissions taking too long to load, proceeding with fetch anyway...'
-        );
+
         fetchApprovedContracts();
       }
     }, 2000); // Reduced to 2 seconds for faster response
@@ -246,12 +225,7 @@ export default function ApprovedContractsPage() {
         // Call fetchApprovedContracts directly to avoid dependency loop
         fetchApprovedContracts();
       } else {
-        console.warn('⚠️ Insufficient permissions for approved contracts:', {
-          required: 'contract:read:own or admin role',
-          hasPermission,
-          isAdmin: permissions.isAdmin,
-          canRead: permissions.can('contract:read:own'),
-        });
+        
         setLoading(false);
         setPermissionError(true);
       }
@@ -315,7 +289,7 @@ export default function ApprovedContractsPage() {
       const year = date.getFullYear();
       return `${day}/${month}/${year}`;
     } catch (error) {
-      console.warn('Error formatting date:', dateString, error);
+
       return 'Invalid Date';
     }
   };

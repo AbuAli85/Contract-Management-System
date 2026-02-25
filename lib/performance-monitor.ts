@@ -57,9 +57,6 @@ export class PerformanceMonitor {
       .find(m => m.operationName === operationName && !m.endTime);
 
     if (!metric) {
-      console.warn(
-        `⚠️ [Performance] No matching start found for: ${operationName}`
-      );
       return null;
     }
 
@@ -76,9 +73,6 @@ export class PerformanceMonitor {
 
     // Log warning if operation is slow
     if (metric.duration > 3000) {
-      console.warn(
-        `🐌 [Performance] Slow operation detected: ${operationName} took ${metric.duration}ms`
-      );
     }
 
     return metric.duration;

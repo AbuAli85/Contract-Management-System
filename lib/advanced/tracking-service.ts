@@ -87,7 +87,6 @@ export class TrackingService {
         .single();
 
       if (error) {
-        console.error('Error creating tracking event:', error);
         return { data: null, error: error.message };
       }
 
@@ -96,7 +95,6 @@ export class TrackingService {
 
       return { data, error: null };
     } catch (error) {
-      console.error('Error in createTrackingEvent:', error);
       return { data: null, error: 'Failed to create tracking event' };
     }
   }
@@ -142,13 +140,11 @@ export class TrackingService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching tracking events:', error);
         return { data: [], error: error.message };
       }
 
       return { data: data || [], error: null };
     } catch (error) {
-      console.error('Error in getTrackingEvents:', error);
       return { data: [], error: 'Failed to fetch tracking events' };
     }
   }
@@ -182,7 +178,6 @@ export class TrackingService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in trackContractStatus:', error);
       return { success: false, error: 'Failed to track contract status' };
     }
   }
@@ -223,7 +218,6 @@ export class TrackingService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in trackDocumentDelivery:', error);
       return { success: false, error: 'Failed to track document delivery' };
     }
   }
@@ -259,7 +253,6 @@ export class TrackingService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in trackProjectMilestone:', error);
       return { success: false, error: 'Failed to track project milestone' };
     }
   }
@@ -283,7 +276,6 @@ export class TrackingService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching entity tracking history:', error);
         return { data: [], error: error.message };
       }
 
@@ -324,7 +316,6 @@ export class TrackingService {
 
       return { data: timeline, error: null };
     } catch (error) {
-      console.error('Error in getEntityTrackingHistory:', error);
       return { data: [], error: 'Failed to get tracking history' };
     }
   }
@@ -351,7 +342,6 @@ export class TrackingService {
       const { data: events, error } = await query;
 
       if (error) {
-        console.error('Error fetching tracking statistics:', error);
         return { data: null, error: error.message };
       }
 
@@ -427,7 +417,6 @@ export class TrackingService {
         error: null,
       };
     } catch (error) {
-      console.error('Error in getTrackingStatistics:', error);
       return { data: null, error: 'Failed to get tracking statistics' };
     }
   }
@@ -451,13 +440,11 @@ export class TrackingService {
         .eq('id', eventId);
 
       if (error) {
-        console.error('Error updating tracking status:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in updateTrackingStatus:', error);
       return { success: false, error: 'Failed to update tracking status' };
     }
   }
@@ -474,7 +461,6 @@ export class TrackingService {
         .single();
 
       if (error) {
-        console.error('Error fetching delivery tracking:', error);
         return { data: null, error: error.message };
       }
 
@@ -486,7 +472,6 @@ export class TrackingService {
         .order('timestamp', { ascending: true });
 
       if (locError) {
-        console.error('Error fetching delivery locations:', locError);
       }
 
       const deliveryTracking: DeliveryTracking = {
@@ -501,7 +486,6 @@ export class TrackingService {
 
       return { data: deliveryTracking, error: null };
     } catch (error) {
-      console.error('Error in getDeliveryTracking:', error);
       return { data: null, error: 'Failed to get delivery tracking' };
     }
   }
@@ -533,7 +517,6 @@ export class TrackingService {
         subscription.unsubscribe();
       };
     } catch (error) {
-      console.error('Error setting up tracking subscription:', error);
       return () => {};
     }
   }
@@ -579,14 +562,21 @@ export class TrackingService {
   // Helper methods
   private async sendTrackingNotification(event: TrackingEvent): Promise<void> {
     try {
-      // Send real-time notification via WebSocket/SSE
-      // For now, we'll log the event
-      // TODO: Implement actual notification sending
-      // - Real-time notifications
-      // - Email notifications for important events
-      // - SMS notifications for critical events
-    } catch (error) {
-      console.error('Error sending tracking notification:', error);
+      // Only send notifications for significant events
+      const notifiableEvents = ['signed', 'approved', 'rejected', 'expired', 'milestone_reached'];
+      if (!notifiableEvents.includes(event.event_type)) return;
+      const notificationService = new (await import('@/lib/advanced/notification-service')).NotificationService();
+      await notificationService.createNotification({
+        user_id: event.performed_by,
+        type: 'contract_tracking',
+        title: `Contract Event: ${event.event_type.replace(/_/g, ' ')}`,
+        message: event.description || `A tracking event occurred on contract ${event.contract_id}.`,
+        priority: event.event_type === 'expired' ? 'urgent' : 'medium',
+        action_url: `/contracts/${event.contract_id}`,
+        send_email: event.event_type === 'expired' || event.event_type === 'signed',
+      });
+    } catch {
+      // Non-critical: notification failure should not block tracking
     }
   }
 
@@ -614,7 +604,6 @@ export class TrackingService {
           .eq('id', contractId);
       }
     } catch (error) {
-      console.error('Error updating contract tracking summary:', error);
     }
   }
 
@@ -634,7 +623,6 @@ export class TrackingService {
         },
       ]);
     } catch (error) {
-      console.error('Error creating delivery tracking:', error);
     }
   }
 }

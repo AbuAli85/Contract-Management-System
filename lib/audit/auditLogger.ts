@@ -76,13 +76,11 @@ export class AuditLogger {
       const { error } = await supabase.from('audit_logs').insert(entry);
 
       if (error) {
-        console.error('Failed to log audit event:', error);
         // Fallback to queue if database insert fails
         this.queue.push(entry);
         this.processQueue();
       }
     } catch (error) {
-      console.error('Error in audit logging:', error);
       // Fallback to queue
       this.queue.push(entry);
       this.processQueue();
@@ -238,7 +236,6 @@ export class AuditLogger {
         pages,
       };
     } catch (error) {
-      console.error('Error fetching audit logs:', error);
       throw error;
     }
   }
@@ -304,7 +301,6 @@ export class AuditLogger {
         top_users: topUsers,
       };
     } catch (error) {
-      console.error('Error getting audit summary:', error);
       throw error;
     }
   }
@@ -324,7 +320,6 @@ export class AuditLogger {
           try {
             await supabase.from('audit_logs').insert(entry);
           } catch (error) {
-            console.error('Failed to process queued audit event:', error);
             // Put it back in the queue for retry
             this.queue.unshift(entry);
             break;

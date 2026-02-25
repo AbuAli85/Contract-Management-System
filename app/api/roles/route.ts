@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
       .select('role');
 
     if (usersError) {
-      console.error('Error fetching users:', usersError);
       return NextResponse.json(
         {
           success: false,
@@ -49,7 +48,6 @@ export async function GET(request: NextRequest) {
       roles,
     });
   } catch (error) {
-    console.error('Roles API error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -84,7 +82,6 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (checkError) {
-      console.error('Error checking existing role:', checkError);
       return NextResponse.json(
         {
           success: false,
@@ -121,7 +118,6 @@ export async function POST(request: NextRequest) {
       role: newRole,
     });
   } catch (error) {
-    console.error('Create role error:', error);
     return NextResponse.json(
       {
         success: false,

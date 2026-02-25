@@ -46,19 +46,12 @@ export async function GET(request: NextRequest) {
     const report = await runFullDataIntegrityCheck();
 
     // Log results
-    console.log('📊 Data Integrity Check:', {
-      status: report.overallStatus,
-      errors: report.metricsValidation.errors.length,
-      warnings: report.metricsValidation.warnings.length,
-      checks: report.consistencyChecks.length,
-    });
 
     return NextResponse.json({
       success: true,
       report,
     });
   } catch (error) {
-    console.error('Error running data integrity check:', error);
     return NextResponse.json(
       {
         error: 'Failed to run data integrity check',
@@ -93,7 +86,6 @@ export async function POST(request: NextRequest) {
       validation,
     });
   } catch (error) {
-    console.error('Error validating metrics:', error);
     return NextResponse.json(
       {
         error: 'Failed to validate metrics',

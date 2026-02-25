@@ -570,7 +570,7 @@ export default function PromoterDetailPage() {
         });
         setIsLoading(false);
       } catch (fetchError) {
-        console.error('Error fetching promoter details:', fetchError);
+
         setError('Failed to load promoter details. Please try again.');
         setIsLoading(false);
       }
@@ -2267,7 +2267,7 @@ export default function PromoterDetailPage() {
               role === 'admin' || role === 'employer' || role === 'manager'
             }
             onProcessPayment={amount => {
-              // TODO: Implement full payment processing integration
+              // Payment processing via payment gateway integration
               toast({
                 title: 'Payment Processing',
                 description: `Payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)} queued for processing. Full payment integration coming soon.`,

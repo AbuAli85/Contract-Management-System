@@ -23,10 +23,6 @@ export async function ensureUserProfile(user: User) {
   if (fetchError && fetchError.code !== 'PGRST116') {
     // 'PGRST116' is the code for "exact one row not found", which is expected if the profile is new.
     // For any other error, we should throw.
-    console.error(
-      `[ensureUserProfile] Error fetching profile for user ${user.id}:`,
-      fetchError
-    );
     throw new Error(`Failed to fetch user profile: ${fetchError.message}`);
   }
 
@@ -56,10 +52,6 @@ export async function ensureUserProfile(user: User) {
     .single();
 
   if (createError) {
-    console.error(
-      `[ensureUserProfile] Error creating profile for user ${user.id}:`,
-      createError
-    );
     throw new Error(`Failed to create user profile: ${createError.message}`);
   }
 

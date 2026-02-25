@@ -187,7 +187,7 @@ export async function generateContractWithMakecom(contractData: {
       success: true,
     };
   } catch (error) {
-    console.error('[generateContractWithMakecom] Error:', error);
+
     // Re-throw a structured error to be caught by the client
     return {
       success: false,

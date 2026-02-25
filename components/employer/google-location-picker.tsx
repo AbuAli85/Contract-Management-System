@@ -147,7 +147,6 @@ export function GoogleLocationPicker({
         setRecentLocations(locations.slice(0, MAX_RECENT_LOCATIONS));
       }
     } catch (error) {
-      console.error('Error loading recent locations:', error);
     }
   }, []);
 
@@ -175,7 +174,6 @@ export function GoogleLocationPicker({
         }
       }
     } catch (error) {
-      console.error('Error fetching office locations:', error);
     }
   };
 
@@ -194,7 +192,6 @@ export function GoogleLocationPicker({
         setDetectingLocation(false);
       },
       error => {
-        console.error('Error getting current location:', error);
         setDetectingLocation(false);
         if (error.code === error.PERMISSION_DENIED) {
           toast({
@@ -230,7 +227,6 @@ export function GoogleLocationPicker({
         setRecentLocations(updated);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       } catch (error) {
-        console.error('Error saving recent location:', error);
       }
     },
     [recentLocations]
@@ -287,12 +283,10 @@ export function GoogleLocationPicker({
           }, 100);
         })
         .catch(error => {
-          console.error('Failed to define gmpx-place-picker:', error);
           setApiError('Failed to initialize Google Maps place picker.');
         });
     };
     script.onerror = () => {
-      console.error('Failed to load Google Maps Extended Component Library.');
       setMapsLoaded(false);
       setApiError(
         'Failed to load Google Maps. Please check your internet connection and try again.'
@@ -421,7 +415,6 @@ export function GoogleLocationPicker({
 
         onLocationSelect(location);
       } catch (error: any) {
-        console.error('Error processing place:', error);
         setApiError('Failed to process selected location. Please try again.');
         toast({
           title: 'Error',

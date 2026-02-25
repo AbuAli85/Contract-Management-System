@@ -81,7 +81,6 @@ export function useContractActivity(contractId: string) {
         const activityData = await response.json();
         setData(activityData);
       } catch (err) {
-        console.error('Error fetching contract activity:', err);
         setError(
           err instanceof Error ? err.message : 'Failed to fetch activity'
         );

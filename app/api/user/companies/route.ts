@@ -226,7 +226,6 @@ export async function GET(request: NextRequest) {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -264,14 +263,6 @@ export async function GET(request: NextRequest) {
       );
 
       if (orphanedMemberships.length > 0) {
-        console.warn(
-          '[Companies API] Found orphaned company_members records (missing company data):',
-          {
-            count: orphanedMemberships.length,
-            company_ids: orphanedMemberships.map((cm: any) => cm.company_id),
-            user_id: user.id,
-          }
-        );
 
         // Try to fetch company data directly for orphaned memberships
         const orphanedCompanyIds = orphanedMemberships
@@ -303,14 +294,6 @@ export async function GET(request: NextRequest) {
           // Include companies even if is_active is false (user might need to see them)
           // Only filter if company record doesn't exist at all (even after orphaned check)
           if (!cm.company?.id || !cm.company?.name) {
-            console.warn(
-              '[Companies API] Filtered out membership - missing company data (even after orphaned check):',
-              {
-                company_id: cm.company_id,
-                membership_status: cm.status,
-                membership_id: cm.id,
-              }
-            );
             return false;
           }
           // Don't filter by is_active - include all companies user is a member of
@@ -330,10 +313,6 @@ export async function GET(request: NextRequest) {
         .filter((c: any) => {
           const isValid = !isInvalidCompany(c.company_name || '');
           if (!isValid) {
-            console.warn(
-              '[Companies API] Filtered out invalid company:',
-              c.company_name
-            );
           }
           return isValid;
         });
@@ -354,10 +333,6 @@ export async function GET(request: NextRequest) {
         if (!existingIds.has(company.id) && company.id && company.name) {
           // Check if invalid before adding
           if (isInvalidCompany(company.name || '')) {
-            console.warn(
-              '[Companies API] Filtered out invalid owned company:',
-              company.name
-            );
             continue;
           }
           allCompanies.push({
@@ -442,7 +417,6 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (e) {
-        console.warn('Error fetching party-linked companies:', e);
       }
     }
 
@@ -500,7 +474,6 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (e) {
-      console.warn('Error fetching employer-linked companies:', e);
     }
 
     // Fifth try: Get companies from parties table where type = 'Employer'
@@ -579,7 +552,6 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (e) {
-        console.warn('Error fetching profile-party matched companies:', e);
       }
     }
 
@@ -714,7 +686,6 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (e) {
-        console.warn('Error fetching employer parties:', e);
       }
     }
 
@@ -922,7 +893,6 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (groupError) {
-      console.warn('Error fetching group names:', groupError);
       // Continue without group names if there's an error
     }
 
@@ -1149,7 +1119,6 @@ export async function POST(request: Request) {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -1187,7 +1156,6 @@ export async function POST(request: Request) {
       .single();
 
     if (createError) {
-      console.error('Error creating company:', createError);
       return NextResponse.json(
         { error: 'Failed to create company' },
         { status: 500 }
@@ -1220,7 +1188,6 @@ export async function POST(request: Request) {
       message: 'Company created successfully',
     });
   } catch (error: any) {
-    console.error('Error creating company:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -12,7 +12,6 @@ export const runtime = 'nodejs';
 // GET - Fetch all permissions
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Permissions API: Starting GET request');
 
     const serviceClient = getServiceRoleClient();
     const currentUser = await getAuthenticatedUser();
@@ -23,7 +22,6 @@ export async function GET(request: NextRequest) {
       .select('*');
 
     if (error) {
-      console.error('❌ Error fetching permissions:', error);
       return NextResponse.json(
         { error: 'Failed to fetch permissions', details: error.message },
         { status: 500 }
@@ -62,7 +60,6 @@ export async function GET(request: NextRequest) {
       permissions: transformedPermissions,
     });
   } catch (error) {
-    console.error('❌ Error in GET /api/users/permissions:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     const status =

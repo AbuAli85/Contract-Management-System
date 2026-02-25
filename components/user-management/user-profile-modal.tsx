@@ -154,7 +154,6 @@ export function UserProfileModal({
         setUserActivity(data);
       }
     } catch (error) {
-      console.error('Error fetching user activity:', error);
     }
   };
 
@@ -186,7 +185,6 @@ export function UserProfileModal({
         });
       }
     } catch (error) {
-      console.error('Error fetching user stats:', error);
     }
   };
 

@@ -140,7 +140,6 @@ export function RealTimeClientDashboard({
       setLoading(true);
       await Promise.all([loadClientStats(), loadClientProjects()]);
     } catch (error) {
-      console.error('Error loading client data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -157,7 +156,6 @@ export function RealTimeClientDashboard({
       const data = await response.json();
       setStats(data.stats);
     } catch (error) {
-      console.error('Error loading client stats:', error);
       toast.error('Failed to load client statistics');
     }
   };
@@ -172,7 +170,6 @@ export function RealTimeClientDashboard({
       const data = await response.json();
       setProjects(data.projects);
     } catch (error) {
-      console.error('Error loading client projects:', error);
       toast.error('Failed to load projects');
     }
   };
@@ -224,7 +221,6 @@ export function RealTimeClientDashboard({
       await loadClientStats();
       toast.success(`Project ${action} completed!`);
     } catch (error) {
-      console.error(`Error ${action} project:`, error);
       toast.error(`Failed to ${action} project`);
     }
   };

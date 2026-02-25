@@ -241,7 +241,6 @@ export function PerformanceReviewsManagement() {
         );
       }
     } catch (error) {
-      console.error('Error fetching reviews:', error);
     } finally {
       setLoading(false);
     }
@@ -258,7 +257,6 @@ export function PerformanceReviewsManagement() {
         );
       }
     } catch (error) {
-      console.error('Error fetching team members:', error);
     }
   };
 

@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
       });
 
     if (settingsError) {
-      console.error('Error fetching attendance settings:', settingsError);
       // Fallback to defaults if function fails
       const defaultSettings = {
         require_photo: true,
@@ -228,7 +227,6 @@ export async function GET(request: NextRequest) {
       settings: formattedSettings,
     });
   } catch (error) {
-    console.error('Error in GET /api/employer/attendance/settings:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -351,7 +349,6 @@ export async function PUT(request: NextRequest) {
         .single();
 
       if (updateError) {
-        console.error('Error updating attendance settings:', updateError);
         throw updateError;
       }
       result = updated;
@@ -365,7 +362,6 @@ export async function PUT(request: NextRequest) {
         .single();
 
       if (insertError) {
-        console.error('Error inserting attendance settings:', insertError);
         throw insertError;
       }
       result = inserted;
@@ -377,7 +373,6 @@ export async function PUT(request: NextRequest) {
       settings: result,
     });
   } catch (error) {
-    console.error('Error in PUT /api/employer/attendance/settings:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

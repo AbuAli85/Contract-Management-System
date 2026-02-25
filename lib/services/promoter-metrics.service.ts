@@ -190,9 +190,6 @@ export async function getEnhancedPromoterMetrics(
         default:
           // Any unknown status defaults to available
           statusCounts[PromoterStatus.AVAILABLE]++;
-          console.warn(
-            `Unknown promoter status: "${statusValue}", defaulting to AVAILABLE`
-          );
       }
     });
 
@@ -294,18 +291,6 @@ export async function getEnhancedPromoterMetrics(
       statusCounts[PromoterStatus.TERMINATED];
 
     if (totalCounted !== totalWorkforce) {
-      console.error('❌ Promoter count mismatch!', {
-        totalWorkforce,
-        totalCounted,
-        missing: totalWorkforce - totalCounted,
-        breakdown: {
-          activeOnContracts,
-          available: statusCounts[PromoterStatus.AVAILABLE],
-          onLeave: statusCounts[PromoterStatus.ON_LEAVE],
-          inactive: statusCounts[PromoterStatus.INACTIVE],
-          terminated: statusCounts[PromoterStatus.TERMINATED],
-        },
-      });
     }
 
     // Build metrics object
@@ -340,13 +325,6 @@ export async function getEnhancedPromoterMetrics(
       statusCounts[PromoterStatus.TERMINATED];
 
     if (statusSum !== totalWorkforce) {
-      console.warn('⚠️ Promoter Metrics: Status sum mismatch!', {
-        totalWorkforce,
-        statusSum,
-        difference: totalWorkforce - statusSum,
-        breakdown: statusCounts,
-        rawDataLength: statusCountsResult.data?.length,
-      });
     }
 
     // Cache the results
@@ -354,7 +332,6 @@ export async function getEnhancedPromoterMetrics(
 
     return metrics;
   } catch (error) {
-    console.error('❌ Error calculating promoter metrics:', error);
     throw new Error(
       `Failed to calculate promoter metrics: ${
         error instanceof Error ? error.message : 'Unknown error'

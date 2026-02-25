@@ -384,7 +384,6 @@ export function ProviderProfile({ providerId }: ProviderProfileProps) {
       setProvider(mockProvider);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading provider profile:', error);
       toast.error('Failed to load provider profile');
       setLoading(false);
     }

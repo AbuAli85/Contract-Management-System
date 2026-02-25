@@ -156,10 +156,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
         if (newPerm?.id && !createError) {
           permissionIds.push(newPerm.id);
         } else {
-          console.warn(
-            `⚠️ Could not create permission ${perm.name}:`,
-            createError
-          );
         }
       }
     }
@@ -201,7 +197,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
       if (newRole?.id && !createRoleError) {
         promoterRoleId = newRole.id;
       } else {
-        console.warn(`⚠️ Could not create 'promoter' role:`, createRoleError);
         return; // Can't proceed without role
       }
     }
@@ -221,17 +216,10 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
           );
 
         if (linkError) {
-          console.error(
-            `❌ Error linking permission ${permId} to role ${promoterRoleId}:`,
-            linkError
-          );
         } else {
         }
       }
     } else {
-      console.warn(
-        `⚠️ Cannot link permissions: roleId=${promoterRoleId}, permissionIds.length=${permissionIds.length}`
-      );
     }
 
     // Step 4: Assign role to user
@@ -265,10 +253,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
           .upsert(assignmentData, { onConflict: 'user_id,role_id' });
 
         if (assignError) {
-          console.error(
-            `❌ Error assigning role to user ${userId}:`,
-            assignError
-          );
         } else {
         }
       } else {
@@ -308,7 +292,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
     }
   } catch (roleError) {
     // Non-critical: log but don't fail
-    console.error('Error ensuring promoter role (non-critical):', roleError);
     throw roleError; // Re-throw so caller knows it failed
   }
 }
@@ -544,7 +527,6 @@ export async function findOrCreateEmployeeAccount(
       temporaryPassword,
     };
   } catch (error: any) {
-    console.error('Error in findOrCreateEmployeeAccount:', error);
     return {
       success: false,
       authUserId: null,
@@ -603,7 +585,6 @@ export async function resetEmployeePassword(
       password,
     };
   } catch (error: any) {
-    console.error('Error in resetEmployeePassword:', error);
     return {
       success: false,
       password: null,

@@ -135,7 +135,6 @@ export function ForcePasswordChange({
       // Redirect to dashboard
       router.push(`/${locale}/dashboard`);
     } catch (err: any) {
-      console.error('Password change error:', err);
       setError(err.message || 'Failed to change password');
     } finally {
       setLoading(false);

@@ -45,7 +45,6 @@ export async function GET(
 
     return NextResponse.json({ success: true, employee: employeeRecord });
   } catch (error) {
-    console.error('Error in GET /api/employer/team/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -121,7 +120,6 @@ export async function PATCH(
         .eq('id', employeeRecord.employee_id);
 
       if (profileError) {
-        console.error('Error updating profile:', profileError);
         return NextResponse.json(
           { error: 'Failed to update profile', details: profileError.message },
           { status: 500 }
@@ -137,7 +135,6 @@ export async function PATCH(
           );
 
         if (authUpdateError) {
-          console.error('Error updating auth email:', authUpdateError);
           // Don't fail the request, just log it
         }
       }
@@ -185,7 +182,6 @@ export async function PATCH(
         .eq('id', employerEmployeeId);
 
       if (employmentError) {
-        console.error('Error updating employment:', employmentError);
         return NextResponse.json(
           {
             error: 'Failed to update employment details',
@@ -201,7 +197,6 @@ export async function PATCH(
       message: 'Employee updated successfully',
     });
   } catch (error) {
-    console.error('Error in PATCH /api/employer/team/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

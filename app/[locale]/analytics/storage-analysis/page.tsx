@@ -75,7 +75,7 @@ export default function StorageAnalysisPage() {
         .select('id, name_en, id_card_url, passport_url');
 
       if (promotersError) {
-        console.error('Error fetching promoters:', promotersError);
+
         setError(`Failed to fetch promoter data: ${promotersError.message}`);
         return;
       }
@@ -110,7 +110,7 @@ export default function StorageAnalysisPage() {
           });
 
         if (storageError) {
-          console.error('Storage list error:', storageError);
+
           // This is expected if we don't have direct storage access
           setError(
             'Note: Direct storage listing requires elevated permissions. Showing database URL statistics instead.'
@@ -166,7 +166,7 @@ export default function StorageAnalysisPage() {
           });
         }
       } catch (storageErr) {
-        console.error('Storage access error:', storageErr);
+
         // Use database statistics as fallback
         setStats({
           totalFiles:
@@ -184,7 +184,7 @@ export default function StorageAnalysisPage() {
         });
       }
     } catch (error) {
-      console.error('Error in fetchStorageStats:', error);
+
       setError(
         `Failed to load statistics: ${
           error instanceof Error ? error.message : 'Unknown error'

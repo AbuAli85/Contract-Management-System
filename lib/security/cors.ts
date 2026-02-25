@@ -70,9 +70,6 @@ export function handleCorsPreflightRequest(request: NextRequest): NextResponse {
   const origin = request.headers.get('origin');
 
   if (origin && !isOriginAllowed(origin)) {
-    console.warn(
-      `🚫 CORS: Blocked preflight from unauthorized origin: ${origin}`
-    );
     return new NextResponse('Forbidden: Origin not allowed', { status: 403 });
   }
 
@@ -93,9 +90,6 @@ export function validateCorsRequest(request: NextRequest): NextResponse | null {
   if (!origin) return null;
 
   if (!isOriginAllowed(origin)) {
-    console.warn(
-      `🚫 CORS: Blocked request from unauthorized origin: ${origin}`
-    );
     return new NextResponse('Forbidden: Origin not allowed', {
       status: 403,
       headers: {

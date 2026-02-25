@@ -28,7 +28,6 @@ const importRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    console.log('🔍 API /api/promoters/import POST called');
 
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,7 +36,6 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-      console.error('❌ Missing Supabase credentials');
       return NextResponse.json(
         { success: false, error: 'Server configuration error' },
         { status: 500 }
@@ -64,7 +62,6 @@ export async function POST(request: Request) {
     const validation = importRequestSchema.safeParse(body);
 
     if (!validation.success) {
-      console.error('❌ Validation error:', validation.error);
       return NextResponse.json(
         {
           success: false,
@@ -76,7 +73,6 @@ export async function POST(request: Request) {
     }
 
     const { promoters } = validation.data;
-    console.log(`📊 Importing ${promoters.length} promoters...`);
 
     let imported = 0;
     let duplicates = 0;
@@ -95,10 +91,6 @@ export async function POST(request: Request) {
 
         if (checkError && checkError.code !== 'PGRST116') {
           // PGRST116 = no rows
-          console.error(
-            `❌ Error checking duplicate for ${promoter.id_card_number}:`,
-            checkError
-          );
           errors.push(
             `Error checking ${promoter.name_en}: ${checkError.message}`
           );
@@ -106,9 +98,6 @@ export async function POST(request: Request) {
         }
 
         if (existing) {
-          console.log(
-            `⚠️  Duplicate: ${promoter.name_en} (${promoter.id_card_number})`
-          );
           duplicates++;
           continue;
         }
@@ -133,7 +122,6 @@ export async function POST(request: Request) {
         });
 
         if (insertError) {
-          console.error(`❌ Error inserting ${promoter.name_en}:`, insertError);
           errors.push(
             `Error inserting ${promoter.name_en}: ${insertError.message}`
           );
@@ -144,18 +132,13 @@ export async function POST(request: Request) {
         if (promoter.employer_id) {
           importedWithCompany++;
         }
-        console.log(`✅ Imported: ${promoter.name_en}`);
       } catch (error: any) {
-        console.error(`❌ Unexpected error for ${promoter.name_en}:`, error);
         errors.push(
           `Unexpected error for ${promoter.name_en}: ${error.message}`
         );
       }
     }
 
-    console.log(
-      `✅ Import complete: ${imported} imported, ${duplicates} duplicates, ${errors.length} errors`
-    );
 
     return NextResponse.json({
       success: true,
@@ -167,7 +150,6 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('❌ API error:', error);
     return NextResponse.json(
       {
         success: false,

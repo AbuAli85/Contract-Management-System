@@ -64,12 +64,6 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
 
       if (!response.ok) {
         // Log full error details for debugging
-        console.error('[Invite Admin Dialog] API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          data,
-          url: response.url,
-        });
 
         // Build a comprehensive error message
         let errorMessage =
@@ -84,10 +78,6 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
 
         // Include technical details in development
         if (process.env.NODE_ENV === 'development' && data.technicalDetails) {
-          console.error(
-            '[Invite Admin Dialog] Technical Details:',
-            data.technicalDetails
-          );
         }
 
         throw new Error(errorMessage);
@@ -112,11 +102,6 @@ export function InviteAdminDialog({ onSuccess }: InviteAdminDialogProps) {
       });
       onSuccess?.();
     } catch (error: any) {
-      console.error('[Invite Admin Dialog] Error:', {
-        message: error.message,
-        error,
-        stack: error.stack,
-      });
 
       toast({
         title: 'Error',

@@ -91,7 +91,7 @@ export default function HRDashboard() {
         });
       }
     } catch (error) {
-      console.error('Error fetching HR stats:', error);
+
     } finally {
       setLoading(false);
       setRefreshing(false);

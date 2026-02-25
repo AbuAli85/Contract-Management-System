@@ -241,7 +241,7 @@ export function ClientDashboard() {
               fav.provider_services?.provider?.full_name || 'Unknown Provider',
             category: fav.provider_services?.category || 'General',
             price_base: fav.provider_services?.price_base || 0,
-            rating: 4.5, // TODO: Calculate from reviews
+            rating: fav.provider_services?.average_rating || fav.provider_services?.rating || 0,
             image_url: fav.provider_services?.images?.[0],
           }))
         );
@@ -277,7 +277,6 @@ export function ClientDashboard() {
         );
       }
     } catch (error) {
-      console.error('Error loading client data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setIsLoading(false);

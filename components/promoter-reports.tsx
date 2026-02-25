@@ -97,7 +97,6 @@ export function PromoterReports({ promoterId, isAdmin }: PromoterReportsProps) {
         setReports(data.reports || []);
       }
     } catch (error) {
-      console.error('Error fetching reports:', error);
     }
   };
 
@@ -111,7 +110,6 @@ export function PromoterReports({ promoterId, isAdmin }: PromoterReportsProps) {
         setPerformanceMetrics(data);
       }
     } catch (error) {
-      console.error('Error fetching performance metrics:', error);
     }
   };
 

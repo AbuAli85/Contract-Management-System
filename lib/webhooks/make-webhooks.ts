@@ -92,10 +92,6 @@ export class MakeWebhookManager {
           clearTimeout(timeoutId);
         }
 
-        console.error(
-          `❌ ${webhookType} webhook failed (attempt ${attempt + 1}):`,
-          error
-        );
 
         if (attempt === retries) {
           return {

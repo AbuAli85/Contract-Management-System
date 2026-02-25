@@ -15,7 +15,7 @@ export default function LoginPage() {
   // Determine the current locale from the URL
   const pathname =
     typeof window !== 'undefined' ? window.location.pathname : '';
-  const locale = pathname.split('/')[1] || 'en';
+  const locale = pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
 
   return (
     <div className='flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8'>

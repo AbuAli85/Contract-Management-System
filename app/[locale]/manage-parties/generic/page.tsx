@@ -97,7 +97,7 @@ export default function GenericPartiesPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching generic parties:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to fetch generic parties',
@@ -155,7 +155,7 @@ export default function GenericPartiesPage() {
       }
       return format(parsedDate, 'MMM dd, yyyy');
     } catch (error) {
-      console.error('Error formatting date:', dateString, error);
+
       return 'Invalid date';
     }
   };

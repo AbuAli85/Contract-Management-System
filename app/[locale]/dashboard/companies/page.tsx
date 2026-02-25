@@ -209,7 +209,7 @@ export default function CrossCompanyDashboard() {
         throw new Error(data.error || 'Failed to load companies');
       }
     } catch (error: any) {
-      console.error('Error fetching data:', error);
+
       toast({
         title: 'Error',
         description:
@@ -246,7 +246,7 @@ export default function CrossCompanyDashboard() {
         router.refresh();
       }
     } catch (error) {
-      console.error('Error switching company:', error);
+
     }
   };
 

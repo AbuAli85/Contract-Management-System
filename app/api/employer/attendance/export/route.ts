@@ -71,7 +71,6 @@ export async function GET(request: NextRequest) {
     const { data: attendance, error } = await query;
 
     if (error) {
-      console.error('Error fetching attendance for export:', error);
       return NextResponse.json(
         { error: 'Failed to fetch attendance data' },
         { status: 500 }
@@ -124,7 +123,6 @@ export async function GET(request: NextRequest) {
       count: attendance?.length || 0,
     });
   } catch (error: any) {
-    console.error('Error exporting attendance:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

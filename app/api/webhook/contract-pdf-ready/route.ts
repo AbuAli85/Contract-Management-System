@@ -43,7 +43,6 @@ export async function PATCH(request: Request) {
     const requestId = request.headers.get('X-Make-Request-ID');
 
     if (!PDF_WEBHOOK_SECRET) {
-      console.error('PDF_WEBHOOK_SECRET not configured');
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
@@ -51,7 +50,6 @@ export async function PATCH(request: Request) {
     }
 
     if (webhookSecret !== PDF_WEBHOOK_SECRET) {
-      console.warn('Invalid webhook secret received');
       return NextResponse.json(
         { error: 'Unauthorized - Invalid webhook secret' },
         { status: 401 }
@@ -63,9 +61,7 @@ export async function PATCH(request: Request) {
     try {
       payload = await request.json();
     } catch (parseError) {
-      console.error('Failed to parse webhook JSON:', parseError);
       const rawBody = await request.text().catch(() => 'Unable to read body');
-      console.error('Raw body received:', rawBody);
       return NextResponse.json(
         {
           error: 'Invalid JSON payload',
@@ -79,12 +75,6 @@ export async function PATCH(request: Request) {
       );
     }
 
-    console.log('PDF Ready webhook received:', {
-      contractId: payload.contract_id,
-      contractNumber: payload.contract_number,
-      status: payload.status,
-      requestId,
-    });
 
     // 3. Validate payload
     if (!payload.contract_id) {
@@ -112,7 +102,6 @@ export async function PATCH(request: Request) {
       .single();
 
     if (fetchError || !contract) {
-      console.error('Contract not found:', payload.contract_id);
       return NextResponse.json(
         { error: 'Contract not found' },
         { status: 404 }
@@ -139,10 +128,6 @@ export async function PATCH(request: Request) {
             data: { publicUrl },
           } = supabase.storage.from(bucketName).getPublicUrl(fileName);
           pdfUrl = publicUrl;
-          console.log(
-            '✅ Using file_name from Make.com upload response:',
-            fileName
-          );
         }
       } else if (pdfUrl && pdfUrl.includes('/contracts/')) {
         // Extract filename from URL and verify it exists
@@ -185,19 +170,9 @@ export async function PATCH(request: Request) {
                   .from('contracts')
                   .getPublicUrl(matchingFile.name);
                 pdfUrl = publicUrl;
-                console.log(
-                  '✅ Found PDF with correct filename:',
-                  matchingFile.name
-                );
-                console.log('📝 Original URL:', payload.pdf_url);
-                console.log('📝 Corrected URL:', pdfUrl);
               }
             }
           } catch (storageError) {
-            console.warn(
-              '⚠️ Could not verify PDF file in storage:',
-              storageError
-            );
             // Continue with original URL if verification fails
           }
         }
@@ -215,7 +190,6 @@ export async function PATCH(request: Request) {
       updateData.notes = errorNote;
     }
 
-    console.log('Updating contract with data:', updateData);
 
     const { error: updateError } = await supabase
       .from('contracts')
@@ -223,7 +197,6 @@ export async function PATCH(request: Request) {
       .eq('id', payload.contract_id);
 
     if (updateError) {
-      console.error('Failed to update contract:', updateError);
       return NextResponse.json(
         {
           error: 'Failed to update contract',
@@ -234,7 +207,6 @@ export async function PATCH(request: Request) {
       );
     }
 
-    console.log('✅ Contract updated successfully:', payload.contract_id);
 
     // 7. Log the webhook event for audit trail
     try {
@@ -248,7 +220,6 @@ export async function PATCH(request: Request) {
       });
     } catch (logError) {
       // Non-critical - just log
-      console.warn('Failed to log webhook event:', logError);
     }
 
     // 8. Send notification to user (optional - if you have notification system)
@@ -267,7 +238,6 @@ export async function PATCH(request: Request) {
         });
       } catch (notificationError) {
         // Non-critical error - just log
-        console.warn('Failed to send notification:', notificationError);
       }
     }
 
@@ -280,7 +250,6 @@ export async function PATCH(request: Request) {
       updated_at: updateData.updated_at,
     });
   } catch (error) {
-    console.error('Webhook processing error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -306,7 +275,6 @@ async function sendNotification(params: {
   // - Email notification
   // - WebSocket real-time notification
 
-  console.log('Notification:', params);
 
   // Example: Store in database
   try {
@@ -321,7 +289,6 @@ async function sendNotification(params: {
       created_at: new Date().toISOString(),
     });
   } catch (error) {
-    console.warn('Failed to create notification:', error);
   }
 }
 

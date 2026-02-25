@@ -110,11 +110,9 @@ class OptimizedAuthManager {
             })
           );
         } catch (e) {
-          console.warn('Failed to cache session in sessionStorage:', e);
         }
       }
     } catch (error) {
-      console.error('❌ Failed to cache session:', error);
     }
   }
 
@@ -150,7 +148,6 @@ class OptimizedAuthManager {
 
       return [...new Set(permissions)]; // Remove duplicates
     } catch (error) {
-      console.error('Failed to fetch user permissions:', error);
       return [];
     }
   }
@@ -185,7 +182,6 @@ class OptimizedAuthManager {
       try {
         sessionStorage.removeItem('auth_cache');
       } catch (e) {
-        console.warn('Failed to clear session cache:', e);
       }
     }
   }
@@ -207,7 +203,6 @@ class OptimizedAuthManager {
         }
       }
     } catch (e) {
-      console.warn('Failed to load cached session:', e);
     }
   }
 
@@ -228,7 +223,6 @@ class OptimizedAuthManager {
         throw new Error('No session returned from refresh');
       } catch (error) {
         retries++;
-        console.error(`❌ Session refresh attempt ${retries} failed:`, error);
 
         if (retries < maxRetries) {
           const delay = Math.min(
@@ -240,7 +234,6 @@ class OptimizedAuthManager {
       }
     }
 
-    console.error('❌ Session refresh failed after all retries');
     return false;
   }
 
@@ -279,7 +272,6 @@ class OptimizedAuthManager {
         }
       });
     } catch (error) {
-      console.warn('Failed to initialize background worker:', error);
     }
   }
 
@@ -303,14 +295,12 @@ class OptimizedAuthManager {
 
     try {
       if (!this.supabase?.auth) {
-        console.error('Supabase auth not available');
         return null;
       }
 
       const authResponse = await this.supabase.auth.getUser();
       return authResponse?.data?.user || null;
     } catch (error) {
-      console.error('Failed to get current user:', error);
       return null;
     }
   }

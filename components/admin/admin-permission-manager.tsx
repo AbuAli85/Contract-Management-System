@@ -261,7 +261,6 @@ export function AdminPermissionManager({
       if (error) throw error;
       setUsers(data || []);
     } catch (error: any) {
-      console.error('Error fetching users:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch users',
@@ -294,7 +293,6 @@ export function AdminPermissionManager({
         setSelectedPermissions(new Set());
       }
     } catch (error) {
-      console.error('Error fetching permissions:', error);
       setUserPermissions([]);
       setSelectedPermissions(new Set());
     } finally {
@@ -379,7 +377,6 @@ export function AdminPermissionManager({
       setSelectedUser(null);
       fetchUsers();
     } catch (error: any) {
-      console.error('Error saving permissions:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to save permissions',
@@ -451,7 +448,6 @@ export function AdminPermissionManager({
       setCompanyId('');
       fetchUsers();
     } catch (error: any) {
-      console.error('Error assigning role:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to assign role',

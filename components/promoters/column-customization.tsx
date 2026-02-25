@@ -287,7 +287,6 @@ export function useColumnCustomization(defaultColumns: ColumnConfig[]) {
           });
         }
       } catch (error) {
-        console.warn('Failed to load column preferences:', error);
       }
     }
     return defaultColumns;
@@ -300,7 +299,6 @@ export function useColumnCustomization(defaultColumns: ColumnConfig[]) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newColumns));
       } catch (error) {
-        console.warn('Failed to save column preferences:', error);
       }
     }
   };

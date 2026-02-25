@@ -50,7 +50,6 @@ async function getUserPermissionsHandler(
       userRole,
     });
   } catch (error) {
-    console.error('Error in GET /api/users/[id]/permissions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -118,7 +117,6 @@ async function updateUserPermissionsHandler(
       permissions: data.permissions || permissions,
     });
   } catch (error) {
-    console.error('Error in POST /api/users/[id]/permissions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

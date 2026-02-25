@@ -69,7 +69,6 @@ export async function GET(request: NextRequest) {
       .order('attendance_date', { ascending: false });
 
     if (attendanceError) {
-      console.error('Error fetching attendance:', attendanceError);
       return NextResponse.json(
         { error: 'Failed to fetch attendance records' },
         { status: 500 }
@@ -276,7 +275,6 @@ export async function GET(request: NextRequest) {
       data: reportData,
     });
   } catch (error) {
-    console.error('Error in GET /api/employer/team/attendance/report:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

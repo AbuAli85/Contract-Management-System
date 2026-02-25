@@ -122,7 +122,6 @@ export function EmployeeGroupManager() {
         setOfficeLocations(data.locations);
       }
     } catch (error) {
-      console.error('Error fetching office locations:', error);
     }
   };
 
@@ -231,7 +230,6 @@ export function EmployeeGroupManager() {
           .filter(Boolean);
       }
     } catch (error) {
-      console.error('Error fetching group employees:', error);
     }
 
     setFormData({

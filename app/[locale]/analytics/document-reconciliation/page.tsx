@@ -89,7 +89,7 @@ export default function DocumentReconciliationPage() {
         );
 
       if (promotersError) {
-        console.error('Error fetching promoters:', promotersError);
+
         toast({
           title: 'Error',
           description: `Failed to fetch promoters: ${promotersError.message}`,
@@ -268,7 +268,7 @@ export default function DocumentReconciliationPage() {
         description: `Found ${foundIssues.length} issues`,
       });
     } catch (error) {
-      console.error('Error scanning for issues:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to scan for issues',
@@ -340,7 +340,7 @@ export default function DocumentReconciliationPage() {
       // Rescan after fixing
       await scanForIssues();
     } catch (error) {
-      console.error('Error fixing issues:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to fix some issues',

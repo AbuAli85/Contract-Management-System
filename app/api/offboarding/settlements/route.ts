@@ -163,7 +163,6 @@ export const POST = withAnyRBAC(
         { status: 201 }
       );
     } catch (error: any) {
-      console.error('Error creating settlement:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

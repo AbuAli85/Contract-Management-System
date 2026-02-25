@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Sending approval reminders...', new Date().toISOString());
 
     await ApprovalWorkflowService.sendOverdueReminders();
 
@@ -36,7 +35,6 @@ export async function GET(request: NextRequest) {
       message: 'Approval reminders sent successfully',
     });
   } catch (error) {
-    console.error('Error sending approval reminders:', error);
     return NextResponse.json(
       {
         error: 'Failed to send reminders',

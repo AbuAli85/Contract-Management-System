@@ -44,24 +44,12 @@ export const POST = withAnyRBAC(
       // Use provided companyId or user's active company
       const targetCompanyId = companyId || profile?.active_company_id;
 
-      console.log('🔍 Starting document expiry check...', {
-        companyId: targetCompanyId,
-        userId: user.id,
-      });
 
       // Check all documents
       const report = await documentExpiryAutomation.checkAllDocuments(
         targetCompanyId || undefined
       );
 
-      console.log('📊 Compliance Report:', {
-        total: report.totalDocuments,
-        expired: report.expired,
-        expiringSoon: report.expiringSoon,
-        missing: report.missing,
-        compliant: report.compliant,
-        complianceRate: report.complianceRate,
-      });
 
       // Send expiry alerts
       const expiryAlertsResult =
@@ -71,10 +59,6 @@ export const POST = withAnyRBAC(
           channels: channels as any,
         });
 
-      console.log('📧 Expiry Alerts Sent:', {
-        sent: expiryAlertsResult.sent,
-        failed: expiryAlertsResult.failed,
-      });
 
       // Send missing document alerts
       let missingAlertsResult = { sent: 0, failed: 0, errors: [] as string[] };
@@ -88,10 +72,6 @@ export const POST = withAnyRBAC(
             }
           );
 
-        console.log('📋 Missing Document Alerts Sent:', {
-          sent: missingAlertsResult.sent,
-          failed: missingAlertsResult.failed,
-        });
       }
 
       return NextResponse.json({
@@ -121,7 +101,6 @@ export const POST = withAnyRBAC(
         message: 'Document expiry check completed successfully',
       });
     } catch (error: any) {
-      console.error('❌ Error in document expiry check:', error);
       return NextResponse.json(
         {
           success: false,
@@ -173,7 +152,6 @@ export const GET = withAnyRBAC(
         report,
       });
     } catch (error: any) {
-      console.error('❌ Error getting compliance report:', error);
       return NextResponse.json(
         {
           success: false,

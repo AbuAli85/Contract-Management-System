@@ -104,7 +104,6 @@ export function getRoleDisplay(userRole: string) {
 export async function updateUserRole(userId: string, newRole: UserRole) {
   const supabase = createClient();
   if (!supabase) {
-    console.error('Supabase client is not available.');
     return { success: false, error: 'Supabase client is not available.' };
   }
 
@@ -119,7 +118,6 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
 
     return { success: true, data };
   } catch (error) {
-    console.error('Error updating user role:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -134,7 +132,6 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
 export async function getUsersWithRoleInfo() {
   const supabase = createClient();
   if (!supabase) {
-    console.error('Supabase client is not available.');
     return { success: false, error: 'Supabase client is not available.' };
   }
 
@@ -153,7 +150,6 @@ export async function getUsersWithRoleInfo() {
 
     return { success: true, data: usersWithRoleInfo };
   } catch (error) {
-    console.error('Error fetching users with role info:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

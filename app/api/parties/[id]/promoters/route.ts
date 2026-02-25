@@ -14,9 +14,6 @@ export const GET = withRBAC(
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      console.log(
-        `[${requestId}] 🚀 Promoters by Employer API Request started`
-      );
 
       const { id: employerId } = await params;
 
@@ -55,9 +52,6 @@ export const GET = withRBAC(
         }
       );
 
-      console.log(
-        `[${requestId}] 📊 Fetching promoters for employer: ${employerId}`
-      );
 
       // First, verify the employer exists
       const { data: employer, error: employerError } = await supabase
@@ -68,10 +62,6 @@ export const GET = withRBAC(
         .single();
 
       if (employerError || !employer) {
-        console.warn(
-          `[${requestId}] ⚠️ Employer not found:`,
-          employerError?.message
-        );
         return NextResponse.json(
           {
             success: false,
@@ -105,10 +95,6 @@ export const GET = withRBAC(
         .order('created_at', { ascending: false });
 
       if (promotersError) {
-        console.error(
-          `[${requestId}] ❌ Error fetching promoters:`,
-          promotersError
-        );
         return NextResponse.json(
           {
             success: false,
@@ -120,9 +106,6 @@ export const GET = withRBAC(
       }
 
       const duration = Date.now() - startTime;
-      console.log(
-        `[${requestId}] ✅ Successfully fetched ${promoters?.length || 0} promoters for employer ${employer.name_en} in ${duration}ms`
-      );
 
       return NextResponse.json({
         success: true,
@@ -142,12 +125,6 @@ export const GET = withRBAC(
       });
     } catch (error) {
       const duration = Date.now() - startTime;
-      console.error(`[${requestId}] ❌ Promoters by Employer API Error:`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        duration,
-        timestamp: new Date().toISOString(),
-      });
 
       return NextResponse.json(
         {

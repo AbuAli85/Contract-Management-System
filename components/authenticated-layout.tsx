@@ -111,7 +111,6 @@ export function AuthenticatedLayout({
     try {
       await signOut();
     } catch (error) {
-      console.error('Sign out error:', error);
     }
   };
 

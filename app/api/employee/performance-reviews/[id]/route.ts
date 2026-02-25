@@ -68,7 +68,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Error updating review:', updateError);
       return NextResponse.json(
         { error: 'Failed to update review' },
         { status: 500 }
@@ -80,7 +79,6 @@ export async function PATCH(
       review: updatedReview,
     });
   } catch (error: any) {
-    console.error('Review update error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

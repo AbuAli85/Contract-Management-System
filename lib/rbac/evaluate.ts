@@ -114,7 +114,6 @@ export class PermissionEvaluator {
         user_permissions: structuredPermissions,
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error evaluating permission:', error);
 
       const result: PermissionDecision = {
         allowed: false,
@@ -517,7 +516,6 @@ export class PermissionEvaluator {
       }
 
       if (rolesFetchError) {
-        console.error('🔐 RBAC: Failed to fetch user roles:', rolesFetchError);
         return { permissions: [], roles: [] };
       }
 
@@ -570,7 +568,6 @@ export class PermissionEvaluator {
       }
 
       if (permError) {
-        console.error('🔐 RBAC: Failed to fetch permissions:', permError);
         return { permissions: [], roles: [] };
       }
 
@@ -583,10 +580,6 @@ export class PermissionEvaluator {
         roles,
       };
     } catch (error) {
-      console.error(
-        '🔐 RBAC: Error fetching user permissions directly:',
-        error
-      );
       return { permissions: [], roles: [] };
     }
   }
@@ -614,7 +607,6 @@ export class PermissionEvaluator {
           : undefined,
       });
     } catch (error) {
-      console.warn('🔐 RBAC: Failed to audit permission check:', error);
     }
   }
 

@@ -243,7 +243,6 @@ export function PromoterDocumentUploadDialog({
         resetForm();
       }, 500);
     } catch (error) {
-      console.error('Upload error:', error);
       setError(
         error instanceof Error
           ? error.message

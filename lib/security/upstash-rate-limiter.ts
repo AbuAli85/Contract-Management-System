@@ -158,7 +158,6 @@ export async function applyRateLimit(
         : Math.ceil((result.reset - Date.now()) / 1000),
     };
   } catch (error) {
-    console.error('Rate limiting error:', error);
 
     // In case of Redis failure, allow the request but log the error
     // This prevents the entire system from failing due to rate limiting issues
@@ -240,7 +239,6 @@ export function withRateLimit(
         userAgent: request.headers.get('user-agent')?.substring(0, 100),
       };
 
-      console.warn('⚠️ Rate limit violation:', JSON.stringify(violation));
 
       // Create user-friendly error message based on limit type
       let userMessage = 'Too many requests. Please try again later.';
@@ -301,7 +299,6 @@ export function withRateLimit(
         headers,
       });
     } catch (error) {
-      console.error('API handler error:', error);
 
       // Return error response with rate limit headers
       return new Response(

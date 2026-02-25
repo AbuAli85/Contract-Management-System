@@ -138,7 +138,6 @@ export function ExpensesCard() {
         setStats(data.stats || null);
       }
     } catch (error) {
-      console.error('Error fetching expenses:', error);
     } finally {
       setLoading(false);
     }

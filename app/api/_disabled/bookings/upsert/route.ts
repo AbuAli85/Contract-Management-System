@@ -8,7 +8,6 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('📨 Booking upsert request:', body);
 
     // Validate required fields
     const requiredFields = ['service_id', 'provider_company_id', 'client_id'];
@@ -56,7 +55,6 @@ export async function POST(request: NextRequest) {
       message: `Booking ${bookingNumber} ${body.booking_number ? 'updated' : 'created'} successfully`,
     });
   } catch (error) {
-    console.error('❌ API Booking upsert error:', error);
 
     return NextResponse.json(
       {
@@ -147,7 +145,6 @@ export async function GET(request: NextRequest) {
       message: `Booking ${bookingNumber} retrieved successfully`,
     });
   } catch (error) {
-    console.error('❌ API Get booking error:', error);
 
     return NextResponse.json(
       {

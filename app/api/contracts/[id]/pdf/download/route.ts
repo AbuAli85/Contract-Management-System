@@ -17,7 +17,6 @@ export const GET = withRBAC(
       const supabase = await createClient();
       const { id: contractId } = await params;
 
-      console.log('🔍 PDF download API called for contract:', contractId);
 
       // Get current user to check permissions
       const {
@@ -26,7 +25,6 @@ export const GET = withRBAC(
       } = await supabase.auth.getUser();
 
       if (authError || !user) {
-        console.log('❌ Authentication failed:', authError);
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
@@ -47,7 +45,6 @@ export const GET = withRBAC(
         .single();
 
       if (contractError || !contract) {
-        console.log('❌ Contract not found:', contractError);
         return NextResponse.json(
           { error: 'Contract not found' },
           { status: 404 }
@@ -63,7 +60,6 @@ export const GET = withRBAC(
           contract.second_party_id === user.id;
 
         if (!isInvolved) {
-          console.log('❌ User not authorized to view this contract');
           return NextResponse.json(
             { error: 'Unauthorized to view this contract' },
             { status: 403 }
@@ -78,7 +74,6 @@ export const GET = withRBAC(
       const hasPDF = !!contract.pdf_url;
 
       if (!isApproved) {
-        console.log('❌ Contract not approved:', contract.approval_status);
         return NextResponse.json(
           { error: 'Contract is not approved yet' },
           { status: 403 }
@@ -86,14 +81,12 @@ export const GET = withRBAC(
       }
 
       if (!hasPDF) {
-        console.log('❌ No PDF available for contract');
         return NextResponse.json(
           { error: 'PDF not available for this contract' },
           { status: 404 }
         );
       }
 
-      console.log('✅ PDF download authorized, generating PDF content');
 
       // Generate the actual PDF content using the contract data
       try {
@@ -109,7 +102,6 @@ export const GET = withRBAC(
           },
         });
       } catch (pdfError) {
-        console.error('❌ PDF generation failed:', pdfError);
         return NextResponse.json(
           {
             error: 'Failed to generate PDF',
@@ -120,7 +112,6 @@ export const GET = withRBAC(
         );
       }
     } catch (error) {
-      console.error('❌ Error in GET /api/contracts/[id]/pdf/download:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

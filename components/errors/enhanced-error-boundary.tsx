@@ -61,11 +61,6 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by boundary:', {
-        component: componentName,
-        error,
-        errorInfo,
-      });
     }
 
     // Call custom error handler
@@ -104,7 +99,6 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
         });
       }
     } catch (reportingError) {
-      console.error('Failed to report error:', reportingError);
     }
   };
 

@@ -31,7 +31,6 @@ export class SimplePdfService {
         documentUrl,
       };
     } catch (error) {
-      console.error('❌ Simple PDF generation failed:', error);
       throw error;
     }
   }
@@ -200,7 +199,6 @@ startxref
       // For now, return a placeholder URL
       return `https://your-domain.com/contracts/${fileName}`;
     } catch (error) {
-      console.error('Failed to save PDF:', error);
       throw error;
     }
   }

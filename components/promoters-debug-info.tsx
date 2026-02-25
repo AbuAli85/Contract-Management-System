@@ -110,7 +110,6 @@ export function PromotersDebugInfo() {
         },
       });
     } catch (error) {
-      console.error('🔍 Debug: Fetch error:', error);
       setDebugInfo(prev => ({
         ...prev,
         apiStatus: 'error',
@@ -165,7 +164,6 @@ export function PromotersDebugInfo() {
                     `Direct API Test:\nStatus: ${response.status}\nPromoters: ${data.promoters?.length || 0}\nCount: ${data.count || 0}`
                   );
                 } catch (error) {
-                  console.error('❌ Direct API test failed:', error);
                   alert(
                     `Direct API Test Failed: ${error instanceof Error ? error.message : 'Unknown error'}`
                   );

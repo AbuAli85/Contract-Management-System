@@ -67,7 +67,7 @@ export default function CheckRegistrationPage() {
       }
     } catch (err) {
       setError('Error fetching registration status');
-      console.error('Registration status error:', err);
+
     } finally {
       setLoading(false);
     }

@@ -86,7 +86,6 @@ export async function runDashboardDiagnostics(): Promise<DashboardDiagnosticSumm
 
     if (result.success) {
     } else {
-      console.error(`❌ ${endpoint}: Failed - ${result.error}`);
     }
   }
 
@@ -142,11 +141,6 @@ export async function quickDashboardHealthCheck(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      console.error(
-        '❌ Dashboard health check failed:',
-        response.status,
-        response.statusText
-      );
       return false;
     }
 
@@ -156,11 +150,9 @@ export async function quickDashboardHealthCheck(): Promise<boolean> {
     if (data && typeof data === 'object') {
       return true;
     } else {
-      console.error('❌ Dashboard health check failed: Invalid data format');
       return false;
     }
   } catch (error) {
-    console.error('❌ Dashboard health check failed:', error);
     return false;
   }
 }

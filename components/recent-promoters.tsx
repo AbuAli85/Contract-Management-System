@@ -55,7 +55,6 @@ export function RecentPromoters({ limit = 3 }: RecentPromotersProps) {
       }));
       setPromoters(normalized);
     } catch (error) {
-      console.error('Error fetching recent promoters:', error);
     } finally {
       setIsLoading(false);
     }

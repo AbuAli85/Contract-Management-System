@@ -70,10 +70,9 @@ export default function EmployerPromotersAnalyticsPage() {
           setTotalEmployers(result.data.summary.totalEmployers);
           setTotalPromoters(result.data.summary.totalPromoters);
         } else {
-          console.error('Invalid response format:', result);
+
         }
       } catch (error) {
-        console.error('Error in fetchEmployerPromotersData:', error);
 
         // Fallback to direct Supabase query if API fails
         const supabase = createClient();
@@ -91,7 +90,7 @@ export default function EmployerPromotersAnalyticsPage() {
             .order('name_en');
 
           if (employersError) {
-            console.error('Error fetching employers:', employersError);
+
             setLoading(false);
             return;
           }
@@ -103,7 +102,7 @@ export default function EmployerPromotersAnalyticsPage() {
             .order('name_en');
 
           if (promotersError) {
-            console.error('Error fetching promoters:', promotersError);
+
             setLoading(false);
             return;
           }
@@ -114,7 +113,7 @@ export default function EmployerPromotersAnalyticsPage() {
             .select('promoter_id, employer_id, first_party_id');
 
           if (contractsError) {
-            console.error('Error fetching contracts:', contractsError);
+
           }
 
           // Build employer-promoter mapping
@@ -157,7 +156,7 @@ export default function EmployerPromotersAnalyticsPage() {
           setTotalEmployers(employers?.length || 0);
           setTotalPromoters(allPromoters?.length || 0);
         } catch (fallbackError) {
-          console.error('Fallback query also failed:', fallbackError);
+
         }
       } finally {
         setLoading(false);

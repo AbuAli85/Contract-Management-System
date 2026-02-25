@@ -15,13 +15,8 @@ export async function GET(_request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.warn(
-        'Activities API: User error (continuing anyway):',
-        userError
-      );
     }
     if (!user) {
-      console.warn('Activities API: No user found (continuing anyway)');
     }
 
     // Get recent activities from multiple sources
@@ -133,7 +128,6 @@ export async function GET(_request: NextRequest) {
     // Return top 15 activities
     return NextResponse.json(activities.slice(0, 15));
   } catch (error) {
-    console.error('Recent activities error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch recent activities' },
       { status: 500 }

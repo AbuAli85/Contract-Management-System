@@ -180,7 +180,7 @@ export default function UserManagementPage() {
           Array.isArray(data.permissions) ? data.permissions : []
         );
       } catch (error) {
-        console.error('Error loading permissions:', error);
+
         setPermissionsError(
           error instanceof Error ? error.message : 'Failed to load permissions'
         );
@@ -252,7 +252,7 @@ export default function UserManagementPage() {
         }
       );
     } catch (fetchError) {
-      console.error('Error fetching users:', fetchError);
+
       setError(
         fetchError instanceof Error
           ? fetchError.message
@@ -299,7 +299,7 @@ export default function UserManagementPage() {
       setSuccess(data.message || 'Action completed');
       await fetchUsers({ skipGlobalLoading: true }); // Refresh the list
     } catch (error) {
-      console.error('Error performing action:', error);
+
       setError(error instanceof Error ? error.message : 'Action failed');
     } finally {
       setActionLoading(null);
@@ -478,7 +478,7 @@ export default function UserManagementPage() {
       closePermissionDialog();
       await fetchUsers({ skipGlobalLoading: true });
     } catch (error) {
-      console.error('Error assigning permissions:', error);
+
       setPermissionDialogError(
         error instanceof Error ? error.message : 'Failed to assign permissions'
       );

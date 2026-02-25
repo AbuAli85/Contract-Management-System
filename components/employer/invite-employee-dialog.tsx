@@ -130,7 +130,6 @@ export function InviteEmployeeDialog({ onSuccess }: InviteEmployeeDialogProps) {
 
       onSuccess?.();
     } catch (error: any) {
-      console.error('Error inviting employee:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to invite employee',

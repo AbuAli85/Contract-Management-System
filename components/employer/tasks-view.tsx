@@ -89,7 +89,6 @@ export function TasksView({
 
       setTasks(data.tasks || []);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
       toast({
         title: 'Error',
         description: 'Failed to load tasks',
@@ -155,7 +154,6 @@ export function TasksView({
       // Refresh tasks
       fetchTasks();
     } catch (error: any) {
-      console.error('Error creating task:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to create task',
@@ -269,7 +267,6 @@ export function TasksView({
 
       fetchTasks();
     } catch (error: any) {
-      console.error('Error updating task:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to update task',

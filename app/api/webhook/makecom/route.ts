@@ -6,7 +6,6 @@ import { verifyWebhook } from '@/lib/webhooks/verify';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔗 Make.com webhook received');
 
     const rawBody = await request.text();
 
@@ -38,7 +37,6 @@ export async function POST(request: NextRequest) {
 
     const body = verification.payload;
 
-    console.log('📤 Webhook payload:', body);
 
     // Validate required fields
     const { contract_id, contract_number, contract_type } = body;
@@ -100,7 +98,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (contractError || !contract) {
-      console.error('❌ Contract fetch error:', contractError);
       return NextResponse.json(
         {
           success: false,
@@ -110,14 +107,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('📋 Contract data fetched:', {
-      id: contract.id,
-      number: contract.contract_number,
-      type: contract.contract_type,
-      hasFirstParty: !!contract.first_party,
-      hasSecondParty: !!contract.second_party,
-      hasPromoter: !!contract.promoter,
-    });
 
     // Prepare clean, template-ready data
     const templateData = {
@@ -214,14 +203,6 @@ export async function POST(request: NextRequest) {
       special_terms: templateData.special_terms.trim(),
     };
 
-    console.log('✅ Template data prepared:', {
-      contract_number: cleanedData.contract_number,
-      promoter_name: cleanedData.promoter_name_en,
-      first_party: cleanedData.first_party_name_en,
-      second_party: cleanedData.second_party_name_en,
-      job_title: cleanedData.job_title,
-      template_id: cleanedData.template_id,
-    });
 
     // Record successful processing
     await supabase.from('tracking_events').insert({
@@ -248,7 +229,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('❌ Make.com webhook error:', error);
     return NextResponse.json(
       {
         success: false,

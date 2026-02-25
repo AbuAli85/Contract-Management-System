@@ -73,7 +73,6 @@ export const POST = withAnyRBAC(
           .update({ pdf_url: pdfUrl, status: 'completed', updated_by: user.id })
           .eq('id', contractId);
         if (updateError) {
-          console.error('Contract update error:', updateError);
           return NextResponse.json(
             {
               error: 'Failed to update contract with PDF URL',
@@ -96,7 +95,6 @@ export const POST = withAnyRBAC(
             body: JSON.stringify(notifyPayload),
           });
         } catch (webhookError) {
-          console.warn('Webhook notification failed:', webhookError);
           // Don't fail the entire request if webhook fails
         }
 
@@ -112,7 +110,6 @@ export const POST = withAnyRBAC(
       return result as NextResponse;
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      console.error('Contract generation error:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

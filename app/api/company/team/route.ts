@@ -20,7 +20,6 @@ export async function GET(_request: NextRequest) {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -79,7 +78,6 @@ export async function GET(_request: NextRequest) {
         .order('name_en', { ascending: true });
 
       if (promotersError) {
-        console.error('Error fetching promoters:', promotersError);
       } else if (promoters) {
         // Transform promoters to team member format
         teamMembers = promoters.map((promoter: any) => ({
@@ -224,7 +222,6 @@ export async function GET(_request: NextRequest) {
       count: teamMembers.length,
     });
   } catch (error: any) {
-    console.error('Error fetching company team:', error);
     return NextResponse.json(
       { error: 'Failed to fetch team members', details: error.message },
       { status: 500 }

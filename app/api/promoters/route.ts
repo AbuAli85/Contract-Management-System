@@ -190,7 +190,6 @@ async function handleGET(request: Request) {
       );
     }
 
-    console.log('👤 Authenticated user:', user.email);
 
     // ✅ SECURITY: Check user role for data scoping
     const { data: userProfile } = await supabase
@@ -486,9 +485,6 @@ async function handleGET(request: Request) {
 // Export GET with optional RBAC protection (bypass when RBAC_ENFORCEMENT is not true)
 export const GET = RBAC_BYPASS
   ? async (request: Request) => {
-      console.log(
-        '⚠️ RBAC BYPASS ENABLED for promoters - Running without permission checks'
-      );
       return handleGET(request);
     }
   : withRBAC('promoter:read:own', handleGET);

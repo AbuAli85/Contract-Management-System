@@ -46,11 +46,6 @@ export async function checkPermission(
 
     // Enhanced error logging for debugging
     if (authError) {
-      console.error('🔐 RBAC: Auth error:', {
-        message: authError.message,
-        status: authError.status,
-        requiredPermission,
-      });
     }
 
     if (!user) {
@@ -59,11 +54,6 @@ export async function checkPermission(
         data: { session },
         error: sessionError,
       } = await supabase.auth.getSession();
-      console.warn('🔐 RBAC: No user found', {
-        hasSession: !!session,
-        sessionError: sessionError?.message,
-        requiredPermission,
-      });
     }
 
     if (authError || !user) {
@@ -116,9 +106,6 @@ export async function checkPermission(
       !result.allowed &&
       (!result.user_permissions || result.user_permissions.length === 0)
     ) {
-      console.warn(
-        '🔐 RBAC: No permissions found via cache, forcing direct lookup...'
-      );
       normalizedOptions.skipCache = true;
       result = await permissionEvaluator.evaluatePermission(
         user.id,
@@ -143,7 +130,6 @@ export async function checkPermission(
       user_id: user.id,
     };
   } catch (error) {
-    console.error('🔐 RBAC: Error in checkPermission:', error);
     return {
       allowed: false,
       reason: 'Error checking permission',
@@ -173,9 +159,6 @@ export async function guardPermission(
       process.env.NODE_ENV === 'production' &&
       enforcementMode !== 'enforce'
     ) {
-      console.warn(
-        '🔐 RBAC: Production environment detected, forcing enforce mode'
-      );
       // Don't throw error, just log warning and continue
     }
 
@@ -278,10 +261,6 @@ export async function guardPermission(
               const { permissionCache } = await import('@/lib/rbac/cache');
               await permissionCache.invalidateUser(userId);
             } catch (cacheError) {
-              console.warn(
-                '⚠️ Could not clear cache (non-critical):',
-                cacheError
-              );
             }
 
             // Longer delay to ensure database transaction is committed and indexes are updated
@@ -296,14 +275,6 @@ export async function guardPermission(
             if (retryResult.allowed) {
               return null; // Allow access
             } else {
-              console.error(
-                `❌ Permission check still failed after auto-fix for user ${userId}:`,
-                {
-                  user_permissions: retryResult.user_permissions,
-                  user_roles: retryResult.user_roles,
-                  reason: retryResult.reason,
-                }
-              );
 
               // ✅ FALLBACK: If we've verified it's their own resource and auto-fix ran,
               // allow access anyway (permissions might take a moment to propagate)
@@ -311,7 +282,6 @@ export async function guardPermission(
             }
           }
         } catch (autoFixError) {
-          console.error('❌ Could not auto-fix permissions:', autoFixError);
           // Continue with normal error handling
         }
       }
@@ -329,7 +299,6 @@ export async function guardPermission(
     // Permission granted
     return null;
   } catch (error) {
-    console.error('🔐 RBAC: Error in guardPermission:', error);
 
     // In case of error, default to deny in enforce mode
     const enforcementMode =
@@ -373,12 +342,6 @@ export function withRBAC<T extends any[]>(
 
     if (!rateLimitResult.success) {
       // Log rate limit violation
-      console.warn('⚠️ Rate limit exceeded:', {
-        endpoint: pathname,
-        method,
-        limitType: rateLimitConfig.type,
-        retryAfter: rateLimitResult.retryAfter,
-      });
 
       const headers = getRateLimitHeaders(rateLimitResult);
 
@@ -445,12 +408,6 @@ export function withAnyRBAC<T extends any[]>(
 
     if (!rateLimitResult.success) {
       // Log rate limit violation
-      console.warn('⚠️ Rate limit exceeded:', {
-        endpoint: pathname,
-        method,
-        limitType: rateLimitConfig.type,
-        retryAfter: rateLimitResult.retryAfter,
-      });
 
       const headers = getRateLimitHeaders(rateLimitResult);
 
@@ -606,10 +563,6 @@ async function guardAnyPermission(
               const { permissionCache } = await import('@/lib/rbac/cache');
               await permissionCache.invalidateUser(userId);
             } catch (cacheError) {
-              console.warn(
-                '⚠️ Could not clear cache (non-critical):',
-                cacheError
-              );
             }
 
             // Longer delay to ensure database transaction is committed and indexes are updated
@@ -624,14 +577,6 @@ async function guardAnyPermission(
             if (retryResult.allowed) {
               return null; // Allow access
             } else {
-              console.error(
-                `❌ Permission check still failed after auto-fix for user ${userId}:`,
-                {
-                  user_permissions: retryResult.user_permissions,
-                  user_roles: retryResult.user_roles,
-                  reason: retryResult.reason,
-                }
-              );
 
               // ✅ FALLBACK: If we've verified it's their own profile and auto-fix ran,
               // allow access anyway (permissions might take a moment to propagate)
@@ -640,7 +585,6 @@ async function guardAnyPermission(
           } else {
           }
         } catch (autoFixError) {
-          console.error('❌ Could not auto-fix permissions:', autoFixError);
           // Continue with normal error handling
         }
       } else {
@@ -648,31 +592,13 @@ async function guardAnyPermission(
 
       // In dry-run mode, log but allow
       if (enforcementMode === 'dry-run') {
-        console.warn(`🔐 RBAC DRY-RUN: Access denied to ${request.url}`, {
-          required_permissions: requiredPermissions,
-          user_permissions: result.user_permissions,
-          user_roles: result.user_roles,
-          reason: result.reason,
-        });
         return null;
       }
 
       // In enforce mode, deny access
-      console.warn(`🔐 RBAC ENFORCE: Access denied to ${request.url}`, {
-        required_permissions: requiredPermissions,
-        user_permissions: result.user_permissions,
-        user_roles: result.user_roles,
-        reason: result.reason,
-      });
 
       // Add detailed debugging for empty permissions
       if (result.user_permissions.length === 0) {
-        console.error('🔐 RBAC DEBUG: User permissions array is empty!');
-        console.error('🔐 RBAC DEBUG: User roles array:', result.user_roles);
-        console.error(
-          '🔐 RBAC DEBUG: Result object:',
-          JSON.stringify(result, null, 2)
-        );
       }
 
       return NextResponse.json(
@@ -690,13 +616,9 @@ async function guardAnyPermission(
     // Permission check passed
     return null;
   } catch (error) {
-    console.error('🔐 RBAC: Error in guardAnyPermission:', error);
 
     // In dry-run mode, allow on error
     if (process.env.RBAC_ENFORCEMENT === 'dry-run') {
-      console.warn(
-        '🔐 RBAC DRY-RUN: Allowing access due to error in permission check'
-      );
       return null;
     }
 
@@ -754,9 +676,6 @@ export async function checkAnyPermission(
       !result.allowed &&
       (!result.user_permissions || result.user_permissions.length === 0)
     ) {
-      console.warn(
-        '🔐 RBAC: No permissions found via cache, forcing direct lookup...'
-      );
       anyOptions.skipCache = true;
       result = await permissionEvaluator.hasAnyPermission(
         user.id,
@@ -780,7 +699,6 @@ export async function checkAnyPermission(
       user_id: user.id, // ✅ Use user.id from auth, not result.user_id
     };
   } catch (error) {
-    console.error('🔐 RBAC: Error in checkAnyPermission:', error);
     return {
       allowed: false,
       reason: 'Error checking permissions',
@@ -836,9 +754,6 @@ export async function checkAllPermissions(
       !result.allowed &&
       (!result.user_permissions || result.user_permissions.length === 0)
     ) {
-      console.warn(
-        '🔐 RBAC: No permissions found via cache, forcing direct lookup...'
-      );
       allOptions.skipCache = true;
       result = await permissionEvaluator.hasAllPermissions(
         user.id,
@@ -862,7 +777,6 @@ export async function checkAllPermissions(
       user_id: result.user_id || null,
     };
   } catch (error) {
-    console.error('🔐 RBAC: Error in checkAllPermissions:', error);
     return {
       allowed: false,
       reason: 'Error checking permissions',
@@ -898,7 +812,6 @@ export async function getCurrentUserPermissions(): Promise<{
     );
     return { permissions, roles, userId: user.id };
   } catch (error) {
-    console.error('🔐 RBAC: Error getting current user permissions:', error);
     return { permissions: [], roles: [], userId: null };
   }
 }
@@ -925,7 +838,6 @@ export async function hasPermission(permission: string): Promise<boolean> {
     );
     return result.allowed;
   } catch (error) {
-    console.error('🔐 RBAC: Error checking if user has permission:', error);
     return false;
   }
 }
@@ -954,7 +866,6 @@ export async function hasAnyPermission(
     );
     return result.allowed;
   } catch (error) {
-    console.error('🔐 RBAC: Error checking if user has any permission:', error);
     return false;
   }
 }
@@ -983,10 +894,6 @@ export async function hasAllPermissions(
     );
     return result.allowed;
   } catch (error) {
-    console.error(
-      '🔐 RBAC: Error checking if user has all permissions:',
-      error
-    );
     return false;
   }
 }
@@ -1008,9 +915,6 @@ export function getRBACEnforcementMode(): 'dry-run' | 'enforce' | 'disabled' {
     return mode;
   }
 
-  console.warn(
-    `🔐 RBAC: Invalid RBAC_ENFORCEMENT mode: ${mode}, defaulting to dry-run`
-  );
   return 'dry-run';
 }
 

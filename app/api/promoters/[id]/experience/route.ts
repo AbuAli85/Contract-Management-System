@@ -37,13 +37,11 @@ export async function GET(
       .eq('promoter_id', id);
 
     if (error) {
-      console.error('Error fetching experience:', error);
       return NextResponse.json({ experience: [] }, { status: 200 });
     }
 
     return NextResponse.json({ experience: data || [] }, { status: 200 });
   } catch (error) {
-    console.error('Experience API error:', error);
     return NextResponse.json({ experience: [] }, { status: 200 });
   }
 }

@@ -12,7 +12,7 @@ export async function getPromoters(): Promise<Promoter[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching promoters:', error);
+
     return [];
   }
 
@@ -29,7 +29,7 @@ export async function getPromoterById(id: string): Promise<Promoter | null> {
     .single();
 
   if (error) {
-    console.error('Error fetching promoter:', error);
+
     return null;
   }
 
@@ -48,7 +48,7 @@ export async function createPromoter(
     .single();
 
   if (error) {
-    console.error('Error creating promoter:', error);
+
     throw new Error('Failed to create promoter');
   }
 
@@ -104,7 +104,7 @@ export async function updatePromoter(
     .single();
 
   if (error) {
-    console.error('Error updating promoter:', error);
+
     throw new Error('Failed to update promoter');
   }
 
@@ -121,7 +121,7 @@ export async function deletePromoter(
   const { error } = await supabase.from('promoters').delete().eq('id', id);
 
   if (error) {
-    console.error('Error deleting promoter:', error);
+
     return { success: false, message: 'Failed to delete promoter' };
   }
 

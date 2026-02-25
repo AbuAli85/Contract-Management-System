@@ -81,7 +81,6 @@ export default function SimpleAdminDashboard() {
           setAttendance(attendanceData);
         }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);

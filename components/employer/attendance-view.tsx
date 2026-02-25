@@ -115,7 +115,6 @@ export function AttendanceView({ employerEmployeeId }: AttendanceViewProps) {
       setAttendance(data.attendance || []);
       setSummary(data.summary || {});
     } catch (error) {
-      console.error('Error fetching attendance:', error);
       toast({
         title: 'Error',
         description: 'Failed to load attendance',

@@ -112,7 +112,6 @@ export async function POST(request: NextRequest) {
     );
 
     if (updateError) {
-      console.error('Error updating password:', updateError);
       return NextResponse.json(
         { error: 'Failed to update password' },
         { status: 500 }
@@ -120,14 +119,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the password change activity (optional)
-    console.log(`Password changed for user ${userIdToChange} by ${user.id}`);
 
     return NextResponse.json({
       success: true,
       message: 'Password updated successfully',
     });
   } catch (error) {
-    console.error('Error in POST /api/users/change-password:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

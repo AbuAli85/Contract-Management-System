@@ -16,7 +16,7 @@ export default function LogoutPage() {
         // Get current locale from URL
         const pathname =
           typeof window !== 'undefined' ? window.location.pathname : '';
-        const locale = pathname.split('/')[1] || 'en';
+        const locale = pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
 
         // Call signOut
         await signOut();
@@ -31,13 +31,12 @@ export default function LogoutPage() {
         // Redirect to localized login page
         router.push(`/${locale}/auth/login`);
       } catch (error) {
-        console.error('🔐 Logout: Unexpected error:', error);
         setStatus('error');
 
         // Get locale and redirect to login
         const pathname =
           typeof window !== 'undefined' ? window.location.pathname : '';
-        const locale = pathname.split('/')[1] || 'en';
+        const locale = pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
 
         setTimeout(() => {
           router.push(`/${locale}/auth/login`);

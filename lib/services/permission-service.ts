@@ -33,13 +33,11 @@ export async function getAllPermissions(): Promise<Permission[]> {
       .order('name', { ascending: true });
 
     if (error) {
-      console.error('Error fetching permissions:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error in getAllPermissions:', error);
     return [];
   }
 }
@@ -101,7 +99,6 @@ export async function getUserPermissions(
       .eq('is_active', true);
 
     if (roleError || !roleData) {
-      console.warn('Error fetching user permissions from roles:', roleError);
       return [];
     }
 
@@ -122,7 +119,6 @@ export async function getUserPermissions(
       granted: true,
     }));
   } catch (error) {
-    console.error('Error in getUserPermissions:', error);
     return [];
   }
 }
@@ -140,7 +136,6 @@ export async function hasPermission(
       up => up.permission === permission && up.granted
     );
   } catch (error) {
-    console.error('Error checking permission:', error);
     return false;
   }
 }
@@ -160,7 +155,6 @@ export async function hasAnyPermission(
 
     return permissions.some(perm => grantedPermissions.includes(perm));
   } catch (error) {
-    console.error('Error checking any permission:', error);
     return false;
   }
 }
@@ -180,7 +174,6 @@ export async function hasAllPermissions(
 
     return permissions.every(perm => grantedPermissions.includes(perm));
   } catch (error) {
-    console.error('Error checking all permissions:', error);
     return false;
   }
 }
@@ -198,13 +191,11 @@ export async function getUserRole(userId: string): Promise<string | null> {
       .single();
 
     if (error) {
-      console.warn('Error fetching user role:', error);
       return null;
     }
 
     return data?.role || null;
   } catch (error) {
-    console.error('Error in getUserRole:', error);
     return null;
   }
 }

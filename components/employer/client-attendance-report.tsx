@@ -126,7 +126,6 @@ export function ClientAttendanceReport() {
         );
       }
     } catch (error) {
-      console.error('Error fetching employees:', error);
     }
   };
 

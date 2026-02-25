@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
       .order('attendance_date', { ascending: false });
 
     if (error) {
-      console.error('Error fetching attendance:', error);
       return NextResponse.json(
         { error: 'Failed to fetch attendance' },
         { status: 500 }
@@ -98,7 +97,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in attendance GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -200,10 +198,6 @@ export async function POST(request: NextRequest) {
             companySettings = settingsData[0];
           }
         } catch (error) {
-          console.warn(
-            'Failed to fetch company settings, using defaults:',
-            error
-          );
         }
       }
 
@@ -267,7 +261,6 @@ export async function POST(request: NextRequest) {
               (locationVerification as any).distance_meters || null;
           }
         } catch (error) {
-          console.warn('Location verification failed:', error);
           // Continue without location verification if function doesn't exist yet
         }
       }
@@ -309,7 +302,6 @@ export async function POST(request: NextRequest) {
             photoUrl = urlData?.publicUrl || null;
           }
         } catch (error) {
-          console.warn('Photo upload failed:', error);
         }
       }
 
@@ -398,7 +390,6 @@ export async function POST(request: NextRequest) {
               p_company_id: employeeLink.company_id,
             });
           } catch (error) {
-            console.warn('Location verification failed:', error);
           }
         }
 
@@ -450,7 +441,6 @@ export async function POST(request: NextRequest) {
             companySettings = settingsData[0];
           }
         } catch (error) {
-          console.warn('Failed to fetch company settings for checkout:', error);
         }
       }
 
@@ -498,7 +488,6 @@ export async function POST(request: NextRequest) {
             checkOutPhotoUrl = urlData?.publicUrl || null;
           }
         } catch (error) {
-          console.warn('Check-out photo upload failed:', error);
         }
       }
 
@@ -535,7 +524,6 @@ export async function POST(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Error in attendance POST:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

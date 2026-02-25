@@ -86,9 +86,6 @@ export function calculateUtilizationRate(
 
   // Ensure we don't have more active than total (data inconsistency check)
   if (activeCount > totalCount) {
-    console.warn(
-      `Data inconsistency: ${activeCount} active workers > ${totalCount} total workforce`
-    );
     return 100;
   }
 

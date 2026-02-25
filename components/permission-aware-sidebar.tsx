@@ -79,13 +79,12 @@ export function PermissionAwareSidebar({
     new Set()
   );
 
-  // Extract locale from pathname
-  const locale =
-    pathname && pathname.startsWith('/en/')
-      ? 'en'
-      : pathname && pathname.startsWith('/ar/')
-        ? 'ar'
-        : 'en';
+  // Extract locale from pathname using regex for extensibility
+  const locale = (() => {
+    if (!pathname) return 'en';
+    const match = pathname.match(/^\/([a-z]{2})\//);
+    return match ? match[1] : 'en';
+  })();
 
   useEffect(() => {
     setMounted(true);

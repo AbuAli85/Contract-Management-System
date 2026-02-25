@@ -21,7 +21,6 @@ export async function GET(
       );
     }
 
-    console.log('🔍 Checking email status for:', messageId);
 
     const result = await getEmailStatus(messageId);
 
@@ -43,7 +42,6 @@ export async function GET(
       interpretation: interpretStatus(result.status),
     });
   } catch (error) {
-    console.error('❌ Error checking email status:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Unknown error',

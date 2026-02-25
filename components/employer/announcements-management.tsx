@@ -125,7 +125,6 @@ export function AnnouncementsManagement() {
         setAnnouncements(data.announcements || []);
       }
     } catch (error) {
-      console.error('Error fetching announcements:', error);
     } finally {
       setLoading(false);
     }
@@ -235,7 +234,6 @@ export function AnnouncementsManagement() {
 
       fetchAnnouncements();
     } catch (error) {
-      console.error('Error toggling pin:', error);
     }
   };
 

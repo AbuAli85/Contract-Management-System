@@ -40,14 +40,14 @@ export default function WorkingLoginPage() {
           .limit(1);
 
         if (error) {
-          console.error('❌ Connection test failed:', error);
+
           setConnectionStatus('error');
           setError(`Connection failed: ${error.message}`);
         } else {
           setConnectionStatus('connected');
         }
       } catch (err) {
-        console.error('❌ Connection error:', err);
+
         setConnectionStatus('error');
         setError(
           `Connection error: ${err instanceof Error ? err.message : 'Unknown error'}`
@@ -100,7 +100,6 @@ export default function WorkingLoginPage() {
         });
 
       if (authError) {
-        console.error('❌ Auth error:', authError);
 
         // Provide specific error messages
         if (authError.message.includes('Invalid login credentials')) {
@@ -127,7 +126,7 @@ export default function WorkingLoginPage() {
       setMessage(`✅ Successfully logged in as ${authData.user.email}`);
       setCurrentUser(authData.user);
     } catch (error) {
-      console.error('❌ Login error:', error);
+
       setError(
         `❌ Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -158,7 +157,7 @@ export default function WorkingLoginPage() {
 
   const goToDashboard = () => {
     // Force navigation to dashboard
-    window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard/provider-comprehensive`;
+    window.location.href = `/${(window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en')}/dashboard/provider-comprehensive`;
   };
 
   const runSchemaFix = () => {

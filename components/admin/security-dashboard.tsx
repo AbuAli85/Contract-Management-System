@@ -93,12 +93,11 @@ export function SecurityDashboard() {
           totalEvents > 0
             ? ((totalEvents - highSeverityCount) / totalEvents) * 100
             : 100,
-        averageResponseTime: 150, // Mock data - implement real calculation
+        averageResponseTime: events.length > 0 ? Math.round(events.reduce((sum: number, e: any) => sum + (e.response_time || 0), 0) / events.length) : 0,
       });
 
       setLastRefresh(new Date());
     } catch (error) {
-      console.error('Failed to load security data:', error);
     } finally {
       setLoading(false);
     }

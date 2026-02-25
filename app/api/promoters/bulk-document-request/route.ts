@@ -74,9 +74,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      `📤 Processing bulk document request for ${promoterIds.length} promoters...`
-    );
 
     // Get promoter information
     const supabase = await createClient();
@@ -86,7 +83,6 @@ export async function POST(request: NextRequest) {
       .in('id', promoterIds);
 
     if (fetchError) {
-      console.error('Error fetching promoters:', fetchError);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch promoter information' },
         { status: 500 }
@@ -161,7 +157,6 @@ export async function POST(request: NextRequest) {
             promoterResult.success = false;
             const errorMsg = `Failed for ${promoter.full_name}: ${requestResult.error}`;
             results.errors.push(errorMsg);
-            console.error(errorMsg);
           }
         }
 
@@ -177,20 +172,12 @@ export async function POST(request: NextRequest) {
         promoterResult.error = errorMsg;
         results.errors.push(`Error for ${promoter.full_name}: ${errorMsg}`);
         results.failureCount++;
-        console.error(`Error sending request to ${promoter.full_name}:`, error);
       }
 
       results.details.push(promoterResult as any);
     }
 
     // Log summary
-    console.log(`✅ Bulk document request completed:`, {
-      totalCount: results.totalCount,
-      successCount: results.successCount,
-      failureCount: results.failureCount,
-      emailsSent: results.emailsSent,
-      smsSent: results.smsSent,
-    });
 
     return NextResponse.json({
       success: true,
@@ -206,7 +193,6 @@ export async function POST(request: NextRequest) {
       errors: results.errors.length > 0 ? results.errors : undefined,
     });
   } catch (error) {
-    console.error('Error in bulk document request:', error);
     return NextResponse.json(
       {
         success: false,

@@ -11,7 +11,6 @@ export async function PATCH(
     const bookingId = params.id;
     const body = await request.json();
 
-    console.log(`🔄 Updating booking ${bookingId} status...`);
 
     // Get user session
     const {
@@ -111,7 +110,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Error updating booking:', updateError);
       return NextResponse.json(
         {
           success: false,
@@ -122,14 +120,10 @@ export async function PATCH(
       );
     }
 
-    console.log(`✅ Booking ${bookingId} updated successfully`);
 
     // Trigger webhook if status changed
     if (newStatus && oldStatus !== newStatus) {
       try {
-        console.log(
-          `🔔 Triggering status change webhook: ${oldStatus} → ${newStatus}`
-        );
         const webhookResult = await triggerBookingStatusChangeWebhook(
           updatedBooking,
           oldStatus,
@@ -137,12 +131,9 @@ export async function PATCH(
         );
 
         if (webhookResult.success) {
-          console.log('✅ Status change webhook triggered successfully');
         } else {
-          console.warn('⚠️ Status change webhook failed:', webhookResult.error);
         }
       } catch (webhookError) {
-        console.error('❌ Status change webhook error:', webhookError);
         // Don't fail the update if webhook fails
       }
     }
@@ -155,7 +146,6 @@ export async function PATCH(
       new_status: newStatus,
     });
   } catch (error) {
-    console.error('Update booking error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -254,7 +244,6 @@ export async function GET(
       booking,
     });
   } catch (error) {
-    console.error('Get booking error:', error);
     return NextResponse.json(
       {
         success: false,

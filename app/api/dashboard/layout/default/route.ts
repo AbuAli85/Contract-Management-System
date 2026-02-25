@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error fetching default layout:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch default layout' },
         { status: 500 }
@@ -47,7 +46,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Default layout GET error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

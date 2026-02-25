@@ -61,7 +61,6 @@ export async function GET(_request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (ordersError) {
-      console.error('Error fetching provider orders:', ordersError);
       return NextResponse.json(
         { error: 'Failed to fetch orders' },
         { status: 500 }
@@ -109,7 +108,6 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({ orders: formattedOrders });
   } catch (error) {
-    console.error('Error in provider orders API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -169,7 +167,6 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error('Error updating order:', updateError);
       return NextResponse.json(
         { error: 'Failed to update order' },
         { status: 500 }
@@ -191,7 +188,6 @@ export async function PUT(request: NextRequest) {
       order: updatedOrder,
     });
   } catch (error) {
-    console.error('Error in update order API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

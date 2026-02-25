@@ -11,7 +11,7 @@ export default function AuthLogoutPage() {
     // Get current locale from URL
     const pathname =
       typeof window !== 'undefined' ? window.location.pathname : '';
-    const locale = pathname.split('/')[1] || 'en';
+    const locale = pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en';
 
     // Redirect to the correct logout page
     router.replace(`/${locale}/logout`);

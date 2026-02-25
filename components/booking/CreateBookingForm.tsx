@@ -71,15 +71,23 @@ export function CreateBookingForm({
     Record<string, string>
   >({});
 
-  // Mock service details - in real app, fetch from API
-  const [serviceDetails] = useState<ServiceDetails>({
+  const [serviceDetails, setServiceDetails] = useState<ServiceDetails>({
     id: serviceId,
-    name: 'Sample Service',
+    name: 'Loading...',
     duration_minutes: 60,
-    price_base: 100,
+    price_base: 0,
     price_currency: 'USD',
     requires_approval: false,
   });
+  useEffect(() => {
+    if (!serviceId) return;
+    fetch(`/api/services/${serviceId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) setServiceDetails({ ...data, id: serviceId });
+      })
+      .catch(() => {/* keep default */});
+  }, [serviceId]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -143,7 +151,6 @@ export function CreateBookingForm({
       onSuccess?.(bookingId);
     } catch (err) {
       // Error is already handled by the hook
-      console.error('Failed to create booking:', err);
     }
   };
 

@@ -43,7 +43,6 @@ export const GET = withRBAC(
         .single();
 
       if (error) {
-        console.error('API GET /contracts/[id] error:', error);
         if (error.code === 'PGRST116') {
           return NextResponse.json(
             { error: 'Contract not found' },
@@ -143,7 +142,6 @@ export const GET = withRBAC(
         { status: 200 }
       );
     } catch (error) {
-      console.error('Error in GET /api/contracts/[id]:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',
@@ -212,10 +210,6 @@ export const PUT = withRBAC(
         delete body[field]; // Unconditionally delete, don't check if exists
       });
 
-      console.log(
-        '📋 Request body after filtering invalid fields:',
-        Object.keys(body)
-      );
 
       // Build update payload with only fields that exist in the schema
       const dataToUpdate: any = {
@@ -254,15 +248,8 @@ export const PUT = withRBAC(
           dataToUpdate.status = body.status;
         } else if (extendedStatuses.includes(body.status)) {
           // Try extended statuses - if database rejects it, error will be caught below
-          console.warn(
-            `⚠️ Using extended status "${body.status}" - may not be supported by current constraint`
-          );
           dataToUpdate.status = body.status;
         } else {
-          console.warn(
-            `⚠️ Invalid status "${body.status}". Skipping status update.`
-          );
-          console.warn(`⚠️ Safe statuses: ${safeStatuses.join(', ')}`);
           // Don't include status in the update to prevent constraint violation
         }
       }
@@ -287,7 +274,6 @@ export const PUT = withRBAC(
       // Note: work_location, email, id_card_number, special_terms, department, and allowances
       // don't exist in the contracts table schema and are filtered out above
 
-      console.log('🔄 Updating contract with data:', dataToUpdate);
 
       // Perform the update
       const { data: updated, error } = await supabase
@@ -298,14 +284,6 @@ export const PUT = withRBAC(
         .single();
 
       if (error) {
-        console.error('API PUT /contracts/[id] error:', error);
-        console.error('Error details:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          dataToUpdate,
-        });
 
         // Special handling for status constraint violations
         if (error.code === '23514' && error.message.includes('status_check')) {
@@ -362,7 +340,6 @@ export const PUT = withRBAC(
           details: { updated_fields: Object.keys(dataToUpdate) },
         } as any);
       } catch (logError) {
-        console.warn('Could not log activity:', logError);
         // Continue execution even if logging fails
       }
 
@@ -375,11 +352,6 @@ export const PUT = withRBAC(
         { status: 200 }
       );
     } catch (error) {
-      console.error('Error in PUT /api/contracts/[id]:', error);
-      console.error(
-        'Error stack:',
-        error instanceof Error ? error.stack : 'No stack trace'
-      );
       return NextResponse.json(
         {
           error: 'Internal server error',
@@ -448,7 +420,6 @@ export const DELETE = withRBAC(
         .eq('id', id);
 
       if (deleteError) {
-        console.error('API DELETE /contracts/[id] error:', deleteError);
         return NextResponse.json(
           {
             error: 'Delete failed',
@@ -472,7 +443,6 @@ export const DELETE = withRBAC(
           },
         } as any);
       } catch (logError) {
-        console.warn('Could not log activity:', logError);
         // Continue execution even if logging fails
       }
 
@@ -485,7 +455,6 @@ export const DELETE = withRBAC(
         { status: 200 }
       );
     } catch (error) {
-      console.error('Error in DELETE /api/contracts/[id]:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

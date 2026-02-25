@@ -33,10 +33,6 @@ export class OwnershipEvaluator {
     try {
       this.supabase = await createClient();
     } catch (error) {
-      console.error(
-        '🔐 RBAC: Failed to initialize Supabase for ownership evaluation:',
-        error
-      );
     }
   }
 
@@ -86,7 +82,6 @@ export class OwnershipEvaluator {
           };
       }
     } catch (error) {
-      console.error('🔐 RBAC: Error checking ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking ownership',
@@ -171,7 +166,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking service ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking service ownership',
@@ -223,7 +217,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking booking ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking booking ownership',
@@ -275,7 +268,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking contract ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking contract ownership',
@@ -325,7 +317,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking company ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking company ownership',
@@ -375,7 +366,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking promoter ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking promoter ownership',
@@ -425,7 +415,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking party ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking party ownership',
@@ -477,7 +466,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking organization ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking organization ownership',
@@ -529,7 +517,6 @@ export class OwnershipEvaluator {
         },
       };
     } catch (error) {
-      console.error('🔐 RBAC: Error checking provider ownership:', error);
       return {
         isOwner: false,
         reason: 'Error checking provider ownership',

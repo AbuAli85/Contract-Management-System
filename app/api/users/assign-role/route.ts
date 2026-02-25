@@ -52,7 +52,6 @@ async function assignRoleHandler(request: NextRequest) {
       message: data.message || 'Role assigned successfully',
     });
   } catch (error) {
-    console.error('Error in assign-role:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Internal server error',

@@ -114,7 +114,6 @@ export function EmployeeScheduleSelector({
         setPromoterOnlyCount(promoterOnly.length);
 
         if (teamMembers.length === 0) {
-          console.warn('No employees found. Response:', data);
           setEmployees([]);
           return;
         }
@@ -175,11 +174,9 @@ export function EmployeeScheduleSelector({
 
         setEmployees(mappedEmployees);
       } else {
-        console.error('Failed to fetch employees:', data.error);
         setEmployees([]);
       }
     } catch (error) {
-      console.error('Error fetching employees:', error);
       setEmployees([]);
     } finally {
       setLoading(false);
@@ -195,7 +192,6 @@ export function EmployeeScheduleSelector({
         setGroups(data.groups);
       }
     } catch (error) {
-      console.error('Error fetching groups:', error);
     }
   };
 

@@ -69,7 +69,6 @@ export default function ProductionCaptcha({
           await loadTurnstile();
         }
       } catch (err) {
-        console.error('CAPTCHA loading error:', err);
         setError('Failed to load CAPTCHA');
         onCaptchaError?.('Failed to load CAPTCHA');
       } finally {
@@ -162,7 +161,6 @@ export default function ProductionCaptcha({
         });
         widgetIdRef.current = widgetId;
       } catch (err) {
-        console.error('hCaptcha render error:', err);
         throw new Error('Failed to render hCaptcha');
       }
     };
@@ -190,7 +188,6 @@ export default function ProductionCaptcha({
         });
         widgetIdRef.current = widgetId;
       } catch (err) {
-        console.error('Turnstile render error:', err);
         throw new Error('Failed to render Turnstile');
       }
     };
@@ -207,7 +204,6 @@ export default function ProductionCaptcha({
             window.turnstile.remove(widgetIdRef.current);
           }
         } catch (err) {
-          console.warn('CAPTCHA cleanup error:', err);
         }
       }
     };
@@ -232,7 +228,6 @@ export default function ProductionCaptcha({
         setIsReady(false);
         setError(null);
       } catch (err) {
-        console.warn('CAPTCHA reset error:', err);
       }
     }
   };
@@ -246,7 +241,6 @@ export default function ProductionCaptcha({
           window.turnstile.execute(widgetIdRef.current);
         }
       } catch (err) {
-        console.warn('CAPTCHA execute error:', err);
       }
     }
   };

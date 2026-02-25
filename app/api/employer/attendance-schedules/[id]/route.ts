@@ -72,10 +72,6 @@ export const GET = withRBAC(
         schedule,
       });
     } catch (error) {
-      console.error(
-        'Error in GET /api/employer/attendance-schedules/[id]:',
-        error
-      );
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -172,7 +168,6 @@ export const PUT = withRBAC(
         .single();
 
       if (error) {
-        console.error('Error updating schedule:', error);
         return NextResponse.json(
           { error: 'Failed to update schedule', details: error.message },
           { status: 500 }
@@ -184,10 +179,6 @@ export const PUT = withRBAC(
         schedule,
       });
     } catch (error) {
-      console.error(
-        'Error in PUT /api/employer/attendance-schedules/[id]:',
-        error
-      );
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -233,7 +224,6 @@ export const DELETE = withRBAC(
         .eq('company_id', profile.active_company_id);
 
       if (error) {
-        console.error('Error deleting schedule:', error);
         return NextResponse.json(
           { error: 'Failed to delete schedule' },
           { status: 500 }
@@ -245,10 +235,6 @@ export const DELETE = withRBAC(
         message: 'Schedule deleted successfully',
       });
     } catch (error) {
-      console.error(
-        'Error in DELETE /api/employer/attendance-schedules/[id]:',
-        error
-      );
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

@@ -34,7 +34,6 @@ export class AuthErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('AuthErrorBoundary caught an error:', error, errorInfo);
     this.setState({
       error,
       errorInfo,
@@ -48,7 +47,6 @@ export class AuthErrorBoundary extends Component<Props, State> {
     // In production, send to error monitoring service
     if (process.env.NODE_ENV === 'production') {
       // Example: Sentry.captureException(error, { contexts: { react: errorInfo } });
-      console.error('Error logged to monitoring service:', error);
     }
   }
 
@@ -127,7 +125,6 @@ export function useAuthErrorHandler() {
   const router = useRouter();
 
   const handleAuthError = (error: Error, context?: string) => {
-    console.error(`Auth error in ${context || 'unknown context'}:`, error);
 
     // Handle specific auth errors
     if (

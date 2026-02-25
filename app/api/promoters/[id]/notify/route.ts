@@ -198,7 +198,6 @@ async function fetchPromoterDetails(supabase: any, promoterId: string) {
       }),
     };
   } catch (error) {
-    console.error('Error fetching promoter details:', error);
     return {
       status: 'Active',
       assignmentStatus: 'Unknown',
@@ -269,7 +268,6 @@ export async function POST(
       .single();
 
     if (promoterError || !promoterData) {
-      console.error('Error fetching promoter:', promoterError);
       return NextResponse.json(
         {
           error: 'Promoter not found',
@@ -448,10 +446,8 @@ export async function POST(
           });
 
           // Log email result for debugging
-          console.log('📧 Email send result:', emailResult);
         }
       } catch (emailError) {
-        console.error('Failed to send email notification:', emailError);
         // Don't fail the whole request if email fails
       }
     }
@@ -483,7 +479,6 @@ export async function POST(
       message: 'Notification sent successfully',
     });
   } catch (error) {
-    console.error('Error in notify promoter API:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

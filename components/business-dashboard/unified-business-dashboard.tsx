@@ -240,7 +240,7 @@ export function UnifiedBusinessDashboard() {
             <Button
               variant='outline'
               className='flex items-center gap-2'
-              onClick={() => console.log('Opening notifications panel...')}
+              onClick={() => {}}
             >
               <Bell className='h-4 w-4' />
               Notifications
@@ -253,7 +253,7 @@ export function UnifiedBusinessDashboard() {
             <Button
               variant='outline'
               className='flex items-center gap-2'
-              onClick={() => console.log('Opening settings panel...')}
+              onClick={() => {}}
             >
               <Settings className='h-4 w-4' />
               Settings

@@ -17,7 +17,6 @@ export async function refreshSupabaseSchemaCache() {
       .limit(1);
 
     if (promotersError) {
-      console.error('❌ Error querying promoters table:', promotersError);
       return { success: false, error: promotersError };
     }
 
@@ -35,10 +34,6 @@ export async function refreshSupabaseSchemaCache() {
       .limit(1);
 
     if (relationshipsError) {
-      console.error(
-        '❌ Error testing foreign key relationships:',
-        relationshipsError
-      );
       return { success: false, error: relationshipsError };
     }
 
@@ -49,7 +44,6 @@ export async function refreshSupabaseSchemaCache() {
       .limit(1);
 
     if (allColumnsError) {
-      console.error('❌ Error testing all columns:', allColumnsError);
       return { success: false, error: allColumnsError };
     }
 
@@ -62,7 +56,6 @@ export async function refreshSupabaseSchemaCache() {
       },
     };
   } catch (error) {
-    console.error('❌ Error refreshing schema cache:', error);
     return { success: false, error };
   }
 }
@@ -81,7 +74,6 @@ export async function checkSchemaCacheStatus() {
       .limit(1);
 
     if (error) {
-      console.error('❌ Schema cache issue detected:', error);
       return {
         status: 'error',
         error: error.message,
@@ -95,7 +87,6 @@ export async function checkSchemaCacheStatus() {
       needsRefresh: false,
     };
   } catch (error) {
-    console.error('❌ Error checking schema cache:', error);
     return {
       status: 'error',
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -120,6 +111,5 @@ export async function refreshSchemaCacheWithRetry(maxRetries = 3) {
     }
   }
 
-  console.error(`❌ Schema cache refresh failed after ${maxRetries} attempts`);
   return { success: false, error: 'Max retries exceeded' };
 }

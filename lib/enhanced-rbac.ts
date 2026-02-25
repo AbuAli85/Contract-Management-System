@@ -394,7 +394,6 @@ export async function canAccessResource(
 
     return false;
   } catch (error) {
-    console.error('Error checking resource access:', error);
     return false;
   }
 }
@@ -408,7 +407,6 @@ export function requirePermission(permission: PermissionKey) {
       const { role } = await getUserRoleInfo(userId);
       return hasPermission(role, permission);
     } catch (error) {
-      console.error('Permission check failed:', error);
       return false;
     }
   };

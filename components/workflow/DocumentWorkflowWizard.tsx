@@ -182,7 +182,6 @@ export default function DocumentWorkflowWizard() {
       setParties(partiesData || []);
       setContractTypes(result.success ? result.data : []);
     } catch (error) {
-      console.error('Failed to load initial data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load data',
@@ -242,7 +241,6 @@ export default function DocumentWorkflowWizard() {
         throw new Error(result.error || 'Failed to generate contract');
       }
     } catch (error) {
-      console.error('Contract generation error:', error);
       toast({
         title: 'Error',
         description: 'Failed to generate contract',

@@ -49,7 +49,6 @@ class BackgroundContractProcessor {
       
       return { success: true, result }
     } catch (error) {
-      console.error(\`❌ Background: PDF generation failed for \${contractId}:\`, error)
       return { success: false, error: error.message }
     }
   }
@@ -180,7 +179,6 @@ class BackgroundContractProcessor {
       
       return { success: true, result }
     } catch (error) {
-      console.error('❌ Background: Cleanup failed:', error)
       return { success: false, error: error.message }
     }
   }
@@ -195,7 +193,6 @@ self.addEventListener('message', async function(e) {
     const result = await processor.processMessage({ type, payload })
     self.postMessage({ id, success: true, result })
   } catch (error) {
-    console.error('Background worker error:', error)
     self.postMessage({ 
       id, 
       success: false, 
@@ -225,7 +222,6 @@ export class BackgroundContractWorker {
 
   private initializeWorker() {
     if (typeof Worker === 'undefined') {
-      console.warn('Web Workers not supported in this environment');
       return;
     }
 
@@ -252,10 +248,8 @@ export class BackgroundContractWorker {
       });
 
       this.worker.addEventListener('error', error => {
-        console.error('Background worker error:', error);
       });
     } catch (error) {
-      console.error('Failed to initialize background worker:', error);
     }
   }
 

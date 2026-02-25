@@ -259,7 +259,6 @@ export default function SharafDGDeploymentForm({
         // Always update the selected client display
         setSelectedClient(sharafDG);
       } else {
-        console.warn('⚠️ Sharaf DG not found in clients list');
       }
     }
   }, [clients, formData.first_party_id]);
@@ -296,7 +295,6 @@ export default function SharafDGDeploymentForm({
         });
       }
     } catch (error) {
-      console.error('Error loading saved draft:', error);
     }
   };
 
@@ -319,7 +317,6 @@ export default function SharafDGDeploymentForm({
         .order('name_en');
 
       if (partiesError) {
-        console.error('Error loading parties:', partiesError);
         throw new Error(`Failed to load parties: ${partiesError.message}`);
       }
 
@@ -346,7 +343,6 @@ export default function SharafDGDeploymentForm({
           .order('display_order', { ascending: true });
 
       if (designationsError) {
-        console.error('Error loading designations:', designationsError);
       } else if (designationsData) {
         const designationLookup = (designationsData || []).reduce<
           Record<string, DesignationDetails>
@@ -370,14 +366,12 @@ export default function SharafDGDeploymentForm({
         .order('name_en');
 
       if (promotersError) {
-        console.error('Error loading promoters:', promotersError);
         throw new Error(`Failed to load promoters: ${promotersError.message}`);
       }
 
       setPromoters(promotersData || []);
       setAllPromoters(promotersData || []);
     } catch (error) {
-      console.error('Failed to load data:', error);
       toast({
         title: 'Error',
         description:
@@ -508,7 +502,6 @@ export default function SharafDGDeploymentForm({
     e.preventDefault();
 
     if (!validateForm()) {
-      console.error('❌ Validation failed');
       return;
     }
 
@@ -518,7 +511,6 @@ export default function SharafDGDeploymentForm({
       const supabase = createClient();
 
       if (!supabase) {
-        console.error('❌ Supabase client not available');
         throw new Error('Supabase client not available');
       }
 
@@ -528,7 +520,6 @@ export default function SharafDGDeploymentForm({
       } = await supabase.auth.getUser();
 
       if (!currentUser) {
-        console.error('❌ No authenticated user');
         throw new Error('You must be logged in to create contracts');
       }
 
@@ -587,7 +578,6 @@ export default function SharafDGDeploymentForm({
         .single();
 
       if (createError) {
-        console.error('❌ Database error:', createError);
         throw createError;
       }
 
@@ -609,7 +599,6 @@ export default function SharafDGDeploymentForm({
           ?.scrollIntoView({ behavior: 'smooth' });
       }, 500);
     } catch (error) {
-      console.error('❌ Error creating contract:', error);
 
       // Extract detailed error message
       let errorMessage = 'Failed to create contract';
@@ -777,10 +766,6 @@ export default function SharafDGDeploymentForm({
             .toLowerCase()
             .includes('placeholder'))
       ) {
-        console.warn(
-          '🛑 Removing ID card placeholder URL:',
-          safeWebhookData.promoter_id_card_url
-        );
         delete safeWebhookData.promoter_id_card_url;
         delete safeWebhookData.id_card_url;
         safeWebhookData.has_id_card_image = false;
@@ -797,10 +782,6 @@ export default function SharafDGDeploymentForm({
             .toLowerCase()
             .includes('placeholder'))
       ) {
-        console.warn(
-          '🛑 Removing passport placeholder URL:',
-          safeWebhookData.promoter_passport_url
-        );
         delete safeWebhookData.promoter_passport_url;
         delete safeWebhookData.passport_url;
         safeWebhookData.has_passport_image = false;
@@ -873,14 +854,8 @@ export default function SharafDGDeploymentForm({
             { method: 'HEAD' }
           );
           if (!testResponse.ok) {
-            console.error(
-              '❌ Passport URL not accessible:',
-              safeWebhookData.promoter_passport_url
-            );
-            console.warn('⚠️ Make.com may fail to embed this image');
           }
         } catch (urlError) {
-          console.error('❌ Passport URL test failed:', urlError);
         }
       }
 
@@ -891,30 +866,17 @@ export default function SharafDGDeploymentForm({
             { method: 'HEAD' }
           );
           if (!testResponse.ok) {
-            console.error(
-              '❌ ID card URL not accessible:',
-              safeWebhookData.promoter_id_card_url
-            );
-            console.warn('⚠️ Make.com may fail to embed this image');
           }
         } catch (urlError) {
-          console.error('❌ ID card URL test failed:', urlError);
         }
       }
 
       // Final sanity check: Ensure critical fields are present
       if (!safeWebhookData.contract_number || !safeWebhookData.contract_id) {
-        console.error(
-          '❌ CRITICAL: Missing contract_number or contract_id!',
-          safeWebhookData
-        );
         throw new Error('Cannot send webhook - missing critical contract data');
       }
 
       if (!safeWebhookData.passport_number) {
-        console.warn(
-          '⚠️ WARNING: Passport number is missing from webhook data!'
-        );
       }
 
       // Log the complete payload being sent (for Make.com debugging)
@@ -933,7 +895,6 @@ export default function SharafDGDeploymentForm({
 
       if (!webhookResponse.ok) {
         const errorText = await webhookResponse.text();
-        console.error('❌ Webhook error response:', errorText);
         throw new Error(`Make.com webhook failed: ${errorText}`);
       }
 
@@ -948,7 +909,6 @@ export default function SharafDGDeploymentForm({
       // Poll for status
       pollPDFStatus();
     } catch (error) {
-      console.error('PDF generation error:', error);
       setPdfStatus('error');
       toast({
         title: 'Generation Failed',
@@ -984,7 +944,6 @@ export default function SharafDGDeploymentForm({
           .single();
 
         if (error) {
-          console.error('Poll error:', error);
           return;
         }
 
@@ -1063,7 +1022,6 @@ export default function SharafDGDeploymentForm({
               contract.notes.toLowerCase().includes('error') ||
               contract.notes.toLowerCase().includes('failed')
             ) {
-              console.warn('⚠️ Possible error in notes:', contract.notes);
             }
           } catch (noteParseError) {}
         }
@@ -1080,7 +1038,6 @@ export default function SharafDGDeploymentForm({
           });
         }
       } catch (error) {
-        console.error('Poll error:', error);
       }
     }, 3000);
 

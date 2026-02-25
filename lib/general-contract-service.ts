@@ -152,7 +152,6 @@ export class GeneralContractService {
       .order('name_en');
 
     if (error) {
-      console.error('Error fetching promoters:', error);
       throw new Error('Failed to fetch promoters');
     }
 
@@ -171,7 +170,6 @@ export class GeneralContractService {
       .order('name_en');
 
     if (error) {
-      console.error('Error fetching products:', error);
       throw new Error('Failed to fetch products');
     }
 
@@ -190,7 +188,6 @@ export class GeneralContractService {
       .order('name_en');
 
     if (error) {
-      console.error('Error fetching locations:', error);
       throw new Error('Failed to fetch locations');
     }
 
@@ -218,7 +215,6 @@ export class GeneralContractService {
         } = await serverClient.auth.getUser();
         currentUserId = currentUser?.id;
       } catch (error) {
-        console.warn('Could not get user from server client:', error);
       }
     }
 
@@ -452,7 +448,6 @@ export class GeneralContractService {
           'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz';
 
         if (!makecomWebhookUrl) {
-          console.warn('⚠️ MAKECOM_WEBHOOK_URL_GENERAL not configured');
           return { success: false, error: 'Webhook URL not configured' };
         }
 
@@ -514,7 +509,6 @@ export class GeneralContractService {
 
           req.on('error', (err: any) => {
             const duration = Date.now() - startTime;
-            console.error(`❌ Request error after ${duration}ms:`, err);
             reject(err);
           });
 
@@ -540,7 +534,6 @@ export class GeneralContractService {
             .eq('id', contractId);
 
           if (updateError) {
-            console.error('❌ Failed to update contract status:', updateError);
           } else {
           }
 
@@ -555,11 +548,6 @@ export class GeneralContractService {
             },
           };
         } else {
-          console.error(`❌ Make.com webhook failed (attempt ${attempt}):`, {
-            status: response.status,
-            statusText: response.statusText,
-            error: response.data,
-          });
 
           lastError = {
             status: response.status,
@@ -575,18 +563,6 @@ export class GeneralContractService {
           }
         }
       } catch (error) {
-        console.error(
-          `❌ Make.com webhook error (attempt ${attempt}/${maxRetries}):`,
-          error
-        );
-        console.error(
-          '❌ Error details:',
-          error instanceof Error ? error.message : 'Unknown error'
-        );
-        console.error(
-          '❌ Error stack:',
-          error instanceof Error ? error.stack : 'No stack trace'
-        );
 
         lastError = {
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -602,9 +578,6 @@ export class GeneralContractService {
     }
 
     // All attempts failed
-    console.error(
-      `❌ All ${maxRetries} webhook attempts failed for contract ${contractId}`
-    );
     return {
       success: false,
       error: lastError
@@ -645,10 +618,6 @@ export class GeneralContractService {
       .eq('id', contractId);
 
     if (error) {
-      console.error(
-        '❌ Failed to update contract with Make.com results:',
-        error
-      );
       throw new Error(`Failed to update contract: ${error.message}`);
     }
   }

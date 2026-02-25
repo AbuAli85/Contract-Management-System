@@ -135,7 +135,6 @@ export function WorkPermitDashboard() {
         setSummary(complianceData.summary || summary);
       }
     } catch (error) {
-      console.error('Error fetching work permit data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load work permit data',

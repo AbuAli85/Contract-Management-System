@@ -62,21 +62,18 @@ export function DatabaseErrorLoginForm() {
         .limit(1);
 
       if (healthError) {
-        console.error('❌ Database health check failed:', healthError);
 
         // Test 2: Try simple auth check as fallback
         try {
           const { data: sessionData, error: sessionError } =
             await supabase.auth.getSession();
           if (sessionError) {
-            console.error('❌ Auth service also failing:', sessionError);
             setDatabaseStatus('error');
             setFallbackMode(true);
           } else {
             setDatabaseStatus('error');
           }
         } catch (authError) {
-          console.error('❌ Auth service connection failed:', authError);
           setDatabaseStatus('error');
           setFallbackMode(true);
         }
@@ -85,7 +82,6 @@ export function DatabaseErrorLoginForm() {
         setFallbackMode(false);
       }
     } catch (error) {
-      console.error('❌ Database health test error:', error);
       setDatabaseStatus('error');
       setFallbackMode(true);
     }
@@ -110,7 +106,6 @@ export function DatabaseErrorLoginForm() {
       //   description: 'Cleared all authentication data. Please try logging in again.',
       // });
     } catch (error) {
-      console.error('❌ Error clearing auth data:', error);
     }
   };
 
@@ -134,7 +129,6 @@ export function DatabaseErrorLoginForm() {
       // Redirect to instant offline mode
       router.push('/instant-offline');
     } catch (error: any) {
-      console.error('🚨 Offline mode switch failed:', error);
       setError(
         'Unable to switch to offline mode. Please try refreshing the page.'
       );
@@ -162,7 +156,6 @@ export function DatabaseErrorLoginForm() {
         });
 
       if (authError) {
-        console.error('🔐 Auth error:', authError);
 
         if (authError.message.includes('Database error')) {
           setDatabaseStatus('error');
@@ -188,9 +181,6 @@ export function DatabaseErrorLoginForm() {
           .single();
 
         if (profileError) {
-          console.warn(
-            '⚠️ Profile fetch failed, proceeding without profile data'
-          );
         }
 
         setSuccess('Login successful! Redirecting...');
@@ -205,7 +195,6 @@ export function DatabaseErrorLoginForm() {
           router.push('/dashboard-role-router');
         }, 3000);
       } catch (profileError) {
-        console.warn('⚠️ Profile operations failed, but auth succeeded');
 
         setSuccess('Login successful! Redirecting...');
 
@@ -215,7 +204,6 @@ export function DatabaseErrorLoginForm() {
         }, 3000);
       }
     } catch (error: any) {
-      console.error('🔐 Login failed:', error);
       setError(error.message);
       setRetryCount(prev => prev + 1);
     } finally {

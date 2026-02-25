@@ -128,7 +128,6 @@ export function ChangePasswordForm({
         setError(data.error || 'Failed to change password');
       }
     } catch (error) {
-      console.error('Error changing password:', error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);

@@ -66,7 +66,7 @@ export default function SmartDocumentFixPage() {
         throw new Error(data.error || 'Unknown error');
       }
     } catch (error) {
-      console.error('Smart fix error:', error);
+
       toast({
         title: 'Error',
         description:

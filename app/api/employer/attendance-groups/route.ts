@@ -66,7 +66,6 @@ export const GET = withRBAC(
       const { data: groups, error } = await query;
 
       if (error) {
-        console.error('Error fetching employee groups:', error);
         return NextResponse.json(
           { error: 'Failed to fetch employee groups', details: error.message },
           { status: 500 }
@@ -149,7 +148,6 @@ export const GET = withRBAC(
         count: formattedGroups.length,
       });
     } catch (error) {
-      console.error('Error in GET /api/employer/attendance-groups:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -229,7 +227,6 @@ export const POST = withRBAC(
         .single();
 
       if (createError) {
-        console.error('Error creating employee group:', createError);
         return NextResponse.json(
           {
             error: 'Failed to create employee group',
@@ -253,7 +250,6 @@ export const POST = withRBAC(
         ).insert(assignments);
 
         if (assignError) {
-          console.error('Error assigning employees to group:', assignError);
           // Don't fail the request, just log the error
         }
       }
@@ -263,7 +259,6 @@ export const POST = withRBAC(
         group,
       });
     } catch (error) {
-      console.error('Error in POST /api/employer/attendance-groups:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

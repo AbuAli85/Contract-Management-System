@@ -48,7 +48,6 @@ export const GET = withRBAC(
         .single();
 
       if (error) {
-        console.error('API GET /contracts/download-pdf error:', error);
         if (error.code === 'PGRST116') {
           return NextResponse.json(
             { error: 'Contract not found' },
@@ -104,7 +103,6 @@ export const GET = withRBAC(
         { status: 200 }
       );
     } catch (error) {
-      console.error('Error in GET /api/contracts/download-pdf:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

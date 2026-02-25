@@ -37,7 +37,7 @@ function NewServicePageContent() {
       try {
         const supabase = createClient();
         if (!supabase) {
-          console.error('Failed to initialize database connection');
+
           return;
         }
         const { data, error } = await supabase
@@ -47,13 +47,13 @@ function NewServicePageContent() {
           .order('full_name');
 
         if (error) {
-          console.error('Error fetching providers:', error);
+
           setError('Failed to load providers');
         } else if (data) {
           setProviders(data);
         }
       } catch (err) {
-        console.error('Error fetching providers:', err);
+
         setError('Failed to load providers');
       } finally {
         setLoading(false);

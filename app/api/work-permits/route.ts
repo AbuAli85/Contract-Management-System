@@ -84,7 +84,6 @@ export const GET = withAnyRBAC(
       const { data: applications, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching work permits:', error);
         return NextResponse.json(
           { error: 'Failed to fetch work permits', details: error.message },
           { status: 500 }
@@ -97,7 +96,6 @@ export const GET = withAnyRBAC(
         count: count || 0,
       });
     } catch (error: any) {
-      console.error('Error in GET /api/work-permits:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -196,7 +194,6 @@ export const POST = withAnyRBAC(
         .single();
 
       if (error) {
-        console.error('Error creating work permit application:', error);
         return NextResponse.json(
           {
             error: 'Failed to create work permit application',
@@ -233,7 +230,6 @@ export const POST = withAnyRBAC(
         { status: 201 }
       );
     } catch (error: any) {
-      console.error('Error in POST /api/work-permits:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

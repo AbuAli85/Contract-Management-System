@@ -96,7 +96,6 @@ export default function ExcelImportModal({
     try {
       const supabase = createClient();
       if (!supabase) {
-        console.error('Supabase client not available');
         return;
       }
 
@@ -107,7 +106,6 @@ export default function ExcelImportModal({
         .order('name_en');
 
       if (error) {
-        console.error('Error fetching companies:', error);
         toast({
           title: 'Error loading companies',
           description: 'Could not load company list for template',
@@ -118,7 +116,6 @@ export default function ExcelImportModal({
 
       setCompanies(data || []);
     } catch (error) {
-      console.error('Error fetching companies:', error);
     } finally {
       setCompaniesLoading(false);
     }
@@ -403,7 +400,6 @@ export default function ExcelImportModal({
         setPreviewData(validData);
         setStep('preview');
       } catch (error) {
-        console.error('Error processing file:', error);
         toast({
           title: 'Error processing file',
           description:
@@ -490,7 +486,6 @@ export default function ExcelImportModal({
         errors,
       });
     } catch (error) {
-      console.error('Import error:', error);
       setImportResult({
         success: false,
         message: error instanceof Error ? error.message : 'Import failed',

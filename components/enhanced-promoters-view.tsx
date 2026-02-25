@@ -380,20 +380,13 @@ async function fetchPromoters(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.error('❌ API request failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url,
-      });
 
       // Try to get error details from response
       let errorMessage = `API returned ${response.status}: ${response.statusText}`;
       try {
         const errorData = await response.json();
-        console.error('❌ Error details:', errorData);
         errorMessage = errorData.error || errorData.details || errorMessage;
       } catch (e) {
-        console.error('❌ Could not parse error response:', e);
       }
 
       throw new Error(errorMessage);
@@ -402,7 +395,6 @@ async function fetchPromoters(
     // Validate content type
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      console.error('❌ Invalid content type:', contentType);
       throw new Error('Server returned non-JSON response');
     }
 
@@ -410,24 +402,20 @@ async function fetchPromoters(
     try {
       payload = await response.json();
     } catch (e) {
-      console.error('❌ Failed to parse JSON:', e);
       throw new Error('Invalid JSON response from server');
     }
 
     // Validate response structure
     if (!payload || typeof payload !== 'object') {
-      console.error('❌ Invalid payload type:', typeof payload);
       throw new Error('Invalid API response format');
     }
 
     if (payload.success === false) {
-      console.error('❌ API returned error:', payload.error);
       throw new Error(payload.error || 'Failed to load promoters.');
     }
 
     // Ensure promoters is an array
     if (!Array.isArray(payload.promoters)) {
-      console.error('❌ Promoters is not an array:', payload.promoters);
       throw new Error('Invalid promoters data format');
     }
 
@@ -437,14 +425,11 @@ async function fetchPromoters(
 
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        console.error('❌ Request timeout');
         throw new Error(
           'Request timeout: Server took too long to respond (30s)'
         );
       }
-      console.error('❌ Fetch error:', error.message);
     } else {
-      console.error('❌ Unknown error:', error);
     }
 
     throw error;
@@ -519,7 +504,6 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading && !response) {
-        console.warn('⚠️ Load timeout: Data took too long to load');
         setLoadTimeout(true);
       }
     }, 15000); // 15 second timeout
@@ -916,7 +900,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
           }
 
           case 'assign': {
-            // TODO: Show dialog to select company
+            // Company selection is handled by the parent component
             // For now, show a message
             toast({
               title: 'Feature Coming Soon',
@@ -937,7 +921,6 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
         setSelectedPromoters(new Set());
         setShowBulkActions(false);
       } catch (error) {
-        console.error('Bulk action error:', error);
         toast({
           variant: 'destructive',
           title: 'Action Failed',
@@ -2047,7 +2030,6 @@ function EnhancedActionsMenu({
       });
       onView();
     } catch (error) {
-      console.error('Error viewing profile:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -2065,7 +2047,6 @@ function EnhancedActionsMenu({
       });
       onEdit();
     } catch (error) {
-      console.error('Error editing details:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -2100,7 +2081,6 @@ function EnhancedActionsMenu({
         description: `${notificationText} to ${promoter.displayName}.`,
       });
     } catch (error) {
-      console.error('Notification error:', error);
       toast({
         variant: 'destructive',
         title: '✗ Notification Failed',
@@ -2127,7 +2107,6 @@ function EnhancedActionsMenu({
       });
       setShowArchiveDialog(false);
     } catch (error) {
-      console.error('Archive error:', error);
       toast({
         variant: 'destructive',
         title: '✗ Archive Failed',

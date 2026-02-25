@@ -49,7 +49,6 @@ export async function getDashboardAnalyticsSrv(): Promise<
       .select('id, status, created_at, contract_value');
 
     if (contractsError) {
-      console.error('Error fetching contracts:', contractsError);
       return {
         success: false,
         message: `Failed to fetch contracts: ${contractsError.message}`,
@@ -62,7 +61,6 @@ export async function getDashboardAnalyticsSrv(): Promise<
       .select('*', { count: 'exact', head: true });
 
     if (partiesError) {
-      console.error('Error fetching parties:', partiesError);
       return {
         success: false,
         message: `Failed to fetch parties: ${partiesError.message}`,
@@ -75,7 +73,6 @@ export async function getDashboardAnalyticsSrv(): Promise<
       .select('*', { count: 'exact', head: true });
 
     if (promotersError) {
-      console.error('Error fetching promoters:', promotersError);
       return {
         success: false,
         message: `Failed to fetch promoters: ${promotersError.message}`,
@@ -183,7 +180,6 @@ export async function getDashboardAnalyticsSrv(): Promise<
       data: analyticsData,
     };
   } catch (error) {
-    console.error('Error in getDashboardAnalytics:', error);
     return {
       success: false,
       message: `An unexpected error occurred: ${(error as Error).message}`,
@@ -207,7 +203,6 @@ export async function getPendingReviewsSrv(): Promise<
       .limit(10);
 
     if (error) {
-      console.error('Error fetching pending reviews:', error);
       return {
         success: false,
         message: `Failed to fetch pending reviews: ${error.message}`,
@@ -230,7 +225,6 @@ export async function getPendingReviewsSrv(): Promise<
       data: reviews,
     };
   } catch (error) {
-    console.error('Error in getPendingReviews:', error);
     return {
       success: false,
       message: `An unexpected error occurred: ${(error as Error).message}`,
@@ -254,7 +248,6 @@ export async function getAdminActionsSrv(): Promise<
       .limit(10);
 
     if (error) {
-      console.error('Error fetching admin actions:', error);
       return {
         success: false,
         message: `Failed to fetch admin actions: ${error.message}`,
@@ -278,7 +271,6 @@ export async function getAdminActionsSrv(): Promise<
       data: adminActions,
     };
   } catch (error) {
-    console.error('Error in getAdminActions:', error);
     return {
       success: false,
       message: `An unexpected error occurred: ${(error as Error).message}`,
@@ -302,7 +294,6 @@ export async function getAuditLogsSrv(): Promise<
       .limit(50);
 
     if (error) {
-      console.error('Error fetching audit logs:', error);
       return {
         success: false,
         message: `Failed to fetch audit logs: ${error.message}`,
@@ -326,7 +317,6 @@ export async function getAuditLogsSrv(): Promise<
       message: 'Audit logs fetched successfully.',
     };
   } catch (error) {
-    console.error('Error in getAuditLogs:', error);
     return {
       success: false,
       message: `An unexpected error occurred: ${(error as Error).message}`,
@@ -346,7 +336,6 @@ export async function getNotificationsSrv(): Promise<
       .limit(20);
 
     if (error) {
-      console.error('Error fetching notifications:', error);
       return {
         success: false,
         message: `Failed to fetch notifications: ${error.message}`,
@@ -371,7 +360,6 @@ export async function getNotificationsSrv(): Promise<
       message: 'Notifications fetched successfully.',
     };
   } catch (error) {
-    console.error('Error fetching notifications:', error);
     return {
       success: false,
       message: `An unexpected error occurred: ${(error as Error).message}`,
@@ -388,7 +376,6 @@ export async function getUsersSrv(): Promise<ServerActionResponse<User[]>> {
       .limit(20);
 
     if (error) {
-      console.error('Error fetching users:', error);
       return {
         success: false,
         message: `Failed to fetch users: ${error.message}`,
@@ -408,7 +395,6 @@ export async function getUsersSrv(): Promise<ServerActionResponse<User[]>> {
       message: 'Users fetched successfully.',
     };
   } catch (error) {
-    console.error('Error fetching users:', error);
     return {
       success: false,
       message: `An unexpected error occurred: ${(error as Error).message}`,

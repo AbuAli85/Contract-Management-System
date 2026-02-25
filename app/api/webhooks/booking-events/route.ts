@@ -24,12 +24,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!verification.verified) {
-      console.warn('❌ Invalid webhook request');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (verification.idempotent) {
-      console.log('🔄 Idempotent webhook - already processed');
       return NextResponse.json({ success: true, message: 'Already processed' });
     }
 
@@ -40,11 +38,6 @@ export async function POST(request: NextRequest) {
     const bookingEvent: BookingEventPayload =
       verification.payload.record || verification.payload;
 
-    console.log('📨 Received booking event webhook:', {
-      event_id: bookingEvent.id,
-      event_type: bookingEvent.event_type,
-      booking_id: bookingEvent.booking_id,
-    });
 
     // Validate the booking event
     if (
@@ -88,9 +81,6 @@ export async function POST(request: NextRequest) {
         idempotency_key: request.headers.get('x-idempotency-key') || '',
       });
 
-      console.log(
-        `✅ Booking event forwarded to Make.com successfully (${result.attempts} attempts)`
-      );
       return NextResponse.json({
         success: true,
         event_id: bookingEvent.id,
@@ -98,10 +88,6 @@ export async function POST(request: NextRequest) {
         response_time: responseTime,
       });
     } else {
-      console.error(
-        `❌ Failed to forward booking event to Make.com:`,
-        result.error
-      );
       return NextResponse.json(
         {
           success: false,
@@ -112,7 +98,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error('❌ Booking event webhook error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
@@ -193,10 +178,6 @@ async function fetchBookingContext(supabase: any, bookingId: string) {
       .single();
 
     if (bookingError || !booking) {
-      console.warn(
-        `⚠️ Could not fetch booking context for ${bookingId}:`,
-        bookingError
-      );
       return {};
     }
 
@@ -244,7 +225,6 @@ async function fetchBookingContext(supabase: any, bookingId: string) {
         : undefined,
     };
   } catch (error) {
-    console.error('❌ Error fetching booking context:', error);
     return {};
   }
 }

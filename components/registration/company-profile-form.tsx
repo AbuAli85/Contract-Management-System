@@ -212,10 +212,8 @@ export function CompanyProfileForm({
           if (roleSetupResponse.ok) {
             const roleSetupResult = await roleSetupResponse.json();
           } else {
-            console.warn('Provider role setup failed, but continuing...');
           }
         } catch (roleError) {
-          console.warn('Provider role setup error:', roleError);
           // Don't fail the whole process if role setup fails
         }
       }

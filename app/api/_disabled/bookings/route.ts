@@ -9,7 +9,6 @@ import Sentry from '@/lib/sentry';
 
 async function bookingsGET(request: NextRequest) {
   try {
-    console.log('🔍 Bookings API: Starting request...');
 
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
@@ -20,7 +19,6 @@ async function bookingsGET(request: NextRequest) {
 
     // Check if we're using a mock client
     if (!supabase || typeof supabase.from !== 'function') {
-      console.error('❌ Bookings API: Using mock client - returning mock data');
       return NextResponse.json(
         {
           success: true,
@@ -53,7 +51,6 @@ async function bookingsGET(request: NextRequest) {
       );
     }
 
-    console.log('🔍 Bookings API: Fetching bookings from database...');
 
     // Build query
     let query = supabase
@@ -86,18 +83,11 @@ async function bookingsGET(request: NextRequest) {
         await query.limit(50);
 
       if (bookingsError) {
-        console.warn(
-          '⚠️ Bookings API: Error fetching bookings:',
-          bookingsError.message
-        );
         bookings = [];
       } else {
         bookings = bookingsData || [];
       }
     } catch (error) {
-      console.warn(
-        '⚠️ Bookings API: Booking fetch failed, continuing with empty array'
-      );
       bookings = [];
     }
 
@@ -136,12 +126,8 @@ async function bookingsGET(request: NextRequest) {
         cancelled_bookings: cancelledCount || 0,
       };
     } catch (error) {
-      console.warn('⚠️ Bookings API: Could not fetch statistics');
     }
 
-    console.log(
-      `✅ Bookings API: Successfully fetched ${bookings?.length || 0} bookings`
-    );
 
     return NextResponse.json({
       success: true,
@@ -150,7 +136,6 @@ async function bookingsGET(request: NextRequest) {
       stats,
     });
   } catch (error) {
-    console.error('❌ Bookings API: Unexpected error:', error);
     return NextResponse.json(
       {
         success: true, // Return success to avoid errors
@@ -221,7 +206,6 @@ async function bookingsPOST(request: NextRequest) {
       .single()) as { data: any; error: any };
 
     if (error) {
-      console.error('Error creating booking:', error);
       return NextResponse.json(
         {
           success: false,
@@ -242,7 +226,6 @@ async function bookingsPOST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Booking created successfully:', booking.id);
 
     // Insert tracking event
     // @ts-ignore - Supabase type inference issue
@@ -256,19 +239,12 @@ async function bookingsPOST(request: NextRequest) {
 
     // Trigger Make.com webhook for automation
     try {
-      console.log('🔔 Triggering booking created webhook...');
       const webhookResult = await triggerBookingCreatedWebhook(booking);
 
       if (webhookResult.success) {
-        console.log('✅ Webhook triggered successfully');
       } else {
-        console.warn(
-          '⚠️ Webhook failed but booking was created:',
-          webhookResult.error
-        );
       }
     } catch (webhookError) {
-      console.error('❌ Webhook trigger error:', webhookError);
       // Don't fail the booking creation if webhook fails
     }
 
@@ -277,7 +253,6 @@ async function bookingsPOST(request: NextRequest) {
       booking,
     });
   } catch (error) {
-    console.error('Create booking error:', error);
     Sentry.captureException(error);
     return NextResponse.json(
       {

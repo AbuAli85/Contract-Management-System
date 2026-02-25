@@ -38,7 +38,6 @@ export async function GET(request: NextRequest) {
       .order('name', { ascending: true });
 
     if (rolesError) {
-      console.error('🔐 RBAC: Error fetching roles:', rolesError);
       return NextResponse.json(
         { error: 'Failed to fetch roles' },
         { status: 500 }
@@ -59,7 +58,6 @@ export async function GET(request: NextRequest) {
       `);
 
     if (permError) {
-      console.error('🔐 RBAC: Error fetching role permissions:', permError);
       return NextResponse.json(
         { error: 'Failed to fetch role permissions' },
         { status: 500 }
@@ -79,7 +77,6 @@ export async function GET(request: NextRequest) {
       .is('valid_until', null);
 
     if (userError) {
-      console.error('🔐 RBAC: Error fetching user counts:', userError);
       return NextResponse.json(
         { error: 'Failed to fetch user counts' },
         { status: 500 }
@@ -116,7 +113,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('🔐 RBAC: Error in GET /api/admin/roles:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -169,7 +165,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('🔐 RBAC: Error checking existing role:', checkError);
       return NextResponse.json(
         { error: 'Failed to check existing role' },
         { status: 500 }
@@ -195,7 +190,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('🔐 RBAC: Error creating role:', createError);
       return NextResponse.json(
         { error: 'Failed to create role' },
         { status: 500 }
@@ -211,7 +205,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('🔐 RBAC: Error in POST /api/admin/roles:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -202,7 +202,7 @@ export default function QuickDocumentFixPage() {
         description: `Fixed ${fixedResults.length} promoters: ${fixedResults.filter(r => r.fixedIdCard).length} ID cards, ${fixedResults.filter(r => r.fixedPassport).length} passports`,
       });
     } catch (error) {
-      console.error('Quick fix error:', error);
+
       toast({
         title: 'Error',
         description:

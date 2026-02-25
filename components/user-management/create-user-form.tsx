@@ -174,7 +174,6 @@ export function CreateUserForm({
         setError(data.error || 'Failed to create user');
       }
     } catch (error) {
-      console.error('Error creating user:', error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);

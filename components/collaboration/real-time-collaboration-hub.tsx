@@ -126,160 +126,53 @@ export function RealTimeCollaborationHub({
   }, [messages]);
 
   const loadChannels = async () => {
-    // Mock data - in production, fetch from API
-    const mockChannels: Channel[] = [
+    // Initialize with default channels; Supabase Realtime subscription can be added
+    const defaultChannels: Channel[] = [
       {
         id: 'general',
         name: 'General',
         type: 'public',
         description: 'General discussions and announcements',
-        members: ['user1', 'user2', 'user3'],
+        members: [],
         unreadCount: 0,
         isActive: true,
-        lastMessage: {
-          id: 'msg_1',
-          content: 'Contract #123 has been approved!',
-          sender: {
-            id: 'user1',
-            name: 'Sarah Johnson',
-            email: 'sarah@company.com',
-          },
-          timestamp: new Date().toISOString(),
-          type: 'text',
-          reactions: [],
-        },
       },
       {
         id: 'contracts',
         name: 'Contracts',
         type: 'public',
         description: 'Contract-related discussions',
-        members: ['user1', 'user2', 'user3', 'user4'],
-        unreadCount: 3,
+        members: [],
+        unreadCount: 0,
         isActive: false,
-        lastMessage: {
-          id: 'msg_2',
-          content: 'New contract template uploaded',
-          sender: { id: 'user2', name: 'Mike Chen', email: 'mike@company.com' },
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          type: 'text',
-          reactions: [],
-        },
-      },
-      {
-        id: 'legal-team',
-        name: 'Legal Team',
-        type: 'private',
-        description: 'Legal team discussions',
-        members: ['user1', 'user3'],
-        unreadCount: 1,
-        isActive: false,
-        lastMessage: {
-          id: 'msg_3',
-          content: 'Review needed for contract #456',
-          sender: {
-            id: 'user3',
-            name: 'Emma Davis',
-            email: 'emma@company.com',
-          },
-          timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          type: 'text',
-          reactions: [],
-        },
       },
     ];
-
-    setChannels(mockChannels);
-    setSelectedChannel(mockChannels[0]);
-  };
+    setChannels(defaultChannels);
+    setSelectedChannel(defaultChannels[0]);
+  };;
 
   const loadTeamMembers = async () => {
-    // Mock data
-    const mockMembers: TeamMember[] = [
-      {
-        id: 'user1',
-        name: 'Sarah Johnson',
-        email: 'sarah@company.com',
-        status: 'online',
-        role: 'Legal Manager',
-      },
-      {
-        id: 'user2',
-        name: 'Mike Chen',
-        email: 'mike@company.com',
-        status: 'away',
-        role: 'Contract Specialist',
-      },
-      {
-        id: 'user3',
-        name: 'Emma Davis',
-        email: 'emma@company.com',
-        status: 'busy',
-        role: 'Legal Counsel',
-      },
-      {
-        id: 'user4',
-        name: 'Alex Rodriguez',
-        email: 'alex@company.com',
-        status: 'offline',
-        role: 'HR Manager',
-      },
-    ];
-
-    setTeamMembers(mockMembers);
+    try {
+      const res = await fetch('/api/company/members');
+      if (res.ok) {
+        const data = await res.json();
+        setTeamMembers(data.members || []);
+      }
+    } catch {
+      setTeamMembers([]);
+    }
   };
 
   const loadMessages = async (channelId: string) => {
-    // Mock messages
-    const mockMessages: Message[] = [
-      {
-        id: 'msg_1',
-        content: 'Welcome to the General channel! 👋',
-        sender: { id: 'system', name: 'System', email: 'system@company.com' },
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        type: 'system',
-        reactions: [],
-      },
-      {
-        id: 'msg_2',
-        content: "Hi everyone! I've uploaded the new contract template.",
-        sender: { id: 'user2', name: 'Mike Chen', email: 'mike@company.com' },
-        timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-        type: 'text',
-        reactions: [{ emoji: '👍', users: ['user1', 'user3'] }],
-      },
-      {
-        id: 'msg_3',
-        content:
-          "Thanks Mike! I'll review it and let you know if we need any changes.",
-        sender: {
-          id: 'user1',
-          name: 'Sarah Johnson',
-          email: 'sarah@company.com',
-        },
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        type: 'text',
-        reactions: [],
-      },
-      {
-        id: 'msg_4',
-        content: 'Contract #123 has been approved! 🎉',
-        sender: {
-          id: 'user1',
-          name: 'Sarah Johnson',
-          email: 'sarah@company.com',
-        },
-        timestamp: new Date().toISOString(),
-        type: 'text',
-        reactions: [
-          { emoji: '🎉', users: ['user2', 'user3'] },
-          { emoji: '👍', users: ['user4'] },
-        ],
-        isPinned: true,
-      },
-    ];
-
-    setMessages(mockMessages);
+    try {
+      const res = await fetch(`/api/collaboration/messages?channel=${channelId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+      }
+    } catch {
+      setMessages([]);
+    }
   };
 
   const sendMessage = async () => {

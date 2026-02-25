@@ -311,7 +311,6 @@ export default function DocumentUpload({
 
             return;
           } catch (apiError) {
-            console.error('API upload also failed:', apiError);
             // Continue to the original error handling below
             throw apiError;
           }
@@ -341,7 +340,6 @@ export default function DocumentUpload({
         });
       } catch (error) {
         clearInterval(progressInterval);
-        console.error('Error uploading document:', error);
 
         let errorMessage = 'Failed to upload document';
         let helpMessage = '';
@@ -447,7 +445,6 @@ VALUES ('promoter-documents', 'promoter-documents', false, 5242880);`;
         description: 'Document has been removed successfully',
       });
     } catch (error) {
-      console.error('Error deleting document:', error);
       toast({
         title: 'Delete failed',
         description:
@@ -482,7 +479,6 @@ VALUES ('promoter-documents', 'promoter-documents', false, 5242880);`;
       if (fileInput) {
         fileInput.click();
       } else {
-        console.error(`File input not found for ID: ${documentType}-upload`);
       }
     }
   };
@@ -502,7 +498,6 @@ VALUES ('promoter-documents', 'promoter-documents', false, 5242880);`;
       if (fileInput) {
         fileInput.click();
       } else {
-        console.error(`File input not found for ID: ${documentType}-upload`);
       }
     }
   };

@@ -163,7 +163,6 @@ export function RealTimeRegisterForm() {
       });
 
       if (authError) {
-        console.error('🔐 Register Debug - Auth error:', authError);
         throw new Error(authError.message);
       }
 
@@ -182,7 +181,6 @@ export function RealTimeRegisterForm() {
       });
 
       if (profileError) {
-        console.error('🔐 Register Debug - Profile error:', profileError);
 
         // If profile creation fails, clean up auth user
         await supabase.auth.admin.deleteUser(authData.user.id);
@@ -206,10 +204,6 @@ export function RealTimeRegisterForm() {
           });
 
         if (companyError) {
-          console.warn(
-            '🔐 Register Debug - Company creation failed:',
-            companyError
-          );
           // Don't fail registration if company creation fails
         } else {
         }
@@ -231,7 +225,6 @@ export function RealTimeRegisterForm() {
         router.push(`/${locale}/auth/login`);
       }, 3000);
     } catch (error) {
-      console.error('🔐 Register Debug - Registration failed:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Registration failed';
       setError(errorMessage);

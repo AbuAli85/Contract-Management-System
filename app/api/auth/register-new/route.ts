@@ -10,7 +10,6 @@ export async function POST(request: NextRequest) {
 
     const { email, password, fullName, role, phone, company } = body;
 
-    console.log('🔐 Registration API - Starting for:', email, role);
 
     // SECURITY FIX: Comprehensive input validation
     if (!email || !password || !fullName || !role) {
@@ -74,7 +73,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (authError) {
-      console.error('❌ Auth creation error:', authError);
       return NextResponse.json(
         { error: 'Registration failed' }, // SECURITY FIX: Generic error message
         { status: 400 }
@@ -88,7 +86,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Auth user created:', authData.user.id);
 
     // Step 2: Create public user record with PENDING status for approval
     const { error: publicUserError } = await supabaseAdmin
@@ -105,14 +102,11 @@ export async function POST(request: NextRequest) {
       });
 
     if (publicUserError) {
-      console.error('❌ Public user creation error:', publicUserError);
 
       // Try to clean up the auth user if public user creation failed
       try {
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        console.log('🧹 Cleaned up auth user after public user failure');
       } catch (cleanupError) {
-        console.error('❌ Failed to cleanup auth user:', cleanupError);
       }
 
       return NextResponse.json(
@@ -121,7 +115,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Public user record created successfully');
 
     // Step 3: Create organization record if provider or client
     if ((role === 'provider' || role === 'client') && company) {
@@ -137,10 +130,8 @@ export async function POST(request: NextRequest) {
         });
 
       if (companyError) {
-        console.error('⚠️ Organization creation error:', companyError);
         // Don't fail the whole registration for organization creation issues
       } else {
-        console.log('✅ Organization record created successfully');
       }
     }
 
@@ -158,7 +149,6 @@ export async function POST(request: NextRequest) {
       requiresApproval: true,
     });
   } catch (error) {
-    console.error('❌ Registration API error:', error);
     return NextResponse.json(
       { error: 'Internal server error during registration' },
       { status: 500 }

@@ -55,7 +55,6 @@ export function ComplianceDashboard({
         setReport(data.report);
       }
     } catch (error) {
-      console.error('Error fetching compliance data:', error);
     } finally {
       setLoading(false);
     }
@@ -75,7 +74,6 @@ export function ComplianceDashboard({
         );
       }
     } catch (error) {
-      console.error('Error sending alerts:', error);
       alert('Failed to send alerts');
     } finally {
       setSendingAlerts(false);

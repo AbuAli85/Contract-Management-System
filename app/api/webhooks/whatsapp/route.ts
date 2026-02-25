@@ -23,14 +23,6 @@ export async function POST(request: NextRequest) {
     const accountSid = formData.get('AccountSid') as string;
     const numMedia = formData.get('NumMedia') as string;
 
-    console.log('📱 Incoming WhatsApp Message:', {
-      from,
-      to,
-      body,
-      messageSid,
-      accountSid,
-      numMedia,
-    });
 
     // Extract phone number (remove whatsapp: prefix)
     const phoneNumber = from?.replace('whatsapp:', '') || '';
@@ -68,7 +60,6 @@ export async function POST(request: NextRequest) {
       // You can create a whatsapp_messages table to log all conversations
       // For now, we'll just log to console and handle commands
     } catch (error) {
-      console.warn('Could not store message:', error);
     }
 
     // Handle commands
@@ -122,7 +113,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error handling WhatsApp webhook:', error);
 
     // Return empty TwiML response to avoid Twilio retries
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>

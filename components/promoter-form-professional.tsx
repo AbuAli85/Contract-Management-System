@@ -256,7 +256,6 @@ export default function PromoterFormProfessional(
 
     // Set a timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      console.warn('[Promoter Form] Employer fetch timeout - taking too long');
       setEmployersLoading(false);
       setEmployers([]);
     }, 10000); // 10 second timeout
@@ -264,9 +263,6 @@ export default function PromoterFormProfessional(
     try {
       const supabase = createClient();
       if (!supabase) {
-        console.error(
-          '[Promoter Form] Supabase client is null - environment variables may be missing'
-        );
         clearTimeout(timeoutId);
         setEmployers([]);
         setEmployersLoading(false);
@@ -282,16 +278,8 @@ export default function PromoterFormProfessional(
       clearTimeout(timeoutId);
 
       if (error) {
-        console.error(
-          '[Promoter Form] Error fetching employers:',
-          error.message,
-          error.code
-        );
         // Check for common error types
         if (error.code === '42501' || error.message?.includes('permission')) {
-          console.warn(
-            '[Promoter Form] RLS policy may be blocking employer query'
-          );
         }
         // Set empty employers instead of throwing
         setEmployers([]);
@@ -302,10 +290,6 @@ export default function PromoterFormProfessional(
     } catch (error) {
       clearTimeout(timeoutId);
       // Error fetching employers - handled gracefully
-      console.error(
-        '[Promoter Form] Unexpected error fetching employers:',
-        error
-      );
       setEmployers([]);
     } finally {
       setEmployersLoading(false);
@@ -680,26 +664,17 @@ export default function PromoterFormProfessional(
     // Documents can be uploaded later after promoter is created
     if (!formData.id_card_url || !formData.id_card_url.trim()) {
       // Don't block form submission - just log warning
-      console.warn(
-        '[Promoter Form] ID card image not provided - can be added later'
-      );
     }
 
     // Passport validation - STRONGLY ENCOURAGED
     if (!formData.passport_number || !formData.passport_number.trim()) {
       // Add warning instead of error to allow submission but encourage passport
-      console.warn(
-        '[Promoter Form] Passport number not provided - recommended for contracts'
-      );
     }
 
     // Passport Image validation - Recommended but not blocking
     // Documents can be uploaded later after promoter is created
     if (!formData.passport_url || !formData.passport_url.trim()) {
       // Don't block form submission - just log warning
-      console.warn(
-        '[Promoter Form] Passport image not provided - can be added later'
-      );
     }
 
     // Passport expiry validation - ENCOURAGE with warning

@@ -71,7 +71,6 @@ export function PromotersHeader({
       router.push(`/${derivedLocale}/manage-promoters/new`);
       onAddPromoter();
     } catch (error) {
-      console.error('Error navigating to add promoter:', error);
       toast({
         variant: 'destructive',
         title: 'Navigation Error',
@@ -84,7 +83,6 @@ export function PromotersHeader({
     try {
       router.push(`/${derivedLocale}/csv-import`);
     } catch (error) {
-      console.error('Error navigating to import page:', error);
       toast({
         variant: 'destructive',
         title: 'Navigation Error',

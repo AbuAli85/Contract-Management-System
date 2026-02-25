@@ -235,7 +235,6 @@ export default function PromoterOnboardingForm() {
     },
     onError: error => {
       toast.error('Failed to submit onboarding data');
-      console.error('Onboarding error:', error);
     },
   });
 

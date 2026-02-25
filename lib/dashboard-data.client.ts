@@ -24,7 +24,6 @@ export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
 
     return data.analytics;
   } catch (error) {
-    console.error('Error fetching dashboard analytics:', error);
 
     // Return fallback data if API fails
     return {
@@ -79,7 +78,6 @@ export async function getPendingReviews(): Promise<any[]> {
       updated_at: contract.updated_at || null,
     }));
   } catch (error) {
-    console.error('Error fetching pending reviews:', error);
     return [];
   }
 }
@@ -100,7 +98,6 @@ export async function getAdminActions(): Promise<any[]> {
 
     return data.data || [];
   } catch (error) {
-    console.error('Error fetching admin actions:', error);
     return [];
   }
 }
@@ -121,7 +118,6 @@ export async function getAuditLogs(): Promise<any[]> {
 
     return data.data || [];
   } catch (error) {
-    console.error('Error fetching audit logs:', error);
     return [];
   }
 }
@@ -150,7 +146,6 @@ export async function getNotifications(): Promise<any[]> {
       timestamp: notification.created_at,
     }));
   } catch (error) {
-    console.error('Error fetching notifications:', error);
     return [];
   }
 }
@@ -175,7 +170,6 @@ export async function getUsers(): Promise<any[]> {
       last_sign_in_at: undefined, // Not available in users table
     }));
   } catch (error) {
-    console.error('Error fetching users:', error);
     return [];
   }
 }

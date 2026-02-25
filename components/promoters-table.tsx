@@ -199,7 +199,6 @@ export function PromotersTable({
           setEmployers(data.parties);
         }
       } catch (error) {
-        console.error('Error fetching employers:', error);
       } finally {
         setIsLoadingEmployers(false);
       }
@@ -234,7 +233,6 @@ export function PromotersTable({
       setDeletePromoter(null);
       onRefresh?.();
     } catch (error) {
-      console.error('Error deleting promoter:', error);
       toast.error('Failed to delete promoter');
     } finally {
       setIsDeleting(false);
@@ -286,7 +284,6 @@ export function PromotersTable({
       setEditingValue('');
       onRefresh?.();
     } catch (error) {
-      console.error('Error updating field:', error);
       toast.error(
         error instanceof Error
           ? error.message

@@ -251,10 +251,6 @@ export function QuickFixWorkflowDialog({
 
           results.success++;
         } catch (error) {
-          console.error(
-            `Failed to process case for ${case_.promoter.displayName}:`,
-            error
-          );
           results.failed++;
         }
 
@@ -290,7 +286,6 @@ export function QuickFixWorkflowDialog({
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      console.error('Error in quick-fix workflow:', error);
       toast({
         title: 'Error',
         description:

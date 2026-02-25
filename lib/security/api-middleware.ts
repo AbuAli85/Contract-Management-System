@@ -156,7 +156,6 @@ export async function withSecurity(
 
       return secureResponse;
     } catch (error) {
-      console.error(`Security middleware error [${requestId}]:`, error);
 
       await auditLogger.logSecurityEvent({
         event: 'security_middleware_error',

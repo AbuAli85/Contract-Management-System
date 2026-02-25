@@ -36,7 +36,6 @@ export async function GET(request: Request) {
 
   try {
     // Check 1: Environment Variables
-    console.log('🔍 Checking environment variables...');
     const envVars = {
       NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY:
@@ -66,7 +65,6 @@ export async function GET(request: Request) {
     }
 
     // Check 2: Supabase Client Creation
-    console.log('🔍 Creating Supabase client...');
     let supabase;
     try {
       const cookieStore = await cookies();
@@ -104,7 +102,6 @@ export async function GET(request: Request) {
     }
 
     // Check 3: Authentication
-    console.log('🔍 Checking authentication...');
     try {
       const {
         data: { user },
@@ -138,7 +135,6 @@ export async function GET(request: Request) {
     }
 
     // Check 4: Database Connection - Test parties table
-    console.log('🔍 Testing database connection and parties table...');
     try {
       const { data, error, count } = await supabase
         .from('parties')
@@ -177,7 +173,6 @@ export async function GET(request: Request) {
     }
 
     // Check 5: RBAC Configuration
-    console.log('🔍 Checking RBAC configuration...');
     try {
       const rbacMode = process.env.RBAC_ENFORCEMENT || 'enforce';
       const isEnforced = rbacMode === 'enforce';
@@ -207,7 +202,6 @@ export async function GET(request: Request) {
     }
 
     // Check 6: Sample Query
-    console.log('🔍 Attempting sample parties query...');
     try {
       const { data: parties, error } = await supabase
         .from('parties')
@@ -283,11 +277,9 @@ export async function GET(request: Request) {
       );
     }
 
-    console.log('✅ Diagnostic complete:', diagnosticResults.overallStatus);
 
     return NextResponse.json(diagnosticResults, { status: 200 });
   } catch (error) {
-    console.error('💥 Diagnostic failed with exception:', error);
 
     diagnosticResults.overallStatus = 'EXCEPTION';
     diagnosticResults.error = {

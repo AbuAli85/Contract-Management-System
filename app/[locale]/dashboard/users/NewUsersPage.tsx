@@ -389,7 +389,7 @@ export default function NewUsersPage() {
 
       // Ensure result is always an array
       if (!Array.isArray(result)) {
-        console.error('Result is not an array after processing:', result);
+
         setFilteredUsers([]);
         setPaginatedUsers([]);
       } else {
@@ -402,7 +402,7 @@ export default function NewUsersPage() {
         setPaginatedUsers(Array.isArray(paginated) ? paginated : []);
       }
     } catch (error) {
-      console.error('Error in filtering effect:', error);
+
       setFilteredUsers([]);
       setPaginatedUsers([]);
     }
@@ -451,7 +451,7 @@ export default function NewUsersPage() {
           let usersArray: User[] = data.users || data || [];
 
           if (!Array.isArray(usersArray)) {
-            console.warn('API returned non-array users data:', usersArray);
+
             usersArray = [];
           }
 
@@ -477,7 +477,7 @@ export default function NewUsersPage() {
           setUsers([]);
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
+
         setError(
           'Failed to fetch users. Please check your connection and try again.'
         );
@@ -579,7 +579,7 @@ export default function NewUsersPage() {
           position: '',
         });
       } catch (error) {
-        console.error('Error saving user:', error);
+
         setFormError('Failed to save user. Please try again.');
       } finally {
         setEditLoading(false);
@@ -616,7 +616,7 @@ export default function NewUsersPage() {
         });
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to delete user. Please try again.',
@@ -658,7 +658,7 @@ export default function NewUsersPage() {
           });
         }
       } catch (error) {
-        console.error('Error updating user status:', error);
+
         toast({
           title: 'Error',
           description: 'Failed to update user status. Please try again.',
@@ -676,7 +676,13 @@ export default function NewUsersPage() {
 
       setBulkLoading(true);
       try {
-        // TODO: Implement bulk actions API call
+        const res = await fetch('/api/users/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, userIds: Array.from(selectedUsers) }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Bulk action failed');
         toast({
           title: 'Bulk action completed',
           description: `${action} action applied to ${selectedUsers.size} users.`,
@@ -685,7 +691,7 @@ export default function NewUsersPage() {
         setShowBulkActions(false);
         await fetchUsers(true);
       } catch (error) {
-        console.error('Error performing bulk action:', error);
+
         toast({
           title: 'Error',
           description: 'Failed to perform bulk action. Please try again.',

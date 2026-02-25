@@ -194,7 +194,6 @@ export const POST = withAnyRBAC(
         .single();
 
       if (updateError) {
-        console.error('Error updating contract:', updateError);
         return NextResponse.json(
           {
             success: false,
@@ -205,18 +204,41 @@ export const POST = withAnyRBAC(
         );
       }
 
-      // TODO: Send notifications
-      // - Notify contract creator about approval/rejection
-      // - Notify relevant parties about status change
-      // - Send email notifications
-
-      console.log(`✅ Contract ${action} successful:`, {
-        contractId,
-        action,
-        status: updateData.status,
-        userId: user.id,
-        timestamp: new Date().toISOString(),
-      });
+      // Send notifications about contract status change
+      try {
+        const { ContractNotificationService } = await import(
+          '@/lib/services/contract-notification.service'
+        );
+        const notificationService = new ContractNotificationService(supabase);
+        // Fetch contract with creator info for notification
+        const { data: contractWithCreator } = await supabase
+          .from('contracts')
+          .select('created_by, contract_number, contract_type')
+          .eq('id', contractId)
+          .single();
+        if (contractWithCreator?.created_by) {
+          const { data: creatorProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', contractWithCreator.created_by)
+            .single();
+          if (creatorProfile?.email) {
+            await notificationService.sendStatusChange({
+              contractId: contractId as string,
+              contractNumber:
+                contractWithCreator.contract_number ?? (contractId as string),
+              contractType: contractWithCreator.contract_type ?? 'Contract',
+              newStatus: updateData.status ?? action,
+              recipientEmail: creatorProfile.email,
+              recipientName: creatorProfile.full_name ?? 'Contract Owner',
+              changedBy: user.email ?? undefined,
+              notes: reason,
+            });
+          }
+        }
+      } catch {
+        // Do not fail the approval if notification fails
+      }
 
       return NextResponse.json({
         success: true,
@@ -225,7 +247,6 @@ export const POST = withAnyRBAC(
         action,
       });
     } catch (error) {
-      console.error('❌ Contract approval error:', error);
       return NextResponse.json(
         {
           success: false,
@@ -279,7 +300,6 @@ export const GET = withRBAC(
         contract,
       });
     } catch (error) {
-      console.error('Error fetching contract approval status:', error);
       return NextResponse.json(
         {
           success: false,

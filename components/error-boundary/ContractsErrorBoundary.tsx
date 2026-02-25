@@ -41,12 +41,6 @@ export class ContractsErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('❌ Contracts Error Boundary caught an error:', {
-      error,
-      errorInfo,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString(),
-    });
 
     this.setState({
       errorInfo,

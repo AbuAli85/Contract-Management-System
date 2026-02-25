@@ -4,7 +4,6 @@ import { ensureUserProfile } from '@/lib/ensure-user-profile';
 
 export async function POST() {
   try {
-    console.log('[API /users/sync] Starting user sync...');
 
     const supabase = await createClient();
 
@@ -15,7 +14,6 @@ export async function POST() {
     } = await supabase.auth.getUser();
 
     if (authError) {
-      console.error('[API /users/sync] Auth error:', authError);
       return NextResponse.json(
         {
           success: false,
@@ -26,7 +24,6 @@ export async function POST() {
     }
 
     if (!user) {
-      console.warn('[API /users/sync] No authenticated user found');
       return NextResponse.json(
         {
           success: false,
@@ -36,15 +33,12 @@ export async function POST() {
       );
     }
 
-    console.log('[API /users/sync] User authenticated:', user.id);
 
     // The core logic: ensure the user profile exists with error handling
     let profile;
     try {
       profile = await ensureUserProfile(user);
-      console.log('[API /users/sync] Profile sync successful');
     } catch (profileError) {
-      console.error('[API /users/sync] Profile sync error:', profileError);
       // Return success anyway to prevent blocking
       return NextResponse.json({
         success: true,
@@ -63,7 +57,6 @@ export async function POST() {
       profile,
     });
   } catch (error) {
-    console.error('[API /users/sync] Unexpected error:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'An unknown error occurred.';
 

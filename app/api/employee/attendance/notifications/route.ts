@@ -134,7 +134,6 @@ export async function GET(_request: NextRequest) {
       unread_count: notifications.filter(n => !n.read).length,
     });
   } catch (error: any) {
-    console.error('Error fetching notifications:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

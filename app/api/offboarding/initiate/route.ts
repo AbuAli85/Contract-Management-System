@@ -158,7 +158,6 @@ export const POST = withAnyRBAC(
         .insert(taskInserts);
 
       if (tasksError) {
-        console.error('Error creating offboarding tasks:', tasksError);
         // Continue anyway, tasks can be added later
       }
 
@@ -236,7 +235,6 @@ export const POST = withAnyRBAC(
         { status: 201 }
       );
     } catch (error: any) {
-      console.error('Error initiating offboarding:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

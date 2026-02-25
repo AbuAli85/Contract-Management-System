@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating letter:', createError);
       return NextResponse.json(
         { error: 'Failed to create letter', details: createError.message },
         { status: 500 }
@@ -137,7 +136,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/letters/generate:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

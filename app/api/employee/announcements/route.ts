@@ -55,7 +55,6 @@ export async function GET(_request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (announcementsError) {
-      console.error('Error fetching announcements:', announcementsError);
       return NextResponse.json(
         { error: 'Failed to fetch announcements' },
         { status: 500 }
@@ -100,7 +99,6 @@ export async function GET(_request: NextRequest) {
       unreadCount,
     });
   } catch (error) {
-    console.error('Error in announcements GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -151,7 +149,6 @@ export async function POST(request: NextRequest) {
       message: 'Marked as read',
     });
   } catch (error) {
-    console.error('Error in announcements POST:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

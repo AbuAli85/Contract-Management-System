@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
 
     const { userId, email, fullName, role, phone } = body;
 
-    console.log('🔧 Manual Sync API - Starting for:', email, role);
 
     // Validate required fields
     if (!userId || !email || !fullName || !role) {
@@ -36,14 +35,12 @@ export async function POST(request: NextRequest) {
     );
 
     if (upsertError) {
-      console.error('❌ Manual sync error:', upsertError);
       return NextResponse.json(
         { error: `Sync failed: ${upsertError.message}` },
         { status: 500 }
       );
     }
 
-    console.log('✅ Manual sync successful');
 
     return NextResponse.json({
       success: true,
@@ -56,7 +53,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('❌ Manual sync API error:', error);
     return NextResponse.json(
       { error: 'Internal server error during sync' },
       { status: 500 }

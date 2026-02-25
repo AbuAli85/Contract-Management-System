@@ -134,7 +134,6 @@ export default function UnifiedLoginForm() {
         await supabase.auth.signInWithPassword(authOptions);
 
       if (authError) {
-        console.error('🔐 Unified Login - Auth error:', authError);
 
         // Check if it's a CAPTCHA error
         if (
@@ -163,7 +162,6 @@ export default function UnifiedLoginForm() {
         .single();
 
       if (profileError) {
-        console.warn('🔐 Unified Login - Profile error:', profileError);
         // Continue with auth user data if profile doesn't exist
         setUserProfile({
           id: authData.user.id,
@@ -277,7 +275,6 @@ export default function UnifiedLoginForm() {
         router.push(redirectPath);
       }, 1500);
     } catch (error) {
-      console.error('🔐 Unified Login - Exception:', error);
       setError(
         `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

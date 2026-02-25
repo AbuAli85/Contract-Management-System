@@ -229,7 +229,6 @@ export default function EnhancedCRMDashboard() {
       setContracts(contractsData || []);
       setRecentActivity(recentActivity);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load dashboard data',

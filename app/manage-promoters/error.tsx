@@ -9,8 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { useTranslations } from 'next-intl';
-import { redirect } from 'next/navigation';
+
 
 export default function Error({
   error,
@@ -20,9 +19,15 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error('Manage Promoters Error:', error);
+    // Error captured - integrate with error reporting service if needed
+    // Example: Sentry.captureException(error);
   }, [error]);
+
+  const getLocale = (): string => {
+    if (typeof window === 'undefined') return 'en';
+    const match = window.location.pathname.match(/^\/([a-z]{2})\//);
+    return match ? match[1] : 'en';
+  };
 
   return (
     <div className='flex min-h-[calc(100vh-64px)] items-center justify-center p-4'>
@@ -41,9 +46,9 @@ export default function Error({
             <Button onClick={() => reset()}>Try Again</Button>
             <Button
               variant='outline'
-              onClick={() =>
-                (window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/promoters`)
-              }
+              onClick={() => {
+                window.location.href = `/${getLocale()}/promoters`;
+              }}
             >
               Go to Promoters
             </Button>

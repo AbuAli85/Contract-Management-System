@@ -40,7 +40,6 @@ function getTwilioClient() {
       process.env.TWILIO_AUTH_TOKEN
     );
   } catch (error) {
-    console.error('Twilio package not installed. Run: npm install twilio');
     throw new Error('Twilio package not installed');
   }
 }
@@ -51,7 +50,6 @@ function getTwilioClient() {
 export async function sendSMS(options: SMSOptions): Promise<SMSResult> {
   try {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-      console.warn('⚠️ Twilio not configured - SMS will not be sent');
       return {
         success: false,
         error: 'SMS service not configured',
@@ -59,7 +57,6 @@ export async function sendSMS(options: SMSOptions): Promise<SMSResult> {
     }
 
     if (!process.env.TWILIO_PHONE_NUMBER) {
-      console.warn('⚠️ TWILIO_PHONE_NUMBER not configured');
       return {
         success: false,
         error: 'Twilio phone number not configured',
@@ -82,7 +79,6 @@ export async function sendSMS(options: SMSOptions): Promise<SMSResult> {
       messageId: result.sid,
     };
   } catch (error: any) {
-    console.error('❌ SMS send error:', error);
     return {
       success: false,
       error: error.message || 'Failed to send SMS',

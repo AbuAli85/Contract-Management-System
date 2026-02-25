@@ -98,11 +98,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (profileError) {
-        console.error('Profile creation error:', profileError);
         // Don't fail the registration if profile creation fails
-        console.warn(
-          'Profile creation failed, but auth user was created successfully'
-        );
       }
 
       // Create company if provider
@@ -118,7 +114,6 @@ export async function POST(request: NextRequest) {
           });
 
         if (companyError) {
-          console.warn('Company creation failed:', companyError);
         }
       }
 
@@ -180,7 +175,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Production registration error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -201,7 +195,6 @@ export async function GET(request: NextRequest) {
       validRoles: ['user', 'provider', 'client', 'admin'],
     });
   } catch (error) {
-    console.error('Production registration config error:', error);
     return NextResponse.json(
       { error: 'Failed to get configuration' },
       { status: 500 }

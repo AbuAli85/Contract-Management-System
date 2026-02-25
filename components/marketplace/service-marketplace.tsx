@@ -232,7 +232,6 @@ export function ServiceMarketplace() {
 
       setServices(transformedServices);
     } catch (error) {
-      console.error('Error loading services:', error);
       toast.error('Failed to load services');
     } finally {
       setLoading(false);

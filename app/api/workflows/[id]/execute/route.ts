@@ -51,7 +51,6 @@ export const POST = withAnyRBAC(
         message: 'Workflow executed successfully',
       });
     } catch (error: any) {
-      console.error('Error executing workflow:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

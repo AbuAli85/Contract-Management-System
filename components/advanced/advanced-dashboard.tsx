@@ -219,7 +219,6 @@ export function AdvancedDashboard() {
         },
       ]);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -278,7 +277,7 @@ export function AdvancedDashboard() {
       description: 'Create a new contract from template',
       icon: FileText,
       color: 'bg-blue-500',
-      action: () => console.log('Navigate to contract generation'),
+      action: () => {},
     },
     {
       id: 'book_meeting',
@@ -286,7 +285,7 @@ export function AdvancedDashboard() {
       description: 'Reserve a conference room',
       icon: Calendar,
       color: 'bg-green-500',
-      action: () => console.log('Navigate to booking system'),
+      action: () => {},
     },
     {
       id: 'upload_document',
@@ -294,7 +293,7 @@ export function AdvancedDashboard() {
       description: 'Upload compliance documents',
       icon: Upload,
       color: 'bg-purple-500',
-      action: () => console.log('Navigate to document upload'),
+      action: () => {},
     },
     {
       id: 'send_notification',
@@ -302,7 +301,7 @@ export function AdvancedDashboard() {
       description: 'Broadcast system announcement',
       icon: Bell,
       color: 'bg-orange-500',
-      action: () => console.log('Navigate to announcements'),
+      action: () => {},
     },
   ];
 

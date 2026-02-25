@@ -3,6 +3,7 @@ import {
   professionalSecurityMiddleware,
   SecurityPolicies,
 } from '@/lib/auth/professional-security-middleware';
+import { createClient } from '@/lib/supabase/server';
 
 // ========================================
 // 🏢 PROFESSIONAL AUTHENTICATION API
@@ -20,49 +21,102 @@ import {
 export const POST = professionalSecurityMiddleware.withSecurity(
   async (req: NextRequest, context) => {
     try {
-      const { email, password, _mfaToken, _deviceName, _trustDevice } =
+      const { email, password, mfaToken, deviceName, trustDevice } =
         await req.json();
 
       if (!email || !password) {
         return NextResponse.json(
-          {
-            success: false,
-            error: 'Email and password are required',
-          },
+          { success: false, error: 'Email and password are required' },
           { status: 400 }
         );
       }
 
-      // TODO: Implement comprehensive authentication logic
-      // This would integrate with the ProfessionalAuthService
+      const supabase = await createClient();
+
+      // Authenticate with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error || !data.user) {
+        return NextResponse.json(
+          { success: false, error: error?.message ?? 'Authentication failed' },
+          { status: 401 }
+        );
+      }
+
+      // Check if user profile is active
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, status, full_name')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.status && !['active', 'approved'].includes(profile.status)) {
+        await supabase.auth.signOut();
+        return NextResponse.json(
+          { success: false, error: 'Account is not active. Please contact support.' },
+          { status: 403 }
+        );
+      }
+
+      // Check MFA requirement
+      const { data: mfaData } = await supabase
+        .from('user_mfa')
+        .select('enabled')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (mfaData?.enabled && !mfaToken) {
+        return NextResponse.json({
+          success: false,
+          requiresMFA: true,
+          message: 'MFA token required',
+        });
+      }
+
+      // Verify MFA token if provided
+      if (mfaData?.enabled && mfaToken) {
+        const { MFAService } = await import('@/lib/auth/mfa-service');
+        const mfaService = MFAService.getInstance();
+        const mfaResult = await mfaService.verifyMFALogin(mfaToken);
+        if (!mfaResult.success) {
+          return NextResponse.json(
+            { success: false, error: 'Invalid MFA token' },
+            { status: 401 }
+          );
+        }
+      }
 
       return NextResponse.json({
         success: true,
         message: 'Authentication successful',
         user: {
-          id: 'user_123',
-          email,
-          role: 'user',
+          id: data.user.id,
+          email: data.user.email,
+          role: profile?.role ?? 'user',
+          fullName: profile?.full_name,
         },
-        securityContext: context,
-        requiresMFA: false, // Based on user's MFA settings and risk assessment
+        securityContext: {
+          requestId: context.requestId,
+          riskScore: context.riskScore,
+          timestamp: context.timestamp,
+        },
+        requiresMFA: false,
       });
-    } catch (error) {
-      console.error('Professional authentication error:', error);
+    } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Authentication failed',
-        },
+        { success: false, error: 'Authentication failed' },
         { status: 500 }
       );
     }
   },
-  SecurityPolicies.PROTECTED
+  SecurityPolicies.PUBLIC
 );
 
 export const GET = professionalSecurityMiddleware.withSecurity(
-  async (req: NextRequest, context) => {
+  async (_req: NextRequest, context) => {
     return NextResponse.json({
       message: 'Professional Authentication API',
       version: '2.0.0',

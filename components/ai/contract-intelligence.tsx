@@ -110,101 +110,31 @@ export function ContractIntelligence({
     }
   }, [contractId]);
 
-  const analyzeContract = async (id: string) => {
+  const analyzeContract = async (id: string, query?: string) => {
     setLoading(true);
     try {
-      // Simulate AI analysis - in production, this would call an AI service
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const mockAnalysis: ContractAnalysis = {
-        id: `analysis_${id}`,
-        contractId: id,
-        riskScore: 75,
-        complianceScore: 88,
-        efficiencyScore: 82,
-        recommendations: [
-          {
-            type: 'risk',
-            priority: 'high',
-            title: 'Payment Terms Risk',
-            description:
-              'Payment terms are longer than industry average, increasing cash flow risk',
-            impact: 15,
-            suggestedAction:
-              'Negotiate shorter payment terms or add late payment penalties',
-          },
-          {
-            type: 'compliance',
-            priority: 'medium',
-            title: 'Regulatory Compliance',
-            description: 'Contract includes all required regulatory clauses',
-            impact: 8,
-            suggestedAction:
-              'Monitor for regulatory changes and update accordingly',
-          },
-          {
-            type: 'efficiency',
-            priority: 'low',
-            title: 'Process Optimization',
-            description: 'Contract processing time can be reduced by 20%',
-            impact: 12,
-            suggestedAction: 'Implement automated approval workflows',
-          },
-        ],
-        aiInsights: [
-          {
-            category: 'Market Analysis',
-            insight:
-              'Contract value is 15% above market average for similar services',
-            confidence: 0.92,
-            actionable: true,
-          },
-          {
-            category: 'Risk Assessment',
-            insight: 'Low risk profile with strong counterparty credit rating',
-            confidence: 0.87,
-            actionable: false,
-          },
-          {
-            category: 'Opportunity',
-            insight:
-              'Potential for 25% value increase through performance incentives',
-            confidence: 0.78,
-            actionable: true,
-          },
-        ],
-        marketComparison: {
-          averageValue: 45000,
-          marketPosition: 'above',
-          competitiveAdvantage: [
-            'Favorable payment terms',
-            'Strong performance metrics',
-            'Clear dispute resolution',
-          ],
-          improvementAreas: [
-            'Add performance bonuses',
-            'Include innovation clauses',
-            'Enhance termination protection',
-          ],
+      const response = await fetch('/api/ai/analyze-contract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractId: id, query }),
+      });
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setAnalysis({
+        ...data,
+        marketComparison: data.marketComparison ?? {
+          averageValue: 0,
+          marketPosition: 'average' as const,
+          competitiveAdvantage: [],
+          improvementAreas: [],
         },
-        predictedOutcome: {
-          successProbability: 0.85,
-          estimatedValue: 52000,
-          timeline: '12 months',
-          keyFactors: [
-            'Strong counterparty relationship',
-            'Clear performance metrics',
-            'Favorable market conditions',
-          ],
-        },
-      };
-
-      setAnalysis(mockAnalysis);
-    } catch (error) {
-      console.error('Error analyzing contract:', error);
+      });
+    } catch {
       toast({
         title: 'Analysis Error',
-        description: 'Failed to analyze contract',
+        description: 'Failed to analyze contract. Please try again.',
         variant: 'destructive',
       });
     } finally {

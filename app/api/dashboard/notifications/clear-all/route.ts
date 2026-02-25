@@ -16,7 +16,6 @@ export async function DELETE(_request: NextRequest) {
       count: 0, // Would return actual count
     });
   } catch (error) {
-    console.error('Error clearing all notifications:', error);
     return NextResponse.json(
       { error: 'Failed to clear all notifications' },
       { status: 500 }

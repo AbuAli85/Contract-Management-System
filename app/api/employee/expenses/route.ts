@@ -62,7 +62,6 @@ export async function GET(request: NextRequest) {
     const { data: expenses, error } = await query;
 
     if (error) {
-      console.error('Error fetching expenses:', error);
       return NextResponse.json(
         { error: 'Failed to fetch expenses' },
         { status: 500 }
@@ -103,7 +102,6 @@ export async function GET(request: NextRequest) {
       stats,
     });
   } catch (error) {
-    console.error('Error in expenses GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -176,7 +174,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating expense:', createError);
       return NextResponse.json(
         { error: 'Failed to create expense', details: createError.message },
         { status: 500 }
@@ -189,7 +186,6 @@ export async function POST(request: NextRequest) {
       expense,
     });
   } catch (error) {
-    console.error('Error in expenses POST:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

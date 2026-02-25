@@ -305,7 +305,6 @@ export function AdvancedWorkflowEngine() {
 
       setInstances(mockInstances);
     } catch (error) {
-      console.error('Error loading workflows:', error);
       toast({
         title: 'Error',
         description: 'Failed to load workflows',

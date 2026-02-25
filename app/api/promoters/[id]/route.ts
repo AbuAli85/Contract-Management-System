@@ -172,14 +172,7 @@ export const GET = withAnyRBAC(
           const { ensurePromoterRole } =
             await import('@/lib/services/employee-account-service');
           await ensurePromoterRole(userId);
-          console.log(
-            `✅ Auto-assigned promoter role to user ${userId} accessing own profile`
-          );
         } catch (roleError) {
-          console.warn(
-            '⚠️ Could not auto-assign promoter role (non-critical):',
-            roleError
-          );
           // Continue anyway - the RBAC check will handle it
         }
       }
@@ -198,7 +191,6 @@ export const GET = withAnyRBAC(
       let { data: promoter, error } = await promoterQuery.maybeSingle();
 
       if (error) {
-        console.error('Error fetching promoter:', error);
         return NextResponse.json(
           { error: 'Failed to fetch promoter' },
           { status: 500 }
@@ -207,9 +199,6 @@ export const GET = withAnyRBAC(
 
       // ✅ AUTO-FIX: If user is accessing their own profile and promoter record doesn't exist, create it
       if (!promoter && searchId === userId) {
-        console.log(
-          `🔧 AUTO-FIX: Creating missing promoter record for user ${userId}`
-        );
 
         try {
           // Get user profile to populate promoter data
@@ -250,14 +239,6 @@ export const GET = withAnyRBAC(
                 .single();
 
             if (createError) {
-              console.error('❌ Error auto-creating promoter record:', {
-                error: createError,
-                code: createError.code,
-                message: createError.message,
-                details: createError.details,
-                hint: createError.hint,
-                promoterData,
-              });
               return NextResponse.json(
                 {
                   error: 'Failed to create promoter record',
@@ -269,7 +250,6 @@ export const GET = withAnyRBAC(
             }
 
             if (!newPromoter) {
-              console.error('❌ Promoter record creation returned no data');
               return NextResponse.json(
                 {
                   error: 'Failed to create promoter record - no data returned',
@@ -278,9 +258,6 @@ export const GET = withAnyRBAC(
               );
             }
 
-            console.log(
-              `✅ Successfully auto-created promoter record for user ${userId}`
-            );
 
             // Re-fetch the promoter using admin client to ensure we can read it
             const { data: refetchedPromoter } = await supabaseAdmin
@@ -290,7 +267,6 @@ export const GET = withAnyRBAC(
               .maybeSingle();
 
             if (!refetchedPromoter) {
-              console.error('❌ Failed to refetch newly created promoter');
               return NextResponse.json(
                 { error: 'Failed to fetch newly created promoter' },
                 { status: 500 }
@@ -301,17 +277,12 @@ export const GET = withAnyRBAC(
             // Set promoter to the refetched one so the code below handles it
             promoter = refetchedPromoter;
           } else {
-            console.error('❌ User profile not found for auto-creation');
             return NextResponse.json(
               { error: 'User profile not found' },
               { status: 404 }
             );
           }
         } catch (autoFixError) {
-          console.error(
-            '❌ Error in auto-fix for promoter record:',
-            autoFixError
-          );
           return NextResponse.json(
             { error: 'Failed to create promoter record' },
             { status: 500 }
@@ -339,7 +310,6 @@ export const GET = withAnyRBAC(
             employer = employerData[0];
           }
         } catch (employerError) {
-          console.warn('Could not fetch employer data:', employerError);
           // Continue without employer data rather than failing the entire request
         }
       }
@@ -362,7 +332,6 @@ export const GET = withAnyRBAC(
           }));
         }
       } catch (contractError) {
-        console.warn('Could not fetch contracts:', contractError);
         // Continue without contracts rather than failing the entire request
       }
 
@@ -373,7 +342,6 @@ export const GET = withAnyRBAC(
             { status: 404 }
           );
         }
-        console.error('Error fetching promoter:', error);
         return NextResponse.json(
           { error: 'Failed to fetch promoter' },
           { status: 500 }
@@ -389,7 +357,6 @@ export const GET = withAnyRBAC(
         },
       });
     } catch (error) {
-      console.error('API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -454,19 +421,11 @@ export const PUT = withRBAC(
       const body = await request.json();
 
       // Log the incoming request for debugging
-      console.log('📥 PATCH /api/promoters/[id] - Incoming data:', {
-        id,
-        bodyKeys: Object.keys(body),
-        bodySample: Object.fromEntries(
-          Object.entries(body).slice(0, 10) // First 10 fields
-        ),
-      });
 
       let validatedData;
       try {
         validatedData = promoterUpdateSchema.parse(body);
       } catch (validationError) {
-        console.error('❌ Validation error:', validationError);
         if (validationError instanceof z.ZodError) {
           return NextResponse.json(
             {
@@ -489,7 +448,6 @@ export const PUT = withRBAC(
           .single();
 
         if (checkError && checkError.code !== 'PGRST116') {
-          console.error('Error checking ID card number:', checkError);
           return NextResponse.json(
             { error: 'Failed to validate ID card number' },
             { status: 500 }
@@ -559,7 +517,6 @@ export const PUT = withRBAC(
             { status: 404 }
           );
         }
-        console.error('Error updating promoter:', error);
         return NextResponse.json(
           {
             error: 'Failed to update promoter',
@@ -580,7 +537,6 @@ export const PUT = withRBAC(
           created_at: new Date().toISOString(),
         });
       } catch (auditError) {
-        console.error('Error creating audit log:', auditError);
         // Don't fail the request if audit logging fails
       }
 
@@ -599,7 +555,6 @@ export const PUT = withRBAC(
         );
       }
 
-      console.error('API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -616,10 +571,6 @@ export const PATCH = withRBAC(
       const { id } = await params;
 
       // Log the incoming request for debugging
-      console.log(
-        '📥 PATCH /api/promoters/[id] - Request received for ID:',
-        id
-      );
 
       const cookieStore = await cookies();
 
@@ -671,19 +622,11 @@ export const PATCH = withRBAC(
       const body = await request.json();
 
       // Log the incoming request for debugging
-      console.log('📥 PATCH /api/promoters/[id] - Incoming data:', {
-        id,
-        bodyKeys: Object.keys(body),
-        bodySample: Object.fromEntries(
-          Object.entries(body).slice(0, 10) // First 10 fields
-        ),
-      });
 
       let validatedData;
       try {
         validatedData = promoterUpdateSchema.parse(body);
       } catch (validationError) {
-        console.error('❌ Validation error:', validationError);
         if (validationError instanceof z.ZodError) {
           return NextResponse.json(
             {
@@ -706,7 +649,6 @@ export const PATCH = withRBAC(
           .single();
 
         if (checkError && checkError.code !== 'PGRST116') {
-          console.error('Error checking ID card number:', checkError);
           return NextResponse.json(
             { error: 'Failed to validate ID card number' },
             { status: 500 }
@@ -776,7 +718,6 @@ export const PATCH = withRBAC(
             { status: 404 }
           );
         }
-        console.error('Error updating promoter:', error);
         return NextResponse.json(
           {
             error: 'Failed to update promoter',
@@ -797,7 +738,6 @@ export const PATCH = withRBAC(
           created_at: new Date().toISOString(),
         });
       } catch (auditError) {
-        console.error('Error creating audit log:', auditError);
         // Don't fail the request if audit logging fails
       }
 
@@ -816,7 +756,6 @@ export const PATCH = withRBAC(
         );
       }
 
-      console.error('API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -899,7 +838,6 @@ export const DELETE = withRBAC(
         .eq('status', 'active');
 
       if (contractsError) {
-        console.error('Error checking contracts:', contractsError);
         return NextResponse.json(
           { error: 'Failed to check contracts' },
           { status: 500 }
@@ -926,7 +864,6 @@ export const DELETE = withRBAC(
             { status: 404 }
           );
         }
-        console.error('Error deleting promoter:', error);
         return NextResponse.json(
           {
             error: 'Failed to delete promoter',
@@ -946,7 +883,6 @@ export const DELETE = withRBAC(
           created_at: new Date().toISOString(),
         });
       } catch (auditError) {
-        console.error('Error creating audit log:', auditError);
         // Don't fail the request if audit logging fails
       }
 
@@ -955,7 +891,6 @@ export const DELETE = withRBAC(
         message: 'Promoter deleted successfully',
       });
     } catch (error) {
-      console.error('API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

@@ -67,7 +67,6 @@ export interface NotificationData {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔔 Dashboard notifications API called');
 
     // Rate limiting check
     const clientIp =
@@ -75,7 +74,6 @@ export async function GET(request: NextRequest) {
       request.headers.get('x-real-ip') ||
       'unknown';
     if (!checkRateLimit(clientIp)) {
-      console.warn('Notifications API: Rate limit exceeded for', clientIp);
       return NextResponse.json(
         {
           notifications: [],
@@ -115,23 +113,12 @@ export async function GET(request: NextRequest) {
       const { data, error } = await supabase.auth.getSession();
       session = data.session;
       if (error) {
-        console.warn(
-          'Notifications API: Session error (continuing anyway):',
-          error
-        );
       }
     } catch (error) {
-      console.warn(
-        'Notifications API: Session error (continuing anyway):',
-        error
-      );
     }
 
     // If no session, return empty notifications immediately
     if (!session) {
-      console.warn(
-        'Notifications API: No session found (returning empty notifications)'
-      );
       return NextResponse.json(
         {
           notifications: [],
@@ -164,20 +151,12 @@ export async function GET(request: NextRequest) {
       user = data.user;
       userError = error;
     } catch (error) {
-      console.warn('Notifications API: Auth error (continuing anyway):', error);
       userError = error;
     }
 
     if (userError) {
-      console.warn(
-        'Notifications API: User error (continuing anyway):',
-        userError
-      );
     }
     if (!user) {
-      console.warn(
-        'Notifications API: No user found (returning empty notifications)'
-      );
       // Return empty notifications for unauthenticated users
       return NextResponse.json(
         {
@@ -450,7 +429,6 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Notifications error:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch notifications',
@@ -503,7 +481,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Notification action error:', error);
     return NextResponse.json(
       { error: 'Failed to update notifications' },
       { status: 500 }

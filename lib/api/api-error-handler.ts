@@ -248,13 +248,9 @@ export function logAPIError(
 ): void {
   if (process.env.NODE_ENV === 'development') {
     console.group('🔴 API Error');
-    console.error('Error:', error);
     if (context) {
-      console.error('Context:', context);
     }
     if (error instanceof APIException) {
-      console.error('Status:', error.status);
-      console.error('Details:', error.details);
     }
     console.groupEnd();
   }

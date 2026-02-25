@@ -12,10 +12,6 @@ export const GET = withAnyRBAC(
       const { id: targetUserId } = await params;
       const supabase = await createClient();
 
-      console.log(
-        '📋 Profile API: Fetching profile for user ID:',
-        targetUserId
-      );
 
       // Set CORS headers for browser requests
       const headers = {
@@ -32,7 +28,6 @@ export const GET = withAnyRBAC(
         .single();
 
       if (profileError) {
-        console.error('❌ Profile fetch error:', profileError);
 
         if (profileError.code === 'PGRST116') {
           // Profile not found
@@ -57,7 +52,6 @@ export const GET = withAnyRBAC(
       }
 
       if (!profile) {
-        console.log('❌ Profile not found');
         return NextResponse.json(
           {
             error: 'Profile not found',
@@ -80,13 +74,8 @@ export const GET = withAnyRBAC(
         updated_at: profile.updated_at,
       };
 
-      console.log(
-        '✅ Profile API: Successfully fetched profile for',
-        profile.email
-      );
       return NextResponse.json(userProfile, { headers });
     } catch (error) {
-      console.error('💥 Profile API unexpected error:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

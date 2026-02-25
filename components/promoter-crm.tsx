@@ -116,7 +116,6 @@ export function PromoterCRM({ promoterId, isAdmin }: PromoterCRMProps) {
         setCommunications(data);
       }
     } catch (error) {
-      console.error('Error fetching communications:', error);
     }
   };
 
@@ -128,7 +127,6 @@ export function PromoterCRM({ promoterId, isAdmin }: PromoterCRMProps) {
         setTasks(data);
       }
     } catch (error) {
-      console.error('Error fetching tasks:', error);
     }
   };
 
@@ -140,7 +138,6 @@ export function PromoterCRM({ promoterId, isAdmin }: PromoterCRMProps) {
         setNotes(data);
       }
     } catch (error) {
-      console.error('Error fetching notes:', error);
     }
   };
 

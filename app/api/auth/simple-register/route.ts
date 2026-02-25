@@ -42,9 +42,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Simple Register - Starting registration process...');
-    console.log('🔐 Simple Register - Email:', email);
-    console.log('🔐 Simple Register - Role:', role);
 
     // Create Supabase client
     const supabase = await createClient();
@@ -64,7 +61,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
-      console.error('🔐 Simple Register - Auth error:', authError);
 
       // Check if it's a CAPTCHA error
       if (
@@ -106,7 +102,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Simple Register - Auth user created:', authData.user.id);
 
     // Step 2: Create user profile
     const { error: profileError } = await supabase.from('users').insert({
@@ -121,13 +116,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (profileError) {
-      console.error('🔐 Simple Register - Profile error:', profileError);
       // Don't fail the registration if profile creation fails
-      console.warn(
-        'Profile creation failed, but auth user was created successfully'
-      );
     } else {
-      console.log('🔐 Simple Register - Profile created successfully');
     }
 
     // Step 3: Create company if provider
@@ -141,9 +131,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (companyError) {
-        console.warn('Company creation failed:', companyError);
       } else {
-        console.log('Company created successfully');
       }
     }
 
@@ -159,7 +147,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('🔐 Simple Register - Exception:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -176,7 +163,6 @@ export async function GET(_request: NextRequest) {
       message: 'Simple register API is ready',
     });
   } catch (error) {
-    console.error('Simple register config error:', error);
     return NextResponse.json(
       { error: 'Failed to get configuration' },
       { status: 500 }

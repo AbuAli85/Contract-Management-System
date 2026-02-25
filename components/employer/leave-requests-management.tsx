@@ -104,7 +104,6 @@ export function LeaveRequestsManagement() {
         setStats(data.stats || { pending: 0, approved: 0, rejected: 0 });
       }
     } catch (error) {
-      console.error('Error fetching leave requests:', error);
     } finally {
       setLoading(false);
     }

@@ -47,10 +47,6 @@ export async function GET(request: NextRequest) {
 
       if (company?.party_id) {
         partyId = company.party_id;
-        console.log(
-          '📊 Promoter Metrics: Filtering by company party_id:',
-          partyId
-        );
       }
     }
 
@@ -85,7 +81,6 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Promoter metrics error:', error);
     return NextResponse.json(
       {
         success: false,

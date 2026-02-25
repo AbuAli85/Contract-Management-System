@@ -111,7 +111,6 @@ export function LeaveCalendar() {
         setLeaveRequests(data.requests || []);
       }
     } catch (error) {
-      console.error('Error fetching leave requests:', error);
     } finally {
       setLoading(false);
     }

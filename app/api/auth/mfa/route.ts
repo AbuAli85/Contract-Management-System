@@ -3,6 +3,8 @@ import {
   professionalSecurityMiddleware,
   SecurityPolicies,
 } from '@/lib/auth/professional-security-middleware';
+import { MFAService } from '@/lib/auth/mfa-service';
+import { createClient } from '@/lib/supabase/server';
 
 // ========================================
 // 🔐 MFA MANAGEMENT API
@@ -20,78 +22,74 @@ export const POST = professionalSecurityMiddleware.withSecurity(
   async (req: NextRequest, _context) => {
     try {
       const { action, token, backupCode } = await req.json();
+      const mfaService = MFAService.getInstance();
 
       switch (action) {
-        case 'setup':
-          // Generate TOTP secret and QR code
-          return NextResponse.json({
-            success: true,
-            qrCode: 'data:image/png;base64,placeholder_qr_code',
-            secret: 'placeholder_secret',
-            backupCodes: [
-              'BACKUP001',
-              'BACKUP002',
-              'BACKUP003',
-              'BACKUP004',
-              'BACKUP005',
-              'BACKUP006',
-              'BACKUP007',
-              'BACKUP008',
-              'BACKUP009',
-              'BACKUP010',
-            ],
-          });
-
-        case 'verify':
-          if (!token) {
+        case 'setup': {
+          const result = await mfaService.enableMFA();
+          if (!result.success) {
             return NextResponse.json(
-              {
-                success: false,
-                error: 'Verification token required',
-              },
+              { success: false, error: result.error },
               { status: 400 }
             );
           }
+          return NextResponse.json({
+            success: true,
+            qrCode: result.qrCode,
+            secret: result.secret,
+            backupCodes: result.backupCodes,
+          });
+        }
 
-          // TODO: Verify TOTP token
+        case 'verify': {
+          if (!token) {
+            return NextResponse.json(
+              { success: false, error: 'Verification token required' },
+              { status: 400 }
+            );
+          }
+          const result = await mfaService.verifyMFASetup(token);
+          if (!result.success) {
+            return NextResponse.json(
+              { success: false, error: result.error },
+              { status: 400 }
+            );
+          }
           return NextResponse.json({
             success: true,
             message: 'MFA successfully enabled',
           });
+        }
 
-        case 'authenticate':
+        case 'authenticate': {
           if (!token && !backupCode) {
             return NextResponse.json(
-              {
-                success: false,
-                error: 'Token or backup code required',
-              },
+              { success: false, error: 'Token or backup code required' },
               { status: 400 }
             );
           }
-
-          // TODO: Verify MFA token or backup code
+          const result = await mfaService.verifyMFALogin(token, backupCode);
+          if (!result.success) {
+            return NextResponse.json(
+              { success: false, error: result.error },
+              { status: 401 }
+            );
+          }
           return NextResponse.json({
             success: true,
             message: 'MFA verification successful',
           });
+        }
 
         default:
           return NextResponse.json(
-            {
-              success: false,
-              error: 'Invalid action',
-            },
+            { success: false, error: 'Invalid action' },
             { status: 400 }
           );
       }
-    } catch (error) {
-      console.error('MFA API error:', error);
+    } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'MFA operation failed',
-        },
+        { success: false, error: 'MFA operation failed' },
         { status: 500 }
       );
     }
@@ -103,21 +101,32 @@ export const POST = professionalSecurityMiddleware.withSecurity(
 export const GET = professionalSecurityMiddleware.withSecurity(
   async (_req: NextRequest, _context) => {
     try {
-      // TODO: Get user's MFA status from database
+      const supabase = await createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const { data: mfaData } = await supabase
+        .from('user_mfa')
+        .select('enabled, backup_codes, last_used, created_at')
+        .eq('user_id', user.id)
+        .single();
+
       return NextResponse.json({
-        enabled: false,
-        verified: false,
-        backupCodesRemaining: 0,
-        lastUsed: null,
-        setupDate: null,
+        enabled: mfaData?.enabled ?? false,
+        verified: mfaData?.enabled ?? false,
+        backupCodesRemaining: mfaData?.backup_codes?.length ?? 0,
+        lastUsed: mfaData?.last_used ?? null,
+        setupDate: mfaData?.created_at ?? null,
       });
-    } catch (error) {
-      console.error('MFA status error:', error);
+    } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to get MFA status',
-        },
+        { success: false, error: 'Failed to get MFA status' },
         { status: 500 }
       );
     }
@@ -133,26 +142,28 @@ export const DELETE = professionalSecurityMiddleware.withSecurity(
 
       if (!password) {
         return NextResponse.json(
-          {
-            success: false,
-            error: 'Password required to disable MFA',
-          },
+          { success: false, error: 'Password required to disable MFA' },
           { status: 400 }
         );
       }
 
-      // TODO: Verify password and disable MFA
+      const mfaService = MFAService.getInstance();
+      const result = await mfaService.disableMFA(password);
+
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json({
         success: true,
         message: 'MFA successfully disabled',
       });
-    } catch (error) {
-      console.error('MFA disable error:', error);
+    } catch {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to disable MFA',
-        },
+        { success: false, error: 'Failed to disable MFA' },
         { status: 500 }
       );
     }

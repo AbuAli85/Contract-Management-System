@@ -356,7 +356,6 @@ export default function DocumentUploadEnhanced({
         });
       } catch (error) {
         clearInterval(progressInterval);
-        console.error('Error uploading document:', error);
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to upload document';
         toast({
@@ -414,7 +413,6 @@ export default function DocumentUploadEnhanced({
         description: 'Document has been removed successfully',
       });
     } catch (error) {
-      console.error('Error deleting document:', error);
       toast({
         title: 'Delete failed',
         description:

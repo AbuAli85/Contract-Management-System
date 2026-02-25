@@ -62,10 +62,6 @@ export class ContractService {
         );
 
         if (!validation.isValid) {
-          console.error(
-            '❌ Data mapping validation failed:',
-            validation.errors
-          );
           return {
             success: false,
             error: 'Contract data validation failed',
@@ -77,7 +73,6 @@ export class ContractService {
         }
 
         if (validation.warnings.length > 0) {
-          console.warn('⚠️ Data mapping warnings:', validation.warnings);
         }
       }
 
@@ -109,7 +104,6 @@ export class ContractService {
         .single();
 
       if (insertError) {
-        console.error('❌ Contract creation failed:', insertError);
         return {
           success: false,
           error: `Failed to create contract: ${insertError.message}`,
@@ -126,7 +120,6 @@ export class ContractService {
         if (pdfResult.success) {
           pdfUrl = pdfResult.data?.pdfUrl;
         } else {
-          console.warn('⚠️ PDF generation failed:', pdfResult.error);
         }
       }
 
@@ -146,7 +139,6 @@ export class ContractService {
         },
       };
     } catch (error) {
-      console.error('❌ Contract generation error:', error);
       return {
         success: false,
         error:
@@ -259,7 +251,6 @@ export class ContractService {
         },
       };
     } catch (error) {
-      console.error('❌ PDF generation error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'PDF generation failed',
@@ -487,7 +478,6 @@ export class ContractService {
         body: JSON.stringify({ contractId, event }),
       });
     } catch (error) {
-      console.warn('⚠️ Failed to send notification:', error);
     }
   }
 

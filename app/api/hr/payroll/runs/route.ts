@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching payroll runs:', error);
       return NextResponse.json(
         { error: 'Failed to fetch payroll runs', details: error.message },
         { status: 500 }
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest) {
       payroll_runs: data || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/payroll/runs:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -103,7 +101,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      console.error('Error fetching profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to fetch user profile' },
         { status: 500 }
@@ -222,7 +219,6 @@ export async function POST(request: NextRequest) {
     const { data: employees, error: employeesError } = await employeesQuery;
 
     if (employeesError) {
-      console.error('Error fetching employees:', employeesError);
       return NextResponse.json(
         { error: 'Failed to fetch employees', details: employeesError.message },
         { status: 500 }
@@ -253,7 +249,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating payroll run:', createError);
       return NextResponse.json(
         { error: 'Failed to create payroll run', details: createError.message },
         { status: 500 }
@@ -277,7 +272,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (!salaryStructure) {
-        console.warn(`No salary structure found for employee ${employee.id}`);
         continue;
       }
 
@@ -374,7 +368,6 @@ export async function POST(request: NextRequest) {
       ).insert(payrollEntries);
 
       if (entriesError) {
-        console.error('Error creating payroll entries:', entriesError);
         // Continue anyway, entries can be added later
       }
     }
@@ -398,7 +391,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error('Error updating payroll run:', updateError);
     }
 
     return NextResponse.json({
@@ -408,7 +400,6 @@ export async function POST(request: NextRequest) {
       entries_count: payrollEntries.length,
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/payroll/runs:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

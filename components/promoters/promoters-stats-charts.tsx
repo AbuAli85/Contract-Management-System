@@ -152,9 +152,6 @@ export function PromotersStatsCharts({
     0
   );
   if (totalPercentage > 105 || totalPercentage < 95) {
-    console.warn(
-      `Workforce distribution percentages may overlap: ${totalPercentage}%`
-    );
   }
 
   return (

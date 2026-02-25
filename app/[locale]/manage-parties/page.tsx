@@ -73,7 +73,7 @@ export default function ManagePartiesPage() {
           .single();
 
         if (error) {
-          console.error('Error fetching party:', error);
+
           setLoadError('Failed to load party data');
           toast({
             title: 'Error',
@@ -94,7 +94,7 @@ export default function ManagePartiesPage() {
           });
         }
       } catch (error) {
-        console.error('Error in fetchPartyData:', error);
+
         setLoadError('An unexpected error occurred');
       } finally {
         setIsLoadingParty(false);

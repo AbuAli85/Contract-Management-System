@@ -53,7 +53,6 @@ export function DashboardDiagnosticsPanel({
       const dataPointResults = await testDashboardDataPoints();
       setDataPoints(dataPointResults);
     } catch (error) {
-      console.error('❌ Diagnostics failed:', error);
       setResults({
         totalTests: 0,
         passedTests: 0,
@@ -92,7 +91,6 @@ export function DashboardDiagnosticsPanel({
           : 'Dashboard has issues',
       });
     } catch (error) {
-      console.error('Quick check failed:', error);
     } finally {
       setIsRunning(false);
     }

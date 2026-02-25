@@ -125,7 +125,6 @@ export const POST = withRBAC(
         .select();
 
       if (updateError) {
-        console.error('Error updating attendance:', updateError);
         return NextResponse.json(
           { error: 'Failed to update attendance' },
           { status: 500 }
@@ -139,7 +138,6 @@ export const POST = withRBAC(
         count: updated.length,
       });
     } catch (error) {
-      console.error('Error in attendance approval:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -203,7 +201,6 @@ export const GET = withRBAC(
       const { data: pendingAttendance, error } = await query;
 
       if (error) {
-        console.error('Error fetching pending attendance:', error);
         return NextResponse.json(
           { error: 'Failed to fetch pending attendance' },
           { status: 500 }
@@ -216,7 +213,6 @@ export const GET = withRBAC(
         count: pendingAttendance?.length || 0,
       });
     } catch (error) {
-      console.error('Error in GET attendance approval:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

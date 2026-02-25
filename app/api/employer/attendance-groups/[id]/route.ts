@@ -123,10 +123,6 @@ export const GET = withRBAC(
         },
       });
     } catch (error) {
-      console.error(
-        'Error in GET /api/employer/attendance-groups/[id]:',
-        error
-      );
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -179,7 +175,6 @@ export const PUT = withRBAC(
         .single();
 
       if (updateError) {
-        console.error('Error updating group:', updateError);
         return NextResponse.json(
           { error: 'Failed to update group', details: updateError.message },
           { status: 500 }
@@ -211,7 +206,6 @@ export const PUT = withRBAC(
             await assignmentsTable.insert(assignments);
 
           if (assignError) {
-            console.error('Error assigning employees to group:', assignError);
             // Don't fail the request, just log the error
           }
         }
@@ -222,10 +216,6 @@ export const PUT = withRBAC(
         group,
       });
     } catch (error) {
-      console.error(
-        'Error in PUT /api/employer/attendance-groups/[id]:',
-        error
-      );
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -271,7 +261,6 @@ export const DELETE = withRBAC(
         .eq('company_id', profile.active_company_id);
 
       if (error) {
-        console.error('Error deleting group:', error);
         return NextResponse.json(
           { error: 'Failed to delete group' },
           { status: 500 }
@@ -283,10 +272,6 @@ export const DELETE = withRBAC(
         message: 'Group deleted successfully',
       });
     } catch (error) {
-      console.error(
-        'Error in DELETE /api/employer/attendance-groups/[id]:',
-        error
-      );
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

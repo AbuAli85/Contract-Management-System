@@ -163,7 +163,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(results);
   } catch (error) {
-    console.error('Test notification error:', error);
     return NextResponse.json(
       {
         error: 'Test failed',

@@ -6,7 +6,6 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔐 Authentication helper: Starting auth session setup...');
 
     const { userId } = await request.json();
 
@@ -22,7 +21,6 @@ export async function POST(request: NextRequest) {
       await supabase.auth.admin.listUsers();
 
     if (authError) {
-      console.error('❌ Auth admin error:', authError);
       return NextResponse.json(
         { error: 'Authentication failed' },
         { status: 500 }
@@ -43,14 +41,12 @@ export async function POST(request: NextRequest) {
       });
 
     if (sessionError) {
-      console.error('❌ Session generation error:', sessionError);
       return NextResponse.json(
         { error: 'Session generation failed' },
         { status: 500 }
       );
     }
 
-    console.log('✅ Auth helper: Session generated successfully');
 
     return NextResponse.json({
       message: 'Authentication helper ready',
@@ -62,7 +58,6 @@ export async function POST(request: NextRequest) {
       auth_url: sessionData.properties?.action_link,
     });
   } catch (error) {
-    console.error('💥 Auth helper error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

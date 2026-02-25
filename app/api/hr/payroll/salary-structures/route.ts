@@ -72,7 +72,6 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching salary structures:', error);
       return NextResponse.json(
         { error: 'Failed to fetch salary structures', details: error.message },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(request: NextRequest) {
       salary_structures: data || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/payroll/salary-structures:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -198,7 +196,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating salary structure:', createError);
       return NextResponse.json(
         {
           error: 'Failed to create salary structure',
@@ -226,7 +223,6 @@ export async function POST(request: NextRequest) {
       salary_structure: salaryStructure,
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/payroll/salary-structures:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

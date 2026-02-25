@@ -120,7 +120,6 @@ export function PermissionsManager({
       setOriginalPermissions(new Set(granted));
       setPermissions(data.permissions || []);
     } catch (error) {
-      console.error('Error fetching permissions:', error);
       toast({
         title: 'Error',
         description: 'Failed to load permissions',
@@ -140,7 +139,6 @@ export function PermissionsManager({
         setAvailablePermissions(data.permissions);
       }
     } catch (error) {
-      console.error('Error fetching available permissions:', error);
     }
   };
 
@@ -186,7 +184,6 @@ export function PermissionsManager({
       setOriginalPermissions(new Set(selectedPermissions));
       fetchPermissions();
     } catch (error) {
-      console.error('Error saving permissions:', error);
       toast({
         title: 'Error',
         description: 'Failed to save permissions',

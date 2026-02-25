@@ -32,9 +32,6 @@ class DebounceManager {
         this.callCounts.set(key, 0);
         this.lastResetTime.set(key, now);
       } else if (callCount >= maxCallsPerMinute) {
-        console.warn(
-          `🚨 Circuit breaker activated for ${key} - too many calls`
-        );
         return Promise.resolve();
       }
 

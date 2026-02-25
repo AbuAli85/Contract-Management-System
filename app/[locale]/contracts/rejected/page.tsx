@@ -55,7 +55,7 @@ export default function RejectedContractsPage() {
       }
     } catch (err) {
       setError('Failed to fetch rejected contracts');
-      console.error('Error fetching rejected contracts:', err);
+
     } finally {
       setLoading(false);
     }

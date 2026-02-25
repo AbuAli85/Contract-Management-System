@@ -62,17 +62,9 @@ export async function GET(request: NextRequest) {
     const validation = validatePromoterMetrics(metrics);
 
     if (!validation.isValid) {
-      console.error(
-        '❌ Promoter metrics validation failed:',
-        validation.errors
-      );
     }
 
     if (validation.warnings.length > 0) {
-      console.warn(
-        '⚠️ Promoter metrics validation warnings:',
-        validation.warnings
-      );
     }
 
     return NextResponse.json({
@@ -87,7 +79,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('❌ Enhanced promoter metrics error:', error);
 
     return NextResponse.json(
       {

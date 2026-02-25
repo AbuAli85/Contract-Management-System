@@ -10,7 +10,6 @@ export async function PATCH(
     const body = await request.json();
     const bookingId = params.id;
 
-    console.log('📍 Updating tracking for booking:', bookingId);
 
     // Check authentication
     const {
@@ -49,7 +48,6 @@ export async function PATCH(
       .single();
 
     if (trackingError) {
-      console.error('Error fetching tracking:', trackingError);
       return NextResponse.json(
         { success: false, error: 'Tracking not found' },
         { status: 404 }
@@ -89,7 +87,6 @@ export async function PATCH(
     );
 
     if (updateError) {
-      console.error('Error updating tracking:', updateError);
       return NextResponse.json(
         { success: false, error: 'Failed to update tracking' },
         { status: 500 }
@@ -103,7 +100,6 @@ export async function PATCH(
       );
     }
 
-    console.log('✅ Tracking updated successfully');
 
     // Log the tracking update
     await supabase.from('activity_logs').insert({
@@ -126,7 +122,6 @@ export async function PATCH(
       message: 'Tracking updated successfully',
     });
   } catch (error) {
-    console.error('Tracking update error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -146,7 +141,6 @@ export async function GET(
     const supabase = await createClient();
     const bookingId = params.id;
 
-    console.log('📍 Fetching tracking for booking:', bookingId);
 
     // Check authentication
     const {
@@ -179,7 +173,6 @@ export async function GET(
       .single();
 
     if (currentError && currentError.code !== 'PGRST116') {
-      console.error('Error fetching current tracking:', currentError);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch tracking' },
         { status: 500 }
@@ -194,7 +187,6 @@ export async function GET(
       .order('updated_at', { ascending: false });
 
     if (historyError) {
-      console.error('Error fetching tracking history:', historyError);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch tracking history' },
         { status: 500 }
@@ -226,7 +218,6 @@ export async function GET(
       booking: currentTracking?.booking,
     });
   } catch (error) {
-    console.error('Tracking fetch error:', error);
     return NextResponse.json(
       {
         success: false,

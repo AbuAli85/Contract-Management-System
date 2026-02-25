@@ -19,7 +19,7 @@ export default async function SafeLocaleLayout({
 
   // Validate locale
   if (!locale || !['en', 'ar'].includes(locale)) {
-    console.error('Invalid locale:', locale);
+
     return (
       <div className='p-4 text-red-600'>
         <h1>Invalid locale</h1>

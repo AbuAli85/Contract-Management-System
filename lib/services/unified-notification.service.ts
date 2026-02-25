@@ -375,10 +375,6 @@ export class UnifiedNotificationService {
 
       if (error) {
         // If notifications table doesn't exist, log and continue
-        console.warn(
-          'Notifications table not found, skipping in-app notification:',
-          error
-        );
         return { success: false, error: 'Notifications table not available' };
       }
 

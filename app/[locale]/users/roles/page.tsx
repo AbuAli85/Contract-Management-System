@@ -85,7 +85,7 @@ interface User {
 
 export default function RolesAndPermissionsPage() {
   const pathname = usePathname();
-  const _locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
+  const _locale = pathname ? pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en' : 'en';
   const { canManageUsers, canAssignRoles } = usePermissions();
 
   // Use toast helpers at the top level (React Hooks rule)
@@ -136,11 +136,11 @@ export default function RolesAndPermissionsPage() {
       } else if (Array.isArray(usersData)) {
         setUsers(usersData);
       } else {
-        console.warn('Unexpected users data format:', usersData);
+
         setUsers([]);
       }
     } catch (err) {
-      console.error('Error fetching data:', err);
+
       error(
         'Failed to fetch data',
         'An error occurred while loading roles and permissions'

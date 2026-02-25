@@ -33,13 +33,11 @@ export async function queueNotification(options: NotificationOptions) {
       .single();
 
     if (error) {
-      console.error('Error queuing notification:', error);
       return { success: false, error };
     }
 
     return { success: true, notification: data };
   } catch (error) {
-    console.error('Error in queueNotification:', error);
     return { success: false, error };
   }
 }

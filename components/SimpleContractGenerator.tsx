@@ -140,7 +140,6 @@ export default function SimpleContractGenerator({
         });
       }
     } catch (error) {
-      console.error('Error loading saved draft:', error);
     }
   };
 
@@ -173,7 +172,6 @@ export default function SimpleContractGenerator({
         // Handle parties response
         if (!partiesResponse.ok) {
           const errorData = await partiesResponse.json().catch(() => ({}));
-          console.error('Error loading parties:', errorData);
           throw new Error(
             errorData.error ||
               `Failed to load parties: ${partiesResponse.status}`
@@ -200,7 +198,6 @@ export default function SimpleContractGenerator({
         // Handle promoters response
         if (!promotersResponse.ok) {
           const errorData = await promotersResponse.json().catch(() => ({}));
-          console.error('Error loading promoters:', errorData);
           throw new Error(
             errorData.error ||
               `Failed to load promoters: ${promotersResponse.status}`
@@ -221,7 +218,6 @@ export default function SimpleContractGenerator({
 
       await Promise.race([loadDataPromise(), timeoutPromise]);
     } catch (error) {
-      console.error('Failed to load data:', error);
       toast({
         title: 'Error',
         description:
@@ -448,7 +444,6 @@ export default function SimpleContractGenerator({
         throw new Error(result.error || 'Contract generation failed');
       }
     } catch (error) {
-      console.error('Contract generation error:', error);
       toast({
         title: 'Error',
         description:

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const errorDescription = searchParams.get('error_description');
 
     if (error) {
-      console.error('🔐 Auth Callback: OAuth error:', error, errorDescription);
+
       return NextResponse.redirect(
         new URL(
           `/auth/login?error=${error}&message=${errorDescription || 'OAuth error'}`,
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!code) {
-      console.error('🔐 Auth Callback: No code provided');
+
       return NextResponse.redirect(
         new URL(
           '/auth/login?error=no_code&message=No authorization code provided',
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
-      console.error('🔐 Auth Callback: Exchange error:', exchangeError);
+
       return NextResponse.redirect(
         new URL(
           `/auth/login?error=exchange_failed&message=${exchangeError.message}`,
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!data.session) {
-      console.error('🔐 Auth Callback: No session after exchange');
+
       return NextResponse.redirect(
         new URL(
           '/auth/login?error=no_session&message=No session after OAuth exchange',
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     // Redirect to dashboard
     return NextResponse.redirect(new URL('/dashboard', request.url));
   } catch (error) {
-    console.error('🔐 Auth Callback: Unexpected error:', error);
+
     return NextResponse.redirect(
       new URL(
         '/auth/login?error=unexpected&message=An unexpected error occurred',

@@ -81,10 +81,6 @@ class ContractGenerationService {
       this.makecomWebhookUrl = process.env.MAKE_WEBHOOK_URL || '';
       this.googleDriveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
     } catch (error) {
-      console.error(
-        '❌ Failed to initialize ContractGenerationService:',
-        error
-      );
       throw error;
     }
   }
@@ -174,13 +170,11 @@ class ContractGenerationService {
         .single();
 
       if (error) {
-        console.error('❌ Database error:', error);
         throw new Error(`Failed to create contract: ${error.message}`);
       }
 
       return contract;
     } catch (error) {
-      console.error('❌ Failed to create contract in database:', error);
       throw error;
     }
   }
@@ -199,10 +193,6 @@ class ContractGenerationService {
         contract.contract_type
       );
       if (!contractTypeConfig) {
-        console.error(
-          '❌ Contract type configuration not found:',
-          contract.contract_type
-        );
         return false;
       }
 
@@ -225,7 +215,6 @@ class ContractGenerationService {
         if (!promoterError && promoter) {
           promoterData = promoter;
         } else {
-          console.warn('⚠️ Could not fetch promoter data:', promoterError);
         }
       }
 
@@ -255,11 +244,6 @@ class ContractGenerationService {
       });
 
       if (!response.ok) {
-        console.error(
-          '❌ Webhook request failed:',
-          response.status,
-          response.statusText
-        );
         return false;
       }
 
@@ -276,7 +260,6 @@ class ContractGenerationService {
 
       return true;
     } catch (error) {
-      console.error('❌ Failed to trigger Make.com webhook:', error);
       return false;
     }
   }
@@ -406,7 +389,6 @@ class ContractGenerationService {
           };
         }
       } catch (pdfError) {
-        console.error('❌ PDF generation error:', pdfError);
         return {
           success: true,
           contract_id: contract.id,
@@ -419,7 +401,6 @@ class ContractGenerationService {
         };
       }
     } catch (error) {
-      console.error('❌ Contract generation failed:', error);
       return {
         success: false,
         contract_id: '',
@@ -474,7 +455,6 @@ class ContractGenerationService {
           });
 
       if (uploadError) {
-        console.error('Storage upload error:', uploadError);
 
         // Check if it's a bucket not found error
         if (
@@ -505,7 +485,6 @@ class ContractGenerationService {
         .eq('id', contractId);
 
       if (updateError) {
-        console.error('Database update error:', updateError);
         throw new Error('Failed to update contract');
       }
 
@@ -527,7 +506,6 @@ class ContractGenerationService {
         pdf_url: publicUrl,
       };
     } catch (error) {
-      console.error('❌ Direct PDF generation failed:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -548,7 +526,6 @@ class ContractGenerationService {
         .single();
 
       if (error || !contract) {
-        console.error('❌ Contract not found:', contractId);
         return false;
       }
 
@@ -577,7 +554,6 @@ class ContractGenerationService {
         return true;
       }
     } catch (error) {
-      console.error('❌ Error fixing stuck processing contract:', error);
       return false;
     }
   }
@@ -607,7 +583,6 @@ class ContractGenerationService {
         error_message: contract.error_message,
       };
     } catch (error) {
-      console.error('❌ Error getting contract status:', error);
       return null;
     }
   }
@@ -707,7 +682,6 @@ class ContractGenerationService {
 
       return true;
     } catch (error) {
-      console.error('❌ Error updating contract with PDF:', error);
       return false;
     }
   }
@@ -739,7 +713,6 @@ class ContractGenerationService {
       const success = await this.triggerMakecomWebhook(contract);
       return success;
     } catch (error) {
-      console.error('❌ Error retrying contract generation:', error);
       return false;
     }
   }

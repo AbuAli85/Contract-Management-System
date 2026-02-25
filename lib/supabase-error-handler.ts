@@ -399,7 +399,6 @@ export class SupabaseErrorHandler {
     requestId?: string,
     userId?: string
   ): SupabaseErrorDetails {
-    console.error(`❌ Supabase error in ${operation}:`, error);
 
     // Check if it's a known error type
     if (error && typeof error === 'object') {
@@ -490,7 +489,6 @@ export class SupabaseErrorHandler {
 
     // In development, log to console
     if (process.env.NODE_ENV === 'development') {
-      console.error('🔴 Supabase Error:', logEntry);
     }
 
     // In production, you would send this to your monitoring service

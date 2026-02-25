@@ -175,7 +175,6 @@ export async function uploadPromoterDocument(
       });
 
     if (error) {
-      console.error('Upload error:', error);
       return { success: false, error: error.message };
     }
 
@@ -190,7 +189,6 @@ export async function uploadPromoterDocument(
       path: filePath,
     };
   } catch (error) {
-    console.error('Unexpected error during upload:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -236,7 +234,6 @@ export async function uploadProfilePicture(
     // Upload new profile picture
     return uploadPromoterDocument(file, promoterId, 'profile_picture');
   } catch (error) {
-    console.error('Error uploading profile picture:', error);
     return {
       success: false,
       error:
@@ -286,13 +283,11 @@ export async function deletePromoterDocument(
       .remove([filePath]);
 
     if (error) {
-      console.error('Delete error:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Unexpected error during delete:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -320,7 +315,6 @@ export async function deletePromoterDocumentByUrl(
     }
     return deletePromoterDocument(filePath);
   } catch (error) {
-    console.error('Error deleting document by URL:', error);
     return {
       success: false,
       error:
@@ -369,7 +363,6 @@ export async function deletePromoterDocuments(
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting promoter documents:', error);
     return {
       success: false,
       error:
@@ -447,7 +440,6 @@ export async function deleteAllPromoterDocuments(
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting all promoter documents:', error);
     return {
       success: false,
       error:
@@ -472,13 +464,11 @@ export async function checkStorageAccess(): Promise<boolean> {
     const { data, error } = await supabase.storage.getBucket(STORAGE_BUCKET);
 
     if (error) {
-      console.error('Storage access error:', error);
       return false;
     }
 
     return !!data;
   } catch (error) {
-    console.error('Storage access check failed:', error);
     return false;
   }
 }

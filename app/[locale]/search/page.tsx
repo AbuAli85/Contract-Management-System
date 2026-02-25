@@ -82,7 +82,7 @@ export default function SearchPage() {
         setResults([]);
       }
     } catch (err) {
-      console.error('Search error:', err);
+
       setError('Failed to perform search');
       setResults([]);
     } finally {

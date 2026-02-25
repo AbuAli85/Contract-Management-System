@@ -113,7 +113,6 @@ export function EmployeeDashboard() {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching employee record:', error);
         setEmployeeInfo(null);
         return;
       }
@@ -170,13 +169,6 @@ export function EmployeeDashboard() {
 
       // If no party found, use profile data as fallback but log warning
       if (!employerParty) {
-        console.warn(
-          'No matching employer party found in parties table for employer_id:',
-          employeeRecord.employer_id
-        );
-        console.warn(
-          'Using profile data as fallback. Please review and align employer data in parties table.'
-        );
         // Use profile data as fallback
         setEmployeeInfo({
           id: user.id,
@@ -211,7 +203,6 @@ export function EmployeeDashboard() {
         hire_date: employeeRecord.hire_date,
       });
     } catch (error) {
-      console.error('Error fetching employee info:', error);
       toast({
         title: 'Error',
         description: 'Failed to load employee information',

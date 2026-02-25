@@ -18,16 +18,10 @@ class ContractFormErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error) {
-    console.error('ContractFormErrorBoundary caught error:', error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ContractForm Error Details:', {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-    });
     this.setState({ error, errorInfo });
   }
 
@@ -109,7 +103,6 @@ const ContractFormLoader = () => (
 const SafeUnifiedContractGeneratorForm = dynamic(
   () =>
     import('@/components/unified-contract-generator-form').catch(err => {
-      console.error('Failed to load UnifiedContractGeneratorForm:', err);
       // Return a fallback component if import fails
       return {
         default: () => (

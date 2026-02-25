@@ -163,7 +163,6 @@ export function BookingSystem() {
         setBookings([]);
       }
     } catch (error) {
-      console.error('Failed to load booking data:', error);
       setError('Failed to load booking data. Please try again.');
       // Set fallback data on error
       setResources([]);
@@ -207,7 +206,6 @@ export function BookingSystem() {
 
       alert('Booking created successfully!');
     } catch (error) {
-      console.error('Failed to create booking:', error);
       alert('Failed to create booking. Please try again.');
     }
   };

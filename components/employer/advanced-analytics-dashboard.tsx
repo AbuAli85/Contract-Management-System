@@ -268,7 +268,6 @@ export function AdvancedAnalyticsDashboard() {
       const result = await response.json();
       setData(result.data);
     } catch (err) {
-      console.error('Error fetching analytics:', err);
       setError(err instanceof Error ? err.message : 'Failed to load analytics');
       toast({
         title: 'Error',

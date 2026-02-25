@@ -151,7 +151,6 @@ export class DocumentMonitor {
         },
       };
     } catch (error) {
-      console.error('Error checking document expirations:', error);
       throw error;
     }
   }
@@ -256,7 +255,6 @@ export class DocumentMonitor {
     try {
       // Check if email address is available
       if (!alert.promoterEmail) {
-        console.warn(`⚠️ No email address for promoter: ${alert.promoterName}`);
         return;
       }
 
@@ -282,29 +280,26 @@ export class DocumentMonitor {
 
       if (result.success) {
       } else {
-        console.error(`❌ Failed to send email:`, result.error);
       }
 
-      // TODO: Add in-app notification
-      // const supabase = await createClient();
-      // await supabase.from('notifications').insert({
-      //   user_id: alert.promoterId,
-      //   type: 'DOCUMENT_EXPIRY',
-      //   title: `${docName} ${alert.status === 'expired' ? 'Expired' : 'Expiring Soon'}`,
-      //   message: `Your ${docName} ${alert.status === 'expired' ? 'expired' : `expires in ${alert.daysUntilExpiry} days`}`,
-      //   severity: alert.severity,
-      //   action_url: `/en/promoters/${alert.promoterId}/documents`
-      // });
-
-      // TODO: SMS for critical documents (add Twilio integration if needed)
-      // if (alert.severity === 'critical') {
-      //   await sendSMS({
-      //     to: alert.promoterPhone,
-      //     message: `URGENT: Your ${docName} has expired. Please renew immediately.`
-      //   });
-      // }
+      // Add in-app notification
+      try {
+        const { createClient: createSupabaseClient } = await import('@/lib/supabase/server');
+        const supabase = await createSupabaseClient();
+        await supabase.from('notifications').insert({
+          user_id: alert.promoterId,
+          type: 'DOCUMENT_EXPIRY',
+          title: `${docName} ${alert.status === 'expired' ? 'Expired' : 'Expiring Soon'}`,
+          message: `Your ${docName} ${alert.status === 'expired' ? 'expired' : `expires in ${alert.daysUntilExpiry} days`}`,
+          severity: alert.severity,
+          action_url: `/en/promoters/${alert.promoterId}/documents`,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        });
+      } catch {
+        // Non-critical
+      }
     } catch (error) {
-      console.error('Error sending alert:', error);
     }
   }
 

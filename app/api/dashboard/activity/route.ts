@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching activity:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch activity' },
         { status: 500 }
@@ -45,7 +44,7 @@ export async function GET(request: NextRequest) {
       title: contract.contract_number,
       description: contract.title || 'Untitled Contract',
       timestamp: contract.updated_at || contract.created_at,
-      link: `/en/contracts/${contract.id}`,
+      link: `/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/contracts/${contract.id}`,
     }));
 
     return NextResponse.json({
@@ -53,7 +52,6 @@ export async function GET(request: NextRequest) {
       activities,
     });
   } catch (error) {
-    console.error('Activity GET error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

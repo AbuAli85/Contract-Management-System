@@ -160,7 +160,6 @@ export async function GET(request: NextRequest) {
       query,
     });
   } catch (error) {
-    console.error('Search error:', error);
     return NextResponse.json(
       {
         error: 'Search failed',

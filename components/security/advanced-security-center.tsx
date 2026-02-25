@@ -381,7 +381,6 @@ export function AdvancedSecurityCenter() {
 
       setMetrics(realMetrics);
     } catch (error) {
-      console.error('Error loading security data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load security data',

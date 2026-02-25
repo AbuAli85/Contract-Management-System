@@ -186,7 +186,6 @@ async function getUserRole(supabase: any, userId: string): Promise<string> {
     // Default to 'user' role
     return 'user';
   } catch (error) {
-    console.error('Error getting user role:', error);
     return 'user';
   }
 }
@@ -264,7 +263,6 @@ export async function getContractMetrics(
     const { data: contracts, error } = await query;
 
     if (error) {
-      console.error('Error fetching contracts for metrics:', error);
       throw new Error(`Failed to fetch contracts: ${error.message}`);
     }
 
@@ -294,7 +292,6 @@ export async function getContractMetrics(
     const { count: totalCount, error: countError } = await countQuery;
 
     if (countError) {
-      console.error('Error counting contracts:', countError);
       throw new Error(`Failed to count contracts: ${countError.message}`);
     }
 
@@ -409,7 +406,6 @@ export async function getContractMetrics(
 
     return metrics;
   } catch (error) {
-    console.error('Error calculating contract metrics:', error);
     throw error;
   }
 }
@@ -469,7 +465,6 @@ export async function getPromoterMetrics(
       .select('id, id_card_expiry_date, passport_expiry_date, status');
 
     if (promotersError) {
-      console.error('Error fetching promoters for compliance:', promotersError);
     }
 
     const now = new Date();
@@ -535,7 +530,6 @@ export async function getPromoterMetrics(
     metricsCache.set(cacheKey, metrics);
     return metrics;
   } catch (error) {
-    console.error('Error calculating promoter metrics:', error);
     throw error;
   }
 }
@@ -602,7 +596,6 @@ export async function getPartyMetrics(
     metricsCache.set(cacheKey, metrics);
     return metrics;
   } catch (error) {
-    console.error('Error calculating party metrics:', error);
     throw error;
   }
 }
@@ -981,7 +974,6 @@ export async function checkDataConsistency(): Promise<DataConsistencyCheck[]> {
       });
     }
   } catch (error) {
-    console.error('Error in data consistency checks:', error);
     checks.push({
       checkName: 'consistency_check_error',
       status: 'FAIL',

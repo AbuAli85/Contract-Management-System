@@ -26,7 +26,6 @@ export function LastUpdated() {
           setBuildInfo(data);
         }
       } catch (error) {
-        console.error('Failed to fetch build info:', error);
       } finally {
         setLoading(false);
       }

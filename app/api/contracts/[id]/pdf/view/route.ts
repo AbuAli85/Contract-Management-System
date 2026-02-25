@@ -29,7 +29,6 @@ export const GET = withRBAC(
       const supabase = await createClient();
       const { id: contractId } = await params;
 
-      console.log('🔍 PDF view API called for contract:', contractId);
 
       // Get current user to check permissions
       const {
@@ -38,7 +37,6 @@ export const GET = withRBAC(
       } = await supabase.auth.getUser();
 
       if (authError || !user) {
-        console.log('❌ Authentication failed:', authError);
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
@@ -59,7 +57,6 @@ export const GET = withRBAC(
         .single();
 
       if (contractError || !contract) {
-        console.log('❌ Contract not found:', contractError);
         return NextResponse.json(
           { error: 'Contract not found' },
           { status: 404 }
@@ -78,14 +75,6 @@ export const GET = withRBAC(
           contract.user_id === user.id;
 
         if (!isInvolved) {
-          console.log('❌ User not authorized to view this contract');
-          console.log('📋 User ID:', user.id);
-          console.log('📋 Contract client_id:', contract.client_id);
-          console.log('📋 Contract employer_id:', contract.employer_id);
-          console.log('📋 Contract first_party_id:', contract.first_party_id);
-          console.log('📋 Contract second_party_id:', contract.second_party_id);
-          console.log('📋 Contract created_by:', contract.created_by);
-          console.log('📋 Contract user_id:', contract.user_id);
           return NextResponse.json(
             { error: 'Unauthorized to view this contract' },
             { status: 403 }
@@ -99,7 +88,6 @@ export const GET = withRBAC(
         contract.approval_status === 'approved';
       const _hasPDF = !!contract.pdf_url;
       if (!isApproved) {
-        console.log('❌ Contract not approved:', contract.approval_status);
         return NextResponse.json(
           { error: 'Contract is not approved yet' },
           { status: 403 }
@@ -111,7 +99,6 @@ export const GET = withRBAC(
       let _pdfUrl: string | null = contract.pdf_url || null;
 
       if (!contract.contract_number) {
-        console.error('❌ Contract number missing, cannot search for PDF');
         return NextResponse.json(
           { error: 'Contract number is required to find PDF file' },
           { status: 400 }
@@ -131,10 +118,6 @@ export const GET = withRBAC(
           }
         }
 
-        console.log('🔍 Searching for PDF file...');
-        console.log('📋 Contract number:', contract.contract_number);
-        console.log('📋 Stored filename from URL:', storedFilename);
-        console.log('📋 Full stored URL:', contract.pdf_url);
 
         // List ALL files in storage using service client
         const { data: fileList, error: listError } = await serviceClient.storage
@@ -144,25 +127,15 @@ export const GET = withRBAC(
           });
 
         if (listError) {
-          console.error('❌ Error listing storage files:', listError);
-          console.error(
-            '❌ List error details:',
-            JSON.stringify(listError, null, 2)
-          );
           return NextResponse.json(
             { error: 'Failed to access storage', details: listError.message },
             { status: 500 }
           );
         }
 
-        console.log(`📁 Found ${fileList?.length || 0} files in storage`);
 
         // Log first few file names for debugging
         if (fileList && fileList.length > 0) {
-          console.log(
-            '📄 Sample files:',
-            fileList.slice(0, 5).map(f => f.name)
-          );
         }
 
         // First, try exact match with stored filename (decoded)
@@ -172,31 +145,19 @@ export const GET = withRBAC(
           );
           if (exactMatch) {
             pdfFileName = exactMatch.name;
-            console.log('✅ Found exact match:', pdfFileName);
           } else {
-            console.log('⚠️ No exact match found for:', storedFilename);
           }
         }
 
         // If no exact match, search for files matching contract number
         if (!pdfFileName && fileList) {
-          console.log(
-            `🔍 Searching for files starting with: "${contract.contract_number}"`
-          );
           const matchingFiles = fileList.filter(
             file =>
               file.name.startsWith(contract.contract_number!) &&
               file.name.endsWith('.pdf')
           );
 
-          console.log(
-            `🔍 Found ${matchingFiles.length} files matching contract number`
-          );
           if (matchingFiles.length > 0) {
-            console.log(
-              '📋 Matching files:',
-              matchingFiles.map(f => f.name)
-            );
 
             // Get the most recent matching file
             const sortedFiles = matchingFiles.sort((a, b) => {
@@ -226,33 +187,19 @@ export const GET = withRBAC(
                     .from('contracts')
                     .update({ pdf_url: publicUrl })
                     .eq('id', contractId);
-                  console.log('✅ Auto-fixed PDF URL:', matchingFile.name);
                 } catch (err: unknown) {
-                  console.warn('⚠️ Failed to auto-fix PDF URL:', err);
                 }
               })();
 
-              console.log('🔧 Found matching PDF file:', pdfFileName);
             }
           } else {
-            console.log('❌ No files found matching contract number pattern');
             // Log all PDF files for debugging
             const allPdfs = fileList.filter(f => f.name.endsWith('.pdf'));
-            console.log(`📄 Total PDF files in storage: ${allPdfs.length}`);
             if (allPdfs.length > 0) {
-              console.log(
-                '📄 Sample PDF files:',
-                allPdfs.slice(0, 10).map(f => f.name)
-              );
             }
           }
         }
       } catch (fixError) {
-        console.error('❌ Error searching for PDF file:', fixError);
-        console.error(
-          '❌ Error stack:',
-          fixError instanceof Error ? fixError.stack : 'No stack trace'
-        );
         return NextResponse.json(
           {
             error: 'Failed to search for PDF file',
@@ -265,9 +212,6 @@ export const GET = withRBAC(
 
       // MUST fetch PDF from storage - never generate if pdf_url exists
       if (!pdfFileName) {
-        console.error('❌ PDF file not found in storage');
-        console.error('📋 Contract number:', contract.contract_number);
-        console.error('📋 Stored PDF URL:', contract.pdf_url);
         return NextResponse.json(
           {
             error: 'PDF file not found in storage',
@@ -282,22 +226,11 @@ export const GET = withRBAC(
 
       // Fetch the actual PDF file from storage using service client
       try {
-        console.log('📥 Fetching PDF from storage:', pdfFileName);
-        console.log('📥 Filename length:', pdfFileName.length);
-        console.log('📥 Filename includes space:', pdfFileName.includes(' '));
 
         const { data: pdfData, error: downloadError } =
           await serviceClient.storage.from('contracts').download(pdfFileName);
 
         if (downloadError) {
-          console.error(
-            '❌ Failed to download PDF from storage:',
-            downloadError
-          );
-          console.error(
-            '❌ Error details:',
-            JSON.stringify(downloadError, null, 2)
-          );
           return NextResponse.json(
             {
               error: 'Failed to download PDF from storage',
@@ -309,7 +242,6 @@ export const GET = withRBAC(
         }
 
         if (!pdfData) {
-          console.error('❌ PDF data is null');
           return NextResponse.json(
             { error: 'PDF file is empty or corrupted' },
             { status: 500 }
@@ -320,14 +252,12 @@ export const GET = withRBAC(
         const pdfBuffer = new Uint8Array(arrayBuffer);
 
         if (pdfBuffer.length === 0) {
-          console.error('❌ PDF buffer is empty');
           return NextResponse.json(
             { error: 'PDF file is empty' },
             { status: 500 }
           );
         }
 
-        console.log('✅ PDF fetched from storage:', pdfBuffer.length, 'bytes');
 
         // URL encode filename for Content-Disposition header if it contains spaces
         const encodedFileName = pdfFileName.includes(' ')
@@ -344,11 +274,6 @@ export const GET = withRBAC(
           },
         });
       } catch (fetchError) {
-        console.error('❌ Error fetching PDF from storage:', fetchError);
-        console.error(
-          '❌ Fetch error details:',
-          fetchError instanceof Error ? fetchError.message : String(fetchError)
-        );
         return NextResponse.json(
           {
             error: 'Failed to fetch PDF from storage',
@@ -362,7 +287,6 @@ export const GET = withRBAC(
         );
       }
     } catch (error) {
-      console.error('❌ Error in GET /api/contracts/[id]/pdf/view:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

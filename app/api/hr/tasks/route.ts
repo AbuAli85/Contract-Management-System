@@ -72,7 +72,6 @@ export async function GET(request: NextRequest) {
     const { data: tasks, error } = await query;
 
     if (error) {
-      console.error('Error fetching tasks:', error);
       return NextResponse.json(
         { error: 'Failed to fetch tasks', details: error.message },
         { status: 500 }
@@ -84,7 +83,6 @@ export async function GET(request: NextRequest) {
       tasks: tasks || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/tasks:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -178,7 +176,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating task:', createError);
       return NextResponse.json(
         { error: 'Failed to create task', details: createError.message },
         { status: 500 }
@@ -191,7 +188,6 @@ export async function POST(request: NextRequest) {
       task,
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/tasks:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -265,7 +265,6 @@ export function ContractsCard() {
       setContracts(data.contracts || []);
       setStats(data.stats || null);
     } catch (error) {
-      console.error('Error fetching contracts:', error);
     } finally {
       setLoading(false);
     }

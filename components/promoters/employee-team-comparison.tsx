@@ -130,7 +130,6 @@ export function EmployeeTeamComparison({
         });
       }
     } catch (error) {
-      console.error('Error fetching team metrics:', error);
       setTeamMetrics({
         averageScore: 75,
         rank: 5,

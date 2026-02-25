@@ -139,7 +139,7 @@ export function ProviderDashboard() {
           totalReviews: statsData.total_reviews || 0,
           totalRevenue: statsData.total_revenue || 0,
           monthlyRevenue: 0, // Calculate separately
-          responseRate: 95, // TODO: Calculate from response times
+          responseRate: statsData.response_rate || 0,
         });
       }
 
@@ -296,7 +296,6 @@ export function ProviderDashboard() {
         );
       }
     } catch (error) {
-      console.error('Error loading provider data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setIsLoading(false);

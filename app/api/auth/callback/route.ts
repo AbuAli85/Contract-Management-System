@@ -38,7 +38,6 @@ export async function GET(request: NextRequest) {
         try {
           await ensureUserProfile(user);
         } catch (error) {
-          console.error(`[AuthCallback] Failed to ensure user profile:`, error);
         }
       }
       const forwardedHost = request.headers.get('x-forwarded-host');
@@ -98,10 +97,6 @@ export async function POST(_req: Request) {
       await ensureUserProfile(user);
     } catch (error) {
       // Log the error but don't block the user flow
-      console.error(
-        `[AuthCallback] Failed to ensure user profile, but continuing:`,
-        error
-      );
     }
   }
 

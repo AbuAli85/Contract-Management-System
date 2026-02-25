@@ -46,7 +46,6 @@ export function DashboardAuthGuard({
 
       // Add timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
-        console.warn('🔐 User status check timeout, allowing access');
         setCheckingStatus(false);
         setUserStatus('active');
       }, 5000); // 5 second timeout
@@ -109,7 +108,6 @@ export function DashboardAuthGuard({
           }
         }
       } catch (error) {
-        console.error('Error checking user status:', error);
         // On error, allow access to prevent blocking
         setUserStatus('active');
       } finally {
@@ -180,12 +178,10 @@ export function DashboardAuthGuard({
             return;
           }
         } else {
-          console.error('Failed to check user role');
           const redirectUrl = locale ? `/${locale}/auth/login` : `/auth/login`;
           router.replace(redirectUrl);
         }
       } catch (error) {
-        console.error('Error checking user role:', error);
         const redirectUrl = locale ? `/${locale}/auth/login` : `/auth/login`;
         router.replace(redirectUrl);
       } finally {

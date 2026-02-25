@@ -175,7 +175,6 @@ export async function getPromoterMetrics(): Promise<PromoterMetrics> {
       },
     };
   } catch (error) {
-    console.error('Error calculating promoter metrics:', error);
     throw error;
   }
 }

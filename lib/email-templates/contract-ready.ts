@@ -21,7 +21,7 @@ export interface ContractReadyEmailProps {
 
 export function contractReadyEmail(data: ContractReadyEmailProps) {
   const portalUrl =
-    data.portalUrl || 'https://portal.thesmartpro.io/en/dashboard';
+    data.portalUrl || `https://portal.thesmartpro.io/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/dashboard`;
   const currencyLabel = data.currency || 'OMR';
   const salaryRow =
     data.basicSalary != null

@@ -500,7 +500,6 @@ function SidebarContent({
 
       return filteredItems;
     } catch (error) {
-      console.error('Error creating navigation items:', error);
       return [
         {
           title: 'Dashboard',
@@ -519,7 +518,6 @@ function SidebarContent({
       if (!pathname || typeof pathname !== 'string') return false;
       return pathname === href || pathname.startsWith(`${href}/`);
     } catch (error) {
-      console.error('Error checking active route:', error);
       return false;
     }
   };

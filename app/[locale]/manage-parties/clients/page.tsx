@@ -97,7 +97,7 @@ export default function ClientsPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching clients:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to fetch clients',
@@ -155,7 +155,7 @@ export default function ClientsPage() {
       }
       return format(parsedDate, 'MMM dd, yyyy');
     } catch (error) {
-      console.error('Error formatting date:', dateString, error);
+
       return 'Invalid date';
     }
   };

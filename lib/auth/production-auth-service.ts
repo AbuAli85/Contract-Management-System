@@ -50,7 +50,6 @@ export class ProductionAuthService {
    */
   async verifyCaptcha(token: string, ipAddress?: string): Promise<boolean> {
     if (!this.captchaConfig) {
-      console.warn('CAPTCHA not configured, skipping verification');
       return true;
     }
 
@@ -79,7 +78,6 @@ export class ProductionAuthService {
         return data.success === true;
       }
     } catch (error) {
-      console.error('CAPTCHA verification failed:', error);
       throw new Error('CAPTCHA verification failed');
     }
   }
@@ -265,7 +263,6 @@ export class ProductionAuthService {
       //   created_at: new Date().toISOString(),
       // });
     } catch (error) {
-      console.error('Failed to log auth attempt:', error);
     }
   }
 

@@ -142,7 +142,6 @@ async function fetchSearchSuggestions(
 
     return unique;
   } catch (error) {
-    console.error('Error fetching search suggestions:', error);
     return [];
   }
 }

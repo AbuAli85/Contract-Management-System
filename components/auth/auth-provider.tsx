@@ -89,14 +89,19 @@ export function useRequireAuth(requiredRole?: string) {
       user?.role !== requiredRole
     ) {
       // Redirect to appropriate dashboard if wrong role
+      const currentLocale = (() => {
+        if (typeof window === 'undefined') return 'en';
+        const match = window.location.pathname.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'en';
+      })();
       const dashboardMap = {
-        provider: `/${typeof window !== 'undefined' && window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard/provider-comprehensive`,
-        admin: `/${typeof window !== 'undefined' && window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard`,
-        client: `/${typeof window !== 'undefined' && window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard/client-comprehensive`,
+        provider: `/${currentLocale}/dashboard/provider-comprehensive`,
+        admin: `/${currentLocale}/dashboard`,
+        client: `/${currentLocale}/dashboard/client-comprehensive`,
       };
 
       router.push(
-        dashboardMap[user?.role as keyof typeof dashboardMap] || '/en'
+        dashboardMap[user?.role as keyof typeof dashboardMap] || `/${currentLocale}`
       );
       return;
     }

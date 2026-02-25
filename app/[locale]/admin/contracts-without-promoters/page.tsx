@@ -123,7 +123,7 @@ export default function ContractsWithoutPromotersPage() {
         throw new Error(data.error || 'Failed to fetch contracts');
       }
     } catch (error) {
-      console.error('Error fetching contracts:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to fetch contracts without promoters',
@@ -161,7 +161,7 @@ export default function ContractsWithoutPromotersPage() {
         fetchContracts(); // Refresh to show new suggestions
       }
     } catch (error) {
-      console.error('Error generating suggestions:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to generate suggestions',
@@ -231,7 +231,7 @@ export default function ContractsWithoutPromotersPage() {
         throw new Error(data.error || 'Failed to assign promoters');
       }
     } catch (error) {
-      console.error('Error saving assignments:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to assign promoters',

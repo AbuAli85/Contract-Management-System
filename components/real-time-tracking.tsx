@@ -133,7 +133,6 @@ export function RealTimeTracking({
         if (historyError) throw historyError;
         setTrackingHistory(historyData || []);
       } catch (error) {
-        console.error('Error loading tracking data:', error);
         toast({
           title: 'Failed to load tracking data',
           description: 'Please refresh the page to try again.',
@@ -239,7 +238,6 @@ export function RealTimeTracking({
         throw new Error(data?.error || 'Failed to update status');
       }
     } catch (error) {
-      console.error('Error updating tracking:', error);
       toast({
         title: 'Update Failed',
         description:

@@ -222,7 +222,7 @@ export default function DashboardOverviewPage() {
         const data = await getDashboardAnalytics();
         setAnalytics(data);
       } catch (error) {
-        console.error('Failed to load analytics:', error);
+
         // Set fallback data
         setAnalytics({
           total_contracts: 140,

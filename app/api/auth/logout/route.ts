@@ -10,7 +10,6 @@ export async function POST(_request: NextRequest) {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('Supabase signout error:', error);
     }
 
     // Create response
@@ -21,7 +20,6 @@ export async function POST(_request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Logout error:', error);
 
     // Even if there's an error, try to clear cookies
     const response = NextResponse.json({ message: 'Logged out successfully' });
@@ -29,7 +27,6 @@ export async function POST(_request: NextRequest) {
     try {
       await clearAuthCookies(response);
     } catch (cookieError) {
-      console.error('Cookie cleanup error:', cookieError);
     }
 
     return response;

@@ -133,7 +133,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (updateError) {
-      console.error('Error updating password:', updateError);
       return NextResponse.json(
         { error: 'Failed to update password' },
         { status: 500 }
@@ -151,7 +150,6 @@ export async function POST(request: NextRequest) {
       });
 
     if (historyError) {
-      console.error('Error saving password history:', historyError);
       // Don't fail the password change if history save fails
     }
 
@@ -163,7 +161,6 @@ export async function POST(request: NextRequest) {
       message: 'Password updated successfully',
     });
   } catch (error) {
-    console.error('Password change error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -251,27 +248,20 @@ async function sendPasswordChangeNotification(request: NextRequest, user: any) {
       </div>
     `;
 
-    // Send email via Supabase Auth (if email notifications are enabled)
-    // Or use your email service (SendGrid, Resend, etc.)
-    console.log('📧 Password change notification sent to:', user.email);
-    console.log('   IP:', ip);
-    console.log('   Time:', timestamp);
-
-    // TODO: Implement actual email sending
-    // For now, just log the notification
-    // In production, integrate with your email service:
-    // - SendGrid
-    // - Resend
-    // - AWS SES
-    // - Mailgun
-    // etc.
+    // Send notification email via Resend
+    const { sendEmail } = await import('@/lib/services/email.service');
+    const emailResult = await sendEmail({
+      to: user.email!,
+      subject: 'Password Changed Successfully',
+      html: emailHtml,
+    });
 
     return {
-      sent: true,
+      sent: emailResult.success,
       recipient: user.email,
+      messageId: emailResult.messageId,
     };
   } catch (error) {
-    console.error('Error sending password change notification:', error);
     // Don't fail the password change if email fails
     return {
       sent: false,

@@ -143,7 +143,6 @@ export async function POST(request: NextRequest) {
       });
     }
   } catch (error: any) {
-    console.error('Error in break action:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

@@ -32,7 +32,6 @@ async function getAttendanceHandler(
       );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
-      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         {
           error: 'Failed to process employee record',
@@ -167,7 +166,6 @@ async function getAttendanceHandler(
     const { data: attendance, error: attendanceError } = await query;
 
     if (attendanceError) {
-      console.error('Error fetching attendance:', attendanceError);
       return NextResponse.json(
         { error: 'Failed to fetch attendance' },
         { status: 500 }
@@ -193,7 +191,6 @@ async function getAttendanceHandler(
       summary,
     });
   } catch (error) {
-    console.error('Error in GET /api/employer/team/[id]/attendance:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -333,7 +330,6 @@ async function recordAttendanceHandler(
       .single();
 
     if (upsertError) {
-      console.error('Error recording attendance:', upsertError);
       return NextResponse.json(
         { error: 'Failed to record attendance', details: upsertError.message },
         { status: 500 }
@@ -346,7 +342,6 @@ async function recordAttendanceHandler(
       attendance,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/[id]/attendance:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

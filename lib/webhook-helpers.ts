@@ -49,7 +49,6 @@ export async function triggerWebhook(
         };
       } else {
         const errorText = await response.text();
-        console.error(`❌ Webhook failed (attempt ${attempt}):`, errorText);
 
         if (attempt === retries) {
           return {
@@ -61,7 +60,6 @@ export async function triggerWebhook(
         }
       }
     } catch (error) {
-      console.error(`❌ Webhook error (attempt ${attempt}):`, error);
 
       if (attempt === retries) {
         return {
@@ -192,7 +190,6 @@ export async function triggerMultipleWebhooks(
     if (result.status === 'fulfilled') {
       return result.value;
     } else {
-      console.error(`Webhook ${index} failed:`, result.reason);
       return {
         success: false,
         error:

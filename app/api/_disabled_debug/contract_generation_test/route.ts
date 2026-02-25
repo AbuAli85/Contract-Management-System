@@ -26,7 +26,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         error: authError,
       } = await supabase.auth.getUser();
 
-      console.log('Auth check result:', { user: !!user, authError });
 
       if (authError || !user) {
         return NextResponse.json(
@@ -52,7 +51,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         ? PDF_API_URL
         : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${PDF_API_URL}`;
 
-      console.log('Calling PDF API:', apiUrl);
 
       const pdfRes = await fetch(apiUrl, {
         method: 'POST',
@@ -62,7 +60,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       if (!pdfRes.ok) {
         const errorText = await pdfRes.text();
-        console.error('PDF generation failed:', errorText);
         return NextResponse.json(
           { error: 'Failed to generate PDF', details: errorText },
           { status: 500 }
@@ -87,7 +84,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         .eq('id', contractId);
 
       if (updateError) {
-        console.error('Contract update error:', updateError);
         return NextResponse.json(
           {
             error: 'Failed to update contract with PDF URL',
@@ -111,7 +107,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     return result as NextResponse;
   } catch (error) {
     const processingTime = Date.now() - startTime;
-    console.error('Contract generation error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

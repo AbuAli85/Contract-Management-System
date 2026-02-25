@@ -89,7 +89,7 @@ export default function CompanyPermissionsPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching companies:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to load companies',

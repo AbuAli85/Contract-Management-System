@@ -66,9 +66,6 @@ function normalizeRole(rawRole: unknown): string {
 
   // Enforce allowlist - if role not recognized, default to 'user'
   if (!ALLOWED_ROLES.includes(normalized as (typeof ALLOWED_ROLES)[number])) {
-    console.warn(
-      `[Role Normalization] Unknown role "${rawRole}" normalized to "user"`
-    );
     return 'user';
   }
 
@@ -353,7 +350,6 @@ export function toMcpErrorResponse(
   }
 
   // 5. Default to internal error
-  console.error('[MCP Error]', err);
   const response = Response.json(
     {
       error: {

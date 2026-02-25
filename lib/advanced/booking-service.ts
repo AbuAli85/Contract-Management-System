@@ -84,7 +84,6 @@ export class BookingService {
         .single();
 
       if (error) {
-        console.error('Error creating booking:', error);
         return { data: null, error: error.message };
       }
 
@@ -93,7 +92,6 @@ export class BookingService {
 
       return { data, error: null };
     } catch (error) {
-      console.error('Error in createBooking:', error);
       return { data: null, error: 'Failed to create booking' };
     }
   }
@@ -134,7 +132,6 @@ export class BookingService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching bookings:', error);
         return { data: [], error: error.message };
       }
 
@@ -151,7 +148,6 @@ export class BookingService {
 
       return { data: processedData, error: null };
     } catch (error) {
-      console.error('Error in getBookings:', error);
       return { data: [], error: 'Failed to fetch bookings' };
     }
   }
@@ -199,7 +195,6 @@ export class BookingService {
         .single();
 
       if (error) {
-        console.error('Error updating booking:', error);
         return { data: null, error: error.message };
       }
 
@@ -208,7 +203,6 @@ export class BookingService {
 
       return { data, error: null };
     } catch (error) {
-      console.error('Error in updateBooking:', error);
       return { data: null, error: 'Failed to update booking' };
     }
   }
@@ -232,7 +226,6 @@ export class BookingService {
         .single();
 
       if (error) {
-        console.error('Error cancelling booking:', error);
         return { success: false, error: error.message };
       }
 
@@ -241,7 +234,6 @@ export class BookingService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in cancelBooking:', error);
       return { success: false, error: 'Failed to cancel booking' };
     }
   }
@@ -271,7 +263,6 @@ export class BookingService {
       const { data, error } = await query.limit(1);
 
       if (error) {
-        console.error('Error checking conflicts:', error);
         return { hasConflict: false };
       }
 
@@ -280,7 +271,6 @@ export class BookingService {
         conflictingBooking: data?.[0],
       };
     } catch (error) {
-      console.error('Error in checkBookingConflicts:', error);
       return { hasConflict: false };
     }
   }
@@ -316,7 +306,6 @@ export class BookingService {
         .order('start_time', { ascending: true });
 
       if (bookingsError) {
-        console.error('Error fetching resource bookings:', bookingsError);
         return { data: null, error: bookingsError.message };
       }
 
@@ -379,7 +368,6 @@ export class BookingService {
         error: null,
       };
     } catch (error) {
-      console.error('Error in getResourceAvailability:', error);
       return { data: null, error: 'Failed to check availability' };
     }
   }
@@ -405,7 +393,6 @@ export class BookingService {
       const { data: bookings, error } = await query;
 
       if (error) {
-        console.error('Error fetching booking statistics:', error);
         return { data: null, error: error.message };
       }
 
@@ -480,7 +467,6 @@ export class BookingService {
         error: null,
       };
     } catch (error) {
-      console.error('Error in getBookingStatistics:', error);
       return { data: null, error: 'Failed to get statistics' };
     }
   }
@@ -526,14 +512,29 @@ export class BookingService {
     action: 'created' | 'updated' | 'cancelled'
   ): Promise<void> {
     try {
-      // This would integrate with your notification service
-      // For now, we'll log the action
-      // TODO: Implement actual notification sending
-      // - Email notifications
-      // - In-app notifications
-      // - SMS notifications (if configured)
-    } catch (error) {
-      console.error('Error sending booking notification:', error);
+      const { data: booking } = await this.supabase
+        .from('bookings')
+        .select('*, profiles:user_id(email, full_name)')
+        .eq('id', bookingId)
+        .single();
+      const notificationService = new (await import('@/lib/advanced/notification-service')).NotificationService();
+      const titles = { created: 'Booking Confirmed', updated: 'Booking Updated', cancelled: 'Booking Cancelled' };
+      const messages = {
+        created: 'Your booking has been confirmed.',
+        updated: 'Your booking details have been updated.',
+        cancelled: 'Your booking has been cancelled.',
+      };
+      await notificationService.createNotification({
+        user_id: booking.user_id,
+        type: 'booking_update',
+        title: titles[action],
+        message: messages[action],
+        priority: action === 'cancelled' ? 'high' : 'medium',
+        action_url: '/bookings/' + bookingId,
+        send_email: true,
+      });
+    } catch {
+      // Non-critical: notification failure should not block booking operation
     }
   }
 

@@ -201,7 +201,6 @@ export default function GeneralContractGenerator() {
         });
       }
     } catch (error) {
-      console.error('Error loading saved draft:', error);
     }
   };
 
@@ -221,7 +220,6 @@ export default function GeneralContractGenerator() {
         .order('name_en');
 
       if (partiesError) {
-        console.error('Error loading parties:', partiesError);
         throw new Error(`Failed to load parties: ${partiesError.message}`);
       }
 
@@ -247,7 +245,6 @@ export default function GeneralContractGenerator() {
         .order('name_en');
 
       if (promotersError) {
-        console.error('Error loading promoters:', promotersError);
         throw new Error(`Failed to load promoters: ${promotersError.message}`);
       }
 
@@ -264,7 +261,6 @@ export default function GeneralContractGenerator() {
         .order('name_en');
 
       if (productsError) {
-        console.error('Error loading products:', productsError);
         throw new Error(`Failed to load products: ${productsError.message}`);
       }
 
@@ -280,13 +276,11 @@ export default function GeneralContractGenerator() {
         .order('name_en');
 
       if (locationsError) {
-        console.error('Error loading locations:', locationsError);
         throw new Error(`Failed to load locations: ${locationsError.message}`);
       }
 
       setLocations(locationsData || []);
     } catch (error) {
-      console.error('Failed to load data:', error);
       toast({
         title: 'Error',
         description:
@@ -542,7 +536,6 @@ export default function GeneralContractGenerator() {
         throw new Error(result.error || 'Contract generation failed');
       }
     } catch (error) {
-      console.error('Contract generation error:', error);
       toast({
         title: 'Error',
         description:

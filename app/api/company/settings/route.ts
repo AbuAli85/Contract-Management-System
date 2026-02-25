@@ -20,7 +20,6 @@ export async function GET() {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -152,7 +151,6 @@ export async function GET() {
       .single();
 
     if (error) {
-      console.error('Error fetching company:', error);
       return NextResponse.json({
         success: true,
         company: null,
@@ -169,7 +167,6 @@ export async function GET() {
       can_edit: ['owner', 'admin'].includes(userRole),
     });
   } catch (error: any) {
-    console.error('Settings API Error:', error);
     // Return graceful response even on error
     return NextResponse.json({
       success: true,
@@ -200,7 +197,6 @@ export async function PUT(request: Request) {
     try {
       adminClient = createAdminClient();
     } catch (e) {
-      console.warn('Admin client not available, using regular client');
       adminClient = supabase;
     }
 
@@ -289,7 +285,6 @@ export async function PUT(request: Request) {
       .single();
 
     if (error) {
-      console.error('Error updating company:', error);
       return NextResponse.json(
         { error: 'Failed to update company' },
         { status: 500 }
@@ -302,7 +297,6 @@ export async function PUT(request: Request) {
       message: 'Company settings updated successfully',
     });
   } catch (error: any) {
-    console.error('Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -93,7 +93,6 @@ export function AttendanceNotifications() {
 
       setNotifications(data.notifications || []);
     } catch (error: any) {
-      console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -121,7 +120,6 @@ export function AttendanceNotifications() {
         }
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
     }
   };
 
@@ -140,7 +138,6 @@ export function AttendanceNotifications() {
         );
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 

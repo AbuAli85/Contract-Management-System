@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔧 Clear cookies API called');
 
     const response = NextResponse.json({
       success: true,
@@ -28,11 +27,9 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    console.log('🔧 Cleared auth cookies');
 
     return response;
   } catch (error) {
-    console.error('❌ Clear cookies API error:', error);
     return NextResponse.json(
       {
         success: false,

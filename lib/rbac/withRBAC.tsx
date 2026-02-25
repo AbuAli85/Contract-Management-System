@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkPermission } from './guard';
 
 export interface RBACOptions {
   requiredRoles?: string[];
@@ -35,8 +34,7 @@ export function withRBAC(
 
       // Call the original handler
       return await handler(req);
-    } catch (error) {
-      console.error('RBAC wrapper error:', error);
+    } catch {
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -46,19 +44,25 @@ export function withRBAC(
 }
 
 /**
- * Check if user has any of the required roles
+ * Check if user has any of the required roles using Supabase auth
  */
 async function checkUserRole(requiredRoles: string[]): Promise<boolean> {
   try {
-    // For now, we'll use a simple role check
-    // In a full implementation, you'd check against the user's actual roles
-    // This is a placeholder that should be replaced with actual role checking logic
-
-    // TODO: Implement actual role checking against user's roles
-    // For now, return true to allow the build to pass
-    return true;
-  } catch (error) {
-    console.error('Error checking user role:', error);
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) return false;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (!profile?.role) return false;
+    return requiredRoles.includes(profile.role);
+  } catch {
     return false;
   }
 }
@@ -68,11 +72,9 @@ async function checkUserRole(requiredRoles: string[]): Promise<boolean> {
  */
 export function withRBACComponent<P extends object>(
   Component: React.ComponentType<P>,
-  options: RBACOptions
+  _options: RBACOptions
 ) {
   return function RBACWrappedComponent(props: P) {
-    // This is a placeholder implementation
-    // In a full implementation, you'd check permissions here
     return <Component {...props} />;
   };
 }

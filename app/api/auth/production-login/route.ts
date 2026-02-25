@@ -92,7 +92,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Production login error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -112,7 +111,6 @@ export async function GET(request: NextRequest) {
       environment: process.env.NODE_ENV,
     });
   } catch (error) {
-    console.error('Production login config error:', error);
     return NextResponse.json(
       { error: 'Failed to get configuration' },
       { status: 500 }

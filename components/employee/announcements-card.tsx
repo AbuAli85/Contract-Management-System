@@ -184,7 +184,6 @@ export function AnnouncementsCard() {
         setUnreadCount(data.unreadCount || 0);
       }
     } catch (error) {
-      console.error('Error fetching announcements:', error);
     } finally {
       setLoading(false);
     }
@@ -203,7 +202,6 @@ export function AnnouncementsCard() {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking announcement as read:', error);
     }
   };
 

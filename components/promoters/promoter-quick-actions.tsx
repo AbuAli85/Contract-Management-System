@@ -210,7 +210,7 @@ export function PromoterQuickActions({
       label: 'Advanced Settings',
       icon: <Settings className='h-4 w-4' />,
       variant: 'outline',
-      onClick: () => console.log('Advanced settings'),
+      onClick: () => {},
       description: 'Configure advanced options',
     },
     {

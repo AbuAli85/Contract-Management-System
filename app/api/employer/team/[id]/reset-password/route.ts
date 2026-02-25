@@ -228,15 +228,11 @@ export async function POST(
         email: employeeEmail,
         employee_name: employeeName,
         temporary_password: newPassword,
-        login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/en/auth/login`,
+        login_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://portal.thesmartpro.io'}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/auth/login`,
         note: 'Employee must change password on first login',
       },
     });
   } catch (error) {
-    console.error(
-      'Error in POST /api/employer/team/[id]/reset-password:',
-      error
-    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

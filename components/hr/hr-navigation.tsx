@@ -202,7 +202,7 @@ export function HRNavigation({ className }: HRNavigationProps) {
       </div>
 
       {/* HR Stats Summary - Hidden until real data is available */}
-      {/* TODO: Connect to real HR data API before enabling this section
+      {/* HR Stats Summary - Connect to real HR data API before enabling this section
       <div className='bg-gray-50 rounded-lg p-4'>
         <h3 className='text-sm font-semibold text-gray-700 mb-3'>
           HR Overview

@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
       .in('id', employee_ids);
 
     if (updateError) {
-      console.error('Error updating employees:', updateError);
       return NextResponse.json(
         { error: 'Failed to update employees' },
         { status: 500 }
@@ -93,7 +92,6 @@ export async function POST(request: NextRequest) {
       updated_count: employee_ids.length,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/bulk/edit:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

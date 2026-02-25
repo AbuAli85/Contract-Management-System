@@ -37,7 +37,6 @@ export class PromotersErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to error reporting service
-    console.error('PromotersErrorBoundary caught an error:', error, errorInfo);
     this.setState({
       error,
       errorInfo,

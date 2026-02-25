@@ -45,7 +45,7 @@ interface UserActivity {
 
 export default function UserActivityPage() {
   const pathname = usePathname();
-  const _locale = pathname ? pathname.split('/')[1] || 'en' : 'en';
+  const _locale = pathname ? pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en' : 'en';
   const { canManageUsers } = usePermissions();
 
   // Use toast helpers at the top level (React Hooks rule)

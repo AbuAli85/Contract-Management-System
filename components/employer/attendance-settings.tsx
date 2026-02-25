@@ -172,7 +172,6 @@ export function AttendanceSettings() {
         }
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
     }

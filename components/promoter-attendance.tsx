@@ -121,7 +121,6 @@ export function PromoterAttendance({
         setLeaveRequests(leaveData);
       }
     } catch (error) {
-      console.error('Error fetching attendance data:', error);
     }
   };
 

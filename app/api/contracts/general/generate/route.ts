@@ -4,10 +4,8 @@ import type { GeneralContractData } from '@/lib/general-contract-service';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔗 General Contract Generation API called');
 
     const body = await request.json();
-    console.log('📤 Request payload:', body);
 
     // Validate required fields
     const {
@@ -103,20 +101,14 @@ export async function POST(request: NextRequest) {
       contractData,
       currentUser.id
     );
-    console.log('✅ Contract created:', contract.id);
 
     // Trigger Make.com webhook for general contracts with retry
     let makecomResponse = null;
     try {
-      console.log(
-        '🔄 About to trigger Make.com webhook for contract:',
-        contract.id
-      );
       const webhookResult = await generalContractService.triggerMakeComWebhook(
         contract.id,
         3
       );
-      console.log('📊 Make.com webhook result:', webhookResult);
 
       makecomResponse = {
         triggered: webhookResult.success,
@@ -128,12 +120,9 @@ export async function POST(request: NextRequest) {
       };
 
       if (webhookResult.success) {
-        console.log('✅ Make.com webhook triggered successfully');
       } else {
-        console.warn('⚠️ Make.com webhook not triggered');
       }
     } catch (makecomError) {
-      console.error('❌ Make.com webhook error:', makecomError);
       makecomResponse = {
         triggered: false,
         error:
@@ -160,7 +149,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('❌ General contract generation failed:', error);
     return NextResponse.json(
       {
         success: false,

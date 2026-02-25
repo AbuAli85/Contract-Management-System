@@ -103,7 +103,6 @@ export const POST = withRBAC(
       );
 
       if (codeError) {
-        console.error('Error generating link code:', codeError);
         return NextResponse.json(
           { error: 'Failed to generate link code', details: codeError.message },
           { status: 500 }
@@ -135,16 +134,6 @@ export const POST = withRBAC(
         .single();
 
       if (createError) {
-        console.error('Error creating attendance link:', createError);
-        console.error('User profile:', {
-          id: user.id,
-          role: userProfile.role,
-          active_company_id: userProfile.active_company_id,
-        });
-        console.error(
-          'Service role key configured:',
-          !!process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
 
         // Provide more detailed error information
         return NextResponse.json(
@@ -184,7 +173,6 @@ export const POST = withRBAC(
         },
       });
     } catch (error) {
-      console.error('Error in POST /api/employer/attendance-links:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -325,7 +313,6 @@ export const GET = withRBAC(
       const { data: links, error } = await query;
 
       if (error) {
-        console.error('Error fetching attendance links:', error);
         return NextResponse.json(
           { error: 'Failed to fetch attendance links' },
           { status: 500 }
@@ -350,7 +337,6 @@ export const GET = withRBAC(
         count: linksWithUrls.length,
       });
     } catch (error) {
-      console.error('Error in GET /api/employer/attendance-links:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

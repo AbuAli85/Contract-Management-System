@@ -76,7 +76,6 @@ export async function POST(
       .single();
 
     if (fetchError) {
-      console.error('Error fetching leave request:', fetchError);
       return NextResponse.json(
         { error: 'Leave request not found' },
         { status: 404 }
@@ -137,7 +136,6 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Error updating leave request:', error);
       return NextResponse.json(
         { error: 'Failed to update leave request' },
         { status: 500 }
@@ -158,7 +156,6 @@ export async function POST(
       data,
     });
   } catch (error) {
-    console.error('Error in POST /api/hr/leave-requests/[id]/approve:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

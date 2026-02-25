@@ -21,7 +21,6 @@ export async function DELETE(
       message: 'Notification deleted',
     });
   } catch (error) {
-    console.error('Error deleting notification:', error);
     return NextResponse.json(
       { error: 'Failed to delete notification' },
       { status: 500 }

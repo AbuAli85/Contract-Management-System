@@ -175,7 +175,6 @@ export function TeamManagementDashboard() {
       setTeamMembers(data.team || []);
       calculateStats(data.team || []);
     } catch (error) {
-      console.error('Error fetching team:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to load team members';
       setError(errorMessage);

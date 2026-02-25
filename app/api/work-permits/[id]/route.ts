@@ -48,7 +48,6 @@ export const GET = withAnyRBAC(
         application,
       });
     } catch (error: any) {
-      console.error('Error in GET /api/work-permits/[id]:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -153,7 +152,6 @@ export const PUT = withAnyRBAC(
         .single();
 
       if (error) {
-        console.error('Error updating work permit application:', error);
         return NextResponse.json(
           {
             error: 'Failed to update work permit application',
@@ -187,7 +185,6 @@ export const PUT = withAnyRBAC(
         message: 'Work permit application updated successfully',
       });
     } catch (error: any) {
-      console.error('Error in PUT /api/work-permits/[id]:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -234,7 +231,6 @@ export const DELETE = withAnyRBAC(
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting work permit application:', error);
         return NextResponse.json(
           {
             error: 'Failed to delete work permit application',
@@ -249,7 +245,6 @@ export const DELETE = withAnyRBAC(
         message: 'Work permit application deleted successfully',
       });
     } catch (error: any) {
-      console.error('Error in DELETE /api/work-permits/[id]:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

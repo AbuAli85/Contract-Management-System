@@ -24,7 +24,6 @@ export const logger: Logger = {
   },
   warn: (...args: unknown[]) => {
     if (isDevelopment) {
-      console.warn(...args);
     }
   },
   error: (...args: unknown[]) => {
@@ -36,7 +35,6 @@ export const logger: Logger = {
       }
       return arg;
     });
-    console.error(...sanitized);
   },
   debug: (...args: unknown[]) => {
     if (isDevelopment) {

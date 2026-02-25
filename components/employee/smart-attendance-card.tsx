@@ -111,7 +111,6 @@ export function SmartAttendanceCard() {
       setTodayAttendance(todayRecord || null);
       setSummary(data.summary);
     } catch (error) {
-      console.error('Error fetching attendance:', error);
     } finally {
       setLoading(false);
     }

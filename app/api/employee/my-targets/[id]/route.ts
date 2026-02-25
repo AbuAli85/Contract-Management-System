@@ -61,7 +61,6 @@ export async function GET(
       target,
     });
   } catch (error) {
-    console.error('Error in GET /api/employee/my-targets/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -159,7 +158,6 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error('Error updating target:', updateError);
       return NextResponse.json(
         { error: 'Failed to update target', details: updateError.message },
         { status: 500 }
@@ -187,7 +185,6 @@ export async function POST(
       target: updatedTarget,
     });
   } catch (error) {
-    console.error('Error in POST /api/employee/my-targets/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -288,7 +285,6 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Error updating target:', updateError);
       return NextResponse.json(
         { error: 'Failed to update target', details: updateError.message },
         { status: 500 }
@@ -314,7 +310,6 @@ export async function PATCH(
       target: updatedTarget,
     });
   } catch (error) {
-    console.error('Error in PATCH /api/employee/my-targets/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

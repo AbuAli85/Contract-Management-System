@@ -56,7 +56,6 @@ export default function SimpleWorkingLogin() {
         });
 
       if (authError) {
-        console.error('🔐 Simple Login - Auth error:', authError);
         setError(`Login failed: ${authError.message}`);
         return;
       }
@@ -100,7 +99,6 @@ export default function SimpleWorkingLogin() {
         router.push(redirectPath);
       }, 1000);
     } catch (error) {
-      console.error('🔐 Simple Login - Exception:', error);
       setError(
         `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

@@ -92,7 +92,6 @@ export default function MakecomContractTemplates() {
             setSelectedType(result.data[0].id);
           }
         } else {
-          console.error('Invalid response format:', result);
           setContractTypes([]);
           toast({
             title: 'Error',
@@ -101,7 +100,6 @@ export default function MakecomContractTemplates() {
           });
         }
       } catch (error) {
-        console.error('Failed to load contract types:', error);
         setContractTypes([]);
         toast({
           title: 'Error',
@@ -141,7 +139,6 @@ export default function MakecomContractTemplates() {
         });
       }
     } catch (error) {
-      console.error('Failed to load template config:', error);
       toast({
         title: 'Error',
         description: 'Failed to load template configuration',
@@ -177,7 +174,6 @@ export default function MakecomContractTemplates() {
         });
       }
     } catch (error) {
-      console.error('Failed to generate blueprint:', error);
       toast({
         title: 'Error',
         description: 'Failed to generate blueprint',
@@ -197,9 +193,6 @@ export default function MakecomContractTemplates() {
         description: 'Content copied to clipboard',
       });
     } else {
-      console.warn(
-        'Copy to clipboard is not supported in this browser/environment'
-      );
     }
   };
 

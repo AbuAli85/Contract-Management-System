@@ -5,7 +5,6 @@ export const getContract = async (
   contractId: string
 ): Promise<ContractWithRelations | null> => {
   if (!contractId) {
-    console.warn('getContract called with no contractId');
     return null;
   }
 
@@ -25,7 +24,6 @@ export const getContract = async (
       .single();
 
     if (error) {
-      console.error('Error fetching contract:', error.message);
       // Consider how to handle errors. Throwing might be appropriate for React Query's error state.
       // If the error is because the contract doesn't exist (e.g., RLS or actual missing row),
       // Supabase often returns a specific error code or null data.
@@ -37,7 +35,6 @@ export const getContract = async (
     }
     return data as ContractWithRelations | null;
   } catch (error) {
-    console.error('Error in getContract:', error);
     return null;
   }
 };

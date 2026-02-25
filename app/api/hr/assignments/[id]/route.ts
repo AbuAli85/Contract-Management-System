@@ -96,7 +96,6 @@ export async function GET(
       assignment,
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/assignments/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -217,7 +216,6 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Error updating assignment:', updateError);
       return NextResponse.json(
         { error: 'Failed to update assignment', details: updateError.message },
         { status: 500 }
@@ -230,7 +228,6 @@ export async function PUT(
       assignment: updatedAssignment,
     });
   } catch (error) {
-    console.error('Error in PUT /api/hr/assignments/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -320,7 +317,6 @@ export async function DELETE(
       .eq('id', id);
 
     if (updateError) {
-      console.error('Error deleting assignment:', updateError);
       return NextResponse.json(
         { error: 'Failed to delete assignment', details: updateError.message },
         { status: 500 }
@@ -332,7 +328,6 @@ export async function DELETE(
       message: 'Assignment terminated successfully',
     });
   } catch (error) {
-    console.error('Error in DELETE /api/hr/assignments/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

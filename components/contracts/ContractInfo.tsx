@@ -23,69 +23,30 @@ interface ContractInfoProps {
   contractId: string;
 }
 
-// Mock data for demonstration - replace with real data from your API
-const mockActivityData = {
-  addedBy: {
-    id: 'user-1',
-    name: 'Ahmed Hassan',
-    email: 'ahmed.hassan@company.com',
-    avatar: '/avatars/ahmed.jpg',
-    role: 'Contract Manager',
-  },
-  lastUpdatedBy: {
-    id: 'user-2',
-    name: 'Sarah Al-Mansouri',
-    email: 'sarah.mansouri@company.com',
-    avatar: '/avatars/sarah.jpg',
-    role: 'Legal Reviewer',
-  },
-  notifications: [
-    {
-      id: 'notif-1',
-      type: 'task',
-      title: 'Review Required',
-      description: 'Contract pending legal review',
-      priority: 'high',
-      dueDate: '2025-08-10',
-      assignedTo: 'Legal Team',
+// Activity data is derived from the contract prop
+function getActivityData(contract: any) {
+  return {
+    addedBy: {
+      id: contract?.created_by ?? '',
+      name: contract?.created_by_name ?? contract?.created_by ?? 'Unknown',
+      email: contract?.created_by_email ?? '',
+      avatar: '',
+      role: 'Contract Creator',
     },
-    {
-      id: 'notif-2',
-      type: 'update',
-      title: 'Status Changed',
-      description: 'Contract moved to active status',
-      timestamp: '2025-08-05T10:30:00Z',
-      user: 'Sarah Al-Mansouri',
+    lastUpdatedBy: {
+      id: contract?.updated_by ?? '',
+      name: contract?.updated_by_name ?? contract?.updated_by ?? 'Unknown',
+      email: contract?.updated_by_email ?? '',
+      avatar: '',
+      role: 'Last Editor',
     },
-    {
-      id: 'notif-3',
-      type: 'task',
-      title: 'Document Upload',
-      description: 'Upload signed contract documents',
-      priority: 'medium',
-      dueDate: '2025-08-15',
-      assignedTo: 'HR Department',
-    },
-  ],
-  tasks: [
-    {
-      id: 'task-1',
-      title: 'Legal Review',
-      status: 'pending',
-      assignee: 'Legal Team',
-      dueDate: '2025-08-10',
-    },
-    {
-      id: 'task-2',
-      title: 'Final Approval',
-      status: 'completed',
-      assignee: 'Contract Manager',
-      completedDate: '2025-08-03',
-    },
-  ],
-};
+    tasks: [],
+    notifications: [],
+  };
+}
 
 export function ContractInfo({ contract, contractId }: ContractInfoProps) {
+  const activityData = getActivityData(contract);
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'task':
@@ -186,11 +147,11 @@ export function ContractInfo({ contract, contractId }: ContractInfoProps) {
             <div className='flex items-start gap-3 p-3 bg-blue-50 rounded-lg'>
               <Avatar className='h-10 w-10'>
                 <AvatarImage
-                  src={mockActivityData.addedBy.avatar}
-                  alt={mockActivityData.addedBy.name}
+                  src={activityData.addedBy.avatar}
+                  alt={activityData.addedBy.name}
                 />
                 <AvatarFallback>
-                  {mockActivityData.addedBy.name
+                  {activityData.addedBy.name
                     .split(' ')
                     .map(n => n[0])
                     .join('')}
@@ -199,14 +160,14 @@ export function ContractInfo({ contract, contractId }: ContractInfoProps) {
               <div className='flex-1'>
                 <div className='flex items-center gap-2'>
                   <p className='font-semibold text-sm'>
-                    {mockActivityData.addedBy.name}
+                    {activityData.addedBy.name}
                   </p>
                   <Badge variant='secondary' className='text-xs'>
-                    {mockActivityData.addedBy.role}
+                    {activityData.addedBy.role}
                   </Badge>
                 </div>
                 <p className='text-sm text-gray-600'>
-                  {mockActivityData.addedBy.email}
+                  {activityData.addedBy.email}
                 </p>
                 <p className='text-xs text-gray-500 mt-1'>
                   <span className='font-medium'>Contract Creator</span> •{' '}
@@ -219,11 +180,11 @@ export function ContractInfo({ contract, contractId }: ContractInfoProps) {
             <div className='flex items-start gap-3 p-3 bg-green-50 rounded-lg'>
               <Avatar className='h-10 w-10'>
                 <AvatarImage
-                  src={mockActivityData.lastUpdatedBy.avatar}
-                  alt={mockActivityData.lastUpdatedBy.name}
+                  src={activityData.lastUpdatedBy.avatar}
+                  alt={activityData.lastUpdatedBy.name}
                 />
                 <AvatarFallback>
-                  {mockActivityData.lastUpdatedBy.name
+                  {activityData.lastUpdatedBy.name
                     .split(' ')
                     .map(n => n[0])
                     .join('')}
@@ -232,14 +193,14 @@ export function ContractInfo({ contract, contractId }: ContractInfoProps) {
               <div className='flex-1'>
                 <div className='flex items-center gap-2'>
                   <p className='font-semibold text-sm'>
-                    {mockActivityData.lastUpdatedBy.name}
+                    {activityData.lastUpdatedBy.name}
                   </p>
                   <Badge variant='secondary' className='text-xs'>
-                    {mockActivityData.lastUpdatedBy.role}
+                    {activityData.lastUpdatedBy.role}
                   </Badge>
                 </div>
                 <p className='text-sm text-gray-600'>
-                  {mockActivityData.lastUpdatedBy.email}
+                  {activityData.lastUpdatedBy.email}
                 </p>
                 <p className='text-xs text-gray-500 mt-1'>
                   <span className='font-medium'>Last Update</span> •{' '}
@@ -260,7 +221,7 @@ export function ContractInfo({ contract, contractId }: ContractInfoProps) {
           </CardHeader>
           <CardContent>
             <div className='space-y-3'>
-              {mockActivityData.tasks.map(task => (
+              {activityData.tasks.map(task => (
                 <div
                   key={task.id}
                   className='flex items-center justify-between p-3 border rounded-lg'
@@ -299,7 +260,7 @@ export function ContractInfo({ contract, contractId }: ContractInfoProps) {
         </CardHeader>
         <CardContent>
           <div className='space-y-3'>
-            {mockActivityData.notifications.map(notification => (
+            {activityData.notifications.map(notification => (
               <div
                 key={notification.id}
                 className='flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors'

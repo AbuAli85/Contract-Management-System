@@ -37,13 +37,11 @@ export async function GET(
       .eq('promoter_id', id);
 
     if (error) {
-      console.error('Error fetching skills:', error);
       return NextResponse.json({ skills: [] }, { status: 200 });
     }
 
     return NextResponse.json({ skills: data || [] }, { status: 200 });
   } catch (error) {
-    console.error('Skills API error:', error);
     return NextResponse.json({ skills: [] }, { status: 200 });
   }
 }

@@ -144,7 +144,6 @@ export function BulkDocumentRequestDialog({
       setSendEmail(true);
       setSendSms(false);
     } catch (error) {
-      console.error('Error sending bulk document requests:', error);
       toast({
         title: 'Error',
         description:

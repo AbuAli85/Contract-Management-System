@@ -121,177 +121,39 @@ export function TrackingDashboard() {
   const loadTrackingData = async () => {
     setLoading(true);
     try {
-      // Simulate loading data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock entities data
-      setEntities([
-        {
-          id: '1',
-          type: 'contract',
-          name: 'Partnership Agreement - TechCorp',
-          description:
-            'Annual partnership contract with TechCorp for software licensing',
-          status: 'in_progress',
-          priority: 'high',
-          progress_percentage: 75,
-          assigned_to: 'John Doe',
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-20T14:30:00Z',
-          due_date: '2024-02-15T23:59:59Z',
-          metadata: { contract_value: 150000, renewal_date: '2025-01-15' },
-        },
-        {
-          id: '2',
-          type: 'document',
-          name: 'Compliance Report Q4 2023',
-          description: 'Quarterly compliance documentation and review',
-          status: 'completed',
-          priority: 'medium',
-          progress_percentage: 100,
-          assigned_to: 'Jane Smith',
-          created_at: '2024-01-10T09:00:00Z',
-          updated_at: '2024-01-18T16:00:00Z',
-          due_date: '2024-01-31T23:59:59Z',
-          metadata: { document_type: 'compliance', quarter: 'Q4' },
-        },
-        {
-          id: '3',
-          type: 'project',
-          name: 'Digital Transformation Initiative',
-          description:
-            'Company-wide digital transformation and automation project',
-          status: 'in_progress',
-          priority: 'urgent',
-          progress_percentage: 45,
-          assigned_to: 'Mike Johnson',
-          created_at: '2024-01-01T08:00:00Z',
-          updated_at: '2024-01-20T11:15:00Z',
-          due_date: '2024-06-30T23:59:59Z',
-          metadata: { budget: 500000, team_size: 12 },
-        },
-        {
-          id: '4',
-          type: 'delivery',
-          name: 'Equipment Delivery - Branch Office',
-          description: 'IT equipment shipment to new branch office',
-          status: 'on_hold',
-          priority: 'medium',
-          progress_percentage: 25,
-          assigned_to: 'Sarah Wilson',
-          created_at: '2024-01-18T12:00:00Z',
-          updated_at: '2024-01-19T10:30:00Z',
-          due_date: '2024-01-25T17:00:00Z',
-          metadata: { shipment_id: 'SH-2024-001', items_count: 25 },
-        },
+      // Fetch contracts for tracking entities
+      const [contractsRes] = await Promise.all([
+        fetch('/api/contracts?limit=20&status=active'),
       ]);
-
-      // Mock events data
-      setEvents([
-        {
-          id: '1',
-          entity_id: '1',
-          entity_type: 'contract',
-          event_type: 'status_update',
-          description: 'Contract moved to legal review phase',
-          user_id: 'user1',
-          user_name: 'John Doe',
-          created_at: '2024-01-20T14:30:00Z',
-          metadata: { previous_status: 'draft', new_status: 'in_progress' },
-        },
-        {
-          id: '2',
-          entity_id: '2',
-          entity_type: 'document',
-          event_type: 'completion',
-          description: 'Document review completed and approved',
-          user_id: 'user2',
-          user_name: 'Jane Smith',
-          created_at: '2024-01-18T16:00:00Z',
-          metadata: { approved_by: 'Director of Compliance' },
-        },
-        {
-          id: '3',
-          entity_id: '3',
-          entity_type: 'project',
-          event_type: 'milestone',
-          description: 'Phase 1 milestone achieved',
-          user_id: 'user3',
-          user_name: 'Mike Johnson',
-          created_at: '2024-01-20T11:15:00Z',
-          metadata: {
-            milestone: 'Requirements Gathering',
-            completion_rate: 45,
-          },
-        },
-      ]);
-
-      // Mock deliveries data
-      setDeliveries([
-        {
-          id: 'DEL-001',
-          tracking_number: 'TRK123456789',
-          title: 'Office Equipment Package',
-          from_location: 'Warehouse - New York',
-          to_location: 'Branch Office - Boston',
-          status: 'in_transit',
-          carrier: 'FastShip Express',
-          estimated_delivery: '2024-01-25T17:00:00Z',
-          progress_percentage: 65,
-          checkpoints: [
-            {
-              location: 'New York Warehouse',
-              status: 'Shipped',
-              timestamp: '2024-01-22T08:00:00Z',
-              description: 'Package shipped from warehouse',
-            },
-            {
-              location: 'Hartford Distribution Center',
-              status: 'In Transit',
-              timestamp: '2024-01-22T14:30:00Z',
-              description: 'Package arrived at distribution center',
-            },
-            {
-              location: 'Boston Hub',
-              status: 'Processing',
-              timestamp: '2024-01-23T09:15:00Z',
-              description: 'Package being processed for local delivery',
-            },
-          ],
-        },
-        {
-          id: 'DEL-002',
-          tracking_number: 'TRK987654321',
-          title: 'Legal Documents Package',
-          from_location: 'Legal Department - HQ',
-          to_location: 'Client Office - Chicago',
-          status: 'delivered',
-          carrier: 'SecureDoc Courier',
-          estimated_delivery: '2024-01-20T12:00:00Z',
-          actual_delivery: '2024-01-20T11:45:00Z',
-          progress_percentage: 100,
-          checkpoints: [
-            {
-              location: 'HQ Legal Department',
-              status: 'Picked Up',
-              timestamp: '2024-01-19T16:00:00Z',
-              description: 'Secure documents picked up',
-            },
-            {
-              location: 'Chicago Office',
-              status: 'Delivered',
-              timestamp: '2024-01-20T11:45:00Z',
-              description: 'Documents delivered and signed for',
-            },
-          ],
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to load tracking data:', error);
+      if (contractsRes.ok) {
+        const contractsData = await contractsRes.json();
+        const contracts = contractsData.contracts ?? contractsData.data ?? [];
+        const mappedEntities = contracts.map((c: Record<string, unknown>) => ({
+          id: String(c.id),
+          type: 'contract' as const,
+          name: String(c.title ?? c.name ?? `Contract #${c.id}`),
+          description: String(c.description ?? ''),
+          status: String(c.status ?? 'active'),
+          priority: String(c.priority ?? 'medium'),
+          progress_percentage: Number(c.progress_percentage ?? 50),
+          assigned_to: String(c.assigned_to ?? ''),
+          created_at: String(c.created_at ?? new Date().toISOString()),
+          updated_at: String(c.updated_at ?? new Date().toISOString()),
+          due_date: c.end_date ? String(c.end_date) : undefined,
+          metadata: {},
+        }));
+        setEntities(mappedEntities);
+      }
+      setEvents([]);
+      setDeliveries([]);
+    } catch {
+      setEntities([]);
+      setEvents([]);
+      setDeliveries([]);
     } finally {
       setLoading(false);
     }
-  };
+  };;
 
   const getStatusColor = (status: string) => {
     switch (status) {

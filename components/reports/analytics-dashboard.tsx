@@ -152,7 +152,6 @@ export function AnalyticsDashboard() {
         },
       ]);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
     }

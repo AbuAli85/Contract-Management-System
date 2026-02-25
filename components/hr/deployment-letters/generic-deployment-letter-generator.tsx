@@ -209,9 +209,6 @@ export function GenericDeploymentLetterGenerator({
       });
 
       if (!webhookResponse.ok) {
-        console.warn(
-          'PDF generation webhook may have failed, but contract was created'
-        );
       }
 
       return { contractId: newContractId, contract: contractResult.contract };
@@ -566,7 +563,7 @@ export function GenericDeploymentLetterGenerator({
                   : 'Deployment letter created successfully!'}
                 <div className='mt-2 flex gap-2'>
                   <Button variant='outline' size='sm' asChild>
-                    <a href={`/en/contracts/${contractId}`} target='_blank'>
+                    <a href={`/${locale ?? 'en'}/contracts/${contractId}`} target='_blank'>
                       <ExternalLink className='h-4 w-4 mr-2' />
                       {locale === 'ar' ? 'عرض العقد' : 'View Contract'}
                     </a>

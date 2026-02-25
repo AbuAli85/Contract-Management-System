@@ -212,7 +212,6 @@ export async function checkPasswordBreach(password: string): Promise<{
     );
 
     if (!response.ok) {
-      console.error('Failed to check password breach:', response.status);
       return {
         isBreached: false,
         breachCount: 0,
@@ -241,7 +240,6 @@ export async function checkPasswordBreach(password: string): Promise<{
       breachCount: 0,
     };
   } catch (error) {
-    console.error('Error checking password breach:', error);
     // Don't fail password validation if breach check fails
     return {
       isBreached: false,
@@ -292,7 +290,6 @@ export async function checkPasswordHistory(
     );
 
     if (!response.ok) {
-      console.error('Failed to fetch password history:', response.status);
       // Don't fail password change if history check fails
       return { isReused: false };
     }
@@ -310,7 +307,6 @@ export async function checkPasswordHistory(
 
     return { isReused: false };
   } catch (error) {
-    console.error('Error checking password history:', error);
     // Don't fail password change if history check fails
     return { isReused: false };
   }

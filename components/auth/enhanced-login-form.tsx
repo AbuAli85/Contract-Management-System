@@ -47,13 +47,11 @@ export function EnhancedLoginForm() {
         .limit(1);
 
       if (error) {
-        console.error('🔗 Supabase connection error:', error);
         setConnectionStatus('error');
       } else {
         setConnectionStatus('connected');
       }
     } catch (error) {
-      console.error('🔗 Supabase connection failed:', error);
       setConnectionStatus('error');
     }
   };
@@ -79,7 +77,6 @@ export function EnhancedLoginForm() {
         });
 
       if (authError) {
-        console.error('🔐 Enhanced Login - Auth error:', authError);
 
         // Handle specific error types
         let errorMessage = 'Authentication failed';
@@ -114,7 +111,6 @@ export function EnhancedLoginForm() {
         .single();
 
       if (profileError) {
-        console.error('🔐 Enhanced Login - Profile fetch error:', profileError);
         throw new Error('Failed to load user profile');
       }
 
@@ -191,7 +187,6 @@ export function EnhancedLoginForm() {
         router.push(redirectUrl);
       }, 1000);
     } catch (error) {
-      console.error('🔐 Enhanced Login - Login failed:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Login failed';
       setError(errorMessage);

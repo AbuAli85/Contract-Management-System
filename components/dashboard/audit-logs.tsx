@@ -71,7 +71,6 @@ export default function AuditLogs() {
       setLogs(transformedLogs);
       devLog('Audit logs loaded successfully:', transformedLogs.length);
     } catch (error: any) {
-      console.error('Error fetching audit logs:', error);
       toast({
         title: 'Error Fetching Audit Logs',
         description: error.message,

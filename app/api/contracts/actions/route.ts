@@ -6,19 +6,15 @@ export const dynamic = 'force-dynamic';
 // Contract actions endpoint
 export const POST = async (request: NextRequest) => {
   try {
-    console.log('🔍 Contract actions API called');
 
     const supabase = await createClient();
-    console.log('🔍 Supabase client created');
 
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    console.log('🔍 Auth check:', { user: user?.id, authError });
 
     if (authError || !user) {
-      console.log('❌ Authentication failed:', authError);
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
         { status: 401 }
@@ -26,12 +22,10 @@ export const POST = async (request: NextRequest) => {
     }
 
     const body = await request.json();
-    console.log('🔍 Request body:', body);
 
     const { contractId, action, reason } = body;
 
     if (!contractId || !action) {
-      console.log('❌ Missing required fields:', { contractId, action });
       return NextResponse.json(
         { success: false, error: 'Contract ID and action are required' },
         { status: 400 }
@@ -47,14 +41,12 @@ export const POST = async (request: NextRequest) => {
       'send_to_hr',
     ];
     if (!validActions.includes(action)) {
-      console.log('❌ Invalid action:', action);
       return NextResponse.json(
         { success: false, error: 'Invalid action' },
         { status: 400 }
       );
     }
 
-    console.log('🔍 Fetching contract:', contractId);
 
     // Get the contract first to check permissions
     const { data: contract, error: contractError } = await supabase
@@ -63,13 +55,8 @@ export const POST = async (request: NextRequest) => {
       .eq('id', contractId)
       .single();
 
-    console.log('🔍 Contract fetch result:', {
-      contract: contract?.id,
-      contractError,
-    });
 
     if (contractError || !contract) {
-      console.log('❌ Contract not found:', contractError);
       return NextResponse.json(
         { success: false, error: 'Contract not found' },
         { status: 404 }
@@ -84,10 +71,8 @@ export const POST = async (request: NextRequest) => {
       contract.client_id === user.id ||
       contract.employer_id === user.id;
 
-    console.log('🔍 Permission check:', { isAdmin, isOwner, userId: user.id });
 
     if (!isAdmin && !isOwner) {
-      console.log('❌ Insufficient permissions');
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -99,7 +84,6 @@ export const POST = async (request: NextRequest) => {
       updated_at: new Date().toISOString(),
     };
 
-    console.log('🔍 Preparing update data for action:', action);
 
     switch (action) {
       case 'approve':
@@ -134,7 +118,6 @@ export const POST = async (request: NextRequest) => {
         break;
     }
 
-    console.log('🔍 Update data:', updateData);
 
     // Update the contract
     const { data: updatedContract, error: updateError } = await supabase
@@ -144,13 +127,8 @@ export const POST = async (request: NextRequest) => {
       .select()
       .single();
 
-    console.log('🔍 Update result:', {
-      updatedContract: updatedContract?.id,
-      updateError,
-    });
 
     if (updateError) {
-      console.error('❌ Error updating contract:', updateError);
       return NextResponse.json(
         {
           success: false,
@@ -161,7 +139,6 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
-    console.log('✅ Contract updated successfully');
 
     // Log the action (optional - skip if table doesn't exist)
     try {
@@ -177,12 +154,7 @@ export const POST = async (request: NextRequest) => {
         },
         created_at: new Date().toISOString(),
       });
-      console.log('✅ Activity logged successfully');
     } catch (logError) {
-      console.warn(
-        'Failed to log contract action (table may not exist):',
-        logError
-      );
     }
 
     return NextResponse.json({
@@ -191,7 +163,6 @@ export const POST = async (request: NextRequest) => {
       message: `Contract ${action}d successfully`,
     });
   } catch (error) {
-    console.error('❌ Error in contract action API:', error);
     return NextResponse.json(
       {
         success: false,
@@ -206,7 +177,6 @@ export const POST = async (request: NextRequest) => {
 // Bulk actions
 export const PUT = async (request: NextRequest) => {
   try {
-    console.log('🔍 Bulk contract actions API called');
 
     const supabase = await createClient();
     const {
@@ -339,7 +309,6 @@ export const PUT = async (request: NextRequest) => {
       .select();
 
     if (updateError) {
-      console.error('Error updating contracts:', updateError);
       return NextResponse.json(
         { success: false, error: 'Failed to update contracts' },
         { status: 500 }
@@ -363,10 +332,6 @@ export const PUT = async (request: NextRequest) => {
 
       await supabase.from('contract_activity_logs').insert(logEntries);
     } catch (logError) {
-      console.warn(
-        'Failed to log bulk contract action (table may not exist):',
-        logError
-      );
     }
 
     return NextResponse.json({
@@ -375,7 +340,6 @@ export const PUT = async (request: NextRequest) => {
       message: `${contractIds.length} contracts ${action}d successfully`,
     });
   } catch (error) {
-    console.error('Error in bulk contract action API:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

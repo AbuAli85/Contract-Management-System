@@ -74,7 +74,6 @@ export async function POST(
       message: `Promoter has been successfully archived.`,
     });
   } catch (error) {
-    console.error('Error in archive promoter API:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -132,7 +131,6 @@ export async function DELETE(
       message: `Promoter has been permanently deleted.`,
     });
   } catch (error) {
-    console.error('Error in delete promoter API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

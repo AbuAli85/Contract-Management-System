@@ -159,7 +159,6 @@ export default function ChartsSection() {
 
       setMonthlyData(monthlyData);
     } catch (error: any) {
-      console.error('Error fetching chart data:', error);
       toast({
         title: 'Error Fetching Chart Data',
         description: error.message,

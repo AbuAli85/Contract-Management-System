@@ -37,7 +37,6 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('📄 Generating PDF for contract:', contractId);
 
     // 3. Fetch contract data with all relations
     const { data: contract, error: fetchError } = await supabase
@@ -74,7 +73,6 @@ export async function POST(request: Request) {
       .single();
 
     if (fetchError || !contract) {
-      console.error('❌ Contract fetch error:', fetchError);
       return NextResponse.json(
         { error: 'Contract not found', details: fetchError?.message },
         { status: 404 }
@@ -106,13 +104,7 @@ export async function POST(request: Request) {
     }
 
     // 5. Generate PDF using jsPDF
-    console.log('🔧 Generating PDF with jsPDF...');
     const pdfBuffer = await generateContractPDF(contract);
-    console.log(
-      '✅ PDF generated successfully, size:',
-      pdfBuffer.length,
-      'bytes'
-    );
 
     // 6. Handle return type — direct download
     if (returnType === 'download') {
@@ -130,7 +122,6 @@ export async function POST(request: Request) {
     // 7. Upload to Supabase Storage and return URL
     const fileName = `contracts/${contract.id}/contract-${contract.contract_number}-${Date.now()}.pdf`;
 
-    console.log('📤 Uploading PDF to Supabase Storage:', fileName);
     const { error: uploadError } = await supabase.storage
       .from('contract-documents')
       .upload(fileName, pdfBuffer, {
@@ -139,7 +130,6 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      console.error('❌ Upload error:', uploadError);
       return NextResponse.json(
         { error: 'Failed to upload PDF', details: uploadError.message },
         { status: 500 }
@@ -151,7 +141,6 @@ export async function POST(request: Request) {
       data: { publicUrl },
     } = supabase.storage.from('contract-documents').getPublicUrl(fileName);
 
-    console.log('✅ PDF uploaded successfully:', publicUrl);
 
     // 9. Update contract record with PDF URL
     const { error: updateError } = await supabase
@@ -164,7 +153,6 @@ export async function POST(request: Request) {
       .eq('id', contractId);
 
     if (updateError) {
-      console.error('⚠️ Failed to update contract record:', updateError);
       // Don't fail the request — PDF was still generated
     }
 
@@ -182,18 +170,9 @@ export async function POST(request: Request) {
         });
 
         if (emailResult.success) {
-          console.log(
-            '✅ Contract-ready email sent, messageId:',
-            emailResult.messageId
-          );
         } else {
-          console.warn(
-            '⚠️ Contract-ready email failed (PDF still generated):',
-            emailResult.error
-          );
         }
       } catch (emailError) {
-        console.error('⚠️ Failed to send email notification:', emailError);
         // Don't fail the request — PDF was still generated
       }
     }
@@ -208,7 +187,6 @@ export async function POST(request: Request) {
       message: 'PDF generated successfully using native jsPDF',
     });
   } catch (error) {
-    console.error('❌ PDF generation error:', error);
     return NextResponse.json(
       {
         error: 'Failed to generate PDF',

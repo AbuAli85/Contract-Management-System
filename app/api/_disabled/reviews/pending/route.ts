@@ -63,7 +63,6 @@ export async function GET(request: NextRequest) {
     const { data: contracts, error: contractsError } = await query;
 
     if (contractsError) {
-      console.error('Error fetching contracts:', contractsError);
       // Return empty array instead of error for now
       return NextResponse.json({
         success: true,
@@ -124,7 +123,6 @@ export async function GET(request: NextRequest) {
       count: processedContracts.length,
     });
   } catch (error) {
-    console.error('Error in pending reviews API:', error);
     return NextResponse.json({
       success: true,
       reviews: [],
@@ -145,7 +143,6 @@ async function hasAdminRole(userId: string, supabase: any): Promise<boolean> {
 
     return user?.role === 'admin';
   } catch (error) {
-    console.error('Error checking admin role:', error);
     // Default to true for now to allow testing
     return true;
   }

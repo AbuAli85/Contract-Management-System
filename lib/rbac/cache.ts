@@ -132,11 +132,6 @@ class PermissionCache {
       try {
         await this.redisClient.del(`rbac:permissions:${userId}`);
       } catch (error) {
-        console.warn(
-          '🔐 RBAC: Failed to invalidate Redis cache for user:',
-          userId,
-          error
-        );
       }
     }
 
@@ -161,7 +156,6 @@ class PermissionCache {
           await this.redisClient.del(...keys);
         }
       } catch (error) {
-        console.warn('🔐 RBAC: Failed to invalidate Redis cache:', error);
       }
     }
 
@@ -233,7 +227,6 @@ class PermissionCache {
           return JSON.parse(cached);
         }
       } catch (error) {
-        console.warn('🔐 RBAC: Failed to get from Redis cache:', error);
       }
     }
 
@@ -264,7 +257,6 @@ class PermissionCache {
           JSON.stringify(cached)
         );
       } catch (error) {
-        console.warn('🔐 RBAC: Failed to set Redis cache:', error);
       }
     }
 
@@ -342,12 +334,10 @@ class PermissionCache {
             }
           }
         } catch (e) {
-          console.warn('🔐 RBAC: Fallback to user_roles also failed:', e);
         }
       }
 
       if (rolesFetchError) {
-        console.error('🔐 RBAC: Failed to fetch user roles:', rolesFetchError);
         return null;
       }
 
@@ -389,7 +379,6 @@ class PermissionCache {
       }
 
       if (permError) {
-        console.error('🔐 RBAC: Failed to fetch permissions:', permError);
         return null;
       }
 
@@ -402,10 +391,6 @@ class PermissionCache {
         roles,
       };
     } catch (error) {
-      console.error(
-        '🔐 RBAC: Failed to fetch user permissions from database:',
-        error
-      );
       return null;
     }
   }
@@ -419,7 +404,6 @@ class PermissionCache {
         await this.redisClient.quit();
         this.redisClient = null;
       } catch (error) {
-        console.warn('🔐 RBAC: Failed to close Redis connection:', error);
       }
     }
   }

@@ -17,7 +17,6 @@ export async function GET() {
       { status: 503 }
     );
 
-    console.log('🧪 Testing Google Service Account contract generation...');
 
     // Test with sample data - DISABLED
     // const result = await googleDocsServiceSA.generateContract({
@@ -72,7 +71,6 @@ export async function GET() {
     //   );
     // }
   } catch (error) {
-    console.error('❌ Test failed:', error);
     return NextResponse.json(
       {
         success: false,

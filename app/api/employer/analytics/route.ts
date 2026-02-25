@@ -98,7 +98,6 @@ export async function GET(_request: NextRequest) {
     const { data: teamMembers, error: teamError } = await teamQuery;
 
     if (teamError) {
-      console.error('Error fetching team:', teamError);
       // Don't return error, continue with empty array
     }
 
@@ -430,7 +429,6 @@ export async function GET(_request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in analytics GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

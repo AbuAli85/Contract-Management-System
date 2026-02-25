@@ -81,7 +81,6 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
 
       setUsers(data || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch users',
@@ -111,7 +110,6 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
       if (data) setEmployers(data);
       return data || [];
     } catch (error) {
-      console.error('Error fetching employers:', error);
       return [];
     }
   };
@@ -216,7 +214,6 @@ export function AdminRoleManager({ className }: AdminRoleManagerProps) {
       setCompanyId('');
       fetchUsers();
     } catch (error: any) {
-      console.error('Error assigning role:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to assign role',

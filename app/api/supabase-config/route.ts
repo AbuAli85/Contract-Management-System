@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
         : null,
     });
   } catch (error) {
-    console.error('Supabase config check error:', error);
     return NextResponse.json(
       {
         success: false,

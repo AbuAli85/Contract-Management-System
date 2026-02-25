@@ -131,7 +131,6 @@ export class ContractNotificationService {
       .single();
 
     if (error) {
-      console.error('ContractNotificationService: fetch error', error);
       return null;
     }
     return data as ContractRow;
@@ -160,7 +159,6 @@ export class ContractNotificationService {
         });
 
       if (uploadError) {
-        console.error('ContractNotificationService: upload error', uploadError);
         return null;
       }
 
@@ -177,7 +175,6 @@ export class ContractNotificationService {
 
       return publicUrl;
     } catch (err) {
-      console.error('ContractNotificationService: PDF generation error', err);
       return null;
     }
   }
@@ -223,7 +220,7 @@ export class ContractNotificationService {
         basicSalary: contract.basic_salary as number | undefined,
         currency: contract.currency as string | undefined,
         pdfUrl,
-        portalUrl: `${this.portalUrl(input.portalBaseUrl)}/en/dashboard`,
+        portalUrl: `${this.portalUrl(input.portalBaseUrl)}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/dashboard`,
       });
 
       // 4. Send email
@@ -233,17 +230,12 @@ export class ContractNotificationService {
       });
 
       if (!result.success) {
-        console.error(
-          'ContractNotificationService: email send failed',
-          result.error
-        );
         return { success: false, pdfUrl, error: result.error };
       }
 
       return { success: true, messageId: result.messageId, pdfUrl };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('ContractNotificationService: unexpected error', err);
       return { success: false, error: message };
     }
   }
@@ -255,7 +247,7 @@ export class ContractNotificationService {
     input: ContractApprovalNotificationInput
   ): Promise<NotificationResult> {
     try {
-      const actionUrl = `${this.portalUrl(input.portalBaseUrl)}/en/dashboard/approvals?contract=${input.contractId}`;
+      const actionUrl = `${this.portalUrl(input.portalBaseUrl)}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/dashboard/approvals?contract=${input.contractId}`;
 
       const emailContent = contractApprovalEmail({
         recipientName: input.approverName,
@@ -290,7 +282,7 @@ export class ContractNotificationService {
     input: ContractStatusNotificationInput
   ): Promise<NotificationResult> {
     try {
-      const actionUrl = `${this.portalUrl(input.portalBaseUrl)}/en/dashboard/contracts/${input.contractId}`;
+      const actionUrl = `${this.portalUrl(input.portalBaseUrl)}/${process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? 'en'}/dashboard/contracts/${input.contractId}`;
 
       const emailContent = contractStatusChangeEmail({
         recipientName: input.recipientName,

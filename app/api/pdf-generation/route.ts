@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
       const body = await request.json();
       const supabase = await createClient();
 
-      console.log('🔍 PDF Generation API - Received request:', body);
 
       // Get current user to check permissions
       const {
@@ -23,14 +22,8 @@ export async function POST(request: NextRequest) {
         error: authError,
       } = await supabase.auth.getUser();
 
-      console.log('PDF Generation - Auth check:', {
-        hasUser: !!user,
-        authError: authError?.message,
-        userId: user?.id,
-      });
 
       if (authError || !user) {
-        console.error('PDF Generation - Unauthorized:', authError);
         return NextResponse.json(
           {
             error: 'Unauthorized',
@@ -69,7 +62,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log('📄 Starting PDF generation for contract:', contractNumber);
 
       // Fetch related data for the contract
       const { data: contract, error: contractError } = await supabase
@@ -107,7 +99,6 @@ export async function POST(request: NextRequest) {
         });
 
       if (uploadError) {
-        console.error('Storage upload error:', uploadError);
 
         // Check if it's a bucket not found error
         if (
@@ -153,7 +144,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (updateError) {
-        console.error('Database update error:', updateError);
         return NextResponse.json(
           {
             error: 'Failed to update contract status',
@@ -176,12 +166,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      console.log('✅ PDF generated successfully:', {
-        contractId,
-        contractNumber,
-        pdfUrl: publicUrl,
-        fileName,
-      });
 
       return NextResponse.json({
         success: true,
@@ -196,7 +180,6 @@ export async function POST(request: NextRequest) {
     // Race between processing and timeout
     return await Promise.race([processPromise, timeoutPromise]);
   } catch (error) {
-    console.error('PDF Generation API error:', error);
     const processingTime = Date.now() - startTime;
 
     return NextResponse.json(
@@ -457,7 +440,6 @@ export async function GET() {
 
     return NextResponse.json(healthStatus);
   } catch (error) {
-    console.error('PDF Generation health check error:', error);
     return NextResponse.json(
       {
         service: 'PDF Generation',

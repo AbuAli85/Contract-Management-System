@@ -38,22 +38,28 @@ import { useContract } from '@/hooks/useContract';
 // StatusBadge component for displaying contract status
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { safeRender } from '@/lib/utils/safe-render';
-import { ContractStatusBadge } from '@/components/contracts/contract-status-badge';
+import {
+  ContractStatusBadge,
+  ContractStatus,
+} from '@/components/contracts/contract-status-badge';
+
+const VALID_CONTRACT_STATUSES: ContractStatus[] = [
+  'draft',
+  'pending',
+  'approved',
+  'active',
+  'completed',
+  'terminated',
+  'expired',
+  'rejected',
+];
 
 // StatusBadge wrapper using shared ContractStatusBadge component
-function StatusBadge({ status }: { status?: string | undefined }) {
-  const validStatuses = [
-    'draft',
-    'pending',
-    'approved',
-    'active',
-    'completed',
-    'terminated',
-    'expired',
-    'rejected',
-  ];
-  const safeStatus = validStatuses.includes(status || '')
-    ? (status as any)
+function StatusBadge({ status }: { status?: string | null }) {
+  const safeStatus: ContractStatus = VALID_CONTRACT_STATUSES.includes(
+    status as ContractStatus
+  )
+    ? (status as ContractStatus)
     : 'draft';
   return <ContractStatusBadge status={safeStatus} />;
 }
@@ -128,7 +134,6 @@ export default function ContractDetailPage() {
         // Fetch updated contract data
         const response = await fetch(`/api/contracts/${contractId}`);
         if (!response.ok) {
-          console.error('❌ Poll fetch failed:', response.status);
           return;
         }
 
@@ -163,7 +168,6 @@ export default function ContractDetailPage() {
           );
         }
       } catch (error) {
-        console.error('❌ Poll error:', error);
       }
     }, 3000); // Poll every 3 seconds
 
@@ -249,7 +253,6 @@ export default function ContractDetailPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching PDF status:', error);
     }
   };
 
@@ -273,7 +276,6 @@ export default function ContractDetailPage() {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage =
           errorData.error || errorData.message || `HTTP ${response.status}`;
-        console.error('❌ PDF API failed:', response.status, errorMessage);
 
         // Don't fallback to direct URL as it may be incorrect
         // Instead, show error and suggest regenerating the PDF
@@ -284,7 +286,6 @@ export default function ContractDetailPage() {
       const contentType = response.headers.get('content-type');
 
       if (!contentType || !contentType.includes('application/pdf')) {
-        console.warn('⚠️ Unexpected content type:', contentType);
       }
 
       const blob = await response.blob();
@@ -311,7 +312,6 @@ export default function ContractDetailPage() {
 
       setStatusMessage('PDF downloaded successfully');
     } catch (error) {
-      console.error('❌ Download error:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       setStatusMessage(`Download failed: ${errorMessage}`);
@@ -321,7 +321,6 @@ export default function ContractDetailPage() {
         window.open(`/api/contracts/${contractId}/pdf/view`, '_blank');
         setStatusMessage('Opened PDF in new window (download failed)');
       } catch (openError) {
-        console.error('❌ Failed to open PDF:', openError);
       }
     } finally {
       setDownloading(false);
@@ -348,7 +347,6 @@ export default function ContractDetailPage() {
           errorData.message ||
           errorData.error ||
           'Failed to generate PDF';
-        console.error('PDF generation error:', errorData);
         setStatusMessage(`Error: ${errorMessage}`);
         return;
       }
@@ -365,7 +363,6 @@ export default function ContractDetailPage() {
         setStatusMessage(`Error: ${data.error || 'Failed to generate PDF'}`);
       }
     } catch (error) {
-      console.error('Error generating PDF:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to generate PDF';
       setStatusMessage(`Error: ${errorMessage}`);
@@ -589,7 +586,6 @@ export default function ContractDetailPage() {
                               await copyToClipboard(contractId);
                             }
                           } catch (error) {
-                            console.error('Failed to copy contract ID:', error);
                           }
                         }}
                       >
@@ -1034,7 +1030,6 @@ export default function ContractDetailPage() {
                             handleDownloadExistingPDF(
                               contract.pdf_url || undefined
                             ).catch(error => {
-                              console.error('Download handler error:', error);
                               setStatusMessage(
                                 `Error: ${error instanceof Error ? error.message : 'Failed to download'}`
                               );
@@ -1508,10 +1503,6 @@ export default function ContractDetailPage() {
                                 setStatusMessage(`Error: ${data.error}`);
                               }
                             } catch (error) {
-                              console.error(
-                                'Error fixing processing status:',
-                                error
-                              );
                               setStatusMessage(
                                 'Failed to fix processing status'
                               );

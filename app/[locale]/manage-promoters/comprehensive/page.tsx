@@ -37,7 +37,7 @@ export default function ComprehensivePromotersPage() {
         toast.error('Failed to fetch promoters');
       }
     } catch (error) {
-      console.error('Error fetching promoters:', error);
+
       toast.error('An error occurred while fetching promoters');
     } finally {
       setIsLoading(false);
@@ -79,7 +79,7 @@ export default function ComprehensivePromotersPage() {
       await fetchPromoters();
       toast.success('Promoter created successfully');
     } catch (error) {
-      console.error('Error creating promoter:', error);
+
       throw error;
     }
   };
@@ -119,7 +119,7 @@ export default function ComprehensivePromotersPage() {
       await fetchPromoters();
       toast.success('Promoter updated successfully');
     } catch (error) {
-      console.error('Error updating promoter:', error);
+
       throw error;
     }
   };
@@ -159,7 +159,7 @@ export default function ComprehensivePromotersPage() {
         toast.error('Failed to fetch promoter details');
       }
     } catch (error) {
-      console.error('Error fetching promoter:', error);
+
       toast.error('An error occurred while fetching promoter details');
     }
   };
@@ -179,7 +179,7 @@ export default function ComprehensivePromotersPage() {
       await fetchPromoters();
       toast.success('Promoter deleted successfully');
     } catch (error) {
-      console.error('Error deleting promoter:', error);
+
       toast.error('Failed to delete promoter');
       throw error;
     }

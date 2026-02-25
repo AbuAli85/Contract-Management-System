@@ -48,7 +48,6 @@ export async function GET(_request: NextRequest) {
     ]);
 
     if (ordersError) {
-      console.error('Error fetching orders for stats:', ordersError);
       return NextResponse.json(
         { error: 'Failed to fetch order statistics' },
         { status: 500 }
@@ -56,7 +55,6 @@ export async function GET(_request: NextRequest) {
     }
 
     if (servicesError) {
-      console.error('Error fetching services for stats:', servicesError);
       return NextResponse.json(
         { error: 'Failed to fetch service statistics' },
         { status: 500 }
@@ -126,7 +124,6 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({ stats });
   } catch (error) {
-    console.error('Error in provider stats API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

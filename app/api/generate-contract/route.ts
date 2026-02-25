@@ -12,7 +12,6 @@ export const POST = withAnyRBAC(
       try {
         body = await request.json();
       } catch (jsonError) {
-        console.error('JSON parse error:', jsonError);
         return NextResponse.json(
           {
             error: 'Invalid JSON in request body',
@@ -34,15 +33,9 @@ export const POST = withAnyRBAC(
       } = await supabase.auth.getUser();
 
       if (authError || !user) {
-        console.log(
-          '🔐 Authentication check failed:',
-          authError?.message || 'No user found'
-        );
         // For testing purposes, we'll continue without authentication
         // In production, you should return an error here
-        console.log('⚠️ Continuing without authentication for testing');
       } else {
-        console.log('✅ User authenticated:', user.id);
       }
 
       // Validate required fields
@@ -150,7 +143,6 @@ export const POST = withAnyRBAC(
         .single();
 
       if (error) {
-        console.error('Database error:', error);
         return NextResponse.json(
           {
             error: 'Failed to create contract record',
@@ -181,7 +173,6 @@ export const POST = withAnyRBAC(
             }),
           });
         } catch (webhookError) {
-          console.error('Webhook error:', webhookError);
           // Don't fail the request if webhook fails
         }
       }
@@ -193,7 +184,6 @@ export const POST = withAnyRBAC(
         message: 'Contract created successfully',
       });
     } catch (error) {
-      console.error('API error:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

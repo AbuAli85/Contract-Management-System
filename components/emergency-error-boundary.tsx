@@ -47,11 +47,6 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(
-      '🚨 Emergency Error Boundary caught error:',
-      error,
-      errorInfo
-    );
 
     this.setState({
       error,
@@ -66,7 +61,6 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
 
   private handleRetry = async () => {
     if (this.state.retryCount >= 3) {
-      console.warn('Maximum retry attempts reached');
       return;
     }
 
@@ -81,7 +75,6 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
             try {
               localStorage.removeItem(key);
             } catch (e) {
-              console.warn('Failed to clear localStorage key:', key);
             }
           }
         });
@@ -97,7 +90,6 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
         retryCount: this.state.retryCount + 1,
       });
     } catch (retryError) {
-      console.error('Retry failed:', retryError);
       this.setState({
         hasError: true,
         error: retryError as Error,
@@ -109,7 +101,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
 
   private handleGoHome = () => {
     if (typeof window !== 'undefined') {
-      window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard`;
+      window.location.href = `/${(window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en')}/dashboard`;
     }
   };
 
@@ -243,8 +235,6 @@ export function EmergencyErrorBoundaryWrapper({
     }
 
     // Log to console for debugging
-    console.error('🚨 Emergency Error Boundary - Error:', error);
-    console.error('🚨 Emergency Error Boundary - Error Info:', errorInfo);
 
     // Check if it's an authentication-related error
     const isAuthError =
@@ -261,7 +251,6 @@ export function EmergencyErrorBoundaryWrapper({
           localStorage.removeItem('supabase.auth.token');
           sessionStorage.clear();
         } catch (e) {
-          console.warn('Failed to clear auth storage:', e);
         }
       }
     }

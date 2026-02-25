@@ -125,7 +125,6 @@ export function PromoterRanking({ promoterId, isAdmin }: PromoterRankingProps) {
         setScores(data);
       }
     } catch (error) {
-      console.error('Error fetching scores:', error);
     }
   };
 
@@ -137,7 +136,6 @@ export function PromoterRanking({ promoterId, isAdmin }: PromoterRankingProps) {
         setBadges(data);
       }
     } catch (error) {
-      console.error('Error fetching badges:', error);
     }
   };
 
@@ -149,7 +147,6 @@ export function PromoterRanking({ promoterId, isAdmin }: PromoterRankingProps) {
         setFeedback(data);
       }
     } catch (error) {
-      console.error('Error fetching feedback:', error);
     }
   };
 

@@ -210,7 +210,6 @@ export default function UnifiedSignupForm() {
         await supabase.auth.signUp(signupOptions);
 
       if (authError) {
-        console.error('🔐 Unified Signup - Auth error:', authError);
 
         // Check if it's a CAPTCHA error
         if (
@@ -244,11 +243,7 @@ export default function UnifiedSignupForm() {
       });
 
       if (profileError) {
-        console.error('🔐 Unified Signup - Profile error:', profileError);
         // Don't fail the signup if profile creation fails
-        console.warn(
-          'Profile creation failed, but auth user was created successfully'
-        );
       } else {
       }
 
@@ -265,7 +260,6 @@ export default function UnifiedSignupForm() {
           });
 
         if (companyError) {
-          console.warn('Company creation failed:', companyError);
         } else {
         }
       }
@@ -279,7 +273,6 @@ export default function UnifiedSignupForm() {
         );
       }, 2000);
     } catch (error) {
-      console.error('🔐 Unified Signup - Exception:', error);
       setError(
         `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

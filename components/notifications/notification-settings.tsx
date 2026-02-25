@@ -90,7 +90,6 @@ export function NotificationSettings() {
       // Store in localStorage for now
       localStorage.setItem('notificationSettings', JSON.stringify(settings));
     } catch (error) {
-      console.error('Failed to save settings:', error);
     } finally {
       setSaving(false);
     }

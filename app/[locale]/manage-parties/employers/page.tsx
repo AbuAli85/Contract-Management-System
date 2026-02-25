@@ -124,7 +124,7 @@ export default function EmployersPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching employers:', error);
+
       toast({
         title: 'Error',
         description: 'Failed to fetch employers',
@@ -182,7 +182,7 @@ export default function EmployersPage() {
       }
       return format(parsedDate, 'MMM dd, yyyy');
     } catch (error) {
-      console.error('Error formatting date:', dateString, error);
+
       return 'Invalid date';
     }
   };
@@ -253,7 +253,7 @@ export default function EmployersPage() {
           }));
         }
       } catch (error) {
-        console.error('Error fetching promoters:', error);
+
       } finally {
         setLoadingPromoters(prev => {
           const newSet = new Set(prev);

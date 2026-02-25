@@ -90,7 +90,6 @@ export async function GET(request: NextRequest) {
             message: 'Performance reviews feature not yet configured',
           });
         }
-        console.error('Error fetching reviews:', error);
         return NextResponse.json(
           { error: 'Failed to fetch reviews' },
           { status: 500 }
@@ -116,7 +115,6 @@ export async function GET(request: NextRequest) {
       });
     } catch (tableError: any) {
       // Handle case where employee_performance_reviews table doesn't exist
-      console.error('Performance reviews table error:', tableError);
       return NextResponse.json({
         success: true,
         reviews: [],
@@ -125,7 +123,6 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Error in performance reviews GET:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -217,7 +214,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating review:', createError);
       return NextResponse.json(
         { error: 'Failed to create review', details: createError.message },
         { status: 500 }
@@ -249,7 +245,6 @@ export async function POST(request: NextRequest) {
       review,
     });
   } catch (error) {
-    console.error('Error in performance reviews POST:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

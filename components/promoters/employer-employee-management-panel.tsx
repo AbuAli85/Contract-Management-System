@@ -113,7 +113,6 @@ export function EmployerEmployeeManagementPanel({
       });
       setNote('');
     } catch (error: any) {
-      console.error('Error saving note:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to save note. Please try again.',

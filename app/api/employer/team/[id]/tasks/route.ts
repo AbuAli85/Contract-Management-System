@@ -31,7 +31,6 @@ async function getTasksHandler(
       );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
-      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         {
           error: 'Failed to process employee record',
@@ -107,7 +106,6 @@ async function getTasksHandler(
     const { data: tasks, error: tasksError } = await query;
 
     if (tasksError) {
-      console.error('Error fetching tasks:', tasksError);
       return NextResponse.json(
         { error: 'Failed to fetch tasks' },
         { status: 500 }
@@ -144,7 +142,6 @@ async function getTasksHandler(
       count: tasksWithComments.length,
     });
   } catch (error) {
-    console.error('Error in GET /api/employer/team/[id]/tasks:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -177,7 +174,6 @@ async function createTaskHandler(
       );
       id = employerEmployeeId; // Use the actual employer_employee ID
     } catch (error: any) {
-      console.error('Error in ensureEmployerEmployeeRecord:', error);
       return NextResponse.json(
         {
           error: 'Failed to process employee record',
@@ -269,7 +265,6 @@ async function createTaskHandler(
       .single();
 
     if (createError) {
-      console.error('Error creating task:', createError);
       return NextResponse.json(
         { error: 'Failed to create task', details: createError.message },
         { status: 500 }
@@ -282,7 +277,6 @@ async function createTaskHandler(
       task,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/[id]/tasks:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

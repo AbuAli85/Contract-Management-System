@@ -124,7 +124,6 @@ export class GoogleDocsServiceSA {
         pdfUrl,
       };
     } catch (error) {
-      console.error('❌ Contract generation error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -149,7 +148,6 @@ export class GoogleDocsServiceSA {
           fields: 'id, name, permissions, owners',
         });
       } catch (accessError: any) {
-        console.error('❌ Cannot access template:', accessError.message);
         return {
           success: false,
           error: `Cannot access template: ${accessError.message}`,
@@ -172,7 +170,6 @@ export class GoogleDocsServiceSA {
         documentId: response.data.id,
       };
     } catch (error: any) {
-      console.error('❌ Copy template error:', error);
 
       // Provide detailed error information
       let errorMessage = 'Unknown error';
@@ -267,7 +264,6 @@ export class GoogleDocsServiceSA {
 
       return { success: true };
     } catch (error) {
-      console.error('❌ Replace text error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -301,7 +297,6 @@ export class GoogleDocsServiceSA {
         pdfUrl,
       };
     } catch (error) {
-      console.error('❌ Export PDF error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

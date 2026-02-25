@@ -54,13 +54,11 @@ export async function recordMetricsSnapshot(
     });
 
     if (error) {
-      console.error('Error recording metric snapshot:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Unexpected error recording metric:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -85,13 +83,11 @@ export async function recordDailyMetrics(): Promise<{
     );
 
     if (error) {
-      console.error('Error recording daily metrics:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true, metricsRecorded: 6 }; // We record 6 key metrics
   } catch (error) {
-    console.error('Unexpected error recording daily metrics:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -120,7 +116,6 @@ export async function getMetricTrend(
     );
 
     if (error) {
-      console.error('Error getting metric trend:', error);
       return null;
     }
 
@@ -138,7 +133,6 @@ export async function getMetricTrend(
       previousValue: result.previous_value || 0,
     };
   } catch (error) {
-    console.error('Unexpected error getting metric trend:', error);
     return null;
   }
 }
@@ -185,13 +179,11 @@ export async function getMetricHistory(
       .order('snapshot_date', { ascending: true });
 
     if (error) {
-      console.error('Error fetching metric history:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Unexpected error fetching metric history:', error);
     return [];
   }
 }

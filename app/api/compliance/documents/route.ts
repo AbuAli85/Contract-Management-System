@@ -20,18 +20,10 @@ export const dynamic = 'force-dynamic';
  */
 export const GET = withRBAC('promoter:read:own', async () => {
   try {
-    console.log('📋 Compliance check: Starting document review...');
 
     const monitor = new DocumentMonitor();
     const report = await monitor.checkExpirations();
 
-    console.log('📋 Compliance check completed:', {
-      total: report.summary.total,
-      expired: report.summary.expired,
-      expiring7days: report.summary.expiring7days,
-      expiring30days: report.summary.expiring30days,
-      complianceRate: `${report.summary.complianceRate}%`,
-    });
 
     return NextResponse.json({
       success: true,
@@ -46,7 +38,6 @@ export const GET = withRBAC('promoter:read:own', async () => {
       },
     });
   } catch (error) {
-    console.error('❌ Error checking document compliance:', error);
     return NextResponse.json(
       {
         success: false,
@@ -66,13 +57,11 @@ export const GET = withRBAC('promoter:read:own', async () => {
  */
 export async function POST() {
   try {
-    console.log('📧 Sending compliance alerts...');
 
     const monitor = new DocumentMonitor();
     const report = await monitor.checkExpirations();
     const alertResults = await monitor.sendAlerts(report);
 
-    console.log('📧 Alerts sent successfully:', alertResults);
 
     return NextResponse.json({
       success: true,
@@ -84,7 +73,6 @@ export async function POST() {
       },
     });
   } catch (error) {
-    console.error('❌ Error sending compliance alerts:', error);
     return NextResponse.json(
       {
         success: false,

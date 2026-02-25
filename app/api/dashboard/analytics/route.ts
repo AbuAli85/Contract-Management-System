@@ -9,18 +9,15 @@ export const GET = withRBAC(
   'analytics:read:all',
   async (_request: NextRequest) => {
     try {
-      console.log('🔧 Dashboard analytics API called');
       const supabase = await createClient();
 
       // Get current user to check authentication
-      console.log('🔧 Analytics API: Checking user authentication...');
       const {
         data: { user },
         error: authError,
       } = await supabase.auth.getUser();
 
       if (authError) {
-        console.error('❌ Analytics API: Auth error:', authError);
         return NextResponse.json(
           {
             success: false,
@@ -31,7 +28,6 @@ export const GET = withRBAC(
       }
 
       if (!user) {
-        console.log('❌ Analytics API: No user found');
         return NextResponse.json(
           {
             success: false,
@@ -41,7 +37,6 @@ export const GET = withRBAC(
         );
       }
 
-      console.log('✅ Analytics API: User authenticated:', user.id);
 
       // Fetch contract statistics
       const { data: contracts, error: contractsError } = await supabase
@@ -49,7 +44,6 @@ export const GET = withRBAC(
         .select('id, status, created_at');
 
       if (contractsError) {
-        console.error('Error fetching contracts:', contractsError);
         return NextResponse.json(
           {
             success: false,
@@ -65,7 +59,6 @@ export const GET = withRBAC(
         .select('*', { count: 'exact', head: true });
 
       if (promotersError) {
-        console.error('Error fetching promoters:', promotersError);
         return NextResponse.json(
           {
             success: false,
@@ -81,7 +74,6 @@ export const GET = withRBAC(
         .select('*', { count: 'exact', head: true });
 
       if (partiesError) {
-        console.error('Error fetching parties:', partiesError);
         return NextResponse.json(
           {
             success: false,
@@ -98,7 +90,6 @@ export const GET = withRBAC(
         .eq('status', 'pending');
 
       if (usersError) {
-        console.error('Error fetching pending users:', usersError);
         return NextResponse.json(
           {
             success: false,
@@ -139,14 +130,12 @@ export const GET = withRBAC(
         recentActivity,
       };
 
-      console.log('✅ Analytics API: Returning stats:', analytics);
 
       return NextResponse.json({
         success: true,
         stats: analytics,
       });
     } catch (error) {
-      console.error('Dashboard analytics error:', error);
       return NextResponse.json(
         {
           success: false,

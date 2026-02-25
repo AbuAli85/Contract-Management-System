@@ -167,7 +167,6 @@ export async function POST(
       .single();
 
     if (invoiceError) {
-      console.error('Invoice creation error:', invoiceError);
       return new Response(JSON.stringify({ error: invoiceError.message }), {
         status: 400,
       });
@@ -189,7 +188,6 @@ export async function POST(
       message: 'Invoice created successfully',
     });
   } catch (error) {
-    console.error('Create invoice from booking API error:', error);
     if (error instanceof z.ZodError) {
       return new Response(
         JSON.stringify({ error: 'Invalid input', details: error.errors }),

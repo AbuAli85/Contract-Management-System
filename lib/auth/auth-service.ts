@@ -35,7 +35,6 @@ export class AuthService {
       // Clear sessionStorage
       sessionStorage.clear();
     } catch (error) {
-      console.error('Error clearing auth:', error);
       // Force clear even if there's an error
       localStorage.clear();
       sessionStorage.clear();
@@ -52,7 +51,6 @@ export class AuthService {
       const { data, error } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('Session error:', error);
 
         // If it's a refresh token error, clear auth and return null
         if (
@@ -68,7 +66,6 @@ export class AuthService {
 
       return data;
     } catch (error) {
-      console.error('Failed to get session:', error);
       await this.clearAuth();
       return { session: null, user: null };
     }
@@ -90,13 +87,11 @@ export class AuthService {
       });
 
       if (error) {
-        console.error('Sign in error:', error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      console.error('Failed to sign in:', error);
       throw error;
     }
   }
@@ -117,13 +112,11 @@ export class AuthService {
       });
 
       if (error) {
-        console.error('Sign up error:', error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      console.error('Failed to sign up:', error);
       throw error;
     }
   }
@@ -138,7 +131,6 @@ export class AuthService {
       const { error } = await this.supabase.auth.signOut();
 
       if (error) {
-        console.error('Sign out error:', error);
         throw error;
       }
 
@@ -147,7 +139,6 @@ export class AuthService {
 
       return { success: true };
     } catch (error) {
-      console.error('Failed to sign out:', error);
       // Force clear even if there's an error
       await this.clearAuth();
       throw error;
@@ -164,13 +155,11 @@ export class AuthService {
       const { data, error } = await this.supabase.auth.getUser();
 
       if (error) {
-        console.error('Get user error:', error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      console.error('Failed to get user:', error);
       throw error;
     }
   }
@@ -187,13 +176,11 @@ export class AuthService {
       });
 
       if (error) {
-        console.error('Update profile error:', error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      console.error('Failed to update profile:', error);
       throw error;
     }
   }
@@ -208,13 +195,11 @@ export class AuthService {
       const { data, error } = await this.supabase.auth.refreshSession();
 
       if (error) {
-        console.error('Refresh session error:', error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      console.error('Failed to refresh session:', error);
       throw error;
     }
   }
@@ -225,7 +210,6 @@ export class AuthService {
       const { session } = await this.getSession();
       return !!session;
     } catch (error) {
-      console.error('Failed to check authentication:', error);
       return false;
     }
   }
@@ -260,7 +244,6 @@ export class AuthService {
 
       return null;
     } catch (error) {
-      console.error('Failed to get user role:', error);
       return null;
     }
   }
@@ -298,7 +281,6 @@ export class AuthService {
 
       return false;
     } catch (error) {
-      console.error('Failed to check permission:', error);
       return false;
     }
   }

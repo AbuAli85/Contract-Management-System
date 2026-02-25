@@ -368,7 +368,6 @@ export function PromoterDetailsEnhanced({
           .then(res => (res.ok ? res.json() : { documents: [] }))
           .then(result => ({ data: result.documents || [], error: null }))
           .catch(error => {
-            console.warn('Documents API not available:', error);
             return { data: [], error: null };
           }),
 

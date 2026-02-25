@@ -100,7 +100,6 @@ export function useAuth() {
             }
           }
         } catch (statusError) {
-          console.error('Error checking user status:', statusError);
           // Continue with login if status check fails
         }
 

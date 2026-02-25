@@ -11,7 +11,6 @@ export const PUT = withRBAC(
       const body = await request.json();
       const { status, role } = body;
 
-      console.log('🔍 API Approve: Request details:', { userId, status, role });
 
       // Use authenticated client with RLS
       const supabase = await createClient();
@@ -37,7 +36,6 @@ export const PUT = withRBAC(
         .single();
 
       if ((requesterProfile as any)?.role !== 'admin') {
-        console.log('❌ API Approve: User is not admin:', user.email);
         return NextResponse.json(
           { error: 'Forbidden - Admin access required' },
           { status: 403 }
@@ -68,7 +66,6 @@ export const PUT = withRBAC(
         updateData.role = role;
       }
 
-      console.log('🔄 API Approve: Updating user with data:', updateData);
 
       const { data: updatedUser, error: updateError } = await supabase
         .from('users')
@@ -77,7 +74,6 @@ export const PUT = withRBAC(
         .select();
 
       if (updateError) {
-        console.error('❌ API Approve: Error updating user:', updateError);
         return NextResponse.json(
           {
             error: 'Failed to update user',
@@ -99,10 +95,8 @@ export const PUT = withRBAC(
           created_at: new Date().toISOString(),
         });
       } catch (auditError) {
-        console.error('Error creating audit log:', auditError);
       }
 
-      console.log('✅ API Approve: User updated successfully');
 
       return NextResponse.json({
         success: true,
@@ -110,7 +104,6 @@ export const PUT = withRBAC(
         message: `User ${status === 'active' ? 'approved' : status === 'inactive' ? 'deactivated' : 'set to pending'} successfully`,
       });
     } catch (error) {
-      console.error('❌ API Approve: Error:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

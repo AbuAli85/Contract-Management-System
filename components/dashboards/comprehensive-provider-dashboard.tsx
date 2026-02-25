@@ -389,7 +389,6 @@ export function ComprehensiveProviderDashboard() {
       setDashboardData(mockData);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading provider data:', error);
       toast.error('Failed to load dashboard data');
       setLoading(false);
     }

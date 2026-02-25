@@ -66,7 +66,6 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Error updating announcement:', updateError);
       return NextResponse.json(
         { error: 'Failed to update announcement' },
         { status: 500 }
@@ -78,7 +77,6 @@ export async function PUT(
       announcement: updated,
     });
   } catch (error) {
-    console.error('Error in announcement PUT:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -124,7 +122,6 @@ export async function DELETE(
       .eq('id', id);
 
     if (deleteError) {
-      console.error('Error deleting announcement:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete announcement' },
         { status: 500 }
@@ -136,7 +133,6 @@ export async function DELETE(
       message: 'Announcement deleted',
     });
   } catch (error) {
-    console.error('Error in announcement DELETE:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

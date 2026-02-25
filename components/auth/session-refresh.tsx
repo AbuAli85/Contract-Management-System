@@ -74,7 +74,6 @@ export function SessionRefresh() {
         );
       }
     } catch (error: any) {
-      console.error('Session refresh error:', error);
       toast({
         title: 'Refresh Failed',
         description:

@@ -58,7 +58,6 @@ class AuditLogger {
         created_at: log.timestamp,
       });
     } catch (error) {
-      console.error('Failed to log API request:', error);
     }
   }
 
@@ -85,14 +84,7 @@ class AuditLogger {
       });
 
       // Also log to console for immediate visibility
-      console.warn(`🚨 Security Event [${event.event}]:`, {
-        requestId: event.requestId,
-        userId: event.userId,
-        path: event.path,
-        severity: event.severity,
-      });
     } catch (error) {
-      console.error('Failed to log security event:', error);
     }
   }
 
@@ -114,7 +106,6 @@ class AuditLogger {
         created_at: event.created_at || new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Failed to log data change:', error);
     }
   }
 
@@ -194,13 +185,11 @@ class AuditLogger {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Failed to get audit trail:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Failed to get audit trail:', error);
       return [];
     }
   }
@@ -225,13 +214,11 @@ class AuditLogger {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Failed to get security events:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Failed to get security events:', error);
       return [];
     }
   }

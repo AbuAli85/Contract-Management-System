@@ -234,7 +234,6 @@ export function ComprehensiveClientDashboard() {
       setDashboardData(dashboardData);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
       toast.error('Failed to load dashboard data');
       setLoading(false);
     }

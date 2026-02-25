@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
         limit: rateLimitResult.limit,
         remaining: rateLimitResult.remaining,
       };
-      console.warn('⚠️ Login rate limit exceeded:', JSON.stringify(violation));
 
       // Log audit event
       const auditEntry = createAuditLog(request, 'LOGIN_RATE_LIMITED', false, {
@@ -59,7 +58,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Server login API called');
 
     const { email, password } = await request.json();
 
@@ -83,7 +81,6 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    console.log('🔐 Attempting server-side sign in...');
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -91,7 +88,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('🔐 Server login error:', error);
 
       // Log failed login attempt
       const auditEntry = createAuditLog(request, 'LOGIN_FAILED', false, {
@@ -109,7 +105,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!data.user) {
-      console.error('🔐 No user returned from sign in');
 
       // Log authentication failure
       const auditEntry = createAuditLog(request, 'LOGIN_AUTH_FAILED', false, {
@@ -125,7 +120,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Server login successful for user:', data.user.id);
 
     // Log successful login
     const auditEntry = createAuditLog(request, 'LOGIN_SUCCESS', true, {
@@ -137,14 +131,6 @@ export async function POST(request: NextRequest) {
 
     // Debug: Log session details
     if (data.session) {
-      console.log('🔐 Session details:', {
-        accessTokenLength: data.session.access_token?.length || 0,
-        refreshTokenLength: data.session.refresh_token?.length || 0,
-        accessTokenPreview: `${data.session.access_token?.substring(0, 50)}...`,
-        refreshTokenPreview: `${data.session.refresh_token?.substring(0, 50)}...`,
-        expiresAt: data.session.expires_at,
-        tokenType: data.session.token_type,
-      });
     }
 
     // Add rate limit headers to response
@@ -165,9 +151,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (setError) {
-        console.error('🔐 Failed to set session in cookies:', setError);
       } else {
-        console.log('🔐 Session set in cookies via setSession');
       }
     }
 
@@ -196,7 +180,6 @@ export async function POST(request: NextRequest) {
     );
 
     if (authCookies.length > 0) {
-      console.log(`🔐 Found ${authCookies.length} auth cookies after login`);
       // Copy cookies from cookieStore to response
       authCookies.forEach(cookie => {
         response.cookies.set(cookie.name, cookie.value, {
@@ -208,16 +191,11 @@ export async function POST(request: NextRequest) {
         });
       });
     } else {
-      console.warn(
-        '🔐 No auth cookies found after login. This will cause 401 errors.'
-      );
     }
 
-    console.log('🔐 Login completed');
 
     return response;
   } catch (error) {
-    console.error('🔐 Server login API error:', error);
 
     // Log unexpected error
     const auditEntry = createAuditLog(request, 'LOGIN_ERROR', false, {

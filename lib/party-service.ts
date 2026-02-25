@@ -46,10 +46,6 @@ async function withRetry<T>(
         baseDelay * Math.pow(2, attempt - 1),
         RETRY_CONFIG.maxDelay
       );
-      console.warn(
-        `Retry attempt ${attempt}/${maxAttempts} after ${delay}ms due to:`,
-        error
-      );
 
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -382,10 +378,6 @@ export async function exportPartiesToCSV(
         .in('party_id', partyIds);
 
       if (contactsError) {
-        console.warn(
-          'Error fetching contacts for export:',
-          contactsError.message
-        );
       } else {
         contacts = contactsData || [];
       }

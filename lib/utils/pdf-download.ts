@@ -98,11 +98,6 @@ export async function downloadContractPDF(
     if (!contentType || !contentType.includes('application/pdf')) {
       // If it's not a PDF, try to get the text to see what we got
       const text = await response.text();
-      console.error(
-        'Expected PDF but got:',
-        contentType,
-        text.substring(0, 200)
-      );
       throw new Error(
         `Expected PDF but got ${contentType}. The file may be corrupted or unavailable.`
       );
@@ -144,7 +139,6 @@ export async function downloadContractPDF(
 
     return true;
   } catch (error) {
-    console.error('PDF download error:', error);
     toast.error('❌ Download Failed', {
       description:
         error instanceof Error

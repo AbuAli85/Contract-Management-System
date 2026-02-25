@@ -176,7 +176,6 @@ export async function POST() {
       },
     });
   } catch (error) {
-    console.error('Bulk fix error:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

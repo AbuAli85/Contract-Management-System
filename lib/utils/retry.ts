@@ -342,7 +342,6 @@ export class CircuitBreaker {
 
     if (this.failures >= this.threshold) {
       this.isOpen = true;
-      console.warn(`⚠️ Circuit breaker opened after ${this.failures} failures`);
     }
   }
 

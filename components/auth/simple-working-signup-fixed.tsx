@@ -153,7 +153,6 @@ export default function SimpleWorkingSignupFixed() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error('🔐 Simple Signup Fixed - API error:', data);
 
         // Check if it's a CAPTCHA error
         if (data.captchaRequired) {
@@ -175,7 +174,6 @@ export default function SimpleWorkingSignupFixed() {
         );
       }, 2000);
     } catch (error) {
-      console.error('🔐 Simple Signup Fixed - Exception:', error);
       setError(
         `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

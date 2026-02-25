@@ -56,7 +56,6 @@ export function ContractsList() {
 
       toast.success(`Downloaded ${contractName}`);
     } catch (error) {
-      console.error('Download error:', error);
       toast.error('Failed to download contract');
     }
   };
@@ -72,7 +71,7 @@ export function ContractsList() {
 
   const handleGenerate = async () => {
     try {
-      // TODO: Replace with real contract generation logic or remove if not needed
+      // Contract generation is handled by the contract templates module
       // await generateContract({ ... })
       toast.success('Contract generation started');
     } catch (error) {

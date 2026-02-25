@@ -61,10 +61,6 @@ export async function ensureUserCanManageUsers(
       .single<PermissionCacheRow>();
 
     if (error) {
-      console.warn(
-        '⚠️ Unable to read user_permissions_cache, falling back to user_role_assignments:',
-        error.message
-      );
       const { data: fallbackRoles, error: fallbackError } = await adminClient
         .from('user_role_assignments')
         .select('roles(name)')

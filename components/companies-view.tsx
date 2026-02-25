@@ -105,7 +105,6 @@ export function CompaniesView() {
             });
           }
         } catch (err) {
-          console.warn('Could not fetch contract counts:', err);
         }
 
         setStats({
@@ -126,7 +125,6 @@ export function CompaniesView() {
         setError(data.error || 'Failed to fetch companies');
       }
     } catch (error) {
-      console.error('Error fetching companies:', error);
       setError('Failed to fetch companies');
     } finally {
       setLoading(false);

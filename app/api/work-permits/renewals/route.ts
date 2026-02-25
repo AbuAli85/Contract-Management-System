@@ -55,7 +55,6 @@ export const GET = withAnyRBAC(
       const { data: renewals, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching work permit renewals:', error);
         return NextResponse.json(
           { error: 'Failed to fetch renewals', details: error.message },
           { status: 500 }
@@ -68,7 +67,6 @@ export const GET = withAnyRBAC(
         count: count || 0,
       });
     } catch (error: any) {
-      console.error('Error in GET /api/work-permits/renewals:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -135,7 +133,6 @@ export const POST = withAnyRBAC(
         .single();
 
       if (error) {
-        console.error('Error creating work permit renewal:', error);
         return NextResponse.json(
           { error: 'Failed to create renewal', details: error.message },
           { status: 500 }
@@ -151,7 +148,6 @@ export const POST = withAnyRBAC(
         { status: 201 }
       );
     } catch (error: any) {
-      console.error('Error in POST /api/work-permits/renewals:', error);
       return NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

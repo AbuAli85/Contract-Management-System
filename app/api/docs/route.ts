@@ -194,7 +194,6 @@ export async function GET(request: NextRequest) {
 // Fetch public stats (no authentication)
 const response = await fetch('${baseUrl}/api/dashboard/public-stats');
 const stats = await response.json();
-console.log('Total Contracts:', stats.totalContracts);
         `,
         authenticatedStats: `
 // Fetch enhanced stats with API key
@@ -204,7 +203,6 @@ const response = await fetch('${baseUrl}/api/dashboard/public-stats', {
   }
 });
 const stats = await response.json();
-console.log('Active Contracts:', stats.activeContracts);
         `,
         contracts: `
 // Fetch contracts with API key
@@ -214,7 +212,6 @@ const response = await fetch('${baseUrl}/api/contracts?page=1&limit=20&status=ac
   }
 });
 const data = await response.json();
-console.log('Contracts:', data.contracts);
         `,
       },
       curl: {

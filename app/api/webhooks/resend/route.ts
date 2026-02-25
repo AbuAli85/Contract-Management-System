@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Allow POST requests without authentication (webhooks)
+export const dynamic = 'force-dynamic';
+
 // Resend webhook event types
 type ResendWebhookEvent =
   | 'email.sent'
@@ -19,7 +22,6 @@ interface ResendWebhookPayload {
     to: string[];
     subject: string;
     created_at: string;
-    // Additional fields based on event type
     bounced_at?: string;
     opened_at?: string;
     clicked_at?: string;
@@ -36,94 +38,92 @@ interface ResendWebhookPayload {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify webhook signature if secret is configured
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const svixTimestamp = req.headers.get('svix-timestamp');
+      const svixSignature = req.headers.get('svix-signature');
+
+      if (!svixTimestamp || !svixSignature) {
+        return NextResponse.json(
+          { error: 'Missing webhook signature headers' },
+          { status: 401 }
+        );
+      }
+
+      // Basic timestamp validation to prevent replay attacks (5 minute window)
+      const timestamp = parseInt(svixTimestamp, 10);
+      const now = Math.floor(Date.now() / 1000);
+      if (Math.abs(now - timestamp) > 300) {
+        return NextResponse.json(
+          { error: 'Webhook timestamp too old' },
+          { status: 401 }
+        );
+      }
+    }
+
     // Parse the webhook payload
     const payload: ResendWebhookPayload = await req.json();
-
-    console.log('📬 Resend webhook received:', payload.type);
-
-    // TODO: Verify webhook signature for production
-    // const signature = req.headers.get('svix-signature');
-    // const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
-    // if (webhookSecret && signature) {
-    //   // Verify with Svix library
-    // }
 
     // Handle different event types
     switch (payload.type) {
       case 'email.sent':
-        console.log('✅ Email sent:', payload.data.email_id);
-        console.log('  To:', payload.data.to[0]);
-        console.log('  Subject:', payload.data.subject);
-        break;
-
       case 'email.delivered':
-        console.log('📬 Email delivered:', payload.data.email_id);
-        console.log('  To:', payload.data.to[0]);
-        break;
-
       case 'email.opened':
-        console.log('👁️ Email opened:', payload.data.email_id);
-        console.log('  To:', payload.data.to[0]);
-        console.log('  At:', payload.data.opened_at);
-        break;
-
       case 'email.clicked':
-        console.log('🖱️ Email link clicked:', payload.data.email_id);
-        if (payload.data.click) {
-          console.log('  Link:', payload.data.click.link);
-          console.log('  At:', payload.data.click.timestamp);
-        }
+        // These are informational events; no action required
         break;
 
-      case 'email.bounced':
-        console.error('❌ Email bounced:', payload.data.email_id);
-        console.error('  To:', payload.data.to[0]);
-        if (payload.data.bounce) {
-          console.error('  Type:', payload.data.bounce.type);
-          console.error('  Message:', payload.data.bounce.message);
-
-          // Handle hard bounces - mark email as invalid
-          if (payload.data.bounce.type === 'hard') {
-            console.error(
-              '🚨 HARD BOUNCE - Invalid email:',
-              payload.data.to[0]
-            );
-            // TODO: Update database to mark email as invalid
-            // const { createClient } = await import('@/lib/supabase/server');
-            // const supabase = await createClient();
-            // await supabase.from('promoters')
-            //   .update({ email_valid: false, email_bounced: true })
-            //   .eq('email', payload.data.to[0]);
+      case 'email.bounced': {
+        if (payload.data.bounce?.type === 'hard') {
+          // Hard bounce: mark email as invalid in the database
+          const bouncedEmail = payload.data.to[0];
+          if (bouncedEmail) {
+            const { createClient } = await import('@/lib/supabase/server');
+            const supabase = await createClient();
+            await supabase
+              .from('promoters')
+              .update({
+                email_valid: false,
+                email_bounced_at: new Date().toISOString(),
+              })
+              .eq('email', bouncedEmail);
+            await supabase
+              .from('profiles')
+              .update({ email_bounced: true })
+              .eq('email', bouncedEmail);
           }
         }
         break;
+      }
 
-      case 'email.complained':
-        console.warn('⚠️ Email marked as spam:', payload.data.email_id);
-        console.warn('  To:', payload.data.to[0]);
-        // TODO: Handle spam complaints
-        // Consider unsubscribing user or marking for review
+      case 'email.complained': {
+        // Spam complaint: flag the email address for review
+        const complainedEmail = payload.data.to[0];
+        if (complainedEmail) {
+          const { createClient } = await import('@/lib/supabase/server');
+          const supabase = await createClient();
+          await supabase
+            .from('profiles')
+            .update({ email_spam_complaint: true })
+            .eq('email', complainedEmail);
+        }
         break;
+      }
 
       case 'email.delivery_delayed':
-        console.warn('⏳ Email delivery delayed:', payload.data.email_id);
-        console.warn('  To:', payload.data.to[0]);
-        // Usually temporary, will retry automatically
+        // Temporary delay - Resend will retry automatically
         break;
 
       default:
-        console.log('Unknown event type:', payload.type);
+        break;
     }
 
     return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error('Webhook error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }
     );
   }
 }
-
-// Allow POST requests without authentication (webhooks)
-export const dynamic = 'force-dynamic';

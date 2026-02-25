@@ -104,7 +104,6 @@ export class NotificationService {
         .single();
 
       if (error) {
-        console.error('Error creating notification:', error);
         return { data: null, error: error.message };
       }
 
@@ -123,7 +122,6 @@ export class NotificationService {
 
       return { data: data as NotificationData, error: null };
     } catch (error) {
-      console.error('Error in createNotification:', error);
       return { data: null, error: 'Failed to create notification' };
     }
   }
@@ -169,13 +167,11 @@ export class NotificationService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching notifications:', error);
         return { data: [], error: error.message };
       }
 
       return { data: data || [], error: null };
     } catch (error) {
-      console.error('Error in getNotifications:', error);
       return { data: [], error: 'Failed to fetch notifications' };
     }
   }
@@ -194,13 +190,11 @@ export class NotificationService {
         .eq('id', notificationId);
 
       if (error) {
-        console.error('Error marking notification as read:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in markAsRead:', error);
       return { success: false, error: 'Failed to mark notification as read' };
     }
   }
@@ -220,13 +214,11 @@ export class NotificationService {
         .is('read_at', null);
 
       if (error) {
-        console.error('Error marking all notifications as read:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in markAllAsRead:', error);
       return {
         success: false,
         error: 'Failed to mark all notifications as read',
@@ -245,13 +237,11 @@ export class NotificationService {
         .eq('id', notificationId);
 
       if (error) {
-        console.error('Error deleting notification:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in deleteNotification:', error);
       return { success: false, error: 'Failed to delete notification' };
     }
   }
@@ -270,7 +260,6 @@ export class NotificationService {
       const { data: notifications, error } = await query;
 
       if (error) {
-        console.error('Error fetching notification stats:', error);
         return { data: null, error: error.message };
       }
 
@@ -339,7 +328,6 @@ export class NotificationService {
         error: null,
       };
     } catch (error) {
-      console.error('Error in getNotificationStats:', error);
       return { data: null, error: 'Failed to get notification statistics' };
     }
   }
@@ -400,7 +388,6 @@ export class NotificationService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in sendContractNotification:', error);
       return { success: false, error: 'Failed to send contract notification' };
     }
   }
@@ -449,7 +436,6 @@ export class NotificationService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in sendDocumentExpiryNotification:', error);
       return {
         success: false,
         error: 'Failed to send document expiry notification',
@@ -493,7 +479,6 @@ export class NotificationService {
 
       return { success: true, error: null };
     } catch (error) {
-      console.error('Error in sendSystemAnnouncement:', error);
       return { success: false, error: 'Failed to send system announcement' };
     }
   }
@@ -524,7 +509,6 @@ export class NotificationService {
         subscription.unsubscribe();
       };
     } catch (error) {
-      console.error('Error setting up notification subscription:', error);
       return () => {};
     }
   }
@@ -561,7 +545,6 @@ export class NotificationService {
 
       return job;
     } catch (error) {
-      console.error('Error in sendBulkNotifications:', error);
       throw new Error('Failed to create bulk notification job');
     }
   }
@@ -577,7 +560,6 @@ export class NotificationService {
       // - Server-sent events
       // - Push notifications for mobile
     } catch (error) {
-      console.error('Error sending real-time notification:', error);
     }
   }
 
@@ -593,23 +575,24 @@ export class NotificationService {
         .single();
 
       if (!user?.email) {
-        console.warn('User email not found for notification:', notification.id);
         return;
       }
-
-      // TODO: Implement email sending
-
-      // Example email service integration:
-      // await emailService.send({
-      //   to: user.email,
-      //   subject: notification.title,
-      //   html: this.generateEmailTemplate(notification, user)
-      // })
-    } catch (error) {
-      console.error('Error sending email notification:', error);
+      // Send email notification via email service
+      const { sendEmail } = await import('@/lib/services/email.service');
+      await sendEmail({
+        to: user.email,
+        subject: notification.title,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+            <h2>${notification.title}</h2>
+            <p>${notification.message}</p>
+            ${notification.action_url ? `<div style="margin: 24px 0;"><a href="${notification.action_url}" style="background: #2563eb; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none;">View Details</a></div>` : ''}
+          </div>
+        `,
+      });
+    } catch {
     }
   }
-
   private async sendSMSNotification(notification: Notification): Promise<void> {
     try {
       // Get user phone number
@@ -620,10 +603,6 @@ export class NotificationService {
         .single();
 
       if (!user?.phone_number) {
-        console.warn(
-          'User phone number not found for notification:',
-          notification.id
-        );
         return;
       }
 
@@ -635,7 +614,6 @@ export class NotificationService {
       //   message: this.generateSMSMessage(notification)
       // })
     } catch (error) {
-      console.error('Error sending SMS notification:', error);
     }
   }
 

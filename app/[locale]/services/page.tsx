@@ -86,7 +86,7 @@ function ServicesListContent() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching services:', error);
+
         setError('Failed to load services');
         return;
       }
@@ -114,7 +114,7 @@ function ServicesListContent() {
         setFilteredServices(transformedServices);
       }
     } catch (err) {
-      console.error('Error fetching services:', err);
+
       setError('Failed to load services');
     } finally {
       setLoading(false);

@@ -82,7 +82,6 @@ export async function GET(
       document,
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/documents/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -204,7 +203,6 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Error updating document:', updateError);
       return NextResponse.json(
         { error: 'Failed to update document', details: updateError.message },
         { status: 500 }
@@ -217,7 +215,6 @@ export async function PUT(
       document: updatedDoc,
     });
   } catch (error) {
-    console.error('Error in PUT /api/hr/documents/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -301,7 +298,6 @@ export async function DELETE(
       .eq('id', id);
 
     if (deleteError) {
-      console.error('Error deleting document:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete document', details: deleteError.message },
         { status: 500 }
@@ -313,7 +309,6 @@ export async function DELETE(
       message: 'Document deleted successfully',
     });
   } catch (error) {
-    console.error('Error in DELETE /api/hr/documents/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

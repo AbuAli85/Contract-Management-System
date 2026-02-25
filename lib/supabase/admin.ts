@@ -15,19 +15,11 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
     const error = new Error(
       'Supabase admin credentials are missing. Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in your environment variables.'
     );
-    console.error('❌ Supabase Admin Client Error:', {
-      hasUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceRoleKey,
-      serviceKeyLength: supabaseServiceRoleKey?.length || 0,
-    });
     throw error;
   }
 
   // Verify service role key format (should start with 'eyJ' for JWT)
   if (!supabaseServiceRoleKey.startsWith('eyJ')) {
-    console.warn(
-      '⚠️ SUPABASE_SERVICE_ROLE_KEY does not appear to be a valid JWT token. It should start with "eyJ".'
-    );
   }
 
   supabaseAdminInstance = createClient<Database>(

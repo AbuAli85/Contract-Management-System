@@ -164,7 +164,6 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
       return parsed;
     }
   } catch (error) {
-    console.warn('Invalid ISO date string:', dateString, error);
   }
 
   // Try alternative parsing for common formats
@@ -176,12 +175,8 @@ const safeParseISO = (dateString: string | null | undefined): Date | null => {
         return parsed;
       }
     }
-  } catch (error) {
-    console.warn(
-      'Failed to parse date with alternative formats:',
-      dateString,
-      error
-    );
+  } catch {
+    // Ignore parsing errors
   }
 
   return null;
@@ -201,7 +196,6 @@ const safeFormatDate = (
     const formatted = format(date, formatStr);
     return formatted;
   } catch (error) {
-    console.warn('Failed to format date:', dateString, error);
     return 'N/A';
   }
 };
@@ -216,7 +210,6 @@ const safeDifferenceInDays = (
   try {
     return differenceInDays(date, compareDate);
   } catch (error) {
-    console.warn('Failed to calculate date difference:', date, error);
     return null;
   }
 };
@@ -255,7 +248,6 @@ function getContractStatus(contract: ContractWithRelations): ContractStatus {
     if (now < startDate) return 'Upcoming';
     return 'Unknown';
   } catch (error) {
-    console.error('Error calculating contract status:', contract.id, error);
     return 'Unknown';
   }
 }
@@ -275,7 +267,6 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
         days_until_expiry =
           safeDifferenceInDays(contract.end_date, now) ?? undefined;
       } catch (error) {
-        console.warn('Error calculating days until expiry:', error);
         days_until_expiry = undefined;
       }
     }
@@ -287,7 +278,6 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
         try {
           contract_duration_days = differenceInDays(endDate, startDate);
         } catch (error) {
-          console.warn('Error calculating contract duration:', error);
           contract_duration_days = undefined;
         }
       }
@@ -297,7 +287,6 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
       try {
         age_days = safeDifferenceInDays(contract.created_at, now) ?? undefined;
       } catch (error) {
-        console.warn('Error calculating age:', error);
         age_days = undefined;
       }
     }
@@ -315,7 +304,6 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
     } as EnhancedContract;
   } catch (error) {
     // If enhancement completely fails, return contract with minimal enhancement
-    console.error('Critical error enhancing contract:', contract.id, error);
     // Return contract with only status_type set
     // TypeScript requires explicit cast because optional properties may be undefined
     return Object.assign({}, contract, {
@@ -489,7 +477,6 @@ function ContractsContent() {
           ) / enhanced.length || 0,
       };
     } catch (error) {
-      console.error('Error calculating contract stats:', error);
       return {
         total: 0,
         active: 0,
@@ -578,7 +565,6 @@ function ContractsContent() {
 
       return sorted;
     } catch (error) {
-      console.error('Error filtering and sorting contracts:', error);
       return [];
     }
   }, [
@@ -659,7 +645,6 @@ function ContractsContent() {
       });
       setSelectedContracts([]);
     } catch (error) {
-      console.error('Error deleting contracts:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete contracts',
@@ -697,7 +682,6 @@ function ContractsContent() {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage =
           errorData.error || errorData.message || `HTTP ${response.status}`;
-        console.error('❌ PDF API failed:', response.status, errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -723,7 +707,6 @@ function ContractsContent() {
         variant: 'default',
       });
     } catch (error) {
-      console.error('❌ Download error:', error);
       toast({
         title: '❌ Download Failed',
         description:
@@ -776,7 +759,6 @@ function ContractsContent() {
       setShowEmailDialog(false);
       setContractToEmail(null);
     } catch (error) {
-      console.error('Email error:', error);
       toast({
         title: '❌ Email Failed',
         description: 'Failed to send contract email',
@@ -864,7 +846,6 @@ function ContractsContent() {
         variant: 'default',
       });
     } catch (error) {
-      console.error('Export error:', error);
       toast({
         title: '❌ Export Failed',
         description: 'Failed to export contracts',
@@ -1900,12 +1881,7 @@ function ContractsContent() {
                                 </TableCell>
                               </TableRow>
                             );
-                          } catch (renderError) {
-                            console.error(
-                              'Error rendering contract row:',
-                              contract.id,
-                              renderError
-                            );
+                          } catch {
                             // Return a fallback row for contracts that fail to render
                             return (
                               <TableRow key={contract.id} className='bg-red-50'>
@@ -2196,12 +2172,7 @@ function ContractsContent() {
                             </CardContent>
                           </Card>
                         );
-                      } catch (renderError) {
-                        console.error(
-                          'Error rendering contract card:',
-                          contract.id,
-                          renderError
-                        );
+                      } catch {
                         // Return a fallback card for contracts that fail to render
                         return (
                           <Card

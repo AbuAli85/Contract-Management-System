@@ -45,13 +45,8 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.warn(
-        'Notifications API: User error (continuing anyway):',
-        userError
-      );
     }
     if (!user) {
-      console.warn('Notifications API: No user found (continuing anyway)');
     }
 
     const notifications: NotificationData[] = [];
@@ -293,7 +288,6 @@ export async function GET(request: NextRequest) {
       timestamp: now.toISOString(),
     });
   } catch (error) {
-    console.error('Notifications error:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch notifications',
@@ -339,7 +333,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Notification action error:', error);
     return NextResponse.json(
       { error: 'Failed to update notifications' },
       { status: 500 }

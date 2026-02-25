@@ -54,7 +54,6 @@ export default function AdminTools() {
         description: `Processed ${data.processed} records from ${file.name}`,
       });
     } catch (error) {
-      console.error('Bulk import error:', error);
       toast({
         title: 'Upload Failed',
         description: 'Failed to process the CSV file',
@@ -103,7 +102,6 @@ export default function AdminTools() {
             description: 'Database backup has been initiated',
           });
         } catch (error) {
-          console.error('Backup error:', error);
           toast({
             title: 'Backup Failed',
             description: 'Failed to initiate database backup',

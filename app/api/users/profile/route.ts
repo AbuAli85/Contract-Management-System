@@ -9,7 +9,6 @@ export const GET = withRBAC(
   'profile:read:own',
   async (request: NextRequest) => {
     try {
-      console.log('🔍 User Profile API: Starting request...');
 
       const supabase = await createClient();
 
@@ -20,11 +19,9 @@ export const GET = withRBAC(
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        console.log('❌ User Profile API: No authenticated user');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
-      console.log('✅ User Profile API: User authenticated:', user.id);
 
       // Get user profile from profiles table
       const { data: profile, error: profileError } = await supabase
@@ -34,9 +31,6 @@ export const GET = withRBAC(
         .single();
 
       if (profileError) {
-        console.log(
-          '⚠️ User Profile API: Profile not found, creating default profile'
-        );
 
         // Create a default profile if it doesn't exist
         const { data: newProfile, error: createError } = await supabase
@@ -55,10 +49,6 @@ export const GET = withRBAC(
           .single();
 
         if (createError) {
-          console.error(
-            '❌ User Profile API: Error creating profile:',
-            createError
-          );
           return NextResponse.json(
             {
               error: 'Failed to create user profile',
@@ -68,14 +58,11 @@ export const GET = withRBAC(
           );
         }
 
-        console.log('✅ User Profile API: Created new profile');
         return NextResponse.json(newProfile);
       }
 
-      console.log('✅ User Profile API: Profile found');
       return NextResponse.json(profile);
     } catch (error) {
-      console.error('❌ User Profile API: Unexpected error:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',
@@ -91,7 +78,6 @@ export const PUT = withRBAC(
   'profile:update:own',
   async (request: NextRequest) => {
     try {
-      console.log('🔍 User Profile API: Starting PUT request...');
 
       const supabase = await createClient();
 
@@ -102,7 +88,6 @@ export const PUT = withRBAC(
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        console.log('❌ User Profile API: No authenticated user');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
@@ -115,7 +100,6 @@ export const PUT = withRBAC(
       if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
       if (role !== undefined) updateData.role = role;
 
-      console.log('🔍 User Profile API: Updating profile for user:', user.id);
 
       // Update profile in profiles table
       const { data: updatedProfile, error: updateError } = await supabase
@@ -126,10 +110,6 @@ export const PUT = withRBAC(
         .single();
 
       if (updateError) {
-        console.error(
-          '❌ User Profile API: Error updating profile:',
-          updateError
-        );
         return NextResponse.json(
           {
             error: 'Failed to update profile',
@@ -139,10 +119,8 @@ export const PUT = withRBAC(
         );
       }
 
-      console.log('✅ User Profile API: Profile updated successfully');
       return NextResponse.json(updatedProfile);
     } catch (error) {
-      console.error('❌ User Profile API: Unexpected error:', error);
       return NextResponse.json(
         {
           error: 'Internal server error',

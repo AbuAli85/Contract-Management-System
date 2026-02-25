@@ -138,7 +138,6 @@ export function EmployeeComplianceAlerts({
           });
         }
       } catch (error) {
-        console.error('Error parsing ID card expiry date:', error);
       }
     }
 
@@ -213,7 +212,6 @@ export function EmployeeComplianceAlerts({
           });
         }
       } catch (error) {
-        console.error('Error parsing passport expiry date:', error);
       }
     }
 

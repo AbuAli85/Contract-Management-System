@@ -76,7 +76,6 @@ export class CompanyService {
 
       return { url: urlData.publicUrl };
     } catch (error) {
-      console.error('Company logo upload error:', error);
       throw error;
     }
   }
@@ -168,7 +167,6 @@ export async function upsertCompany(
       .single();
 
     if (error) {
-      console.error('Error upserting company:', error);
 
       // Handle specific constraint violations
       if (error.code === '23505') {
@@ -189,7 +187,6 @@ export async function upsertCompany(
 
     return result as CompanyResponse;
   } catch (error) {
-    console.error('Company upsert service error:', error);
     throw error;
   }
 }
@@ -234,13 +231,11 @@ export async function upsertCompanyBySlug(
       .single();
 
     if (error) {
-      console.error('Error upserting company by slug:', error);
       throw new Error(`Failed to create/update company: ${error.message}`);
     }
 
     return result as CompanyResponse;
   } catch (error) {
-    console.error('Company upsert by slug service error:', error);
     throw error;
   }
 }
@@ -276,7 +271,6 @@ export async function getCompany(
 
     return data as CompanyResponse;
   } catch (error) {
-    console.error('Error fetching company:', error);
     throw error;
   }
 }
@@ -338,13 +332,11 @@ export async function updateCompany(
       .single();
 
     if (error) {
-      console.error('Error updating company:', error);
       throw new Error(`Failed to update company: ${error.message}`);
     }
 
     return result as CompanyResponse;
   } catch (error) {
-    console.error('Company update service error:', error);
     throw error;
   }
 }
@@ -405,7 +397,6 @@ export async function listCompanies(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error listing companies:', error);
       throw new Error(`Failed to fetch companies: ${error.message}`);
     }
 
@@ -417,7 +408,6 @@ export async function listCompanies(
       pages: Math.ceil((count || 0) / limit),
     };
   } catch (error) {
-    console.error('Company list service error:', error);
     throw error;
   }
 }
@@ -452,11 +442,9 @@ export async function deleteCompany(id: string, userId: string): Promise<void> {
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting company:', error);
       throw new Error(`Failed to delete company: ${error.message}`);
     }
   } catch (error) {
-    console.error('Company delete service error:', error);
     throw error;
   }
 }

@@ -34,11 +34,6 @@ export class AttendanceErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(
-      'Attendance Error Boundary caught an error:',
-      error,
-      errorInfo
-    );
     this.setState({
       error,
       errorInfo,

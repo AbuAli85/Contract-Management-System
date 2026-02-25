@@ -58,7 +58,6 @@ export function CompletedReviewsList() {
       }
     } catch (err) {
       setError('Failed to fetch completed reviews');
-      console.error('Error fetching completed reviews:', err);
     } finally {
       setLoading(false);
     }

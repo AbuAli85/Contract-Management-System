@@ -249,7 +249,6 @@ export function PromotersCSVImport() {
       );
       setParseResult(result);
     } catch (error) {
-      console.error('Error parsing CSV:', error);
       setParseResult({
         data: [],
         errors: [

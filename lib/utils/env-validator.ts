@@ -131,15 +131,12 @@ export function logEnvCheck(): void {
   const result = validateEnvironmentVariables();
 
   if (result.missing.length > 0) {
-    console.error('❌ Missing variables:', result.missing);
   }
 
   if (result.invalid.length > 0) {
-    console.error('❌ Invalid variables:', result.invalid);
   }
 
   if (result.warnings.length > 0) {
-    console.warn('⚠️  Warnings:', result.warnings);
   }
 
   if (result.isValid && result.warnings.length === 0) {

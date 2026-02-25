@@ -81,7 +81,6 @@ export function ApprovalDashboard({ userRole }: ApprovalDashboardProps) {
       }
     } catch (err) {
       setError('Failed to fetch pending reviews');
-      console.error('Error fetching pending reviews:', err);
     } finally {
       setLoading(false);
     }

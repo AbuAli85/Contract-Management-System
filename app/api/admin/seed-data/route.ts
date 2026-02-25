@@ -63,10 +63,6 @@ export const POST = withRBAC('data:seed:all', async (_request: NextRequest) => {
     const useNewSchema =
       !schemaError || !schemaError.message.includes('column');
 
-    console.log('Schema check:', {
-      useNewSchema,
-      schemaError: schemaError?.message,
-    });
 
     // Sample contracts data
     const sampleContracts = [
@@ -173,7 +169,6 @@ export const POST = withRBAC('data:seed:all', async (_request: NextRequest) => {
       },
     });
   } catch (error) {
-    console.error('Error creating sample data:', error);
     return NextResponse.json(
       {
         error: 'Failed to create sample data',

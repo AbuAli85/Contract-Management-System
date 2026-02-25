@@ -54,7 +54,6 @@ export function SmartAttendanceFeatures({ companyId }: SmartFeaturesProps) {
         setAlerts(data.alerts || []);
       }
     } catch (error) {
-      console.error('Error fetching smart alerts:', error);
     } finally {
       setLoading(false);
     }

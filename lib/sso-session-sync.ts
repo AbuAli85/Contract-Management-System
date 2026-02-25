@@ -52,10 +52,6 @@ export async function syncSessionToSSO() {
         supabaseSession = session;
       }
     } catch (getSessionError) {
-      console.warn(
-        'Could not get session from Supabase client:',
-        getSessionError
-      );
     }
 
     // STEP 2: If no session from cookies, check localStorage
@@ -70,7 +66,6 @@ export async function syncSessionToSSO() {
         try {
           sessionData = JSON.parse(userSession);
         } catch (e) {
-          console.warn('Could not parse userSession:', e);
         }
       }
 
@@ -82,17 +77,10 @@ export async function syncSessionToSSO() {
           // Check if it's the storage key format (uuid, version, domain, ts)
           // This is Supabase's internal storage format - we can't use it directly
           if (sessionData.uuid && sessionData.version && sessionData.domain) {
-            console.warn(
-              '⚠️  Found storage key format in sb-auth-token. This format cannot be used directly.'
-            );
-            console.warn(
-              '⚠️  The Supabase client should handle this automatically. If cookies are missing, the session may be expired.'
-            );
             // Don't try to use this format - let Supabase handle it
             sessionData = null;
           }
         } catch (e) {
-          console.warn('Could not parse sb-auth-token:', e);
         }
       }
 
@@ -143,21 +131,15 @@ export async function syncSessionToSSO() {
             });
 
             if (error) {
-              console.error('Error setting session:', error);
               // If setSession fails, the session might be expired
               // Try to refresh it
               try {
                 const { data: refreshData, error: refreshError } =
                   await supabase.auth.refreshSession();
                 if (refreshError) {
-                  console.warn(
-                    '⚠️  Session refresh failed. User may need to log in again:',
-                    refreshError
-                  );
                 } else if (refreshData.session) {
                 }
               } catch (refreshErr) {
-                console.warn('⚠️  Could not refresh session:', refreshErr);
               }
             } else {
               // Verify cookies were set by checking session again
@@ -166,15 +148,9 @@ export async function syncSessionToSSO() {
               } = await supabase.auth.getSession();
               if (verifySession && verifySession.user) {
               } else {
-                console.warn(
-                  '⚠️  Session set but not found in cookies. This may cause API route issues.'
-                );
               }
             }
           } else {
-            console.warn(
-              '⚠️  No refresh_token available, cookies may not be set correctly'
-            );
             // Try to get session from Supabase which might have refresh_token
             const {
               data: { session: existingSession },
@@ -186,22 +162,11 @@ export async function syncSessionToSSO() {
               });
               if (!setError) {
               } else {
-                console.error(
-                  'Error setting session with existing refresh_token:',
-                  setError
-                );
               }
             } else {
-              console.warn(
-                '⚠️  No refresh_token found. Session may be expired. User should log in again.'
-              );
             }
           }
         } catch (supabaseError) {
-          console.warn(
-            'Could not set session in Supabase client:',
-            supabaseError
-          );
           // Fallback: manually set cookies (may not work for API routes)
           const sessionString = JSON.stringify(supabaseSession);
           const projectRef =
@@ -217,7 +182,6 @@ export async function syncSessionToSSO() {
 
     return false;
   } catch (error) {
-    console.error('Error syncing session to SSO:', error);
     return false;
   }
 }
@@ -241,7 +205,6 @@ export function syncSSOToSession() {
       try {
         sessionData = JSON.parse(ssoSession);
       } catch (e) {
-        console.warn('Could not parse sb-auth-token:', e);
         return;
       }
 
@@ -253,7 +216,6 @@ export function syncSSOToSession() {
       }
     }
   } catch (error) {
-    console.error('Error syncing SSO to session:', error);
   }
 
   return false;
@@ -315,17 +277,17 @@ export function initializeSSOSync() {
   }
 
   // Initial sync
-  syncSessions().catch(console.error);
+  syncSessions().catch(() => { /* SSO sync error - non-critical */ });
 
   // Set up periodic sync (every 2 seconds)
   const syncInterval = setInterval(() => {
-    syncSessions().catch(console.error);
+    syncSessions().catch(() => { /* SSO sync error - non-critical */ });
   }, 2000);
 
   // Also sync on storage events (cross-tab sync)
   window.addEventListener('storage', e => {
     if (e.key === 'userSession' || e.key === 'sb-auth-token') {
-      syncSessions().catch(console.error);
+      syncSessions().catch(() => { /* SSO sync error - non-critical */ });
     }
   });
 

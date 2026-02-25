@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
     const forceBypass = request.nextUrl.searchParams.get('bypass') === 'true';
 
     if (isDevelopment && (bypassAuth || forceBypass)) {
-      console.log('🔓 Development: Bypassing authentication check');
       return NextResponse.json({
         authenticated: true,
         user: {
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
     try {
       supabase = await createClient();
     } catch (initError) {
-      console.error('🔐 Auth Check: Supabase client init failed:', initError);
       return NextResponse.json(
         {
           authenticated: false,
@@ -50,7 +48,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!supabase) {
-      console.error('🔐 Auth Check: Failed to create Supabase client');
       return NextResponse.json(
         {
           authenticated: false,
@@ -67,10 +64,6 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (error) {
-      console.warn(
-        '🔐 Auth Check: getUser error treated as unauthenticated:',
-        error?.message || error
-      );
       // Treat recoverable auth errors as unauthenticated rather than 500
       return NextResponse.json(
         {
@@ -83,7 +76,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!user) {
-      console.log('🔐 Auth Check: No user found');
       return NextResponse.json(
         {
           authenticated: false,
@@ -95,7 +87,6 @@ export async function GET(request: NextRequest) {
 
     // Validate user data
     if (!user.id) {
-      console.warn('🔐 Auth Check: Invalid user data - missing user ID');
       return NextResponse.json(
         {
           authenticated: false,
@@ -108,10 +99,8 @@ export async function GET(request: NextRequest) {
 
     // Make email optional for development
     if (!user.email) {
-      console.warn('🔐 Auth Check: No email in user data, using fallback');
       // In development, we can proceed without email
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔓 Development: Proceeding without email validation');
       } else {
         return NextResponse.json(
           {
@@ -136,9 +125,6 @@ export async function GET(request: NextRequest) {
 
       // If not found in 'users', try 'profiles' table as fallback
       if (profileError || !userProfile) {
-        console.log(
-          '🔐 Auth Check: User not in users table, trying profiles table'
-        );
         const profilesResult = await supabase
           .from('profiles')
           .select('id, email, role, full_name')
@@ -150,17 +136,9 @@ export async function GET(request: NextRequest) {
       }
 
       if (profileError) {
-        console.warn(
-          '🔐 Auth Check: User profile not found in any table:',
-          profileError.message
-        );
 
         // If profile not found, return basic user info from auth
         if (profileError.code === 'PGRST116') {
-          console.log(
-            '🔐 Auth Check: Creating basic user profile for:',
-            user.id
-          );
 
           // Return basic user info without database profile
           return NextResponse.json({
@@ -189,7 +167,6 @@ export async function GET(request: NextRequest) {
 
         // For other profile errors, still allow access in development
         if (process.env.NODE_ENV === 'development') {
-          console.log('🔓 Development: Allowing access despite profile error');
           return NextResponse.json({
             authenticated: true,
             user: {
@@ -226,10 +203,6 @@ export async function GET(request: NextRequest) {
 
       // Check if user status is active (if status field exists)
       if (userProfile?.status && userProfile.status !== 'active') {
-        console.warn(
-          '🔐 Auth Check: User account is not active:',
-          userProfile.status
-        );
         return NextResponse.json(
           {
             authenticated: false,
@@ -240,10 +213,6 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      console.log(
-        '✅ Auth Check: User authenticated successfully:',
-        user.email
-      );
 
       // Return user info without sensitive data
       return NextResponse.json({
@@ -268,10 +237,6 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (profileError) {
-      console.warn(
-        '🔐 Auth Check: Profile validation error, using auth metadata:',
-        profileError
-      );
 
       // In case of error, return auth data with fallback
       return NextResponse.json({
@@ -295,7 +260,6 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.warn('🔐 Auth Check: Unexpected error treated as unauthenticated');
     return NextResponse.json(
       {
         authenticated: false,

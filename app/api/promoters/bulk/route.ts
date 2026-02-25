@@ -51,7 +51,6 @@ export const POST = withRBAC(
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !supabaseAnonKey) {
-        console.error('❌ Missing Supabase credentials');
         return NextResponse.json(
           { success: false, error: 'Server configuration error' },
           { status: 500 }
@@ -98,10 +97,6 @@ export const POST = withRBAC(
       const { action, promoterIds, status, notificationType, companyId } =
         validatedData;
 
-      console.log('📊 Bulk action request:', {
-        action,
-        promoterCount: promoterIds.length,
-      });
 
       const result: any = {
         success: true,
@@ -124,7 +119,6 @@ export const POST = withRBAC(
               .select('id, name_en, name_ar');
 
           if (archiveError) {
-            console.error('❌ Archive error:', archiveError);
             return NextResponse.json(
               {
                 success: false,
@@ -152,7 +146,6 @@ export const POST = withRBAC(
               created_at: new Date().toISOString(),
             });
           } catch (auditError) {
-            console.error('Error creating audit log:', auditError);
           }
           break;
         }
@@ -169,7 +162,6 @@ export const POST = withRBAC(
             .select('id, name_en, name_ar');
 
           if (deleteError) {
-            console.error('❌ Delete error:', deleteError);
             return NextResponse.json(
               {
                 success: false,
@@ -197,7 +189,6 @@ export const POST = withRBAC(
               created_at: new Date().toISOString(),
             });
           } catch (auditError) {
-            console.error('Error creating audit log:', auditError);
           }
           break;
         }
@@ -223,7 +214,6 @@ export const POST = withRBAC(
             .select('id, name_en, name_ar');
 
           if (updateError) {
-            console.error('❌ Update error:', updateError);
             return NextResponse.json(
               {
                 success: false,
@@ -252,7 +242,6 @@ export const POST = withRBAC(
               created_at: new Date().toISOString(),
             });
           } catch (auditError) {
-            console.error('Error creating audit log:', auditError);
           }
           break;
         }
@@ -278,7 +267,6 @@ export const POST = withRBAC(
             .select('id, name_en, name_ar');
 
           if (assignError) {
-            console.error('❌ Assign error:', assignError);
             return NextResponse.json(
               {
                 success: false,
@@ -307,7 +295,6 @@ export const POST = withRBAC(
               created_at: new Date().toISOString(),
             });
           } catch (auditError) {
-            console.error('Error creating audit log:', auditError);
           }
           break;
         }
@@ -333,7 +320,6 @@ export const POST = withRBAC(
               created_at: new Date().toISOString(),
             });
           } catch (auditError) {
-            console.error('Error creating audit log:', auditError);
           }
           break;
         }
@@ -366,7 +352,6 @@ export const POST = withRBAC(
         );
       }
 
-      console.error('❌ API error:', error);
       return NextResponse.json(
         {
           success: false,

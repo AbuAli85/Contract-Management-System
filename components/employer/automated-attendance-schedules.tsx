@@ -192,7 +192,6 @@ export function AutomatedAttendanceSchedules() {
         setOfficeLocations(data.locations);
       }
     } catch (error) {
-      console.error('Error fetching office locations:', error);
     }
   };
 

@@ -14,7 +14,6 @@ export async function signIn(
     });
     if (error) throw error;
   } catch (error: unknown) {
-    console.error('Sign in error:', error);
     toast({
       title: 'Error',
       description: (error as Error).message,
@@ -42,7 +41,6 @@ export async function signUp(
     });
     if (error) throw error;
   } catch (error: unknown) {
-    console.error('Sign up error:', error);
     toast?.({
       title: 'Error',
       description: (error as Error).message,
@@ -58,7 +56,6 @@ export async function signOut(toast?: (props: Toast) => void) {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   } catch (error: unknown) {
-    console.error('Sign out error:', error);
     toast?.({
       title: 'Error',
       description: (error as Error).message,
@@ -80,7 +77,6 @@ export async function resetPassword(
     });
     if (error) throw error;
   } catch (error: unknown) {
-    console.error('Password reset error:', error);
     toast?.({
       title: 'Error',
       description: (error as Error).message,
@@ -101,7 +97,6 @@ export async function updatePassword(
     });
     if (error) throw error;
   } catch (error: unknown) {
-    console.error('Password update error:', error);
     toast?.({
       title: 'Error',
       description: (error as Error).message,
@@ -126,7 +121,6 @@ export async function signInWithOAuth(
     });
     if (error) throw error;
   } catch (error: unknown) {
-    console.error('OAuth sign in error:', error);
     toast?.({
       title: 'Error',
       description: (error as Error).message,

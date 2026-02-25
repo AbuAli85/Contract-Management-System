@@ -261,7 +261,6 @@ export async function calculatePromoterPerformanceStats(
 
     return { success: true, data: stats };
   } catch (error) {
-    console.error('Error calculating performance stats:', error);
     return {
       success: false,
       error:
@@ -398,7 +397,6 @@ export async function getDocumentExpiryStats(
 
     return { success: true, data: stats };
   } catch (error) {
-    console.error('Error calculating document expiry stats:', error);
     return {
       success: false,
       error:
@@ -464,7 +462,6 @@ export async function getStatusDistribution(
 
     return { success: true, data: distribution };
   } catch (error) {
-    console.error('Error calculating status distribution:', error);
     return {
       success: false,
       error:
@@ -526,7 +523,6 @@ export async function getLocationDistribution(
 
     return { success: true, data: distribution };
   } catch (error) {
-    console.error('Error calculating location distribution:', error);
     return {
       success: false,
       error:
@@ -597,7 +593,6 @@ export async function getEmployerDistribution(
 
     return { success: true, data: distribution };
   } catch (error) {
-    console.error('Error calculating employer distribution:', error);
     return {
       success: false,
       error:
@@ -662,7 +657,6 @@ export async function getComprehensiveAnalytics(
 
     return { success: true, data: analytics };
   } catch (error) {
-    console.error('Error getting comprehensive analytics:', error);
     return {
       success: false,
       error:

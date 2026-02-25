@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔗 Make.com Employment Contracts Webhook received');
 
     // Get the webhook secret from headers
     const webhookSecret = request.headers.get('x-webhook-secret');
@@ -11,20 +10,15 @@ export async function POST(request: NextRequest) {
 
     // Verify webhook secret
     if (!webhookSecret || !expectedSecret || webhookSecret !== expectedSecret) {
-      console.log('❌ Webhook secret verification failed');
-      console.log('Received:', webhookSecret);
-      console.log('Expected:', expectedSecret);
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Invalid webhook secret' },
         { status: 401 }
       );
     }
 
-    console.log('✅ Webhook secret verified');
 
     // Parse the request body
     const body = await request.json();
-    console.log('📤 Employment Contracts Webhook payload:', body);
 
     // Validate required fields
     const {
@@ -71,7 +65,6 @@ export async function POST(request: NextRequest) {
           return v.toString(16);
         }
       );
-      console.log('🆔 Generated contract_id:', finalContractId);
     }
 
     if (!finalContractNumber || finalContractNumber.trim() === '') {
@@ -82,7 +75,6 @@ export async function POST(request: NextRequest) {
       const year = now.getFullYear();
       const random = Math.random().toString(36).substring(2, 6).toUpperCase();
       finalContractNumber = `PAC-${day}${month}${year}-${random}`;
-      console.log('🔢 Generated contract_number:', finalContractNumber);
     }
 
     // Create Supabase client
@@ -98,12 +90,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (contractError && contractError.code !== 'PGRST116') {
-        console.error('❌ Error fetching contract:', contractError);
-        console.error('❌ Contract ID:', finalContractId);
-        console.error('❌ Error code:', contractError.code);
-        console.error('❌ Error message:', contractError.message);
         // Don't return error here, just log it and continue with contract creation
-        console.log('⚠️ Continuing with contract creation despite fetch error');
       }
 
       contract = existingContract;
@@ -117,12 +104,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (contractError && contractError.code !== 'PGRST116') {
-        console.error('❌ Error fetching contract by number:', contractError);
-        console.error('❌ Contract Number:', finalContractNumber);
-        console.error('❌ Error code:', contractError.code);
-        console.error('❌ Error message:', contractError.message);
         // Don't return error here, just log it and continue with contract creation
-        console.log('⚠️ Continuing with contract creation despite fetch error');
       }
 
       contract = existingContract;
@@ -130,7 +112,6 @@ export async function POST(request: NextRequest) {
 
     // If contract exists, update it
     if (contract) {
-      console.log('📝 Updating existing contract:', (contract as any).id);
 
       const updateData: any = {
         contract_type,
@@ -150,14 +131,12 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (updateError) {
-        console.error('❌ Error updating contract:', updateError);
         return NextResponse.json(
           { success: false, error: 'Failed to update contract' },
           { status: 500 }
         );
       }
 
-      console.log('✅ Contract updated successfully');
       return NextResponse.json({
         success: true,
         message: 'Contract updated successfully',
@@ -182,7 +161,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new contract
-    console.log('🆕 Creating new contract');
 
     const contractData: any = {
       contract_type,
@@ -267,11 +245,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('❌ Error creating contract:', createError);
-      console.error('❌ Contract data that failed:', contractData);
-      console.error('❌ Error code:', createError.code);
-      console.error('❌ Error details:', createError.details);
-      console.error('❌ Error hint:', createError.hint);
       return NextResponse.json(
         {
           success: false,
@@ -286,7 +259,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Contract created successfully');
     return NextResponse.json({
       success: true,
       message: 'Contract created successfully',
@@ -309,11 +281,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('❌ Webhook processing failed:', error);
-    console.error(
-      '❌ Error stack:',
-      error instanceof Error ? error.stack : 'No stack trace'
-    );
     return NextResponse.json(
       {
         success: false,

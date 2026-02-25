@@ -30,46 +30,27 @@ export async function POST(request: NextRequest) {
     const report: CSPReport = await request.json();
     const violation = report['csp-report'];
 
-    // Log the violation (in production, send to monitoring service)
-    console.warn('🚨 CSP Violation Report:', {
-      documentUri: violation['document-uri'],
-      violatedDirective: violation['violated-directive'],
-      blockedUri: violation['blocked-uri'],
-      sourceFile: violation['source-file'],
-      lineNumber: violation['line-number'],
-      timestamp: new Date().toISOString(),
-    });
-
-    // TODO: In production, send to monitoring service
-    // Examples:
-    // - Send to Sentry
-    // - Send to Datadog
-    // - Store in database for analysis
-    // - Send to Report URI service
-
-    // Example Sentry integration:
-    // if (process.env.SENTRY_DSN) {
-    //   Sentry.captureMessage('CSP Violation', {
-    //     level: 'warning',
-    //     extra: violation,
-    //   });
-    // }
-
-    // Example database logging:
-    // if (process.env.LOG_CSP_TO_DB === 'true') {
-    //   await supabase.from('csp_violations').insert({
-    //     document_uri: violation['document-uri'],
-    //     violated_directive: violation['violated-directive'],
-    //     blocked_uri: violation['blocked-uri'],
-    //     source_file: violation['source-file'],
-    //     line_number: violation['line-number'],
-    //     created_at: new Date().toISOString(),
-    //   });
-    // }
+    // Log to database if configured
+    if (process.env.LOG_CSP_TO_DB === 'true') {
+      try {
+        const { createClient } = await import('@/lib/supabase/server');
+        const supabase = await createClient();
+        await supabase.from('csp_violations').insert({
+          document_uri: violation['document-uri'],
+          violated_directive: violation['violated-directive'],
+          blocked_uri: violation['blocked-uri'],
+          source_file: violation['source-file'],
+          line_number: violation['line-number'],
+          column_number: violation['column-number'],
+          created_at: new Date().toISOString(),
+        });
+      } catch {
+        // Do not fail the request if DB logging fails
+      }
+    }
 
     return NextResponse.json({ received: true }, { status: 204 });
-  } catch (error) {
-    console.error('Error processing CSP report:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Invalid report format' },
       { status: 400 }

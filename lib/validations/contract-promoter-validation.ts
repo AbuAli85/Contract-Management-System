@@ -104,7 +104,6 @@ export async function validateContractPromoter(
 
   if (result.warnings.length > 0) {
     // Log warnings but allow creation
-    console.warn('Contract promoter warnings:', result.warnings);
   }
 
   return { valid: true };
@@ -130,7 +129,6 @@ export async function getSuggestedPromoters(
     const data = await response.json();
     return data.success ? data.data.suggestions : [];
   } catch (error) {
-    console.error('Error getting suggested promoters:', error);
     return [];
   }
 }

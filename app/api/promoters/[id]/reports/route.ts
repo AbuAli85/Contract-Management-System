@@ -58,13 +58,11 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching reports:', error);
       return NextResponse.json({ reports: [] }, { status: 200 });
     }
 
     return NextResponse.json({ reports: data || [] }, { status: 200 });
   } catch (error) {
-    console.error('Reports API error:', error);
     return NextResponse.json({ reports: [] }, { status: 200 });
   }
 }

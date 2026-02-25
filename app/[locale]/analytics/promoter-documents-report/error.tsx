@@ -13,7 +13,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Promoter documents report error:', error);
+
   }, [error]);
 
   return (

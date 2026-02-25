@@ -119,7 +119,6 @@ export function CompanyPermissionsManager({
         setPermissions(data.permissions || []);
       }
     } catch (error) {
-      console.error('Error fetching permissions:', error);
     } finally {
       setLoading(false);
     }
@@ -135,7 +134,6 @@ export function CompanyPermissionsManager({
         setUsers(data.members || []);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
     }
   };
 

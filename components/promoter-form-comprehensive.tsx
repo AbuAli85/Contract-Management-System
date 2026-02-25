@@ -188,7 +188,6 @@ export function PromoterFormComprehensive({
           localStorage.setItem(autoSaveKey, JSON.stringify(formData));
           setLastSaved(new Date());
         } catch (error) {
-          console.error('Failed to auto-save:', error);
         }
       }, 30000); // Auto-save every 30 seconds
 
@@ -212,7 +211,6 @@ export function PromoterFormComprehensive({
           }
         }
       } catch (error) {
-        console.error('Failed to load draft:', error);
       }
     }
   }, [form, mode, promoterId, initialData]);
@@ -228,7 +226,6 @@ export function PromoterFormComprehensive({
           setEmployers(data.parties);
         }
       } catch (error) {
-        console.error('Error fetching employers:', error);
       } finally {
         setIsLoadingEmployers(false);
       }
@@ -296,7 +293,6 @@ export function PromoterFormComprehensive({
           : 'Promoter updated successfully!'
       );
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast.error(
         error instanceof Error
           ? error.message

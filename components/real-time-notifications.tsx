@@ -90,7 +90,6 @@ export function RealTimeNotifications({
         setNotifications(data || []);
         setUnreadCount(data?.filter(n => !n.read).length || 0);
       } catch (error) {
-        console.error('Error loading notifications:', error);
         toast({
           title: 'Failed to load notifications',
           description: 'Please refresh the page to try again.',
@@ -194,7 +193,6 @@ export function RealTimeNotifications({
       );
       setUnreadCount(current => Math.max(0, current - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 
@@ -219,7 +217,6 @@ export function RealTimeNotifications({
         duration: 2000,
       });
     } catch (error) {
-      console.error('Error marking all as read:', error);
       toast({
         title: 'Failed to mark notifications as read',
         variant: 'destructive',
@@ -244,7 +241,6 @@ export function RealTimeNotifications({
         setUnreadCount(current => Math.max(0, current - 1));
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
     }
   };
 
@@ -479,7 +475,6 @@ export function useNotifications(userId: string) {
         setNotifications(data || []);
         setUnreadCount(data?.filter(n => !n.read).length || 0);
       } catch (error) {
-        console.error('Error loading notifications:', error);
       } finally {
         setLoading(false);
       }

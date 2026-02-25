@@ -75,7 +75,6 @@ export async function POST(request: NextRequest) {
     ).insert(tasksToInsert);
 
     if (insertError) {
-      console.error('Error creating tasks:', insertError);
       return NextResponse.json(
         { error: 'Failed to create tasks' },
         { status: 500 }
@@ -88,7 +87,6 @@ export async function POST(request: NextRequest) {
       assigned_count: employee_ids.length,
     });
   } catch (error) {
-    console.error('Error in POST /api/employer/team/bulk/assign:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -128,136 +128,18 @@ export function NotificationCenter() {
   const loadNotifications = async () => {
     setLoading(true);
     try {
-      // Simulate loading data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock notifications data
-      setNotifications([
-        {
-          id: '1',
-          type: 'success',
-          title: 'Contract Approved',
-          message:
-            'The Partnership Agreement with TechCorp has been approved and is ready for execution.',
-          is_read: false,
-          is_starred: true,
-          is_archived: false,
-          priority: 'high',
-          category: 'contract',
-          action_url: '/contracts/1',
-          sender: 'Legal Department',
-          metadata: { contract_id: '1', contract_value: 150000 },
-          created_at: '2024-01-21T14:30:00Z',
-        },
-        {
-          id: '2',
-          type: 'warning',
-          title: 'Document Review Due',
-          message:
-            'The Compliance Report Q4 2023 is due for review by tomorrow. Please complete your review.',
-          is_read: false,
-          is_starred: false,
-          is_archived: false,
-          priority: 'medium',
-          category: 'document',
-          action_url: '/documents/2',
-          sender: 'System',
-          metadata: { document_id: '2', due_date: '2024-01-22T23:59:59Z' },
-          created_at: '2024-01-21T13:15:00Z',
-        },
-        {
-          id: '3',
-          type: 'info',
-          title: 'System Maintenance Scheduled',
-          message:
-            'Planned system maintenance will occur this Saturday from 2:00 AM to 6:00 AM. Services may be temporarily unavailable.',
-          is_read: true,
-          is_starred: false,
-          is_archived: false,
-          priority: 'medium',
-          category: 'announcement',
-          sender: 'IT Department',
-          metadata: {
-            maintenance_window: '2024-01-22T02:00:00Z to 2024-01-22T06:00:00Z',
-          },
-          created_at: '2024-01-21T12:00:00Z',
-          read_at: '2024-01-21T12:30:00Z',
-        },
-        {
-          id: '4',
-          type: 'error',
-          title: 'Project Milestone Delayed',
-          message:
-            'Digital Transformation Initiative Phase 2 has been delayed due to resource constraints. New timeline updated.',
-          is_read: false,
-          is_starred: false,
-          is_archived: false,
-          priority: 'urgent',
-          category: 'project',
-          action_url: '/projects/3',
-          sender: 'Project Manager',
-          metadata: { project_id: '3', new_deadline: '2024-02-15T23:59:59Z' },
-          created_at: '2024-01-21T11:45:00Z',
-        },
-        {
-          id: '5',
-          type: 'message',
-          title: 'New Comment on Contract',
-          message:
-            'John Doe added a comment to the Partnership Agreement: "Please review the updated terms in section 4.2"',
-          is_read: true,
-          is_starred: false,
-          is_archived: false,
-          priority: 'low',
-          category: 'contract',
-          action_url: '/contracts/1/comments',
-          sender: 'John Doe',
-          metadata: { contract_id: '1', comment_id: 'c1' },
-          created_at: '2024-01-21T10:30:00Z',
-          read_at: '2024-01-21T11:00:00Z',
-        },
-        {
-          id: '6',
-          type: 'info',
-          title: 'Monthly Backup Complete',
-          message:
-            'Monthly system backup has been completed successfully. All data is secure and up to date.',
-          is_read: true,
-          is_starred: false,
-          is_archived: false,
-          priority: 'low',
-          category: 'system',
-          sender: 'System',
-          metadata: {
-            backup_size: '2.4GB',
-            backup_location: 'cloud-storage-east',
-          },
-          created_at: '2024-01-21T09:00:00Z',
-          read_at: '2024-01-21T09:15:00Z',
-        },
-        {
-          id: '7',
-          type: 'warning',
-          title: 'Reminder: Team Meeting',
-          message:
-            'Weekly team standup meeting is scheduled for tomorrow at 10:00 AM in Conference Room A.',
-          is_read: false,
-          is_starred: true,
-          is_archived: false,
-          priority: 'medium',
-          category: 'reminder',
-          action_url: '/calendar/meeting-1',
-          sender: 'Calendar System',
-          metadata: { meeting_id: 'meeting-1', room: 'Conference Room A' },
-          created_at: '2024-01-21T08:00:00Z',
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
+      const params = new URLSearchParams();
+      if (selectedFilter === 'unread') params.set('unread_only', 'true');
+      const response = await fetch(`/api/notifications?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      const data = await response.json();
+      setNotifications(data.notifications ?? []);
+    } catch {
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
-  };
+  };;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {

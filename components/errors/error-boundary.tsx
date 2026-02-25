@@ -53,7 +53,6 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('🔴 Error Boundary caught an error:', error, errorInfo);
     }
 
     // Update state with error details
@@ -103,12 +102,10 @@ export class ErrorBoundary extends Component<Props, State> {
         userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'SSR',
       };
 
-      console.error('📊 Error Boundary - Structured Error:', errorData);
 
-      // TODO: Send to external monitoring service
+      // External monitoring (Sentry/LogRocket) can be integrated here
       // Example: Sentry.captureException(error, { extra: errorData });
     } catch (loggingError) {
-      console.error('Failed to log error to monitoring service:', loggingError);
     }
   }
 

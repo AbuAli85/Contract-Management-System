@@ -117,7 +117,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Error in POST /api/employer/team/fix-permissions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

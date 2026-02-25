@@ -24,7 +24,6 @@ export function verifyStripeSignature(
     }
 
     if (!timestamp || !v1) {
-      console.error('Missing timestamp or signature in webhook');
       return false;
     }
 
@@ -32,7 +31,6 @@ export function verifyStripeSignature(
     const webhookTimestamp = parseInt(timestamp, 10);
     const currentTime = Math.floor(Date.now() / 1000);
     if (currentTime - webhookTimestamp > 300) {
-      console.error('Webhook timestamp too old');
       return false;
     }
 
@@ -53,7 +51,6 @@ export function verifyStripeSignature(
 
     return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
   } catch (error) {
-    console.error('Error verifying webhook signature:', error);
     return false;
   }
 }
@@ -86,7 +83,6 @@ export function verifyWebhookSignature(
 
     return crypto.timingSafeEqual(expectedBuffer, providedBuffer);
   } catch (error) {
-    console.error('Error verifying webhook signature:', error);
     return false;
   }
 }

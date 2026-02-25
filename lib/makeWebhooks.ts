@@ -32,7 +32,6 @@ async function logWebhookToDatabase(logEntry: WebhookLogEntry): Promise<void> {
       attempts: logEntry.attempts,
     });
   } catch (error) {
-    console.error('Failed to log webhook to database:', error);
   }
 }
 
@@ -96,17 +95,9 @@ export async function dispatchWebhook(
       } else {
         const errorText = await response.text().catch(() => 'Unknown error');
         lastError = `HTTP ${response.status}: ${errorText}`;
-        console.error(
-          `❌ ${type} webhook failed (attempt ${attempt}):`,
-          lastError
-        );
       }
     } catch (error) {
       lastError = error instanceof Error ? error.message : 'Network error';
-      console.error(
-        `❌ ${type} webhook failed (attempt ${attempt}):`,
-        lastError
-      );
     }
 
     // If this wasn't the last attempt, wait before retrying

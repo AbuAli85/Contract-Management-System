@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Booking Resources API: Starting request...');
 
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
@@ -11,9 +10,6 @@ export async function GET(request: NextRequest) {
 
     // Check if we're using a mock client
     if (!supabase || typeof supabase.from !== 'function') {
-      console.error(
-        '❌ Booking Resources API: Using mock client - returning mock data'
-      );
       return NextResponse.json(
         {
           success: true,
@@ -58,9 +54,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(
-      '🔍 Booking Resources API: Fetching resources from database...'
-    );
 
     // Build query
     let query = supabase
@@ -78,24 +71,14 @@ export async function GET(request: NextRequest) {
       const { data: resourcesData, error: resourcesError } = await query;
 
       if (resourcesError) {
-        console.warn(
-          '⚠️ Booking Resources API: Error fetching resources:',
-          resourcesError.message
-        );
         resources = [];
       } else {
         resources = resourcesData || [];
       }
     } catch (error) {
-      console.warn(
-        '⚠️ Booking Resources API: Resource fetch failed, continuing with empty array'
-      );
       resources = [];
     }
 
-    console.log(
-      `✅ Booking Resources API: Successfully fetched ${resources?.length || 0} resources`
-    );
 
     return NextResponse.json({
       success: true,
@@ -103,7 +86,6 @@ export async function GET(request: NextRequest) {
       count: resources?.length || 0,
     });
   } catch (error) {
-    console.error('❌ Booking Resources API: Unexpected error:', error);
     return NextResponse.json(
       {
         success: true, // Return success to avoid errors

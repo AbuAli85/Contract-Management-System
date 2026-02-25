@@ -51,7 +51,6 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
 
     // Check if Resend is configured
     if (!process.env.RESEND_API_KEY) {
-      console.error('❌ RESEND_API_KEY not configured');
       return {
         success: false,
         error: 'Email service is not configured',
@@ -83,7 +82,6 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     });
 
     if (error) {
-      console.error('❌ Email send error:', error);
       return {
         success: false,
         error: error.message || 'Failed to send email',
@@ -95,7 +93,6 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
       messageId: data?.id,
     };
   } catch (error) {
-    console.error('❌ Email send exception:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -156,7 +153,6 @@ export async function getEmailStatus(messageId: string): Promise<{
     const { data, error } = await getResendClient().emails.get(messageId);
 
     if (error) {
-      console.error('❌ Failed to get email status:', error);
       return {
         success: false,
         error: error.message || 'Failed to get email status',
@@ -169,7 +165,6 @@ export async function getEmailStatus(messageId: string): Promise<{
       details: data,
     };
   } catch (error) {
-    console.error('❌ Get email status exception:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

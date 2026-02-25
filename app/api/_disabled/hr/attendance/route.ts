@@ -88,7 +88,6 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query.range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Error fetching attendance:', error);
       return NextResponse.json(
         { error: 'Failed to fetch attendance records' },
         { status: 500 }
@@ -105,7 +104,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/hr/attendance:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -168,7 +166,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('Error creating check-in:', error);
         return NextResponse.json(
           { error: 'Failed to check in' },
           { status: 500 }
@@ -190,7 +187,6 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (findError) {
-        console.error('Error finding open shift:', findError);
         return NextResponse.json(
           { error: 'Failed to find open shift' },
           { status: 500 }
@@ -231,7 +227,6 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('Error updating check-out:', error);
         return NextResponse.json(
           { error: 'Failed to check out' },
           { status: 500 }
@@ -248,7 +243,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Error in POST /api/hr/attendance:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

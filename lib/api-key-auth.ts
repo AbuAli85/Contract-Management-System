@@ -140,7 +140,6 @@ export async function validateApiKey(
       apiKey: apiKeyData,
     };
   } catch (error) {
-    console.error('Error validating API key:', error);
     return {
       isValid: false,
       error: 'Internal server error',
@@ -282,7 +281,6 @@ export function withApiKeyAuth(
       // Call the handler with validated API key
       return await handler(request, apiKeyData);
     } catch (error) {
-      console.error('API key auth error:', error);
       return NextResponse.json(
         {
           error: 'Authentication error',
@@ -329,7 +327,6 @@ export async function logApiKeyUsage(
       user_agent: userAgent,
     });
   } catch (error) {
-    console.error('Failed to log API key usage:', error);
     // Don't throw - logging failures shouldn't break the API
   }
 }

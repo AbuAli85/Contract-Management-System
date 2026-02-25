@@ -132,7 +132,7 @@ function PendingContractsPageContent() {
 
     // Setup timeout to abort request after 10 seconds
     const timeoutId = setTimeout(() => {
-      console.warn('⏱️ Request timeout - aborting after 10 seconds');
+
       controller.abort();
     }, 10000);
 
@@ -191,7 +191,7 @@ function PendingContractsPageContent() {
         );
         setPermissionError(true);
         setError('Insufficient permissions to view pending contracts');
-        console.error('❌ Permission denied for pending contracts:', data);
+
       } else if (response.status === 401) {
         // ✅ FIX: Clear timeouts on auth error
         if (timeoutId) clearTimeout(timeoutId);
@@ -204,7 +204,7 @@ function PendingContractsPageContent() {
           'Not authenticated'
         );
         setError('Please log in to view pending contracts');
-        console.error('❌ Authentication required for pending contracts');
+
       } else if (response.status === 504) {
         // ✅ FIX: Clear timeouts on server timeout
         if (timeoutId) clearTimeout(timeoutId);
@@ -219,11 +219,7 @@ function PendingContractsPageContent() {
         setError(
           'Server timeout - the request took too long. Please try again.'
         );
-        console.error('❌ Server timeout for pending contracts:', {
-          status: response.status,
-          data,
-          queryTime: `${queryTime}ms`,
-        });
+
       } else if (response.ok && data.success !== false) {
         // ✅ FIX: Clear timeouts on success
         if (timeoutId) clearTimeout(timeoutId);
@@ -261,11 +257,7 @@ function PendingContractsPageContent() {
         setError(
           data.error || data.message || 'Failed to fetch pending contracts'
         );
-        console.error('❌ Error fetching pending contracts:', {
-          status: response.status,
-          data,
-          queryTime: `${queryTime}ms`,
-        });
+
       }
     } catch (err: any) {
       if (timeoutId) clearTimeout(timeoutId);
@@ -283,10 +275,7 @@ function PendingContractsPageContent() {
         setError(
           'Request timeout - the server took too long to respond. Please try again.'
         );
-        console.error('❌ Request timeout after 10 seconds:', {
-          queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString(),
-        });
+        
       } else {
         performanceMonitor.endOperation(
           'fetch-pending-contracts',
@@ -296,13 +285,7 @@ function PendingContractsPageContent() {
         setError(
           `Network error: ${err.message || 'Please check your connection and try again.'}`
         );
-        console.error('❌ Exception fetching pending contracts:', {
-          error: err,
-          message: err.message,
-          name: err.name,
-          queryTime: `${queryTime}ms`,
-          timestamp: new Date().toISOString(),
-        });
+        
       }
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
@@ -325,9 +308,7 @@ function PendingContractsPageContent() {
     // ✅ FIX: Force load after 4 seconds regardless of permissions (safety net)
     const forceLoadTimeout = setTimeout(() => {
       if (!fetchAttemptedRef.current) {
-        console.warn(
-          '⚠️ Force loading after 4 seconds - permissions check may be stuck'
-        );
+
         forceLoadRef.current = true;
         setForceLoad(true);
       }
@@ -336,9 +317,7 @@ function PendingContractsPageContent() {
     // ✅ FIX: Add timeout to prevent infinite loading if permissions never load
     const permissionTimeout = setTimeout(() => {
       if (permissions.isLoading && !fetchAttemptedRef.current) {
-        console.warn(
-          '⚠️ Permissions taking too long to load, proceeding with fetch anyway...'
-        );
+
         fetchPendingContracts();
       }
     }, 2000); // Reduced to 2 seconds for faster response
@@ -351,12 +330,7 @@ function PendingContractsPageContent() {
         // Call fetchPendingContracts directly to avoid dependency loop
         fetchPendingContracts();
       } else {
-        console.warn('⚠️ Insufficient permissions for pending contracts:', {
-          required: 'contract:read:own or admin role',
-          hasPermission,
-          isAdmin: permissions.isAdmin,
-          canRead: permissions.can('contract:read:own'),
-        });
+        
         setLoading(false);
         setPermissionError(true);
       }
@@ -559,7 +533,7 @@ function PendingContractsPageContent() {
       setActionReason('');
       setSelectedContracts([]);
     } catch (error) {
-      console.error('Error executing action:', error);
+
       toast.error('Failed to perform action');
     } finally {
       setActionLoading(false);
@@ -622,7 +596,7 @@ function PendingContractsPageContent() {
       const year = date.getFullYear();
       return `${day}/${month}/${year}`;
     } catch (error) {
-      console.warn('Error formatting date:', dateString, error);
+
       return 'Invalid Date';
     }
   };

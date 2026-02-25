@@ -217,7 +217,6 @@ export function ClientProviderRelationships() {
           setRelationships(realRelationships);
         }
       } catch (err) {
-        console.error('Error loading relationship data:', err);
         if (isMounted) {
           setError(
             err instanceof Error

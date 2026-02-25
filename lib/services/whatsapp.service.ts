@@ -41,7 +41,6 @@ function getTwilioClient() {
       process.env.TWILIO_AUTH_TOKEN
     );
   } catch (error) {
-    console.error('Twilio package not installed. Run: npm install twilio');
     throw new Error('Twilio package not installed');
   }
 }
@@ -54,7 +53,6 @@ export async function sendWhatsApp(
 ): Promise<WhatsAppResult> {
   try {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-      console.warn('⚠️ Twilio not configured - WhatsApp will not be sent');
       return {
         success: false,
         error: 'WhatsApp service not configured',
@@ -62,7 +60,6 @@ export async function sendWhatsApp(
     }
 
     if (!process.env.TWILIO_WHATSAPP_FROM) {
-      console.warn('⚠️ TWILIO_WHATSAPP_FROM not configured');
       return {
         success: false,
         error: 'Twilio WhatsApp sender number not configured',
@@ -118,7 +115,6 @@ export async function sendWhatsApp(
       messageId: result.sid,
     };
   } catch (error: any) {
-    console.error('❌ WhatsApp send error:', error);
     return {
       success: false,
       error: error.message || 'Failed to send WhatsApp message',

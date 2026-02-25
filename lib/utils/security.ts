@@ -124,7 +124,6 @@ export function setupCSPReporting() {
 
     // Log in development
     if (process.env.NODE_ENV === 'development') {
-      console.warn('CSP Violation:', violation);
     }
 
     // Report to endpoint in production
@@ -134,7 +133,6 @@ export function setupCSPReporting() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(violation),
       }).catch(error => {
-        console.error('Failed to report CSP violation:', error);
       });
     }
   });

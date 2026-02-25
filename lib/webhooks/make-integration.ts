@@ -124,7 +124,6 @@ export async function sendToMakeWebhook(
 
     return { success: true };
   } catch (error: any) {
-    console.error(`❌ Failed to send to Make.com webhook:`, error);
     return {
       success: false,
       error: error.message || 'Unknown error occurred',
@@ -165,10 +164,6 @@ export async function sendToMakeWebhookWithRetry(
     }
   }
 
-  console.error(
-    `❌ Make.com webhook failed after ${webhookConfig.retryAttempts} attempts:`,
-    lastError
-  );
   return {
     success: false,
     error: lastError,

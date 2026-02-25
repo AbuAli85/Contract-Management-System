@@ -98,7 +98,6 @@ export default function ContractReportsTable() {
 
       setContracts(mappedData as ContractReportItem[]);
     } catch (error: any) {
-      console.error('Error fetching contracts:', error);
       toast({
         title: 'Error Fetching Contracts',
         description: error.message,

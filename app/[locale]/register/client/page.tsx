@@ -40,7 +40,7 @@ export default function ClientRegistrationPage() {
   };
 
   const handleRegistrationError = (error: string) => {
-    console.error('Registration error:', error);
+
     // Error is handled by the form component
   };
 

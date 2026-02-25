@@ -56,7 +56,6 @@ export async function GET(
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching password history:', error);
       return NextResponse.json(
         { error: 'Failed to fetch password history' },
         { status: 500 }
@@ -69,7 +68,6 @@ export async function GET(
       count: history?.length || 0,
     });
   } catch (error) {
-    console.error('Password history API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -6,7 +6,6 @@ export const GET = withAnyRBAC(
   ['company:read:own', 'company:read:organization', 'company:read:all'],
   async (request: NextRequest) => {
     try {
-      console.log('🔍 Companies API: Starting request...');
 
       const supabase = await createClient();
       const { searchParams } = new URL(request.url);
@@ -14,9 +13,6 @@ export const GET = withAnyRBAC(
 
       // Check if we're using a mock client
       if (!supabase || typeof supabase.from !== 'function') {
-        console.error(
-          '❌ Companies API: Using mock client - environment variables may be missing'
-        );
         return NextResponse.json(
           {
             success: true,
@@ -28,7 +24,6 @@ export const GET = withAnyRBAC(
         );
       }
 
-      console.log('🔍 Companies API: Fetching companies from database...');
 
       // Build query based on filters
       let query = supabase
@@ -46,24 +41,14 @@ export const GET = withAnyRBAC(
           await query.limit(50);
 
         if (companiesError) {
-          console.warn(
-            '⚠️ Companies API: Error fetching companies:',
-            companiesError.message
-          );
           companies = [];
         } else {
           companies = companiesData || [];
         }
       } catch (error) {
-        console.warn(
-          '⚠️ Companies API: Company fetch failed, continuing with empty array'
-        );
         companies = [];
       }
 
-      console.log(
-        `✅ Companies API: Successfully fetched ${companies?.length || 0} companies`
-      );
 
       return NextResponse.json({
         success: true,
@@ -71,7 +56,6 @@ export const GET = withAnyRBAC(
         count: companies?.length || 0,
       });
     } catch (error) {
-      console.error('❌ Companies API: Unexpected error:', error);
       return NextResponse.json(
         {
           success: true, // Return success to avoid errors
@@ -139,7 +123,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating company:', error);
       return NextResponse.json(
         {
           success: false,
@@ -152,7 +135,6 @@ export async function POST(request: NextRequest) {
 
     // If this is a provider registration, update the user's role
     if (role === 'provider') {
-      console.log('Assigning provider role to user:', session.user.id);
 
       // Update users table
       const { error: userRoleError } = await supabase.from('users').upsert({
@@ -165,7 +147,6 @@ export async function POST(request: NextRequest) {
       });
 
       if (userRoleError) {
-        console.error('Error updating user role:', userRoleError);
       }
 
       // Also update user_roles table for redundancy
@@ -179,10 +160,8 @@ export async function POST(request: NextRequest) {
         });
 
       if (userRolesError) {
-        console.error('Error updating user_roles:', userRolesError);
       }
 
-      console.log('Provider role assignment completed');
     }
 
     return NextResponse.json({
@@ -194,7 +173,6 @@ export async function POST(request: NextRequest) {
           : 'Company registered successfully',
     });
   } catch (error) {
-    console.error('Create company error:', error);
     return NextResponse.json(
       {
         success: false,

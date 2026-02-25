@@ -50,7 +50,6 @@ export function LoginDebugger() {
       try {
         responseData = JSON.parse(responseText);
       } catch (parseError) {
-        console.error('🔍 Debug Login - JSON parse error:', parseError);
         setError(`Invalid JSON response: ${responseText}`);
         return;
       }
@@ -71,14 +70,12 @@ export function LoginDebugger() {
           `Login successful! Welcome ${responseData.user?.user_metadata?.full_name || responseData.user?.email}`
         );
       } else {
-        console.error('🔍 Debug Login - Login failed:', responseData);
         setError(
           responseData.error ||
             `HTTP ${response.status}: ${response.statusText}`
         );
       }
     } catch (fetchError) {
-      console.error('🔍 Debug Login - Fetch error:', fetchError);
       setError(
         `Network error: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`
       );
@@ -111,7 +108,6 @@ export function LoginDebugger() {
 
       setDebugInfo(debugData);
     } catch (fetchError) {
-      console.error('🔍 Debug Login - GET test error:', fetchError);
       setError(
         `GET test failed: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`
       );

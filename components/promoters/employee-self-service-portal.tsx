@@ -161,7 +161,6 @@ export function EmployeeSelfServicePortal({
         ]);
       }
     } catch (error) {
-      console.error('Error fetching employee data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load employee data',
@@ -195,7 +194,6 @@ export function EmployeeSelfServicePortal({
         );
       }
     } catch (error) {
-      console.error('Error fetching tasks:', error);
     }
   };
 
@@ -223,7 +221,6 @@ export function EmployeeSelfServicePortal({
         );
       }
     } catch (error) {
-      console.error('Error fetching targets:', error);
     }
   };
 
@@ -241,7 +238,6 @@ export function EmployeeSelfServicePortal({
         setPayrollEntries(data as PayrollEntry[]);
       }
     } catch (error) {
-      console.error('Error fetching payroll:', error);
     }
   };
 
@@ -274,7 +270,6 @@ export function EmployeeSelfServicePortal({
         );
       }
     } catch (error) {
-      console.error('Error fetching letters:', error);
     }
   };
 

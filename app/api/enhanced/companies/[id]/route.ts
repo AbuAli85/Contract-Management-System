@@ -45,7 +45,6 @@ export const GET = withRBAC(
         data: company,
       });
     } catch (error: any) {
-      console.error('Error in company GET API:', error);
 
       if (error.message.includes('permissions')) {
         return NextResponse.json({ error: error.message }, { status: 403 });

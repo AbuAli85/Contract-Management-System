@@ -99,7 +99,6 @@ export async function verifyUserRoleFromToken(
 
     return { role: 'user', isValid: true, userId: user.id };
   } catch (error) {
-    console.error('Role verification error:', error);
     return { role: 'anonymous', isValid: false };
   }
 }
@@ -120,11 +119,9 @@ async function updateUserCustomClaims(
     });
 
     if (error) {
-      console.warn('Failed to update custom claims:', error.message);
     } else {
     }
   } catch (error) {
-    console.warn('Custom claims update failed:', error);
   }
 }
 

@@ -137,7 +137,7 @@ export default function ProviderRegistrationPage() {
         // If approval is required, redirect to check status page
         if (result.requiresApproval) {
           setTimeout(() => {
-            window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/check-registration`;
+            window.location.href = `/${(window.location.pathname.match(/^\/([a-z]{2})\//)?.[1] ?? 'en')}/check-registration`;
           }, 3000);
         } else {
           // Direct access (legacy path)
@@ -146,11 +146,11 @@ export default function ProviderRegistrationPage() {
           }, 3000);
         }
       } else {
-        console.error('❌ Registration failed:', result);
+
         alert(`Registration failed: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('❌ Registration error:', error);
+
       alert('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -167,7 +167,7 @@ export default function ProviderRegistrationPage() {
   };
 
   const _handleRegistrationError = (error: string) => {
-    console.error('Registration error:', error);
+
     // Error is handled by the form component
   };
 
