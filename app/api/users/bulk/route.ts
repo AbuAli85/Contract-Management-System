@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isAdminOrManager } from '@/lib/auth/get-company-role';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,14 +10,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || !['admin', 'employer', 'manager'].includes(profile.role)) {
+    // Check admin role — use user_roles (canonical source)
+    const adminOrManager = await isAdminOrManager(supabase);
+    if (!adminOrManager) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 

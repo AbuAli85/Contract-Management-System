@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { isAdminOrManager } from '@/lib/auth/get-company-role';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -23,21 +24,21 @@ async function getTeamHandler(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const employerId = searchParams.get('employer_id') || user.id;
 
-    // Verify user is the employer or admin
+    // Verify user is the employer or admin — use user_roles (canonical source)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, id, active_company_id, email')
-      .eq('id', user.id)
+      .select('id, active_company_id, email')
+      .eq('user_id', user.id)
       .single();
 
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    const isAdmin = profile.role === 'admin' || profile.role === 'manager';
+    const adminOrManager = await isAdminOrManager(supabase, profile.active_company_id);
     const isOwnTeam = employerId === user.id;
 
-    if (!isAdmin && !isOwnTeam) {
+    if (!adminOrManager && !isOwnTeam) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }
