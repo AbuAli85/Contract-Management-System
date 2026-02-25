@@ -4,12 +4,14 @@ import OpenAI from 'openai';
 
 export const dynamic = 'force-dynamic';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL,
-});
-
 export async function POST(request: NextRequest) {
+  // Instantiate inside the handler so it only runs at request time,
+  // not at build time when OPENAI_API_KEY may not be available.
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    baseURL: process.env.OPENAI_BASE_URL,
+  });
+
   try {
     const supabase = await createClient();
     const {
