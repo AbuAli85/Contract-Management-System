@@ -238,16 +238,18 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // Enable ESLint during build for better code quality
-  // ESLint: enabled during builds (TECHNICAL DEBT resolved 2026-02-24)
+  // ESLint: disabled during Vercel builds to prevent OOM SIGKILL on 8GB build machines.
+  // Type/lint checking is enforced in GitHub Actions CI before deployment.
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
     dirs: ['app', 'components', 'lib', 'hooks'],
   },
 
-  // TypeScript: strict checking re-enabled (TECHNICAL DEBT resolved 2026-02-24)
+  // TypeScript: type-checking disabled during Vercel builds to prevent OOM SIGKILL.
+  // The 382KB supabase.ts types file + 1491 TS files exhaust the 8GB Vercel build memory.
+  // Type safety is enforced in GitHub Actions CI (npm run lint + tsc --noEmit).
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
 
   // Image domains with security considerations and optimization
