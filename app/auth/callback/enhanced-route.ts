@@ -13,8 +13,6 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
 
-    console.log(`🔐 Enhanced Auth Callback [${requestId}]: Processing request`);
-
     // Handle OAuth errors
     if (error) {
       console.error(
@@ -59,10 +57,6 @@ export async function GET(request: NextRequest) {
         `${origin}/en/auth/login?error=no_code&message=No authorization code provided`
       );
     }
-
-    console.log(
-      `🔐 Enhanced Auth Callback [${requestId}]: Exchanging code for session`
-    );
 
     const supabase = await createClient();
 
@@ -112,11 +106,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(
-      `🔐 Enhanced Auth Callback [${requestId}]: Session established for user:`,
-      data.session.user.email
-    );
-
     // Check if user needs to complete profile setup
     const needsProfileSetup = await checkProfileSetup(
       data.session.user.id,
@@ -124,9 +113,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (needsProfileSetup) {
-      console.log(
-        `🔐 Enhanced Auth Callback [${requestId}]: User needs profile setup`
-      );
       return NextResponse.redirect(
         `${origin}/en/onboarding?user_id=${data.session.user.id}`
       );
@@ -139,9 +125,6 @@ export async function GET(request: NextRequest) {
     );
 
     if (mfaRequired) {
-      console.log(
-        `🔐 Enhanced Auth Callback [${requestId}]: MFA required for user`
-      );
       return NextResponse.redirect(
         `${origin}/en/auth/mfa-setup?user_id=${data.session.user.id}`
       );
@@ -149,11 +132,6 @@ export async function GET(request: NextRequest) {
 
     // Validate redirect URL for security
     const validatedNext = validateRedirectUrl(next, origin);
-
-    console.log(
-      `🔐 Enhanced Auth Callback [${requestId}]: Redirecting to:`,
-      validatedNext
-    );
 
     // Set security headers
     const response = NextResponse.redirect(`${origin}${validatedNext}`);
@@ -263,10 +241,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { state, code, provider } = body;
 
-    console.log(
-      `🔐 Enhanced Auth Callback POST [${requestId}]: Processing OAuth state verification`
-    );
-
     if (!state || !code) {
       const errorDetails = SupabaseErrorHandler.createError(
         'Missing required OAuth parameters',
@@ -331,11 +305,6 @@ export async function POST(request: NextRequest) {
         }
       );
     }
-
-    console.log(
-      `🔐 Enhanced Auth Callback POST [${requestId}]: OAuth session established for user:`,
-      data.session.user.email
-    );
 
     // Return success response with session info
     return NextResponse.json({

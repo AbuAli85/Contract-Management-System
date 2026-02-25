@@ -78,8 +78,6 @@ export class GoogleDocsServiceSA {
     errorDetails?: any;
   }> {
     try {
-      console.log('📄 Starting contract generation with Service Account...');
-
       // Step 0: Check storage quota first
       try {
         const about = await this.drive.about.get({
@@ -91,13 +89,8 @@ export class GoogleDocsServiceSA {
           const limit = parseInt(quota.limit);
           const available = limit - used;
           const usedPercent = ((used / limit) * 100).toFixed(1);
-          console.log(
-            `💾 Storage: ${usedPercent}% used (${Math.round(available / 1024 / 1024)} MB available)`
-          );
         }
-      } catch (quotaError) {
-        console.log('⚠️ Could not check storage quota:', quotaError);
-      }
+      } catch (quotaError) {}
 
       // Step 1: Copy template
       const copyResult = await this.copyTemplate(contractData.contract_number);
@@ -110,7 +103,6 @@ export class GoogleDocsServiceSA {
       }
 
       const documentId = copyResult.documentId;
-      console.log(`✅ Template copied: ${documentId}`);
 
       // Step 2: Replace all text placeholders
       const replaceResult = await this.replaceTextInDocument(
@@ -120,8 +112,6 @@ export class GoogleDocsServiceSA {
       if (!replaceResult.success) {
         return { success: false, error: 'Failed to replace text' };
       }
-
-      console.log('✅ Text replacements completed');
 
       // Step 3: Get document URLs
       const documentUrl = `https://docs.google.com/document/d/${documentId}/edit`;
@@ -152,17 +142,12 @@ export class GoogleDocsServiceSA {
     errorDetails?: any;
   }> {
     try {
-      console.log('🔍 Attempting to copy template...');
-      console.log('   Template ID:', TEMPLATE_ID);
-      console.log('   New name:', `Contract - ${contractNumber}`);
-
       // First, let's try to get template info to verify access
       try {
         const templateInfo = await this.drive.files.get({
           fileId: TEMPLATE_ID,
           fields: 'id, name, permissions, owners',
         });
-        console.log('✅ Template access verified:', templateInfo.data.name);
       } catch (accessError: any) {
         console.error('❌ Cannot access template:', accessError.message);
         return {
@@ -182,7 +167,6 @@ export class GoogleDocsServiceSA {
         },
       });
 
-      console.log('✅ Template copied successfully:', response.data.id);
       return {
         success: true,
         documentId: response.data.id,

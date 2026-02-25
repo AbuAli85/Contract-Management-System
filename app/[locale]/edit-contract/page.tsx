@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 /**
@@ -10,15 +10,8 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
  */
 export default function EditContractRedirectPage() {
   const router = useRouter();
-  const pathname = usePathname();
-
-  // Extract locale from pathname
-  const locale =
-    pathname && pathname.startsWith('/en/')
-      ? 'en'
-      : pathname && pathname.startsWith('/ar/')
-        ? 'ar'
-        : 'en';
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
 
   useEffect(() => {
     // Redirect to contracts list if no contract ID is provided

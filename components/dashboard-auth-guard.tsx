@@ -39,7 +39,6 @@ export function DashboardAuthGuard({
       const now = Date.now();
       if (now - lastStatusCheck < 300000) {
         // 300 second debounce (increased from 120 to match main AuthGuard)
-        console.log('🔐 Skipping user status check (debounced)');
         return;
       }
 
@@ -53,8 +52,6 @@ export function DashboardAuthGuard({
       }, 5000); // 5 second timeout
 
       try {
-        console.log('🔐 Checking user status for:', session.user.id);
-
         // Check user status in both users and profiles tables
         const { data: userData, error: userError } = await supabase
           .from('users')
@@ -63,7 +60,6 @@ export function DashboardAuthGuard({
           .single();
 
         if (!userError && userData) {
-          console.log('🔐 User status found in users table:', userData.status);
           setUserStatus(userData.status as string);
 
           if (userData.status === 'pending') {
@@ -82,9 +78,6 @@ export function DashboardAuthGuard({
             return;
           }
         } else {
-          console.log(
-            '🔐 User not found in users table, checking profiles table...'
-          );
           // Try profiles table as fallback
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
@@ -93,10 +86,6 @@ export function DashboardAuthGuard({
             .single();
 
           if (!profileError && profileData) {
-            console.log(
-              '🔐 User status found in profiles table:',
-              profileData.status
-            );
             setUserStatus(profileData.status as string);
 
             if (profileData.status === 'pending') {
@@ -115,9 +104,6 @@ export function DashboardAuthGuard({
               return;
             }
           } else {
-            console.log(
-              '🔐 User not found in profiles table either, allowing access'
-            );
             // If user doesn't exist in either table, allow access (new user)
             setUserStatus('active');
           }
@@ -150,17 +136,10 @@ export function DashboardAuthGuard({
   // Check user role when required
   useEffect(() => {
     const checkUserRole = async () => {
-      console.log('🔐 DashboardAuthGuard: Starting role check', {
-        hasSession: !!session?.user,
-        checkingRole,
-        requiredRole,
-      });
-
       if (!session?.user || checkingRole) return;
 
       // If no role requirement, allow access
       if (!requiredRole) {
-        console.log('🔐 No role requirement - allowing access');
         return;
       }
 
@@ -168,7 +147,6 @@ export function DashboardAuthGuard({
       const now = Date.now();
       if (now - lastRoleCheck < 30000) {
         // 30 second debounce (increased from 10)
-        console.log('🔐 Skipping user role check (debounced)');
         return;
       }
 
@@ -187,9 +165,6 @@ export function DashboardAuthGuard({
 
           // Admin users should have access to everything
           if (data.role.value === 'admin') {
-            console.log(
-              '🔐 Admin user detected - granting access to all dashboards'
-            );
             setUserRole(data.role.value);
             return;
           }

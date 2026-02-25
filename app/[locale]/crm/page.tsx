@@ -20,7 +20,6 @@ export default function CRMPage() {
       try {
         setPromotersLoading(true);
         setError(null);
-        console.log('Fetching promoters...');
 
         const supabase = createClient();
         if (!supabase) {
@@ -30,8 +29,6 @@ export default function CRMPage() {
           .from('promoters')
           .select('id')
           .order('created_at', { ascending: false });
-
-        console.log('Promoters fetch result:', { data, error });
 
         if (error) {
           console.error('Error fetching promoters:', error);
@@ -52,15 +49,6 @@ export default function CRMPage() {
 
     fetchPromoters();
   }, []);
-
-  console.log('CRM Page state:', {
-    userRole,
-    loading,
-    isAdmin,
-    promotersLoading,
-    promoters,
-    error,
-  });
 
   if (loading || isLoading)
     return <div className='p-8 text-center'>Loading authentication...</div>;

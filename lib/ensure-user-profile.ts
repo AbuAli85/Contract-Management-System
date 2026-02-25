@@ -13,10 +13,6 @@ import { User } from '@supabase/supabase-js';
 export async function ensureUserProfile(user: User) {
   const supabase = await createClient();
 
-  console.log(
-    `[ensureUserProfile] Checking profile for user ${user.id} (${user.email})`
-  );
-
   // First, try to fetch the profile
   const { data: profile, error: fetchError } = await supabase
     .from('profiles')
@@ -36,14 +32,10 @@ export async function ensureUserProfile(user: User) {
 
   if (profile) {
     // Profile already exists, return it
-    console.log(`[ensureUserProfile] Profile found for user ${user.id}`);
     return profile;
   }
 
   // Profile does not exist, so create it
-  console.log(
-    `[ensureUserProfile] No profile found for user ${user.id}. Creating one.`
-  );
 
   const newUserProfile = {
     id: user.id,
@@ -71,8 +63,5 @@ export async function ensureUserProfile(user: User) {
     throw new Error(`Failed to create user profile: ${createError.message}`);
   }
 
-  console.log(
-    `[ensureUserProfile] Successfully created profile for user ${user.id}.`
-  );
   return createdProfile;
 }

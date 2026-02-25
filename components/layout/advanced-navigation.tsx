@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import React from 'react';
 import Link from 'next/link';
@@ -168,7 +169,11 @@ const navigationItems: NavigationItem[] = [
 ];
 
 const quickActions = [
-  { name: 'New Contract', href: '/en/generate-contract', icon: FileText },
+  {
+    name: 'New Contract',
+    href: `/${locale}/generate-contract`,
+    icon: FileText,
+  },
   { name: 'Book Resource', href: '/booking/new', icon: Calendar },
   { name: 'Create Project', href: '/tracking/projects/new', icon: Briefcase },
   { name: 'Search', href: '/search', icon: Search },
@@ -183,6 +188,8 @@ export function AdvancedNavigation({
   className,
   onItemClick,
 }: AdvancedNavigationProps) {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const pathname = usePathname();
 
   const isActiveRoute = (href: string) => {

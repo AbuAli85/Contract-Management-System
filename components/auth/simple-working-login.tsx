@@ -48,8 +48,6 @@ export default function SimpleWorkingLogin() {
     setError('');
 
     try {
-      console.log('🔐 Simple Login - Attempting login with:', email);
-
       // Step 1: Try Supabase auth login
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
@@ -68,7 +66,6 @@ export default function SimpleWorkingLogin() {
         return;
       }
 
-      console.log('🔐 Simple Login - Auth successful:', authData.user.id);
       setMessage('Login successful! Redirecting...');
 
       // Step 2: Get user profile to determine redirect
@@ -78,29 +75,25 @@ export default function SimpleWorkingLogin() {
         .eq('id', authData.user.id)
         .single();
 
-      let redirectPath = '/en/dashboard';
+      let redirectPath = `/${locale}/dashboard`;
 
       if (!profileError && userProfile && userProfile.role) {
-        console.log('🔐 Simple Login - User role:', userProfile.role);
-
         // Route based on role
         switch (userProfile.role) {
           case 'provider':
-            redirectPath = '/en/dashboard/provider-comprehensive';
+            redirectPath = `/${locale}/dashboard/provider-comprehensive`;
             break;
           case 'client':
-            redirectPath = '/en/dashboard/client-comprehensive';
+            redirectPath = `/${locale}/dashboard/client-comprehensive`;
             break;
           case 'admin':
           case 'super_admin':
-            redirectPath = '/en/dashboard';
+            redirectPath = `/${locale}/dashboard`;
             break;
           default:
-            redirectPath = '/en/dashboard';
+            redirectPath = `/${locale}/dashboard`;
         }
       }
-
-      console.log('🔐 Simple Login - Redirecting to:', redirectPath);
 
       // Use Next.js router for proper navigation
       setTimeout(() => {

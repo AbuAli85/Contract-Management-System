@@ -41,7 +41,9 @@ export default function Error({
             <Button onClick={() => reset()}>Try Again</Button>
             <Button
               variant='outline'
-              onClick={() => (window.location.href = '/en/promoters')}
+              onClick={() =>
+                (window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/promoters`)
+              }
             >
               Go to Promoters
             </Button>

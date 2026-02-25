@@ -39,8 +39,6 @@ export class PerformanceMonitor {
       this.metrics.shift();
     }
 
-    console.log(`⏱️ [Performance] Started: ${operationName}`, metadata);
-
     return operationId;
   }
 
@@ -75,13 +73,6 @@ export class PerformanceMonitor {
 
     const emoji = success ? '✅' : '❌';
     const status = success ? 'Completed' : 'Failed';
-
-    console.log(`${emoji} [Performance] ${status}: ${operationName}`, {
-      duration: `${metric.duration}ms`,
-      success,
-      error,
-      ...metadata,
-    });
 
     // Log warning if operation is slow
     if (metric.duration > 3000) {
@@ -136,7 +127,6 @@ export class PerformanceMonitor {
    */
   clear(): void {
     this.metrics = [];
-    console.log('🧹 [Performance] Metrics cleared');
   }
 
   /**
@@ -238,11 +228,4 @@ export function logApiCall(
   metadata?: Record<string, any>
 ): void {
   const emoji = success ? '✅' : '❌';
-  console.log(`${emoji} [API] ${method} ${endpoint}`, {
-    duration: `${duration}ms`,
-    status,
-    success,
-    timestamp: new Date().toISOString(),
-    ...metadata,
-  });
 }

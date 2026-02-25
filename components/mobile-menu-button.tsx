@@ -9,7 +9,6 @@ interface MobileMenuButtonProps {
 
 export function MobileMenuButton({ isOpen, onToggle }: MobileMenuButtonProps) {
   const handleToggle = () => {
-    console.log('🧭 MobileMenuButton: Toggling sidebar', { isOpen: !isOpen });
     onToggle();
   };
 

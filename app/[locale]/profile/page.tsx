@@ -174,7 +174,6 @@ export default function ProfilePage() {
         });
       } else if (profileResponse.status === 403) {
         // Wait for auto-fix and retry
-        console.log('🔄 Profile access denied, waiting for auto-fix...');
         await new Promise(resolve => setTimeout(resolve, 1500));
         const retryResponse = await fetch('/api/users/profile');
         if (retryResponse.ok) {
@@ -213,7 +212,6 @@ export default function ProfilePage() {
         setActivity(activityData.activities || []);
       } else if (activityResponse.status === 403) {
         // Wait for auto-fix and retry
-        console.log('🔄 Activity access denied, waiting for auto-fix...');
         await new Promise(resolve => setTimeout(resolve, 1500));
         const retryResponse = await fetch('/api/users/activity?limit=10');
         if (retryResponse.ok) {

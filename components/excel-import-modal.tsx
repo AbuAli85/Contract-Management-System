@@ -163,14 +163,6 @@ export default function ExcelImportModal({
       setProgress(0);
 
       try {
-        console.log('=== FILE PROCESSING DEBUG START ===');
-        console.log(
-          'Processing file:',
-          selectedFile.name,
-          'Size:',
-          selectedFile.size
-        );
-
         const arrayBuffer = await selectedFile.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, {
           type: 'array',
@@ -179,13 +171,9 @@ export default function ExcelImportModal({
           dateNF: 'yyyy-mm-dd',
         });
 
-        console.log('Workbook sheets:', workbook.SheetNames);
-
         // Get the first sheet
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-
-        console.log('Processing sheet:', sheetName);
 
         // Convert to JSON (row arrays) keeping empty cells as ''
         const jsonData = XLSX.utils.sheet_to_json(worksheet, {
@@ -193,9 +181,6 @@ export default function ExcelImportModal({
           raw: false,
           defval: '',
         });
-
-        console.log('Raw JSON data length:', jsonData.length);
-        console.log('Raw JSON data:', jsonData);
 
         if (jsonData.length < 2) {
           throw new Error(
@@ -206,10 +191,6 @@ export default function ExcelImportModal({
         // Extract headers and data
         const headers = jsonData[0] as string[];
         const dataRows = jsonData.slice(1) as any[][];
-
-        console.log('Headers:', headers);
-        console.log('Data rows count:', dataRows.length);
-        console.log('Data rows:', dataRows);
 
         // Build header index map with tolerant matching (underscores, punctuation → spaces)
         const normalize = (s: string) =>
@@ -299,8 +280,6 @@ export default function ExcelImportModal({
 
         // Map data to PromoterData interface
         const mappedData: PromoterData[] = dataRows.map((row, index) => {
-          console.log(`Mapping row ${index + 1}:`, row);
-
           const toISODate = (value: any): string | null => {
             if (value == null || value === '') return null;
 
@@ -321,16 +300,12 @@ export default function ExcelImportModal({
             const dateStr = String(value).trim();
             if (!dateStr) return null;
 
-            console.log(`Formatting date: "${dateStr}"`);
-
             // Try dd-mm-yyyy format (with dashes)
             if (dateStr.includes('-') && dateStr.length === 10) {
               const parts = dateStr.split('-');
-              console.log(`Split by -: ${parts}`);
               if (parts.length === 3) {
                 // Check if it's already in yyyy-mm-dd format
                 if (parts[0].length === 4) {
-                  console.log(`Already in yyyy-mm-dd format: ${dateStr}`);
                   return dateStr;
                 }
                 // Convert dd-mm-yyyy to yyyy-mm-dd
@@ -338,7 +313,6 @@ export default function ExcelImportModal({
                 const month = parts[1].padStart(2, '0');
                 const year = parts[2];
                 const formattedDate = `${year}-${month}-${day}`;
-                console.log(`Formatted dd-mm-yyyy: ${formattedDate}`);
                 return formattedDate;
               }
             }
@@ -346,13 +320,11 @@ export default function ExcelImportModal({
             // Try dd/mm/yyyy format
             if (dateStr.includes('/')) {
               const parts = dateStr.split('/');
-              console.log(`Split by /: ${parts}`);
               if (parts.length === 3) {
                 const day = parts[0].padStart(2, '0');
                 const month = parts[1].padStart(2, '0');
                 const year = parts[2];
                 const formattedDate = `${year}-${month}-${day}`;
-                console.log(`Formatted dd/mm/yyyy: ${formattedDate}`);
                 return formattedDate;
               }
             }
@@ -360,13 +332,11 @@ export default function ExcelImportModal({
             // Try dd.mm.yyyy format
             if (dateStr.includes('.')) {
               const parts = dateStr.split('.');
-              console.log(`Split by .: ${parts}`);
               if (parts.length === 3) {
                 const day = parts[0].padStart(2, '0');
                 const month = parts[1].padStart(2, '0');
                 const year = parts[2];
                 const formattedDate = `${year}-${month}-${day}`;
-                console.log(`Formatted dd.mm.yyyy: ${formattedDate}`);
                 return formattedDate;
               }
             }
@@ -376,7 +346,6 @@ export default function ExcelImportModal({
               return dateStr;
             }
 
-            console.log(`Could not format date: "${dateStr}"`);
             return null;
           };
 
@@ -409,40 +378,28 @@ export default function ExcelImportModal({
             }
           }
 
-          console.log(`Mapped row ${index + 1}:`, mappedRow);
           return mappedRow;
         });
-
-        console.log('Final mapped data:', mappedData);
 
         // Filter out empty rows
         const validData = mappedData.filter(row => {
           const isValid = row.name_en && row.id_card_number;
-          console.log(
-            `Row validation: ${row.name_en} - ${row.id_card_number} = ${isValid}`
-          );
 
           // Additional validation for required fields
           if (!row.name_en) {
-            console.log(`Row skipped: Missing English name`);
             return false;
           }
           if (!row.id_card_number) {
-            console.log(`Row skipped: Missing ID card number`);
             return false;
           }
 
           return isValid;
         });
 
-        console.log('Valid data count:', validData.length);
-        console.log('Valid data:', validData);
-
         if (validData.length === 0) {
           throw new Error('No valid promoter data found in the file');
         }
 
-        console.log('=== FILE PROCESSING DEBUG END ===');
         setPreviewData(validData);
         setStep('preview');
       } catch (error) {
@@ -476,12 +433,6 @@ export default function ExcelImportModal({
     setStep('import');
 
     try {
-      console.log('=== IMPORT DEBUG START ===');
-      console.log(
-        'Starting import process for',
-        previewData.length,
-        'promoters'
-      );
       setProgress(10);
 
       const response = await fetch('/api/promoters/import', {

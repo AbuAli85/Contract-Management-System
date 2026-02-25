@@ -146,10 +146,6 @@ export default function ProductionLoginForm() {
     setCaptchaError('');
 
     try {
-      console.log('🔐 Production Login - Starting login process...');
-      console.log('🔐 Production Login - Email:', formData.email);
-      console.log('🔐 Production Login - CAPTCHA Required:', captchaRequired);
-
       // Prepare request body
       const requestBody: any = {
         email: formData.email.trim(),
@@ -185,7 +181,6 @@ export default function ProductionLoginForm() {
         return;
       }
 
-      console.log('🔐 Production Login - Login successful:', data.user.id);
       setSuccess('Login successful! Redirecting...');
 
       // Get user profile to determine redirect
@@ -219,28 +214,31 @@ export default function ProductionLoginForm() {
 
       // Determine redirect path based on role
       const userRole = profile?.role || data.user.user_metadata?.role || 'user';
-      let redirectPath = '/en/dashboard';
+      const currentLocale =
+        typeof window !== 'undefined' &&
+        window.location.pathname.startsWith('/ar/')
+          ? 'ar'
+          : 'en';
+      let redirectPath = `/${currentLocale}/dashboard`;
 
       switch (userRole) {
         case 'provider':
-          redirectPath = '/en/dashboard/provider-comprehensive';
+          redirectPath = `/${currentLocale}/dashboard/provider-comprehensive`;
           break;
         case 'client':
-          redirectPath = '/en/dashboard/client-comprehensive';
+          redirectPath = `/${currentLocale}/dashboard/client-comprehensive`;
           break;
         case 'admin':
         case 'super_admin':
-          redirectPath = '/en/dashboard';
+          redirectPath = `/${currentLocale}/dashboard`;
           break;
         case 'hr_admin':
         case 'hr_staff':
-          redirectPath = '/en/hr';
+          redirectPath = `/${currentLocale}/hr`;
           break;
         default:
-          redirectPath = '/en/dashboard';
+          redirectPath = `/${currentLocale}/dashboard`;
       }
-
-      console.log('🔐 Production Login - Redirecting to:', redirectPath);
 
       // Redirect after a short delay
       setTimeout(() => {

@@ -240,9 +240,6 @@ export class ContractNotificationService {
         return { success: false, pdfUrl, error: result.error };
       }
 
-      console.log(
-        `✅ ContractNotificationService: contract-ready email sent to ${input.recipientEmail} (messageId: ${result.messageId})`
-      );
       return { success: true, messageId: result.messageId, pdfUrl };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -279,9 +276,6 @@ export class ContractNotificationService {
         return { success: false, error: result.error };
       }
 
-      console.log(
-        `✅ ContractNotificationService: approval-request email sent to ${input.approverEmail}`
-      );
       return { success: true, messageId: result.messageId };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -318,9 +312,6 @@ export class ContractNotificationService {
         return { success: false, error: result.error };
       }
 
-      console.log(
-        `✅ ContractNotificationService: status-change email sent to ${input.recipientEmail}`
-      );
       return { success: true, messageId: result.messageId };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

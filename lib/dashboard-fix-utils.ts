@@ -81,7 +81,6 @@ export async function testDashboardEndpoints(): Promise<{
 
     if (statsResponse.ok) {
       stats = await statsResponse.json();
-      console.log('✅ Stats API working:', stats);
     } else {
       errors.push(
         `Stats API failed: ${statsResponse.status} ${statsResponse.statusText}`
@@ -103,7 +102,6 @@ export async function testDashboardEndpoints(): Promise<{
 
     if (notificationsResponse.ok) {
       notifications = await notificationsResponse.json();
-      console.log('✅ Notifications API working:', notifications);
     } else {
       errors.push(
         `Notifications API failed: ${notificationsResponse.status} ${notificationsResponse.statusText}`
@@ -125,7 +123,6 @@ export async function testDashboardEndpoints(): Promise<{
 
     if (activitiesResponse.ok) {
       activities = await activitiesResponse.json();
-      console.log('✅ Activities API working:', activities);
     } else {
       errors.push(
         `Activities API failed: ${activitiesResponse.status} ${activitiesResponse.statusText}`
@@ -154,12 +151,4 @@ export function calculateSummaryMetrics(data: DashboardData) {
 /**
  * Debug dashboard data issues
  */
-export function debugDashboardData(data: any) {
-  console.log('🔍 Dashboard Data Debug:');
-  console.log('- Raw data:', data);
-  console.log('- Data type:', typeof data);
-  console.log('- Is object:', typeof data === 'object');
-  console.log('- Has totalPromoters:', 'totalPromoters' in data);
-  console.log('- totalPromoters value:', data?.totalPromoters);
-  console.log('- totalPromoters type:', typeof data?.totalPromoters);
-}
+export function debugDashboardData(data: any) {}

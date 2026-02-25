@@ -54,7 +54,6 @@ export class SimpleNotificationService {
         return { success: false, error: error.message };
       }
 
-      console.log('Notification created successfully');
       return { success: true, error: null };
     } catch (error) {
       console.error('Error in createNotification:', error);

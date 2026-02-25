@@ -11,8 +11,6 @@ export function SampleDataButton() {
   const handleCreateSampleData = async () => {
     setIsLoading(true);
     try {
-      console.log('🎯 Creating sample contract...');
-
       const response = await fetch('/api/admin/simple-seed', {
         method: 'POST',
         headers: {
@@ -21,7 +19,6 @@ export function SampleDataButton() {
       });
 
       const result = await response.json();
-      console.log('📄 API Response:', result);
 
       if (result.success) {
         toast.success(

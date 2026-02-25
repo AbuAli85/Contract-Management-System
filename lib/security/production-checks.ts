@@ -261,10 +261,6 @@ export function runAllSecurityChecks(): SecurityCheckReport {
  * Log security check results
  */
 export function logSecurityCheckResults(report: SecurityCheckReport): void {
-  console.log('\n========================================');
-  console.log('🔒 PRODUCTION SECURITY CHECKS');
-  console.log('========================================\n');
-
   report.checks.forEach(check => {
     const icon = check.passed ? '✅' : '❌';
     const severityIcon = {
@@ -273,18 +269,7 @@ export function logSecurityCheckResults(report: SecurityCheckReport): void {
       error: '🚨',
       critical: '🔥',
     }[check.severity];
-
-    console.log(`${icon} ${severityIcon} ${check.message}`);
   });
-
-  console.log('\n========================================');
-  console.log(`Critical Issues: ${report.criticalIssues}`);
-  console.log(`Errors: ${report.errors}`);
-  console.log(`Warnings: ${report.warnings}`);
-  console.log(
-    `Overall Status: ${report.allPassed ? '✅ PASSED' : '❌ FAILED'}`
-  );
-  console.log('========================================\n');
 
   if (report.criticalIssues > 0) {
     console.error(

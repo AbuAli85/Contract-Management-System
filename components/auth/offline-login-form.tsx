@@ -80,8 +80,6 @@ export function OfflineLoginForm() {
     setSuccess(null);
 
     try {
-      console.log('🔒 Attempting offline authentication...');
-
       // Simulate authentication delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -95,8 +93,6 @@ export function OfflineLoginForm() {
           'Invalid credentials. Try: provider@test.com / password123'
         );
       }
-
-      console.log('✅ Offline authentication successful:', user.role);
 
       // Create demo session using session manager
       const session = demoSessionManager.createSession({

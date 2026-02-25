@@ -468,7 +468,7 @@ export function WorkPermitDashboard() {
                             variant='ghost'
                             size='sm'
                             onClick={() =>
-                              router.push(`/en/work-permits/${app.id}`)
+                              router.push(`/${locale}/work-permits/${app.id}`)
                             }
                             title='View Details'
                           >
@@ -479,7 +479,9 @@ export function WorkPermitDashboard() {
                               variant='ghost'
                               size='sm'
                               onClick={() =>
-                                router.push(`/en/work-permits/${app.id}/edit`)
+                                router.push(
+                                  `/${locale}/work-permits/${app.id}/edit`
+                                )
                               }
                               title='Edit Application'
                             >

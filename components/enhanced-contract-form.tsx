@@ -733,17 +733,6 @@ export default function EnhancedContractForm({
       };
 
       // Debug logging
-      console.log('🔍 Form values:', formValues);
-      console.log(
-        '🔍 Contract type being sent:',
-        formValues.contract_type || 'full-time-permanent'
-      );
-      console.log('🔍 Mapped values:', {
-        probationPeriod,
-        noticePeriod,
-        workingHours,
-      });
-      console.log('🔍 Final payload:', payload);
 
       const res = await fetch('/api/contracts/makecom/generate', {
         method: 'POST',

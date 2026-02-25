@@ -90,7 +90,6 @@ export default function DashboardRoleRouter() {
       if (!user) return;
 
       try {
-        console.log('Fetching user role for dashboard routing...');
         const response = await fetch('/api/get-user-role');
         if (!response.ok) {
           throw new Error('Failed to fetch user role');
@@ -98,7 +97,6 @@ export default function DashboardRoleRouter() {
 
         const data = await response.json();
         const role = data.role?.value || 'user';
-        console.log('User role detected:', role);
         setUserRole(role as UserRole);
 
         // Show role info for a moment before redirecting
@@ -106,7 +104,6 @@ export default function DashboardRoleRouter() {
           setRedirecting(true);
           const targetPath =
             roleConfig[role as UserRole]?.dashboardPath || '/dashboard/user';
-          console.log('Redirecting to:', targetPath);
 
           // Force a small delay to show the role confirmation
           setTimeout(() => {

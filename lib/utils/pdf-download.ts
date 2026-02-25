@@ -70,7 +70,6 @@ export async function downloadContractPDF(
 
     // If internal API fails and we have external URL, try fallback
     if (!response.ok && useInternalApi && downloadUrl) {
-      console.log('Internal API failed, trying external URL...');
       finalUrl = downloadUrl;
 
       // Convert Google Drive URL if needed

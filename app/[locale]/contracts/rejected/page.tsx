@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -30,6 +31,8 @@ interface Contract {
 }
 
 export default function RejectedContractsPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -196,7 +199,7 @@ export default function RejectedContractsPage() {
                     </div>
                     <div className='flex items-center gap-2'>
                       <Button variant='outline' size='sm' asChild>
-                        <Link href={`/en/contracts/${contract.id}`}>
+                        <Link href={`/${locale}/contracts/${contract.id}`}>
                           <Eye className='mr-2 h-4 w-4' />
                           View
                         </Link>

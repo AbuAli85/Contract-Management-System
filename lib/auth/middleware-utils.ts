@@ -32,7 +32,6 @@ export async function verifyUserRoleFromToken(
     } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
-      console.log('Auth verification failed:', authError?.message);
       return { role: 'anonymous', isValid: false };
     }
 
@@ -40,7 +39,6 @@ export async function verifyUserRoleFromToken(
     const userRole = user.user_metadata?.role || user.app_metadata?.role;
 
     if (userRole) {
-      console.log('✅ Middleware: Role found in JWT custom claims:', userRole);
       return {
         role: userRole,
         isValid: true,
@@ -56,8 +54,6 @@ export async function verifyUserRoleFromToken(
       .single();
 
     if (!userError && userData && userData.role) {
-      console.log('✅ Middleware: Role found in users table:', userData.role);
-
       // SECURITY FIX: Update JWT custom claims for future requests
       await updateUserCustomClaims(supabase, user.id, userData.role);
 
@@ -76,11 +72,6 @@ export async function verifyUserRoleFromToken(
       .single();
 
     if (!roleError && userRoles) {
-      console.log(
-        '✅ Middleware: Role found in user_roles table:',
-        userRoles.role
-      );
-
       // SECURITY FIX: Update JWT custom claims for future requests
       await updateUserCustomClaims(supabase, user.id, userRoles.role);
 
@@ -93,8 +84,6 @@ export async function verifyUserRoleFromToken(
 
     // If no role found, check if it's admin by email
     if (user.email === 'luxsess2001@gmail.com') {
-      console.log('✅ Middleware: Admin user detected by email');
-
       // SECURITY FIX: Update JWT custom claims for future requests
       await updateUserCustomClaims(supabase, user.id, 'admin');
 
@@ -104,8 +93,6 @@ export async function verifyUserRoleFromToken(
         userId: user.id,
       };
     }
-
-    console.log('⚠️ Middleware: No role found, defaulting to user');
 
     // SECURITY FIX: Update JWT custom claims for future requests
     await updateUserCustomClaims(supabase, user.id, 'user');
@@ -135,7 +122,6 @@ async function updateUserCustomClaims(
     if (error) {
       console.warn('Failed to update custom claims:', error.message);
     } else {
-      console.log('✅ Custom claims updated for user:', userId);
     }
   } catch (error) {
     console.warn('Custom claims update failed:', error);

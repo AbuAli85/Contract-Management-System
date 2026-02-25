@@ -255,10 +255,6 @@ export default function SharafDGDeploymentForm({
         // Always set Sharaf DG as first party (even if draft has different value)
         if (formData.first_party_id !== sharafDG.id) {
           setFormData(prev => ({ ...prev, first_party_id: sharafDG.id }));
-          console.log(
-            '✅ Auto-selected Sharaf DG as First Party:',
-            sharafDG.name_en
-          );
         }
         // Always update the selected client display
         setSelectedClient(sharafDG);
@@ -380,10 +376,6 @@ export default function SharafDGDeploymentForm({
 
       setPromoters(promotersData || []);
       setAllPromoters(promotersData || []);
-
-      console.log(
-        `✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers, ${suppliersList.length} suppliers`
-      );
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
@@ -515,14 +507,10 @@ export default function SharafDGDeploymentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('📝 Form submitted, validating...', formData);
-
     if (!validateForm()) {
       console.error('❌ Validation failed');
       return;
     }
-
-    console.log('✅ Validation passed, creating contract...');
 
     setLoading(true);
 
@@ -591,7 +579,6 @@ export default function SharafDGDeploymentForm({
       };
 
       // Insert contract into database (without pdf_status - column doesn't exist)
-      console.log('📤 Inserting contract:', contractData);
 
       const { data: newContract, error: createError } = await supabase
         .from('contracts')
@@ -603,8 +590,6 @@ export default function SharafDGDeploymentForm({
         console.error('❌ Database error:', createError);
         throw createError;
       }
-
-      console.log('✅ Contract created successfully:', newContract);
 
       setCreatedContractId(newContract.id);
       setContractCreated(true);
@@ -880,39 +865,12 @@ export default function SharafDGDeploymentForm({
       safeWebhookData.stored_second_party_logo_url =
         safeWebhookData.second_party_logo_url || placeholderImages.logo;
 
-      console.log('📤 Sending to Make.com webhook:');
-      console.log('Contract:', {
-        id: safeWebhookData.contract_id,
-        number: safeWebhookData.contract_number,
-        type: safeWebhookData.contract_type,
-      });
-      console.log('Promoter:', {
-        name_en: safeWebhookData.promoter_name_en,
-        name_ar: safeWebhookData.promoter_name_ar,
-        id_card: safeWebhookData.id_card_number,
-        passport: safeWebhookData.passport_number,
-      });
-      console.log('Images:', {
-        id_card_url: safeWebhookData.promoter_id_card_url || '(empty)',
-        passport_url: safeWebhookData.promoter_passport_url || '(empty)',
-        id_card_length: safeWebhookData.promoter_id_card_url?.length || 0,
-        passport_length: safeWebhookData.promoter_passport_url?.length || 0,
-        has_id_card: safeWebhookData.has_id_card_image,
-        has_passport: safeWebhookData.has_passport_image,
-      });
-
       // Test image URL accessibility before sending to Make.com
       if (safeWebhookData.promoter_passport_url) {
-        console.log('🔍 Testing passport URL accessibility...');
         try {
           const testResponse = await fetch(
             safeWebhookData.promoter_passport_url,
             { method: 'HEAD' }
-          );
-          console.log(
-            'Passport URL status:',
-            testResponse.status,
-            testResponse.statusText
           );
           if (!testResponse.ok) {
             console.error(
@@ -927,16 +885,10 @@ export default function SharafDGDeploymentForm({
       }
 
       if (safeWebhookData.promoter_id_card_url) {
-        console.log('🔍 Testing ID card URL accessibility...');
         try {
           const testResponse = await fetch(
             safeWebhookData.promoter_id_card_url,
             { method: 'HEAD' }
-          );
-          console.log(
-            'ID card URL status:',
-            testResponse.status,
-            testResponse.statusText
           );
           if (!testResponse.ok) {
             console.error(
@@ -949,16 +901,6 @@ export default function SharafDGDeploymentForm({
           console.error('❌ ID card URL test failed:', urlError);
         }
       }
-      console.log('Parties:', {
-        first_party: safeWebhookData.first_party_name_en,
-        second_party: safeWebhookData.second_party_name_en,
-        supplier: safeWebhookData.supplier_brand_name_en,
-      });
-      console.log(
-        '📋 Total fields being sent:',
-        Object.keys(safeWebhookData).length
-      );
-      console.log('📋 All payload keys:', Object.keys(safeWebhookData).sort());
 
       // Final sanity check: Ensure critical fields are present
       if (!safeWebhookData.contract_number || !safeWebhookData.contract_id) {
@@ -976,10 +918,6 @@ export default function SharafDGDeploymentForm({
       }
 
       // Log the complete payload being sent (for Make.com debugging)
-      console.log(
-        '📦 COMPLETE WEBHOOK PAYLOAD:',
-        JSON.stringify(safeWebhookData, null, 2)
-      );
 
       // Send to Make.com webhook (using safeWebhookData with placeholders removed)
       const webhookResponse = await fetch(
@@ -1000,7 +938,6 @@ export default function SharafDGDeploymentForm({
       }
 
       const webhookResult = await webhookResponse.text();
-      console.log('✅ Make.com webhook response:', webhookResult);
 
       toast({
         title: 'PDF Generation Started',
@@ -1051,22 +988,12 @@ export default function SharafDGDeploymentForm({
           return;
         }
 
-        console.log(`📊 Poll ${pollCount}/${maxPolls}:`, {
-          status: contract?.status,
-          has_pdf_url: !!contract?.pdf_url,
-          has_google_doc: !!contract?.google_doc_url,
-          has_terms: !!contract?.terms,
-          has_notes: !!contract?.notes,
-        });
-
         // PRIORITY 1: Check pdf_url column directly (Make.com updates this!)
         if (contract?.pdf_url) {
           clearInterval(interval);
           setPdfStatus('ready');
           setPdfUrl(contract.pdf_url);
           setGoogleDriveUrl(contract.google_doc_url || null);
-
-          console.log('✅ PDF Ready! URL:', contract.pdf_url);
 
           toast({
             title: 'PDF Ready!',
@@ -1102,9 +1029,7 @@ export default function SharafDGDeploymentForm({
             });
             return;
           }
-        } catch (parseError) {
-          console.log('Terms parse error (might be normal):', parseError);
-        }
+        } catch (parseError) {}
 
         // Also check notes field for PDF URL (Make.com might update this instead)
         if (contract?.notes) {
@@ -1140,9 +1065,7 @@ export default function SharafDGDeploymentForm({
             ) {
               console.warn('⚠️ Possible error in notes:', contract.notes);
             }
-          } catch (noteParseError) {
-            console.log('Notes parse error:', noteParseError);
-          }
+          } catch (noteParseError) {}
         }
 
         // Check if we've exceeded max polling time

@@ -55,8 +55,6 @@ export function DatabaseErrorLoginForm() {
     setDatabaseStatus('testing');
 
     try {
-      console.log('🔍 Testing database health...');
-
       // Test 1: Basic connection - use a simple query instead of RPC
       const { data: healthData, error: healthError } = await supabase
         .from('users')
@@ -75,9 +73,6 @@ export function DatabaseErrorLoginForm() {
             setDatabaseStatus('error');
             setFallbackMode(true);
           } else {
-            console.log(
-              '✅ Auth service is working, database may be having issues'
-            );
             setDatabaseStatus('error');
           }
         } catch (authError) {
@@ -86,7 +81,6 @@ export function DatabaseErrorLoginForm() {
           setFallbackMode(true);
         }
       } else {
-        console.log('✅ Database health check passed');
         setDatabaseStatus('healthy');
         setFallbackMode(false);
       }
@@ -99,8 +93,6 @@ export function DatabaseErrorLoginForm() {
 
   const clearAuthData = async () => {
     try {
-      console.log('🧹 Clearing authentication data...');
-
       // Clear localStorage
       const keysToRemove = Object.keys(localStorage).filter(
         key => key.includes('supabase') || key.includes('sb-')
@@ -112,8 +104,6 @@ export function DatabaseErrorLoginForm() {
 
       // Sign out from Supabase
       await supabase.auth.signOut();
-
-      console.log('✅ Auth data cleared');
 
       // toast({
       //   title: 'Authentication Reset',
@@ -129,8 +119,6 @@ export function DatabaseErrorLoginForm() {
     setError(null);
 
     try {
-      console.log('🚨 Database issues detected - switching to offline mode...');
-
       // Since we're in database error mode, skip all Supabase calls
       // and immediately redirect to offline mode
       setSuccess('Switching to offline mode...');
@@ -167,8 +155,6 @@ export function DatabaseErrorLoginForm() {
     setSuccess(null);
 
     try {
-      console.log('🔐 Starting normal login process...');
-
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
           email,
@@ -179,9 +165,6 @@ export function DatabaseErrorLoginForm() {
         console.error('🔐 Auth error:', authError);
 
         if (authError.message.includes('Database error')) {
-          console.log(
-            '🚨 Database error detected, switching to fallback mode...'
-          );
           setDatabaseStatus('error');
           setFallbackMode(true);
           throw new Error(
@@ -195,8 +178,6 @@ export function DatabaseErrorLoginForm() {
       if (!authData.user) {
         throw new Error('Authentication failed - no user returned');
       }
-
-      console.log('✅ Authentication successful');
 
       // Try to fetch user profile
       try {
@@ -221,7 +202,6 @@ export function DatabaseErrorLoginForm() {
 
         // Wait longer to ensure session is properly established
         setTimeout(() => {
-          console.log('🔐 Redirecting to dashboard after successful login...');
           router.push('/dashboard-role-router');
         }, 3000);
       } catch (profileError) {
@@ -231,7 +211,6 @@ export function DatabaseErrorLoginForm() {
 
         // Wait longer to ensure session is properly established
         setTimeout(() => {
-          console.log('🔐 Redirecting to dashboard after successful login...');
           router.push('/dashboard-role-router');
         }, 3000);
       }

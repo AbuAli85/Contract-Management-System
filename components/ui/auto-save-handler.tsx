@@ -38,7 +38,6 @@ export function AutoSaveHandler({
     if (enabled) {
       const savedData = loadFromLocalStorage();
       if (savedData) {
-        console.log('💾 Auto-save: Loading saved data from localStorage');
         form.reset(savedData);
         onLastSavedChange?.(new Date(savedData.timestamp || Date.now()));
         onStatusChange?.('saved');

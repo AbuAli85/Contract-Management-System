@@ -169,11 +169,11 @@ export function ClientManagementDashboard() {
   };
 
   const handleViewClient = (clientId: string) => {
-    router.push(`/en/manage-parties?id=${clientId}`);
+    router.push(`/${locale}/manage-parties?id=${clientId}`);
   };
 
   const handleEditClient = (clientId: string) => {
-    router.push(`/en/manage-parties?id=${clientId}`);
+    router.push(`/${locale}/manage-parties?id=${clientId}`);
   };
 
   // Real-time data loading from Supabase

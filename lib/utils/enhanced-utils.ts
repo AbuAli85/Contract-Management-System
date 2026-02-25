@@ -248,7 +248,6 @@ export function measurePerformance<T>(operation: () => T, label: string): T {
   const result = operation();
   const end = performance.now();
 
-  console.log(`⚡ ${label}: ${(end - start).toFixed(2)}ms`);
   return result;
 }
 
@@ -261,7 +260,6 @@ export async function measureAsyncPerformance<T>(
   const result = await operation();
   const end = performance.now();
 
-  console.log(`⚡ ${label}: ${(end - start).toFixed(2)}ms`);
   return result;
 }
 

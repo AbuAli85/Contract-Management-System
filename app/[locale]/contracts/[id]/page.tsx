@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,31 +38,24 @@ import { useContract } from '@/hooks/useContract';
 // StatusBadge component for displaying contract status
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { safeRender } from '@/lib/utils/safe-render';
+import { ContractStatusBadge } from '@/components/contracts/contract-status-badge';
 
-// Simple StatusBadge implementation
+// StatusBadge wrapper using shared ContractStatusBadge component
 function StatusBadge({ status }: { status?: string | undefined }) {
-  let color = 'bg-gray-200 text-gray-800';
-  let label = status || 'Unknown';
-  if (status === 'active') {
-    color = 'bg-green-100 text-green-800';
-    label = 'Active';
-  } else if (status === 'pending') {
-    color = 'bg-yellow-100 text-yellow-800';
-    label = 'Pending';
-  } else if (status === 'cancelled') {
-    color = 'bg-red-100 text-red-800';
-    label = 'Cancelled';
-  } else if (status === 'processing') {
-    color = 'bg-blue-100 text-blue-800';
-    label = 'Processing';
-  }
-  return (
-    <span
-      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${color}`}
-    >
-      {label}
-    </span>
-  );
+  const validStatuses = [
+    'draft',
+    'pending',
+    'approved',
+    'active',
+    'completed',
+    'terminated',
+    'expired',
+    'rejected',
+  ];
+  const safeStatus = validStatuses.includes(status || '')
+    ? (status as any)
+    : 'draft';
+  return <ContractStatusBadge status={safeStatus} />;
 }
 import { useAuth } from '@/lib/auth-service';
 import { OverviewTab } from '@/components/contract-tabs/OverviewTab';
@@ -87,13 +80,7 @@ export const dynamic = 'force-dynamic';
 
 export default function ContractDetailPage() {
   const params = useParams();
-  const pathname = usePathname();
-  const locale =
-    pathname && pathname.startsWith('/en/')
-      ? 'en'
-      : pathname && pathname.startsWith('/ar/')
-        ? 'ar'
-        : 'en';
+  const locale = (params?.locale as string) || 'en';
   const contractId = (params?.id as string) || '';
   const { contract, loading, error, refetch } = useContract(contractId);
 

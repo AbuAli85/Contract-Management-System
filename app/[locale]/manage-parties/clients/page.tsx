@@ -497,7 +497,7 @@ export default function ClientsPage() {
                             <DropdownMenuItem
                               onClick={() =>
                                 router.push(
-                                  `/en/manage-parties?id=${client.id}`
+                                  `/${locale}/manage-parties?id=${client.id}`
                                 )
                               }
                             >
@@ -506,7 +506,9 @@ export default function ClientsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
-                                router.push(`/en/manage-parties/${client.id}`)
+                                router.push(
+                                  `/${locale}/manage-parties/${client.id}`
+                                )
                               }
                             >
                               <Eye className='mr-2 h-4 w-4' />

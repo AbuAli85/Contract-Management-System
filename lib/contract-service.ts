@@ -51,8 +51,6 @@ export class ContractService {
     options: ContractGenerationOptions = {}
   ): Promise<ContractServiceResponse> {
     try {
-      console.log('🔄 Starting contract generation with validation...');
-
       // Step 1: Validate data mapping
       if (options.validateDataMapping !== false) {
         const contractTypeConfig = getEnhancedContractTypeConfig(
@@ -81,8 +79,6 @@ export class ContractService {
         if (validation.warnings.length > 0) {
           console.warn('⚠️ Data mapping warnings:', validation.warnings);
         }
-
-        console.log('✅ Data mapping validation passed');
       }
 
       // Step 2: Create contract in database
@@ -122,8 +118,6 @@ export class ContractService {
           },
         };
       }
-
-      console.log('✅ Contract created:', contract.id);
 
       // Step 3: Generate PDF if requested
       let pdfUrl: string | undefined;
@@ -172,8 +166,6 @@ export class ContractService {
     formData?: ContractGeneratorFormData
   ): Promise<ContractServiceResponse<{ pdfUrl: string }>> {
     try {
-      console.log('📄 Generating contract PDF...');
-
       // Get contract data if not provided
       if (!formData) {
         const { data: contract, error } = await this.supabase
@@ -487,9 +479,6 @@ export class ContractService {
   ): Promise<void> {
     try {
       // This would integrate with your notification system
-      console.log(
-        `📧 Sending ${event} notification for contract ${contractId}`
-      );
 
       // Example: Send to notification service
       await fetch('/api/notifications/contract', {

@@ -230,10 +230,6 @@ export const createClient = () => {
         .getSession()
         .then(({ data: { session }, error }) => {
           if (session && !error && session.user) {
-            console.log(
-              '[SSO] Session initialized from localStorage, cookies should be set'
-            );
-
             // Verify cookies were set by checking if we can read them back
             const cookies = document.cookie.split(';').map(c => c.trim());
             const hasAuthCookies = cookies.some(
@@ -259,7 +255,6 @@ export const createClient = () => {
                       setError
                     );
                   } else {
-                    console.log('[SSO] Session forced into cookies');
                   }
                 });
             }
@@ -353,9 +348,6 @@ async function migrateLocalStorageToCookies() {
         } = await supabase.auth.getSession();
 
         if (session && session.user && !error) {
-          console.log(
-            '[SSO] Session retrieved successfully from Supabase internal storage'
-          );
           return;
         } else {
           console.warn(
@@ -385,7 +377,6 @@ async function migrateLocalStorageToCookies() {
           );
           console.warn('[SSO] Session may be expired. Please log in again.');
         } else {
-          console.log('[SSO] Migrated session from localStorage to cookies');
         }
       } else if (sessionData.user) {
         // Has user but no tokens - might be expired, try to refresh
@@ -393,7 +384,6 @@ async function migrateLocalStorageToCookies() {
           data: { session: refreshedSession },
         } = await supabase.auth.getSession();
         if (refreshedSession) {
-          console.log('[SSO] Refreshed session from localStorage');
         } else {
           console.warn(
             '[SSO] Session in localStorage appears expired. Please log in again.'
@@ -466,7 +456,6 @@ function fixOldFormatCookies() {
     }
 
     if (fixed) {
-      console.log('[SSO] Fixed old-format cookies on page load');
     }
   } catch (error) {
     console.debug('[SSO] Error fixing old-format cookies:', error);

@@ -30,7 +30,6 @@ export class AuditLogger {
   }): Promise<void> {
     try {
       // Non-blocking console log; replace with DB insert if needed
-      console.log('📝 RBAC Audit:', entry);
     } catch {
       // swallow
     }

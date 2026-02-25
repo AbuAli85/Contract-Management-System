@@ -176,7 +176,7 @@ export default function CompanyPermissionsPage() {
                     setSelectedCompanyName(company.company_name);
                     // Update URL without navigation
                     router.replace(
-                      `/en/dashboard/companies/permissions?company_id=${value}`,
+                      `/${locale}/dashboard/companies/permissions?company_id=${value}`,
                       { scroll: false }
                     );
                   }

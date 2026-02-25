@@ -35,8 +35,6 @@ export class AuthService {
 
       // Clear sessionStorage
       sessionStorage.clear();
-
-      console.log('Auth cleared successfully');
     } catch (error) {
       console.error('Error clearing auth:', error);
       // Force clear even if there's an error
@@ -62,7 +60,6 @@ export class AuthService {
           error.message.includes('refresh') ||
           error.message.includes('Invalid')
         ) {
-          console.log('Clearing invalid session...');
           await this.clearAuth();
           return { session: null, user: null };
         }
@@ -98,7 +95,6 @@ export class AuthService {
         throw error;
       }
 
-      console.log('Sign in successful');
       return data;
     } catch (error) {
       console.error('Sign in failed:', error);
@@ -126,7 +122,6 @@ export class AuthService {
         throw error;
       }
 
-      console.log('Sign up successful');
       return data;
     } catch (error) {
       console.error('Sign up failed:', error);
@@ -141,7 +136,6 @@ export class AuthService {
         await this.supabase.auth.signOut();
       }
       await this.clearAuth();
-      console.log('Sign out successful');
     } catch (error) {
       console.error('Sign out error:', error);
       // Force clear even if sign out fails
@@ -166,7 +160,6 @@ export class AuthService {
           error.message.includes('JWT') ||
           error.message.includes('refresh')
         ) {
-          console.log('Attempting to refresh session...');
           const sessionData = await this.getSession();
           return { user: sessionData.session?.user || null };
         }
@@ -199,7 +192,6 @@ export class AuthService {
         return false;
       }
 
-      console.log('Database connection test passed');
       return true;
     } catch (error) {
       console.error('Database connection test error:', error);
@@ -241,7 +233,6 @@ export class AuthService {
         throw error;
       }
 
-      console.log('Session refreshed successfully');
       return data;
     } catch (error) {
       console.error('Failed to refresh session:', error);
@@ -258,15 +249,10 @@ export class AuthService {
     }
 
     return this.supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event);
-
       if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed');
       } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
         await this.clearAuth();
       } else if (event === 'SIGNED_IN') {
-        console.log('User signed in');
       }
 
       callback(event, session);

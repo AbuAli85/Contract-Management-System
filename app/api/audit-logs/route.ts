@@ -6,12 +6,11 @@ export const GET = withRBAC('audit:read:all', async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const timeframe = searchParams.get('timeframe') || '24h';
-
     const supabase = await createClient();
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -19,7 +18,6 @@ export const GET = withRBAC('audit:read:all', async (request: NextRequest) => {
     // Calculate date range based on timeframe
     const now = new Date();
     let fromDate: Date;
-
     switch (timeframe) {
       case '7d':
         fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -40,14 +38,21 @@ export const GET = withRBAC('audit:read:all', async (request: NextRequest) => {
       .select('*')
       .gte('created_at', fromDate.toISOString())
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(200);
 
     if (webhookError) {
-      console.error('Error fetching webhook logs:', webhookError);
+      // webhook_logs table may not exist yet — return empty
+      return NextResponse.json({
+        logs: [],
+        total: 0,
+        timeframe,
+        from: fromDate.toISOString(),
+        to: now.toISOString(),
+      });
     }
 
     // Transform webhook logs to audit log format
-    const auditLogs = (webhookLogs || []).map(log => ({
+    const auditLogs = (webhookLogs ?? []).map(log => ({
       id: log.id,
       action: `webhook_${log.type}`,
       description: log.error
@@ -66,46 +71,14 @@ export const GET = withRBAC('audit:read:all', async (request: NextRequest) => {
       },
     }));
 
-    // Add some mock authentication events for demonstration
-    const mockAuthEvents = [
-      {
-        id: `auth_${Date.now()}_1`,
-        action: 'user_login',
-        description: 'User logged in successfully',
-        timestamp: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
-        user_email: user.email,
-        ip: '192.168.1.100',
-        user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        success: true,
-        details: { method: 'email' },
-      },
-      {
-        id: `auth_${Date.now()}_2`,
-        action: 'permission_check',
-        description: 'Permission check for admin dashboard',
-        timestamp: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-        user_email: user.email,
-        ip: '192.168.1.100',
-        user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        success: true,
-        details: { resource: 'admin_dashboard' },
-      },
-    ];
-
-    const allLogs = [...auditLogs, ...mockAuthEvents].sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-
     return NextResponse.json({
-      logs: allLogs,
-      total: allLogs.length,
+      logs: auditLogs,
+      total: auditLogs.length,
       timeframe,
       from: fromDate.toISOString(),
       to: now.toISOString(),
     });
   } catch (error) {
-    console.error('Error fetching audit logs:', error);
     return NextResponse.json(
       { error: 'Failed to fetch audit logs' },
       { status: 500 }

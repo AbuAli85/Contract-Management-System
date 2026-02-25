@@ -176,7 +176,6 @@ export function GenerateContractPDFButton({
     try {
       // Use the internal API endpoint that fetches from storage
       const apiUrl = `/api/contracts/${contract.id}/pdf/view`;
-      console.log('📥 Downloading PDF via API:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'GET',

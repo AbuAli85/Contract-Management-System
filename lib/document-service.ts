@@ -377,7 +377,6 @@ export class DocumentService {
   ): Promise<DocumentServiceResponse> {
     try {
       // This would integrate with your notification system
-      console.log(`Sending expiry notification for document: ${documentId}`);
       return { message: 'Notification sent successfully' };
     } catch (error) {
       console.error('Error sending expiry notification:', error);

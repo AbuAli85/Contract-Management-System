@@ -581,8 +581,6 @@ export class TrackingService {
     try {
       // Send real-time notification via WebSocket/SSE
       // For now, we'll log the event
-      console.log('Tracking event created:', event);
-
       // TODO: Implement actual notification sending
       // - Real-time notifications
       // - Email notifications for important events

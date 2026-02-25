@@ -285,10 +285,6 @@ export default function GeneralContractGenerator() {
       }
 
       setLocations(locationsData || []);
-
-      console.log(
-        `✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers, ${productsData?.length || 0} products, ${locationsData?.length || 0} locations`
-      );
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({

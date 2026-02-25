@@ -28,13 +28,8 @@ export default function ProfileSyncGuard({
   // Add a timeout to prevent infinite loading
   useEffect(() => {
     if (isAuthenticated() && !isProfileSynced && !timeoutReached) {
-      console.log('🔐 ProfileSyncGuard: Profile sync in progress...');
-
       // Add a 5-second timeout to prevent infinite loading
       const timeout = setTimeout(() => {
-        console.log(
-          '🔐 ProfileSyncGuard: Sync timeout reached, proceeding anyway'
-        );
         setTimeoutReached(true);
       }, 5000);
 

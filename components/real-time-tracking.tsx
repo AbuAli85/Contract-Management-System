@@ -149,11 +149,6 @@ export function RealTimeTracking({
 
   // Set up real-time subscription
   useEffect(() => {
-    console.log(
-      '🔔 Setting up real-time tracking subscription for booking:',
-      bookingId
-    );
-
     const subscription = supabase
       .channel(`tracking:${bookingId}`)
       .on(
@@ -165,8 +160,6 @@ export function RealTimeTracking({
           filter: `booking_id=eq.${bookingId}`,
         },
         payload => {
-          console.log('📍 Tracking update received:', payload.new);
-
           const updatedTracking = payload.new as TrackingData;
 
           // Update current tracking
@@ -201,19 +194,14 @@ export function RealTimeTracking({
           filter: `booking_id=eq.${bookingId}`,
         },
         payload => {
-          console.log('📍 New tracking record:', payload.new);
-
           const newTracking = payload.new as TrackingData;
           setTrackingData(newTracking);
           setTrackingHistory(current => [newTracking, ...current]);
         }
       )
-      .subscribe(status => {
-        console.log('📡 Tracking subscription status:', status);
-      });
+      .subscribe(status => {});
 
     return () => {
-      console.log('🔌 Cleaning up tracking subscription');
       supabase.removeChannel(subscription);
     };
   }, [bookingId, supabase, toast]);

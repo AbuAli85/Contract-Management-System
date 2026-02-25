@@ -411,7 +411,9 @@ export function CompaniesView() {
                         variant='outline'
                         className='h-8 px-3'
                         onClick={() => {
-                          router.push(`/en/settings/company?id=${company.id}`);
+                          router.push(
+                            `/${locale}/settings/company?id=${company.id}`
+                          );
                         }}
                       >
                         <Edit className='h-3 w-3 mr-1' />
@@ -422,7 +424,7 @@ export function CompaniesView() {
                         className='h-8 px-3'
                         onClick={() => {
                           router.push(
-                            `/en/dashboard/companies?view=${company.id}`
+                            `/${locale}/dashboard/companies?view=${company.id}`
                           );
                         }}
                       >

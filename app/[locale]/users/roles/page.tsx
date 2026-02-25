@@ -126,9 +126,6 @@ export default function RolesAndPermissionsPage() {
       ]);
 
       // Debug logging
-      console.log('Roles API response:', rolesData);
-      console.log('Permissions API response:', permissionsData);
-      console.log('Users API response:', usersData);
 
       if (rolesData.success) setRoles(rolesData.roles);
       if (permissionsData.success) setPermissions(permissionsData.permissions);

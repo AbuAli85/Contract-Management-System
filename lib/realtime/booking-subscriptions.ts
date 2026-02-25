@@ -39,8 +39,6 @@ export class BookingSubscriptionManager {
     // Unsubscribe existing channel if it exists
     this.unsubscribeFromBooking(bookingId);
 
-    console.log(`🔄 Subscribing to booking events for booking: ${bookingId}`);
-
     const channel = this.supabase
       .channel(channelId)
       .on(
@@ -52,7 +50,6 @@ export class BookingSubscriptionManager {
           filter: `booking_id=eq.${bookingId}`,
         },
         payload => {
-          console.log(`📨 Booking event received for ${bookingId}:`, payload);
           onEvent(payload.new as BookingEventPayload);
         }
       )
@@ -65,7 +62,6 @@ export class BookingSubscriptionManager {
           filter: `id=eq.${bookingId}`,
         },
         payload => {
-          console.log(`📋 Booking update received for ${bookingId}:`, payload);
           // Create a synthetic event for booking updates
           const syntheticEvent: BookingEventPayload = {
             id: `synthetic_${Date.now()}`,
@@ -79,9 +75,7 @@ export class BookingSubscriptionManager {
           onEvent(syntheticEvent);
         }
       )
-      .subscribe(status => {
-        console.log(`📡 Subscription status for ${bookingId}:`, status);
-      });
+      .subscribe(status => {});
 
     this.channels.set(bookingId, channel);
 
@@ -104,8 +98,6 @@ export class BookingSubscriptionManager {
       this.channels.delete(userId);
     }
 
-    console.log(`🔄 Subscribing to user booking events for user: ${userId}`);
-
     const channel = this.supabase
       .channel(channelId)
       .on(
@@ -117,13 +109,10 @@ export class BookingSubscriptionManager {
           filter: `created_by=eq.${userId}`,
         },
         payload => {
-          console.log(`📨 User booking event received for ${userId}:`, payload);
           onEvent(payload.new as BookingEventPayload);
         }
       )
-      .subscribe(status => {
-        console.log(`📡 User subscription status for ${userId}:`, status);
-      });
+      .subscribe(status => {});
 
     this.channels.set(userId, channel);
 
@@ -149,10 +138,6 @@ export class BookingSubscriptionManager {
       this.channels.delete(channelId);
     }
 
-    console.log(
-      `🔄 Subscribing to provider booking events for provider: ${providerId}`
-    );
-
     // We'll need to filter on the client side since RLS handles the security
     const channel = this.supabase
       .channel(channelId)
@@ -164,8 +149,6 @@ export class BookingSubscriptionManager {
           table: 'booking_events',
         },
         async payload => {
-          console.log(`📨 Potential provider event received:`, payload);
-
           // Verify this event is for a booking related to this provider
           const bookingId = payload.new?.booking_id;
           if (bookingId) {
@@ -181,12 +164,7 @@ export class BookingSubscriptionManager {
           }
         }
       )
-      .subscribe(status => {
-        console.log(
-          `📡 Provider subscription status for ${providerId}:`,
-          status
-        );
-      });
+      .subscribe(status => {});
 
     this.channels.set(channelId, channel);
 
@@ -204,7 +182,6 @@ export class BookingSubscriptionManager {
   unsubscribeFromBooking(bookingId: string): void {
     const channel = this.channels.get(bookingId);
     if (channel) {
-      console.log(`🔇 Unsubscribing from booking events for: ${bookingId}`);
       channel.unsubscribe();
       this.channels.delete(bookingId);
     }
@@ -214,9 +191,7 @@ export class BookingSubscriptionManager {
    * Unsubscribe from all active subscriptions
    */
   unsubscribeAll(): void {
-    console.log(`🔇 Unsubscribing from all booking event channels`);
     this.channels.forEach((channel, id) => {
-      console.log(`  - Unsubscribing from: ${id}`);
       channel.unsubscribe();
     });
     this.channels.clear();

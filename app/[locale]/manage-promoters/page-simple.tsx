@@ -11,8 +11,6 @@ interface PromoterManagementProps {
 export default function PromoterManagement({
   params,
 }: PromoterManagementProps) {
-  console.log('🚀 SIMPLE TEST - Component mounted!');
-
   return (
     <div className='p-8'>
       <h1 className='text-2xl font-bold'>SIMPLE TEST PAGE</h1>

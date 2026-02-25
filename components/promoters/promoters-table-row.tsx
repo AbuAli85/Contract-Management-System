@@ -203,7 +203,6 @@ function EnhancedActionsMenu({
 
   // Handle View Profile - Simple and direct
   const onClickView = () => {
-    console.log('[CLICK] View profile clicked for:', promoter.displayName);
     try {
       toast({
         title: '👁️ Opening profile...',
@@ -222,7 +221,6 @@ function EnhancedActionsMenu({
 
   // Handle Edit Details - Simple and direct
   const onClickEdit = () => {
-    console.log('[CLICK] Edit details clicked for:', promoter.displayName);
     try {
       toast({
         title: '✏️ Opening editor...',
@@ -241,7 +239,6 @@ function EnhancedActionsMenu({
 
   // Handle Send Notification
   const onClickNotify = async (type: 'standard' | 'urgent' | 'reminder') => {
-    console.log('[CLICK] Send notification:', type, 'to', promoter.displayName);
     setIsLoading(true);
     try {
       const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
@@ -279,7 +276,6 @@ function EnhancedActionsMenu({
 
   // Handle Archive
   const onClickArchive = async () => {
-    console.log('[CLICK] Archive record for:', promoter.displayName);
     setIsLoading(true);
     try {
       const response = await fetch(`/api/promoters/${promoter.id}/archive`, {

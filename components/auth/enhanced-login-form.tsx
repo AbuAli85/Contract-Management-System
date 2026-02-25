@@ -40,8 +40,6 @@ export function EnhancedLoginForm() {
 
   const testSupabaseConnection = async () => {
     try {
-      console.log('🔗 Testing Supabase connection...');
-
       // Simple connection test
       const { data, error } = await supabase
         .from('users')
@@ -52,7 +50,6 @@ export function EnhancedLoginForm() {
         console.error('🔗 Supabase connection error:', error);
         setConnectionStatus('error');
       } else {
-        console.log('🔗 Supabase connection successful');
         setConnectionStatus('connected');
       }
     } catch (error) {
@@ -74,10 +71,6 @@ export function EnhancedLoginForm() {
     setSuccess(null);
 
     try {
-      console.log('🔐 Enhanced Login - Starting login process...');
-      console.log('🔐 Enhanced Login - Email:', email);
-      console.log('🔐 Enhanced Login - Connection status:', connectionStatus);
-
       // Step 1: Authenticate with Supabase
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
@@ -113,11 +106,6 @@ export function EnhancedLoginForm() {
         throw new Error('Authentication failed - no user returned');
       }
 
-      console.log(
-        '🔐 Enhanced Login - Auth successful, user ID:',
-        authData.user.id
-      );
-
       // Step 2: Fetch user profile
       const { data: userProfile, error: profileError } = await supabase
         .from('users')
@@ -133,12 +121,6 @@ export function EnhancedLoginForm() {
       if (!userProfile) {
         throw new Error('User profile not found');
       }
-
-      console.log(
-        '🔐 Enhanced Login - Profile loaded:',
-        userProfile.role,
-        userProfile.status
-      );
 
       // Step 3: Check user status
       if (userProfile.status === 'pending') {
@@ -172,27 +154,31 @@ export function EnhancedLoginForm() {
       // Step 4: Success - determine redirect URL based on role
       setSuccess('Login successful! Redirecting...');
 
-      let redirectUrl = '/en/dashboard';
+      // Detect locale from current URL
+      const currentLocale =
+        typeof window !== 'undefined' &&
+        window.location.pathname.startsWith('/ar/')
+          ? 'ar'
+          : 'en';
+      let redirectUrl = `/${currentLocale}/dashboard`;
 
       switch (userProfile.role) {
         case 'provider':
-          redirectUrl = '/en/dashboard/provider-comprehensive';
+          redirectUrl = `/${currentLocale}/dashboard/provider-comprehensive`;
           break;
         case 'client':
-          redirectUrl = '/en/dashboard/client-comprehensive';
+          redirectUrl = `/${currentLocale}/dashboard/client-comprehensive`;
           break;
         case 'admin':
         case 'super_admin':
-          redirectUrl = '/en/dashboard/admin';
+          redirectUrl = `/${currentLocale}/dashboard/admin`;
           break;
         case 'manager':
-          redirectUrl = '/en/dashboard/manager';
+          redirectUrl = `/${currentLocale}/dashboard/manager`;
           break;
         default:
-          redirectUrl = '/en/dashboard';
+          redirectUrl = `/${currentLocale}/dashboard`;
       }
-
-      console.log('🔐 Enhanced Login - Redirecting to:', redirectUrl);
 
       toast({
         title: 'Login Successful',

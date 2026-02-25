@@ -112,17 +112,14 @@ export function ClientProviderRelationships() {
 
   // Handler functions for interactivity
   const handleCreatePartnership = () => {
-    console.log('Opening Create Partnership form...');
     alert('Create Partnership functionality would open here!');
   };
 
   const handleExportNetwork = () => {
-    console.log('Exporting network data...');
     alert('Export Network functionality would download a file here!');
   };
 
   const handleAnalyzeRelationship = (relationshipId: string) => {
-    console.log(`Analyzing relationship ID: ${relationshipId}`);
     alert(
       `Analyze Relationship ${relationshipId} would open detailed insights!`
     );

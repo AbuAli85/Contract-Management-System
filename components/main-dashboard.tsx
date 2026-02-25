@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -80,6 +81,8 @@ interface QuickAction {
 }
 
 export function MainDashboard() {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const [stats, setStats] = useState<DashboardStats>({
     contracts: { total: 156, active: 89, pending: 23, expired: 44 },
     bookings: { total: 234, today: 8, upcoming: 15, completed: 211 },
@@ -132,7 +135,7 @@ export function MainDashboard() {
     {
       name: 'New Contract',
       description: 'Create a new contract',
-      href: '/en/generate-contract',
+      href: `/${locale}/generate-contract`,
       icon: FileText,
       color: 'bg-blue-500',
       isNew: false,

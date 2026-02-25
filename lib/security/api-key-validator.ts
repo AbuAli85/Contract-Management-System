@@ -119,8 +119,4 @@ if (process.env.NODE_ENV === 'development') {
     API_PERMISSIONS.READ_CONTRACTS,
     API_PERMISSIONS.READ_USERS,
   ]);
-
-  console.log('🔑 Development API Keys Generated:');
-  console.log('Admin Key:', adminKey);
-  console.log('Read-Only Key:', readOnlyKey);
 }

@@ -11,11 +11,8 @@ export function patchReactDOM() {
     return;
   }
 
-  console.log('🔧 Applying DOM safety patches...');
-
   // Only patch in development and when explicitly needed
   if (process.env.NODE_ENV !== 'development') {
-    console.log('⏭️ Skipping DOM patches in production');
     return;
   }
 
@@ -155,7 +152,6 @@ export function patchReactDOM() {
   }
 
   isPatched = true;
-  console.log('✅ DOM safety patches applied');
 }
 
 // Remove automatic patching to avoid hydration issues

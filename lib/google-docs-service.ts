@@ -82,8 +82,6 @@ export class GoogleDocsService {
 
       this.docs = google.docs({ version: 'v1', auth: authClient });
       this.drive = google.drive({ version: 'v3', auth: authClient });
-
-      console.log('✅ Google APIs initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Google Auth:', error);
       throw new Error(
@@ -101,26 +99,20 @@ export class GoogleDocsService {
     pdfUrl: string;
   }> {
     try {
-      console.log('🔄 Starting Google Docs contract generation...');
-
       // Ensure Google APIs are initialized
       await this.ensureInitialized();
 
       // Step 1: Copy template to create new document
       const documentId = await this.copyTemplate();
-      console.log('✅ Template copied, document ID:', documentId);
 
       // Step 2: Replace text placeholders
       await this.replaceTextPlaceholders(documentId, contractData);
-      console.log('✅ Text placeholders replaced');
 
       // Step 3: Replace image placeholders
       await this.replaceImagePlaceholders(documentId, contractData);
-      console.log('✅ Image placeholders replaced');
 
       // Step 4: Generate PDF
       const pdfUrl = await this.generatePDF(documentId);
-      console.log('✅ PDF generated');
 
       const documentUrl = `https://docs.google.com/document/d/${documentId}/edit`;
 
@@ -143,10 +135,6 @@ export class GoogleDocsService {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `Contract-${timestamp}`;
 
-      console.log(
-        `📋 Copying template ${this.config.templateId} to ${fileName}`
-      );
-
       // For personal drive setup, we need to copy the template to the user's drive
       // The service account should have access to the template via sharing
       let response;
@@ -161,7 +149,6 @@ export class GoogleDocsService {
               parents: [this.config.outputFolderId],
             },
           });
-          console.log('✅ Template copied to output folder');
         } else {
           // Copy without specifying parents (let it inherit from template)
           response = await this.drive.files.copy({
@@ -170,7 +157,6 @@ export class GoogleDocsService {
               name: fileName,
             },
           });
-          console.log('✅ Template copied successfully');
         }
       } catch (copyError) {
         console.error('❌ Failed to copy template:', copyError);
@@ -197,22 +183,18 @@ Original error: ${copyError.message}`);
         }
 
         // If the above fails, try without specifying parents (fallback)
-        console.log('⚠️ Trying fallback method without specifying parents...');
         response = await this.drive.files.copy({
           fileId: this.config.templateId,
           requestBody: {
             name: fileName,
           },
         });
-
-        console.log('✅ Template copied using fallback method');
       }
 
       if (!response.data.id) {
         throw new Error('Failed to copy template - no document ID returned');
       }
 
-      console.log('✅ Template copied successfully:', response.data.id);
       return response.data.id;
     } catch (error) {
       console.error('❌ Failed to copy template:', error);

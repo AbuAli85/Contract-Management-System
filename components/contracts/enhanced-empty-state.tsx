@@ -31,6 +31,8 @@ export function EnhancedEmptyState({
   message,
   action,
 }: EnhancedEmptyStateProps) {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const config = {
     'no-contracts': {
       icon: FileText,
@@ -46,7 +48,7 @@ export function EnhancedEmptyState({
       ],
       defaultAction: {
         label: 'Create Your First Contract',
-        href: '/en/generate-contract',
+        href: `/${locale}/generate-contract`,
       },
     },
     'no-results': {

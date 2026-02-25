@@ -71,25 +71,8 @@ export default function DocumentGenerationPage() {
       if (response.ok) {
         setEmployees(data.data || []);
       } else {
-        // Fallback to mock data
-        setEmployees([
-          {
-            id: 1,
-            employee_code: 'EMP0001',
-            full_name: 'Ahmed Al-Rashid',
-            job_title: 'Software Developer',
-            department_name: 'Information Technology',
-            email: 'ahmed@company.com',
-          },
-          {
-            id: 2,
-            employee_code: 'EMP0002',
-            full_name: 'Sarah Johnson',
-            job_title: 'HR Manager',
-            department_name: 'Human Resources',
-            email: 'sarah@company.com',
-          },
-        ]);
+        // Show empty state on error - do not use mock data in production
+        setEmployees([]);
       }
     } catch (error) {
       console.error('Error fetching employees:', error);

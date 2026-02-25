@@ -35,6 +35,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 export default function HelpPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const [searchQuery, setSearchQuery] = useState('');
 
   const quickLinks = [
@@ -336,7 +338,7 @@ export default function HelpPage() {
               <CardTitle>Feature Documentation</CardTitle>
             </CardHeader>
             <CardContent className='grid gap-4 md:grid-cols-2'>
-              <Link href='/promoters'>
+              <Link href={`/${locale}/promoters`}>
                 <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
                   <Users className='h-5 w-5 text-primary mt-0.5' />
                   <div>
@@ -347,7 +349,7 @@ export default function HelpPage() {
                   </div>
                 </div>
               </Link>
-              <Link href='/manage-promoters'>
+              <Link href={`/${locale}/manage-promoters`}>
                 <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
                   <FileText className='h-5 w-5 text-primary mt-0.5' />
                   <div>
@@ -358,7 +360,7 @@ export default function HelpPage() {
                   </div>
                 </div>
               </Link>
-              <Link href='/contracts'>
+              <Link href={`/${locale}/contracts`}>
                 <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
                   <FileCheck className='h-5 w-5 text-primary mt-0.5' />
                   <div>
@@ -369,7 +371,7 @@ export default function HelpPage() {
                   </div>
                 </div>
               </Link>
-              <Link href='/profile'>
+              <Link href={`/${locale}/profile`}>
                 <div className='flex items-start gap-3 p-4 rounded-lg border hover:bg-accent transition-colors'>
                   <Settings className='h-5 w-5 text-primary mt-0.5' />
                   <div>

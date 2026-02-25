@@ -168,7 +168,6 @@ export default function EmergencyClientDashboard() {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
-      console.log('✅ Emergency dashboard refreshed - no API calls made');
     }, 1000);
   };
 

@@ -243,9 +243,6 @@ export class DocumentMonitor {
     }
 
     // Log warning alerts (expiring within 30 days) but don't spam
-    console.log(
-      `📋 ${report.alerts.warning.length} documents expiring within 30 days`
-    );
 
     return { emailsSent, notificationsCreated };
   }
@@ -255,13 +252,6 @@ export class DocumentMonitor {
    */
   private async sendAlert(alert: DocumentAlert): Promise<void> {
     const docName = alert.documentType === 'id_card' ? 'ID Card' : 'Passport';
-
-    console.log(`🚨 ${alert.severity.toUpperCase()} Alert:`, {
-      promoter: alert.promoterName,
-      document: docName,
-      status: alert.status,
-      daysUntilExpiry: alert.daysUntilExpiry,
-    });
 
     try {
       // Check if email address is available
@@ -291,7 +281,6 @@ export class DocumentMonitor {
       });
 
       if (result.success) {
-        console.log(`✅ Email sent successfully to ${alert.promoterEmail}`);
       } else {
         console.error(`❌ Failed to send email:`, result.error);
       }
@@ -363,24 +352,12 @@ export class DocumentMonitor {
  * Run daily at 9 AM or as needed
  */
 export async function scheduledDocumentCheck(): Promise<ComplianceReport> {
-  console.log('🔍 Starting scheduled document compliance check...');
-
   const monitor = new DocumentMonitor();
   const report = await monitor.checkExpirations();
-
-  console.log('📊 Document monitoring completed:', {
-    timestamp: report.timestamp,
-    total: report.summary.total,
-    expired: report.summary.expired,
-    expiring7days: report.summary.expiring7days,
-    expiring30days: report.summary.expiring30days,
-    complianceRate: `${report.summary.complianceRate}%`,
-  });
 
   // Send alerts for urgent issues
   if (report.alerts.critical.length > 0 || report.alerts.urgent.length > 0) {
     const alertResults = await monitor.sendAlerts(report);
-    console.log('📧 Alerts sent:', alertResults);
   }
 
   return report;

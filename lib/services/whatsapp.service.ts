@@ -113,7 +113,6 @@ export async function sendWhatsApp(
 
     const result = await client.messages.create(messageParams);
 
-    console.log('✅ WhatsApp sent successfully:', result.sid);
     return {
       success: true,
       messageId: result.sid,

@@ -20,7 +20,6 @@ interface Logger {
 export const logger: Logger = {
   log: (...args: unknown[]) => {
     if (isDevelopment) {
-      console.log(...args);
     }
   },
   warn: (...args: unknown[]) => {
@@ -58,7 +57,6 @@ export const logger: Logger = {
 export const analyticsLogger = {
   track: (event: string, data?: Record<string, unknown>) => {
     if (isDevelopment) {
-      console.log(`[Analytics] ${event}`, data);
     }
     // In production, send to analytics service
     // Example: analytics.track(event, data);

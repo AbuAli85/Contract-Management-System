@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function SignupRedirectPage() {
   useEffect(() => {
     // Redirect to the new registration system
-    window.location.href = '/en/register-new';
+    window.location.href = `/${typeof window !== 'undefined' && navigator.language?.startsWith('ar') ? 'ar' : 'en'}/register-new`;
   }, []);
 
   return (

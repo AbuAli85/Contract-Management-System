@@ -65,14 +65,12 @@ export function AuthGuard({
     async (force = false) => {
       // Check if component is still mounted
       if (!isMountedRef.current) {
-        console.log('⏱️ AuthGuard: Component unmounted, skipping auth check');
         return;
       }
 
       // Global rate limiting check
       const now = Date.now();
       if (!force && now - globalAuthState.lastCheck < AUTH_CHECK_INTERVAL) {
-        console.log('⏱️ AuthGuard: Using cached auth state (rate limited)');
         if (globalAuthState.user) {
           setUser(globalAuthState.user);
           setError(globalAuthState.error);
@@ -83,7 +81,6 @@ export function AuthGuard({
 
       // Check if there's already a pending auth check
       if (pendingAuthCheck && !force) {
-        console.log('⏱️ AuthGuard: Waiting for pending auth check...');
         try {
           const result = await pendingAuthCheck;
           if (isMountedRef.current && result.user) {
@@ -94,22 +91,16 @@ export function AuthGuard({
             setLoading(false);
           }
           return;
-        } catch (error) {
-          console.log(
-            '⚠️ AuthGuard: Pending auth check failed, proceeding with new check'
-          );
-        }
+        } catch (error) {}
       }
 
       // Prevent multiple simultaneous checks
       if (isCheckingRef.current) {
-        console.log('⏱️ AuthGuard: Already checking, skipping...');
         return;
       }
 
       // Check if we're being rate limited
       if (now - globalAuthState.lastCheck < RATE_LIMIT_WINDOW) {
-        console.log('⏱️ AuthGuard: Rate limiting - skipping check');
         return;
       }
 
@@ -166,8 +157,6 @@ export function AuthGuard({
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
 
-      console.log('🔐 AuthGuard: Checking authentication...');
-
       const response = await fetch('/api/auth/check-session', {
         method: 'GET',
         headers: {
@@ -198,10 +187,6 @@ export function AuthGuard({
             console.warn('🚫 AuthGuard:', errorMsg);
             return { user: null, error: errorMsg };
           } else {
-            console.log(
-              '✅ AuthGuard: User authenticated:',
-              data.user.email || data.user.id
-            );
             return { user: data.user, error: null };
           }
         } else {
@@ -217,7 +202,6 @@ export function AuthGuard({
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('🔄 AuthGuard: Request aborted');
         return { user: null, error: 'Request aborted' };
       }
 
@@ -245,7 +229,6 @@ export function AuthGuard({
         localStorage.setItem('emergency-bypass', 'true');
         localStorage.setItem('dev-bypass', 'true');
         localStorage.setItem('force-bypass', 'true');
-        console.log('🚨 Bypass enabled via console command');
         window.location.reload();
       };
 
@@ -254,7 +237,6 @@ export function AuthGuard({
         localStorage.removeItem('emergency-bypass');
         localStorage.removeItem('dev-bypass');
         localStorage.removeItem('force-bypass');
-        console.log('🚨 Bypass disabled via console command');
         window.location.reload();
       };
 
@@ -279,8 +261,6 @@ export function AuthGuard({
           setError(null);
           setLoading(false);
         }
-
-        console.log('🚨 Force auth enabled for:', email, 'with role:', role);
       };
 
       // @ts-ignore - Adding to window for development
@@ -314,61 +294,12 @@ export function AuthGuard({
             setError(null);
             setLoading(false);
           }
-
-          console.log(
-            '🔄 Switched to user:',
-            email,
-            'with role:',
-            userInfo.role
-          );
         } else {
-          console.log(
-            '❌ User not found. Available users:',
-            Object.keys(userMap)
-          );
         }
       };
 
       // @ts-ignore - Adding to window for development
-      window.listUsers = () => {
-        console.log('👥 Available test users:');
-        console.log(
-          '  window.switchToUser("luxsess2001@gmail.com")     - Admin (Luxsess)'
-        );
-        console.log(
-          '  window.switchToUser("admin@example.com")         - Admin (System)'
-        );
-        console.log(
-          '  window.switchToUser("manager@example.com")       - Manager'
-        );
-        console.log(
-          '  window.switchToUser("promoter@example.com")      - Promoter'
-        );
-        console.log(
-          '  window.switchToUser("client@example.com")        - Client'
-        );
-        console.log('');
-        console.log(
-          '  window.forceAuth("email@example.com", "role")    - Custom user'
-        );
-        console.log(
-          '  window.enableBypass()                            - Enable bypass'
-        );
-        console.log(
-          '  window.disableBypass()                           - Disable bypass'
-        );
-      };
-
-      console.log('🔧 Development console commands available:');
-      console.log('  window.enableBypass()  - Enable emergency bypass');
-      console.log('  window.disableBypass() - Disable emergency bypass');
-      console.log(
-        '  window.forceAuth("email@example.com", "admin") - Force authentication'
-      );
-      console.log(
-        '  window.switchToUser("email@example.com") - Switch to test user'
-      );
-      console.log('  window.listUsers() - List all available test users');
+      window.listUsers = () => {};
     }
 
     // Initial check with a small delay to prevent rapid re-renders
@@ -399,9 +330,6 @@ export function AuthGuard({
 
       // Only abort if we have a current request and it's not completed
       if (abortControllerRef.current && isCheckingRef.current) {
-        console.log(
-          '🔄 AuthGuard: Aborting pending auth request due to unmount'
-        );
         abortControllerRef.current.abort();
       }
 

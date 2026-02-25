@@ -65,8 +65,6 @@ export function BookingFormWithWebhook({
     setWebhookStatus('idle');
 
     try {
-      console.log('🚀 Creating booking with webhook integration...');
-
       // Create the booking
       const response = await fetch('/api/bookings', {
         method: 'POST',
@@ -83,7 +81,6 @@ export function BookingFormWithWebhook({
       }
 
       const { booking } = await response.json();
-      console.log('✅ Booking created:', booking.id);
 
       // The webhook is automatically triggered by the API route
       setWebhookStatus('triggering');

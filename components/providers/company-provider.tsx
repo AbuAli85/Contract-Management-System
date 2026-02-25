@@ -70,7 +70,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
                 access_token: session.access_token,
                 refresh_token: session.refresh_token,
               });
-              console.log('[CompanyProvider] Session forced into cookies');
             } else {
               console.debug('[CompanyProvider] Session and cookies verified');
             }

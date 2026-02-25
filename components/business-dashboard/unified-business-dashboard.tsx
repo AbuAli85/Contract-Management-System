@@ -203,24 +203,19 @@ export function UnifiedBusinessDashboard() {
       case 'client-add':
         setSelectedView('clients');
         // In a real app, this would open a client creation modal
-        console.log('Opening client creation form...');
         break;
       case 'provider-add':
         setSelectedView('providers');
         // In a real app, this would open a provider registration modal
-        console.log('Opening provider registration form...');
         break;
       case 'partnership-create':
         setSelectedView('relationships');
         // In a real app, this would open a partnership creation modal
-        console.log('Opening partnership creation form...');
         break;
       case 'analytics-view':
         // In a real app, this would open analytics dashboard
-        console.log('Opening analytics dashboard...');
         break;
       default:
-        console.log(`Quick action: ${action}`);
     }
   };
 

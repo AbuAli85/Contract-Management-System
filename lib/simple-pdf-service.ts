@@ -20,15 +20,11 @@ export class SimplePdfService {
     documentUrl: string;
   }> {
     try {
-      console.log('🔄 Starting simple PDF generation...');
-
       // Generate PDF content
       const pdfContent = this.generatePdfContent(contractData);
-      console.log('✅ PDF content generated');
 
       // Save PDF
       const documentUrl = await this.savePdf(pdfContent, contractData);
-      console.log('✅ PDF saved');
 
       return {
         pdfBuffer: pdfContent,
@@ -200,8 +196,6 @@ startxref
       // 1. Local file system
       // 2. Cloud storage (AWS S3, Google Cloud Storage, etc.)
       // 3. Database
-
-      console.log(`💾 Saving PDF: ${fileName}`);
 
       // For now, return a placeholder URL
       return `https://your-domain.com/contracts/${fileName}`;

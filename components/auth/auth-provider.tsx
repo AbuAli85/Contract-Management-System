@@ -27,8 +27,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Initialize auth state - NO DEMO MODE
     setUser(null);
     setIsLoading(false);
-
-    console.log('🔐 Auth Provider initialized: No demo mode');
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -92,9 +90,9 @@ export function useRequireAuth(requiredRole?: string) {
     ) {
       // Redirect to appropriate dashboard if wrong role
       const dashboardMap = {
-        provider: '/en/dashboard/provider-comprehensive',
-        admin: '/en/dashboard',
-        client: '/en/dashboard/client-comprehensive',
+        provider: `/${typeof window !== 'undefined' && window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard/provider-comprehensive`,
+        admin: `/${typeof window !== 'undefined' && window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard`,
+        client: `/${typeof window !== 'undefined' && window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard/client-comprehensive`,
       };
 
       router.push(

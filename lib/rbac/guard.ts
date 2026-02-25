@@ -127,10 +127,6 @@ export async function checkPermission(
       );
 
       if (result.user_permissions && result.user_permissions.length > 0) {
-        console.log(
-          '🔐 RBAC: Direct lookup found permissions:',
-          result.user_permissions.length
-        );
       }
     }
 
@@ -199,9 +195,6 @@ export async function guardPermission(
       process.env.NODE_ENV === 'development'
     ) {
       if (!result.allowed) {
-        console.log(
-          `🔐 RBAC: WOULD_BLOCK - ${requiredPermission} for ${request.url}`
-        );
         // SECURITY FIX: Still perform actual check in dry-run for validation
         // Log but continue with enforcement logic
       }
@@ -255,10 +248,6 @@ export async function guardPermission(
             const promoterIdIndex = pathParts.indexOf('promoters') + 1;
             const promoterId = pathParts[promoterIdIndex];
 
-            console.log(
-              `🔍 AUTO-FIX: Checking if user ${userId} is accessing own promoter profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`
-            );
-
             shouldAutoFix =
               promoterId === userId ||
               (promoterId &&
@@ -271,38 +260,23 @@ export async function guardPermission(
             const contractIdIndex = pathParts.indexOf('contracts') + 1;
             const contractId = pathParts[contractIdIndex];
 
-            console.log(
-              `🔍 AUTO-FIX: Checking if user ${userId} is accessing contracts (contractId: ${contractId || 'list'}, path: ${request.nextUrl.pathname})`
-            );
-
             shouldAutoFix = true; // Always allow for contract:read:own permission
             resourceType = 'contract';
           } else if (isProfileAccess) {
             // For profile/user access, always allow auto-fix (users should access their own profile/activity)
-            console.log(
-              `🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`
-            );
             shouldAutoFix = true;
             resourceType = 'profile';
           }
 
           if (shouldAutoFix) {
-            console.log(
-              `✅ AUTO-FIX: User ${userId} is accessing own ${resourceType} resource, fixing permissions...`
-            );
-
             const { ensurePromoterRole } =
               await import('@/lib/services/employee-account-service');
             await ensurePromoterRole(userId);
-            console.log(
-              `✅ Auto-assigned promoter role (with contract permissions) to user ${userId}`
-            );
 
             // Clear permission cache for this user
             try {
               const { permissionCache } = await import('@/lib/rbac/cache');
               await permissionCache.invalidateUser(userId);
-              console.log(`✅ Cleared permission cache for user ${userId}`);
             } catch (cacheError) {
               console.warn(
                 '⚠️ Could not clear cache (non-critical):',
@@ -314,23 +288,12 @@ export async function guardPermission(
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // Retry permission check after auto-fix
-            console.log(`🔄 Retrying permission check for user ${userId}...`);
             const retryResult = await checkPermission(requiredPermission, {
               ...baseOptions,
               skipCache: true, // Force fresh lookup
             });
 
-            console.log(`🔍 Retry result:`, {
-              allowed: retryResult.allowed,
-              user_permissions: retryResult.user_permissions,
-              user_roles: retryResult.user_roles,
-              reason: retryResult.reason,
-            });
-
             if (retryResult.allowed) {
-              console.log(
-                `✅ Permission check passed after auto-fix for user ${userId}`
-              );
               return null; // Allow access
             } else {
               console.error(
@@ -344,9 +307,6 @@ export async function guardPermission(
 
               // ✅ FALLBACK: If we've verified it's their own resource and auto-fix ran,
               // allow access anyway (permissions might take a moment to propagate)
-              console.log(
-                `⚠️ Allowing access as fallback for own-resource access (user ${userId})`
-              );
               return null; // Allow access as fallback
             }
           }
@@ -356,9 +316,6 @@ export async function guardPermission(
         }
       }
 
-      console.log(
-        `🔐 RBAC: BLOCKED - ${requiredPermission} for ${request.url}`
-      );
       return NextResponse.json(
         {
           error: 'Insufficient permissions',
@@ -612,10 +569,6 @@ async function guardAnyPermission(
             const promoterIdIndex = pathParts.indexOf('promoters') + 1;
             const promoterId = pathParts[promoterIdIndex];
 
-            console.log(
-              `🔍 AUTO-FIX: Checking if user ${userId} is accessing own promoter profile (promoterId: ${promoterId}, path: ${request.nextUrl.pathname})`
-            );
-
             // If user is accessing their own profile, auto-fix permissions
             // Check both full UUID match and partial match (for slug-based IDs)
             shouldAutoFix =
@@ -633,40 +586,25 @@ async function guardAnyPermission(
             const contractIdIndex = pathParts.indexOf('contracts') + 1;
             const contractId = pathParts[contractIdIndex];
 
-            console.log(
-              `🔍 AUTO-FIX: Checking if user ${userId} is accessing contracts (contractId: ${contractId || 'list'}, path: ${request.nextUrl.pathname})`
-            );
-
             // Allow auto-fix for contract access (the route handler will verify ownership)
             // This ensures users have the permission, even if the specific contract check happens later
             shouldAutoFix = true; // Always allow for contract:read:own permission
             resourceType = 'contract';
           } else if (isProfileAccess) {
             // For profile/user access, always allow auto-fix (users should access their own profile/activity)
-            console.log(
-              `🔍 AUTO-FIX: User ${userId} is accessing own profile/activity (path: ${request.nextUrl.pathname})`
-            );
             shouldAutoFix = true;
             resourceType = 'profile';
           }
 
           if (shouldAutoFix) {
-            console.log(
-              `✅ AUTO-FIX: User ${userId} is accessing own ${resourceType} resource, fixing permissions...`
-            );
-
             const { ensurePromoterRole } =
               await import('@/lib/services/employee-account-service');
             await ensurePromoterRole(userId);
-            console.log(
-              `✅ Auto-assigned promoter role (with contract permissions) to user ${userId}`
-            );
 
             // Clear permission cache for this user
             try {
               const { permissionCache } = await import('@/lib/rbac/cache');
               await permissionCache.invalidateUser(userId);
-              console.log(`✅ Cleared permission cache for user ${userId}`);
             } catch (cacheError) {
               console.warn(
                 '⚠️ Could not clear cache (non-critical):',
@@ -678,23 +616,12 @@ async function guardAnyPermission(
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // Retry permission check after auto-fix
-            console.log(`🔄 Retrying permission check for user ${userId}...`);
             const retryResult = await checkAnyPermission(requiredPermissions, {
               ...options,
               skipCache: true, // Force fresh lookup
             });
 
-            console.log(`🔍 Retry result:`, {
-              allowed: retryResult.allowed,
-              user_permissions: retryResult.user_permissions,
-              user_roles: retryResult.user_roles,
-              reason: retryResult.reason,
-            });
-
             if (retryResult.allowed) {
-              console.log(
-                `✅ Permission check passed after auto-fix for user ${userId}`
-              );
               return null; // Allow access
             } else {
               console.error(
@@ -708,24 +635,15 @@ async function guardAnyPermission(
 
               // ✅ FALLBACK: If we've verified it's their own profile and auto-fix ran,
               // allow access anyway (permissions might take a moment to propagate)
-              console.log(
-                `⚠️ Allowing access as fallback for own-profile access (user ${userId})`
-              );
               return null; // Allow access as fallback
             }
           } else {
-            console.log(
-              `ℹ️ AUTO-FIX: Skipped - user ${userId} is not accessing own profile (promoterId: ${promoterId})`
-            );
           }
         } catch (autoFixError) {
           console.error('❌ Could not auto-fix permissions:', autoFixError);
           // Continue with normal error handling
         }
       } else {
-        console.log(
-          `ℹ️ AUTO-FIX: Conditions not met - user_id: ${userId || result.user_id}, path: ${request.nextUrl.pathname}, requiredPerms: ${requiredPermissions.join(', ')}`
-        );
       }
 
       // In dry-run mode, log but allow
@@ -825,22 +743,11 @@ export async function checkAnyPermission(
     if (options.context)
       anyOptions.context = options.context as PermissionContext;
 
-    console.log(
-      '🔐 RBAC DEBUG: Calling hasAnyPermission with options:',
-      anyOptions
-    );
     let result = await permissionEvaluator.hasAnyPermission(
       user.id,
       requiredPermissions,
       anyOptions
     );
-
-    console.log('🔐 RBAC DEBUG: hasAnyPermission result:', {
-      allowed: result.allowed,
-      user_permissions_count: result.user_permissions?.length || 0,
-      user_roles_count: result.user_roles?.length || 0,
-      reason: result.reason,
-    });
 
     // If no permissions found, force direct database lookup as fallback
     if (
@@ -857,21 +764,7 @@ export async function checkAnyPermission(
         anyOptions
       );
 
-      console.log(
-        '🔐 RBAC DEBUG: hasAnyPermission result after direct lookup:',
-        {
-          allowed: result.allowed,
-          user_permissions_count: result.user_permissions?.length || 0,
-          user_roles_count: result.user_roles?.length || 0,
-          reason: result.reason,
-        }
-      );
-
       if (result.user_permissions && result.user_permissions.length > 0) {
-        console.log(
-          '🔐 RBAC: Direct lookup found permissions:',
-          result.user_permissions.length
-        );
       }
     }
 
@@ -954,10 +847,6 @@ export async function checkAllPermissions(
       );
 
       if (result.user_permissions && result.user_permissions.length > 0) {
-        console.log(
-          '🔐 RBAC: Direct lookup found permissions:',
-          result.user_permissions.length
-        );
       }
     }
 

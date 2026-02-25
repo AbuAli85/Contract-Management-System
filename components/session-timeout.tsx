@@ -29,7 +29,6 @@ export function SessionTimeout({
     warningMinutes,
     onTimeout: () => {
       // Custom timeout handler if needed
-      console.log('Session timeout triggered');
     },
   });
 

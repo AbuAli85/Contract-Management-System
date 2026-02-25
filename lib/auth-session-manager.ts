@@ -35,8 +35,6 @@ export class AuthSessionManager {
 
     // Listen for auth state changes
     this.supabase?.auth.onAuthStateChange((event, session) => {
-      console.log('🔐 Auth state changed:', event, session?.user?.id);
-
       if (event === 'SIGNED_IN' && session) {
         this.storeSession(session);
         this.updateLastActivity();
@@ -65,7 +63,6 @@ export class AuthSessionManager {
 
       // Check if session is expired
       if (this.isSessionExpired(session)) {
-        console.log('🔐 Session expired, signing out');
         await this.signOut();
         return null;
       }
@@ -129,8 +126,6 @@ export class AuthSessionManager {
         };
       }
 
-      console.log('🔐 Attempting sign in for:', email);
-
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -169,8 +164,6 @@ export class AuthSessionManager {
         };
       }
 
-      console.log('✅ Sign in successful, storing session');
-
       // Store session and update activity
       this.storeSession(data.session);
       this.updateLastActivity();
@@ -185,7 +178,6 @@ export class AuthSessionManager {
         lastActivity: Date.now(),
       };
 
-      console.log('✅ User session created successfully');
       return { success: true, session: userSession };
     } catch (error) {
       console.error('🔐 Sign in exception:', {
@@ -265,7 +257,6 @@ export class AuthSessionManager {
       } = await this.supabase.auth.getSession();
 
       if (session && this.isSessionExpired(session)) {
-        console.log('🔐 Session expired during check, signing out');
         await this.signOut();
       }
     } catch (error) {

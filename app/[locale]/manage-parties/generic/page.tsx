@@ -497,7 +497,9 @@ export default function GenericPartiesPage() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem
                               onClick={() =>
-                                router.push(`/en/manage-parties?id=${party.id}`)
+                                router.push(
+                                  `/${locale}/manage-parties?id=${party.id}`
+                                )
                               }
                             >
                               <EditIcon className='mr-2 h-4 w-4' />
@@ -505,7 +507,9 @@ export default function GenericPartiesPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
-                                router.push(`/en/manage-parties/${party.id}`)
+                                router.push(
+                                  `/${locale}/manage-parties/${party.id}`
+                                )
                               }
                             >
                               <Eye className='mr-2 h-4 w-4' />

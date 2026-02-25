@@ -164,13 +164,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.getItem('emergency-bypass') === 'true';
 
         if (hasEmergencyBypass) {
-          console.log(
-            '🚨 Emergency bypass detected - preserving existing session'
-          );
           // Don't clear sessions when bypass is active
         } else {
           // Only clear sessions if there's a specific security issue
-          console.log('🔐 Checking session security...');
           try {
             const {
               data: { session: existingSession },
@@ -180,12 +176,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               if (
                 existingSession.user.email === 'admin@contractmanagement.com'
               ) {
-                console.log(
-                  '🚫 Detected blocked admin account - clearing session'
-                );
                 await client.auth.signOut();
               } else {
-                console.log('✅ Valid session found, preserving...');
                 // Preserve the existing session
                 setSession(existingSession);
                 setUser(existingSession.user);
@@ -194,7 +186,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                 return;
               }
             } else {
-              console.log('ℹ️ No existing sessions to check');
             }
           } catch (error) {
             console.warn('Could not check existing sessions:', error);
@@ -207,7 +198,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('user-role');
           localStorage.removeItem('auth-mode');
           // Don't clear Supabase auth tokens - let Supabase handle them
-          console.log('🧹 Limited local storage cleanup completed');
         } catch (error) {
           console.warn('Could not clean localStorage:', error);
         }
@@ -246,12 +236,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               } else {
                 setSession(session);
                 setUser(session.user);
-                console.log('✅ Authenticated user found:', session.user.email);
                 // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
                 // This is critical for server-side logins
                 try {
                   await syncSessionToSSO();
-                  console.log('✅ Session synced to SSO storage');
                 } catch (syncError) {
                   console.error('⚠️ Error syncing session to SSO:', syncError);
                 }
@@ -262,7 +250,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(null);
             }
           } else {
-            console.log('ℹ️ No active session found');
             setSession(null);
             setUser(null);
           }
@@ -290,7 +277,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         } = client.auth.onAuthStateChange(async (event, session) => {
           // Only log important events to reduce console spam
           if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-            console.log('Auth state changed:', event, session?.user?.email);
           }
 
           if (event === 'SIGNED_IN' && session?.user) {
@@ -306,12 +292,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               } else {
                 setSession(session);
                 setUser(session.user);
-                console.log('✅ User signed in:', session.user.email);
                 // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
                 // Await to ensure cookies are set before API calls
                 try {
                   await syncSessionToSSO();
-                  console.log('✅ Session synced to SSO storage');
                 } catch (syncError) {
                   console.error('⚠️ Error syncing session to SSO:', syncError);
                 }
@@ -320,7 +304,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (event === 'SIGNED_OUT') {
             setSession(null);
             setUser(null);
-            console.log('✅ User signed out');
           } else if (event === 'TOKEN_REFRESHED' && session?.user) {
             if (session.user.id && session.user.email) {
               // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
@@ -370,7 +353,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
         setUser(null);
         setSession(null);
-        console.log('✅ User signed out successfully');
       }
     } catch (error) {
       console.error('Error signing out:', error);
@@ -399,7 +381,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               setSession(session);
               setUser(session.user);
-              console.log('✅ Session refreshed for:', session.user.email);
             }
           }
         }

@@ -74,8 +74,7 @@ export function EmployeeTeamComparison({
         .eq('employment_status', 'active');
 
       if (teamError) {
-        console.error('Error fetching team members:', teamError);
-        // Fallback to mock data on error
+        // Show default metrics on error
         setTeamMetrics({
           averageScore: performanceScore,
           rank: 1,

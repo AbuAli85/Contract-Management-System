@@ -21,15 +21,11 @@ export class HtmlContractService {
     documentUrl: string;
   }> {
     try {
-      console.log('🔄 Starting HTML contract generation...');
-
       // Step 1: Generate HTML content
       const htmlContent = await this.generateHtmlContent(contractData);
-      console.log('✅ HTML content generated');
 
       // Step 2: Generate PDF from HTML
       const pdfBuffer = await this.generatePdfFromHtml(htmlContent);
-      console.log('✅ PDF generated');
 
       // Step 3: Save files
       const documentUrl = await this.saveContract(
@@ -37,7 +33,6 @@ export class HtmlContractService {
         pdfBuffer,
         contractData
       );
-      console.log('✅ Contract saved');
 
       return {
         htmlContent,
@@ -249,7 +244,6 @@ export class HtmlContractService {
     try {
       // This would use Puppeteer in a real implementation
       // For now, we'll return a placeholder
-      console.log('📄 Generating PDF from HTML...');
 
       // In a real implementation, you would:
       // 1. Use Puppeteer to render HTML
@@ -334,8 +328,6 @@ startxref
       // 1. Local file system
       // 2. Cloud storage (AWS S3, Google Cloud Storage, etc.)
       // 3. Database
-
-      console.log(`💾 Saving contract: ${fileName}`);
 
       // For now, return a placeholder URL
       return `https://your-domain.com/contracts/${fileName}.pdf`;

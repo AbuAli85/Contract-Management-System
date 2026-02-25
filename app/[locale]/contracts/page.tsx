@@ -18,7 +18,6 @@ import {
   useDeleteContractMutation as useDeleteContractMutationQuery,
 } from '@/hooks/use-contracts-query';
 import { usePermissions } from '@/hooks/use-permissions';
-import { useAuth } from '@/lib/auth-service';
 import { useCompany } from '@/components/providers/company-provider';
 import { Button } from '@/components/ui/button';
 import { CurrencyDisplay } from '@/components/ui/currency-display';
@@ -340,7 +339,6 @@ function ContractsContent() {
   const searchParams = useSearchParams();
 
   // Add authentication check
-  const { loading: _authLoading } = useAuth(); // Get user's preferred currency
   const { preferredCurrency } = useCurrencyPreference();
 
   // Get pagination params from URL

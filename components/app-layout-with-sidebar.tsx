@@ -72,19 +72,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   // Debug logging for params issue
   useEffect(() => {
     if (mounted) {
-      console.log('🔍 AppLayoutWithSidebar - useSafeParams result:', params);
-      console.log('🔍 AppLayoutWithSidebar - pathname:', pathname);
-      console.log('🔍 AppLayoutWithSidebar - locale:', locale);
-      console.log(
-        '🔍 AppLayoutWithSidebar - shouldHideSidebar:',
-        shouldHideSidebar
-      );
-      console.log(
-        '🔍 AppLayoutWithSidebar - showSidebarAndHeader:',
-        showSidebarAndHeader
-      );
-      console.log('🔍 AppLayoutWithSidebar - user:', !!user);
-      console.log('🔍 AppLayoutWithSidebar - sidebarOpen:', sidebarOpen);
     }
   }, [
     mounted,

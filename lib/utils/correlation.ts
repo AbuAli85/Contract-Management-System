@@ -92,6 +92,5 @@ export function logWithCorrelation(
       console.debug(logMessage, logData);
       break;
     default:
-      console.log(logMessage, logData);
   }
 }

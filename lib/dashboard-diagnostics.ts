@@ -28,8 +28,6 @@ async function testEndpoint(
   const startTime = Date.now();
 
   try {
-    console.log(`🔍 Testing endpoint: ${endpoint}`);
-
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
@@ -72,8 +70,6 @@ async function testEndpoint(
  * Run comprehensive dashboard diagnostics
  */
 export async function runDashboardDiagnostics(): Promise<DashboardDiagnosticSummary> {
-  console.log('🚀 Starting Dashboard Diagnostics...');
-
   const endpoints = [
     '/api/dashboard/stats',
     '/api/dashboard/notifications',
@@ -89,8 +85,6 @@ export async function runDashboardDiagnostics(): Promise<DashboardDiagnosticSumm
     results.push(result);
 
     if (result.success) {
-      console.log(`✅ ${endpoint}: Success (${result.responseTime}ms)`);
-      console.log('📊 Data:', result.data);
     } else {
       console.error(`❌ ${endpoint}: Failed - ${result.error}`);
     }
@@ -98,7 +92,6 @@ export async function runDashboardDiagnostics(): Promise<DashboardDiagnosticSumm
 
   // Test database connectivity through a simple query
   try {
-    console.log('🔍 Testing database connectivity...');
     const dbTest = await testEndpoint('/api/dashboard/stats');
     results.push({
       ...dbTest,
@@ -133,8 +126,6 @@ export async function runDashboardDiagnostics(): Promise<DashboardDiagnosticSumm
     summary,
   };
 
-  console.log('📋 Diagnostic Summary:', diagnosticSummary);
-
   return diagnosticSummary;
 }
 
@@ -163,7 +154,6 @@ export async function quickDashboardHealthCheck(): Promise<boolean> {
 
     // Check if we got meaningful data
     if (data && typeof data === 'object') {
-      console.log('✅ Dashboard health check passed');
       return true;
     } else {
       console.error('❌ Dashboard health check failed: Invalid data format');
@@ -194,7 +184,6 @@ export async function testDashboardDataPoints(): Promise<{
     const statsResponse = await fetch('/api/dashboard/stats');
     if (statsResponse.ok) {
       stats = await statsResponse.json();
-      console.log('📊 Stats data:', stats);
     } else {
       errors.push(`Stats API failed: ${statsResponse.status}`);
     }
@@ -207,7 +196,6 @@ export async function testDashboardDataPoints(): Promise<{
     const notificationsResponse = await fetch('/api/dashboard/notifications');
     if (notificationsResponse.ok) {
       notifications = await notificationsResponse.json();
-      console.log('🔔 Notifications data:', notifications);
     } else {
       errors.push(`Notifications API failed: ${notificationsResponse.status}`);
     }
@@ -220,7 +208,6 @@ export async function testDashboardDataPoints(): Promise<{
     const activitiesResponse = await fetch('/api/dashboard/activities');
     if (activitiesResponse.ok) {
       activities = await activitiesResponse.json();
-      console.log('📈 Activities data:', activities);
     } else {
       errors.push(`Activities API failed: ${activitiesResponse.status}`);
     }

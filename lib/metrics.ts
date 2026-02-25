@@ -230,15 +230,9 @@ export async function getContractMetrics(
   if (!forceRefresh) {
     const cached = metricsCache.get<ContractMetrics>(cacheKey);
     if (cached) {
-      console.log('📊 Metrics: Using cached contract metrics:', cacheKey);
       return cached;
     }
   }
-
-  console.log('📊 Metrics: Calculating fresh contract metrics:', {
-    userId,
-    userRole,
-  });
 
   const supabase = await createClient();
 
@@ -413,13 +407,6 @@ export async function getContractMetrics(
     // Cache the results
     metricsCache.set(cacheKey, metrics);
 
-    console.log('📊 Metrics: Contract metrics calculated:', {
-      total: metrics.total,
-      active: metrics.active,
-      pending: metrics.pending,
-      cached: true,
-    });
-
     return metrics;
   } catch (error) {
     console.error('Error calculating contract metrics:', error);
@@ -441,7 +428,6 @@ export async function getPromoterMetrics(
   if (!forceRefresh) {
     const cached = metricsCache.get<PromoterMetrics>(cacheKey);
     if (cached) {
-      console.log('📊 Metrics: Using cached promoter metrics');
       return cached;
     }
   }
@@ -568,7 +554,6 @@ export async function getPartyMetrics(
   if (!forceRefresh) {
     const cached = metricsCache.get<PartyMetrics>(cacheKey);
     if (cached) {
-      console.log('📊 Metrics: Using cached party metrics');
       return cached;
     }
   }
@@ -637,7 +622,6 @@ export async function getDashboardMetrics(
   if (!forceRefresh) {
     const cached = metricsCache.get<DashboardMetrics>(cacheKey);
     if (cached) {
-      console.log('📊 Metrics: Using cached dashboard metrics');
       return cached;
     }
   }
@@ -695,10 +679,6 @@ export function formatMetrics(metrics: ContractMetrics) {
  */
 export function clearMetricsCache(pattern?: string): void {
   metricsCache.clear(pattern);
-  console.log(
-    '📊 Metrics: Cache cleared',
-    pattern ? `(pattern: ${pattern})` : '(all)'
-  );
 }
 
 /**

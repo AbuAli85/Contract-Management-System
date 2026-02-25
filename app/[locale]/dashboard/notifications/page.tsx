@@ -118,10 +118,7 @@ export default function NotificationsPage() {
 
   // Debug: log mount/unmount
   useEffect(() => {
-    console.log('NotificationsPage mounted');
-    return () => {
-      console.log('NotificationsPage unmounted');
-    };
+    return () => {};
   }, []);
 
   // Fetch notifications and subscribe to real-time updates

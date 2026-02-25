@@ -585,7 +585,7 @@ export default function EmployersPage() {
                               <DropdownMenuItem
                                 onClick={() =>
                                   router.push(
-                                    `/en/manage-parties?id=${employer.id}`
+                                    `/${locale}/manage-parties?id=${employer.id}`
                                   )
                                 }
                               >
@@ -595,7 +595,7 @@ export default function EmployersPage() {
                               <DropdownMenuItem
                                 onClick={() =>
                                   router.push(
-                                    `/en/manage-parties/${employer.id}`
+                                    `/${locale}/manage-parties/${employer.id}`
                                   )
                                 }
                               >

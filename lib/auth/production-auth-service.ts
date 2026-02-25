@@ -254,16 +254,6 @@ export class ProductionAuthService {
 
     try {
       // Log to your preferred logging service (e.g., Sentry, LogRocket, etc.)
-      console.log('Auth attempt:', {
-        type,
-        email,
-        success,
-        ipAddress,
-        userAgent,
-        error,
-        timestamp: new Date().toISOString(),
-      });
-
       // You can also store this in your database for analysis
       // await this.supabase.from('auth_logs').insert({
       //   type,

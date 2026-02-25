@@ -180,10 +180,6 @@ export default function SimpleContractGeneratorWithValidation() {
 
       setPromoters(promotersData || []);
       setAllPromoters(promotersData || []);
-
-      console.log(
-        `✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers`
-      );
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
@@ -257,10 +253,6 @@ export default function SimpleContractGeneratorWithValidation() {
           throw new Error('Make.com integration not available');
         }
       } catch (makecomError) {
-        console.log(
-          'Make.com integration not available, trying alternative methods...'
-        );
-
         // Try HTML generation
         response = await fetch('/api/contracts/generate', {
           method: 'POST',
@@ -303,12 +295,6 @@ export default function SimpleContractGeneratorWithValidation() {
         });
 
         // Log detailed response for debugging
-        console.log('📊 Contract generation response:', {
-          method: generationMethod,
-          contract: result.data?.contract,
-          makecom: result.data?.makecom,
-          google_drive_url: result.data?.google_drive_url,
-        });
 
         // Clear saved draft
         localStorage.removeItem('contract-form-draft');

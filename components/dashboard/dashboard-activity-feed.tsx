@@ -62,9 +62,8 @@ export function DashboardActivityFeed({
         setLastUpdated(new Date());
       }
     } catch (error) {
-      console.error('Error fetching activities:', error);
-      // Set mock data as fallback
-      setActivities(getMockActivities());
+      // Show empty state on error
+      setActivities([]);
     } finally {
       setLoading(false);
     }

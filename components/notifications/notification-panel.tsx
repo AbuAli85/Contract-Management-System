@@ -100,7 +100,6 @@ export function NotificationPanel({
             table: 'contracts',
           },
           payload => {
-            console.log('📬 Contract change detected:', payload);
             // Refresh notifications when contracts change
             if (open) {
               fetchNotifications();
@@ -120,7 +119,6 @@ export function NotificationPanel({
             table: 'promoters',
           },
           payload => {
-            console.log('📬 Promoter change detected:', payload);
             // Refresh notifications when promoters change
             if (open) {
               fetchNotifications();

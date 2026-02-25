@@ -146,10 +146,6 @@ export function createAdminClient() {
         }
 
         if (keyProjectRef && urlProjectRef && keyProjectRef === urlProjectRef) {
-          console.log(
-            '✅ Service role key project matches URL:',
-            keyProjectRef
-          );
         }
       }
     } catch (jwtError) {

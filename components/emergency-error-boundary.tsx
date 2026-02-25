@@ -109,7 +109,7 @@ export class EmergencyErrorBoundary extends Component<Props, State> {
 
   private handleGoHome = () => {
     if (typeof window !== 'undefined') {
-      window.location.href = '/en/dashboard';
+      window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard`;
     }
   };
 
@@ -255,7 +255,6 @@ export function EmergencyErrorBoundaryWrapper({
       (error.message.includes('undefined') && error.message.includes('length'));
 
     if (isAuthError) {
-      console.log('🚨 Authentication error detected');
       // Clear any problematic auth state
       if (typeof window !== 'undefined') {
         try {

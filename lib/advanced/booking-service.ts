@@ -528,8 +528,6 @@ export class BookingService {
     try {
       // This would integrate with your notification service
       // For now, we'll log the action
-      console.log(`Booking ${action}:`, bookingId);
-
       // TODO: Implement actual notification sending
       // - Email notifications
       // - In-app notifications

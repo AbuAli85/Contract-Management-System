@@ -56,11 +56,6 @@ export class MakeWebhookManager {
       let timeoutId: NodeJS.Timeout | null = null;
 
       try {
-        console.log(
-          `🔗 Sending ${webhookType} webhook (attempt ${attempt + 1}):`,
-          payload
-        );
-
         timeoutId = setTimeout(() => controller.abort(), timeout);
 
         const response = await fetch(webhookUrl, {
@@ -83,7 +78,6 @@ export class MakeWebhookManager {
 
         if (response.ok) {
           const result = await response.json().catch(() => ({}));
-          console.log(`✅ ${webhookType} webhook successful:`, result);
 
           return {
             success: true,

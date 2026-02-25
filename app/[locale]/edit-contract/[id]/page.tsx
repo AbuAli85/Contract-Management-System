@@ -48,15 +48,7 @@ export default function EditContractPage() {
   const queryClient = useQueryClient();
   const contractId = params?.id as string;
 
-  // Extract locale from pathname
-  const pathname =
-    typeof window !== 'undefined' ? window.location.pathname : '';
-  const locale =
-    pathname && pathname.startsWith('/en/')
-      ? 'en'
-      : pathname && pathname.startsWith('/ar/')
-        ? 'ar'
-        : 'en';
+  const locale = (params?.locale as string) || 'en';
 
   const { contract, loading, error, refetch } = useContract(contractId);
 
@@ -112,18 +104,10 @@ export default function EditContractPage() {
   // Load contract data into form when contract is fetched
   useEffect(() => {
     if (contract && !isRefreshingAfterSave) {
-      console.log(
-        '📋 Loading contract data into form, PDF URL:',
-        contract.pdf_url
-      );
       setFormData(prev => {
         // Only update if the PDF URL actually changed to avoid unnecessary re-renders
         const newPdfUrl = contract.pdf_url || '';
         if (newPdfUrl !== prev.pdf_url) {
-          console.log('📄 PDF URL updated in form from contract:', {
-            old: prev.pdf_url,
-            new: newPdfUrl,
-          });
         }
         return {
           status: contract.status || 'draft',
@@ -157,10 +141,6 @@ export default function EditContractPage() {
       const newPdfUrl = contract.pdf_url || '';
       setFormData(prev => {
         if (newPdfUrl !== prev.pdf_url) {
-          console.log('📄 PDF URL updated after save from contract:', {
-            old: prev.pdf_url,
-            new: newPdfUrl,
-          });
           return {
             ...prev,
             pdf_url: newPdfUrl,
@@ -272,12 +252,6 @@ export default function EditContractPage() {
       });
 
       // Log the final payload to verify no invalid fields are included
-      console.log(
-        '📤 Final update payload (invalid fields removed):',
-        updateData
-      );
-
-      console.log('🔄 Saving contract with data:', updateData);
 
       // Use the API route instead of direct Supabase client
       const response = await fetch(`/api/contracts/${contractId}`, {
@@ -298,7 +272,6 @@ export default function EditContractPage() {
       }
 
       const result = await response.json();
-      console.log('✅ Contract saved successfully:', result);
 
       setSaveSuccess(true);
       setIsRefreshingAfterSave(true);
@@ -306,7 +279,6 @@ export default function EditContractPage() {
       // Update PDF URL immediately from API response if available
       const apiPdfUrl = result.contract?.pdf_url;
       if (apiPdfUrl !== undefined && apiPdfUrl !== null) {
-        console.log('📄 Updating PDF URL from API response:', apiPdfUrl);
         setFormData(prev => ({
           ...prev,
           pdf_url: apiPdfUrl,
@@ -324,32 +296,21 @@ export default function EditContractPage() {
 
       // Force a fresh refetch to bypass cache and get the latest data from database
       // This ensures we get any updates that might have happened elsewhere (webhooks, etc.)
-      console.log('🔄 Refetching contract data...');
       const refetchResult = await refetch();
 
       if (refetchResult.data) {
         const refetchedPdfUrl = refetchResult.data.pdf_url;
-        console.log('📄 Refetched PDF URL from database:', refetchedPdfUrl);
-        console.log('📄 Current form PDF URL:', formData.pdf_url);
 
         // Always update the form with the refetched PDF URL to ensure we have the latest
         // Use the refetched value if it exists, otherwise keep the current value
         const finalPdfUrl = refetchedPdfUrl || apiPdfUrl || formData.pdf_url;
 
         if (finalPdfUrl !== formData.pdf_url) {
-          console.log('📄 PDF URL changed, updating form:', {
-            old: formData.pdf_url,
-            new: finalPdfUrl,
-            fromApi: apiPdfUrl,
-            fromRefetch: refetchedPdfUrl,
-          });
-
           setFormData(prev => ({
             ...prev,
             pdf_url: finalPdfUrl,
           }));
         } else {
-          console.log('📄 PDF URL unchanged:', finalPdfUrl);
         }
       } else if (refetchResult.error) {
         console.warn(

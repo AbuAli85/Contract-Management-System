@@ -60,7 +60,11 @@ export async function GET(request: NextRequest) {
     forwardedProto || (host?.includes('localhost') ? 'http' : 'https');
   const baseUrl = `${protocol}://${host}`;
 
-  return Response.redirect(`${baseUrl}/en/auth/login?error=auth_failed`);
+  // Extract locale from 'next' param or default to 'en'
+  const errLocale = next.startsWith('/ar/') ? 'ar' : 'en';
+  return Response.redirect(
+    `${baseUrl}/${errLocale}/auth/login?error=auth_failed`
+  );
 }
 
 // Legacy POST method for backward compatibility

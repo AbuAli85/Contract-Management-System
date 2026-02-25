@@ -90,7 +90,6 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
       };
     }
 
-    console.log('✅ Email sent successfully:', data?.id);
     return {
       success: true,
       messageId: data?.id,
@@ -164,7 +163,6 @@ export async function getEmailStatus(messageId: string): Promise<{
       };
     }
 
-    console.log('✅ Email status retrieved:', data);
     return {
       success: true,
       status: data?.last_event || 'unknown',

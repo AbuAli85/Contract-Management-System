@@ -132,9 +132,7 @@ export default function OptimizedDashboard() {
     }
 
     try {
-      await batchGeneratePDFs(pendingContracts, (progress, total) => {
-        console.log(`PDF Generation Progress: ${progress}/${total}`);
-      });
+      await batchGeneratePDFs(pendingContracts, (progress, total) => {});
 
       alert(`PDF generation started for ${pendingContracts.length} contracts`);
       handleRefresh();
@@ -149,7 +147,6 @@ export default function OptimizedDashboard() {
     const cleanup = async () => {
       try {
         await cleanupTempFiles(24 * 60 * 60 * 1000); // 24 hours
-        console.log('Background cleanup completed');
       } catch (error) {
         console.error('Background cleanup failed:', error);
       }

@@ -185,8 +185,6 @@ function ServicesListContent() {
           table: 'services',
         },
         payload => {
-          console.log('🔔 Real-time service update:', payload);
-
           if (payload.eventType === 'INSERT') {
             // Add new service to the list
             setServices(prev => [payload.new as Service, ...prev]);

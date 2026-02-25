@@ -77,7 +77,6 @@ export async function sendSMS(options: SMSOptions): Promise<SMSResult> {
       to: recipients[0],
     });
 
-    console.log('✅ SMS sent successfully:', result.sid);
     return {
       success: true,
       messageId: result.sid,

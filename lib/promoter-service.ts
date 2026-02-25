@@ -105,7 +105,6 @@ async function withRetry<T>(
         finalConfig.maxDelay
       );
 
-      console.log(`Retry attempt ${attempt} failed, retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }

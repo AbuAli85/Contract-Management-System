@@ -145,8 +145,6 @@ class ContractGenerationService {
     contractNumber: string
   ): Promise<any> {
     try {
-      console.log('💾 Creating contract in database...');
-
       const contractData = {
         contract_number: contractNumber,
         first_party_id: data.first_party_id,
@@ -180,7 +178,6 @@ class ContractGenerationService {
         throw new Error(`Failed to create contract: ${error.message}`);
       }
 
-      console.log('✅ Contract created in database:', contract.id);
       return contract;
     } catch (error) {
       console.error('❌ Failed to create contract in database:', error);
@@ -194,14 +191,8 @@ class ContractGenerationService {
   private async triggerMakecomWebhook(contract: any): Promise<boolean> {
     try {
       if (!this.makecomWebhookUrl) {
-        console.log(
-          '⚠️ No Make.com webhook URL configured, skipping webhook trigger'
-        );
         return false;
       }
-
-      console.log('🔗 Triggering Make.com webhook...');
-      console.log('🔗 Webhook URL:', this.makecomWebhookUrl);
 
       // Get contract type configuration
       const contractTypeConfig = getEnhancedContractTypeConfig(
@@ -217,10 +208,6 @@ class ContractGenerationService {
 
       // Check if this contract type supports Make.com integration
       if (!contractTypeConfig.makecomTemplateId) {
-        console.log(
-          '⚠️ Contract type does not support Make.com integration:',
-          contract.contract_type
-        );
         return false;
       }
 
@@ -237,10 +224,6 @@ class ContractGenerationService {
 
         if (!promoterError && promoter) {
           promoterData = promoter;
-          console.log(
-            '✅ Fetched promoter data for webhook:',
-            promoter.name_en
-          );
         } else {
           console.warn('⚠️ Could not fetch promoter data:', promoterError);
         }
@@ -263,8 +246,6 @@ class ContractGenerationService {
         promoter_mobile_number: promoterData?.mobile_number,
       };
 
-      console.log('📤 Sending webhook payload:', webhookPayload);
-
       const response = await fetch(this.makecomWebhookUrl, {
         method: 'POST',
         headers: {
@@ -272,16 +253,6 @@ class ContractGenerationService {
         },
         body: JSON.stringify(webhookPayload),
       });
-
-      console.log(
-        '🔗 Webhook response status:',
-        response.status,
-        response.statusText
-      );
-      console.log(
-        '🔗 Webhook response headers:',
-        Object.fromEntries(response.headers.entries())
-      );
 
       if (!response.ok) {
         console.error(
@@ -297,19 +268,10 @@ class ContractGenerationService {
       if (contentType && contentType.includes('application/json')) {
         try {
           const result = await response.json();
-          console.log('✅ Webhook triggered successfully:', result);
-        } catch (jsonError) {
-          console.log(
-            '⚠️ Webhook response is not valid JSON, but request was successful'
-          );
-        }
+        } catch (jsonError) {}
       } else {
         // Handle non-JSON responses (like "Accepted")
         const textResponse = await response.text();
-        console.log(
-          '✅ Webhook triggered successfully (non-JSON response):',
-          textResponse
-        );
       }
 
       return true;
@@ -326,8 +288,6 @@ class ContractGenerationService {
     data: ContractGenerationRequest
   ): Promise<ContractGenerationResponse> {
     try {
-      console.log('🔄 Starting contract generation...');
-
       // Step 1: Validate input data
       const validation = this.validateContractData(data);
       if (!validation.isValid) {
@@ -385,23 +345,18 @@ class ContractGenerationService {
         };
       }
 
-      console.log('📋 Contract type validated:', normalizedType);
-
       // Step 3: Generate contract number
       const contractNumber = this.generateContractNumber();
-      console.log('📝 Generated contract number:', contractNumber);
 
       // Step 4: Create contract in database
       const contract = await this.createContractInDatabase(
         data,
         contractNumber
       );
-      console.log('💾 Contract saved to database:', contract.id);
 
       // Step 5: Try to trigger Make.com webhook if configured
       if (this.makecomWebhookUrl) {
         // Try Make.com integration for webhook-based processing
-        console.log('🔗 Attempting Make.com webhook integration');
         const webhookTriggered = await this.triggerMakecomWebhook(contract);
 
         if (webhookTriggered) {
@@ -416,21 +371,16 @@ class ContractGenerationService {
               : undefined,
           };
         } else {
-          console.log(
-            '⚠️ Make.com webhook failed, falling back to direct PDF generation'
-          );
         }
       }
 
       // Step 6: Fallback to direct PDF generation
-      console.log('📄 Using direct PDF generation (fallback)');
       try {
         const pdfResult = await this.generatePDFDirectly(
           contract.id,
           contractNumber
         );
         if (pdfResult.success) {
-          console.log('✅ PDF generated directly:', pdfResult.pdf_url);
           return {
             success: true,
             contract_id: contract.id,
@@ -443,9 +393,6 @@ class ContractGenerationService {
               : undefined,
           };
         } else {
-          console.log(
-            '⚠️ Direct PDF generation failed, setting to draft status'
-          );
           return {
             success: true,
             contract_id: contract.id,
@@ -493,8 +440,6 @@ class ContractGenerationService {
     contractNumber: string
   ): Promise<{ success: boolean; pdf_url?: string; error?: string }> {
     try {
-      console.log('📄 Generating PDF directly for contract:', contractId);
-
       // Fetch contract with all related data
       const { data: contract, error: contractError } = await this.supabase
         .from('contracts')
@@ -577,7 +522,6 @@ class ContractGenerationService {
         },
       });
 
-      console.log('✅ PDF generated successfully:', publicUrl);
       return {
         success: true,
         pdf_url: publicUrl,
@@ -596,8 +540,6 @@ class ContractGenerationService {
    */
   async fixStuckProcessingContract(contractId: string): Promise<boolean> {
     try {
-      console.log('🔧 Fixing stuck processing contract:', contractId);
-
       // Get contract details
       const { data: contract, error } = await this.supabase
         .from('contracts')
@@ -611,10 +553,6 @@ class ContractGenerationService {
       }
 
       if (contract.status !== 'processing') {
-        console.log(
-          'ℹ️ Contract is not in processing status:',
-          contract.status
-        );
         return true;
       }
 
@@ -625,7 +563,6 @@ class ContractGenerationService {
       );
 
       if (pdfResult.success) {
-        console.log('✅ Successfully fixed stuck processing contract');
         return true;
       } else {
         // If PDF generation fails, set status to draft
@@ -637,9 +574,6 @@ class ContractGenerationService {
           })
           .eq('id', contractId);
 
-        console.log(
-          '⚠️ Set contract to draft status due to PDF generation failure'
-        );
         return true;
       }
     } catch (error) {
@@ -751,7 +685,6 @@ class ContractGenerationService {
         }
 
         if (byIdData) {
-          console.log('✅ Contract updated with PDF URL (by id):', pdfUrl);
           return true;
         }
       }
@@ -772,7 +705,6 @@ class ContractGenerationService {
         throw new Error('Contract not found by id or contract_number');
       }
 
-      console.log('✅ Contract updated with PDF URL (by number):', pdfUrl);
       return true;
     } catch (error) {
       console.error('❌ Error updating contract with PDF:', error);

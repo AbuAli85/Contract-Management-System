@@ -70,7 +70,6 @@ export default function ApprovedContractsPage() {
   const fetchApprovedContracts = useCallback(async (force = false) => {
     // Prevent multiple simultaneous fetches
     if (fetchAttemptedRef.current && !force) {
-      console.log('⏸️ Fetch already in progress, skipping...');
       return;
     }
 
@@ -106,13 +105,6 @@ export default function ApprovedContractsPage() {
       setPermissionError(false);
       setShowSlowLoadingMessage(false);
 
-      console.log('🔍 Approved Contracts Debug:', {
-        timestamp: new Date().toISOString(),
-        endpoint: '/api/contracts?status=approved',
-        timeout: '10 seconds',
-        retryCount,
-      });
-
       const response = await fetch('/api/contracts?status=approved', {
         signal: controller.signal,
         headers: {
@@ -124,7 +116,6 @@ export default function ApprovedContractsPage() {
       if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
-      console.log(`⏱️ API Response time: ${queryTime}ms`);
 
       const data = await response.json();
 
@@ -167,19 +158,7 @@ export default function ApprovedContractsPage() {
         setContracts(contractsList);
         setError(null);
 
-        console.log('✅ Loaded approved contracts:', {
-          count: contractsList.length,
-          queryTime: `${queryTime}ms`,
-          sampleIds: contractsList.slice(0, 3).map((c: any) => c.id),
-          totalActive: data.activeContracts,
-          requestId: data.requestId,
-          timestamp: new Date().toISOString(),
-        });
-
         if (contractsList.length === 0) {
-          console.log(
-            'ℹ️ No approved contracts found - this is normal, not an error'
-          );
         }
       } else {
         // ✅ FIX: Clear timeouts on error
@@ -238,16 +217,6 @@ export default function ApprovedContractsPage() {
   useEffect(() => {
     mountedRef.current = true;
 
-    console.log('📋 Approved Contracts - Permission Check:', {
-      hasPermission,
-      isAdmin: permissions.isAdmin,
-      isLoading: permissions.isLoading,
-      canRead: permissions.can('contract:read:own'),
-      forceLoad,
-      timestamp: new Date().toISOString(),
-      fetchAttempted: fetchAttemptedRef.current,
-    });
-
     // ✅ FIX: Force load after 4 seconds regardless of permissions (safety net)
     const forceLoadTimeout = setTimeout(() => {
       if (!fetchAttemptedRef.current) {
@@ -274,9 +243,6 @@ export default function ApprovedContractsPage() {
       clearTimeout(forceLoadTimeout);
 
       if (hasPermission || forceLoadRef.current) {
-        console.log(
-          '✅ Permission granted (or forced), fetching approved contracts...'
-        );
         // Call fetchApprovedContracts directly to avoid dependency loop
         fetchApprovedContracts();
       } else {
@@ -290,7 +256,6 @@ export default function ApprovedContractsPage() {
         setPermissionError(true);
       }
     } else {
-      console.log('⏳ Waiting for permissions to load...');
     }
 
     return () => {
@@ -319,7 +284,6 @@ export default function ApprovedContractsPage() {
       setLoading(false);
       setShowSlowLoadingMessage(false);
       setError('Request cancelled by user');
-      console.log('🚫 Request cancelled by user');
     }
   }, []);
 
@@ -699,7 +663,7 @@ export default function ApprovedContractsPage() {
                     </div>
                     <div className='flex items-center gap-2'>
                       <Button variant='outline' size='sm' asChild>
-                        <Link href={`/en/contracts/${contract.id}`}>
+                        <Link href={`/${locale}/contracts/${contract.id}`}>
                           <Eye className='mr-2 h-4 w-4' />
                           View
                         </Link>

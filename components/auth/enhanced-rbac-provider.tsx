@@ -83,8 +83,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
     setIsLoading(true);
 
     try {
-      console.log('🔐 Enhanced RBAC: Loading user roles for:', user.id);
-
       const supabase = createClient();
 
       // Try to fetch user data from profiles table (which exists)
@@ -99,10 +97,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
         .maybeSingle();
 
       if (!profilesError && profilesData?.role) {
-        console.log(
-          '✅ Enhanced RBAC: Found user in profiles by email, role:',
-          profilesData.role
-        );
         userData = {
           id: profilesData.id,
           role: profilesData.role,
@@ -112,9 +106,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
         };
       } else {
         // If not found by email, try by auth ID
-        console.log(
-          '📋 Enhanced RBAC: User not found by email, trying auth ID...'
-        );
         const { data: authIdProfile, error: authIdError } = await supabase
           .from('profiles')
           .select('id, email, role, status, first_name, last_name')
@@ -122,10 +113,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
           .maybeSingle();
 
         if (!authIdError && authIdProfile?.role) {
-          console.log(
-            '✅ Enhanced RBAC: Found user in profiles by auth ID, role:',
-            authIdProfile.role
-          );
           userData = {
             id: authIdProfile.id,
             role: authIdProfile.role,
@@ -135,13 +122,8 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
           };
         } else {
           // Fallback: Use admin detection by email (same as working provider)
-          console.log('📋 Enhanced RBAC: Using admin email fallback...');
           const fallbackRole =
             user.email === 'luxsess2001@gmail.com' ? 'admin' : 'user';
-          console.log(
-            '🔄 Enhanced RBAC: Using email fallback role:',
-            fallbackRole
-          );
 
           userData = {
             id: user.id,
@@ -169,13 +151,6 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
       const permissions = getUserPermissions(role);
       const userCompanyId = userData.company_id;
       const isCompanyMemberStatus = !!(userCompanyId && companyData?.is_active);
-
-      console.log('✅ Enhanced RBAC: User role loaded:', {
-        role,
-        permissions: permissions.length,
-        companyId: userCompanyId,
-        isCompanyMember: isCompanyMemberStatus,
-      });
 
       setUserRole(role);
       setUserPermissions(permissions);
@@ -348,7 +323,6 @@ export function RoleRedirect({
       // Use proper Next.js navigation
       const currentLocale = window.location.pathname.split('/')[1] || 'en';
       const fullRedirectPath = `/${currentLocale}${redirectTo}`;
-      console.log(`🚫 Access denied. Redirecting to: ${fullRedirectPath}`);
       window.location.href = fullRedirectPath;
     }
   }, [userRole, isLoading, allowedRoles, redirectTo]);

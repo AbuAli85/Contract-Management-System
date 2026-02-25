@@ -58,8 +58,6 @@ class OptimizedAuthManager {
   private initializeAuthOptimizations() {
     // Listen for auth state changes
     this.supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔐 Auth state change:', event);
-
       if (event === 'SIGNED_IN' && session) {
         await this.cacheSession(session);
         this.scheduleSessionRefresh(session);
@@ -115,8 +113,6 @@ class OptimizedAuthManager {
           console.warn('Failed to cache session in sessionStorage:', e);
         }
       }
-
-      console.log('✅ Session cached successfully');
     } catch (error) {
       console.error('❌ Failed to cache session:', error);
     }
@@ -171,13 +167,8 @@ class OptimizedAuthManager {
 
     if (timeUntilRefresh > 0) {
       this.refreshTimer = setTimeout(async () => {
-        console.log('🔄 Auto-refreshing session...');
         await this.refreshSession();
       }, timeUntilRefresh);
-
-      console.log(
-        `⏰ Session refresh scheduled in ${Math.round(timeUntilRefresh / 1000 / 60)} minutes`
-      );
     }
   }
 
@@ -213,7 +204,6 @@ class OptimizedAuthManager {
           parsedCache.expiresAt > now &&
           now - parsedCache.lastRefresh < this.config.permissionCacheDuration
         ) {
-          console.log('📋 Loaded cached permissions');
         }
       }
     } catch (e) {
@@ -232,7 +222,6 @@ class OptimizedAuthManager {
         if (error) throw error;
 
         if (data?.session) {
-          console.log('✅ Session refreshed successfully');
           return true;
         }
 
@@ -246,7 +235,6 @@ class OptimizedAuthManager {
             baseDelay * Math.pow(2, retries - 1),
             maxDelay
           );
-          console.log(`⏳ Retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -290,8 +278,6 @@ class OptimizedAuthManager {
           this.refreshSession();
         }
       });
-
-      console.log('🔧 Background refresh worker initialized');
     } catch (error) {
       console.warn('Failed to initialize background worker:', error);
     }

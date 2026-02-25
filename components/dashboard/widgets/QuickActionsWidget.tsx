@@ -1,4 +1,5 @@
 'use client';
+import { useParams } from 'next/navigation';
 
 import { BaseWidget } from '../BaseWidget';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'create_contract',
     label: 'New Contract',
     icon: <Plus className='h-4 w-4' />,
-    href: '/en/contracts/create',
+    href: `/${locale}/contracts/create`,
     description: 'Create a new contract',
     color: 'primary',
   },
@@ -36,7 +37,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'add_promoter',
     label: 'Add Promoter',
     icon: <Users className='h-4 w-4' />,
-    href: '/en/promoters/create',
+    href: `/${locale}/promoters/create`,
     description: 'Register new promoter',
     color: 'default',
   },
@@ -44,7 +45,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'add_party',
     label: 'Add Party',
     icon: <Building className='h-4 w-4' />,
-    href: '/en/parties/create',
+    href: `/${locale}/parties/create`,
     description: 'Create new party',
     color: 'default',
   },
@@ -52,7 +53,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'search_contracts',
     label: 'Search',
     icon: <Search className='h-4 w-4' />,
-    href: '/en/contracts',
+    href: `/${locale}/contracts`,
     description: 'Search contracts',
     color: 'default',
   },
@@ -60,7 +61,7 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'view_reports',
     label: 'Reports',
     icon: <BarChart className='h-4 w-4' />,
-    href: '/en/reports',
+    href: `/${locale}/reports`,
     description: 'View analytics',
     color: 'default',
   },
@@ -68,13 +69,15 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'settings',
     label: 'Settings',
     icon: <Settings className='h-4 w-4' />,
-    href: '/en/settings',
+    href: `/${locale}/settings`,
     description: 'System settings',
     color: 'default',
   },
 ];
 
 export function QuickActionsWidget(props: WidgetProps) {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const actions = props.config.customSettings?.actions || DEFAULT_ACTIONS;
   const layout = props.config.displayOptions?.theme || 'grid'; // 'grid' or 'list'
 

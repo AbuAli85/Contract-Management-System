@@ -187,10 +187,6 @@ export default function UnifiedSignupForm() {
     setCaptchaError('');
 
     try {
-      console.log('🔐 Unified Signup - Starting signup process...');
-      console.log('🔐 Unified Signup - Email:', formData.email);
-      console.log('🔐 Unified Signup - Role:', formData.role);
-
       // Step 1: Create auth user with CAPTCHA if needed
       const signupOptions: any = {
         email: formData.email.trim(),
@@ -235,8 +231,6 @@ export default function UnifiedSignupForm() {
         return;
       }
 
-      console.log('🔐 Unified Signup - Auth user created:', authData.user.id);
-
       // Step 2: Create user profile
       const { error: profileError } = await supabase.from('users').insert({
         id: authData.user.id,
@@ -256,7 +250,6 @@ export default function UnifiedSignupForm() {
           'Profile creation failed, but auth user was created successfully'
         );
       } else {
-        console.log('🔐 Unified Signup - Profile created successfully');
       }
 
       // Step 3: Create company if provider
@@ -274,7 +267,6 @@ export default function UnifiedSignupForm() {
         if (companyError) {
           console.warn('Company creation failed:', companyError);
         } else {
-          console.log('Company created successfully');
         }
       }
 
@@ -283,7 +275,7 @@ export default function UnifiedSignupForm() {
       // Redirect to login after a delay
       setTimeout(() => {
         router.push(
-          '/en/auth/login?message=Account created successfully. You can now sign in.'
+          `/${locale}/auth/login?message=Account created successfully. You can now sign in.`
         );
       }, 2000);
     } catch (error) {

@@ -9,7 +9,9 @@ export default function ManagePromotersPage() {
 
   useEffect(() => {
     // Redirect to the localized version
-    router.replace('/en/manage-promoters');
+    router.replace(
+      `/${typeof window !== 'undefined' && navigator.language?.startsWith('ar') ? 'ar' : 'en'}/manage-promoters`
+    );
   }, [router]);
 
   return (

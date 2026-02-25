@@ -23,8 +23,6 @@ export class NotificationService {
    */
   async createNotification(data: NotificationData) {
     try {
-      console.log('📨 Creating notification:', data);
-
       const { data: notification, error } = await this.supabase
         .from('notifications')
         .insert({
@@ -44,7 +42,6 @@ export class NotificationService {
 
       if (error) throw error;
 
-      console.log('✅ Notification created:', notification.id);
       return notification;
     } catch (error) {
       console.error('❌ Error creating notification:', error);
@@ -190,8 +187,6 @@ export class NotificationService {
         .eq('id', notificationId);
 
       if (error) throw error;
-
-      console.log('✅ Notification marked as read:', notificationId);
     } catch (error) {
       console.error('❌ Error marking notification as read:', error);
       throw error;
@@ -210,8 +205,6 @@ export class NotificationService {
         .eq('read', false);
 
       if (error) throw error;
-
-      console.log('✅ All notifications marked as read for user:', userId);
     } catch (error) {
       console.error('❌ Error marking all notifications as read:', error);
       throw error;
@@ -229,8 +222,6 @@ export class NotificationService {
         .eq('id', notificationId);
 
       if (error) throw error;
-
-      console.log('✅ Notification deleted:', notificationId);
     } catch (error) {
       console.error('❌ Error deleting notification:', error);
       throw error;
@@ -289,8 +280,6 @@ export class NotificationService {
         .lt('expires_at', new Date().toISOString());
 
       if (error) throw error;
-
-      console.log('✅ Expired notifications cleaned up');
     } catch (error) {
       console.error('❌ Error cleaning up expired notifications:', error);
       throw error;
@@ -350,8 +339,6 @@ export const createTestNotifications = async (userId: string) => {
       'Platform Update Available',
       'New features have been added to your dashboard. Check out the updated booking management tools!'
     );
-
-    console.log('✅ Test notifications created successfully!');
   } catch (error) {
     console.error('❌ Error creating test notifications:', error);
   }

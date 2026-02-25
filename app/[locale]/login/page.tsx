@@ -1,21 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginRedirectPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
 
   useEffect(() => {
-    // Redirect to the auth login page with locale
-    router.replace('/en/auth/login');
-  }, [router]);
+    router.replace(`/${locale}/auth/login`);
+  }, [router, locale]);
 
   return (
     <div className='flex min-h-screen items-center justify-center'>
-      <div className='text-center'>
-        <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600'></div>
-        <p>Redirecting to login...</p>
+      <div className='flex flex-col items-center gap-4 text-center'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary' />
+        <p className='text-sm text-muted-foreground'>Redirecting to login...</p>
       </div>
     </div>
   );

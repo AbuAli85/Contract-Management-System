@@ -154,14 +154,6 @@ export function PromoterExportPrint({
         .filter(s => s.isSelected)
         .map(s => s.id);
 
-      console.log('Exporting promoter profile:', {
-        promoterId,
-        format: exportFormat,
-        type: exportType,
-        sections: selectedSections,
-        action,
-      });
-
       // Generate export data
       const exportData = {
         promoter: promoterData,
@@ -212,7 +204,6 @@ export function PromoterExportPrint({
         content = JSON.stringify(data, null, 2);
         mimeType = 'application/pdf';
         extension = 'pdf';
-        console.log('PDF generation would happen here');
         break;
       case 'excel':
         // In production, use a library like xlsx

@@ -27,8 +27,6 @@ export async function triggerWebhook(
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      console.log(`Triggering webhook (attempt ${attempt}/${retries}):`, event);
-
       const response = await fetch('/api/bookings/webhook', {
         method: 'POST',
         headers: {
@@ -44,7 +42,6 @@ export async function triggerWebhook(
 
       if (response.ok) {
         const result = await response.json();
-        console.log(`✅ Webhook triggered successfully:`, event);
         return {
           success: true,
           details: result,

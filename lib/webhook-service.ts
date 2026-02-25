@@ -27,8 +27,6 @@ export class WebhookService {
       throw new Error('Main webhook URL not configured');
     }
 
-    console.log('🔄 Sending to main webhook:', this.MAIN_WEBHOOK_URL);
-
     try {
       const response = await fetch(this.MAIN_WEBHOOK_URL, {
         method: 'POST',
@@ -62,7 +60,6 @@ export class WebhookService {
         result = { status: 'accepted', message: responseText.trim() };
       }
 
-      console.log('✅ Main webhook success:', result);
       return result;
     } catch (error) {
       console.error('❌ Main webhook error:', error);
@@ -86,8 +83,6 @@ export class WebhookService {
       );
       return null;
     }
-
-    console.log('📱 Sending to Slack webhook:', this.SLACK_WEBHOOK_URL);
 
     try {
       const response = await fetch(this.SLACK_WEBHOOK_URL, {
@@ -120,7 +115,6 @@ export class WebhookService {
         result = { status: 'accepted', message: responseText.trim() };
       }
 
-      console.log('✅ Slack webhook success:', result);
       return result;
     } catch (error) {
       console.error('❌ Slack webhook error:', error);
@@ -162,7 +156,6 @@ export class WebhookService {
               source: 'contract-app-pdf-ready',
             }),
           });
-          console.log('✅ PDF Ready webhook notified');
         } catch (pdfReadyError) {
           console.error('❌ PDF Ready webhook error:', pdfReadyError);
           // Don't fail the main process if PDF Ready webhook fails
@@ -187,15 +180,11 @@ export class WebhookService {
       test_mode: true,
     };
 
-    console.log('🧪 Testing webhooks...');
-
     try {
       // Test main webhook
-      console.log('Testing main webhook...');
       await this.sendToMainWebhook(testData);
 
       // Test Slack webhook
-      console.log('Testing Slack webhook...');
       await this.sendToSlackWebhook({
         contract_number: 'PAC-23072024-0001',
         pdf_url: 'https://example.com/test.pdf',
@@ -204,7 +193,6 @@ export class WebhookService {
         employer_name: 'Test Employer',
       });
 
-      console.log('✅ All webhooks tested successfully');
       return { success: true, message: 'All webhooks working' };
     } catch (error) {
       console.error('❌ Webhook test failed:', error);

@@ -94,12 +94,6 @@ export default function RegisterNewUserPage() {
     setError('');
 
     try {
-      console.log(
-        '🔐 New Registration - Starting:',
-        formData.email,
-        formData.role
-      );
-
       // Step 1: Sign up with Supabase Auth
       if (!supabase) {
         setError('Failed to initialize database connection');
@@ -129,8 +123,6 @@ export default function RegisterNewUserPage() {
         return;
       }
 
-      console.log('✅ Auth signup successful:', authData.user.id);
-
       // Step 2: Create public user record
       // Note: User status is set to 'pending' by default for security
       // Only 'provider', 'client', and 'user' roles are allowed for self-registration
@@ -157,17 +149,12 @@ export default function RegisterNewUserPage() {
       if (publicUserError) {
         console.error('❌ Public user creation error:', publicUserError);
         // Continue anyway - the auth user was created successfully
-        console.log(
-          '⚠️ Auth user created but public user failed - this is fixable'
-        );
       } else {
-        console.log('✅ Public user record created successfully');
       }
 
       // Step 3: Email confirmation
       // Note: Email confirmation should be handled server-side for security
       // Users will receive a confirmation email from Supabase
-      console.log('📧 Confirmation email sent to:', formData.email);
 
       setMessage(
         `✅ Registration successful! Please check ${formData.email} for confirmation and wait for admin approval.`
@@ -190,10 +177,10 @@ export default function RegisterNewUserPage() {
   const goToDashboard = () => {
     const dashboardPath =
       formData.role === 'provider'
-        ? '/en/dashboard/provider-comprehensive'
+        ? `/${locale}/dashboard/provider-comprehensive`
         : formData.role === 'client'
-          ? '/en/dashboard/client-comprehensive'
-          : '/en/dashboard';
+          ? `/${locale}/dashboard/client-comprehensive`
+          : `/${locale}/dashboard`;
 
     window.location.href = dashboardPath;
   };
@@ -252,7 +239,9 @@ export default function RegisterNewUserPage() {
               <Button
                 variant='outline'
                 className='w-full'
-                onClick={() => window.open('/en/dashboard-preview', '_blank')}
+                onClick={() =>
+                  window.open(`/${locale}/dashboard-preview`, '_blank')
+                }
               >
                 👁️ View Dashboard Demo
               </Button>

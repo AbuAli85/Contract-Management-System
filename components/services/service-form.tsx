@@ -61,8 +61,6 @@ export function ServiceForm({ providers }: ServiceFormProps) {
     };
 
     try {
-      console.log('🔗 Sending service creation request:', payload);
-
       // Send webhook via API route
       const webhookResponse = await fetch('/api/webhooks/serviceCreation', {
         method: 'POST',
@@ -81,7 +79,6 @@ export function ServiceForm({ providers }: ServiceFormProps) {
       }
 
       const webhookResult = await webhookResponse.json();
-      console.log('✅ Service creation webhook successful:', webhookResult);
 
       setStatus('success');
 

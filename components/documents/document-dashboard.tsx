@@ -236,9 +236,7 @@ export function DocumentDashboard({
             companyId={companyId}
             showAllCompanies={canViewAll}
             onDocumentUpdate={() => setRefreshKey(prev => prev + 1)}
-            onNotificationSent={documentId => {
-              console.log(`Notification sent for document: ${documentId}`);
-            }}
+            onNotificationSent={documentId => {}}
           />
         </TabsContent>
 

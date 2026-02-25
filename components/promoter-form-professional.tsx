@@ -298,7 +298,6 @@ export default function PromoterFormProfessional(
         return;
       }
 
-      console.log('[Promoter Form] Fetched', data?.length || 0, 'employers');
       setEmployers(data || []);
     } catch (error) {
       clearTimeout(timeoutId);

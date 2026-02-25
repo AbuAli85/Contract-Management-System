@@ -44,8 +44,6 @@ export function PromotersDebugInfo() {
     setDebugInfo(prev => ({ ...prev, apiStatus: 'loading', error: null }));
 
     try {
-      console.log('🔍 Debug: Testing promoters API...');
-
       const startTime = Date.now();
       // Add timestamp to force fresh request
       const timestamp = new Date().getTime();
@@ -63,7 +61,6 @@ export function PromotersDebugInfo() {
       // Try each URL until one works
       for (const url of urls) {
         try {
-          console.log(`🔍 Debug: Trying URL: ${url}`);
           response = await fetch(url, {
             cache: 'no-store',
             headers: {
@@ -75,11 +72,9 @@ export function PromotersDebugInfo() {
           });
 
           if (response.ok) {
-            console.log(`✅ Debug: Success with URL: ${url}`);
             break;
           }
         } catch (error) {
-          console.log(`❌ Debug: Failed with URL ${url}:`, error);
           lastError = error;
         }
       }
@@ -91,7 +86,6 @@ export function PromotersDebugInfo() {
       const endTime = Date.now();
 
       const responseTime = endTime - startTime;
-      console.log(`🔍 Debug: API response time: ${responseTime}ms`);
 
       const data = await response.json();
 
@@ -115,15 +109,6 @@ export function PromotersDebugInfo() {
           headers,
         },
       });
-
-      console.log('🔍 Debug: API response:', data);
-      console.log('🔍 Debug: Promoters count:', data.promoters?.length || 0);
-      console.log('🔍 Debug: Response URL:', response.url);
-      console.log('🔍 Debug: Response status:', response.status);
-      console.log(
-        '🔍 Debug: Response headers:',
-        Object.fromEntries(response.headers.entries())
-      );
     } catch (error) {
       console.error('🔍 Debug: Fetch error:', error);
       setDebugInfo(prev => ({
@@ -176,7 +161,6 @@ export function PromotersDebugInfo() {
                     }
                   );
                   const data = await response.json();
-                  console.log('🔍 Direct API test result:', data);
                   alert(
                     `Direct API Test:\nStatus: ${response.status}\nPromoters: ${data.promoters?.length || 0}\nCount: ${data.count || 0}`
                   );

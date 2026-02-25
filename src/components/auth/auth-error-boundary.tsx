@@ -97,7 +97,7 @@ export class AuthErrorBoundary extends Component<Props, State> {
   };
 
   private handleGoHome = () => {
-    window.location.href = '/en/dashboard';
+    window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard`;
   };
 
   private handleSignOut = async () => {
@@ -105,10 +105,10 @@ export class AuthErrorBoundary extends Component<Props, State> {
       // Import auth provider dynamically to avoid circular dependencies
       const { useAuthContext } = await import('@/components/auth-provider');
       // Note: This won't work in class components, but we'll handle it in the functional wrapper
-      window.location.href = '/en/logout';
+      window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/logout`;
     } catch (error) {
       console.error('Sign out failed:', error);
-      window.location.href = '/en/logout';
+      window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/logout`;
     }
   };
 
@@ -290,7 +290,9 @@ export function AuthErrorBoundaryWrapper({
       console.log('Authentication error detected, redirecting to login...');
       // Redirect to login page for auth errors
       setTimeout(() => {
-        router.push('/en/login');
+        router.push(
+          `/${typeof window !== 'undefined' && navigator.language?.startsWith('ar') ? 'ar' : 'en'}/login`
+        );
       }, 2000);
     }
   };
@@ -298,10 +300,14 @@ export function AuthErrorBoundaryWrapper({
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push('/en/login');
+      router.push(
+        `/${typeof window !== 'undefined' && navigator.language?.startsWith('ar') ? 'ar' : 'en'}/login`
+      );
     } catch (error) {
       console.error('Sign out failed:', error);
-      router.push('/en/login');
+      router.push(
+        `/${typeof window !== 'undefined' && navigator.language?.startsWith('ar') ? 'ar' : 'en'}/login`
+      );
     }
   };
 

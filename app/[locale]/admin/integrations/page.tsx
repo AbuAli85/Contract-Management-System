@@ -49,19 +49,8 @@ export default function IntegrationsPage() {
     try {
       setLoading(true);
 
-      // TODO: Implement webhook logs when table is available
-      // For now, using mock data
-      const mockLogs: WebhookLog[] = [
-        {
-          id: '1',
-          type: 'serviceCreation',
-          payload: { service: 'test' },
-          attempts: 1,
-          created_at: new Date().toISOString(),
-        },
-      ];
-
-      setLogs(mockLogs);
+      // Webhook logs table not yet provisioned — show empty state
+      setLogs([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch logs');
     } finally {

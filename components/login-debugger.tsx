@@ -31,19 +31,10 @@ export function LoginDebugger() {
     setDebugInfo(null);
 
     try {
-      console.log('🔍 Debug Login - Starting login attempt...');
-      console.log('🔍 Debug Login - Email:', email);
-      console.log('🔍 Debug Login - Password length:', password.length);
-
       const requestBody = {
         email: email.trim(),
         password,
       };
-
-      console.log('🔍 Debug Login - Request body:', {
-        ...requestBody,
-        password: '[HIDDEN]',
-      });
 
       const response = await fetch('/api/auth/simple-login', {
         method: 'POST',
@@ -53,19 +44,11 @@ export function LoginDebugger() {
         body: JSON.stringify(requestBody),
       });
 
-      console.log('🔍 Debug Login - Response status:', response.status);
-      console.log(
-        '🔍 Debug Login - Response headers:',
-        Object.fromEntries(response.headers.entries())
-      );
-
       const responseText = await response.text();
-      console.log('🔍 Debug Login - Response text:', responseText);
 
       let responseData;
       try {
         responseData = JSON.parse(responseText);
-        console.log('🔍 Debug Login - Parsed response:', responseData);
       } catch (parseError) {
         console.error('🔍 Debug Login - JSON parse error:', parseError);
         setError(`Invalid JSON response: ${responseText}`);
@@ -84,8 +67,6 @@ export function LoginDebugger() {
       setDebugInfo(debugData);
 
       if (response.ok) {
-        console.log('🔍 Debug Login - Login successful!');
-        console.log('✅ Login successful:', responseData);
         setSuccess(
           `Login successful! Welcome ${responseData.user?.user_metadata?.full_name || responseData.user?.email}`
         );
@@ -113,8 +94,6 @@ export function LoginDebugger() {
     setDebugInfo(null);
 
     try {
-      console.log('🔍 Debug Login - Testing GET endpoint...');
-
       const response = await fetch('/api/auth/simple-login', {
         method: 'GET',
       });
@@ -131,7 +110,6 @@ export function LoginDebugger() {
       };
 
       setDebugInfo(debugData);
-      console.log('🔍 Debug Login - GET test result:', responseData);
     } catch (fetchError) {
       console.error('🔍 Debug Login - GET test error:', fetchError);
       setError(

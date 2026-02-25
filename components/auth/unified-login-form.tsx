@@ -117,9 +117,6 @@ export default function UnifiedLoginForm() {
     setCaptchaError('');
 
     try {
-      console.log('🔐 Unified Login - Starting login process...');
-      console.log('🔐 Unified Login - Email:', formData.email);
-
       // Step 1: Try authentication with CAPTCHA if needed
       const authOptions: any = {
         email: formData.email.trim(),
@@ -157,8 +154,6 @@ export default function UnifiedLoginForm() {
         setError('Login failed: No user data returned');
         return;
       }
-
-      console.log('🔐 Unified Login - Auth successful:', authData.user.id);
 
       // Step 2: Get user profile
       const { data: profile, error: profileError } = await supabase
@@ -216,7 +211,7 @@ export default function UnifiedLoginForm() {
       // Step 4: Determine redirect path based on role
       const userRole =
         profile?.role || authData.user.user_metadata?.role || 'user';
-      let redirectPath = '/en/dashboard';
+      let redirectPath = `/${locale}/dashboard`;
 
       // Check if this user is an employee (assigned to an employer)
       const { data: employeeRecord } = await supabase
@@ -239,45 +234,43 @@ export default function UnifiedLoginForm() {
 
       switch (userRole) {
         case 'provider':
-          redirectPath = '/en/dashboard/provider-comprehensive';
+          redirectPath = `/${locale}/dashboard/provider-comprehensive`;
           break;
         case 'client':
-          redirectPath = '/en/dashboard/client-comprehensive';
+          redirectPath = `/${locale}/dashboard/client-comprehensive`;
           break;
         case 'admin':
         case 'super_admin':
-          redirectPath = '/en/dashboard';
+          redirectPath = `/${locale}/dashboard`;
           break;
         case 'hr_admin':
         case 'hr_staff':
-          redirectPath = '/en/hr';
+          redirectPath = `/${locale}/hr`;
           break;
         case 'employer':
-          redirectPath = '/en/employer/team';
+          redirectPath = `/${locale}/employer/team`;
           break;
         case 'promoter':
         case 'user':
           // Check if user is an employee first
           if (isEmployee) {
-            redirectPath = '/en/employee/dashboard';
+            redirectPath = `/${locale}/employee/dashboard`;
           } else if (isEmployer) {
-            redirectPath = '/en/employer/team';
+            redirectPath = `/${locale}/employer/team`;
           } else {
-            redirectPath = '/en/dashboard';
+            redirectPath = `/${locale}/dashboard`;
           }
           break;
         default:
           // For any unrecognized role, check relationships
           if (isEmployee) {
-            redirectPath = '/en/employee/dashboard';
+            redirectPath = `/${locale}/employee/dashboard`;
           } else if (isEmployer) {
-            redirectPath = '/en/employer/team';
+            redirectPath = `/${locale}/employer/team`;
           } else {
-            redirectPath = '/en/dashboard';
+            redirectPath = `/${locale}/dashboard`;
           }
       }
-
-      console.log('🔐 Unified Login - Redirecting to:', redirectPath);
 
       // Redirect after a short delay
       setTimeout(() => {
@@ -327,7 +320,6 @@ export default function UnifiedLoginForm() {
     setShowCaptcha(false);
     setCaptchaToken(null);
     // In a real implementation, you might want to set a bypass flag
-    console.log('CAPTCHA bypassed for development');
   };
 
   // Show CAPTCHA error handler if it's a CAPTCHA-related error

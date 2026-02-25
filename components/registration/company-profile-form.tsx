@@ -197,7 +197,6 @@ export function CompanyProfileForm({
 
       // If this is a provider registration, ensure the role is properly set up
       if (role === 'provider') {
-        console.log('Setting up provider role...');
         try {
           const roleSetupResponse = await fetch('/api/setup-user-role', {
             method: 'POST',
@@ -212,7 +211,6 @@ export function CompanyProfileForm({
 
           if (roleSetupResponse.ok) {
             const roleSetupResult = await roleSetupResponse.json();
-            console.log('Provider role setup successful:', roleSetupResult);
           } else {
             console.warn('Provider role setup failed, but continuing...');
           }

@@ -51,7 +51,6 @@ export function PromoterFormSimpleExample() {
         throw new Error(result.error || 'Failed to create promoter');
       }
 
-      console.log('Promoter created:', result.promoter);
       toast.success('Promoter created successfully!');
 
       // Optional: Redirect or reset form
@@ -68,7 +67,6 @@ export function PromoterFormSimpleExample() {
   };
 
   const handleCancel = () => {
-    console.log('Form cancelled');
     // Optional: Navigate away or clear form
     // router.back();
   };

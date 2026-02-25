@@ -23,16 +23,6 @@ if (typeof window !== 'undefined') {
   // Alternative icons
   (window as any).Cog = Cog;
   (window as any).Sliders = Sliders;
-
-  console.log('🎯 Global icons initialized:', {
-    Settings: !!Settings,
-    UserPlus: !!UserPlus,
-    Menu: !!Menu,
-    Search: !!Search,
-    HelpCircle: !!HelpCircle,
-    Cog: !!Cog,
-    Sliders: !!Sliders,
-  });
 }
 
 export { Settings, UserPlus, Menu, Search, Cog, Sliders };

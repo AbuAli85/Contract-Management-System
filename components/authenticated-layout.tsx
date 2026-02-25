@@ -83,9 +83,6 @@ export function AuthenticatedLayout({
         const loginTime = parseInt(justLoggedIn);
         if (Date.now() - loginTime < 5000) {
           // Increased from 2000ms to 5000ms
-          console.log(
-            '🔍 AuthenticatedLayout: Just logged in, waiting for auth state...'
-          );
           return;
         } else {
           // Clear the flag after 5 seconds
@@ -98,7 +95,6 @@ export function AuthenticatedLayout({
     // Wait for both regular loading and initial loading to complete
     if (!loading && !initialLoading && !user) {
       // Redirect to login if not authenticated
-      console.log('🔍 AuthenticatedLayout: No user, redirecting to login');
       redirectingRef.current = true; // Mark that we're redirecting
       router.push(`/${locale}/auth/login`);
       return;
@@ -155,9 +151,6 @@ export function AuthenticatedLayout({
 
   // If we just logged in and loading is done but user isn't set yet, wait a bit more
   if (recentLogin && !user) {
-    console.log(
-      '🔍 AuthenticatedLayout: Recent login, waiting for user to load...'
-    );
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center'>
@@ -170,7 +163,6 @@ export function AuthenticatedLayout({
 
   // Check if user is not authenticated (for protected pages only)
   if (!user) {
-    console.log('🔍 AuthenticatedLayout: No user, showing login prompt');
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center max-w-md mx-auto p-6'>
@@ -323,7 +315,6 @@ export function AuthenticatedLayout({
 
   // Show login prompt if no user and not a public page
   if (!user && !isPublicPage) {
-    console.log('🔍 AuthenticatedLayout: No user, showing login prompt');
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='text-center'>

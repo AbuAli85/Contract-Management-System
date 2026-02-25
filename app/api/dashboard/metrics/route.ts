@@ -1,100 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const _period = searchParams.get('period') || 'today';
+    const supabase = await createClient();
 
-    // Mock data for the beautiful dashboard
-    const mockMetrics = {
-      totalPromoters: 24,
-      activePromoters: 18,
-      totalContracts: 156,
-      activeContracts: 89,
-      totalRevenue: 125000,
-      monthlyGrowth: 12.5,
-      attendanceRate: 87.3,
-      completionRate: 94.2,
-      averageRating: 4.6,
-      totalTasks: 342,
-      completedTasks: 298,
-      pendingTasks: 44,
-      overdueTasks: 8,
-      topPerformers: [
-        {
-          id: 1,
-          name: 'Sarah Johnson',
-          performance: 98,
-          tasks: 45,
-          rating: 4.9,
-        },
-        { id: 2, name: 'Mike Chen', performance: 95, tasks: 42, rating: 4.8 },
-        { id: 3, name: 'Emma Davis', performance: 92, tasks: 38, rating: 4.7 },
-        {
-          id: 4,
-          name: 'Alex Rodriguez',
-          performance: 89,
-          tasks: 35,
-          rating: 4.6,
-        },
-        { id: 5, name: 'Lisa Wang', performance: 87, tasks: 33, rating: 4.5 },
-      ],
-      recentActivity: [
-        {
-          id: 1,
-          type: 'contract_signed',
-          title: 'New Contract Signed',
-          description: 'Contract #CTR-2024-001 signed by ABC Corp',
-          timestamp: new Date().toISOString(),
-          status: 'completed',
-        },
-        {
-          id: 2,
-          type: 'promoter_added',
-          title: 'New Promoter Added',
-          description: 'Sarah Johnson joined the team',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          status: 'completed',
-        },
-        {
-          id: 3,
-          type: 'task_completed',
-          title: 'Task Completed',
-          description: 'Product launch campaign completed',
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          status: 'completed',
-        },
-        {
-          id: 4,
-          type: 'payment_received',
-          title: 'Payment Received',
-          description: 'Payment of $5,000 received from XYZ Inc',
-          timestamp: new Date(Date.now() - 10800000).toISOString(),
-          status: 'completed',
-        },
-        {
-          id: 5,
-          type: 'meeting_scheduled',
-          title: 'Meeting Scheduled',
-          description: 'Client meeting scheduled for tomorrow',
-          timestamp: new Date(Date.now() - 14400000).toISOString(),
-          status: 'pending',
-        },
-      ],
-      performanceTrends: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        promoters: [18, 20, 22, 21, 24, 24],
-        contracts: [45, 52, 58, 63, 71, 89],
-        revenue: [45000, 52000, 58000, 63000, 71000, 125000],
-      },
+    // Run all queries in parallel for performance
+    const [
+      promotersResult,
+      contractsResult,
+      tasksResult,
+      recentContractsResult,
+    ] = await Promise.all([
+      supabase
+        .from('promoters')
+        .select('id, status', { count: 'exact', head: false })
+        .limit(1000),
+      supabase
+        .from('contracts')
+        .select('id, status, created_at', { count: 'exact', head: false })
+        .limit(1000),
+      supabase
+        .from('tasks')
+        .select('id, status', { count: 'exact', head: false })
+        .limit(1000),
+      supabase
+        .from('contracts')
+        .select('id, status, created_at, contract_number')
+        .order('created_at', { ascending: false })
+        .limit(5),
+    ]);
+
+    const promoters = promotersResult.data ?? [];
+    const contracts = contractsResult.data ?? [];
+    const tasks = tasksResult.data ?? [];
+    const recentContracts = recentContractsResult.data ?? [];
+
+    const totalPromoters = promoters.length;
+    const activePromoters = promoters.filter(p => p.status === 'active').length;
+
+    const totalContracts = contracts.length;
+    const activeContracts = contracts.filter(
+      c => c.status === 'active' || c.status === 'approved'
+    ).length;
+
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const pendingTasks = tasks.filter(
+      t => t.status === 'pending' || t.status === 'in_progress'
+    ).length;
+    const overdueTasks = tasks.filter(t => t.status === 'overdue').length;
+
+    const completionRate =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Build recent activity from real contracts
+    const recentActivity = recentContracts.map((c, i) => ({
+      id: i + 1,
+      type: 'contract_update',
+      title: `Contract ${c.status === 'approved' ? 'Approved' : 'Updated'}`,
+      description: `Contract #${c.contract_number ?? c.id} is ${c.status}`,
+      timestamp: c.created_at ?? new Date().toISOString(),
+      status: c.status === 'approved' ? 'completed' : 'pending',
+    }));
+
+    const metrics = {
+      totalPromoters,
+      activePromoters,
+      totalContracts,
+      activeContracts,
+      totalTasks,
+      completedTasks,
+      pendingTasks,
+      overdueTasks,
+      completionRate,
+      recentActivity,
     };
 
-    return NextResponse.json(mockMetrics);
+    return NextResponse.json(metrics, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (error) {
-    console.error('Dashboard metrics error:', error);
     return NextResponse.json(
       {
         success: false,

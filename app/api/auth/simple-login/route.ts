@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const { email, password, locale = 'en' } = body;
 
     // Validate required fields
     if (!email || !password) {
@@ -120,7 +120,8 @@ export async function POST(request: NextRequest) {
       session: authData.session,
       profile,
       redirectPath: getRedirectPath(
-        (profile as any)?.role || authData.user.user_metadata?.role || 'user'
+        (profile as any)?.role || authData.user.user_metadata?.role || 'user',
+        locale
       ),
     });
   } catch (error) {
@@ -170,20 +171,20 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function getRedirectPath(role: string): string {
+function getRedirectPath(role: string, locale: string = 'en'): string {
   switch (role) {
     case 'provider':
-      return '/en/dashboard/provider-comprehensive';
+      return `/${locale}/dashboard/provider-comprehensive`;
     case 'client':
-      return '/en/dashboard/client-comprehensive';
+      return `/${locale}/dashboard/client-comprehensive`;
     case 'admin':
     case 'super_admin':
-      return '/en/dashboard';
+      return `/${locale}/dashboard`;
     case 'hr_admin':
     case 'hr_staff':
-      return '/en/hr';
+      return `/${locale}/hr`;
     default:
-      return '/en/dashboard';
+      return `/${locale}/dashboard`;
   }
 }
 

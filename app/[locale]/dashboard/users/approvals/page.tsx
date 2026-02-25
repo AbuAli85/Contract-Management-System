@@ -59,7 +59,6 @@ export default function UserApprovalsPage() {
     action: 'approve' | 'reject'
   ) => {
     try {
-      console.log(`🔄 Approval: Starting ${action} for user:`, userId);
       setApproving(userId);
       const newStatus = action === 'approve' ? 'active' : 'inactive';
 
@@ -71,11 +70,8 @@ export default function UserApprovalsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      console.log(`📊 Approval: API response status:`, response.status);
-
       if (response.ok) {
         const result = await response.json();
-        console.log(`✅ Approval: Success result:`, result);
         toast({
           title: 'Success',
           description: `User ${action === 'approve' ? 'approved' : 'rejected'} successfully`,

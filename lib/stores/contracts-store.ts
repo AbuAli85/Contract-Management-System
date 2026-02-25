@@ -98,7 +98,6 @@ const createContractStore = (set: any, get: any) => ({
   },
 
   retryContract: async (contractId: string) => {
-    console.log('Retrying contract:', contractId);
     // In a real app, you'd call an API to retry the contract generation
     // For now, we'll just move it back to 'pending'
     const updatedContracts = get().contracts.map((contract: any) =>

@@ -138,10 +138,6 @@ export async function retryAsync<T>(
 
       // Log retry attempt
       if (process.env.NODE_ENV === 'development') {
-        console.log(
-          `🔄 Retry attempt ${attempt}/${config.maxAttempts} after ${delay}ms`,
-          { error: error?.message || error }
-        );
       }
 
       await sleep(delay);
@@ -262,7 +258,6 @@ export async function retryWithRateLimit<T>(
         const retryAfter = error?.headers?.get?.('Retry-After');
         if (retryAfter) {
           const retryMs = parseInt(retryAfter) * 1000;
-          console.log(`⏳ Rate limited. Waiting ${retryMs}ms before retry...`);
           // This will be used by the delay calculation
           error._retryAfter = retryMs;
         }
@@ -354,7 +349,6 @@ export class CircuitBreaker {
   private reset() {
     this.failures = 0;
     this.isOpen = false;
-    console.log('✅ Circuit breaker reset');
   }
 
   getStatus() {

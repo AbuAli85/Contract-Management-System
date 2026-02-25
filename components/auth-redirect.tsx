@@ -15,16 +15,11 @@ export function AuthRedirect() {
       const isAuthPage = pathname.includes('/auth/');
 
       if (isAuthPage) {
-        console.log(
-          '🔐 AuthRedirect: User is authenticated on auth page, redirecting...'
-        );
-
         // Get locale from pathname
         const segments = pathname.split('/');
         const locale = segments[1] || 'en';
 
         // Use next-intl aware router for proper locale handling
-        console.log('🔐 AuthRedirect: Redirecting to dashboard');
 
         // Use router.replace to avoid adding to browser history
         router.replace('/dashboard');

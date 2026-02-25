@@ -62,11 +62,6 @@ export async function dispatchWebhook(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      console.log(
-        `🔗 Sending ${type} webhook (attempt ${attempt}/${maxAttempts}):`,
-        payload
-      );
-
       const webhookSecret = process.env.WEBHOOK_SECRET;
       const signature = webhookSecret
         ? Buffer.from(JSON.stringify(payload) + webhookSecret).toString(
@@ -90,8 +85,6 @@ export async function dispatchWebhook(
       });
 
       if (response.ok) {
-        console.log(`✅ ${type} webhook successful on attempt ${attempt}`);
-
         // Log successful dispatch
         await logWebhookToDatabase({
           type,
@@ -119,7 +112,6 @@ export async function dispatchWebhook(
     // If this wasn't the last attempt, wait before retrying
     if (attempt < maxAttempts) {
       const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff: 1s, 2s, 4s
-      console.log(`⏳ Waiting ${delay}ms before retry...`);
       await sleep(delay);
     }
   }

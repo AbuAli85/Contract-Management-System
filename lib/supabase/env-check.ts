@@ -15,7 +15,6 @@ export function validateSupabaseEnv() {
     return false;
   }
 
-  console.log('✅ All Supabase environment variables are present');
   return true;
 }
 

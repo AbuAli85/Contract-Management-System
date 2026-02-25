@@ -130,13 +130,6 @@ export function getEnvErrorMessage(checkResult: EnvCheckResult): string {
 export function logEnvCheck(): void {
   const result = validateEnvironmentVariables();
 
-  console.log('\n========================================');
-  console.log('🔍 Environment Variable Check');
-  console.log('========================================');
-  console.log(`Environment: ${result.environment}`);
-  console.log(`Status: ${result.isValid ? '✅ Valid' : '❌ Invalid'}`);
-  console.log('');
-
   if (result.missing.length > 0) {
     console.error('❌ Missing variables:', result.missing);
   }
@@ -150,10 +143,7 @@ export function logEnvCheck(): void {
   }
 
   if (result.isValid && result.warnings.length === 0) {
-    console.log('✅ All environment variables are properly configured');
   }
-
-  console.log('========================================\n');
 }
 
 /**

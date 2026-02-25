@@ -85,12 +85,9 @@ export async function getEnhancedPromoterMetrics(
   if (!forceRefresh) {
     const cached = metricsCache.get();
     if (cached) {
-      console.log('📊 Promoter Metrics: Using cached data');
       return cached;
     }
   }
-
-  console.log('📊 Promoter Metrics: Calculating fresh metrics...');
 
   const supabase = await createClient();
   const { now, thirtyDaysFromNow } = getDateThresholds();
@@ -118,10 +115,6 @@ export async function getEnhancedPromoterMetrics(
       // Filter contracts by company's party_id
       contractsQuery = contractsQuery.or(
         `second_party_id.eq.${partyId},first_party_id.eq.${partyId}`
-      );
-      console.log(
-        '📊 Promoter Metrics: Filtering by company party_id:',
-        partyId
       );
     }
 
@@ -315,17 +308,6 @@ export async function getEnhancedPromoterMetrics(
       });
     }
 
-    console.log('📊 Promoter Metrics Breakdown:', {
-      total: totalWorkforce,
-      activeOnContracts,
-      available: statusCounts[PromoterStatus.AVAILABLE],
-      onLeave: statusCounts[PromoterStatus.ON_LEAVE],
-      inactive: statusCounts[PromoterStatus.INACTIVE],
-      terminated: statusCounts[PromoterStatus.TERMINATED],
-      sum: totalCounted,
-      valid: totalCounted === totalWorkforce ? '✅' : '❌',
-    });
-
     // Build metrics object
     const metrics: EnhancedPromoterMetrics = {
       totalWorkforce,
@@ -370,22 +352,6 @@ export async function getEnhancedPromoterMetrics(
     // Cache the results
     metricsCache.set(metrics);
 
-    console.log('📊 Promoter Metrics: Calculated', {
-      totalWorkforce: metrics.totalWorkforce,
-      statusBreakdown: {
-        active: statusCounts[PromoterStatus.ACTIVE],
-        available: statusCounts[PromoterStatus.AVAILABLE],
-        onLeave: statusCounts[PromoterStatus.ON_LEAVE],
-        inactive: statusCounts[PromoterStatus.INACTIVE],
-        terminated: statusCounts[PromoterStatus.TERMINATED],
-        sum: statusSum,
-      },
-      activeOnContracts: metrics.activeOnContracts,
-      utilizationRate: `${metrics.utilizationRate}%`,
-      complianceRate: `${metrics.complianceRate}%`,
-      dataIntegrity: statusSum === totalWorkforce ? '✅ Valid' : '⚠️ Mismatch',
-    });
-
     return metrics;
   } catch (error) {
     console.error('❌ Error calculating promoter metrics:', error);
@@ -403,7 +369,6 @@ export async function getEnhancedPromoterMetrics(
  */
 export function clearPromoterMetricsCache(): void {
   metricsCache.clear();
-  console.log('🧹 Promoter Metrics: Cache cleared');
 }
 
 /**

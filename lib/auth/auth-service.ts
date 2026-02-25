@@ -34,8 +34,6 @@ export class AuthService {
 
       // Clear sessionStorage
       sessionStorage.clear();
-
-      console.log('Auth cleared successfully');
     } catch (error) {
       console.error('Error clearing auth:', error);
       // Force clear even if there's an error
@@ -61,7 +59,6 @@ export class AuthService {
           error.message.includes('refresh') ||
           error.message.includes('Invalid')
         ) {
-          console.log('Clearing invalid session...');
           await this.clearAuth();
           return { session: null, user: null };
         }

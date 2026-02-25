@@ -14,7 +14,9 @@ export default function EditPromoterPage() {
     if (id) {
       router.replace(`/en/manage-promoters/${id}/edit`);
     } else {
-      router.replace('/en/manage-promoters');
+      router.replace(
+        `/${typeof window !== 'undefined' && navigator.language?.startsWith('ar') ? 'ar' : 'en'}/manage-promoters`
+      );
     }
   }, [router, id]);
 

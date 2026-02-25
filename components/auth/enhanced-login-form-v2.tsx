@@ -133,17 +133,17 @@ export default function EnhancedLoginFormV2() {
   const getRedirectPath = (role: string): string => {
     switch (role) {
       case 'provider':
-        return '/en/dashboard/provider-comprehensive';
+        return `/${locale}/dashboard/provider-comprehensive`;
       case 'client':
-        return '/en/dashboard/client-comprehensive';
+        return `/${locale}/dashboard/client-comprehensive`;
       case 'admin':
       case 'super_admin':
-        return '/en/dashboard';
+        return `/${locale}/dashboard`;
       case 'hr_admin':
       case 'hr_staff':
-        return '/en/hr';
+        return `/${locale}/hr`;
       default:
-        return '/en/dashboard';
+        return `/${locale}/dashboard`;
     }
   };
 

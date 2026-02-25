@@ -50,7 +50,6 @@ export async function syncSessionToSSO() {
       } = await supabase.auth.getSession();
       if (!sessionError && session && session.user) {
         supabaseSession = session;
-        console.log('✅ Found session in Supabase client (from cookies)');
       }
     } catch (getSessionError) {
       console.warn(
@@ -70,7 +69,6 @@ export async function syncSessionToSSO() {
       if (userSession) {
         try {
           sessionData = JSON.parse(userSession);
-          console.log('Found userSession in localStorage');
         } catch (e) {
           console.warn('Could not parse userSession:', e);
         }
@@ -80,7 +78,6 @@ export async function syncSessionToSSO() {
       if (!sessionData && sbAuthToken) {
         try {
           sessionData = JSON.parse(sbAuthToken);
-          console.log('Found sb-auth-token in localStorage');
 
           // Check if it's the storage key format (uuid, version, domain, ts)
           // This is Supabase's internal storage format - we can't use it directly
@@ -119,7 +116,6 @@ export async function syncSessionToSSO() {
         } else {
           supabaseSession = sessionData;
         }
-        console.log('✅ Found session in localStorage');
       }
     }
 
@@ -159,22 +155,16 @@ export async function syncSessionToSSO() {
                     refreshError
                   );
                 } else if (refreshData.session) {
-                  console.log('✅ Session refreshed successfully');
                 }
               } catch (refreshErr) {
                 console.warn('⚠️  Could not refresh session:', refreshErr);
               }
             } else {
-              console.log(
-                '✅ Session set in Supabase client (cookies updated)'
-              );
-
               // Verify cookies were set by checking session again
               const {
                 data: { session: verifySession },
               } = await supabase.auth.getSession();
               if (verifySession && verifySession.user) {
-                console.log('✅ Session verified in cookies');
               } else {
                 console.warn(
                   '⚠️  Session set but not found in cookies. This may cause API route issues.'
@@ -195,7 +185,6 @@ export async function syncSessionToSSO() {
                 refresh_token: existingSession.refresh_token,
               });
               if (!setError) {
-                console.log('✅ Session set using existing refresh_token');
               } else {
                 console.error(
                   'Error setting session with existing refresh_token:',
@@ -223,11 +212,9 @@ export async function syncSessionToSSO() {
         }
       }
 
-      console.log('✅ Session synced to sb-auth-token and cookies for SSO');
       return true;
     }
 
-    console.log('ℹ️ No session found to sync');
     return false;
   } catch (error) {
     console.error('Error syncing session to SSO:', error);
@@ -262,7 +249,6 @@ export function syncSSOToSession() {
       if (sessionData && (sessionData.user || sessionData.access_token)) {
         // Sync to userSession for app compatibility
         localStorage.setItem('userSession', JSON.stringify(sessionData));
-        console.log('✅ SSO session synced to userSession');
         return true;
       }
     }

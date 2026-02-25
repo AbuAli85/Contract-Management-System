@@ -45,8 +45,6 @@ export function DashboardDiagnosticsPanel({
   const runDiagnostics = async () => {
     setIsRunning(true);
     try {
-      console.log('🔍 Starting dashboard diagnostics...');
-
       // Run comprehensive diagnostics
       const diagnosticResults = await runDashboardDiagnostics();
       setResults(diagnosticResults);
@@ -54,8 +52,6 @@ export function DashboardDiagnosticsPanel({
       // Test specific data points
       const dataPointResults = await testDashboardDataPoints();
       setDataPoints(dataPointResults);
-
-      console.log('✅ Diagnostics completed:', diagnosticResults);
     } catch (error) {
       console.error('❌ Diagnostics failed:', error);
       setResults({

@@ -22,17 +22,9 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
 
   useEffect(() => {
     const checkAdminRole = async () => {
-      console.log('🔍 AdminOnlyGuard: Checking admin role...', {
-        user,
-        loading,
-      });
-
       if (loading) return;
 
       if (!user) {
-        console.log(
-          '🔍 AdminOnlyGuard: No user, attempting session refresh...'
-        );
         try {
           await refreshSession();
           // Wait a bit for the session to refresh
@@ -40,16 +32,10 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
 
           // Check again after refresh
           if (!user) {
-            console.log(
-              '🔍 AdminOnlyGuard: Still no user after refresh, redirecting to login'
-            );
             router.push(`/${locale || 'en'}/auth/login`);
             return;
           }
         } catch (error) {
-          console.log(
-            '🔍 AdminOnlyGuard: Session refresh failed, redirecting to login'
-          );
           router.push(`/${locale || 'en'}/auth/login`);
           return;
         }
@@ -62,11 +48,6 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
         // Check user role via API
         const response = await fetch('/api/get-user-role');
         const data = await response.json();
-
-        console.log('🔍 Admin check response:', {
-          status: response.status,
-          data,
-        });
 
         if (response.ok && data.success) {
           setUserRole(data.role.value);

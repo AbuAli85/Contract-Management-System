@@ -148,7 +148,6 @@ export default function DocumentUpload({
     const fetchPromoterName = async () => {
       if (!promoterName || promoterName === 'Unknown') {
         if (promoterId && promoterId !== 'new' && promoterId !== '') {
-          console.log('🔍 Fetching promoter name for ID:', promoterId);
           try {
             const supabase = createClient();
             const { data, error } = await supabase
@@ -158,15 +157,11 @@ export default function DocumentUpload({
               .single();
 
             if (data && !error) {
-              console.log('✅ Found promoter data:', data);
               // We'll store this in a ref or state for use in filename generation
               // For now, we'll log it and use it when creating filenames
             } else {
-              console.log('❌ Could not fetch promoter data:', error?.message);
             }
-          } catch (err) {
-            console.log('❌ Error fetching promoter:', err);
-          }
+          } catch (err) {}
         }
       }
     };
@@ -198,32 +193,12 @@ export default function DocumentUpload({
     async (file: File) => {
       // Prevent multiple simultaneous uploads
       if (uploading) {
-        console.log('Upload already in progress, ignoring new upload request');
         return;
       }
 
       // Debug: Log the values being used for filename generation
-      console.log('🔍 DocumentUpload Debug - Values for filename:');
-      console.log('- promoterName:', promoterName);
-      console.log('- idCardNumber:', idCardNumber);
-      console.log('- passportNumber:', passportNumber);
-      console.log('- documentType:', documentType);
-      console.log('- promoterId:', promoterId);
 
       // Additional debug: Check if values are empty/undefined/null
-      console.log('🔍 Value types and checks:');
-      console.log(
-        '- promoterName type:',
-        typeof promoterName,
-        'isEmpty:',
-        !promoterName || promoterName.trim() === ''
-      );
-      console.log(
-        '- idCardNumber type:',
-        typeof idCardNumber,
-        'isEmpty:',
-        !idCardNumber || idCardNumber.trim() === ''
-      );
 
       const validationError = validateFile(file);
       if (validationError) {
@@ -235,7 +210,6 @@ export default function DocumentUpload({
         return;
       }
 
-      console.log('Starting file upload:', file.name, file.type, file.size);
       setUploading(true);
       setUploadProgress(5); // Start at 5% to show upload has begun
 
@@ -274,15 +248,6 @@ export default function DocumentUpload({
         const fileName = createCleanFilename(file);
         const filePath = `${fileName}`; // Store directly in bucket root for now
 
-        console.log('🔍 Generated filename:', fileName);
-        console.log(
-          '🔍 File extension from:',
-          file.name,
-          'extracted:',
-          file.name.split('.').pop()?.toLowerCase()
-        );
-        console.log('Upload path:', filePath);
-
         // Upload file to Supabase Storage with explicit content type
         const { data, error } = await supabase.storage
           .from('promoter-documents')
@@ -296,10 +261,6 @@ export default function DocumentUpload({
 
         if (error) {
           // If direct upload fails, try using the upload API route
-          console.log(
-            'Direct upload failed, trying API route...',
-            error.message
-          );
 
           try {
             const formData = new FormData();
@@ -310,10 +271,6 @@ export default function DocumentUpload({
             formData.append('passportNumber', passportNumber || '');
             formData.append('documentType', documentType);
 
-            console.log(
-              'Sending to API route with promoter name:',
-              promoterName
-            );
             const response = await fetch('/api/upload', {
               method: 'POST',
               body: formData,
@@ -334,7 +291,6 @@ export default function DocumentUpload({
               throw new Error(result.error || 'Upload failed');
             }
 
-            console.log('API upload successful:', result.url);
             setUploadProgress(100);
 
             const uploadedDoc: UploadedDocument = {
@@ -515,18 +471,13 @@ VALUES ('promoter-documents', 'promoter-documents', false, 5242880);`;
     event.preventDefault(); // Prevent form submission
     event.stopPropagation(); // Stop event bubbling
 
-    console.log('Upload click triggered for:', documentType);
-
     // Try using ref first, then fallback to getElementById
     if (fileInputRef.current) {
-      console.log('Using ref to trigger file input');
       fileInputRef.current.click();
     } else {
-      console.log('Ref not available, using getElementById');
       const fileInput = document.getElementById(
         `${documentType}-upload`
       ) as HTMLInputElement;
-      console.log('File input found:', fileInput);
 
       if (fileInput) {
         fileInput.click();
@@ -540,18 +491,13 @@ VALUES ('promoter-documents', 'promoter-documents', false, 5242880);`;
     event.preventDefault(); // Prevent form submission
     event.stopPropagation(); // Stop event bubbling
 
-    console.log('Replace click triggered for:', documentType);
-
     // Try using ref first, then fallback to getElementById
     if (fileInputRef.current) {
-      console.log('Using ref to trigger file input');
       fileInputRef.current.click();
     } else {
-      console.log('Ref not available, using getElementById');
       const fileInput = document.getElementById(
         `${documentType}-upload`
       ) as HTMLInputElement;
-      console.log('File input found:', fileInput);
 
       if (fileInput) {
         fileInput.click();

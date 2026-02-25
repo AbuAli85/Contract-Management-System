@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   Card,
@@ -52,15 +52,8 @@ interface FeatureCard {
 
 export default function DashboardOverviewPage() {
   const permissions = usePermissions();
-  const pathname = usePathname();
-
-  // Extract locale from pathname
-  const locale =
-    pathname && pathname.startsWith('/en/')
-      ? 'en'
-      : pathname && pathname.startsWith('/ar/')
-        ? 'ar'
-        : 'en';
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
 
   const featureCards: FeatureCard[] = [
     // Contract Management

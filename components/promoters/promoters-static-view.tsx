@@ -73,16 +73,9 @@ export function PromotersStaticView({
   const fetchPromoters = useCallback(
     async (forceRefresh = false) => {
       if (!forceRefresh && promoters.length > 0 && !manualRefresh) {
-        console.log(
-          '🚫 Skipping fetch - data already exists and not manual refresh'
-        );
         return;
       }
 
-      console.log('📡 Fetching promoters data...', {
-        forceRefresh,
-        manualRefresh,
-      });
       setLoading(true);
       setError(null);
 
@@ -109,12 +102,6 @@ export function PromotersStaticView({
         setTotal(data.pagination?.total || 0);
         setLastFetchTime(new Date());
         setManualRefresh(false);
-
-        console.log('✅ Promoters data loaded:', {
-          count: data.promoters?.length || 0,
-          total: data.pagination?.total || 0,
-          timestamp: new Date().toISOString(),
-        });
       } catch (err) {
         console.error('❌ Error fetching promoters:', err);
         setError(
@@ -129,13 +116,11 @@ export function PromotersStaticView({
 
   // Initial load - ONLY on mount
   useEffect(() => {
-    console.log('🚀 Initial load - fetching promoters data');
     fetchPromoters(true);
   }, []); // Empty dependency array - only run once
 
   // Manual refresh handler
   const handleManualRefresh = useCallback(() => {
-    console.log('🔄 Manual refresh triggered');
     setManualRefresh(true);
     fetchPromoters(true);
     toast({

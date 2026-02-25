@@ -41,22 +41,15 @@ export function PendingApprovalsList() {
   const fetchPendingUsers = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching pending users...');
 
       const response = await fetch('/api/users/approval', {
         credentials: 'include', // Include cookies for authentication
         cache: 'no-store',
       });
-      console.log('📊 API Response status:', response.status);
 
       const data = await response.json();
-      console.log('📋 API Response data:', data);
 
       if (data.success) {
-        console.log(
-          '✅ Successfully fetched pending users:',
-          data.pendingUsers
-        );
         setPendingUsers(data.pendingUsers);
       } else {
         console.error('❌ Failed to fetch pending users:', data.error);

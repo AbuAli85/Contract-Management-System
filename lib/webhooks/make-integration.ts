@@ -84,7 +84,6 @@ export async function sendToMakeWebhook(
   const webhookConfig = { ...defaultConfig, ...config };
 
   if (!webhookConfig.enabled || !webhookConfig.url) {
-    console.log('📦 Make.com webhook not configured, skipping');
     return { success: true }; // Not an error if not configured
   }
 
@@ -104,12 +103,6 @@ export async function sendToMakeWebhook(
       ...additionalData,
     };
 
-    console.log(`🚀 Sending booking event to Make.com:`, {
-      event_type: payload.event_type,
-      booking_id: payload.booking_event.booking_id,
-      webhook_url: `${webhookConfig.url.substring(0, 50)}...`,
-    });
-
     const response = await fetch(webhookConfig.url, {
       method: 'POST',
       headers: {
@@ -128,10 +121,6 @@ export async function sendToMakeWebhook(
     }
 
     const result = await response.text();
-    console.log(`✅ Make.com webhook sent successfully:`, {
-      status: response.status,
-      response: result.substring(0, 100),
-    });
 
     return { success: true };
   } catch (error: any) {
@@ -155,10 +144,6 @@ export async function sendToMakeWebhookWithRetry(
   let lastError: string = '';
 
   for (let attempt = 1; attempt <= webhookConfig.retryAttempts; attempt++) {
-    console.log(
-      `🔄 Make.com webhook attempt ${attempt}/${webhookConfig.retryAttempts}`
-    );
-
     const result = await sendToMakeWebhook(
       eventPayload,
       additionalData,
@@ -167,7 +152,6 @@ export async function sendToMakeWebhookWithRetry(
 
     if (result.success) {
       if (attempt > 1) {
-        console.log(`✅ Make.com webhook succeeded on attempt ${attempt}`);
       }
       return { success: true, attempts: attempt };
     }
@@ -177,7 +161,6 @@ export async function sendToMakeWebhookWithRetry(
     // Wait before retry (exponential backoff)
     if (attempt < webhookConfig.retryAttempts) {
       const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s, etc.
-      console.log(`⏳ Waiting ${delay}ms before retry...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -347,10 +330,6 @@ export async function batchSendToMakeWebhook(
 
   for (let i = 0; i < events.length; i += batchSize) {
     const batch = events.slice(i, i + batchSize);
-
-    console.log(
-      `📦 Processing webhook batch ${Math.floor(i / batchSize) + 1} (${batch.length} events)`
-    );
 
     const batchPromises = batch.map(async event => {
       const result = await sendToMakeWebhookWithRetry(event);

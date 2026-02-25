@@ -54,8 +54,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('🔐 Auth Callback: Success for user:', data.session.user.email);
-
     // Redirect to dashboard
     return NextResponse.redirect(new URL('/dashboard', request.url));
   } catch (error) {

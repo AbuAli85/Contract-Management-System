@@ -13,8 +13,6 @@ export default function LogoutPage() {
   useEffect(() => {
     const handleLogout = async () => {
       try {
-        console.log('🔐 Logout: Starting logout process...');
-
         // Get current locale from URL
         const pathname =
           typeof window !== 'undefined' ? window.location.pathname : '';
@@ -22,8 +20,6 @@ export default function LogoutPage() {
 
         // Call signOut
         await signOut();
-
-        console.log('🔐 Logout: Successfully logged out');
 
         // Clear any remaining client-side state
         if (typeof window !== 'undefined') {

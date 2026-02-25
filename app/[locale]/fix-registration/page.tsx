@@ -121,15 +121,24 @@ SELECT '✅ All tests completed!' as final_status;`,
   };
 
   const openSimpleRegister = () => {
-    window.open('/en/simple-register', '_blank');
+    window.open(
+      `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/simple-register`,
+      '_blank'
+    );
   };
 
   const openWorkingLogin = () => {
-    window.open('/en/working-login', '_blank');
+    window.open(
+      `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/working-login`,
+      '_blank'
+    );
   };
 
   const openDashboardPreview = () => {
-    window.open('/en/dashboard-preview', '_blank');
+    window.open(
+      `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard-preview`,
+      '_blank'
+    );
   };
 
   return (

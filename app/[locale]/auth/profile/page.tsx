@@ -1,17 +1,8 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { UserProfile } from '@/auth/components/user-profile';
 
 export default function ProfilePage() {
-  const pathname = usePathname();
-  const _locale =
-    pathname && pathname.startsWith('/en/')
-      ? 'en'
-      : pathname && pathname.startsWith('/ar/')
-        ? 'ar'
-        : 'en';
-
   return (
     <div className='min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8'>
       <div className='mx-auto max-w-3xl'>

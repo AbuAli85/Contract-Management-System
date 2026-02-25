@@ -88,8 +88,6 @@ export function createAuditLog(
 
 export function logAuditEvent(entry: AuditLogEntry): void {
   if (process.env.ENABLE_AUDIT_LOGGING === 'true') {
-    console.log(`[AUDIT] ${JSON.stringify(entry)}`);
-
     // In production, you would save this to a database or audit service
     // await saveAuditLog(entry)
   }

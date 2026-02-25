@@ -155,7 +155,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
 
         if (newPerm?.id && !createError) {
           permissionIds.push(newPerm.id);
-          console.log(`✅ Created permission: ${perm.name}`);
         } else {
           console.warn(
             `⚠️ Could not create permission ${perm.name}:`,
@@ -201,7 +200,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
 
       if (newRole?.id && !createRoleError) {
         promoterRoleId = newRole.id;
-        console.log(`✅ Created 'promoter' role`);
       } else {
         console.warn(`⚠️ Could not create 'promoter' role:`, createRoleError);
         return; // Can't proceed without role
@@ -210,9 +208,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
 
     // Step 3: Link permissions to role
     if (promoterRoleId && permissionIds.length > 0) {
-      console.log(
-        `🔗 Linking ${permissionIds.length} permissions to 'promoter' role (${promoterRoleId})`
-      );
       for (const permId of permissionIds) {
         const { error: linkError } = await supabaseAdmin
           .from(rolePermissionsTable as any)
@@ -231,14 +226,8 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
             linkError
           );
         } else {
-          console.log(
-            `✅ Linked permission ${permId} to role ${promoterRoleId}`
-          );
         }
       }
-      console.log(
-        `✅ Successfully linked ${permissionIds.length} permissions to 'promoter' role`
-      );
     } else {
       console.warn(
         `⚠️ Cannot link permissions: roleId=${promoterRoleId}, permissionIds.length=${permissionIds.length}`
@@ -281,19 +270,12 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
             assignError
           );
         } else {
-          console.log(
-            `✅ Successfully assigned 'promoter' role to user ${userId}`
-          );
         }
-
-        console.log(`✅ Assigned 'promoter' role to user ${userId}`);
       } else {
-        console.log(`ℹ️ User ${userId} already has 'promoter' role assigned`);
       }
     }
 
     // Step 5: Verify permissions are set up correctly
-    console.log(`🔍 Verifying permissions for user ${userId}...`);
     const { data: userRoles } = await supabaseAdmin
       .from(userRoleAssignmentsTable as any)
       .select(
@@ -322,7 +304,6 @@ export async function ensurePromoterRole(userId: string): Promise<void> {
         const permNames = rolePerms
           .map(rp => rp.rbac_permissions?.name || rp.permissions?.name)
           .filter(Boolean);
-        console.log(`✅ Verified permissions for user ${userId}:`, permNames);
       }
     }
   } catch (roleError) {

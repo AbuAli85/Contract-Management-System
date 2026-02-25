@@ -78,7 +78,6 @@ export class DemoSessionManager {
       localStorage.removeItem(this.sessionKey);
       localStorage.removeItem(this.roleKey);
       localStorage.removeItem(this.authModeKey);
-      console.log('🧹 Demo sessions cleared (demo mode disabled)');
     } catch (error) {
       console.warn('Could not clear demo sessions:', error);
     }
@@ -122,7 +121,6 @@ export class DemoSessionManager {
   disableDemoMode(): void {
     this.demoModeEnabled = false;
     this.clearSession();
-    console.log('🔒 Demo mode permanently disabled for security');
   }
 
   // Force clear all demo data
@@ -138,7 +136,6 @@ export class DemoSessionManager {
       localStorage.removeItem('supabase.auth.token');
       localStorage.removeItem('supabase.auth.expires_at');
       localStorage.removeItem('supabase.auth.refresh_token');
-      console.log('🧹 All demo and auth data cleared');
     } catch (error) {
       console.warn('Could not clear all data:', error);
     }
@@ -169,7 +166,6 @@ if (typeof window !== 'undefined') {
     localStorage.removeItem('supabase.auth.token');
     localStorage.removeItem('supabase.auth.expires_at');
     localStorage.removeItem('supabase.auth.refresh_token');
-    console.log('🧹 Immediate cleanup of demo sessions completed');
   } catch (error) {
     console.warn('Could not perform immediate cleanup:', error);
   }

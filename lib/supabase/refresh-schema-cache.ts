@@ -8,8 +8,6 @@ export async function refreshSupabaseSchemaCache() {
   try {
     const supabase = createClient();
 
-    console.log('🔄 Refreshing Supabase schema cache...');
-
     // Step 1: Force a query to refresh the cache
     const { data: promoters, error: promotersError } = await supabase
       .from('promoters')
@@ -55,9 +53,6 @@ export async function refreshSupabaseSchemaCache() {
       return { success: false, error: allColumnsError };
     }
 
-    console.log('✅ Supabase schema cache refreshed successfully');
-    console.log('📊 Sample data:', promoters);
-
     return {
       success: true,
       data: {
@@ -79,8 +74,6 @@ export async function checkSchemaCacheStatus() {
   try {
     const supabase = createClient();
 
-    console.log('🔍 Checking schema cache status...');
-
     // Test if employer_id column is accessible
     const { data, error } = await supabase
       .from('promoters')
@@ -96,7 +89,6 @@ export async function checkSchemaCacheStatus() {
       };
     }
 
-    console.log('✅ Schema cache is working correctly');
     return {
       status: 'ok',
       data,
@@ -117,17 +109,13 @@ export async function checkSchemaCacheStatus() {
  */
 export async function refreshSchemaCacheWithRetry(maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    console.log(`🔄 Schema cache refresh attempt ${attempt}/${maxRetries}`);
-
     const result = await refreshSupabaseSchemaCache();
 
     if (result.success) {
-      console.log(`✅ Schema cache refresh successful on attempt ${attempt}`);
       return result;
     }
 
     if (attempt < maxRetries) {
-      console.log(`⏳ Waiting 2 seconds before retry...`);
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }

@@ -97,7 +97,7 @@ function DashboardContent() {
       }
       return 'en';
     } catch (error) {
-      console.error('Error getting locale from params:', error);
+      // Silently fall back to default locale
       return 'en';
     }
   }, [params]);
@@ -118,7 +118,7 @@ function DashboardContent() {
       if (hour < 18) return 'Good afternoon';
       return 'Good evening';
     } catch (error) {
-      console.error('Error in getTimeBasedGreeting:', error);
+      // Fall back to default greeting
       return 'Hello';
     }
   };
@@ -137,7 +137,7 @@ function DashboardContent() {
       };
       return roleMap[role]?.[validLocale as 'en' | 'ar'] || role;
     } catch (error) {
-      console.error('Error in getRoleDisplayName:', error);
+      // Fall back to default role name
       return role || 'User';
     }
   };
@@ -151,8 +151,8 @@ function DashboardContent() {
   const {
     data: statsData,
     isLoading: statsLoading,
-    isError: _statsError,
-    error: _statsErrorDetails,
+    isError: statsError,
+    error: statsErrorDetails,
     refetch: refetchStats,
   } = useQuery({
     queryKey: ['dashboard-stats', companyId], // Include companyId in query key for proper caching

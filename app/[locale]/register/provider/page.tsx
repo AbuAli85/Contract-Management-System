@@ -120,8 +120,6 @@ export default function ProviderRegistrationPage() {
         description: formData.description,
       };
 
-      console.log('🚀 Submitting professional registration:', registrationData);
-
       // Submit to registration API
       const response = await fetch('/api/auth/register-new', {
         method: 'POST',
@@ -134,13 +132,12 @@ export default function ProviderRegistrationPage() {
       const result = await response.json();
 
       if (response.ok) {
-        console.log('✅ Registration successful:', result);
         setRegistrationComplete(true);
 
         // If approval is required, redirect to check status page
         if (result.requiresApproval) {
           setTimeout(() => {
-            window.location.href = '/en/check-registration';
+            window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/check-registration`;
           }, 3000);
         } else {
           // Direct access (legacy path)

@@ -193,16 +193,6 @@ export default function SimpleContractGenerator({
           (party: any) => party.type?.toLowerCase() === 'employer'
         );
 
-        console.log('📊 Parties loaded:', {
-          total: allPartiesList.length,
-          clients: clientsList.length,
-          employers: employersList.length,
-          pagination: partiesResult.pagination,
-          sampleTypes: allPartiesList
-            .slice(0, 5)
-            .map((p: any) => ({ name: p.name_en, type: p.type })),
-        });
-
         setAllParties(allPartiesList);
         setClients(clientsList);
         setEmployers(employersList);
@@ -227,10 +217,6 @@ export default function SimpleContractGenerator({
 
         setPromoters(promotersList);
         setAllPromoters(promotersList);
-
-        console.log(
-          `✅ Loaded ${promotersList.length} promoters, ${clientsList.length} clients, ${employersList.length} employers`
-        );
       };
 
       await Promise.race([loadDataPromise(), timeoutPromise]);
@@ -274,19 +260,6 @@ export default function SimpleContractGenerator({
 
   // Get promoters filtered by selected employer and search term
   const getFilteredPromoters = () => {
-    console.log('🔍 Filtering promoters:', {
-      selectedEmployer: formData.second_party_id,
-      searchTerm: promoterSearchTerm,
-      totalPromoters: allPromoters.length,
-      firstPromoter: allPromoters[0]
-        ? {
-            id: allPromoters[0].id,
-            name: allPromoters[0].name_en,
-            employer_id: allPromoters[0].employer_id,
-          }
-        : null,
-    });
-
     let filteredPromoters = allPromoters;
 
     // Filter by employer if selected
@@ -294,9 +267,6 @@ export default function SimpleContractGenerator({
       filteredPromoters = allPromoters.filter((promoter: any) => {
         // If employer_id doesn't exist on promoter object, show all promoters
         if (promoter.employer_id === undefined) {
-          console.log(
-            '⚠️ employer_id not found on promoter, showing all promoters'
-          );
           return true; // Show all promoters if employer_id column doesn't exist
         }
         // If employer_id exists, filter by it
@@ -318,9 +288,6 @@ export default function SimpleContractGenerator({
       });
     }
 
-    console.log(
-      `✅ Filtered promoters: ${filteredPromoters.length} out of ${allPromoters.length}`
-    );
     return filteredPromoters;
   };
 
@@ -384,10 +351,6 @@ export default function SimpleContractGenerator({
           throw new Error('Make.com integration not available');
         }
       } catch (makecomError) {
-        console.log(
-          'Make.com integration not available, trying alternative methods...'
-        );
-
         // Try HTML generation
         try {
           response = await fetch('/api/contracts/generate', {
@@ -445,12 +408,6 @@ export default function SimpleContractGenerator({
         });
 
         // Log detailed response for debugging
-        console.log('📊 Contract generation response:', {
-          method: generationMethod,
-          contract: result.data?.contract,
-          makecom: result.data?.makecom,
-          google_drive_url: result.data?.google_drive_url,
-        });
 
         // Show success message with links
         if (result.data) {

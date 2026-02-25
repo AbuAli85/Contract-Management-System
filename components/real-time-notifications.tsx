@@ -106,8 +106,6 @@ export function RealTimeNotifications({
 
   // Set up real-time subscription
   useEffect(() => {
-    console.log('🔔 Setting up real-time notifications for user:', user.id);
-
     const subscription = supabase
       .channel(`notifications:${user.id}`)
       .on(
@@ -119,8 +117,6 @@ export function RealTimeNotifications({
           filter: `user_id=eq.${user.id}`,
         },
         payload => {
-          console.log('📩 New notification received:', payload.new);
-
           const newNotification = payload.new as Notification;
 
           // Add to notifications list
@@ -155,8 +151,6 @@ export function RealTimeNotifications({
           filter: `user_id=eq.${user.id}`,
         },
         payload => {
-          console.log('📝 Notification updated:', payload.new);
-
           const updatedNotification = payload.new as Notification;
 
           setNotifications(current =>
@@ -171,12 +165,9 @@ export function RealTimeNotifications({
           }
         }
       )
-      .subscribe(status => {
-        console.log('📡 Subscription status:', status);
-      });
+      .subscribe(status => {});
 
     return () => {
-      console.log('🔌 Cleaning up notification subscription');
       supabase.removeChannel(subscription);
     };
   }, [user.id, supabase, toast]);

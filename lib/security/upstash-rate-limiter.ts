@@ -118,9 +118,6 @@ export async function applyRateLimit(
   // If Redis is not configured, allow all requests (development mode)
   if (!redis) {
     if (process.env.NODE_ENV === 'development') {
-      console.log(
-        '⚠️  Rate limiting disabled: Upstash Redis not configured (development mode)'
-      );
     }
     return {
       success: true,
@@ -295,9 +292,6 @@ export function withRateLimit(
       // Log successful request (only for monitoring, can be disabled in production)
       if (process.env.NODE_ENV === 'development') {
         const duration = Date.now() - startTime;
-        console.log(
-          `✅ ${request.method} ${request.nextUrl.pathname} - ${duration}ms - Remaining: ${rateLimitResult.remaining}/${rateLimitResult.limit}`
-        );
       }
 
       // Return response with rate limit headers

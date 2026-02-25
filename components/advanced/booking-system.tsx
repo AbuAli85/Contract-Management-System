@@ -187,7 +187,6 @@ export function BookingSystem() {
       }
 
       // Here you would call the actual booking service
-      console.log('Creating booking:', bookingForm);
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));

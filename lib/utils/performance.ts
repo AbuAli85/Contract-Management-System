@@ -245,12 +245,10 @@ export function measurePerformance<T extends (...args: any[]) => any>(
     if (result instanceof Promise) {
       return result.finally(() => {
         const end = performance.now();
-        console.log(`⏱️ ${label || fn.name}: ${(end - start).toFixed(2)}ms`);
       });
     }
 
     const end = performance.now();
-    console.log(`⏱️ ${label || fn.name}: ${(end - start).toFixed(2)}ms`);
     return result;
   }) as T;
 }

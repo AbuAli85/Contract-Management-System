@@ -150,48 +150,63 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Get top vendors (mock data for now)
-    const top_vendors = [
-      { name: 'Vendor A', contracts: 15, value: 250000 },
-      { name: 'Vendor B', contracts: 12, value: 180000 },
-      { name: 'Vendor C', contracts: 10, value: 150000 },
-      { name: 'Vendor D', contracts: 8, value: 120000 },
-      { name: 'Vendor E', contracts: 6, value: 90000 },
-    ];
+    // Get top vendors from real contract data
+    const vendorMap: Record<string, { contracts: number; value: number }> = {};
+    contracts?.forEach(contract => {
+      const vendorName = (contract as Record<string, unknown>).party_name_en as
+        | string
+        | undefined;
+      if (vendorName) {
+        if (!vendorMap[vendorName]) {
+          vendorMap[vendorName] = { contracts: 0, value: 0 };
+        }
+        vendorMap[vendorName].contracts += 1;
+        vendorMap[vendorName].value +=
+          ((contract as Record<string, unknown>).total_value as number) ?? 0;
+      }
+    });
+    const top_vendors = Object.entries(vendorMap)
+      .map(([name, stats]) => ({ name, ...stats }))
+      .sort((a, b) => b.contracts - a.contracts)
+      .slice(0, 5);
 
-    // Performance metrics
+    // Performance metrics (calculated from real data)
+    const completedContracts =
+      contracts?.filter(c => c.status === 'completed') ?? [];
+    const on_time_completion =
+      total_contracts > 0
+        ? Math.round((completedContracts.length / total_contracts) * 100)
+        : 0;
     const performance = {
-      on_time_completion: 87,
-      average_cycle_time: 14,
-      obligations_completed_on_time: 92,
+      on_time_completion,
+      average_cycle_time: Math.round(avg_approval_time / 24) || 0,
+      obligations_completed_on_time: on_time_completion,
     };
 
-    // Trends (mock data for visualization)
+    // Build real monthly trends from contract data
+    const monthlyMap: Record<string, { count: number; value: number }> = {};
+    contracts?.forEach(contract => {
+      const date = contract.created_at ? new Date(contract.created_at) : null;
+      if (date) {
+        const key = date.toLocaleString('en-US', { month: 'short' });
+        if (!monthlyMap[key]) {
+          monthlyMap[key] = { count: 0, value: 0 };
+        }
+        monthlyMap[key].count += 1;
+        monthlyMap[key].value +=
+          ((contract as Record<string, unknown>).total_value as number) ?? 0;
+      }
+    });
     const trends = {
-      contracts_by_month: [
-        { month: 'Jan', count: 12 },
-        { month: 'Feb', count: 15 },
-        { month: 'Mar', count: 18 },
-        { month: 'Apr', count: 22 },
-        { month: 'May', count: 20 },
-        { month: 'Jun', count: 25 },
-      ],
-      value_by_month: [
-        { month: 'Jan', value: 180000 },
-        { month: 'Feb', value: 220000 },
-        { month: 'Mar', value: 280000 },
-        { month: 'Apr', value: 350000 },
-        { month: 'May', value: 320000 },
-        { month: 'Jun', value: 400000 },
-      ],
-      approval_times: [
-        { month: 'Jan', hours: 52 },
-        { month: 'Feb', hours: 48 },
-        { month: 'Mar', hours: 45 },
-        { month: 'Apr', hours: 42 },
-        { month: 'May', hours: 38 },
-        { month: 'Jun', hours: 36 },
-      ],
+      contracts_by_month: Object.entries(monthlyMap).map(([month, d]) => ({
+        month,
+        count: d.count,
+      })),
+      value_by_month: Object.entries(monthlyMap).map(([month, d]) => ({
+        month,
+        value: d.value,
+      })),
+      approval_times: [] as { month: string; hours: number }[],
     };
 
     return NextResponse.json({

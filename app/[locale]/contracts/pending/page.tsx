@@ -116,7 +116,6 @@ function PendingContractsPageContent() {
   const fetchPendingContracts = useCallback(async (force = false) => {
     // Prevent multiple simultaneous fetches
     if (fetchAttemptedRef.current && !force) {
-      console.log('⏸️ Fetch already in progress, skipping...');
       return;
     }
 
@@ -162,13 +161,6 @@ function PendingContractsPageContent() {
       setShowSlowLoadingMessage(false);
       setShowPartialResults(false);
 
-      console.log('🔍 Pending Contracts Debug:', {
-        timestamp: new Date().toISOString(),
-        endpoint: '/api/contracts?status=pending',
-        timeout: '10 seconds',
-        retryCount,
-      });
-
       const response = await fetch('/api/contracts?status=pending', {
         signal: controller.signal,
         headers: {
@@ -181,7 +173,6 @@ function PendingContractsPageContent() {
       if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
-      console.log(`⏱️ API Response time: ${queryTime}ms`);
 
       const data = await response.json();
 
@@ -254,21 +245,8 @@ function PendingContractsPageContent() {
           }
         );
 
-        console.log('✅ Loaded pending contracts:', {
-          count: contractsList.length,
-          queryTime: `${queryTime}ms`,
-          sampleIds: contractsList.slice(0, 3).map((c: any) => c.id),
-          totalPending: data.pendingContracts,
-          stats: data.stats,
-          requestId: data.requestId,
-          timestamp: new Date().toISOString(),
-        });
-
         // Show helpful message if 0 results
         if (contractsList.length === 0) {
-          console.log(
-            'ℹ️ No pending contracts found - this is normal, not an error'
-          );
         }
       } else {
         // ✅ FIX: Clear timeouts on error
@@ -343,15 +321,6 @@ function PendingContractsPageContent() {
     mountedRef.current = true;
 
     // Log permission check for debugging
-    console.log('📋 Pending Contracts - Permission Check:', {
-      hasPermission,
-      isAdmin: permissions.isAdmin,
-      isLoading: permissions.isLoading,
-      canRead: permissions.can('contract:read:own'),
-      forceLoad,
-      timestamp: new Date().toISOString(),
-      fetchAttempted: fetchAttemptedRef.current,
-    });
 
     // ✅ FIX: Force load after 4 seconds regardless of permissions (safety net)
     const forceLoadTimeout = setTimeout(() => {
@@ -379,9 +348,6 @@ function PendingContractsPageContent() {
       clearTimeout(forceLoadTimeout);
 
       if (hasPermission || forceLoadRef.current) {
-        console.log(
-          '✅ Permission granted (or forced), fetching pending contracts...'
-        );
         // Call fetchPendingContracts directly to avoid dependency loop
         fetchPendingContracts();
       } else {
@@ -395,7 +361,6 @@ function PendingContractsPageContent() {
         setPermissionError(true);
       }
     } else {
-      console.log('⏳ Waiting for permissions to load...');
     }
 
     return () => {
@@ -424,7 +389,6 @@ function PendingContractsPageContent() {
       setLoading(false);
       setShowSlowLoadingMessage(false);
       setError('Request cancelled by user');
-      console.log('🚫 Request cancelled by user');
     }
   }, []);
 
@@ -1122,7 +1086,7 @@ function PendingContractsPageContent() {
                     </div>
                     <div className='flex items-center gap-2'>
                       <Button variant='outline' size='sm' asChild>
-                        <Link href={`/en/contracts/${contract.id}`}>
+                        <Link href={`/${locale}/contracts/${contract.id}`}>
                           <Eye className='mr-2 h-4 w-4' />
                           View
                         </Link>

@@ -148,10 +148,6 @@ export function RealTimeRegisterForm() {
     setSuccess(null);
 
     try {
-      console.log('🔐 Register Debug - Starting registration process...');
-      console.log('🔐 Register Debug - Email:', formData.email);
-      console.log('🔐 Register Debug - Role:', formData.role);
-
       // Step 1: Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -175,8 +171,6 @@ export function RealTimeRegisterForm() {
         throw new Error('Registration failed - no user returned');
       }
 
-      console.log('🔐 Register Debug - Auth user created:', authData.user.id);
-
       // Step 2: Create public user profile
       const { error: profileError } = await supabase.from('users').insert({
         id: authData.user.id,
@@ -194,8 +188,6 @@ export function RealTimeRegisterForm() {
         await supabase.auth.admin.deleteUser(authData.user.id);
         throw new Error(`Profile creation failed: ${profileError.message}`);
       }
-
-      console.log('🔐 Register Debug - Public profile created successfully');
 
       // Step 3: Create company if provider
       if (formData.role === 'provider' && formData.companyName) {
@@ -220,7 +212,6 @@ export function RealTimeRegisterForm() {
           );
           // Don't fail registration if company creation fails
         } else {
-          console.log('🔐 Register Debug - Company created successfully');
         }
       }
 

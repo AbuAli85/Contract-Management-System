@@ -82,42 +82,8 @@ export default function EmployeesPage() {
         setTotalPages(data.pagination?.pages || 1);
       } else {
         console.error('Error fetching employees:', data.error);
-        // Fallback to mock data for demo
-        setEmployees([
-          {
-            id: 1,
-            employee_code: 'EMP0001',
-            full_name: 'Ahmed Al-Rashid',
-            job_title: 'Software Developer',
-            department_name: 'Information Technology',
-            employment_status: 'active',
-            hire_date: '2023-01-15',
-            phone: '+968 1234 5678',
-            email: 'ahmed@company.com',
-          },
-          {
-            id: 2,
-            employee_code: 'EMP0002',
-            full_name: 'Sarah Johnson',
-            job_title: 'HR Manager',
-            department_name: 'Human Resources',
-            employment_status: 'active',
-            hire_date: '2022-06-01',
-            phone: '+968 2345 6789',
-            email: 'sarah@company.com',
-          },
-          {
-            id: 3,
-            employee_code: 'EMP0003',
-            full_name: 'Mohammed Hassan',
-            job_title: 'Sales Executive',
-            department_name: 'Sales',
-            employment_status: 'probation',
-            hire_date: '2024-01-10',
-            phone: '+968 3456 7890',
-            email: 'mohammed@company.com',
-          },
-        ]);
+        // Show empty state on error - do not use mock data in production
+        setEmployees([]);
         setTotalPages(1);
       }
     } catch (error) {

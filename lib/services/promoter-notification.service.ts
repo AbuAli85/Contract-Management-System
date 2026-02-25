@@ -133,7 +133,6 @@ async function sendSMS(
   message: string
 ): Promise<{ success: boolean; error?: string }> {
   // TODO: Replace with actual SMS service integration
-  console.log(`[SMS PLACEHOLDER] To: ${to}, Message: ${message}`);
 
   // Simulate success
   return { success: true };

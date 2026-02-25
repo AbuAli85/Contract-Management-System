@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -6,63 +7,72 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'today';
+    const period = searchParams.get('period') || 'month';
 
-    // Generate mock attendance data for the heatmap
-    const generateAttendanceData = () => {
-      const data = [];
-      const today = new Date();
+    const supabase = await createClient();
 
-      // Generate data for the last 30 days
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
+    // Calculate date range based on period
+    const today = new Date();
+    const startDate = new Date(today);
+    if (period === 'week') {
+      startDate.setDate(today.getDate() - 7);
+    } else {
+      startDate.setDate(today.getDate() - 30); // default: last 30 days
+    }
 
-        // Generate random attendance data
-        const totalPromoters = 24;
-        const present =
-          Math.floor(Math.random() * totalPromoters) +
-          Math.floor(totalPromoters * 0.7); // 70-100% attendance
-        const absent = totalPromoters - present;
-        const late = Math.floor(Math.random() * Math.floor(present * 0.3)); // 0-30% of present are late
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
 
-        data.push({
-          date: date.toISOString().split('T')[0],
-          present,
-          absent,
-          late,
-          total: totalPromoters,
-          attendanceRate: Math.round((present / totalPromoters) * 100),
-        });
+    // Fetch real attendance data
+    const { data: attendanceRows, error } = await supabase
+      .from('employee_attendance')
+      .select('attendance_date, check_in, check_out, approval_status')
+      .gte('attendance_date', startDateStr)
+      .lte('attendance_date', todayStr)
+      .order('attendance_date', { ascending: true });
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    // Group by date
+    const byDate: Record<
+      string,
+      { present: number; absent: number; late: number; total: number }
+    > = {};
+
+    for (const row of attendanceRows ?? []) {
+      const d = row.attendance_date;
+      if (!byDate[d]) {
+        byDate[d] = { present: 0, absent: 0, late: 0, total: 0 };
       }
+      byDate[d].total += 1;
+      if (row.check_in) {
+        byDate[d].present += 1;
+        // Consider late if check-in is after 09:00
+        const checkInTime = row.check_in?.substring(11, 16);
+        if (checkInTime && checkInTime > '09:00') {
+          byDate[d].late += 1;
+        }
+      } else {
+        byDate[d].absent += 1;
+      }
+    }
 
-      return data;
-    };
+    const data = Object.entries(byDate).map(([date, stats]) => ({
+      date,
+      ...stats,
+      attendanceRate:
+        stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0,
+    }));
 
-    const mockAttendance = {
-      period,
-      data: generateAttendanceData(),
-      summary: {
-        averageAttendance: 87.3,
-        totalDays: 30,
-        bestDay: '2024-06-15',
-        worstDay: '2024-06-08',
-        totalPresent: 628,
-        totalAbsent: 92,
-        totalLate: 156,
-      },
-      heatmapData: generateAttendanceData().map(day => ({
-        date: day.date,
-        value: day.attendanceRate,
-        present: day.present,
-        absent: day.absent,
-        late: day.late,
-      })),
-    };
-
-    return NextResponse.json(mockAttendance.data);
+    return NextResponse.json(data, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (error) {
-    console.error('Dashboard attendance error:', error);
     return NextResponse.json(
       {
         success: false,

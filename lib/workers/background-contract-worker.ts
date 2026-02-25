@@ -33,7 +33,6 @@ class BackgroundContractProcessor {
   }
 
   async processPDFGeneration({ contractId, priority = 'normal' }) {
-    console.log(\`📄 Background: Processing PDF for contract \${contractId}\`)
     
     try {
       const response = await fetch('/api/contracts/background-pdf', {
@@ -47,7 +46,6 @@ class BackgroundContractProcessor {
       }
 
       const result = await response.json()
-      console.log(\`✅ Background: PDF generated for \${contractId}\`)
       
       return { success: true, result }
     } catch (error) {
@@ -57,7 +55,6 @@ class BackgroundContractProcessor {
   }
 
   async processEmailBatch({ emails, templateType }) {
-    console.log(\`📧 Background: Processing email batch (\${emails.length} emails)\`)
     
     const results = []
     const batchSize = 5 // Process 5 emails at a time
@@ -96,12 +93,10 @@ class BackgroundContractProcessor {
       }
     }
 
-    console.log(\`✅ Background: Email batch completed. \${results.filter(r => r.success).length}/\${results.length} successful\`)
     return { success: true, results }
   }
 
   async processContractBatch({ contractIds, operation }) {
-    console.log(\`📋 Background: Processing contract batch (\${contractIds.length} contracts)\`)
     
     const results = []
     
@@ -169,7 +164,6 @@ class BackgroundContractProcessor {
   }
 
   async cleanupTempFiles({ olderThan = 24 * 60 * 60 * 1000 }) {
-    console.log('🧹 Background: Cleaning up temporary files')
     
     try {
       const response = await fetch('/api/cleanup/temp-files', {
@@ -183,7 +177,6 @@ class BackgroundContractProcessor {
       }
 
       const result = await response.json()
-      console.log(\`✅ Background: Cleaned up \${result.deletedCount} files\`)
       
       return { success: true, result }
     } catch (error) {
@@ -211,7 +204,6 @@ self.addEventListener('message', async function(e) {
   }
 })
 
-console.log('🔧 Background contract processor worker initialized')
 `;
 
 // Main worker manager class
@@ -262,8 +254,6 @@ export class BackgroundContractWorker {
       this.worker.addEventListener('error', error => {
         console.error('Background worker error:', error);
       });
-
-      console.log('✅ Background contract worker initialized');
     } catch (error) {
       console.error('Failed to initialize background worker:', error);
     }
@@ -371,7 +361,6 @@ export class BackgroundContractWorker {
 
       this.worker.terminate();
       this.worker = null;
-      console.log('🔌 Background contract worker terminated');
     }
   }
 }

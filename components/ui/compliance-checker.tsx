@@ -252,7 +252,6 @@ export function ComplianceChecker({
                   variant='outline'
                   onClick={() => {
                     // This would typically open a compliance guide or help
-                    console.log('Show compliance guide');
                   }}
                 >
                   View Guidelines

@@ -34,7 +34,6 @@ export default function WorkingLoginPage() {
         return;
       }
       try {
-        console.log('🔗 Testing Supabase connection...');
         const { _data, error } = await supabase
           .from('users')
           .select('count')
@@ -45,7 +44,6 @@ export default function WorkingLoginPage() {
           setConnectionStatus('error');
           setError(`Connection failed: ${error.message}`);
         } else {
-          console.log('✅ Supabase connection successful');
           setConnectionStatus('connected');
         }
       } catch (err) {
@@ -73,7 +71,6 @@ export default function WorkingLoginPage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 Auth state changed:', event, session?.user?.email);
       if (session?.user) {
         setCurrentUser(session.user);
       } else {
@@ -95,20 +92,12 @@ export default function WorkingLoginPage() {
     setError('');
 
     try {
-      console.log('🔐 Working Login - Attempting:', email);
-      console.log(
-        '🔐 Working Login - Supabase URL:',
-        process.env.NEXT_PUBLIC_SUPABASE_URL
-      );
-
       // Use the most basic auth method
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
-
-      console.log('🔐 Working Login - Auth response:', { authData, authError });
 
       if (authError) {
         console.error('❌ Auth error:', authError);
@@ -135,7 +124,6 @@ export default function WorkingLoginPage() {
         return;
       }
 
-      console.log('✅ Login successful:', authData.user);
       setMessage(`✅ Successfully logged in as ${authData.user.email}`);
       setCurrentUser(authData.user);
     } catch (error) {
@@ -170,7 +158,7 @@ export default function WorkingLoginPage() {
 
   const goToDashboard = () => {
     // Force navigation to dashboard
-    window.location.href = '/en/dashboard/provider-comprehensive';
+    window.location.href = `/${window.location.pathname.startsWith('/ar/') ? 'ar' : 'en'}/dashboard/provider-comprehensive`;
   };
 
   const runSchemaFix = () => {

@@ -444,23 +444,12 @@ export class GeneralContractService {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(
-          `🔄 Make.com webhook attempt ${attempt}/${maxRetries} for contract:`,
-          contractId
-        );
-
         const payload = await this.prepareMakeComPayload(contractId);
-        console.log('✅ Payload prepared successfully:', {
-          contract_number: payload.contract_number,
-          contract_type: payload.contract_type,
-          payloadSize: JSON.stringify(payload).length,
-        });
 
         // Use the specific general contract webhook URL
         const makecomWebhookUrl =
           process.env.MAKECOM_WEBHOOK_URL_GENERAL ||
           'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz';
-        console.log('🔗 Webhook URL:', makecomWebhookUrl);
 
         if (!makecomWebhookUrl) {
           console.warn('⚠️ MAKECOM_WEBHOOK_URL_GENERAL not configured');
@@ -468,12 +457,6 @@ export class GeneralContractService {
         }
 
         const webhookSecret = process.env.MAKE_WEBHOOK_SECRET || '';
-        console.log(
-          '🔐 Webhook secret configured:',
-          webhookSecret ? 'Yes' : 'No'
-        );
-
-        console.log('📤 Sending webhook request...');
 
         // Use Node.js built-in modules for HTTP request with timeout
         const https = require('https');
@@ -513,11 +496,6 @@ export class GeneralContractService {
             });
             res.on('end', () => {
               const duration = Date.now() - startTime;
-              console.log(`📥 Response received in ${duration}ms:`, {
-                status: res.statusCode,
-                statusText: res.statusMessage,
-                responseLength: data.length,
-              });
 
               resolve({
                 status: res.statusCode,
@@ -544,29 +522,14 @@ export class GeneralContractService {
           req.end();
         });
 
-        console.log('📥 Webhook response received:', {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          dataLength: response.data.length,
-          data: response.data.substring(0, 500), // Log first 500 chars
-        });
-
         if (response.ok) {
-          console.log(
-            `✅ Make.com webhook triggered successfully on attempt ${attempt}/${maxRetries}`
-          );
-
           // Parse response if JSON
           let parsedResponse = response.data;
           try {
             parsedResponse = JSON.parse(response.data);
-          } catch (e) {
-            console.log('ℹ️ Response is not JSON, using as plain text');
-          }
+          } catch (e) {}
 
           // Update contract status
-          console.log('🔄 Updating contract status to processing...');
           const supabase = await this.getSupabaseClient();
           const { error: updateError } = await supabase
             .from('contracts')
@@ -579,7 +542,6 @@ export class GeneralContractService {
           if (updateError) {
             console.error('❌ Failed to update contract status:', updateError);
           } else {
-            console.log('✅ Contract status updated to processing');
           }
 
           return {
@@ -609,7 +571,6 @@ export class GeneralContractService {
           // If not successful and not last attempt, wait before retry
           if (attempt < maxRetries) {
             const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
-            console.log(`⏳ Waiting ${waitTime}ms before retry...`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
           }
         }
@@ -635,7 +596,6 @@ export class GeneralContractService {
         // If not last attempt, wait before retry
         if (attempt < maxRetries) {
           const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
-          console.log(`⏳ Waiting ${waitTime}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }

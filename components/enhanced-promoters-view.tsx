@@ -358,10 +358,6 @@ async function fetchPromoters(
   page = 1,
   limit = 50
 ): Promise<PromotersResponse> {
-  console.log(
-    `🔄 Fetching promoters from API (page ${page}, limit ${limit})...`
-  );
-
   // Set up abort controller for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -382,13 +378,6 @@ async function fetchPromoters(
     );
 
     clearTimeout(timeoutId);
-
-    console.log('📡 API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      contentType: response.headers.get('content-type'),
-    });
 
     if (!response.ok) {
       console.error('❌ API request failed:', {
@@ -431,15 +420,6 @@ async function fetchPromoters(
       throw new Error('Invalid API response format');
     }
 
-    console.log('📦 API Payload received:', {
-      success: payload.success,
-      hasPromoters: !!payload.promoters,
-      isArray: Array.isArray(payload.promoters),
-      promotersCount: payload.promoters?.length || 0,
-      total: payload.total || 0,
-      hasPagination: !!payload.pagination,
-    });
-
     if (payload.success === false) {
       console.error('❌ API returned error:', payload.error);
       throw new Error(payload.error || 'Failed to load promoters.');
@@ -451,7 +431,6 @@ async function fetchPromoters(
       throw new Error('Invalid promoters data format');
     }
 
-    console.log('✅ Successfully fetched promoters:', payload.promoters.length);
     return payload;
   } catch (error) {
     clearTimeout(timeoutId);
@@ -473,7 +452,6 @@ async function fetchPromoters(
 }
 
 export function EnhancedPromotersView({ locale }: PromotersViewProps) {
-  console.log('🚀 Enhanced PromotersView component mounted');
   const router = useRouter();
   const { toast } = useToast();
   const { companyId } = useCompany(); // ✅ COMPANY SCOPE: Get active company
@@ -534,7 +512,6 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   // ✅ COMPANY SCOPE: Refetch when company changes
   useEffect(() => {
     if (companyId) {
-      console.log('🔄 Company changed, refetching promoters:', companyId);
       refetch();
     }
   }, [companyId, refetch]);
@@ -564,18 +541,8 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   const pagination = response?.pagination;
 
   // Debug logging
-  console.log('📊 Component state:', {
-    isLoading,
-    isError,
-    isFetching,
-    hasResponse: !!response,
-    hasPromoters: !!promoters,
-    promotersCount: promoters.length,
-    errorMessage: error?.message,
-  });
 
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
-    console.log('🔄 Processing promoters for dashboard...');
     return promoters.map(promoter => {
       const idDocument = computeDocumentHealth(
         promoter.id_card_expiry_date ?? null,
@@ -629,12 +596,6 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
       } as DashboardPromoter;
     });
   }, [promoters]);
-
-  console.log(
-    '📈 Dashboard promoters processed:',
-    dashboardPromoters.length,
-    'items'
-  );
 
   // ✅ COMPANY SCOPE: Fetch company-scoped metrics from dedicated API
   // This ensures all metrics are calculated for the selected company only
@@ -773,8 +734,6 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   ]);
 
   const sortedPromoters = useMemo(() => {
-    console.log('🔀 Sorting promoters...');
-
     const sorted = [...filteredPromoters].sort((a, b) => {
       let comparison = 0;
 
@@ -817,8 +776,6 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
 
     return sorted;
   }, [filteredPromoters, sortField, sortOrder]);
-
-  console.log('✅ Final sorted promoters:', sortedPromoters.length, 'items');
 
   const atRiskPromoters = useMemo(() => {
     return sortedPromoters
@@ -2083,7 +2040,6 @@ function EnhancedActionsMenu({
 
   // Handle View Profile - Simple and direct
   const onClickView = () => {
-    console.log('[CLICK] View profile clicked for:', promoter.displayName);
     try {
       toast({
         title: '👁️ Opening profile...',
@@ -2102,7 +2058,6 @@ function EnhancedActionsMenu({
 
   // Handle Edit Details - Simple and direct
   const onClickEdit = () => {
-    console.log('[CLICK] Edit details clicked for:', promoter.displayName);
     try {
       toast({
         title: '✏️ Opening editor...',
@@ -2121,7 +2076,6 @@ function EnhancedActionsMenu({
 
   // Handle Send Notification
   const onClickNotify = async (type: 'standard' | 'urgent' | 'reminder') => {
-    console.log('[CLICK] Send notification:', type, 'to', promoter.displayName);
     setIsLoading(true);
     try {
       const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
@@ -2159,7 +2113,6 @@ function EnhancedActionsMenu({
 
   // Handle Archive
   const onClickArchive = async () => {
-    console.log('[CLICK] Archive record for:', promoter.displayName);
     setIsLoading(true);
     try {
       const response = await fetch(`/api/promoters/${promoter.id}/archive`, {

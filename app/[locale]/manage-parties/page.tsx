@@ -84,7 +84,6 @@ export default function ManagePartiesPage() {
         }
 
         if (data) {
-          console.log('✅ Party data loaded:', data);
           setPartyData(data as Party);
         } else {
           setLoadError('Party not found');

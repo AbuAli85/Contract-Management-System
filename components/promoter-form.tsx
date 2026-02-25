@@ -158,11 +158,8 @@ export default function PromoterForm(props: PromoterFormProps) {
     debounceMs: 3000, // Save 3 seconds after user stops typing
     enabled: !isEditMode, // Only auto-save for new promoters
     excludeFields: ['password', 'confirm_password'], // Don't save sensitive fields
-    onSave: data => {
-      console.log('✅ Draft auto-saved');
-    },
+    onSave: data => {},
     onRestore: data => {
-      console.log('📥 Draft available for restore');
       setShowDraftRecovery(true);
     },
   });

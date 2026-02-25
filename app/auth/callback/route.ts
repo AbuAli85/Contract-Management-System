@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
 
-    console.log(`🔧 Auth Callback [${requestId}]: Processing request`);
-
     // Handle OAuth errors
     if (error) {
       console.error(
@@ -37,7 +35,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`🔧 Auth Callback [${requestId}]: Exchanging code for session`);
     const supabase = await createClient();
     const { data, error: exchangeError } =
       await supabase.auth.exchangeCodeForSession(code);
@@ -61,10 +58,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(
-      `🔧 Auth Callback [${requestId}]: Success, redirecting to:`,
-      next
-    );
     return NextResponse.redirect(`${origin}${next}`);
   } catch (error) {
     console.error(`🔧 Auth Callback [${requestId}]: Unexpected error:`, error);

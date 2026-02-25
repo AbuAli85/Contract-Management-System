@@ -179,7 +179,7 @@ export function ProviderManagementDashboard() {
   };
 
   const handleViewProvider = (providerId: string) => {
-    router.push(`/en/manage-parties?id=${providerId}`);
+    router.push(`/${locale}/manage-parties?id=${providerId}`);
   };
 
   // Real-time data loading from Supabase

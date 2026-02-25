@@ -136,8 +136,6 @@ export function HoldingGroupMembersManager({
 
       const result = await response.json();
 
-      console.log('[HoldingGroupMembers] API response:', result);
-
       if (!result.success) {
         throw new Error(
           result.error || result.message || 'Failed to fetch parties'
@@ -146,27 +144,12 @@ export function HoldingGroupMembersManager({
 
       // API returns { success: true, parties: [...], ... }
       const data = result.parties || [];
-      console.log(
-        `[HoldingGroupMembers] Fetched ${data.length} parties from API`
-      );
 
       // Filter out parties already in the holding group
       const memberPartyIds = new Set(
         members.map(m => m.party_id).filter(Boolean)
       );
       const filtered = data.filter((p: Party) => !memberPartyIds.has(p.id));
-
-      console.log(
-        `[HoldingGroupMembers] Filtered to ${filtered.length} available parties (${memberPartyIds.size} already members)`
-      );
-      console.log(
-        '[HoldingGroupMembers] Member party IDs:',
-        Array.from(memberPartyIds)
-      );
-      console.log(
-        '[HoldingGroupMembers] Available parties:',
-        filtered.map(p => ({ id: p.id, name: p.name_en }))
-      );
 
       setAvailableParties(filtered);
     } catch (error: any) {
@@ -201,8 +184,6 @@ export function HoldingGroupMembersManager({
 
       const result = await response.json();
 
-      console.log('[HoldingGroupMembers] Companies API response:', result);
-
       if (!result.success) {
         throw new Error(
           result.error || result.message || 'Failed to fetch companies'
@@ -211,27 +192,12 @@ export function HoldingGroupMembersManager({
 
       // API returns { success: true, companies: [...], ... }
       const data = result.companies || [];
-      console.log(
-        `[HoldingGroupMembers] Fetched ${data.length} companies from API`
-      );
 
       // Filter out companies already in the holding group
       const memberCompanyIds = new Set(
         members.map(m => m.company_id).filter(Boolean)
       );
       const filtered = data.filter((c: Company) => !memberCompanyIds.has(c.id));
-
-      console.log(
-        `[HoldingGroupMembers] Filtered to ${filtered.length} available companies (${memberCompanyIds.size} already members)`
-      );
-      console.log(
-        '[HoldingGroupMembers] Member company IDs:',
-        Array.from(memberCompanyIds)
-      );
-      console.log(
-        '[HoldingGroupMembers] Available companies:',
-        filtered.map(c => ({ id: c.id, name: c.name }))
-      );
 
       setAvailableCompanies(filtered);
     } catch (error: any) {

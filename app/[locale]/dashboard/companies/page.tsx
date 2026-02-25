@@ -794,7 +794,9 @@ export default function CrossCompanyDashboard() {
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={() =>
-                                          router.push(`/en/settings/company`)
+                                          router.push(
+                                            `/${locale}/settings/company`
+                                          )
                                         }
                                       >
                                         <Settings size={14} className='mr-2' />
@@ -803,7 +805,7 @@ export default function CrossCompanyDashboard() {
                                       <DropdownMenuItem
                                         onClick={() =>
                                           router.push(
-                                            `/en/dashboard/companies/permissions?company_id=${company.id}`
+                                            `/${locale}/dashboard/companies/permissions?company_id=${company.id}`
                                           )
                                         }
                                       >
@@ -1205,7 +1207,7 @@ export default function CrossCompanyDashboard() {
                               {canEdit && (
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    router.push(`/en/settings/company`)
+                                    router.push(`/${locale}/settings/company`)
                                   }
                                 >
                                   <Settings className='h-4 w-4 mr-2' />
@@ -1216,7 +1218,7 @@ export default function CrossCompanyDashboard() {
                                 <DropdownMenuItem
                                   onClick={() =>
                                     router.push(
-                                      `/en/dashboard/companies/permissions?company_id=${company.id}`
+                                      `/${locale}/dashboard/companies/permissions?company_id=${company.id}`
                                     )
                                   }
                                 >

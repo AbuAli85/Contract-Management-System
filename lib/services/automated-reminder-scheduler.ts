@@ -239,8 +239,6 @@ function shouldSendReminderToday(
  * Send automated reminders for documents expiring soon
  */
 export async function sendAutomatedReminders(): Promise<ReminderResult> {
-  console.log('🤖 Starting automated reminder system...');
-
   const result: ReminderResult = {
     success: true,
     totalProcessed: 0,
@@ -258,15 +256,11 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
     const documents = await getDocumentsNeedingReminders();
     result.totalProcessed = documents.length;
 
-    console.log(`📄 Found ${documents.length} documents to process`);
-
     // Filter documents that should receive reminders today
     const documentsToRemind = documents.filter(doc => {
       const schedule = shouldSendReminderToday(doc);
       return schedule !== null && doc.promoterEmail; // Only if they have email
     });
-
-    console.log(`📧 Sending ${documentsToRemind.length} reminders today`);
 
     // Group documents by promoter to avoid duplicate emails
     const promoterDocuments = new Map<string, PromoterDocument[]>();
@@ -302,10 +296,6 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
               (result.details.byDocumentType[doc.documentType] || 0) + 1;
             result.details.byStatus[doc.status] =
               (result.details.byStatus[doc.status] || 0) + 1;
-
-            console.log(
-              `✅ Sent ${schedule.priority} reminder to ${doc.promoterName} for ${doc.documentType}`
-            );
           } else {
             result.errors.push(
               `Failed to send reminder to ${doc.promoterName}: ${reminderResult.error}`
@@ -324,12 +314,6 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
     }
 
     // Log summary
-    console.log('📊 Reminder Summary:', {
-      totalProcessed: result.totalProcessed,
-      remindersSent: result.remindersSent,
-      errorCount: result.errors.length,
-      details: result.details,
-    });
   } catch (error) {
     result.success = false;
     const errorMessage =
@@ -346,8 +330,6 @@ export async function sendAutomatedReminders(): Promise<ReminderResult> {
  * Useful for manual trigger or emergency situations
  */
 export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
-  console.log('🚨 Starting bulk critical reminder system...');
-
   const result: ReminderResult = {
     success: true,
     totalProcessed: 0,
@@ -372,7 +354,6 @@ export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
     );
 
     result.totalProcessed = criticalDocuments.length;
-    console.log(`🚨 Found ${criticalDocuments.length} critical documents`);
 
     // Group by promoter
     const promoterGroups = new Map<string, PromoterDocument[]>();
@@ -402,10 +383,6 @@ export async function sendBulkCriticalReminders(): Promise<ReminderResult> {
       result.errors = bulkResult.results
         .filter(r => !r.success)
         .map(r => r.error || 'Unknown error');
-
-      console.log(
-        `✅ Bulk reminders sent: ${result.remindersSent}/${result.totalProcessed}`
-      );
     } else {
       result.success = false;
       const errorMsg = 'Bulk send failed';

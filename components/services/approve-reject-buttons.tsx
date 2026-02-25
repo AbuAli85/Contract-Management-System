@@ -66,7 +66,6 @@ export function ApproveRejectButtons({
       const webhookResult = await sendServiceApproval(payload);
 
       if (webhookResult.success) {
-        console.log(`✅ Service ${newStatus} via webhook successful`);
         onStatusUpdate?.(newStatus);
 
         toast({
@@ -78,7 +77,6 @@ export function ApproveRejectButtons({
       }
 
       // Fallback to direct API update if webhook fails
-      console.log('🔄 Using API fallback for status update');
       const supabase = createClient();
       const { error } = await supabase
         .from('services')
@@ -92,7 +90,6 @@ export function ApproveRejectButtons({
         throw error;
       }
 
-      console.log(`✅ Service ${newStatus} via API successful`);
       onStatusUpdate?.(newStatus);
 
       toast({

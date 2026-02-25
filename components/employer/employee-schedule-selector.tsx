@@ -100,14 +100,9 @@ export function EmployeeScheduleSelector({
       const response = await fetch('/api/employer/team');
       const data = await response.json();
 
-      console.log('Employee fetch response:', { response: response.ok, data });
-
       if (response.ok) {
         // The API returns 'team' not 'employees', and also check for 'employees' for compatibility
         const teamMembers = data.team || data.employees || [];
-
-        console.log('Raw team members:', teamMembers);
-        console.log('Team members count:', teamMembers.length);
 
         // Count promoter-only vs actual employees
         const promoterOnly = teamMembers.filter((e: any) =>
@@ -115,9 +110,6 @@ export function EmployeeScheduleSelector({
         );
         const actualEmployees = teamMembers.filter(
           (e: any) => e.id && !e.id.toString().startsWith('promoter_')
-        );
-        console.log(
-          `Promoter-only records: ${promoterOnly.length}, Actual employees: ${actualEmployees.length}`
         );
         setPromoterOnlyCount(promoterOnly.length);
 
@@ -148,12 +140,6 @@ export function EmployeeScheduleSelector({
             const isValid = hasValidId && isActive && hasEmployeeData;
 
             if (!isValid && hasValidId) {
-              console.log('Filtered out employee:', {
-                id: emp.id,
-                employment_status: emp.employment_status,
-                hasEmployee: hasEmployeeData,
-                employee: emp.employee,
-              });
             }
 
             return isValid;
@@ -187,8 +173,6 @@ export function EmployeeScheduleSelector({
             return mapped;
           });
 
-        console.log('Final mapped employees:', mappedEmployees);
-        console.log('Final count:', mappedEmployees.length);
         setEmployees(mappedEmployees);
       } else {
         console.error('Failed to fetch employees:', data.error);

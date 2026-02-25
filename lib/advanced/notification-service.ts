@@ -484,7 +484,6 @@ export class NotificationService {
       // If scheduled, store for later sending
       if (scheduledAt) {
         // TODO: Implement scheduled notifications
-        console.log('Scheduled notification for:', scheduledAt);
       }
 
       // Create notifications
@@ -573,8 +572,6 @@ export class NotificationService {
   ): Promise<void> {
     try {
       // Send via WebSocket/SSE to connected clients
-      console.log('Real-time notification sent:', notification.id);
-
       // TODO: Implement actual real-time sending
       // - WebSocket broadcast
       // - Server-sent events
@@ -601,7 +598,6 @@ export class NotificationService {
       }
 
       // TODO: Implement email sending
-      console.log('Email notification sent to:', user.email);
 
       // Example email service integration:
       // await emailService.send({
@@ -632,7 +628,6 @@ export class NotificationService {
       }
 
       // TODO: Implement SMS sending
-      console.log('SMS notification sent to:', user.phone_number);
 
       // Example SMS service integration:
       // await smsService.send({

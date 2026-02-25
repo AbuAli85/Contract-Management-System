@@ -90,8 +90,6 @@ export function ProviderDashboard({ user }: ProviderDashboardProps) {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        console.log('📊 Loading provider dashboard for user:', user.id);
-
         // Load recent bookings with real-time subscription
         const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
@@ -161,11 +159,6 @@ export function ProviderDashboard({ user }: ProviderDashboardProps) {
 
   // Set up real-time subscription for bookings
   useEffect(() => {
-    console.log(
-      '🔔 Setting up real-time bookings subscription for provider:',
-      user.id
-    );
-
     const subscription = supabase
       .channel(`provider-bookings:${user.id}`)
       .on(
@@ -177,8 +170,6 @@ export function ProviderDashboard({ user }: ProviderDashboardProps) {
           filter: `service_id=in.(${services.map(s => s.id).join(',')})`,
         },
         payload => {
-          console.log('📩 Booking update received:', payload);
-
           if (payload.eventType === 'INSERT') {
             // New booking created
             const newBooking = payload.new as Booking;
@@ -205,12 +196,9 @@ export function ProviderDashboard({ user }: ProviderDashboardProps) {
           }
         }
       )
-      .subscribe(status => {
-        console.log('📡 Bookings subscription status:', status);
-      });
+      .subscribe(status => {});
 
     return () => {
-      console.log('🔌 Cleaning up bookings subscription');
       supabase.removeChannel(subscription);
     };
   }, [user.id, services, supabase]);

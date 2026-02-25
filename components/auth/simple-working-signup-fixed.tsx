@@ -134,10 +134,6 @@ export default function SimpleWorkingSignupFixed() {
     setShowCaptchaInstructions(false);
 
     try {
-      console.log('🔐 Simple Signup Fixed - Starting signup process...');
-      console.log('🔐 Simple Signup Fixed - Email:', formData.email);
-      console.log('🔐 Simple Signup Fixed - Role:', formData.role);
-
       // Use the simple register API
       const response = await fetch('/api/auth/simple-register', {
         method: 'POST',
@@ -170,16 +166,12 @@ export default function SimpleWorkingSignupFixed() {
         return;
       }
 
-      console.log(
-        '🔐 Simple Signup Fixed - Registration successful:',
-        data.user.id
-      );
       setSuccess('Registration successful! Redirecting to login...');
 
       // Redirect to login after a delay
       setTimeout(() => {
         router.push(
-          '/en/auth/login?message=Registration successful. You can now sign in.'
+          `/${locale}/auth/login?message=Registration successful. You can now sign in.`
         );
       }, 2000);
     } catch (error) {
