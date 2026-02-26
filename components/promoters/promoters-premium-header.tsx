@@ -130,20 +130,20 @@ export function PromotersPremiumHeader({
       {/* Animated gradient overlay */}
       <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer pointer-events-none' />
 
-      <CardHeader className='relative pb-6 overflow-visible'>
-        <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between w-full'>
-          <div className='space-y-4 flex-1 min-w-0 w-full lg:max-w-[calc(100%-450px)]'>
+      <CardHeader className='relative pb-3 pt-3 overflow-visible'>
+        <div className='flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between w-full'>
+          <div className='space-y-1.5 flex-1 min-w-0 w-full lg:max-w-[calc(100%-420px)]'>
             {/* Premium Title Section */}
             <div className='flex items-center gap-4 flex-wrap'>
               <div className='relative'>
-                <div className='rounded-2xl bg-gradient-to-br from-indigo-500/30 via-blue-500/30 to-purple-500/30 p-4 backdrop-blur-sm flex-shrink-0 border-2 border-white/20 shadow-2xl'>
-                  <Users className='h-8 w-8 text-white' />
+                <div className='rounded-xl bg-gradient-to-br from-indigo-500/30 via-blue-500/30 to-purple-500/30 p-2.5 backdrop-blur-sm flex-shrink-0 border border-white/20 shadow-lg'>
+                  <Users className='h-5 w-5 text-white' />
                 </div>
                 <div className='absolute -top-1 -right-1 h-4 w-4 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full border-2 border-slate-900 animate-pulse shadow-lg' />
               </div>
               <div className='flex-1 min-w-0'>
                 <div className='flex items-center gap-2 sm:gap-3 flex-wrap'>
-                  <CardTitle className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight break-words bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent drop-shadow-2xl'>
+                  <CardTitle className='text-xl sm:text-2xl md:text-3xl font-bold tracking-tight break-words bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent'>
                     Promoter Intelligence Hub
                   </CardTitle>
                   <Badge
@@ -180,7 +180,7 @@ export function PromotersPremiumHeader({
             </div>
 
             {/* Premium Description */}
-            <CardDescription className='max-w-3xl text-lg text-white/90 leading-relaxed break-words font-medium'>
+            <CardDescription className='max-w-3xl text-sm text-white/80 leading-relaxed break-words hidden sm:block'>
               Monitor workforce readiness, document compliance, and partner
               coverage in real-time to keep every engagement on track.{' '}
               <span className='font-bold text-white text-xl'>
@@ -190,7 +190,7 @@ export function PromotersPremiumHeader({
             </CardDescription>
 
             {/* Premium Metrics Badges */}
-            <div className='flex flex-wrap items-center gap-3 text-sm text-white/90 pt-3 w-full'>
+            <div className='flex flex-wrap items-center gap-2 text-xs text-white/90 pt-1 w-full'>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

@@ -69,9 +69,9 @@ export async function GET(request: NextRequest) {
     const metrics = {
       total: enhancedMetrics.totalWorkforce || 0,
       active: activeCount,
-      critical: enhancedMetrics.expiredDocuments || 0,
+      critical: enhancedMetrics.expiredDocuments || 0, // Includes missing docs (fixed in service)
       expiring: enhancedMetrics.expiringDocuments || 0,
-      unassigned: enhancedMetrics.availableForWork || 0, // Available = unassigned
+      unassigned: enhancedMetrics.availableForWork || 0, // Promoters available (not on contract)
       complianceRate: enhancedMetrics.complianceRate || 0,
     };
 

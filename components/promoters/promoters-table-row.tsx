@@ -142,7 +142,7 @@ function CopyableContactCell({
     <div className='space-y-1.5 text-sm'>
       <div className='flex items-center gap-1.5 group'>
         <Mail className='h-3.5 w-3.5 text-slate-400 flex-shrink-0' />
-        <span className='font-medium truncate min-w-0 flex-1 text-slate-700 dark:text-slate-300'>
+        <span className='font-medium truncate min-w-0 flex-1 text-slate-700 dark:text-slate-300 max-w-[180px]' title={email || ''}>
           {email || '—'}
         </span>
         {email && (

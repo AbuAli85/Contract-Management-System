@@ -420,6 +420,12 @@ async function handleGET(request: Request) {
       updated_at: 'updated_at',
       email: 'email',
       documents: 'id_card_expiry_date', // Sort by ID card expiry for document sort
+      nationality: 'nationality',
+      job_title: 'job_title',
+      contract_end_date: 'contract_end_date',
+      contract_start_date: 'contract_start_date',
+      salary: 'salary',
+      work_location: 'work_location',
     };
     const actualSortField = sortFieldMap[sortField] ?? 'created_at';
     const actualSortOrder = sortOrder === 'asc' ? true : false;

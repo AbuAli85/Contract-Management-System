@@ -252,14 +252,14 @@ export function PromotersMetricsCards({
       />
       <EnhancedStatCard
         title='Document alerts'
-        value={safeMetrics.critical}
+        value={safeMetrics.critical + safeMetrics.expiring}
         helper={
-          safeMetrics.critical > 0
-            ? `${safeMetrics.expiring} expiring soon • Click to view all`
+          (safeMetrics.critical + safeMetrics.expiring) > 0
+            ? `${safeMetrics.critical + safeMetrics.expiring} need attention • Click to view all`
             : 'All documents are valid'
         }
         icon={ShieldAlert}
-        variant={safeMetrics.critical > 0 ? 'danger' : 'warning'}
+        variant={(safeMetrics.critical + safeMetrics.expiring) > 0 ? 'danger' : 'success'}
         trendData={trends?.criticalDocuments}
         trendLabel='from last week'
         invertTrendColors={true} // Down is good for alerts!

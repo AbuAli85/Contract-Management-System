@@ -235,7 +235,6 @@ export async function getEnhancedPromoterMetrics(
           expiringPassports++;
         }
       }
-
       // Overall document status
       const hasExpired =
         (idExpiry && idExpiry < nowDate) ||
@@ -250,15 +249,19 @@ export async function getEnhancedPromoterMetrics(
         passportExpiry &&
         idExpiry > thirtyDaysDate &&
         passportExpiry > thirtyDaysDate;
-
+      // Missing docs = no ID or no passport provided at all
+      const hasMissingDocs = !idExpiry || !passportExpiry;
       if (hasExpired) {
+        expiredDocuments++;
+      } else if (hasMissingDocs && !hasExpiring) {
+        // Missing documents treated as critical (same urgency as expired)
         expiredDocuments++;
       } else if (hasExpiring) {
         expiringDocuments++;
       } else if (isCompliant) {
         fullyCompliant++;
       }
-    });
+    });;
 
     // Calculate derived metrics
     const availableWorkforce =
