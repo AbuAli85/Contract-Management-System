@@ -27,6 +27,7 @@ interface RoleContextType {
   canManageAssignments: boolean;
   canViewAnalytics: boolean;
   canBulkActions: boolean;
+  isLoading: boolean;
 }
 
 const RoleContext = createContext<RoleContextType | null>(null);
@@ -84,7 +85,7 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
     let isEmployeeUser = false;
     let employerId: string | null = null;
 
-    if (authLoading || !user) {
+    if (authLoading || !user || role === 'loading') {
       return {
         userRole: 'viewer',
         isEmployer: false,
@@ -101,6 +102,7 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
         canManageAssignments: false,
         canViewAnalytics: false,
         canBulkActions: false,
+        isLoading: true,
       };
     }
 
@@ -113,6 +115,8 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
       isEmployerUser = true; // Managers can act as employers
     } else if (
       userRoleFromMetadata === 'employer' ||
+      userRoleFromMetadata === 'provider' ||
+      role === 'provider' ||
       employerIdFromMetadata ||
       companyIdFromMetadata ||
       sessionEmployerId ||
@@ -129,7 +133,7 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
       userRoleFromMetadata === 'promoter' ||
       userRoleFromMetadata === 'employee' ||
       role === 'promoter' ||
-      role === 'user'
+      (role === 'user' && userRoleFromMetadata && userRoleFromMetadata !== 'admin' && userRoleFromMetadata !== 'manager' && userRoleFromMetadata !== 'employer' && userRoleFromMetadata !== 'provider')
     ) {
       userRoleType = 'employee';
       isEmployeeUser = true;
@@ -165,6 +169,7 @@ export function RoleContextProvider({ children }: RoleContextProviderProps) {
       canManageAssignments,
       canViewAnalytics: canViewAnalyticsData,
       canBulkActions: canPerformBulkActions,
+      isLoading: false,
     };
   }, [
     user,

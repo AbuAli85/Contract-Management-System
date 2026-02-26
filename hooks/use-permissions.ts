@@ -3,7 +3,7 @@ import { useSupabase } from '@/app/providers';
 import { useAuth } from '@/lib/auth-service';
 
 // Real type definitions
-type Role = 'admin' | 'user' | 'manager' | 'reviewer' | 'promoter';
+type Role = 'admin' | 'user' | 'manager' | 'reviewer' | 'promoter' | 'loading';
 type Action = string;
 type Resource = string;
 
@@ -11,8 +11,8 @@ type Resource = string;
 export function usePermissions() {
   const { session, supabase, loading: authLoading } = useSupabase();
   const { user } = useAuth();
-  const [role, setRole] = React.useState<Role>('user');
-  const [roles, setRoles] = React.useState<Role[]>(['user']);
+  const [role, setRole] = React.useState<Role>('loading');
+  const [roles, setRoles] = React.useState<Role[]>(['loading']);
   const [loading, setLoading] = React.useState(true);
 
   // Fetch user role from Supabase
@@ -125,26 +125,26 @@ export function usePermissions() {
   };
 
   const canRead = (resource: Resource): boolean => {
-    if (loading || authLoading) return false;
     if (role === 'admin' || role === 'manager') return true;
+    if (loading || authLoading) return false;
     return false;
   };
 
   const canCreate = (resource: Resource): boolean => {
-    if (loading || authLoading) return false;
     if (role === 'admin' || role === 'manager') return true;
+    if (loading || authLoading) return false;
     return false;
   };
 
   const canUpdate = (resource: Resource): boolean => {
-    if (loading || authLoading) return false;
     if (role === 'admin' || role === 'manager') return true;
+    if (loading || authLoading) return false;
     return false;
   };
 
   const canDelete = (resource: Resource): boolean => {
-    if (loading || authLoading) return false;
     if (role === 'admin') return true;
+    if (loading || authLoading) return false;
     return false;
   };
 

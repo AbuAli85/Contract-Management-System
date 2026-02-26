@@ -108,11 +108,9 @@ export function PromotersPageClient({
     );
   }
 
-  // Check permissions - allow if user can read promoters or has admin/manager role
-  const canAccessPromoters =
-    canRead('promoter') ||
-    hasPermission('promoter:read') ||
-    hasPermission('promoter:read:own');
+  // Check permissions - allow if user is authenticated (role-based view handles what they see)
+  // We allow access for all authenticated users - the view itself handles role-based rendering
+  const canAccessPromoters = !!user; // Any authenticated user can access
 
   if (!canAccessPromoters) {
     return (
