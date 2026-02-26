@@ -37,6 +37,7 @@ import {
   TrendingUp,
   AlertTriangle,
   GitBranch,
+  LayoutGrid,
 } from 'lucide-react';
 
 interface SimplifiedNavigationProps {
@@ -135,11 +136,11 @@ export function SimplifiedNavigation({
         roles: ['admin', 'manager', 'employer'],
         items: [
           {
-            href: `/${locale}/promoters`,
-            label: 'Promoters',
-            labelAr: 'المروجين',
+            href: `/${locale}/manage-promoters`,
+            label: 'All Promoters',
+            labelAr: 'جميع المروجين',
             icon: Users,
-            description: 'View, manage, and analyze all promoters',
+            description: 'View and manage all promoters',
             roles: ['admin', 'manager', 'employer'],
           },
           {
@@ -151,12 +152,36 @@ export function SimplifiedNavigation({
             roles: ['admin', 'manager', 'employer'],
           },
           {
+            href: `/${locale}/promoter-analysis`,
+            label: 'Promoter Analysis',
+            labelAr: 'تحليل المروجين',
+            icon: BarChart3,
+            description: 'Real-time workforce analytics',
+            roles: ['admin', 'manager', 'employer'],
+          },
+          {
+            href: `/${locale}/promoters/performance`,
+            label: 'Performance',
+            labelAr: 'الأداء',
+            icon: TrendingUp,
+            description: 'Performance metrics and rankings',
+            roles: ['admin', 'manager', 'employer'],
+          },
+          {
             href: `/${locale}/csv-import`,
             label: 'Import CSV',
             labelAr: 'استيراد CSV',
             icon: Upload,
             description: 'Bulk import promoters from CSV file',
             roles: ['admin', 'manager', 'employer'],
+          },
+          {
+            href: `/${locale}/manage-promoters/comprehensive`,
+            label: 'Comprehensive View',
+            labelAr: 'العرض الشامل',
+            icon: LayoutGrid,
+            description: 'Full workforce overview',
+            roles: ['admin', 'manager'],
           },
         ],
       },

@@ -100,15 +100,15 @@ export function PromotersHeader({
       {/* Subtle gradient overlay */}
       <div className='absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-blue-500/5 pointer-events-none' />
 
-      <CardHeader className='relative pb-6 overflow-visible'>
+      <CardHeader className='relative pb-3 pt-3 overflow-visible'>
         <div className='flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between w-full'>
-          <div className='space-y-4 flex-1 min-w-0 w-full lg:max-w-[calc(100%-400px)]'>
+          <div className='space-y-2 flex-1 min-w-0 w-full lg:max-w-[calc(100%-400px)]'>
             <div className='flex items-center gap-4 flex-wrap'>
-              <div className='rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 p-4 backdrop-blur-sm flex-shrink-0 border border-white/10 shadow-lg'>
-                <Users className='h-7 w-7 text-white' />
+              <div className='rounded-lg bg-gradient-to-br from-indigo-500/20 to-blue-500/20 p-2.5 backdrop-blur-sm flex-shrink-0 border border-white/10 shadow-lg'>
+                <Users className='h-5 w-5 text-white' />
               </div>
               <div className='flex-1 min-w-0'>
-                <CardTitle className='text-4xl font-bold tracking-tight lg:text-5xl break-words bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent'>
+                <CardTitle className='text-2xl font-bold tracking-tight lg:text-3xl break-words bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent'>
                   Promoter Intelligence Hub
                 </CardTitle>
                 <div className='flex items-center gap-2 mt-1'>
@@ -124,7 +124,7 @@ export function PromotersHeader({
                 </div>
               </div>
             </div>
-            <CardDescription className='max-w-3xl text-base text-white/90 leading-relaxed break-words font-medium'>
+            <CardDescription className='max-w-3xl text-sm text-white/80 leading-relaxed break-words'>
               Monitor workforce readiness, document compliance, and partner
               coverage in real-time to keep every engagement on track.{' '}
               <span className='font-bold text-white text-lg'>
@@ -132,7 +132,7 @@ export function PromotersHeader({
               </span>{' '}
               active promoters in system.
             </CardDescription>
-            <div className='flex flex-wrap items-center gap-3 text-sm text-white/90 pt-3 w-full'>
+            <div className='flex flex-wrap items-center gap-2 text-sm text-white/90 pt-1 w-full'>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

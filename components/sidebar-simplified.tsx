@@ -106,10 +106,10 @@ export function SidebarSimplified({
           {!isSidebarCollapsed && (
             <div className='flex items-center gap-x-2'>
               <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
-                <span className='text-sm font-bold'>CMS</span>
+                <span className='text-xs font-bold'>SP</span>
               </div>
               <span className='font-semibold text-lg'>
-                {rtl ? 'نظام المروجين' : 'Promoter System'}
+                {rtl ? 'سمارت برو' : 'SmartPRO'}
               </span>
             </div>
           )}
