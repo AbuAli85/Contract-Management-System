@@ -168,19 +168,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               data: { session: existingSession },
             } = await client.auth.getSession();
             if (existingSession) {
-              // Only clear if it's the blocked admin account
-              if (
-                existingSession.user.email === 'admin@contractmanagement.com'
-              ) {
-                await client.auth.signOut();
-              } else {
-                // Preserve the existing session
-                setSession(existingSession);
-                setUser(existingSession.user);
-                setLoading(false);
-                setInitialLoading(false);
-                return;
-              }
+              // Preserve the existing session
+              setSession(existingSession);
+              setUser(existingSession.user);
+              setLoading(false);
+              setInitialLoading(false);
+              return;
             } else {
             }
           } catch (error) {
@@ -214,20 +207,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (session && session.user) {
             // Only set session if user exists and is properly authenticated
             if (session.user.id && session.user.email) {
-              // Check if this is the blocked admin account
-              if (session.user.email === 'admin@contractmanagement.com') {
-                await client.auth.signOut();
-                setSession(null);
-                setUser(null);
-              } else {
-                setSession(session);
-                setUser(session.user);
-                // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
-                // This is critical for server-side logins
-                try {
-                  await syncSessionToSSO();
-                } catch (syncError) {
-                }
+              setSession(session);
+              setUser(session.user);
+              // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
+              try {
+                await syncSessionToSSO();
+              } catch {
               }
             } else {
               setSession(null);
@@ -257,20 +242,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (event === 'SIGNED_IN' && session?.user) {
             if (session.user.id && session.user.email) {
-              // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
-              if (session.user.email === 'admin@contractmanagement.com') {
-                await client.auth.signOut();
-                setSession(null);
-                setUser(null);
-              } else {
-                setSession(session);
-                setUser(session.user);
-                // Sync session to SSO storage key (reads from cookies and syncs to localStorage)
-                // Await to ensure cookies are set before API calls
-                try {
-                  await syncSessionToSSO();
-                } catch (syncError) {
-                }
+              setSession(session);
+              setUser(session.user);
+              try {
+                await syncSessionToSSO();
+              } catch {
               }
             }
           } else if (event === 'SIGNED_OUT') {
@@ -278,19 +254,11 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
           } else if (event === 'TOKEN_REFRESHED' && session?.user) {
             if (session.user.id && session.user.email) {
-              // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
-              if (session.user.email === 'admin@contractmanagement.com') {
-                await client.auth.signOut();
-                setSession(null);
-                setUser(null);
-              } else {
-                setSession(session);
-                setUser(session.user);
-                // Sync session to SSO storage key on token refresh
-                try {
-                  await syncSessionToSSO();
-                } catch (syncError) {
-                }
+              setSession(session);
+              setUser(session.user);
+              try {
+                await syncSessionToSSO();
+              } catch {
               }
             }
           }
@@ -335,15 +303,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
         } else if (session && session.user) {
           if (session.user.id && session.user.email) {
-            // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
-            if (session.user.email === 'admin@contractmanagement.com') {
-              await supabase.auth.signOut();
-              setSession(null);
-              setUser(null);
-            } else {
-              setSession(session);
-              setUser(session.user);
-            }
+            setSession(session);
+            setUser(session.user);
           }
         }
       }

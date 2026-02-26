@@ -82,21 +82,8 @@ export async function verifyUserRoleFromToken(
       };
     }
 
-    // If no role found, check if it's admin by email
-    if (user.email === 'luxsess2001@gmail.com') {
-      // SECURITY FIX: Update JWT custom claims for future requests
-      await updateUserCustomClaims(supabase, user.id, 'admin');
-
-      return {
-        role: 'admin',
-        isValid: true,
-        userId: user.id,
-      };
-    }
-
-    // SECURITY FIX: Update JWT custom claims for future requests
+    // No role found in user_roles — default to 'user' (least privilege)
     await updateUserCustomClaims(supabase, user.id, 'user');
-
     return { role: 'user', isValid: true, userId: user.id };
   } catch (error) {
     return { role: 'anonymous', isValid: false };

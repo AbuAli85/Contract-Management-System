@@ -1,17 +1,6 @@
 'use client';
 
-// 🔥 TEMPORARY TEST - Global Settings Fix
-import { Settings } from 'lucide-react';
-
-// Make Settings globally available (temporary fix)
-if (typeof window !== 'undefined') {
-  (window as any).Settings = Settings;
-}
-
-// Add it to React's global scope as well
 import React from 'react';
-(React as any).Settings = Settings;
-
 import { useState, useEffect, Suspense, lazy, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';

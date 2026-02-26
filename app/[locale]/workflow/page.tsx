@@ -2,7 +2,7 @@
 
 import { ComprehensiveWorkflowSystem } from '@/components/workflow/comprehensive-workflow-system';
 import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
-import { useAuth } from '@/app/providers';
+import { useAuth } from '@/lib/auth-service';
 
 export default function WorkflowPage() {
   const { user } = useAuth();

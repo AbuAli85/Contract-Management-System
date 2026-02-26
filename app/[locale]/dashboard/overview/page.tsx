@@ -207,9 +207,7 @@ export default function DashboardOverviewPage() {
     permissions.can(feature.permission as any)
   );
 
-  // TEMPORARY: Show all features for testing (remove this in production)
-  const showAllFeatures = true; // Set to false in production
-  const displayFeatures = showAllFeatures ? featureCards : filteredFeatures;
+  const displayFeatures = filteredFeatures;
 
   const roleDisplay = getRoleDisplay(permissions.role);
 

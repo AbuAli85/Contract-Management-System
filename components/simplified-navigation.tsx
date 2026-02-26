@@ -34,6 +34,9 @@ import {
   FileText,
   Clock,
   Link as LinkIcon,
+  TrendingUp,
+  AlertTriangle,
+  GitBranch,
 } from 'lucide-react';
 
 interface SimplifiedNavigationProps {
@@ -296,6 +299,37 @@ export function SimplifiedNavigation({
             icon: Users,
             description: 'Organize employees by location or department',
             roles: ['admin', 'manager', 'employer'],
+          },
+        ],
+      },
+      {
+        title: 'Analytics & Compliance',
+        titleAr: 'التحليلات والامتثال',
+        roles: ['admin', 'manager', 'employer'],
+        items: [
+          {
+            href: `/${locale}/dashboard/kpi`,
+            label: 'KPI Dashboard',
+            labelAr: 'لوحة مؤشرات الأداء',
+            icon: TrendingUp,
+            description: 'Key performance indicators and metrics',
+            roles: ['admin', 'manager', 'employer'],
+          },
+          {
+            href: `/${locale}/dashboard/compliance`,
+            label: 'Compliance Alerts',
+            labelAr: 'تنبيهات الامتثال',
+            icon: AlertTriangle,
+            description: 'Monitor and resolve compliance issues',
+            roles: ['admin', 'manager', 'employer'],
+          },
+          {
+            href: `/${locale}/workflow`,
+            label: 'Workflow Manager',
+            labelAr: 'مدير سير العمل',
+            icon: GitBranch,
+            description: 'View and manage workflow instances',
+            roles: ['admin', 'manager'],
           },
         ],
       }

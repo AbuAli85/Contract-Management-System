@@ -258,7 +258,6 @@ export function AuthGuard({
       // @ts-ignore - Adding to window for development
       window.switchToUser = (email: string) => {
         const userMap: Record<string, { role: string; name: string }> = {
-          'luxsess2001@gmail.com': { role: 'admin', name: 'Luxsess Admin' },
           'admin@example.com': { role: 'admin', name: 'System Administrator' },
           'manager@example.com': { role: 'manager', name: 'Project Manager' },
           'promoter@example.com': { role: 'promoter', name: 'Sales Promoter' },

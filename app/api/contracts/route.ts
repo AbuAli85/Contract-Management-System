@@ -927,6 +927,17 @@ export const POST = withAnyRBAC(
           .select()
           .single();
         if (!error && data) {
+          // Start a workflow instance for the new contract (non-blocking)
+          try {
+            const { WorkflowService } = await import('@/lib/workflow/workflow-service');
+            const { data: { user } } = await supabase.auth.getUser();
+            if (data.company_id && user?.id) {
+              const wf = new WorkflowService(supabase, data.company_id, user.id);
+              await wf.startContract(data.id);
+            }
+          } catch {
+            // Workflow start failure is non-fatal — contract is already created
+          }
           return NextResponse.json({ success: true, contract: data });
         }
         attemptErrors.push({

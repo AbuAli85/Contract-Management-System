@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { useAuth } from '@/app/providers';
 import { createClient } from '@/lib/supabase/client';
+import type { EnhancedRBACContext } from '@/lib/enhanced-rbac';
 import {
   EnhancedUserRole,
   EnhancedRBACContext as EnhancedRBACContextType,
@@ -51,15 +52,15 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [isCompanyMember, setIsCompanyMember] = useState(false);
 
-  // Safety timeout to prevent infinite loading
+  // Safety timeout — 8 seconds max, then treat as unauthenticated (not 'user')
   useEffect(() => {
     const safetyTimer = setTimeout(() => {
       if (isLoading) {
-        setUserRole('user');
-        setUserPermissions(getUserPermissions('user'));
+        setUserRole(null);
+        setUserPermissions([]);
         setIsLoading(false);
       }
-    }, 12000); // 12 second safety timeout
+    }, 8000);
 
     return () => clearTimeout(safetyTimer);
   }, [isLoading]);
@@ -79,79 +80,55 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
     try {
       const supabase = createClient();
 
-      // Try to fetch user data from profiles table (which exists)
-      let userData = null;
-      const companyData = null;
-
-      // First try profiles table by email
-      const { data: profilesData, error: profilesError } = await supabase
+      // 1. Resolve profile id and active_company_id
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, email, role, status, first_name, last_name')
-        .eq('email', user.email || '')
-        .maybeSingle();
+        .select('id, active_company_id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (!profilesError && profilesData?.role) {
-        userData = {
-          id: profilesData.id,
-          role: profilesData.role,
-          company_id: null, // profiles table doesn't have company_id
-          status: profilesData.status || 'active',
-          email: profilesData.email,
-        };
-      } else {
-        // If not found by email, try by auth ID
-        const { data: authIdProfile, error: authIdError } = await supabase
-          .from('profiles')
-          .select('id, email, role, status, first_name, last_name')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!authIdError && authIdProfile?.role) {
-          userData = {
-            id: authIdProfile.id,
-            role: authIdProfile.role,
-            company_id: null, // profiles table doesn't have company_id
-            status: authIdProfile.status || 'active',
-            email: authIdProfile.email,
-          };
-        } else {
-          // Fallback: Use admin detection by email (same as working provider)
-          const fallbackRole =
-            user.email === 'luxsess2001@gmail.com' ? 'admin' : 'user';
-
-          userData = {
-            id: user.id,
-            role: fallbackRole,
-            company_id: null,
-            status: 'active',
-            email: user.email,
-          };
-        }
-      }
-
-      if (!userData) {
-        setUserRole('user' as EnhancedUserRole);
-        setUserPermissions(getUserPermissions('user'));
+      if (profileError || !profile) {
+        setUserRole(null);
+        setUserPermissions([]);
         setCompanyId(null);
         setIsCompanyMember(false);
         setIsLoading(false);
         return;
       }
 
-      const role = userData.role as EnhancedUserRole;
-      const permissions = getUserPermissions(role);
-      const userCompanyId = userData.company_id;
-      const isCompanyMemberStatus = !!(userCompanyId && companyData?.is_active);
+      const targetCompanyId = profile.active_company_id;
+
+      if (!targetCompanyId) {
+        setUserRole(null);
+        setUserPermissions([]);
+        setCompanyId(null);
+        setIsCompanyMember(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Look up role in user_roles — the canonical, company-scoped source
+      const { data: userRoleRow, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', profile.id)
+        .eq('company_id', targetCompanyId)
+        .eq('is_active', true)
+        .single();
+
+      const role = (!roleError && userRoleRow?.role)
+        ? (userRoleRow.role as EnhancedUserRole)
+        : null;
+
+      const permissions = role ? getUserPermissions(role) : [];
 
       setUserRole(role);
       setUserPermissions(permissions);
-      setCompanyId(userCompanyId);
-      setIsCompanyMember(isCompanyMemberStatus);
-    } catch (error) {
-
-      // Fallback to basic user role
-      setUserRole('user');
-      setUserPermissions(getUserPermissions('user'));
+      setCompanyId(targetCompanyId);
+      setIsCompanyMember(!!role);
+    } catch {
+      setUserRole(null);
+      setUserPermissions([]);
       setCompanyId(null);
       setIsCompanyMember(false);
     } finally {

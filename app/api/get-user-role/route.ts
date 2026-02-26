@@ -1,122 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerComponentClient } from '@/lib/supabaseServer';
-import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 
-// Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/get-user-role
+ *
+ * Returns the current user's role from the canonical `user_roles` table.
+ * No hardcoded email fallbacks — if no role exists in user_roles, returns null.
+ */
+export async function GET() {
   try {
+    const supabase = await createClient();
 
-    // Create server component client that properly reads cookies
-    const supabase = await createServerComponentClient();
-
-    // Get current session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      return NextResponse.json({ error: 'Session error' }, { status: 401 });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Not authenticated' },
+        { status: 401 }
+      );
     }
 
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = session.user;
-
-    // First, ensure the user profile exists
-    try {
-      await (supabase as any).rpc('ensure_user_profile', { user_id: user.id });
-    } catch (error) {
-      // Continue anyway, we'll try to get the role from existing data
-    }
-
-    // Get the latest role from all possible sources
-    let currentRole = 'user';
-    let roleSource = 'default';
-
-    // Check users table
-    try {
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (!usersError && usersData?.role) {
-        currentRole = usersData.role;
-        roleSource = 'users';
-      }
-    } catch (error) {
-    }
-
-    // Check profiles table if users didn't have role
-    if (roleSource === 'default') {
-      try {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (!profilesError && profilesData?.role) {
-          currentRole = profilesData.role;
-          roleSource = 'profiles';
-        }
-      } catch (error) {
-      }
-    }
-
-    // Check app_users table if still no role
-    if (roleSource === 'default') {
-      try {
-        const { data: appUsersData, error: appUsersError } = await supabase
-          .from('app_users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (!appUsersError && appUsersData?.role) {
-          currentRole = appUsersData.role;
-          roleSource = 'app_users';
-        }
-      } catch (error) {
-      }
-    }
-
-    // If no role found, set admin role
-    if (roleSource === 'default') {
-      currentRole = 'admin';
-      roleSource = 'default (admin)';
-    }
-
+    const result = await getCompanyRole(supabase);
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-      },
+      user: { id: user.id, email: user.email },
+      // Keep legacy `role.value` shape for backward compatibility
       role: {
-        value: currentRole,
-        source: roleSource,
+        value: result.role,
+        source: 'user_roles',
         timestamp: new Date().toISOString(),
       },
-      summary: {
-        finalRole: currentRole,
-        roleSource,
-        message: `Current role: ${currentRole} (from ${roleSource})`,
-      },
+      companyId: result.companyId,
+      profileId: result.profileId,
     });
   } catch (error) {
-
     return NextResponse.json(
       {
         success: false,
-        error: 'Get user role failed',
+        error: 'Failed to resolve role',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
