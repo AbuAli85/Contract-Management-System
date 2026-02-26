@@ -474,12 +474,27 @@ class ContractGenerationService {
         data: { publicUrl },
       } = this.supabase.storage.from('contracts').getPublicUrl(fileName);
 
-      // Update contract with PDF URL
+      // Update workflow state via workflow_transition (generated)
+      try {
+        await this.supabase.rpc('workflow_transition', {
+          p_company_id: (contract as any).company_id,
+          p_entity_type: 'contract',
+          p_entity_id: contract.id,
+          p_action: 'generate_pdf',
+          p_actor: null,
+          p_metadata: {
+            source: 'contract-generation-service',
+          },
+        });
+      } catch {
+        // Ignore workflow errors to avoid breaking PDF generation
+      }
+
+      // Update contract with PDF URL (status comes from workflow engine)
       const { error: updateError } = await this.supabase
         .from('contracts')
         .update({
           pdf_url: publicUrl,
-          status: 'generated',
           updated_at: new Date().toISOString(),
         })
         .eq('id', contractId);

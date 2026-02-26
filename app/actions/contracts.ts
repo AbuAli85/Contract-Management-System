@@ -87,6 +87,7 @@ export async function createContract(newContract: ContractInsert) {
     .insert(safePayload)
     .select(
       `id,
+       company_id,
        created_at,
        job_title,
        contract_start_date,
@@ -107,6 +108,37 @@ export async function createContract(newContract: ContractInsert) {
 
   if (error) throw new Error(error.message);
   if (!data) throw new Error('Contract creation failed, no data returned.');
+
+  // Best-effort: ensure a workflow instance and initial "created" event exist
+  try {
+    // Create workflow instance for this contract
+    const { data: workflowInstance, error: workflowError } = await supabase
+      .from('workflow_instances')
+      .insert({
+        company_id: (data as any).company_id,
+        entity_type: 'contract',
+        entity_id: data.id,
+        current_state: 'draft',
+      })
+      .select('id, company_id')
+      .single();
+
+    if (!workflowError && workflowInstance) {
+      // Write initial workflow event
+      await supabase.from('workflow_events').insert({
+        company_id: workflowInstance.company_id,
+        workflow_instance_id: workflowInstance.id,
+        action: 'created',
+        performed_by: user.id,
+        previous_state: null,
+        new_state: 'draft',
+        metadata: {},
+      });
+    }
+  } catch {
+    // Swallow workflow errors to avoid breaking core contract creation.
+  }
+
   return data;
 }
 

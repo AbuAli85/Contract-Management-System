@@ -73,7 +73,7 @@ export const POST = withAnyRBAC(
       // Get contract to validate it exists and check current status
       const { data: contract, error: fetchError } = await supabase
         .from('contracts')
-        .select('id, status, contract_number, title')
+        .select('id, status, contract_number, title, company_id')
         .eq('id', contractId)
         .single();
 
@@ -90,6 +90,7 @@ export const POST = withAnyRBAC(
       };
 
       let successMessage = '';
+      let newStatusForNotification: string | undefined;
 
       switch (action) {
         case 'approve':
@@ -106,7 +107,6 @@ export const POST = withAnyRBAC(
 
           updateData = {
             ...updateData,
-            status: 'approved',
             approved_by: user.id,
             approved_at: new Date().toISOString(),
             // Clear any previous rejection data
@@ -114,6 +114,36 @@ export const POST = withAnyRBAC(
             rejected_at: null,
             rejection_reason: null,
           };
+          newStatusForNotification = 'approved';
+
+          // Drive status via workflow engine instead of direct column update
+          {
+            const { error: workflowError } = await supabase.rpc(
+              'workflow_transition',
+              {
+                p_company_id: (contract as any).company_id,
+                p_entity_type: 'contract',
+                p_entity_id: contract.id,
+                p_action: 'approve',
+                p_actor: user.id,
+                p_metadata: {
+                  previous_status: contract.status,
+                  reason,
+                },
+              }
+            );
+
+            if (workflowError) {
+              return NextResponse.json(
+                {
+                  success: false,
+                  error: 'Failed to transition contract workflow',
+                  details: workflowError.message,
+                },
+                { status: 500 }
+              );
+            }
+          }
           successMessage = `Contract ${contract.contract_number || contract.id} has been approved successfully`;
           break;
 
@@ -228,7 +258,7 @@ export const POST = withAnyRBAC(
               contractNumber:
                 contractWithCreator.contract_number ?? (contractId as string),
               contractType: contractWithCreator.contract_type ?? 'Contract',
-              newStatus: updateData.status ?? action,
+              newStatus: newStatusForNotification ?? updateData.status ?? action,
               recipientEmail: creatorProfile.email,
               recipientName: creatorProfile.full_name ?? 'Contract Owner',
               changedBy: user.email ?? undefined,

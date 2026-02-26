@@ -235,12 +235,35 @@ export class ContractService {
 
       const result = await response.json();
 
-      // Update contract with PDF URL
+      // Update workflow state via workflow_transition (generated) and set PDF URL
+      try {
+        const { data: contractRow } = await this.supabase
+          .from('contracts')
+          .select('id, company_id')
+          .eq('id', contractId)
+          .single();
+
+        if (contractRow) {
+          await this.supabase.rpc('workflow_transition', {
+            p_company_id: (contractRow as any).company_id,
+            p_entity_type: 'contract',
+            p_entity_id: contractRow.id,
+            p_action: 'generate_pdf',
+            p_actor: null,
+            p_metadata: {
+              source: 'contract-service',
+            },
+          });
+        }
+      } catch {
+        // Ignore workflow errors here to avoid breaking PDF flow
+      }
+
+      // Update contract with PDF URL (status comes from workflow engine)
       await this.supabase
         .from('contracts')
         .update({
           pdf_url: result.pdfUrl,
-          status: 'generated',
         })
         .eq('id', contractId);
 
