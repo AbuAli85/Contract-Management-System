@@ -88,6 +88,16 @@ const promoterSchema = z.object({
   employer_id: z.string().uuid().optional(),
   notify_days_before_id_expiry: z.number().min(1).max(365).default(100),
   notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
+  // Enhanced fields
+  work_location: z.string().optional(),
+  contract_start_date: z.string().optional(),
+  contract_end_date: z.string().optional(),
+  salary: z.number().min(0).optional(),
+  currency: z.string().max(10).default('OMR').optional(),
+  tags: z.array(z.string()).default([]).optional(),
+  photo_url: z.string().url().optional(),
+  emergency_contact_name: z.string().optional(),
+  emergency_contact_phone: z.string().optional(),
 });
 
 // Handler function for GET
@@ -245,10 +255,14 @@ async function handleGET(request: Request) {
     let query = supabase.from('promoters').select(
       `
         id, name_en, name_ar, email, mobile_number, phone,
-        profile_picture_url, status, job_title,
+        profile_picture_url, photo_url, status, job_title,
         id_card_number, id_card_expiry_date, id_card_url,
         passport_number, passport_expiry_date, passport_url,
         nationality, date_of_birth, gender,
+        work_location, department, salary, currency,
+        contract_start_date, contract_end_date,
+        emergency_contact_name, emergency_contact_phone,
+        tags, notes,
         employer_id, created_at, updated_at,
         parties:employer_id (
           id, name_en, name_ar, type, status

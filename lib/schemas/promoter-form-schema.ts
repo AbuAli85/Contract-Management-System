@@ -138,6 +138,19 @@ export const promoterFormSchema = z
     special_requirements: z.string().max(1000).optional().nullable(),
     notes: z.string().max(2000).optional().nullable(),
 
+    // Contract & Work Details
+    work_location: z.string().max(255).optional().nullable(),
+    contract_start_date: z.date().optional().nullable(),
+    contract_end_date: z.date().optional().nullable(),
+    salary: z.number().min(0).optional().nullable(),
+    currency: z.string().max(10).default('OMR').optional().nullable(),
+
+    // Tags
+    tags: z.array(z.string()).default([]).optional().nullable(),
+
+    // Additional Photo
+    photo_url: z.string().url('Invalid URL').optional().nullable(),
+
     // Relations
     employer_id: z.string().uuid('Invalid employer ID').optional().nullable(),
 
@@ -294,9 +307,14 @@ export const FORM_SECTIONS = {
       'job_title',
       'company',
       'department',
+      'work_location',
       'specialization',
       'experience_years',
       'employer_id',
+      'contract_start_date',
+      'contract_end_date',
+      'salary',
+      'currency',
     ],
   },
   education: {
