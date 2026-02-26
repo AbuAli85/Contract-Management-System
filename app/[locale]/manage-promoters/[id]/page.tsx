@@ -1214,7 +1214,30 @@ export default function PromoterDetailPage() {
                           label='Gender'
                           value={promoterDetails?.gender}
                         />
+                        <DetailItem
+                          label='Work Location'
+                          value={(promoterDetails as any)?.work_location}
+                        />
+                        <DetailItem
+                          label='Department'
+                          value={promoterDetails?.department}
+                        />
+                        <DetailItem
+                          label='Emergency Contact'
+                          value={(promoterDetails as any)?.emergency_contact_name || promoterDetails?.emergency_contact}
+                        />
+                        <DetailItem
+                          label='Emergency Phone'
+                          value={(promoterDetails as any)?.emergency_contact_phone || promoterDetails?.emergency_phone}
+                        />
                       </div>
+                      {((promoterDetails as any)?.tags?.length > 0) && (
+                        <div className='flex flex-wrap gap-1 mt-2'>
+                          {((promoterDetails as any).tags as string[]).map((tag: string) => (
+                            <Badge key={tag} variant='secondary' className='text-xs'>{tag}</Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -1931,6 +1954,51 @@ export default function PromoterDetailPage() {
                     <DetailItem
                       label='Special Requirements'
                       value={promoterDetails?.special_requirements}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contract & Compensation Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2'>
+                    <BriefcaseIcon className='h-5 w-5' />
+                    Contract &amp; Compensation
+                  </CardTitle>
+                  <CardDescription>Employment terms and salary details</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                    <DetailItem
+                      label='Work Location'
+                      value={(promoterDetails as any)?.work_location}
+                    />
+                    <DetailItem
+                      label='Monthly Salary'
+                      value={(promoterDetails as any)?.salary
+                        ? `${Number((promoterDetails as any).salary).toLocaleString()} ${(promoterDetails as any)?.currency || 'OMR'}`
+                        : undefined}
+                    />
+                    <DetailItem
+                      label='Contract Start Date'
+                      value={(promoterDetails as any)?.contract_start_date
+                        ? new Date((promoterDetails as any).contract_start_date).toLocaleDateString()
+                        : undefined}
+                    />
+                    <DetailItem
+                      label='Contract End Date'
+                      value={(promoterDetails as any)?.contract_end_date
+                        ? new Date((promoterDetails as any).contract_end_date).toLocaleDateString()
+                        : undefined}
+                    />
+                    <DetailItem
+                      label='Emergency Contact Name'
+                      value={(promoterDetails as any)?.emergency_contact_name}
+                    />
+                    <DetailItem
+                      label='Emergency Contact Phone'
+                      value={(promoterDetails as any)?.emergency_contact_phone}
                     />
                   </div>
                 </CardContent>

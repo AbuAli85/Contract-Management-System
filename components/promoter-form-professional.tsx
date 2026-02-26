@@ -268,6 +268,19 @@ export default function PromoterFormProfessional(
 
     // Employer assignment
     employer_id: '',
+    // Contract & Work Details (new fields)
+    work_location: '',
+    contract_start_date: '',
+    contract_end_date: '',
+    salary: '',
+    currency: 'OMR',
+    // Tags
+    tags: [] as string[],
+    // Emergency Contact (structured)
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    // Additional photo
+    photo_url: '',
   });
 
   // Fetch employers for dropdown with timeout
@@ -575,6 +588,16 @@ export default function PromoterFormProfessional(
           210
         ),
         employer_id: safeGetValue(promoterToEdit, 'employer_id') || '',
+        // Contract & Work Details
+        work_location: safeGetValue(promoterToEdit, 'work_location') || '',
+        contract_start_date: safeGetValue(promoterToEdit, 'contract_start_date') || '',
+        contract_end_date: safeGetValue(promoterToEdit, 'contract_end_date') || '',
+        salary: safeGetValue(promoterToEdit, 'salary') || '',
+        currency: safeGetValue(promoterToEdit, 'currency') || 'OMR',
+        tags: (promoterToEdit as any).tags || [],
+        emergency_contact_name: safeGetValue(promoterToEdit, 'emergency_contact_name') || safeGetValue(promoterToEdit, 'emergency_contact') || '',
+        emergency_contact_phone: safeGetValue(promoterToEdit, 'emergency_contact_phone') || safeGetValue(promoterToEdit, 'emergency_phone') || '',
+        photo_url: safeGetValue(promoterToEdit, 'photo_url') || '',
       });
     }
   }, [promoterToEdit, fetchEmployers]);
@@ -839,6 +862,20 @@ export default function PromoterFormProfessional(
         preferred_language: formData.preferred_language?.trim() || null,
         timezone: formData.timezone?.trim() || null,
         special_requirements: formData.special_requirements?.trim() || null,
+        // Contract & Work Details
+        work_location: formData.work_location?.trim() || null,
+        contract_start_date: formData.contract_start_date
+          ? formatDateForDatabase(formData.contract_start_date)
+          : null,
+        contract_end_date: formData.contract_end_date
+          ? formatDateForDatabase(formData.contract_end_date)
+          : null,
+        salary: formData.salary ? parseFloat(String(formData.salary)) : null,
+        currency: formData.currency?.trim() || 'OMR',
+        tags: formData.tags.length > 0 ? formData.tags : null,
+        emergency_contact_name: formData.emergency_contact_name?.trim() || null,
+        emergency_contact_phone: formData.emergency_contact_phone?.trim() || null,
+        photo_url: formData.photo_url?.trim() || null,
       };
 
       // Add employer_id if selected (but not "none")
@@ -2675,6 +2712,94 @@ export default function PromoterFormProfessional(
                       rows={3}
                     />
                   </div>
+
+                  {/* Work Location */}
+                  <div className='space-y-2'>
+                    <Label htmlFor='work_location'>Work Location</Label>
+                    <Input
+                      id='work_location'
+                      value={formData.work_location}
+                      onChange={e => handleInputChange('work_location', e.target.value)}
+                      placeholder='e.g. Muscat, Salalah, Remote'
+                    />
+                  </div>
+
+                  {/* Contract Dates */}
+                  <div className='space-y-2'>
+                    <Label htmlFor='contract_start_date'>Contract Start Date</Label>
+                    <Input
+                      id='contract_start_date'
+                      type='date'
+                      value={formData.contract_start_date}
+                      onChange={e => handleInputChange('contract_start_date', e.target.value)}
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <Label htmlFor='contract_end_date'>Contract End Date</Label>
+                    <Input
+                      id='contract_end_date'
+                      type='date'
+                      value={formData.contract_end_date}
+                      onChange={e => handleInputChange('contract_end_date', e.target.value)}
+                    />
+                  </div>
+
+                  {/* Salary & Currency */}
+                  <div className='space-y-2'>
+                    <Label htmlFor='salary'>Monthly Salary</Label>
+                    <Input
+                      id='salary'
+                      type='number'
+                      min='0'
+                      step='0.01'
+                      value={formData.salary}
+                      onChange={e => handleInputChange('salary', e.target.value)}
+                      placeholder='0.00'
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <Label htmlFor='currency'>Currency</Label>
+                    <Select
+                      value={formData.currency}
+                      onValueChange={value => handleInputChange('currency', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select currency' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='OMR'>OMR — Omani Rial</SelectItem>
+                        <SelectItem value='SAR'>SAR — Saudi Riyal</SelectItem>
+                        <SelectItem value='AED'>AED — UAE Dirham</SelectItem>
+                        <SelectItem value='USD'>USD — US Dollar</SelectItem>
+                        <SelectItem value='EUR'>EUR — Euro</SelectItem>
+                        <SelectItem value='GBP'>GBP — British Pound</SelectItem>
+                        <SelectItem value='KWD'>KWD — Kuwaiti Dinar</SelectItem>
+                        <SelectItem value='BHD'>BHD — Bahraini Dinar</SelectItem>
+                        <SelectItem value='QAR'>QAR — Qatari Riyal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Emergency Contact */}
+                  <div className='space-y-2'>
+                    <Label htmlFor='emergency_contact_name'>Emergency Contact Name</Label>
+                    <Input
+                      id='emergency_contact_name'
+                      value={formData.emergency_contact_name}
+                      onChange={e => handleInputChange('emergency_contact_name', e.target.value)}
+                      placeholder='Full name of emergency contact'
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <Label htmlFor='emergency_contact_phone'>Emergency Contact Phone</Label>
+                    <Input
+                      id='emergency_contact_phone'
+                      value={formData.emergency_contact_phone}
+                      onChange={e => handleInputChange('emergency_contact_phone', e.target.value)}
+                      placeholder='+968 XXXX XXXX'
+                    />
+                  </div>
+
                 </div>
               </CardContent>
             </Card>

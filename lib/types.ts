@@ -120,6 +120,22 @@ export interface Promoter {
   national_id?: string | null;
   crn?: string | null;
 
+  // Contract & Work Details
+  contract_start_date?: string | null;
+  contract_end_date?: string | null;
+  salary?: number | null;
+  currency?: string | null;
+  photo_url?: string | null;
+  // Structured Emergency Contact
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  // Archive
+  archived_at?: string | null;
+  archived_by?: string | null;
+  // Overall status & name parts
+  overall_status?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   // Legacy fields for backward compatibility
   name?: string;
   zip_code?: string;

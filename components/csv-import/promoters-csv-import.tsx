@@ -58,6 +58,19 @@ interface PromoterCSVRow {
   id_card_expiry_date?: string;
   passport_number?: string;
   passport_expiry_date?: string;
+  work_location?: string;
+  contract_start_date?: string;
+  contract_end_date?: string;
+  salary?: string;
+  currency?: string;
+  department?: string;
+  visa_number?: string;
+  visa_expiry_date?: string;
+  work_permit_number?: string;
+  work_permit_expiry_date?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  tags?: string;
 }
 
 const PROMOTER_COLUMNS: CSVColumn[] = [
@@ -217,6 +230,110 @@ const PROMOTER_COLUMNS: CSVColumn[] = [
     transformer: value => (value ? transformers.date(value) : null),
     example: '2028-12-31',
   },
+  {
+    key: 'work_location',
+    label: 'Work Location',
+    required: false,
+    transformer: transformers.nullIfEmpty,
+    example: 'Muscat',
+  },
+  {
+    key: 'department',
+    label: 'Department',
+    required: false,
+    transformer: transformers.nullIfEmpty,
+    example: 'Sales',
+  },
+  {
+    key: 'contract_start_date',
+    label: 'Contract Start Date',
+    required: false,
+    validator: value => (value ? validators.date(value) : null),
+    transformer: value => (value ? transformers.date(value) : null),
+    example: '2024-01-01',
+  },
+  {
+    key: 'contract_end_date',
+    label: 'Contract End Date',
+    required: false,
+    validator: value => (value ? validators.date(value) : null),
+    transformer: value => (value ? transformers.date(value) : null),
+    example: '2025-12-31',
+  },
+  {
+    key: 'salary',
+    label: 'Monthly Salary',
+    required: false,
+    validator: value => {
+      if (!value) return null;
+      return isNaN(parseFloat(value)) ? 'Must be a number' : null;
+    },
+    transformer: value => (value ? value.trim() : null),
+    example: '350.000',
+  },
+  {
+    key: 'currency',
+    label: 'Currency',
+    required: false,
+    validator: value => {
+      if (!value) return null;
+      const valid = ['OMR', 'SAR', 'AED', 'USD', 'EUR', 'GBP', 'KWD', 'BHD', 'QAR'];
+      return valid.includes(value.toUpperCase()) ? null : 'Must be a valid currency code (e.g. OMR, SAR, AED)';
+    },
+    transformer: value => (value ? value.toUpperCase() : 'OMR'),
+    example: 'OMR',
+  },
+  {
+    key: 'visa_number',
+    label: 'Visa Number',
+    required: false,
+    transformer: transformers.nullIfEmpty,
+    example: 'V123456789',
+  },
+  {
+    key: 'visa_expiry_date',
+    label: 'Visa Expiry Date',
+    required: false,
+    validator: value => (value ? validators.date(value) : null),
+    transformer: value => (value ? transformers.date(value) : null),
+    example: '2026-06-30',
+  },
+  {
+    key: 'work_permit_number',
+    label: 'Work Permit Number',
+    required: false,
+    transformer: transformers.nullIfEmpty,
+    example: 'WP987654321',
+  },
+  {
+    key: 'work_permit_expiry_date',
+    label: 'Work Permit Expiry Date',
+    required: false,
+    validator: value => (value ? validators.date(value) : null),
+    transformer: value => (value ? transformers.date(value) : null),
+    example: '2026-12-31',
+  },
+  {
+    key: 'emergency_contact_name',
+    label: 'Emergency Contact Name',
+    required: false,
+    transformer: transformers.nullIfEmpty,
+    example: 'Ahmed Al-Rashidi',
+  },
+  {
+    key: 'emergency_contact_phone',
+    label: 'Emergency Contact Phone',
+    required: false,
+    transformer: transformers.nullIfEmpty,
+    example: '+968 9123 4567',
+  },
+  {
+    key: 'tags',
+    label: 'Tags (comma-separated)',
+    required: false,
+    transformer: transformers.nullIfEmpty,
+    example: 'bilingual,senior,certified',
+  },
 ];
 
 export function PromotersCSVImport() {
@@ -340,6 +457,19 @@ export function PromotersCSVImport() {
           employer_id,
           status: row.status || 'active',
           id_card_expiry_date: row.id_card_expiry_date,
+          work_location: row.work_location,
+          department: row.department,
+          contract_start_date: row.contract_start_date,
+          contract_end_date: row.contract_end_date,
+          salary: row.salary ? parseFloat(row.salary) : null,
+          currency: row.currency || 'OMR',
+          visa_number: row.visa_number,
+          visa_expiry_date: row.visa_expiry_date,
+          work_permit_number: row.work_permit_number,
+          work_permit_expiry_date: row.work_permit_expiry_date,
+          emergency_contact_name: row.emergency_contact_name,
+          emergency_contact_phone: row.emergency_contact_phone,
+          tags: row.tags ? row.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : null,
           passport_number: row.passport_number,
           passport_expiry_date: row.passport_expiry_date,
           updated_at: new Date().toISOString(),
