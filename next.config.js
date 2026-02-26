@@ -17,17 +17,20 @@ const nextConfig = {
     const cspDirectives = [
       "default-src 'self'",
       // Allow scripts from self and necessary CDNs
-      // NOTE: 'unsafe-eval' and 'unsafe-inline' are required for Next.js functionality
-      // TODO: Replace with nonces for A+ security grade (see CSP_NONCE_IMPLEMENTATION_GUIDE.md)
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com https://maps.googleapis.com https://ajax.googleapis.com",
+      // 'unsafe-inline' is required for Next.js inline hydration scripts.
+      // 'unsafe-eval' has been REMOVED to harden the CSP against XSS.
+      // TODO: Replace 'unsafe-inline' with per-request nonces for an A+ grade.
+      "script-src 'self' 'unsafe-inline' https://vercel.live https://*.google-analytics.com https://*.googletagmanager.com https://maps.googleapis.com https://ajax.googleapis.com",
       // Allow styles from self and Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      // Allow images from self, data URIs, Supabase storage, analytics, Make.com, and Google Maps
-      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://hook.eu2.make.com https://maps.gstatic.com",
+      // Allow images from self, data URIs, Supabase storage, analytics, and Google Maps.
+      // Make.com webhook URLs removed — they are now server-side only.
+      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://maps.gstatic.com",
       // Allow fonts from self and Google Fonts
       "font-src 'self' data: https://fonts.gstatic.com",
-      // Allow connections to API, Supabase, analytics, Sentry, and Make.com webhook
-      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io https://hook.eu2.make.com wss://*.supabase.co https://vercel.live https://maps.googleapis.com",
+      // Allow connections to API, Supabase, analytics, and Sentry.
+      // Make.com webhook calls are now proxied server-side — removed from connect-src.
+      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://*.sentry.io wss://*.supabase.co https://vercel.live https://maps.googleapis.com",
       // Allow frames from Vercel live preview
       "frame-src 'self' https://vercel.live",
       // Disallow frames from other origins

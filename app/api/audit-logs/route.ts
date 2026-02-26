@@ -51,6 +51,30 @@ export const GET = withRBAC('audit:read:all', async (request: NextRequest) => {
       });
     }
 
+    // Also fetch from the new dedicated audit_logs table
+    const { data: nativeAuditLogs } = await supabase
+      .from('audit_logs')
+      .select('id, action, entity_type, entity_id, user_id, created_at, ip_address')
+      .gte('created_at', fromDate.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    // Transform native audit logs
+    const nativeLogs = (nativeAuditLogs ?? []).map((log: {
+      id: string; action: string; entity_type: string; entity_id: string;
+      user_id: string; created_at: string; ip_address: string;
+    }) => ({
+      id: log.id,
+      action: log.action,
+      description: log.action + ' on ' + log.entity_type + (log.entity_id ? ' (' + log.entity_id + ')' : ''),
+      timestamp: log.created_at,
+      user_email: log.user_id ?? 'System',
+      ip: log.ip_address ?? 'Unknown',
+      user_agent: 'Platform',
+      success: true,
+      details: { entity_type: log.entity_type, entity_id: log.entity_id },
+    }));
+
     // Transform webhook logs to audit log format
     const auditLogs = (webhookLogs ?? []).map(log => ({
       id: log.id,
@@ -71,9 +95,13 @@ export const GET = withRBAC('audit:read:all', async (request: NextRequest) => {
       },
     }));
 
+    const allLogs = [...nativeLogs, ...auditLogs].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
     return NextResponse.json({
-      logs: auditLogs,
-      total: auditLogs.length,
+      logs: allLogs,
+      total: allLogs.length,
       timeframe,
       from: fromDate.toISOString(),
       to: now.toISOString(),
