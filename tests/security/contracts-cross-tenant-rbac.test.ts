@@ -83,6 +83,8 @@ describe('contracts RLS + role-based write rules (cross-tenant)', () => {
 
   let contractAId: string;
   let contractBId: string;
+  let workflowInstanceAId: string;
+  let workflowInstanceBId: string;
 
   beforeAll(async () => {
     jest.setTimeout(60_000);
@@ -166,6 +168,45 @@ describe('contracts RLS + role-based write rules (cross-tenant)', () => {
 
     contractAId = insertedA.id;
     contractBId = insertedB.id;
+
+    // Seed workflow_instances for both contracts with initial state 'draft'
+    const { data: instanceA, error: instanceAError } = await admin
+      .from('workflow_instances')
+      .insert({
+        company_id: COMPANY_A,
+        entity_type: 'contract',
+        entity_id: contractAId,
+        current_state: 'draft',
+      })
+      .select('id')
+      .single();
+
+    if (instanceAError) {
+      throw new Error(
+        `Failed to seed workflow_instance for Company A contract: ${instanceAError.message}`
+      );
+    }
+
+    workflowInstanceAId = instanceA.id;
+
+    const { data: instanceB, error: instanceBError } = await admin
+      .from('workflow_instances')
+      .insert({
+        company_id: COMPANY_B,
+        entity_type: 'contract',
+        entity_id: contractBId,
+        current_state: 'draft',
+      })
+      .select('id')
+      .single();
+
+    if (instanceBError) {
+      throw new Error(
+        `Failed to seed workflow_instance for Company B contract: ${instanceBError.message}`
+      );
+    }
+
+    workflowInstanceBId = instanceB.id;
   });
 
   afterAll(async () => {
@@ -178,6 +219,13 @@ describe('contracts RLS + role-based write rules (cross-tenant)', () => {
     }
     if (admin && contractBId) {
       await admin.from('contracts').delete().eq('id', contractBId);
+    }
+
+    if (admin && workflowInstanceAId) {
+      await admin.from('workflow_instances').delete().eq('id', workflowInstanceAId);
+    }
+    if (admin && workflowInstanceBId) {
+      await admin.from('workflow_instances').delete().eq('id', workflowInstanceBId);
     }
   });
 
@@ -248,6 +296,90 @@ describe('contracts RLS + role-based write rules (cross-tenant)', () => {
       .limit(1);
 
     expect(check?.[0]?.title).toBe('Company A Test Contract');
+  });
+
+  // -------------------------------------------------------------------------
+  // Workflow transitions
+  // -------------------------------------------------------------------------
+
+  describe('workflow_transition for contracts', () => {
+    it('allows a valid transition draft -> submitted for Company A', async () => {
+      // Call workflow_transition as Company A user
+      const { error } = await clientA.rpc('workflow_transition', {
+        p_company_id: COMPANY_A,
+        p_entity_type: 'contract',
+        p_entity_id: contractAId,
+        p_action: 'submit',
+        p_actor: null,
+        p_metadata: { test: 'valid_transition' },
+      });
+
+      expect(error).toBeNull();
+
+      // Verify instance state updated
+      const { data: instance, error: fetchError } = await clientA
+        .from('workflow_instances')
+        .select('current_state')
+        .eq('id', workflowInstanceAId)
+        .single();
+
+      expect(fetchError).toBeNull();
+      expect(instance?.current_state).toBe('submitted');
+
+      // Verify an event was recorded
+      const { data: events, error: eventsError } = await clientA
+        .from('workflow_events')
+        .select('previous_state, new_state, action')
+        .eq('workflow_instance_id', workflowInstanceAId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      expect(eventsError).toBeNull();
+      expect(events).toHaveLength(1);
+      expect(events?.[0]?.previous_state).toBe('draft');
+      expect(events?.[0]?.new_state).toBe('submitted');
+      expect(events?.[0]?.action).toBe('submit');
+    });
+
+    it('blocks an invalid transition from a terminal state for Company A', async () => {
+      // Force the instance into a terminal state as admin
+      const { error: forceError } = await admin
+        .from('workflow_instances')
+        .update({ current_state: 'archived' })
+        .eq('id', workflowInstanceAId);
+
+      expect(forceError).toBeNull();
+
+      // Attempt another transition; should fail with an error
+      const { error } = await clientA.rpc('workflow_transition', {
+        p_company_id: COMPANY_A,
+        p_entity_type: 'contract',
+        p_entity_id: contractAId,
+        p_action: 'approve',
+        p_actor: null,
+        p_metadata: { test: 'invalid_after_archived' },
+      });
+
+      expect(error).not.toBeNull();
+      expect(error?.message).toContain('invalid or terminal state for contracts');
+    });
+
+    it('prevents cross-tenant workflow transitions (Company A user on Company B contract)', async () => {
+      // Company A user tries to transition Company B's contract
+      const { error } = await clientA.rpc('workflow_transition', {
+        p_company_id: COMPANY_B,
+        p_entity_type: 'contract',
+        p_entity_id: contractBId,
+        p_action: 'submit',
+        p_actor: null,
+        p_metadata: { test: 'cross_tenant' },
+      });
+
+      // RLS on workflow_instances should hide the row, causing the function to
+      // raise "no workflow_instance found"
+      expect(error).not.toBeNull();
+      expect(error?.message).toContain('no workflow_instance found');
+    });
   });
 });
 
