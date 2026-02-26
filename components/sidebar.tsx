@@ -394,18 +394,55 @@ function SidebarContent({
             ],
           },
           {
-            title: 'Promoters',
-            href: '/promoters',
+            title: 'Promoter Management',
+            href: '/manage-promoters',
             icon: Users,
-            description: 'View and manage all promoters',
+            description: 'Manage all promoters end-to-end',
             roles: ['admin', 'manager', 'employer'],
-          },
-          {
-            title: 'Promoter Analysis',
-            href: '/promoter-analysis',
-            icon: FolderSearch,
-            description: 'Performance analytics',
-            roles: ['admin', 'manager', 'employer'],
+            children: [
+              {
+                title: 'All Promoters',
+                href: '/manage-promoters',
+                icon: Users,
+                description: 'View and manage all promoters',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Add Promoter',
+                href: '/manage-promoters/new',
+                icon: UserPlus,
+                description: 'Add a new promoter',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Promoter Analysis',
+                href: '/promoter-analysis',
+                icon: BarChart3,
+                description: 'Real-time workforce analytics',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Performance',
+                href: '/promoters/performance',
+                icon: FolderSearch,
+                description: 'Performance metrics and rankings',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Import CSV',
+                href: '/csv-import',
+                icon: FolderPlus,
+                description: 'Bulk import promoters via CSV',
+                roles: ['admin', 'manager', 'employer'],
+              },
+              {
+                title: 'Comprehensive View',
+                href: '/manage-promoters/comprehensive',
+                icon: FolderOpen,
+                description: 'Full workforce overview',
+                roles: ['admin', 'manager'],
+              },
+            ],
           }
         );
       }
