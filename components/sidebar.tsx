@@ -268,6 +268,72 @@ function SidebarContent({
             roles: ['admin', 'manager', 'employer'],
             children: [
               {
+                title: 'HR Dashboard',
+                href: '/hr',
+                icon: BarChart3,
+                description: 'HR overview and quick actions',
+              },
+              {
+                title: 'Employees',
+                href: '/hr/employees',
+                icon: Users,
+                description: 'Manage all employees',
+              },
+              {
+                title: 'Recruitment',
+                href: '/hr/recruitment',
+                icon: Briefcase,
+                description: 'Job postings and applications',
+              },
+              {
+                title: 'Performance Reviews',
+                href: '/hr/performance',
+                icon: BarChart3,
+                description: 'Employee performance evaluations',
+              },
+              {
+                title: 'Org Chart',
+                href: '/hr/org-chart',
+                icon: Users,
+                description: 'Company organisational structure',
+              },
+              {
+                title: 'Attendance',
+                href: '/hr/attendance',
+                icon: Clock,
+                description: 'Attendance tracking and management',
+              },
+              {
+                title: 'Leave Requests',
+                href: '/hr/leave-requests',
+                icon: Calendar,
+                description: 'Manage employee leave requests',
+              },
+              {
+                title: 'Tasks',
+                href: '/hr/tasks',
+                icon: Briefcase,
+                description: 'Task assignment and tracking',
+              },
+              {
+                title: 'Targets & KPIs',
+                href: '/hr/targets',
+                icon: BarChart3,
+                description: 'Set and track team targets',
+              },
+              {
+                title: 'Payroll',
+                href: '/hr/payroll',
+                icon: Briefcase,
+                description: 'Payroll processing and reports',
+              },
+              {
+                title: 'HR Reports',
+                href: '/hr/reports',
+                icon: BarChart3,
+                description: 'HR analytics and workforce reports',
+              },
+              {
                 title: 'Alignment Overview',
                 href: '/hr/alignment',
                 icon: Users,
@@ -384,6 +450,13 @@ function SidebarContent({
           {
             title: 'CRM',
             href: '/crm',
+            children: [
+              { title: 'CRM Overview', href: '/crm' },
+              { title: 'Contacts', href: '/crm/contacts' },
+              { title: 'Pipeline', href: '/crm/pipeline' },
+              { title: 'Communications', href: '/crm/communications' },
+              { title: 'Enhanced CRM', href: '/crm/enhanced' },
+            ],
             icon: Building2,
             description: 'Customer relationship management',
             roles: ['admin'],
@@ -408,6 +481,41 @@ function SidebarContent({
             icon: Shield,
             description: 'System audit trails',
             roles: ['admin'],
+          },
+          {
+            title: 'Analytics',
+            icon: BarChart3,
+            description: 'Platform-wide analytics and reports',
+            roles: ['admin', 'manager'],
+            children: [
+              { title: 'Analytics Overview', href: '/analytics', icon: BarChart3 },
+              { title: 'HR Analytics', href: '/analytics/hr', icon: Users },
+              { title: 'Contract Analytics', href: '/contracts/analytics', icon: FileText },
+              { title: 'Report Builder', href: '/analytics/report-builder', icon: FolderEdit },
+              { title: 'KPI Dashboard', href: '/dashboard/kpi', icon: BarChart3 },
+            ],
+          },
+          {
+            title: 'System',
+            icon: Shield,
+            description: 'System administration',
+            roles: ['admin'],
+            children: [
+              { title: 'System Logs', href: '/system/logs', icon: FileText },
+              { title: 'Security', href: '/system/security', icon: Shield },
+              { title: 'Integrations', href: '/admin/integrations', icon: LinkIcon },
+            ],
+          },
+          {
+            title: 'Data Management',
+            icon: FolderOpen,
+            description: 'Import, export, and backup data',
+            roles: ['admin'],
+            children: [
+              { title: 'Export Data', href: '/data/export', icon: FolderCheck },
+              { title: 'Import Data', href: '/data/import', icon: FolderPlus },
+              { title: 'Backup', href: '/data/backup', icon: FolderMinus },
+            ],
           }
         );
       }
