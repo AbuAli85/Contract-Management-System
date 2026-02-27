@@ -102,13 +102,40 @@ export async function resolveApprovalAssignee(
       }
     }
 
-    // 3. Contract workflows:
-    //    NOTE: current schema does not expose explicit contract owner/legal fields.
-    //    When those fields are added (e.g. owner_id, legal_owner_id), this block
-    //    should:
-    //      - Prefer legal owner when state contains "legal"
-    //      - Otherwise prefer general owner
-    //    Until then, we fall through to the admin fallback below.
+    // 3. Contract workflows: prefer legal reviewer in legal states, else owner
+    if (normalizedEntityType === 'contract') {
+      try {
+        const { data: contract } = await db
+          .from('contracts')
+          .select('owner_user_id, legal_reviewer_user_id')
+          .eq('id', entityId)
+          .eq('company_id', companyId)
+          .maybeSingle();
+
+        if (contract) {
+          const stateLc = state; // already lowercased currentState
+
+          // Legal review states: prefer legal_reviewer_user_id
+          if (
+            stateLc.includes('legal') &&
+            contract.legal_reviewer_user_id
+          ) {
+            return contract.legal_reviewer_user_id as string;
+          }
+
+          // Otherwise, prefer owner_user_id
+          if (contract.owner_user_id) {
+            return contract.owner_user_id as string;
+          }
+        }
+      } catch (error) {
+        logger.error(
+          'Failed to resolve contract approver',
+          { error, companyId, entityId, currentState },
+          'work-engine/assignees'
+        );
+      }
+    }
 
     // 4. Fallback: any admin for the company (deterministic)
     try {

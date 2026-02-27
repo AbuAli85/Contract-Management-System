@@ -54,7 +54,7 @@ interface WorkItem {
   due_at: string | null;
   assignee_id: string | null;
   sla_due_at: string | null;
-  priority: string | null;
+  priority: number | null;
   source: string | null;
   link: string | null;
 }
