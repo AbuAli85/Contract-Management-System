@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { upsertWorkItemFromTask } from '@/lib/work-engine/upsertWorkItemFromTask';
+import { upsertWorkItem, upsertInputFromTask } from '@/lib/work-engine';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -95,11 +95,11 @@ export async function PATCH(
       // Ignore audit failures
     }
 
-    // Best-effort: mirror updated task into Work Engine
+    // Best-effort: mirror updated task into universal work_items inbox
     try {
-      await upsertWorkItemFromTask(updated);
+      await upsertWorkItem(upsertInputFromTask(updated as any, user.id));
     } catch {
-      // Do not fail task update on work engine sync issues
+      // Do not fail task update on work_items sync issues
     }
 
     return NextResponse.json({

@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCompanyRole } from '@/lib/auth/get-company-role';
 import { WorkflowService } from '@/lib/workflow/workflow-service';
-import { upsertWorkItemFromWorkflowInstance } from '@/lib/work-engine/upsertWorkItemFromWorkflowInstance';
+import {
+  upsertWorkItem,
+  upsertInputFromWorkflowInstance,
+} from '@/lib/work-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,21 +59,25 @@ export async function POST(
       );
     }
 
-    // Best-effort: mirror workflow instance into Work Engine
+    // Best-effort: mirror workflow instance into universal work_items inbox
     try {
       const { data: instance } = await supabase
         .from('workflow_instances')
-        .select('*')
+        .select('id, company_id, entity_type, entity_id, current_state, due_at, assigned_to')
         .eq('company_id', companyId)
         .eq('entity_type', 'contract')
         .eq('entity_id', contractId)
         .single();
 
       if (instance) {
-        await upsertWorkItemFromWorkflowInstance(instance);
+        await upsertWorkItem(
+          upsertInputFromWorkflowInstance(instance as any, {
+            createdBy: profileId,
+          })
+        );
       }
     } catch {
-      // Do not fail workflow transition on work engine sync issues
+      // Do not fail workflow transition on work_items sync issues
     }
 
     return NextResponse.json({
