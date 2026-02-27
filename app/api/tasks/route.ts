@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { upsertWorkItemFromTask } from '@/lib/work-engine/upsertWorkItemFromTask';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -180,6 +181,13 @@ export async function POST(request: NextRequest) {
       });
     } catch {
       // Do not fail task creation on audit issues
+    }
+
+    // Best-effort: mirror task into Work Engine
+    try {
+      await upsertWorkItemFromTask(task);
+    } catch {
+      // Do not fail task creation on work engine sync issues
     }
 
     return NextResponse.json({
