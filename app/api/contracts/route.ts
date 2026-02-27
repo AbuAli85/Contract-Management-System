@@ -7,6 +7,7 @@ import { getContractMetrics } from '@/lib/metrics';
 import { withTimeout, logApiCall } from '@/lib/performance-monitor';
 import { logger } from '@/lib/logger';
 import { permissionCache } from '@/lib/permission-cache';
+import { assertEntitlement } from '@/lib/billing/entitlements';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -700,6 +701,20 @@ export const POST = withAnyRBAC(
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
+        );
+      }
+
+      // Enforce subscription plan limits for contracts
+      try {
+        await assertEntitlement(null, 'contracts', 1);
+      } catch (entitlementError: any) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Contract limit reached for current subscription plan',
+            details: entitlementError.message,
+          },
+          { status: 402 }
         );
       }
 

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { NextRequest, NextResponse } from 'next/server';
+import { assertEntitlement } from '@/lib/billing/entitlements';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +17,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      );
+    }
+
+    // Enforce plan limits on self-service registrations as well
+    try {
+      await assertEntitlement(null, 'users', 1);
+    } catch (entitlementError: any) {
+      return NextResponse.json(
+        {
+          error: 'User limit reached for current subscription plan',
+          details: entitlementError.message,
+        },
+        { status: 402 }
       );
     }
 

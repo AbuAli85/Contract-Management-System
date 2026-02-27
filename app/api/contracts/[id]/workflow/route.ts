@@ -8,6 +8,7 @@ import {
   resolveApprovalAssignee,
 } from '@/lib/work-engine';
 import { logger } from '@/lib/logger';
+import { assertEntitlement } from '@/lib/billing/entitlements';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +44,19 @@ export async function POST(
     const { role, profileId } = await getCompanyRole(supabase, companyId);
     if (!role || !profileId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Enforce workflow entitlement (guard number of workflows / feature flag)
+    try {
+      await assertEntitlement(companyId, 'workflows', 1);
+    } catch (entitlementError: any) {
+      return NextResponse.json(
+        {
+          error: 'Workflow feature or limit exceeded for current plan',
+          details: entitlementError.message,
+        },
+        { status: 402 }
+      );
     }
 
     // Fire the transition

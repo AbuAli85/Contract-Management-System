@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { CookieOptions } from '@supabase/ssr';
 import { logger } from '@/lib/utils/logger';
+import { assertEntitlement } from '@/lib/billing/entitlements';
 
 // Helper function to create Supabase client
 async function createSupabaseClient() {
@@ -181,6 +182,19 @@ export async function POST(
     } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Enforce storage / document upload entitlement
+    try {
+      await assertEntitlement(null, 'storage_gb', 1);
+    } catch (entitlementError: any) {
+      return NextResponse.json(
+        {
+          error: 'Storage limit reached for current subscription plan',
+          details: entitlementError.message,
+        },
+        { status: 402 }
+      );
     }
 
     const body = await request.json();

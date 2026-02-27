@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { withRBAC } from '@/lib/rbac/guard';
+import { assertEntitlement } from '@/lib/billing/entitlements';
 
 // GET - Fetch all users
 async function getUsersHandler(request: NextRequest) {
@@ -177,6 +178,20 @@ async function createUserHandler(request: NextRequest) {
       return NextResponse.json(
         { error: 'Email and full name are required' },
         { status: 400 }
+      );
+    }
+
+    // Enforce subscription plan limits for users
+    try {
+      // companyId is resolved from the current session/profile
+      await assertEntitlement(null, 'users', 1);
+    } catch (entitlementError: any) {
+      return NextResponse.json(
+        {
+          error: 'User limit reached for current subscription plan',
+          details: entitlementError.message,
+        },
+        { status: 402 }
       );
     }
 
