@@ -8,6 +8,7 @@ import { withTimeout, logApiCall } from '@/lib/performance-monitor';
 import { logger } from '@/lib/logger';
 import { permissionCache } from '@/lib/permission-cache';
 import { assertEntitlement } from '@/lib/billing/entitlements';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -704,6 +705,29 @@ export const POST = withAnyRBAC(
         );
       }
 
+      // Resolve canonical tenant context and membership
+      const { companyId, role, profileId } = await getCompanyRole(supabase);
+
+      if (!companyId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'No active company selected',
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!role) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'No company role found for current user',
+          },
+          { status: 403 }
+        );
+      }
+
       // Enforce subscription plan limits for contracts
       try {
         await assertEntitlement(null, 'contracts', 1);
@@ -929,9 +953,15 @@ export const POST = withAnyRBAC(
 
       // ✅ SECURITY FIX: Use authenticated client with RLS instead of service-role key
       // Add ownership tracking via database RLS policies instead of created_by column
+      const nowIso = new Date().toISOString();
       const variantsWithOwnership = variants.map(v => ({
         ...v,
-        updated_at: new Date().toISOString(),
+        company_id: companyId,
+        // created_by references auth.users(id) historically; keep it as auth uid
+        created_by: user.id,
+        // created_by_profile_id captures the tenant-scoped actor (profiles.id)
+        ...(profileId ? { created_by_profile_id: profileId } : {}),
+        updated_at: nowIso,
       }));
 
       const attemptErrors: any[] = [];

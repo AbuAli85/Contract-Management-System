@@ -14,6 +14,54 @@ const stripe = STRIPE_SECRET_KEY
     })
   : null;
 
+async function resolveCompanyIdForSubscription(
+  supabase: any,
+  subscription: Stripe.Subscription,
+  stripeCustomerId: string
+): Promise<string | null> {
+  // 1) subscription.metadata.company_id
+  const fromSubscription =
+    (subscription.metadata && (subscription.metadata.company_id as string)) ||
+    null;
+  if (fromSubscription) {
+    return fromSubscription;
+  }
+
+  // 2) customer.metadata.company_id (fetch customer if needed)
+  try {
+    const customer = await stripe!.customers.retrieve(stripeCustomerId);
+    const fromCustomer =
+      (customer as Stripe.Customer).metadata?.company_id || null;
+    if (fromCustomer) {
+      return fromCustomer as string;
+    }
+  } catch (error) {
+    // Best-effort; log and continue to DB lookup
+    // eslint-disable-next-line no-console
+    console.error('Stripe webhook: failed to retrieve customer metadata', {
+      stripeCustomerId,
+      error,
+    });
+  }
+
+  // 3) lookup company_subscriptions by stripe_customer_id
+  const { data: existingSub, error: subError } = await supabase
+    .from('company_subscriptions')
+    .select('company_id')
+    .eq('stripe_customer_id', stripeCustomerId)
+    .maybeSingle();
+
+  if (subError) {
+    // eslint-disable-next-line no-console
+    console.error('Stripe webhook: lookup by stripe_customer_id failed', {
+      stripeCustomerId,
+      error: subError,
+    });
+  }
+
+  return (existingSub && (existingSub.company_id as string)) || null;
+}
+
 export async function POST(request: NextRequest) {
   // INTERNAL mode: ignore Stripe webhooks
   if (BILLING_MODE === 'INTERNAL' || !stripe || !STRIPE_WEBHOOK_SECRET) {
@@ -49,66 +97,89 @@ export async function POST(request: NextRequest) {
         const stripeSubId = subscription.id;
         const stripeCustomerId = subscription.customer as string;
 
-        const companyId =
-          (subscription.metadata && subscription.metadata.company_id) || null;
+        const companyId = await resolveCompanyIdForSubscription(
+          supabase,
+          subscription,
+          stripeCustomerId
+        );
 
-        // Only sync when we have a company_id in metadata
-        if (companyId) {
-          const status = subscription.status;
-          const currentPeriodEnd = subscription.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
-            : null;
-
-          // Map Stripe price/product to a plan in subscription_plans if needed
-          const planMetadata = subscription.items.data[0]?.price?.metadata || {};
-          const planName =
-            (planMetadata.plan_name as string) ||
-            (subscription.items.data[0]?.price?.nickname as string) ||
-            null;
-
-          let planId: string | null = null;
-
-          if (planName) {
-            const { data: planRow } = await supabase
-              .from('subscription_plans')
-              .select('id')
-              .eq('name', planName)
-              .maybeSingle();
-            planId = planRow?.id ?? null;
-          }
-
-          // Upsert company_subscriptions
-          await supabase
-            .from('company_subscriptions')
-            .upsert(
-              {
-                company_id: companyId,
-                plan_id: planId,
-                status,
-                current_period_end: currentPeriodEnd,
-                external_id: stripeSubId,
-                stripe_customer_id: stripeCustomerId,
-              } as any,
-              { onConflict: 'company_id' }
-            );
+        if (!companyId) {
+          // eslint-disable-next-line no-console
+          console.error(
+            'Stripe webhook: unable to resolve company_id for subscription',
+            {
+              stripeSubId,
+              stripeCustomerId,
+            }
+          );
+          break;
         }
+
+        const status = subscription.status;
+        const currentPeriodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null;
+
+        // Map Stripe price/product to a plan in subscription_plans if needed
+        const planMetadata = subscription.items.data[0]?.price?.metadata || {};
+        const planName =
+          (planMetadata.plan_name as string) ||
+          (subscription.items.data[0]?.price?.nickname as string) ||
+          null;
+
+        let planId: string | null = null;
+
+        if (planName) {
+          const { data: planRow } = await supabase
+            .from('subscription_plans')
+            .select('id')
+            .eq('name', planName)
+            .maybeSingle();
+          planId = planRow?.id ?? null;
+        }
+
+        // Upsert company_subscriptions
+        await supabase
+          .from('company_subscriptions')
+          .upsert(
+            {
+              company_id: companyId,
+              plan_id: planId,
+              status,
+              current_period_end: currentPeriodEnd,
+              external_id: stripeSubId,
+              stripe_customer_id: stripeCustomerId,
+            } as any,
+            { onConflict: 'company_id' }
+          );
         break;
       }
       case 'customer.created': {
         const customer = event.data.object as Stripe.Customer;
-        const companyId = (customer.metadata && (customer.metadata.company_id as string)) || null;
+        const companyId =
+          (customer.metadata && (customer.metadata.company_id as string)) ||
+          null;
 
-        if (companyId) {
-          await supabase
-            .from('company_subscriptions')
-            .upsert(
-              {
-                company_id: companyId,
-                stripe_customer_id: customer.id,
-              } as any,
-              { onConflict: 'company_id' }
-            );
+        if (!companyId) {
+          // eslint-disable-next-line no-console
+          console.error(
+            'Stripe webhook: customer.created without company_id metadata',
+            {
+              customerId: customer.id,
+            }
+          );
+          break;
         }
+
+        await supabase
+          .from('company_subscriptions')
+          .upsert(
+            {
+              company_id: companyId,
+              stripe_customer_id: customer.id,
+            } as any,
+            { onConflict: 'company_id' }
+          );
         break;
       }
       default:

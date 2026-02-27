@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 
 const EmployeeSchema = z.object({
   employee_code: z.string().optional(),
@@ -36,11 +37,35 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
 
     // Authentication check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Authentication required' },
         { status: 401 }
+      );
+    }
+
+    // Resolve tenant context to avoid cross-company leakage
+    const { companyId, role } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active company selected',
+        },
+        { status: 400 }
+      );
+    }
+    if (!role) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No company role found for current user',
+        },
+        { status: 403 }
       );
     }
 
@@ -69,6 +94,7 @@ export async function GET(request: NextRequest) {
         departments!inner(name)
       `
       )
+      .eq('company_id', companyId)
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -89,7 +115,8 @@ export async function GET(request: NextRequest) {
     // Get total count for pagination (apply same filters)
     let countQuery = supabase
       .from('hr.employees')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', companyId);
 
     if (search) {
       countQuery = countQuery.or(
@@ -137,11 +164,35 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Authentication check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Authentication required' },
         { status: 401 }
+      );
+    }
+
+    // Resolve canonical tenant context to ensure user has membership
+    const { companyId, role } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active company selected',
+        },
+        { status: 400 }
+      );
+    }
+    if (!role) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No company role found for current user',
+        },
+        { status: 403 }
       );
     }
 
@@ -166,12 +217,19 @@ export async function POST(request: NextRequest) {
 
       const lastCode = lastEmployee?.employee_code || 'EMP0000';
       const nextNumber = parseInt(lastCode.replace('EMP', '')) + 1;
-      parsed.data.employee_code = `EMP${nextNumber.toString().padStart(4, '0')}`;
+      parsed.data.employee_code = `EMP${nextNumber
+        .toString()
+        .padStart(4, '0')}`;
     }
+
+    const insertPayload = {
+      ...parsed.data,
+      company_id: companyId,
+    };
 
     const { data, error } = await supabase
       .from('hr.employees')
-      .insert(parsed.data)
+      .insert(insertPayload as any)
       .select(
         `
         id, employee_code, full_name, first_name, last_name, 

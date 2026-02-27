@@ -184,19 +184,6 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Enforce storage / document upload entitlement
-    try {
-      await assertEntitlement(null, 'storage_gb', 1);
-    } catch (entitlementError: any) {
-      return NextResponse.json(
-        {
-          error: 'Storage limit reached for current subscription plan',
-          details: entitlementError.message,
-        },
-        { status: 402 }
-      );
-    }
-
     const body = await request.json();
     const { document_type, file_name, file_path, file_size, mime_type, notes } =
       body;
@@ -208,6 +195,20 @@ export async function POST(
           error: 'Missing required fields: document_type, file_name, file_path',
         },
         { status: 400 }
+      );
+    }
+
+    // Enforce storage / document upload entitlement using bytes
+    try {
+      // TODO: Ensure check_plan_limit implements 'storage_bytes' support
+      await assertEntitlement(null, 'storage_bytes', file_size ?? 0);
+    } catch (entitlementError: any) {
+      return NextResponse.json(
+        {
+          error: 'Storage limit reached for current subscription plan',
+          details: entitlementError.message,
+        },
+        { status: 402 }
       );
     }
 

@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
+import { WorkflowService } from '@/lib/workflow/workflow-service';
+import {
+  upsertWorkItem,
+  upsertInputFromWorkflowInstance,
+  resolveApprovalAssignee,
+} from '@/lib/work-engine';
+import { logger } from '@/lib/logger';
 
 const LeaveRequestSchema = z.object({
   employee_id: z.number(),
@@ -30,7 +38,20 @@ const LeaveQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
+    const { companyId, role } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'No active company selected' },
+        { status: 400 }
+      );
+    }
+    if (!role) {
+      return NextResponse.json(
+        { error: 'No company role found for current user' },
+        { status: 403 }
+      );
+    }
     const { searchParams } = new URL(request.url);
 
     const queryParams = {
@@ -66,6 +87,7 @@ export async function GET(request: NextRequest) {
         approver:hr.employees!approved_by(full_name, employee_code)
       `
       )
+      .eq('company_id', companyId)
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -90,7 +112,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total count for pagination
-    const { count } = await query.select('*', { count: 'exact', head: true });
+    const { count } = await query
+      .select('*', { count: 'exact', head: true });
 
     // Get paginated results
     const { data, error } = await query.range(offset, offset + limit - 1);
@@ -121,7 +144,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.json();
 
     const parsed = LeaveRequestSchema.safeParse(body);
@@ -129,6 +152,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Validation failed', details: parsed.error.format() },
         { status: 400 }
+      );
+    }
+
+    const {
+      companyId,
+      role,
+      profileId,
+    } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'No active company selected' },
+        { status: 400 }
+      );
+    }
+    if (!role) {
+      return NextResponse.json(
+        { error: 'No company role found for current user' },
+        { status: 403 }
       );
     }
 
@@ -148,17 +189,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for overlapping leave requests
+    // Check for overlapping leave requests for this employee within the same company
     const { data: overlappingRequests } = await supabase
       .from('hr.leave_requests')
       .select('id, start_date, end_date, approval_status')
       .eq('employee_id', employee_id)
+      .eq('company_id', companyId)
       .in('approval_status', ['pending', 'approved'])
       .or(`and(start_date.lte.${end_date},end_date.gte.${start_date})`);
 
     if (overlappingRequests && overlappingRequests.length > 0) {
       return NextResponse.json(
         { error: 'You have overlapping leave requests for this period' },
+        { status: 400 }
+      );
+    }
+
+    // Determine requester employee for sanity check (if HR submits on behalf, allow but enforce company)
+    const { data: employee } = await supabase
+      .from('hr.employees')
+      .select('id, company_id, user_id')
+      .eq('id', employee_id)
+      .maybeSingle();
+
+    if (!employee || employee.company_id !== companyId) {
+      return NextResponse.json(
+        { error: 'Employee does not belong to the active company' },
         { status: 400 }
       );
     }
@@ -172,7 +228,9 @@ export async function POST(request: NextRequest) {
         end_date,
         total_days: totalDays,
         reason,
-      })
+        company_id: companyId,
+        approval_stage: 'pending_manager',
+      } as any)
       .select(
         `
         id, employee_id, leave_type, start_date, end_date, total_days,
@@ -181,10 +239,50 @@ export async function POST(request: NextRequest) {
       )
       .single();
 
-    if (error) {
+    if (error || !data) {
       return NextResponse.json(
         { error: 'Failed to create leave request' },
         { status: 500 }
+      );
+    }
+
+    // Start workflow instance and mirror into work_items (best-effort)
+    try {
+      const wf = new WorkflowService(supabase, companyId, (await supabase.auth.getUser()).data.user!.id);
+      // Start leave workflow as draft->submitted
+      const startResult = await wf.startLeaveRequest(String(data.id));
+      if (!startResult.success) {
+        logger.error(
+          'Failed to start leave workflow',
+          { error: startResult.error, companyId, leaveRequestId: data.id },
+          'api/hr/leave-requests'
+        );
+      } else {
+        // Fetch latest workflow instance
+        const instance = await wf.getInstance('leave_request', String(data.id));
+        if (instance) {
+          // Resolve initial assignee (line manager or HR fallback)
+          const assigneeId = await resolveApprovalAssignee(supabase as any, {
+            companyId,
+            entityType: 'leave_request',
+            entityId: String(data.id),
+            currentState: instance.currentState,
+            requestedBy: employee.user_id ?? null,
+          });
+
+          await upsertWorkItem(
+            upsertInputFromWorkflowInstance(instance as any, {
+              createdBy: profileId ?? undefined,
+              ...(instance.assignedTo ? {} : { assigneeId }),
+            } as any)
+          );
+        }
+      }
+    } catch (wfError) {
+      logger.error(
+        'Failed to mirror leave_request into work_items',
+        { error: wfError, companyId, leaveRequestId: data.id },
+        'api/hr/leave-requests'
       );
     }
 

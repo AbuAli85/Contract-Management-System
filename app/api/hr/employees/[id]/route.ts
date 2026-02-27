@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 
 const EmployeeUpdateSchema = z.object({
   employee_code: z.string().optional(),
@@ -40,7 +41,10 @@ export async function GET(
     const supabase = await createClient();
 
     // Authentication check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Authentication required' },
@@ -53,6 +57,14 @@ export async function GET(
     if (isNaN(employeeId)) {
       return NextResponse.json(
         { error: 'Invalid employee ID' },
+        { status: 400 }
+      );
+    }
+
+    const { companyId } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'No active company selected' },
         { status: 400 }
       );
     }
@@ -74,6 +86,7 @@ export async function GET(
       `
       )
       .eq('id', employeeId)
+      .eq('company_id', companyId)
       .single();
 
     if (error) {
@@ -100,7 +113,10 @@ export async function PUT(
     const supabase = await createClient();
 
     // Authentication check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Authentication required' },
@@ -126,10 +142,68 @@ export async function PUT(
       );
     }
 
+    const { companyId } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'No active company selected' },
+        { status: 400 }
+      );
+    }
+
+    // Manager integrity validation
+    const updatePayload: any = { ...parsed.data };
+
+    // Prevent self-manager assignment
+    if (
+      typeof updatePayload.manager_employee_id === 'number' &&
+      updatePayload.manager_employee_id === employeeId
+    ) {
+      return NextResponse.json(
+        { error: 'Employee cannot be their own manager' },
+        { status: 400 }
+      );
+    }
+
+    // Validate manager_employee_id belongs to same company and avoid simple cycles
+    if (typeof updatePayload.manager_employee_id === 'number') {
+      const { data: managerEmployee, error: managerError } = await supabase
+        .from('hr.employees')
+        .select('id, company_id, manager_employee_id')
+        .eq('id', updatePayload.manager_employee_id)
+        .maybeSingle();
+
+      if (managerError || !managerEmployee) {
+        return NextResponse.json(
+          { error: 'Manager employee not found' },
+          { status: 400 }
+        );
+      }
+
+      if (managerEmployee.company_id !== companyId) {
+        return NextResponse.json(
+          {
+            error: 'Manager must belong to the same company as the employee',
+          },
+          { status: 400 }
+        );
+      }
+
+      if (managerEmployee.manager_employee_id === employeeId) {
+        return NextResponse.json(
+          {
+            error:
+              'Invalid manager assignment: circular relationship detected (one-level cycle)',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const { data, error } = await supabase
       .from('hr.employees')
-      .update(parsed.data)
+      .update(updatePayload)
       .eq('id', employeeId)
+      .eq('company_id', companyId)
       .select(
         `
         id, employee_code, full_name, first_name, last_name, 

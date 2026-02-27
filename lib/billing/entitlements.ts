@@ -1,7 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCompanyRole } from '@/lib/auth/get-company-role';
 
-type EntitlementResource = 'users' | 'contracts' | 'promoters' | 'workflows' | 'storage_gb';
+type EntitlementResource =
+  | 'users'
+  | 'contracts'
+  | 'promoters'
+  | 'workflows'
+  | 'storage_gb'
+  | 'storage_bytes';
 
 interface PlanInfo {
   name: string;
@@ -116,11 +122,13 @@ export async function assertEntitlement(
     return;
   }
 
-  // For users, contracts, promoters, and storage_gb, use check_plan_limit()
+  // For users, contracts, promoters, and storage usage, use check_plan_limit()
   const supportedResources: EntitlementResource[] = [
     'users',
     'contracts',
     'promoters',
+    // TODO: Ensure check_plan_limit implements storage_bytes semantics
+    'storage_bytes',
     'storage_gb',
   ];
 
@@ -142,10 +150,23 @@ export async function assertEntitlement(
   });
 
   if (error) {
-    // Fail open on RPC errors, but log via console; adjust if you prefer strict
     // eslint-disable-next-line no-console
-    console.error('check_plan_limit RPC failed', error);
-    return;
+    console.error('check_plan_limit RPC failed', {
+      error,
+      companyId: effectiveCompanyId,
+      resource,
+      increment,
+    });
+
+    // In INTERNAL mode, log and allow (fail open)
+    if (INTERNAL_MODE) {
+      return;
+    }
+
+    // In normal mode, fail closed so callers can return 503
+    throw new Error(
+      'Subscription plan enforcement is temporarily unavailable. Please try again later.'
+    );
   }
 
   const result = data as EntitlementResult;
