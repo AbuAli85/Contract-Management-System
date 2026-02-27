@@ -43,3 +43,12 @@ export interface WorkflowInstanceLike {
   assigned_to?: string | null;
 }
 
+export interface ContractActionLike {
+  id: string;
+  company_id: string;
+  contract_id: string;
+  action_type: string;
+  due_at: string | null;
+  status: string;
+}
+

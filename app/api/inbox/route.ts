@@ -38,6 +38,14 @@ function buildLink(item: any): string | null {
     return '/hr/tasks';
   }
 
+  // Contract actions (e.g. renewals)
+  if (entityType === 'contract_action') {
+    const contractId: string | undefined = metadata?.contract_id;
+    if (contractId) {
+      return `/contracts/${contractId}?tab=actions&actionId=${item.id}`;
+    }
+  }
+
   // Leave requests
   if (entityType === 'leave_request') {
     return '/employer/team?tab=leave';

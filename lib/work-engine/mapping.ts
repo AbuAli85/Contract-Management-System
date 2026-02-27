@@ -1,6 +1,7 @@
 import type {
   TaskLike,
   WorkflowInstanceLike,
+  ContractActionLike,
   WorkItemUpsertInput,
 } from './types';
 
@@ -25,6 +26,30 @@ export function upsertInputFromTask(
       ? { related_contract_id: task.related_contract_id }
       : null,
     createdBy: userId,
+  };
+}
+
+export function upsertInputFromContractAction(
+  action: ContractActionLike
+): WorkItemUpsertInput {
+  const status = (action.status || 'open').toLowerCase() as WorkItemUpsertInput['status'];
+
+  return {
+    companyId: action.company_id,
+    workType: 'contract_renewal',
+    entityType: 'contract_action',
+    entityId: action.id,
+    status: status === 'done' || status === 'completed' ? 'done' : 'open',
+    title: 'Contract renewal',
+    dueAt: action.due_at,
+    slaDueAt: action.due_at,
+    assigneeId: null,
+    source: 'contracts',
+    metadata: {
+      contract_id: action.contract_id,
+      action_type: action.action_type,
+    },
+    createdBy: null,
   };
 }
 
