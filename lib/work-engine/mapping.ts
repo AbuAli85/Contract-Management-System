@@ -80,6 +80,11 @@ export function upsertInputFromWorkflowInstance(
 
   const title = `Workflow: ${instance.entity_type} → ${instance.current_state}`;
 
+  const metadata: Record<string, unknown> = {
+    workflow_instance_id: instance.id,
+    current_state: instance.current_state,
+  };
+
   return {
     companyId: instance.company_id,
     workType,
@@ -90,7 +95,7 @@ export function upsertInputFromWorkflowInstance(
     dueAt: instance.due_at ?? null,
     assigneeId: instance.assigned_to ?? null,
     source,
-    metadata: null,
+    metadata,
     createdBy: options.createdBy ?? null,
   };
 }

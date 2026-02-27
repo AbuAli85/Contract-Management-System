@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { upsertWorkItem, upsertInputFromTask } from '@/lib/work-engine';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -91,15 +92,15 @@ export async function PATCH(
         actor: user.id,
         metadata,
       });
-    } catch {
-      // Ignore audit failures
+    } catch (error) {
+      logger.error('Failed to insert task_event for update', { error, taskId: task.id }, 'api/tasks/[id]');
     }
 
     // Best-effort: mirror updated task into universal work_items inbox
     try {
       await upsertWorkItem(upsertInputFromTask(updated as any, user.id));
-    } catch {
-      // Do not fail task update on work_items sync issues
+    } catch (error) {
+      logger.error('Failed to mirror updated task into work_items', { error, taskId: updated.id }, 'api/tasks/[id]');
     }
 
     return NextResponse.json({

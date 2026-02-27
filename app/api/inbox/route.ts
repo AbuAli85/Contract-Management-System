@@ -133,10 +133,9 @@ export async function GET(request: NextRequest) {
 
     const rawItems = data || [];
 
-    // Apply assignee filter in application layer to avoid coupling to a specific column name
+    // Apply assignee filter in application layer
     const filteredByAssignee = rawItems.filter(item => {
-      const assigneeId =
-        (item as any).assignee_id ?? (item as any).assigned_to ?? null;
+      const assigneeId = (item as any).assignee_id ?? null;
 
       if (assigneeFilter === 'me') {
         return assigneeId === user.id;
@@ -148,8 +147,7 @@ export async function GET(request: NextRequest) {
     });
 
     const items = filteredByAssignee.map(item => {
-      const assigneeId =
-        (item as any).assignee_id ?? (item as any).assigned_to ?? null;
+      const assigneeId = (item as any).assignee_id ?? null;
 
       return {
         id: item.id,

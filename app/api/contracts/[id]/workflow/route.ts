@@ -6,6 +6,7 @@ import {
   upsertWorkItem,
   upsertInputFromWorkflowInstance,
 } from '@/lib/work-engine';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,7 +64,9 @@ export async function POST(
     try {
       const { data: instance } = await supabase
         .from('workflow_instances')
-        .select('id, company_id, entity_type, entity_id, current_state, due_at, assigned_to')
+        .select(
+          'id, company_id, entity_type, entity_id, current_state, due_at, assigned_to'
+        )
         .eq('company_id', companyId)
         .eq('entity_type', 'contract')
         .eq('entity_id', contractId)
@@ -76,8 +79,12 @@ export async function POST(
           })
         );
       }
-    } catch {
-      // Do not fail workflow transition on work_items sync issues
+    } catch (error) {
+      logger.error(
+        'Failed to mirror workflow_instance into work_items',
+        { error, companyId, contractId },
+        'api/contracts/[id]/workflow'
+      );
     }
 
     return NextResponse.json({

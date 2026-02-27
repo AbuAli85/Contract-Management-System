@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { upsertWorkItem, upsertInputFromTask } from '@/lib/work-engine';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -179,15 +180,15 @@ export async function POST(request: NextRequest) {
           due_date: task.due_date,
         },
       });
-    } catch {
-      // Do not fail task creation on audit issues
+    } catch (error) {
+      logger.error('Failed to insert initial task_event', { error, companyId, taskId: task.id }, 'api/tasks');
     }
 
     // Best-effort: mirror task into universal work_items inbox
     try {
       await upsertWorkItem(upsertInputFromTask(task as any, user.id));
-    } catch {
-      // Do not fail task creation on work_items sync issues
+    } catch (error) {
+      logger.error('Failed to mirror task into work_items', { error, taskId: task.id }, 'api/tasks');
     }
 
     return NextResponse.json({

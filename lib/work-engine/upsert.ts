@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { WorkItemUpsertInput } from './types';
+import { logger } from '@/lib/logger';
 
 type AdminClient = SupabaseClient<Database>;
 
@@ -12,29 +13,11 @@ function getClient(): AdminClient {
 export async function upsertWorkItem(input: WorkItemUpsertInput): Promise<void> {
   const supabase = getClient();
 
-  const { companyId, workType, entityType, entityId } = input;
-
-  // Find existing work item by composite business key:
-  // (company_id, entity_type, entity_id, work_type)
-  const { data: existing, error: fetchError } = await supabase
-    .from('work_items' as any)
-    .select('id')
-    .eq('company_id', companyId)
-    .eq('entity_type', entityType)
-    .eq('entity_id', entityId)
-    .eq('work_type', workType)
-    .maybeSingle();
-
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    // PGRST116 = no rows found; anything else we surface to the caller
-    throw fetchError;
-  }
-
   const payload: any = {
-    company_id: companyId,
-    work_type: workType,
-    entity_type: entityType,
-    entity_id: entityId,
+    company_id: input.companyId,
+    work_type: input.workType,
+    entity_type: input.entityType,
+    entity_id: input.entityId,
     status: input.status,
     title: input.title ?? null,
     due_at: input.dueAt ?? null,
@@ -44,23 +27,17 @@ export async function upsertWorkItem(input: WorkItemUpsertInput): Promise<void> 
     created_by: input.createdBy ?? null,
   };
 
-  if (existing?.id) {
-    const { error: updateError } = await supabase
-      .from('work_items' as any)
-      .update(payload)
-      .eq('id', existing.id);
+  const { error } = await supabase
+    .from('work_items' as any)
+    .upsert(payload, {
+      onConflict: 'company_id,entity_type,entity_id',
+    })
+    .select('id')
+    .single();
 
-    if (updateError) {
-      throw updateError;
-    }
-  } else {
-    const { error: insertError } = await supabase
-      .from('work_items' as any)
-      .insert(payload);
-
-    if (insertError) {
-      throw insertError;
-    }
+  if (error) {
+    logger.error('Failed to upsert work_item', { error, input }, 'work-engine');
+    throw error;
   }
 }
 
@@ -85,6 +62,7 @@ export async function completeWorkItem(
     .maybeSingle();
 
   if (error) {
+    logger.error('Failed to load work_item for completion', { error, companyId, entityType, entityId }, 'work-engine');
     throw error;
   }
 
@@ -98,6 +76,7 @@ export async function completeWorkItem(
     .eq('id', data.id);
 
   if (updateError) {
+    logger.error('Failed to update work_item status', { error: updateError, companyId, entityType, entityId, finalStatus }, 'work-engine');
     throw updateError;
   }
 }
@@ -117,6 +96,7 @@ export async function assignWorkItemById(
     .eq('id', workItemId);
 
   if (error) {
+    logger.error('Failed to assign work_item', { error, workItemId, assigneeId }, 'work-engine');
     throw error;
   }
 }
