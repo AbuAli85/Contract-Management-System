@@ -53,13 +53,14 @@ interface WorkItem {
   title: string | null;
   due_at: string | null;
   assignee_id: string | null;
-  link: string;
+  link: string | null;
 }
 
 interface InboxResponse {
   success: boolean;
   items: WorkItem[];
   total: number;
+  total_estimate?: number;
   limit: number;
   offset: number;
 }
@@ -213,7 +214,8 @@ export default function InboxPage() {
   });
 
   const handleOpen = (item: WorkItem) => {
-    const target = item.link || '/';
+    if (!item.link) return;
+    const target = item.link;
     router.push(`/${locale}${target}`);
   };
 

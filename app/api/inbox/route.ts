@@ -1,18 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-function buildLink(item: any): string {
+function buildLink(item: any): string | null {
   const entityType: string | undefined = item.entity_type;
   const workType: string | undefined = item.work_type;
   const source: string | undefined = item.source;
   const metadata: any = item.metadata ?? {};
 
   // Contract-related approvals and workflow items
+  if (workType === 'approval' && entityType === 'contract') {
+    const workflowEntityType: string | undefined = metadata?.workflow_entity_type;
+    const workflowEntityId: string | undefined = metadata?.workflow_entity_id;
+
+    if (workflowEntityType === 'contract' && workflowEntityId) {
+      return `/contracts/${workflowEntityId}`;
+    }
+
+    return `/contracts/${item.entity_id}`;
+  }
+
   if (entityType === 'contract' || source === 'contracts') {
+    const workflowEntityType: string | undefined = metadata?.workflow_entity_type;
+    const workflowEntityId: string | undefined = metadata?.workflow_entity_id;
+    if (workflowEntityType === 'contract' && workflowEntityId) {
+      return `/contracts/${workflowEntityId}`;
+    }
     return `/contracts/${item.entity_id}`;
   }
 
@@ -32,16 +49,8 @@ function buildLink(item: any): string {
   }
 
   // Workflow approvals where metadata points to a contract
-  if (
-    workType === 'approval' &&
-    (metadata?.entity_type === 'contract' || entityType === 'contract')
-  ) {
-    const contractId = metadata?.entity_id ?? item.entity_id;
-    return `/contracts/${contractId}`;
-  }
-
-  // Fallback: home/dashboard
-  return '/';
+  // Fallback: unknown destination
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -73,14 +82,11 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(parseInt(limitParam || '25', 10) || 25, 1), 100);
     const offset = Math.max(parseInt(offsetParam || '0', 10) || 0, 0);
 
-    // Resolve active company from profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('active_company_id')
-      .eq('id', user.id)
-      .single();
+    // Resolve company and membership using canonical helper
+    const { role, companyId } = await getCompanyRole(supabase);
 
-    if (profileError || !profile?.active_company_id) {
+    // No active company selected
+    if (!companyId) {
       return NextResponse.json(
         {
           success: false,
@@ -90,19 +96,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const companyId = profile.active_company_id;
+    // User has no role/membership for this company
+    if (!role) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'You do not have access to this company inbox.',
+        },
+        { status: 403 }
+      );
+    }
 
-    let query = supabase.from('work_items').select('*').eq('company_id', companyId);
+    let query = supabase
+      .from('work_items')
+      .select('*', { count: 'estimated' })
+      .eq('company_id', companyId);
 
     // Status filter (CSV)
+    let statuses: string[] | undefined;
     if (statusParam && statusParam !== 'all') {
-      const statuses = statusParam
+      statuses = statusParam
         .split(',')
         .map(s => s.trim())
         .filter(Boolean);
-      if (statuses.length > 0) {
-        query = query.in('status', statuses);
-      }
     }
 
     if (workType && workType !== 'all') {
@@ -113,7 +129,8 @@ export async function GET(request: NextRequest) {
       query = query.eq('source', source);
     }
 
-    // Overdue filter: due_at before now
+    // Overdue filter: due_at before now, defaulting to open/pending unless
+    // user explicitly requested done/cancelled in the status filter.
     const isOverdue =
       overdueParam === 'true' ||
       overdueParam === '1' ||
@@ -121,6 +138,14 @@ export async function GET(request: NextRequest) {
     if (isOverdue) {
       const nowIso = new Date().toISOString();
       query = query.lt('due_at', nowIso);
+
+      if (!statuses || statuses.length === 0) {
+        statuses = ['open', 'pending'];
+      }
+    }
+
+    if (statuses && statuses.length > 0) {
+      query = query.in('status', statuses);
     }
 
     // Sorting: priority asc, sla_due_at asc NULLS LAST, due_at asc NULLS LAST, created_at desc
@@ -131,7 +156,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false, nullsFirst: false })
       .range(offset, offset + limit - 1);
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
 
     if (error) {
       logger.error('Failed to fetch inbox items', { error, companyId }, 'api/inbox');
@@ -180,6 +205,7 @@ export async function GET(request: NextRequest) {
       success: true,
       items,
       total: items.length,
+      total_estimate: typeof count === 'number' ? count : items.length,
       limit,
       offset,
     });
