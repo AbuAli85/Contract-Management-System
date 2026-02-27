@@ -407,44 +407,28 @@ export default function PromoterDetailPage() {
           return;
         }
 
-        // Get tags from promoter_tags table if it exists
-        const supabase = createClient();
+        // Get tags from API
         let tags: string[] = [];
         try {
-          if (supabase) {
-            const { data: tagsData, error: tagsError } = await supabase
-              .from('promoter_tags')
-              .select('tag')
-              .eq('promoter_id', promoterId);
-
-            if (!tagsError && tagsData) {
-              tags = tagsData.map((t: any) => t.tag).filter(Boolean);
-            }
+          const tagsRes = await fetch(`/api/promoters/${promoterId}/tags`, { credentials: 'include' });
+          if (tagsRes.ok) {
+            const tagsJson = await tagsRes.json();
+            tags = Array.isArray(tagsJson.tags) ? tagsJson.tags : [];
           }
         } catch (error) {
-          // If promoter_tags table doesn't exist, use empty array
-          logger.log(
-            'promoter_tags table not available, using empty tags array'
-          );
+          logger.log('Could not fetch tags, using empty array');
         }
-
-        // Fetch contracts using API or direct call
+        // Fetch contracts via API
         let contracts: any[] = [];
         try {
-          if (supabase) {
-            const { data: contractsData, error: contractsError } =
-              await supabase
-                .from('contracts')
-                .select('*')
-                .eq('promoter_id', promoterId);
-
-            if (!contractsError && contractsData) {
-              contracts = contractsData;
-            }
+          const contractsRes = await fetch(`/api/contracts?promoter_id=${promoterId}`, { credentials: 'include' });
+          if (contractsRes.ok) {
+            const contractsJson = await contractsRes.json();
+            contracts = Array.isArray(contractsJson.contracts) ? contractsJson.contracts :
+                        Array.isArray(contractsJson.data) ? contractsJson.data : [];
           }
         } catch (error) {
           logger.error('Error fetching contracts:', error);
-          // Don't set error for contracts, just log it
         }
 
         // Employer info is already included in API response
@@ -473,15 +457,15 @@ export default function PromoterDetailPage() {
 
     async function fetchAuditLogs() {
       if (role !== 'admin') return;
-      const supabase = createClient();
-      if (!supabase) return;
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .eq('table_name', 'promoters')
-        .eq('record_id', promoterId)
-        .order('created_at', { ascending: false });
-      if (!error && data) setAuditLogs(data);
+      try {
+        const res = await fetch(`/api/promoters/${promoterId}/activity?type=audit`, { credentials: 'include' });
+        if (res.ok) {
+          const json = await res.json();
+          setAuditLogs(Array.isArray(json.logs) ? json.logs : []);
+        }
+      } catch (err) {
+        logger.error('Error fetching audit logs:', err);
+      }
     }
 
     async function fetchCVData() {
@@ -618,21 +602,19 @@ export default function PromoterDetailPage() {
         },
         payload => {
           logger.log('📄 Contract changed in real-time:', payload);
-          // Refetch contracts to get updated data
-          const supabaseClient = createClient();
-          if (supabaseClient) {
-            supabaseClient
-              .from('contracts')
-              .select('*')
-              .eq('promoter_id', promoterId)
-              .then(({ data, error }) => {
-                if (!error && data) {
-                  setPromoterDetails(prev =>
-                    prev ? { ...prev, contracts: data } : null
-                  );
-                }
-              });
-          }
+          // Refetch contracts via API
+          fetch(`/api/contracts?promoter_id=${promoterId}`, { credentials: 'include' })
+            .then(r => r.ok ? r.json() : null)
+            .then(json => {
+              if (json) {
+                const data = Array.isArray(json.contracts) ? json.contracts :
+                             Array.isArray(json.data) ? json.data : [];
+                setPromoterDetails(prev =>
+                  prev ? { ...prev, contracts: data } : null
+                );
+              }
+            })
+            .catch(err => logger.error('Error refetching contracts:', err));
         }
       )
       .subscribe();
@@ -689,21 +671,19 @@ export default function PromoterDetailPage() {
 
     const interval = setInterval(() => {
       logger.log('🔄 Auto-refreshing promoter data...');
-      // Silently refresh contracts and basic info
-      const supabase = createClient();
-      if (supabase) {
-        supabase
-          .from('contracts')
-          .select('*')
-          .eq('promoter_id', promoterId)
-          .then(({ data, error }) => {
-            if (!error && data) {
-              setPromoterDetails(prev =>
-                prev ? { ...prev, contracts: data } : null
-              );
-            }
-          });
-      }
+      // Silently refresh contracts via API
+      fetch(`/api/contracts?promoter_id=${promoterId}`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(json => {
+          if (json) {
+            const data = Array.isArray(json.contracts) ? json.contracts :
+                         Array.isArray(json.data) ? json.data : [];
+            setPromoterDetails(prev =>
+              prev ? { ...prev, contracts: data } : null
+            );
+          }
+        })
+        .catch(err => logger.error('Auto-refresh contracts error:', err));
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
@@ -1478,42 +1458,29 @@ export default function PromoterDetailPage() {
                                 'Remove employer assignment from this promoter?'
                               )
                             ) {
-                              const supabase = createClient();
-                              if (!supabase) {
-                                toast({
-                                  variant: 'destructive',
-                                  title: 'Connection Error',
-                                  description:
-                                    'Failed to initialize database connection.',
-                                });
-                                return;
-                              }
-
                               try {
-                                const { error } = await supabase
-                                  .from('promoters')
-                                  .update({ employer_id: null })
-                                  .eq('id', promoterId);
-
-                                if (error) {
+                                const res = await fetch(`/api/promoters/${promoterId}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  credentials: 'include',
+                                  body: JSON.stringify({ employer_id: null }),
+                                });
+                                if (!res.ok) {
+                                  const errData = await res.json().catch(() => ({}));
                                   toast({
                                     variant: 'destructive',
                                     title: 'Update Failed',
-                                    description: `Failed to update: ${error.message}`,
+                                    description: errData.error || 'Failed to remove assignment.',
                                   });
                                 } else {
                                   toast({
                                     title: 'Assignment Removed',
-                                    description:
-                                      'Employer assignment has been removed successfully.',
+                                    description: 'Employer assignment has been removed successfully.',
                                   });
                                   window.location.reload();
                                 }
                               } catch (err: unknown) {
-                                const message =
-                                  err instanceof Error
-                                    ? err.message
-                                    : 'Unknown error';
+                                const message = err instanceof Error ? err.message : 'Unknown error';
                                 toast({
                                   variant: 'destructive',
                                   title: 'Update Failed',

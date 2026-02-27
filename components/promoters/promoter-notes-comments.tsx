@@ -263,12 +263,14 @@ export function PromoterNotesComments({
     if (!editContent.trim()) return;
 
     try {
-      await fetch(`/api/promoters/${promoterId}/notes`, {
+      const res = await fetch(`/api/promoters/${promoterId}/notes`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ noteId: editingNoteId, content: editContent, updated_at: new Date().toISOString(),
-          })
-          .eq('id', noteId);
+        body: JSON.stringify({ noteId: editingNoteId, content: editContent, updated_at: new Date().toISOString() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to update note');
       }
 
       setNotes(prev =>
