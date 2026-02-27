@@ -197,6 +197,9 @@ export async function GET(request: NextRequest) {
         title: (item as any).title ?? null,
         due_at: (item as any).due_at ?? null,
         assignee_id: assigneeId,
+        sla_due_at: (item as any).sla_due_at ?? null,
+        priority: (item as any).priority ?? null,
+        source: (item as any).source ?? null,
         link: buildLink(item),
       };
     });

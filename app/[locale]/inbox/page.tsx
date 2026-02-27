@@ -53,6 +53,9 @@ interface WorkItem {
   title: string | null;
   due_at: string | null;
   assignee_id: string | null;
+  sla_due_at: string | null;
+  priority: string | null;
+  source: string | null;
   link: string | null;
 }
 
@@ -386,6 +389,7 @@ export default function InboxPage() {
                     <TableHead>Type</TableHead>
                     <TableHead>Entity</TableHead>
                     <TableHead>Due</TableHead>
+                    <TableHead>SLA</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Assignee</TableHead>
                     <TableHead className='text-right'>Actions</TableHead>
@@ -398,6 +402,14 @@ export default function InboxPage() {
                     const isDone =
                       (item.status || '').toLowerCase() === 'done' ||
                       (item.status || '').toLowerCase() === 'completed';
+
+                    const statusLc = (item.status || '').toLowerCase();
+                    const isOpenOrPending =
+                      statusLc === 'open' || statusLc === 'pending';
+                    const isSlaOverdue =
+                      !!item.sla_due_at &&
+                      isOpenOrPending &&
+                      new Date(item.sla_due_at) < new Date();
 
                     return (
                       <TableRow key={item.id} className='hover:bg-muted/50'>
@@ -428,6 +440,20 @@ export default function InboxPage() {
                             <Clock className='h-3 w-3 text-muted-foreground' />
                             <span>{formatDue(item.due_at)}</span>
                           </div>
+                        </TableCell>
+                        <TableCell className='whitespace-nowrap text-sm'>
+                          {item.sla_due_at ? (
+                            <div className='flex flex-col'>
+                              <span>{formatDue(item.sla_due_at)}</span>
+                              {isSlaOverdue && (
+                                <span className='text-xs font-medium text-red-600'>
+                                  SLA overdue
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className='text-muted-foreground text-sm'>—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(item.status)}>

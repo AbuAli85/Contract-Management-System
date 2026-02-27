@@ -30,7 +30,7 @@ export function upsertInputFromTask(
 
 export function upsertInputFromWorkflowInstance(
   instance: WorkflowInstanceLike,
-  options: { createdBy?: string } = {}
+  options: { createdBy?: string; assigneeId?: string | null } = {}
 ): WorkItemUpsertInput {
   const state = (instance.current_state || '').toLowerCase();
 
@@ -104,12 +104,8 @@ export function upsertInputFromWorkflowInstance(
   // Assignee resolution precedence:
   // - If workflow instance already has assigned_to, keep it.
   // - Else, if caller provided an explicit assigneeId, use that.
-  let assigneeId: string | null = instance.assigned_to ?? null;
-  if (!assigneeId && Object.prototype.hasOwnProperty.call(options, 'assigneeId')) {
-    // options.assigneeId may be null to explicitly clear the assignee
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    assigneeId = (options as any).assigneeId ?? null;
-  }
+  const assigneeId: string | null =
+    instance.assigned_to ?? (options.assigneeId ?? null);
 
   return {
     companyId: instance.company_id,

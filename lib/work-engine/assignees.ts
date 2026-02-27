@@ -30,33 +30,48 @@ export async function resolveApprovalAssignee(
     const normalizedEntityType = entityType.toLowerCase();
     const state = currentState.toLowerCase();
 
-    // 1. Leave approvals: manager of requester, if available
+    // 1. Leave approvals: route to the requester's line manager when possible
     if (normalizedEntityType === 'leave_request' && requestedBy) {
       try {
-        // hr.is_manager_of(uid, emp_id) already encapsulates team logic;
-        // here we just find a manager candidate deterministically.
-        const { data: profile } = await db
+        const { data: userProfile } = await db
           .from('hr.user_profiles')
           .select('employee_id')
           .eq('user_id', requestedBy)
           .maybeSingle();
 
-        if (profile?.employee_id) {
-          const { data: managers } = await db
-            .from('hr.employees')
-            .select('user_id')
-            .eq('company_id', companyId)
-            .eq('role', 'manager')
-            .order('created_at', { ascending: true });
+        if (userProfile?.employee_id != null) {
+          const employeeId = userProfile.employee_id;
 
-          if (managers && managers.length > 0) {
-            return managers[0].user_id as string;
+          const { data: employee } = await db
+            .from('hr.employees')
+            .select('manager_user_id, manager_employee_id')
+            .eq('id', employeeId)
+            .maybeSingle();
+
+          if (employee) {
+            // Prefer an explicit manager_user_id if present
+            if (employee.manager_user_id) {
+              return employee.manager_user_id as string;
+            }
+
+            // Else, follow manager_employee_id to find that employee's user_id
+            if (employee.manager_employee_id != null) {
+              const { data: managerEmployee } = await db
+                .from('hr.employees')
+                .select('user_id')
+                .eq('id', employee.manager_employee_id)
+                .maybeSingle();
+
+              if (managerEmployee?.user_id) {
+                return managerEmployee.user_id as string;
+              }
+            }
           }
         }
       } catch (error) {
         logger.error(
-          'Failed to resolve manager approver for leave_request',
-          { error, companyId, entityId },
+          'Failed to resolve line manager approver for leave_request',
+          { error, companyId, entityId, requestedBy },
           'work-engine/assignees'
         );
       }
@@ -87,33 +102,13 @@ export async function resolveApprovalAssignee(
       }
     }
 
-    // 3. Contract workflows: contract owner / legal
-    if (normalizedEntityType === 'contract') {
-      try {
-        const { data: contract } = await db
-          .from('contracts')
-          .select('owner_id, legal_owner_id')
-          .eq('id', entityId)
-          .eq('company_id', companyId)
-          .maybeSingle();
-
-        const candidates: string[] = [];
-        if (contract?.owner_id) candidates.push(contract.owner_id as string);
-        if (contract?.legal_owner_id) candidates.push(contract.legal_owner_id as string);
-
-        if (candidates.length > 0) {
-          // Deterministic: pick the lexicographically smallest id
-          candidates.sort();
-          return candidates[0];
-        }
-      } catch (error) {
-        logger.error(
-          'Failed to resolve contract approver',
-          { error, companyId, entityId },
-          'work-engine/assignees'
-        );
-      }
-    }
+    // 3. Contract workflows:
+    //    NOTE: current schema does not expose explicit contract owner/legal fields.
+    //    When those fields are added (e.g. owner_id, legal_owner_id), this block
+    //    should:
+    //      - Prefer legal owner when state contains "legal"
+    //      - Otherwise prefer general owner
+    //    Until then, we fall through to the admin fallback below.
 
     // 4. Fallback: any admin for the company (deterministic)
     try {
