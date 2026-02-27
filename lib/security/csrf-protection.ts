@@ -1,71 +1,95 @@
 /**
- * CSRF Protection Utilities
+ * CSRF Protection Utilities - Edge Runtime Compatible
  *
- * Provides double-submit cookie pattern for CSRF protection.
- * Tokens are generated per-session using cryptographically secure random bytes.
+ * Uses the Web Crypto API (crypto.getRandomValues, crypto.subtle) which is
+ * available in both the Vercel Edge Runtime and Node.js 18+.
+ *
+ * IMPORTANT: Node.js `crypto` module APIs (randomBytes, timingSafeEqual,
+ * Buffer) are NOT available in the Edge Runtime and must NOT be used here.
  */
-
-import { randomBytes, timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const CSRF_COOKIE_NAME = 'csrf-token';
 export const CSRF_HEADER_NAME = 'x-csrf-token';
-const CSRF_TOKEN_LENGTH = 32; // 256-bit token
+
+/** Token is 32 random bytes encoded as 64 hex characters */
+const CSRF_TOKEN_BYTES = 32;
+
+// Token Generation
 
 /**
- * Generate a cryptographically secure CSRF token.
+ * Generate a cryptographically secure CSRF token using the Web Crypto API.
+ * Returns a 64-character lowercase hex string.
+ *
+ * Compatible with: Edge Runtime, Node.js 18+, browsers.
  */
 export function generateCSRFToken(): string {
-  return randomBytes(CSRF_TOKEN_LENGTH).toString('hex');
+  const bytes = new Uint8Array(CSRF_TOKEN_BYTES);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
+// Token Validation
+
 /**
- * Validate a CSRF token using timing-safe comparison.
+ * Validate a CSRF token using constant-time comparison.
+ * Avoids timing attacks by comparing all characters regardless of mismatch.
+ *
+ * Uses only Web Crypto / standard JS — no Node.js Buffer or timingSafeEqual.
  */
 export function validateCSRFToken(
   headerToken: string | null | undefined,
   cookieToken: string | null | undefined
 ): boolean {
   if (!headerToken || !cookieToken) return false;
-  try {
-    const a = Buffer.from(headerToken, 'hex');
-    const b = Buffer.from(cookieToken, 'hex');
-    if (a.length !== b.length || a.length !== CSRF_TOKEN_LENGTH) return false;
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
+  if (headerToken.length !== cookieToken.length || headerToken.length !== 64) return false;
+
+  // Constant-time XOR comparison
+  let diff = 0;
+  for (let i = 0; i < headerToken.length; i++) {
+    diff |= headerToken.charCodeAt(i) ^ cookieToken.charCodeAt(i);
   }
+  return diff === 0;
 }
+
+// Cookie Helpers
 
 /**
  * Set a CSRF token cookie on a response.
- * The cookie is NOT httpOnly so the client-side JS can read it.
+ * The cookie is NOT httpOnly so client-side JS can read it for the
+ * double-submit cookie pattern.
  */
 export function setCSRFCookie(response: NextResponse, token: string): void {
   response.cookies.set(CSRF_COOKIE_NAME, token, {
-    httpOnly: false,
+    httpOnly: false, // Must be readable by JS
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/',
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 60 * 24, // 24 hours
   });
 }
 
 /**
- * Ensure a CSRF token exists in the response cookies.
+ * Ensure a CSRF token exists on the response.
+ * If the request already has a valid token cookie, reuse it.
+ * Otherwise generate a new token and set it.
  */
 export function ensureCSRFToken(
   request: NextRequest,
   response: NextResponse
 ): string {
   const existing = request.cookies.get(CSRF_COOKIE_NAME)?.value;
-  if (existing && existing.length === CSRF_TOKEN_LENGTH * 2) {
+  if (existing && existing.length === 64) {
     return existing;
   }
   const token = generateCSRFToken();
   setCSRFCookie(response, token);
   return token;
 }
+
+// Request Validation
 
 /**
  * Validate CSRF token from an incoming API request.
@@ -89,8 +113,12 @@ export function validateRequestCSRF(request: NextRequest): {
   return { valid: true };
 }
 
+// Exempt Paths
+
 /**
  * Paths that are exempt from CSRF validation.
+ * These are auth endpoints that need to work before a session exists,
+ * or webhook endpoints that use their own signature verification.
  */
 export const CSRF_EXEMPT_PATHS = [
   '/api/auth/callback',

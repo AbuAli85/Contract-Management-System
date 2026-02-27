@@ -406,10 +406,12 @@ export async function middleware(request: NextRequest) {
 
   // Ensure CSRF token is set for all page responses
   // This allows client-side JS to read it and include in subsequent API calls
+  // Uses Web Crypto API (crypto.getRandomValues) — Edge Runtime compatible
   const existingCsrf = request.cookies.get('csrf-token')?.value;
   if (!existingCsrf || existingCsrf.length !== 64) {
-    const { randomBytes } = await import('crypto');
-    const newToken = randomBytes(32).toString('hex');
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const newToken = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
     response.cookies.set('csrf-token', newToken, {
       httpOnly: false, // Must be readable by JS
       secure: process.env.NODE_ENV === 'production',
