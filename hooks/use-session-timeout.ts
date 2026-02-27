@@ -10,7 +10,7 @@ interface UseSessionTimeoutOptions {
 }
 
 export function useSessionTimeout({
-  timeoutMinutes = 5,
+  timeoutMinutes = 30, // 30 minutes is a reasonable default for business apps
   onTimeout,
   enableLogging = false,
   silent = true, // Default to silent mode for security
@@ -23,8 +23,9 @@ export function useSessionTimeout({
 
   // Log function that only logs if logging is enabled
   const log = useCallback(
-    (message: string, ...args: any[]) => {
+    (message: string, ...args: unknown[]) => {
       if (enableLogging) {
+        console.log('[SessionTimeout]', message, ...args);
       }
     },
     [enableLogging]

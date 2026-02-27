@@ -103,6 +103,28 @@ class InMemoryRateLimiter {
     this.requests.delete(identifier);
   }
 
+  /**
+   * Peek at the current rate limit status without consuming a request.
+   */
+  peek(identifier: string): RateLimitResult {
+    const now = Date.now();
+    const windowStart = now - this.config.interval;
+    const userRequests = this.requests.get(identifier) || [];
+    const recentRequests = userRequests.filter(time => time > windowStart);
+    const remaining = Math.max(0, this.config.maxRequests - recentRequests.length);
+    const isLimited = recentRequests.length >= this.config.maxRequests;
+    const oldestRequest = recentRequests.length > 0 ? Math.min(...recentRequests) : now;
+    const resetTime = isLimited
+      ? oldestRequest + this.config.interval
+      : now + this.config.interval;
+    return {
+      success: !isLimited,
+      remaining,
+      reset: resetTime,
+      limit: this.config.maxRequests,
+    };
+  }
+
   getStats() {
     return {
       totalIdentifiers: this.requests.size,
@@ -267,21 +289,16 @@ export function withRateLimit(
 }
 
 /**
- * Check rate limit without consuming a request
- * Useful for checking limits before performing expensive operations
+ * Check rate limit status without consuming a request.
+ * Useful for checking limits before performing expensive operations.
  */
 export async function checkRateLimit(
   identifier: string,
   limiter: InMemoryRateLimiter = ratelimit
 ): Promise<RateLimitResult> {
-  // This is a simplified check - doesn't actually consume a request
-  const now = Date.now();
-  return {
-    success: true,
-    remaining: 10, // Placeholder
-    reset: now + 60000,
-    limit: 60,
-  };
+  // Peek at the current state without recording a new request
+  // by temporarily using the limiter's internal state
+  return limiter.peek(identifier);
 }
 
 /**

@@ -38,6 +38,16 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient();
+
+    // Authentication check
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const employeeId = parseInt(params.id);
 
     if (isNaN(employeeId)) {
@@ -88,6 +98,16 @@ export async function PUT(
 ) {
   try {
     const supabase = await createClient();
+
+    // Authentication check
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const employeeId = parseInt(params.id);
     const body = await request.json();
 
@@ -146,6 +166,16 @@ export async function DELETE(
 ) {
   try {
     const supabase = await createClient();
+
+    // Authentication check
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const employeeId = parseInt(params.id);
 
     if (isNaN(employeeId)) {

@@ -4,13 +4,19 @@
  */
 
 /**
- * Sanitize HTML to prevent XSS attacks
- * Note: For production, consider using DOMPurify
+ * Sanitize HTML to prevent XSS attacks.
+ * Works in both browser and server environments.
+ * For rich HTML content, consider using DOMPurify on the client.
  */
 export function sanitizeHtml(html: string): string {
-  const div = document.createElement('div');
-  div.textContent = html;
-  return div.innerHTML;
+  // Server-safe: use regex-based sanitization
+  return html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
 }
 
 /**

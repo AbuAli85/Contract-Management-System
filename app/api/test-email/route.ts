@@ -1,15 +1,31 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 /**
- * Test Email Endpoint
- *
- * Use this to test if Resend is working
- * Access: GET /api/test-email
+ * Test Email Endpoint - sends a test email.
+ * PROTECTED: Admin-only endpoint.
  */
 export async function GET() {
   try {
+    // Admin-only: require authentication
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Check if RESEND_API_KEY is configured
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+    }
+
     if (!process.env.RESEND_API_KEY) {
       return NextResponse.json({
         success: false,
@@ -18,81 +34,23 @@ export async function GET() {
       });
     }
 
-
-    // Try to send a test email
     const { sendEmail } = await import('@/lib/services/email.service');
+    const testEmail = process.env.TEST_EMAIL || user.email || '';
 
-    const testEmail = process.env.TEST_EMAIL || 'chairman@falconeyegroup.net';
-
+    if (!testEmail) {
+      return NextResponse.json({ success: false, error: 'No test email address configured' });
+    }
 
     const result = await sendEmail({
       to: testEmail,
-      subject: `🧪 Test Email - ${new Date().toLocaleString()}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color: #10b981;">✅ Email System Working!</h2>
-          <p>This is a test email from your Contract Management System.</p>
-          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>From:</strong> ${process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io'}</p>
-          <hr>
-          <p style="color: #666; font-size: 12px;">
-            If you received this email, your email system is configured correctly!
-          </p>
-        </body>
-        </html>
-      `,
+      subject: `Test Email - ${new Date().toLocaleString()}`,
+      html: '<p>This is a test email from the Contract Management System.</p>',
     });
 
-
-    if (result.success) {
-      return NextResponse.json({
-        success: true,
-        message:
-          'Test email sent successfully! Check your inbox (and spam folder).',
-        details: {
-          messageId: result.messageId,
-          to: testEmail,
-          from:
-            process.env.RESEND_FROM_EMAIL || 'noreply@portal.thesmartpro.io',
-          timestamp: new Date().toISOString(),
-        },
-        instructions: [
-          '1. Check your email inbox',
-          '2. Check spam/junk folder',
-          '3. Check Resend dashboard: https://resend.com/emails',
-          `4. Search for message ID: ${result.messageId}`,
-        ],
-      });
-    } else {
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error || 'Failed to send email',
-          message: 'Email sending failed',
-          troubleshooting: [
-            'Check if domain is verified: https://resend.com/domains',
-            'Check if API key is valid: https://resend.com/api-keys',
-            'Check DNS records (SPF, DKIM)',
-            'Check Resend account status',
-          ],
-        },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json({ success: true, result, sentTo: testEmail });
   } catch (error) {
-
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Failed to send test email',
-        stack:
-          process.env.NODE_ENV === 'development'
-            ? (error as Error).stack
-            : undefined,
-      },
+      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -154,30 +154,20 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setSupabase(client);
 
-        // Check for emergency bypass in development
-        const hasEmergencyBypass =
-          typeof window !== 'undefined' &&
-          localStorage.getItem('emergency-bypass') === 'true';
-
-        if (hasEmergencyBypass) {
-          // Don't clear sessions when bypass is active
-        } else {
-          // Only clear sessions if there's a specific security issue
-          try {
-            const {
-              data: { session: existingSession },
-            } = await client.auth.getSession();
-            if (existingSession) {
-              // Preserve the existing session
-              setSession(existingSession);
-              setUser(existingSession.user);
-              setLoading(false);
-              setInitialLoading(false);
-              return;
-            } else {
-            }
-          } catch (error) {
+        // Check for an existing valid session on startup
+        try {
+          const {
+            data: { session: existingSession },
+          } = await client.auth.getSession();
+          if (existingSession?.user?.id && existingSession?.user?.email) {
+            setSession(existingSession);
+            setUser(existingSession.user);
+            setLoading(false);
+            setInitialLoading(false);
+            return;
           }
+        } catch {
+          // No existing session — proceed to full initialization
         }
 
         // Clear only specific localStorage items that might cause issues
@@ -186,10 +176,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('user-role');
           localStorage.removeItem('auth-mode');
           // Don't clear Supabase auth tokens - let Supabase handle them
-        } catch (error) {
+        } catch {
+          // Silently handled
         }
 
-        // Get initial session with error handling
+        // Get initial session with error handling.
+        // NOTE: On the client side, getSession() is acceptable for reading the
+        // cached session state. Server-side code uses getUser() for validation.
         try {
           const {
             data: { session },
@@ -200,8 +193,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             // If there's a session error, try to clear corrupted data
             try {
               await client.auth.signOut();
-            } catch (signOutError) {
-            }
+            } catch {
+          // Silently handled
+        }
             setSession(null);
             setUser(null);
           } else if (session && session.user) {
@@ -226,8 +220,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           // Clear all auth data and force fresh start
           try {
             await client.auth.signOut();
-          } catch (signOutError) {
-          }
+          } catch {
+          // Silently handled
+        }
           setSession(null);
           setUser(null);
         }
@@ -289,8 +284,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setSession(null);
       }
-    } catch (error) {
-    }
+    } catch {
+          // Silently handled
+        }
   }, [supabase]);
 
   const refreshSession = useCallback(async () => {
@@ -308,8 +304,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       }
-    } catch (error) {
-    }
+    } catch {
+          // Silently handled
+        }
   }, [supabase]);
 
   const authValue = useMemo(
@@ -415,15 +412,15 @@ function RBACProvider({ children }: { children: React.ReactNode }) {
   );
 
   const hasAnyPermission = useCallback(
-    (permissions: string[]) => {
-      return permissions.some(permission => permissions.includes(permission));
+    (requiredPermissions: string[]) => {
+      return requiredPermissions.some(permission => permissions.includes(permission));
     },
     [permissions]
   );
 
   const hasAllPermissions = useCallback(
-    (permissions: string[]) => {
-      return permissions.every(permission => permissions.includes(permission));
+    (requiredPermissions: string[]) => {
+      return requiredPermissions.every(permission => permissions.includes(permission));
     },
     [permissions]
   );
@@ -436,7 +433,7 @@ function RBACProvider({ children }: { children: React.ReactNode }) {
       hasAnyPermission,
       hasAllPermissions,
     }),
-    [userRole, permissions] // Removed functions from deps
+    [userRole, permissions, hasPermission, hasAnyPermission, hasAllPermissions]
   );
 
   return (

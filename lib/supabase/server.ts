@@ -48,18 +48,16 @@ export async function createClient() {
               }) => {
                 try {
                   cookieStore.set(name, value, options as CookieOptions);
-                } catch (setError) {
-                  // Log the error instead of silently failing
-                  // In API routes, we might need to handle this differently
-                  // But for now, log it so we can debug
+                } catch {
+                  // Cookie set failed — this is expected in Server Components
+                  // where the response has already been sent. The middleware
+                  // handles session refresh, so this is safe to ignore.
                 }
               }
             );
-          } catch (error) {
-            // Log the error instead of silently failing
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions, but we should log it for debugging.
+          } catch {
+            // setAll called from a Server Component — safe to ignore.
+            // Middleware handles session refresh.
           }
         },
       },
@@ -69,21 +67,18 @@ export async function createClient() {
   }
 }
 
+/**
+ * Create a Supabase client and verify the current user is authenticated.
+ * Uses getUser() (not getSession()) for secure server-side validation.
+ * Throws an error if not authenticated.
+ */
 export async function createClientWithAuth() {
-  try {
-    const supabase = await createClient();
-
-    // Verify the client is working
-    const { error } = await supabase.auth.getSession();
-
-    if (error) {
-      throw new Error('Authentication service unavailable');
-    }
-
-    return supabase;
-  } catch (error) {
-    throw error;
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error('Unauthorized: No authenticated user found');
   }
+  return { supabase, user };
 }
 
 // Admin client that bypasses RLS using service role key
