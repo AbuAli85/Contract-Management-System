@@ -19,7 +19,7 @@ export default function SimpleDashboardPage() {
 
   const locale = params.locale as string;
 
-  if (loading || !mounted) {
+  if (loading) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
         <div className='text-center'>

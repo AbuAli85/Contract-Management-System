@@ -39,10 +39,10 @@ export function PromotersPageClient({
 
   // Check permissions once auth is loaded
   useEffect(() => {
-    if (!authLoading && mounted) {
+    if (!authLoading) {
       setIsCheckingPermissions(false);
     }
-  }, [authLoading, mounted]);
+  }, [authLoading]);
 
   // Show loading state while checking authentication
   if (authLoading || isCheckingPermissions || permissionsLoading) {
