@@ -38,7 +38,7 @@ export function usePermissions() {
           setRole('admin');
           setRoles(['admin']);
           setLoading(false);
-        }, 5000); // 5 second timeout
+        }, 2000); // 2 second timeout
 
         // Check profiles table for user role
         const { data: profile, error } = await supabase

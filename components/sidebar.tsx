@@ -113,7 +113,7 @@ function SidebarContent({
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
     getInitialExpandedMenus()
   );
-  const { user, loading, mounted: authMounted, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { profile: userProfile } = useUserProfile();
   const { roleInfo } = useRolePermissions();
   const { theme, setTheme } = useTheme();
@@ -671,7 +671,7 @@ function SidebarContent({
   const shouldShowEmergencyNavigation = showEmergencyNavigation;
   const shouldShowLoginPrompt =
     !user && authMounted && !loading && !pathname?.includes('/dashboard');
-  const shouldShowLoading = !authMounted || loading;
+  const shouldShowLoading = loading;
 
   // Handle different rendering states
   if (shouldShowLoading) {

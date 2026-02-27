@@ -121,7 +121,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         setInitialLoading(false);
       }
-    }, 5000); // 5 second safety timeout (reduced from 15s)
+    }, 3000); // 3 second safety timeout
 
     return () => clearTimeout(safetyTimer);
   }, [loading, initialLoading]);

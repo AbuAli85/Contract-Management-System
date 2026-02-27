@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-service';
 
 export default function SimpleDashboardPage() {
   const params = useParams();
-  const { user, loading, mounted } = useAuth();
+  const { user, loading} = useAuth();
 
   if (!params || !params.locale) {
     return (

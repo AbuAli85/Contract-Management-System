@@ -62,11 +62,11 @@ export default function PromotersPerformancePage() {
         const metricsData = await metricsRes.json();
         if (metricsData.success && metricsData.metrics) {
           const m = metricsData.metrics;
-          const active = m.active || m.activeCount || 0;
-          const expired = m.expired || m.expiredDocuments || 0;
-          const expiring = m.expiring || m.expiringDocuments || 0;
-          const missing = m.missing || m.missingDocuments || 0;
-          const realTotal = m.total || total;
+          const active = m.activeOnContracts || m.active || m.activeCount || 0;
+          const expired = m.expiredDocuments || m.expired || 0;
+          const expiring = m.expiringDocuments || m.expiring || 0;
+          const missing = m.missingDocuments || m.missing || 0;
+          const realTotal = m.totalWorkforce || m.total || total;
           const valid = Math.max(0, realTotal - expired - expiring - missing);
           const complianceRate =
             realTotal > 0 ? Math.round(((realTotal - expired - missing) / realTotal) * 100) : 0;

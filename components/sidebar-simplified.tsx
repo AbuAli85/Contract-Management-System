@@ -40,7 +40,7 @@ export function SidebarSimplified({
   const _params = useSafeParams();
   const extractedLocale = useLocaleFromParams();
   const locale = propLocale || extractedLocale || 'en';
-  const { user, loading, mounted: authMounted, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
 
   const rtl = isRTL(locale);
 
@@ -48,7 +48,7 @@ export function SidebarSimplified({
     setMounted(true);
   }, []);
 
-  if (!mounted || !authMounted || loading) {
+  if (!mounted || loading) {
     return (
       <div
         className={`sidebar-container ${

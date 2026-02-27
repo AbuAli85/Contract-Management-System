@@ -76,19 +76,41 @@ export default function PromoterAnalysisPage() {
       const m = data.metrics;
 
       // Map the enhanced-metrics response to our local shape
+      // Build nationality and department distributions from promoter list
+      let byNationality: Record<string, number> = {};
+      let byDepartment: Record<string, number> = {};
+      let newThisMonth = 0;
+
+      try {
+        const listRes = await fetch('/api/promoters?page=1&limit=2000', { credentials: 'include' });
+        if (listRes.ok) {
+          const listData = await listRes.json();
+          const promoters = listData.promoters || listData.data || [];
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          promoters.forEach((p: { nationality?: string | null; department?: string | null; created_at?: string | null }) => {
+            const nat = p.nationality || 'Unknown';
+            byNationality[nat] = (byNationality[nat] || 0) + 1;
+            const dept = p.department || 'Unassigned';
+            byDepartment[dept] = (byDepartment[dept] || 0) + 1;
+            if (p.created_at && new Date(p.created_at) >= thirtyDaysAgo) newThisMonth++;
+          });
+        }
+      } catch (_) { /* non-critical */ }
+
       setMetrics({
-        total: m?.total ?? m?.totalPromoters ?? 0,
-        active: m?.active ?? m?.activePromoters ?? 0,
-        inactive: m?.inactive ?? m?.inactivePromoters ?? 0,
-        expiring_documents: m?.expiring_documents ?? m?.expiringDocuments ?? 0,
-        expired_documents: m?.expired_documents ?? m?.expiredDocuments ?? 0,
-        by_nationality: m?.by_nationality ?? m?.byNationality ?? {},
-        by_department: m?.by_department ?? m?.byDepartment ?? {},
-        by_status: m?.by_status ?? m?.byStatus ?? {},
-        contracts_active: m?.contracts_active ?? m?.activeContracts ?? 0,
-        contracts_expiring_soon: m?.contracts_expiring_soon ?? m?.expiringContracts ?? 0,
-        new_this_month: m?.new_this_month ?? m?.newThisMonth ?? 0,
-        total_last_month: m?.total_last_month ?? m?.totalLastMonth ?? 0,
+        total: m?.totalWorkforce ?? 0,
+        active: m?.activeOnContracts ?? 0,
+        inactive: (m?.inactive ?? 0) + (m?.terminated ?? 0),
+        expiring_documents: m?.expiringDocuments ?? 0,
+        expired_documents: m?.expiredDocuments ?? 0,
+        by_nationality: byNationality,
+        by_department: byDepartment,
+        by_status: m?.details?.byStatus ?? {},
+        contracts_active: m?.activeOnContracts ?? 0,
+        contracts_expiring_soon: 0,
+        new_this_month: newThisMonth,
+        total_last_month: 0,
       });
       setLastRefresh(new Date());
     } catch (err) {

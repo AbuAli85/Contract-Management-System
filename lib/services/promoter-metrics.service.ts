@@ -25,35 +25,36 @@ interface CacheEntry {
 }
 
 class PromoterMetricsCache {
-  private cache: CacheEntry | null = null;
+  private cache: Map<string, CacheEntry> = new Map();
   private readonly TTL = 5 * 60 * 1000; // 5 minutes
 
-  set(data: EnhancedPromoterMetrics): void {
+  private key(partyId: string | null): string {
+    return partyId ?? '__global__';
+  }
+
+  set(data: EnhancedPromoterMetrics, partyId: string | null = null): void {
     const now = Date.now();
-    this.cache = {
+    this.cache.set(this.key(partyId), {
       data,
       timestamp: now,
       expiresAt: now + this.TTL,
-    };
+    });
   }
 
-  get(): EnhancedPromoterMetrics | null {
-    if (!this.cache) return null;
-
-    const now = Date.now();
-    if (now > this.cache.expiresAt) {
-      this.cache = null;
+  get(partyId: string | null = null): EnhancedPromoterMetrics | null {
+    const entry = this.cache.get(this.key(partyId));
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(this.key(partyId));
       return null;
     }
-
-    return this.cache.data;
+    return entry.data;
   }
 
   clear(): void {
-    this.cache = null;
+    this.cache.clear();
   }
 }
-
 const metricsCache = new PromoterMetricsCache();
 
 // ==================== HELPER FUNCTIONS ====================
@@ -83,7 +84,7 @@ export async function getEnhancedPromoterMetrics(
 ): Promise<EnhancedPromoterMetrics> {
   // Check cache first
   if (!forceRefresh) {
-    const cached = metricsCache.get();
+    const cached = metricsCache.get(partyId);
     if (cached) {
       return cached;
     }
@@ -331,7 +332,7 @@ export async function getEnhancedPromoterMetrics(
     }
 
     // Cache the results
-    metricsCache.set(metrics);
+    metricsCache.set(metrics, partyId);
 
     return metrics;
   } catch (error) {

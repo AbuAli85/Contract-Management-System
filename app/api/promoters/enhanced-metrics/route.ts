@@ -24,30 +24,37 @@ export async function GET(request: NextRequest) {
     let partyId: string | null = null;
 
     if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('active_company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.active_company_id) {
-        const { createAdminClient } = await import('@/lib/supabase/server');
-        let adminClient;
-        try {
-          adminClient = createAdminClient();
-        } catch (e) {
-          adminClient = supabase;
-        }
-
-        const { data: company } = await adminClient
-          .from('companies')
-          .select('party_id')
-          .eq('id', profile.active_company_id)
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('active_company_id')
+          .eq('id', user.id)
           .single();
-
-        if (company?.party_id) {
-          partyId = company.party_id;
+        if (profile?.active_company_id) {
+          // Try to get party_id from companies table
+          const { data: company } = await supabase
+            .from('companies')
+            .select('party_id')
+            .eq('id', profile.active_company_id)
+            .single();
+          if (company?.party_id) {
+            partyId = company.party_id;
+          }
+          // If no party_id in companies, try parties table directly
+          if (!partyId) {
+            const { data: party } = await supabase
+              .from('parties')
+              .select('id')
+              .eq('company_id', profile.active_company_id)
+              .limit(1)
+              .single();
+            if (party?.id) {
+              partyId = party.id;
+            }
+          }
         }
+      } catch (_) {
+        // Non-critical: fall back to unfiltered query
       }
     }
 

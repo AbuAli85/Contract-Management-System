@@ -109,7 +109,7 @@ interface Promoter {
 
 interface PromotersTableProps {
   promoters: Promoter[];
-  onEdit?: (promoterId: string) => void;
+  onEdit?: (promoterId: string) => void | Promise<void>;
   onDelete?: (promoterId: string) => Promise<void>;
   onView?: (promoterId: string) => void;
   onRefresh?: () => void;

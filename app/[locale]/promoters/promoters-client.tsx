@@ -29,7 +29,7 @@ export function PromotersPageClient({
   isDevelopment,
 }: PromotersPageClientProps) {
   const router = useRouter();
-  const { user, loading: authLoading, mounted } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const {
     canRead,
     hasPermission,
@@ -45,7 +45,7 @@ export function PromotersPageClient({
   }, [authLoading, mounted]);
 
   // Show loading state while checking authentication
-  if (authLoading || !mounted || isCheckingPermissions || permissionsLoading) {
+  if (authLoading || isCheckingPermissions || permissionsLoading) {
     return (
       <div className='flex min-h-[60vh] items-center justify-center'>
         <Card className='w-full max-w-md'>
