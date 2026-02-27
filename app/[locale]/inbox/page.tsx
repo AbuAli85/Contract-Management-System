@@ -43,7 +43,6 @@ import {
 } from 'lucide-react';
 
 type AssigneeFilter = 'me' | 'unassigned' | 'all';
-type TimeframeFilter = 'all' | 'overdue' | 'today' | 'week';
 
 interface WorkItem {
   id: string;
@@ -111,7 +110,8 @@ export default function InboxPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<AssigneeFilter>('me');
   const [workTypeFilter, setWorkTypeFilter] = useState<string>('all');
-  const [timeframeFilter, setTimeframeFilter] = useState<TimeframeFilter>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [overdueOnly, setOverdueOnly] = useState<'all' | 'overdue'>('all');
   const [search, setSearch] = useState('');
 
   const {
@@ -125,7 +125,8 @@ export default function InboxPage() {
       statusFilter,
       assigneeFilter,
       workTypeFilter,
-      timeframeFilter,
+      sourceFilter,
+      overdueOnly,
       search,
     ],
     queryFn: async () => {
@@ -133,7 +134,8 @@ export default function InboxPage() {
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (assigneeFilter) params.set('assignee', assigneeFilter);
       if (workTypeFilter !== 'all') params.set('work_type', workTypeFilter);
-      if (timeframeFilter !== 'all') params.set('timeframe', timeframeFilter);
+      if (sourceFilter !== 'all') params.set('source', sourceFilter);
+      if (overdueOnly === 'overdue') params.set('overdue', 'true');
       if (search) params.set('q', search);
       params.set('limit', '50');
       params.set('offset', '0');
@@ -154,10 +156,9 @@ export default function InboxPage() {
 
   const assignMutation = useMutation({
     mutationFn: async (item: WorkItem) => {
-      const res = await fetch(`/api/work-items/${item.id}`, {
+      const res = await fetch(`/api/inbox/${item.id}/assign`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'assign_to_me' }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -184,10 +185,9 @@ export default function InboxPage() {
 
   const completeMutation = useMutation({
     mutationFn: async (item: WorkItem) => {
-      const res = await fetch(`/api/work-items/${item.id}`, {
+      const res = await fetch(`/api/inbox/${item.id}/complete`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'complete' }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -254,7 +254,7 @@ export default function InboxPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+          <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
             <div>
               <label className='block text-xs font-medium mb-1'>Status</label>
               <Select
@@ -308,11 +308,29 @@ export default function InboxPage() {
             </div>
 
             <div>
+              <label className='block text-xs font-medium mb-1'>Source</label>
+              <Select
+                value={sourceFilter}
+                onValueChange={value => setSourceFilter(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='All sources' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>All</SelectItem>
+                  <SelectItem value='contracts'>Contracts</SelectItem>
+                  <SelectItem value='tasks'>Tasks</SelectItem>
+                  <SelectItem value='hr'>HR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <label className='block text-xs font-medium mb-1'>Due</label>
               <Select
-                value={timeframeFilter}
+                value={overdueOnly}
                 onValueChange={value =>
-                  setTimeframeFilter(value as TimeframeFilter)
+                  setOverdueOnly(value as 'all' | 'overdue')
                 }
               >
                 <SelectTrigger>
@@ -320,9 +338,7 @@ export default function InboxPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>Any time</SelectItem>
-                  <SelectItem value='overdue'>Overdue</SelectItem>
-                  <SelectItem value='today'>Due today</SelectItem>
-                  <SelectItem value='week'>This week</SelectItem>
+                  <SelectItem value='overdue'>Overdue only</SelectItem>
                 </SelectContent>
               </Select>
             </div>

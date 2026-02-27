@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -7,25 +8,36 @@ export const dynamic = 'force-dynamic';
 function buildLink(item: any): string {
   const entityType: string | undefined = item.entity_type;
   const workType: string | undefined = item.work_type;
+  const source: string | undefined = item.source;
+  const metadata: any = item.metadata ?? {};
 
   // Contract-related approvals and workflow items
-  if (entityType === 'contract' || workType === 'contract_approval' || workType === 'approval') {
+  if (entityType === 'contract' || source === 'contracts') {
     return `/contracts/${item.entity_id}`;
   }
 
   // Generic tasks (HR tasks dashboard)
-  if (entityType === 'task' || workType === 'task') {
+  if (entityType === 'task' || workType === 'task' || source === 'tasks') {
     return '/hr/tasks';
   }
 
   // Leave requests
-  if (entityType === 'leave_request' || workType === 'leave_approval') {
+  if (entityType === 'leave_request') {
     return '/employer/team?tab=leave';
   }
 
   // Attendance / other HR requests (best-effort mapping)
-  if (entityType === 'attendance_request' || workType === 'attendance_approval') {
+  if (entityType === 'attendance_request') {
     return '/employer/team?tab=attendance';
+  }
+
+  // Workflow approvals where metadata points to a contract
+  if (
+    workType === 'approval' &&
+    (metadata?.entity_type === 'contract' || entityType === 'contract')
+  ) {
+    const contractId = metadata?.entity_id ?? item.entity_id;
+    return `/contracts/${contractId}`;
   }
 
   // Fallback: home/dashboard
@@ -47,13 +59,14 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
 
-    const status = searchParams.get('status') || undefined;
+    const statusParam = searchParams.get('status') || undefined; // CSV of statuses
     const assigneeFilter = (searchParams.get('assignee') || 'me') as
       | 'me'
       | 'unassigned'
       | 'all';
     const workType = searchParams.get('work_type') || undefined;
-    const timeframe = searchParams.get('timeframe') || undefined; // 'overdue' | 'today' | 'week'
+    const source = searchParams.get('source') || undefined;
+    const overdueParam = searchParams.get('overdue');
     const limitParam = searchParams.get('limit');
     const offsetParam = searchParams.get('offset');
 
@@ -81,46 +94,47 @@ export async function GET(request: NextRequest) {
 
     let query = supabase.from('work_items').select('*').eq('company_id', companyId);
 
-    if (status && status !== 'all') {
-      query = query.eq('status', status);
+    // Status filter (CSV)
+    if (statusParam && statusParam !== 'all') {
+      const statuses = statusParam
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+      if (statuses.length > 0) {
+        query = query.in('status', statuses);
+      }
     }
 
     if (workType && workType !== 'all') {
       query = query.eq('work_type', workType);
     }
 
-    // Timeframe filter on due_at
-    if (timeframe) {
-      const now = new Date();
-      const todayStart = new Date(now);
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date(now);
-      todayEnd.setHours(23, 59, 59, 999);
-      const weekEnd = new Date(todayEnd);
-      weekEnd.setDate(weekEnd.getDate() + 7);
-
-      if (timeframe === 'overdue') {
-        // due_at before today
-        query = query.lt('due_at', todayStart.toISOString());
-      } else if (timeframe === 'today') {
-        query = query
-          .gte('due_at', todayStart.toISOString())
-          .lte('due_at', todayEnd.toISOString());
-      } else if (timeframe === 'week') {
-        query = query
-          .gte('due_at', todayStart.toISOString())
-          .lte('due_at', weekEnd.toISOString());
-      }
+    if (source && source !== 'all') {
+      query = query.eq('source', source);
     }
 
-    query = query.order('due_at', { ascending: true, nullsFirst: false }).range(
-      offset,
-      offset + limit - 1
-    );
+    // Overdue filter: due_at before now
+    const isOverdue =
+      overdueParam === 'true' ||
+      overdueParam === '1' ||
+      overdueParam === 'yes';
+    if (isOverdue) {
+      const nowIso = new Date().toISOString();
+      query = query.lt('due_at', nowIso);
+    }
+
+    // Sorting: priority asc, sla_due_at asc NULLS LAST, due_at asc NULLS LAST, created_at desc
+    query = query
+      .order('priority', { ascending: true, nullsFirst: false })
+      .order('sla_due_at', { ascending: true, nullsFirst: false })
+      .order('due_at', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false, nullsFirst: false })
+      .range(offset, offset + limit - 1);
 
     const { data, error } = await query;
 
     if (error) {
+      logger.error('Failed to fetch inbox items', { error, companyId }, 'api/inbox');
       return NextResponse.json(
         {
           success: false,
@@ -170,6 +184,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error: any) {
+    logger.error('Unexpected error in GET /api/inbox', { error }, 'api/inbox');
     return NextResponse.json(
       {
         success: false,
