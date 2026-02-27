@@ -13,6 +13,7 @@ export interface WorkItemUpsertInput {
   title?: string | null;
   dueAt?: string | null;
   assigneeId?: string | null;
+   slaDueAt?: string | null;
   source?: string | null;
   metadata?: Json | null;
   createdBy?: string | null;

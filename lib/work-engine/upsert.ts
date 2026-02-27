@@ -21,6 +21,7 @@ export async function upsertWorkItem(input: WorkItemUpsertInput): Promise<void> 
     status: input.status,
     title: input.title ?? null,
     due_at: input.dueAt ?? null,
+    sla_due_at: input.slaDueAt ?? null,
     assignee_id: input.assigneeId ?? null,
     source: input.source ?? null,
     metadata: input.metadata ?? null,

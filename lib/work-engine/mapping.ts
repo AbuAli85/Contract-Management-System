@@ -82,8 +82,34 @@ export function upsertInputFromWorkflowInstance(
 
   const metadata: Record<string, unknown> = {
     workflow_instance_id: instance.id,
+    workflow_entity_type: instance.entity_type,
+    workflow_entity_id: instance.entity_id,
     current_state: instance.current_state,
   };
+
+  // SLA / due calculation:
+  // - If instance has an explicit due_at, prefer that for both dueAt and slaDueAt.
+  // - Otherwise, for pending approvals, set slaDueAt = now + 2 days.
+  let dueAt: string | null = instance.due_at ?? null;
+  let slaDueAt: string | null = null;
+
+  if (instance.due_at) {
+    slaDueAt = instance.due_at;
+  } else if (workType === 'approval' && status === 'pending') {
+    const now = new Date();
+    now.setDate(now.getDate() + 2);
+    slaDueAt = now.toISOString();
+  }
+
+  // Assignee resolution precedence:
+  // - If workflow instance already has assigned_to, keep it.
+  // - Else, if caller provided an explicit assigneeId, use that.
+  let assigneeId: string | null = instance.assigned_to ?? null;
+  if (!assigneeId && Object.prototype.hasOwnProperty.call(options, 'assigneeId')) {
+    // options.assigneeId may be null to explicitly clear the assignee
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    assigneeId = (options as any).assigneeId ?? null;
+  }
 
   return {
     companyId: instance.company_id,
@@ -92,8 +118,9 @@ export function upsertInputFromWorkflowInstance(
     entityId: instance.entity_id,
     status,
     title,
-    dueAt: instance.due_at ?? null,
-    assigneeId: instance.assigned_to ?? null,
+    dueAt,
+    assigneeId,
+    slaDueAt,
     source,
     metadata,
     createdBy: options.createdBy ?? null,

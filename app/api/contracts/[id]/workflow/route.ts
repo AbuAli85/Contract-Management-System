@@ -5,6 +5,7 @@ import { WorkflowService } from '@/lib/workflow/workflow-service';
 import {
   upsertWorkItem,
   upsertInputFromWorkflowInstance,
+  resolveApprovalAssignee,
 } from '@/lib/work-engine';
 import { logger } from '@/lib/logger';
 
@@ -73,10 +74,21 @@ export async function POST(
         .single();
 
       if (instance) {
+        // Resolve approver/assignee for this approval
+        const assigneeId = await resolveApprovalAssignee(supabase as any, {
+          companyId,
+          entityType: instance.entity_type,
+          entityId: instance.entity_id,
+          currentState: instance.current_state,
+          requestedBy: profileId,
+        });
+
         await upsertWorkItem(
           upsertInputFromWorkflowInstance(instance as any, {
             createdBy: profileId,
-          })
+            // Only apply assignee if workflow instance has no explicit assignee
+            ...(instance.assigned_to ? {} : { assigneeId }),
+          } as any)
         );
       }
     } catch (error) {
