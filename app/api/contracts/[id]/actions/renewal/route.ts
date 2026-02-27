@@ -67,7 +67,7 @@ export async function POST(
       );
     }
 
-    // Compute renewal due_at = end_date - 30 days
+    // Compute renewal due_at = end_date - 30 days (safe date handling)
     const endDate = new Date(contract.end_date as unknown as string);
     if (Number.isNaN(endDate.getTime())) {
       return NextResponse.json(
@@ -79,7 +79,7 @@ export async function POST(
       );
     }
 
-    const dueAt = new Date(endDate);
+    const dueAt = new Date(endDate.getTime());
     dueAt.setDate(dueAt.getDate() - 30);
 
     const { data: action, error: insertError } = await supabase

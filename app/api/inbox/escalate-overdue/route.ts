@@ -51,6 +51,7 @@ export async function POST(_request: NextRequest) {
       .eq('company_id', companyId)
       .in('status', ['open', 'pending'])
       .lt('sla_due_at', nowIso)
+      .is('metadata->>escalated', null)
       .limit(500);
 
     if (error) {
@@ -66,66 +67,68 @@ export async function POST(_request: NextRequest) {
     }
 
     const rawItems = data || [];
-    const candidates = rawItems.filter(item => {
-      const metadata = (item as any).metadata ?? {};
-      return metadata.escalated !== true;
-    });
+    const candidates = rawItems; // already filtered server-side by metadata->>escalated IS NULL
 
     let escalatedCount = 0;
 
-    for (const item of candidates) {
-      try {
-        const metadata = ((item as any).metadata ?? {}) as Record<string, any>;
-        const entityType: string = item.entity_type;
-        const entityId: string = item.entity_id;
-        const currentState: string = metadata.current_state ?? '';
+    // Process in small concurrent batches to avoid N=500 sequential updates
+    const concurrency = 10;
+    for (let i = 0; i < candidates.length; i += concurrency) {
+      const batch = candidates.slice(i, i + concurrency);
+      await Promise.all(
+        batch.map(async item => {
+          try {
+            const metadata = ((item as any).metadata ?? {}) as Record<string, any>;
+            const entityType: string = item.entity_type;
+            const entityId: string = item.entity_id;
+            const currentState: string = metadata.current_state ?? '';
 
-        // Use resolveApprovalAssignee to choose a new assignee when applicable
-        const resolvedAssignee =
-          entityType &&
-          (await resolveApprovalAssignee(supabase as any, {
-            companyId,
-            entityType,
-            entityId,
-            currentState,
-            requestedBy: null,
-          }));
+            const resolvedAssignee =
+              entityType &&
+              (await resolveApprovalAssignee(supabase as any, {
+                companyId,
+                entityType,
+                entityId,
+                currentState,
+                requestedBy: null,
+              }));
 
-        // If we couldn't resolve a better assignee, skip escalation for this item
-        if (!resolvedAssignee) {
-          continue;
-        }
+            if (!resolvedAssignee) {
+              return;
+            }
 
-        metadata.escalated = true;
-        metadata.escalated_at = new Date().toISOString();
-        metadata.escalated_by = user.id;
+            metadata.escalated = true;
+            metadata.escalated_at = new Date().toISOString();
+            metadata.escalated_by = user.id;
 
-        const { error: updateError } = await supabase
-          .from('work_items' as any)
-          .update({
-            assignee_id: resolvedAssignee,
-            metadata,
-          })
-          .eq('id', item.id)
-          .eq('company_id', companyId);
+            const { error: updateError } = await supabase
+              .from('work_items' as any)
+              .update({
+                assignee_id: resolvedAssignee,
+                metadata,
+              })
+              .eq('id', item.id)
+              .eq('company_id', companyId);
 
-        if (updateError) {
-          logger.error(
-            'Failed to update escalated work_item',
-            { error: updateError, workItemId: item.id, companyId },
-            'api/inbox/escalate-overdue'
-          );
-          continue;
-        }
+            if (updateError) {
+              logger.error(
+                'Failed to update escalated work_item',
+                { error: updateError, workItemId: item.id, companyId },
+                'api/inbox/escalate-overdue'
+              );
+              return;
+            }
 
-        escalatedCount += 1;
-      } catch (err) {
-        logger.error(
-          'Unexpected error while escalating work_item',
-          { error: err, workItemId: item.id, companyId },
-          'api/inbox/escalate-overdue'
-        );
-      }
+            escalatedCount += 1;
+          } catch (err) {
+            logger.error(
+              'Unexpected error while escalating work_item',
+              { error: err, workItemId: item.id, companyId },
+              'api/inbox/escalate-overdue'
+            );
+          }
+        })
+      );
     }
 
     return NextResponse.json({

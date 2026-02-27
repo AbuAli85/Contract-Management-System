@@ -60,23 +60,38 @@ export async function POST(request: NextRequest) {
     let workflowCount = 0;
     let contractActionCount = 0;
 
-    // 1) Tasks in the window
-    try {
-      const { data: tasks, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('company_id', companyId)
-        .gte('created_at', windowStartIso)
-        .limit(1000);
+    const pageSize = 1000;
+    let tasksCapped = false;
+    let workflowsCapped = false;
+    let contractActionsCapped = false;
 
-      if (tasksError) {
-        logger.error(
-          'Failed to fetch tasks for inbox rebuild',
-          { error: tasksError, companyId },
-          'api/inbox/rebuild'
-        );
-      } else if (tasks && tasks.length > 0) {
-        for (const task of tasks) {
+    // 1) Tasks in the window (paginated)
+    try {
+      let offset = 0;
+      // Hard cap to avoid unbounded loops
+      const maxPages = 10;
+      for (let page = 0; page < maxPages; page++) {
+        const { data: tasks, error: tasksError } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('company_id', companyId)
+          .gte('created_at', windowStartIso)
+          .order('created_at', { ascending: true })
+          .range(offset, offset + pageSize - 1);
+
+        if (tasksError) {
+          logger.error(
+            'Failed to fetch tasks for inbox rebuild',
+            { error: tasksError, companyId, offset },
+            'api/inbox/rebuild'
+          );
+          break;
+        }
+
+        const batch = tasks || [];
+        if (batch.length === 0) break;
+
+        for (const task of batch) {
           try {
             await upsertWorkItem(upsertInputFromTask(task as any, user.id));
             taskCount += 1;
@@ -88,6 +103,12 @@ export async function POST(request: NextRequest) {
             );
           }
         }
+
+        if (batch.length < pageSize) break;
+        offset += pageSize;
+        if (page === maxPages - 1) {
+          tasksCapped = true;
+        }
       }
     } catch (err) {
       logger.error(
@@ -97,23 +118,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2) Workflow instances in the window
+    // 2) Workflow instances in the window (paginated)
     try {
-      const { data: instances, error: wfError } = await supabase
-        .from('workflow_instances')
-        .select('*')
-        .eq('company_id', companyId)
-        .gte('started_at', windowStartIso)
-        .limit(1000);
+      let offset = 0;
+      const maxPages = 10;
+      for (let page = 0; page < maxPages; page++) {
+        const { data: instances, error: wfError } = await supabase
+          .from('workflow_instances')
+          .select('*')
+          .eq('company_id', companyId)
+          .gte('started_at', windowStartIso)
+          .order('started_at', { ascending: true })
+          .range(offset, offset + pageSize - 1);
 
-      if (wfError) {
-        logger.error(
-          'Failed to fetch workflow_instances for inbox rebuild',
-          { error: wfError, companyId },
-          'api/inbox/rebuild'
-        );
-      } else if (instances && instances.length > 0) {
-        for (const instance of instances) {
+        if (wfError) {
+          logger.error(
+            'Failed to fetch workflow_instances for inbox rebuild',
+            { error: wfError, companyId, offset },
+            'api/inbox/rebuild'
+          );
+          break;
+        }
+
+        const batch = instances || [];
+        if (batch.length === 0) break;
+
+        for (const instance of batch) {
           try {
             await upsertWorkItem(
               upsertInputFromWorkflowInstance(instance as any, {
@@ -130,6 +160,12 @@ export async function POST(request: NextRequest) {
             );
           }
         }
+
+        if (batch.length < pageSize) break;
+        offset += pageSize;
+        if (page === maxPages - 1) {
+          workflowsCapped = true;
+        }
       }
     } catch (err) {
       logger.error(
@@ -139,23 +175,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3) Contract actions in the window
+    // 3) Contract actions in the window (paginated)
     try {
-      const { data: actions, error: caError } = await supabase
-        .from('contract_actions')
-        .select('*')
-        .eq('company_id', companyId)
-        .gte('created_at', windowStartIso)
-        .limit(1000);
+      let offset = 0;
+      const maxPages = 10;
+      for (let page = 0; page < maxPages; page++) {
+        const { data: actions, error: caError } = await supabase
+          .from('contract_actions')
+          .select('*')
+          .eq('company_id', companyId)
+          .gte('created_at', windowStartIso)
+          .order('created_at', { ascending: true })
+          .range(offset, offset + pageSize - 1);
 
-      if (caError) {
-        logger.error(
-          'Failed to fetch contract_actions for inbox rebuild',
-          { error: caError, companyId },
-          'api/inbox/rebuild'
-        );
-      } else if (actions && actions.length > 0) {
-        for (const action of actions) {
+        if (caError) {
+          logger.error(
+            'Failed to fetch contract_actions for inbox rebuild',
+            { error: caError, companyId, offset },
+            'api/inbox/rebuild'
+          );
+          break;
+        }
+
+        const batch = actions || [];
+        if (batch.length === 0) break;
+
+        for (const action of batch) {
           try {
             await upsertWorkItem(upsertInputFromContractAction(action as any));
             contractActionCount += 1;
@@ -166,6 +211,12 @@ export async function POST(request: NextRequest) {
               'api/inbox/rebuild'
             );
           }
+        }
+
+        if (batch.length < pageSize) break;
+        offset += pageSize;
+        if (page === maxPages - 1) {
+          contractActionsCapped = true;
         }
       }
     } catch (err) {
@@ -184,6 +235,11 @@ export async function POST(request: NextRequest) {
         tasks: taskCount,
         workflow_instances: workflowCount,
         contract_actions: contractActionCount,
+      },
+      caps: {
+        tasksCapped,
+        workflowsCapped,
+        contractActionsCapped,
       },
     });
   } catch (error: any) {
