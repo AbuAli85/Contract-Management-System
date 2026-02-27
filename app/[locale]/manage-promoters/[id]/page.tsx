@@ -307,6 +307,14 @@ export default function PromoterDetailPage() {
       }
       // Redirect to promoters list
       router.push(`/${locale}/promoters`);
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to delete promoter',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -339,6 +347,14 @@ export default function PromoterDetailPage() {
         title: 'Status Updated',
         description: `Promoter status updated to ${newStatus}`,
       });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to update status',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   }
 

@@ -842,7 +842,6 @@ export default function PromoterFormProfessional(
       setIsLoading(false);
     }
   };
-  };
 
   // Show loading state during SSR or when formData is not initialized
   if (!isClient || !formData) {
