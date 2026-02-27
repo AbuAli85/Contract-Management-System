@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getCompanyRole } from '@/lib/auth/get-company-role';
 import { logger } from '@/lib/logger';
 import { upsertWorkItem, upsertInputFromContractAction } from '@/lib/work-engine';
+import { auditLogger } from '@/lib/security/audit-logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,17 @@ export async function POST(
       .single();
 
     if (insertError || !action) {
+      // Handle unique constraint violation (open/pending renewal already exists)
+      if ((insertError as any).code === '23505') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'An open or pending renewal action already exists for this contract.',
+          },
+          { status: 409 }
+        );
+      }
+
       logger.error(
         'Failed to create contract_action renewal',
         { error: insertError, contractId },
@@ -114,6 +126,23 @@ export async function POST(
     // Best-effort: mirror into work_items as a contract renewal work item
     try {
       await upsertWorkItem(upsertInputFromContractAction(action as any));
+
+      // Audit: log renewal scheduling
+      try {
+        await auditLogger.logDataChange({
+          event_type: 'contract.renewal_scheduled',
+          user_id: user.id,
+          resource_type: 'contract',
+          resource_id: contract.id,
+          metadata: {
+            company_id: contract.company_id,
+            contract_action_id: action.id,
+            due_at: action.due_at,
+            action_type: action.action_type,
+          },
+        });
+      } catch {
+      }
     } catch (error) {
       logger.error(
         'Failed to mirror contract_action into work_items',

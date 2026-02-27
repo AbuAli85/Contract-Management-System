@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCompanyRole } from '@/lib/auth/get-company-role';
 import { logger } from '@/lib/logger';
+import { auditLogger } from '@/lib/security/audit-logger';
 import { resolveApprovalAssignee } from '@/lib/work-engine';
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +43,8 @@ export async function POST(_request: NextRequest) {
       );
     }
 
-    const nowIso = new Date().toISOString();
+    const now = new Date();
+    const nowIso = now.toISOString();
 
     // Fetch candidate work_items (no JSON filter here; filter escalated in app)
     const { data, error } = await supabase
@@ -51,7 +53,7 @@ export async function POST(_request: NextRequest) {
       .eq('company_id', companyId)
       .in('status', ['open', 'pending'])
       .lt('sla_due_at', nowIso)
-      .is('metadata->>escalated', null)
+      .eq('escalated', false)
       .limit(500);
 
     if (error) {
@@ -70,6 +72,23 @@ export async function POST(_request: NextRequest) {
     const candidates = rawItems; // already filtered server-side by metadata->>escalated IS NULL
 
     let escalatedCount = 0;
+    // Audit log for the escalation batch (best-effort)
+    try {
+      await auditLogger.logDataChange({
+        event_type: 'work_items.escalate_overdue',
+        user_id: user.id,
+        resource_type: 'company',
+        resource_id: companyId,
+        metadata: {
+          total_candidates: rawItems.length,
+          considered: candidates.length,
+          escalated: escalatedCount,
+          at: nowIso,
+        },
+      });
+    } catch {
+    }
+
 
     // Process in small concurrent batches to avoid N=500 sequential updates
     const concurrency = 10;
@@ -105,6 +124,7 @@ export async function POST(_request: NextRequest) {
               .from('work_items' as any)
               .update({
                 assignee_id: resolvedAssignee,
+                escalated: true,
                 metadata,
               })
               .eq('id', item.id)

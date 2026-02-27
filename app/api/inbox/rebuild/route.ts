@@ -8,6 +8,7 @@ import {
   upsertInputFromWorkflowInstance,
   upsertInputFromContractAction,
 } from '@/lib/work-engine';
+import { auditLogger } from '@/lib/security/audit-logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -225,6 +226,31 @@ export async function POST(request: NextRequest) {
         { error: err, companyId },
         'api/inbox/rebuild'
       );
+    }
+
+    // Audit log for rebuild operation (best-effort)
+    try {
+      await auditLogger.logDataChange({
+        event_type: 'inbox.rebuild',
+        user_id: user.id,
+        resource_type: 'company',
+        resource_id: companyId,
+        metadata: {
+          days,
+          totals: {
+            tasks: taskCount,
+            workflow_instances: workflowCount,
+            contract_actions: contractActionCount,
+          },
+          caps: {
+            tasksCapped,
+            workflowsCapped,
+            contractActionsCapped,
+          },
+          at: new Date().toISOString(),
+        },
+      });
+    } catch {
     }
 
     return NextResponse.json({

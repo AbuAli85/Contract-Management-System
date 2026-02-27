@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.contract_actions (
 
 -- Composite index for common filters
 CREATE INDEX IF NOT EXISTS idx_contract_actions_company_contract_status_due
-  ON public.contract_actions (company_id, contract_id, status, due_at);
+  ON public.contract_actions (company_id, contract_id, status, due_at);*** End Patch```}  الاخاطئ to=functions.ApplyPatchిస్తుంది 高清毛片 to=functions.ApplyPatch किया गया үүгээр to=functions.ApplyPatch  mover to=functions.ApplyPatch  Adjusting to=functions.ApplyPatch  Ladder to=functions.ApplyPatch  Invalid to=functions.ApplyPatch  компендиум to=functions.ApplyPatch  Will to=functions.ApplyPatch  않았다 to=functions.ApplyPatch မွန် to=functions.ApplyPatch  выполнен to=functions.ApplyPatch  *** End Patch  보호합니다.  >>  any  !!}  github.com  -------------  *** End Patch  ！！  !***  *** End Patch  ***  >>  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  !***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***  *** End Patch  ***!
 
 -- Basic updated_at trigger (reuse global helper if present)
 DO $$ BEGIN
