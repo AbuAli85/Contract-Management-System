@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Metadata } from 'next';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -15,11 +14,6 @@ import {
 } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-
-export const metadata: Metadata = {
-  title: 'Add Employee | HR Management',
-  description: 'Add a new employee to the system',
-};
 
 export default function AddEmployeePage() {
   const router = useRouter();
