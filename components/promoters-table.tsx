@@ -259,7 +259,7 @@ export function PromotersTable({
 
     setIsUpdating(true);
     try {
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, unknown> = {
         [editingField.field]: editingValue || null,
       };
 

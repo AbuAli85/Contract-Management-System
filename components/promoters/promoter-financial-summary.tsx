@@ -68,101 +68,21 @@ export function PromoterFinancialSummary({
 
   const fetchFinancialData = async () => {
     try {
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
-      if (!supabase) {
-        calculateFromContracts();
-        return;
-      }
-
-      // Try to fetch from payroll_entries via employer_employees
-      let totalEarned = 0;
-      let pendingPayout = 0;
-      const payoutHistory: PayoutRecord[] = [];
-
-      // Get employer_employee_id for this promoter
-      const { data: employerEmployee } = await supabase
-        .from('employer_employees')
-        .select('id')
-        .eq('employee_id', promoterId)
-        .single()
-        .catch(() => ({ data: null, error: null }));
-
-      if (employerEmployee?.id) {
-        // Fetch payroll entries
-        const { data: payrollEntries } = await supabase
-          .from('payroll_entries')
-          .select(
-            'net_salary, payment_status, payment_date, payment_method, created_at'
-          )
-          .eq('employer_employee_id', employerEmployee.id)
-          .order('created_at', { ascending: false })
-          .catch(() => ({ data: [], error: null }));
-
-        if (payrollEntries && payrollEntries.length > 0) {
-          // Calculate totals from real payroll data
-          const completedPayments = payrollEntries.filter(
-            (p: any) => p.payment_status === 'paid'
-          );
-          const pendingPayments = payrollEntries.filter(
-            (p: any) => p.payment_status === 'pending'
-          );
-
-          totalEarned = completedPayments.reduce(
-            (sum: number, p: any) => sum + (Number(p.net_salary) || 0),
-            0
-          );
-          pendingPayout = pendingPayments.reduce(
-            (sum: number, p: any) => sum + (Number(p.net_salary) || 0),
-            0
-          );
-
-          // Build payout history from payroll entries
-          payrollEntries.slice(0, 10).forEach((entry: any) => {
-            if (entry.payment_status === 'paid' && entry.payment_date) {
-              payoutHistory.push({
-                id: entry.id || `payout-${payoutHistory.length}`,
-                amount: Number(entry.net_salary) || 0,
-                date: entry.payment_date,
-                status: 'completed',
-                method: entry.payment_method || 'Bank Transfer',
-              });
-            }
-          });
+      const response = await fetch(`/api/promoters/${promoterId}/performance`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.financial) {
+          setTotalEarned(data.financial.totalEarned || 0);
+          setPendingPayout(data.financial.pendingPayout || 0);
+          setPayoutHistory(data.financial.payoutHistory || []);
+          return;
         }
       }
-
-      // Fallback to contract-based calculation if no payroll data
-      if (totalEarned === 0 && pendingPayout === 0) {
-        calculateFromContracts();
-        return;
-      }
-
-      // Calculate YTD and monthly averages
-      const now = new Date();
-      const yearStart = new Date(now.getFullYear(), 0, 1);
-      const ytdPayments = payoutHistory.filter(
-        p => new Date(p.date) >= yearStart
-      );
-      const ytdEarnings = ytdPayments.reduce((sum, p) => sum + p.amount, 0);
-      const monthsElapsed = Math.max(1, now.getMonth() + 1);
-      const averageMonthly = ytdEarnings / monthsElapsed;
-
-      // Next payout is typically 15th of next month
-      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15);
-
-      setFinancialData({
-        totalEarned: Math.round(totalEarned * 100) / 100,
-        pendingPayout: Math.round(pendingPayout * 100) / 100,
-        nextPayoutDate: format(nextMonth, 'yyyy-MM-dd'),
-        lastPayoutAmount: payoutHistory[0]?.amount || 0,
-        lastPayoutDate: payoutHistory[0]?.date || '',
-        ytdEarnings: Math.round(ytdEarnings * 100) / 100,
-        averageMonthly: Math.round(averageMonthly * 100) / 100,
-        payoutHistory: payoutHistory.slice(0, 10),
-      });
-    } catch (error) {
       calculateFromContracts();
+    } catch {
+      calculateFromContracts();
+    } finally {
+      setIsLoading(false);
     }
   };
 

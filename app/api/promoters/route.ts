@@ -14,11 +14,7 @@ import { logger } from '@/lib/utils/logger';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-// Check if RBAC bypass is enabled for debugging/initial setup
-const RBAC_BYPASS =
-  process.env.RBAC_BYPASS === 'true' ||
-  process.env.RBAC_ENFORCEMENT === 'disabled' ||
-  process.env.RBAC_ENFORCEMENT !== 'true';
+// RBAC is always enforced
 
 // Validation schema for promoter data
 const promoterSchema = z.object({
@@ -137,11 +133,7 @@ async function handleGET(request: Request) {
           success: false,
           error: 'Server configuration error',
           details: 'Missing Supabase environment variables',
-          debug: {
-            hasUrl: !!supabaseUrl,
-            hasAnonKey: !!supabaseAnonKey,
-            timestamp: new Date().toISOString(),
-          },
+
         },
         { status: 500 }
       );
@@ -190,11 +182,7 @@ async function handleGET(request: Request) {
           error: 'Authentication required',
           details:
             authError?.message || 'Please log in to access promoters data',
-          debug: {
-            hasUser: !!user,
-            authError: authError?.message,
-            timestamp: new Date().toISOString(),
-          },
+
         },
         { status: 401 }
       );
@@ -504,12 +492,8 @@ async function handleGET(request: Request) {
   }
 }
 
-// Export GET with optional RBAC protection (bypass when RBAC_ENFORCEMENT is not true)
-export const GET = RBAC_BYPASS
-  ? async (request: Request) => {
-      return handleGET(request);
-    }
-  : withRBAC('promoter:read:own', handleGET);
+// RBAC always enforced for GET
+export const GET = withRBAC('promoter:read:own', handleGET);
 
 // ✅ SECURITY: RBAC enabled with rate limiting
 export const POST = withRBAC(

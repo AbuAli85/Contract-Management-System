@@ -293,50 +293,20 @@ export default function PromoterDetailPage() {
 
     setIsDeleting(true);
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize Supabase client');
+      // Use the API route which handles cascade deletion and auth
+      const response = await fetch(`/api/promoters/${promoterId}`, {
+        method: 'DELETE',
+      });
+      if (response.status === 401) {
+        router.push(`/${locale}/auth/login`);
+        return;
       }
-
-      // Delete related records first (if they exist)
-      await supabase
-        .from('promoter_skills')
-        .delete()
-        .eq('promoter_id', parseInt(promoterId));
-      await supabase
-        .from('promoter_experience')
-        .delete()
-        .eq('promoter_id', parseInt(promoterId));
-      await supabase
-        .from('promoter_education')
-        .delete()
-        .eq('promoter_id', parseInt(promoterId));
-      await supabase
-        .from('promoter_documents')
-        .delete()
-        .eq('promoter_id', parseInt(promoterId));
-
-      // Delete the promoter
-      const { error } = await supabase
-        .from('promoters')
-        .delete()
-        .eq('id', promoterId);
-
-      if (error) {
-        throw new Error(error.message);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Delete failed: ${response.statusText}`);
       }
-
       // Redirect to promoters list
       router.push(`/${locale}/promoters`);
-    } catch (error) {
-      logger.error('Error deleting promoter:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Delete Failed',
-        description: 'Failed to delete promoter. Please try again.',
-      });
-    } finally {
-      setIsDeleting(false);
     }
   }
 
@@ -345,42 +315,30 @@ export default function PromoterDetailPage() {
 
     setIsUpdatingStatus(true);
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize Supabase client');
-      }
-
       const newStatus =
         promoterDetails.status === 'active' ? 'inactive' : 'active';
-
-      const { error } = await supabase
-        .from('promoters')
-        .update({ status: newStatus })
-        .eq('id', promoterId);
-
-      if (error) {
-        throw new Error(error.message);
+      // Use the API route which handles auth and audit logging
+      const response = await fetch(`/api/promoters/${promoterId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (response.status === 401) {
+        router.push(`/${locale}/auth/login`);
+        return;
       }
-
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Update failed: ${response.statusText}`);
+      }
       // Update local state
       setPromoterDetails(prev =>
         prev ? { ...prev, status: newStatus } : null
       );
-
-      // Show success message
       toast({
         title: 'Status Updated',
         description: `Promoter status updated to ${newStatus}`,
       });
-    } catch (error) {
-      logger.error('Error updating promoter status:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Update Failed',
-        description: 'Failed to update promoter status. Please try again.',
-      });
-    } finally {
-      setIsUpdatingStatus(false);
     }
   }
 

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import {
   Card,
   CardContent,
@@ -47,24 +46,22 @@ export default function PromoterDetailsPage() {
 
   async function fetchPromoters() {
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        setError('Failed to initialize database connection');
+      const response = await fetch('/api/promoters?limit=500&page=1');
+      if (response.status === 401) {
+        router.push('/auth/login');
         return;
       }
-
-      const { data, error } = await supabase
-        .from('promoters')
-        .select('id, name_en, name_ar, email, phone, status, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw new Error(error.message);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch promoters: ${response.statusText}`);
       }
-
-      setPromoters(data || []);
-    } catch (error) {
-
+      const data = await response.json();
+      if (data.success && Array.isArray(data.promoters)) {
+        setPromoters(data.promoters);
+      } else {
+        throw new Error(data.error || 'Invalid response format');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load promoters');
     } finally {
       setIsLoading(false);
     }

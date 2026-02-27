@@ -1,87 +1,67 @@
-import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { z } from 'zod';
-import { PromoterFeedback } from '@/lib/types';
-import { NextRequest } from 'next/server';
-
-const feedbackSchema = z.object({
-  feedback_type: z.string(),
-  rating: z.number().optional(),
-  feedback_text: z.string().optional(),
-  strengths: z.array(z.string()).optional(),
-  areas_for_improvement: z.array(z.string()).optional(),
-  is_anonymous: z.boolean().default(false),
-});
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: promoter_id } = await params;
-  const { searchParams } = new URL(req.url);
-  const feedback_type = searchParams.get('feedback_type');
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Placeholder response since promoter_feedback table doesn't exist yet
-  return NextResponse.json([]);
+    const { id: promoterId } = await params;
+    const { data, error } = await supabase
+      .from('promoter_feedback')
+      .select('*')
+      .eq('promoter_id', promoterId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      if (error.code === '42P01') return NextResponse.json({ feedback: [] });
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ feedback: data || [] });
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: promoter_id } = await params;
-  const body = await req.json();
-  const parsed = feedbackSchema.safeParse(body);
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  if (!parsed.success)
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
+    const { id: promoterId } = await params;
+    const body = await request.json();
 
-  // Placeholder response since promoter_feedback table doesn't exist yet
-  return NextResponse.json({
-    id: 'placeholder',
-    promoter_id,
-    ...parsed.data,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-}
+    if (!body.content?.trim()) return NextResponse.json({ error: 'Feedback content is required' }, { status: 400 });
+    if (!body.rating || body.rating < 1 || body.rating > 5) {
+      return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 });
+    }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const body = await req.json();
-  const { id, ...updateData } = body;
+    const { data, error } = await supabase
+      .from('promoter_feedback')
+      .insert([{
+        promoter_id: promoterId,
+        content: body.content.trim(),
+        rating: body.rating,
+        feedback_type: body.feedback_type || 'general',
+        given_by: user.id,
+        created_at: new Date().toISOString(),
+      }])
+      .select()
+      .single();
 
-  if (!id)
-    return NextResponse.json(
-      { error: 'Feedback ID required' },
-      { status: 400 }
-    );
-
-  // Placeholder response since promoter_feedback table doesn't exist yet
-  return NextResponse.json({
-    id,
-    promoter_id,
-    ...updateData,
-    updated_at: new Date().toISOString(),
-  });
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const { id } = await req.json();
-
-  if (!id)
-    return NextResponse.json(
-      { error: 'Feedback ID required' },
-      { status: 400 }
-    );
-
-  // Placeholder response since promoter_feedback table doesn't exist yet
-  return NextResponse.json({ success: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ feedback: data }, { status: 201 });
+  } catch (error) {
+    console.error('Error creating feedback:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

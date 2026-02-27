@@ -38,34 +38,23 @@ export default function EditPromoterPage() {
   useEffect(() => {
     const fetchEmployers = async () => {
       try {
-        const supabase = createClient();
-        if (!supabase) return;
-
-        const { data, error } = await supabase
-          .from('parties')
-          .select('id, name_en, name_ar')
-          .eq('type', 'Employer')
-          .order('name_en', { nullsFirst: true });
-
-        if (error) {
-          // Error is handled by the UI state below
-          return;
-        }
-
+        const response = await fetch('/api/parties?type=Employer&limit=500');
+        if (!response.ok) return;
+        const data = await response.json();
+        const parties = data.parties || data || [];
         setEmployers(
-          (data || []).map((emp: any) => ({
+          parties.map((emp: any) => ({
             id: emp.id,
             name_en: emp.name_en,
             name_ar: emp.name_ar,
           }))
         );
-      } catch (error) {
-        // Error is handled by the UI state below
+      } catch {
+        // Error handled by UI state
       } finally {
         setEmployersLoading(false);
       }
     };
-
     fetchEmployers();
   }, []);
 
@@ -75,49 +64,30 @@ export default function EditPromoterPage() {
     async function fetchPromoter() {
       setIsLoading(true);
       setError(null);
-
       try {
-        const supabase = createClient();
-        if (!supabase) {
-          throw new Error('Failed to initialize database connection');
-        }
-
-        const { data, error } = await supabase
-          .from('promoters')
-          .select('*')
-          .eq('id', promoterId)
-          .single();
-
-        if (error) {
-          // Database error handled by UI state
-          if (error.code === 'PGRST116') {
-            setError(
-              'Promoter not found. The promoter may have been deleted or the ID is invalid.'
-            );
-          } else {
-            setError(`Database error: ${error.message}`);
-          }
-          setIsLoading(false);
+        const response = await fetch(`/api/promoters/${promoterId}`);
+        if (response.status === 401) {
+          router.push(`/${locale}/auth/login`);
           return;
         }
-
-        if (!data) {
-          setError(
-            'Promoter not found. The promoter may have been deleted or the ID is invalid.'
-          );
-          setIsLoading(false);
+        if (response.status === 404) {
+          setError('Promoter not found. The promoter may have been deleted or the ID is invalid.');
           return;
         }
-
-        setPromoter(data);
-        setIsLoading(false);
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          setError(errData.error || `Failed to load promoter: ${response.statusText}`);
+          return;
+        }
+        const data = await response.json();
+        if (!data.success || !data.promoter) {
+          setError('Promoter not found.');
+          return;
+        }
+        setPromoter(data.promoter);
       } catch (err) {
-        // Error handled by UI state
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'An unexpected error occurred while loading the promoter.'
-        );
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred while loading the promoter.');
+      } finally {
         setIsLoading(false);
       }
     }

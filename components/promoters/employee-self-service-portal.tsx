@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import {
   Card,
   CardContent,
@@ -109,7 +108,6 @@ export function EmployeeSelfServicePortal({
 }: EmployeeSelfServicePortalProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const supabase = createClient();
   const [activeTab, setActiveTab] = useState('overview');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [targets, setTargets] = useState<Target[]>([]);
@@ -131,41 +129,35 @@ export function EmployeeSelfServicePortal({
   }, [promoterId]);
 
   const fetchEmployeeData = async () => {
-    if (!supabase) return;
     setIsLoading(true);
-
     try {
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Get employer_employee_id
-      const { data: employeeRecord } = await supabase
-        .from('employer_employees')
-        .select('id')
-        .eq('employee_id', user.id)
-        .eq('employment_status', 'active')
-        .maybeSingle();
-
-      if (employeeRecord) {
-        setEmployerEmployeeId(employeeRecord.id);
-
-        // Fetch all data in parallel
-        await Promise.all([
-          fetchTasks(employeeRecord.id),
-          fetchTargets(employeeRecord.id),
-          fetchPayroll(employeeRecord.id),
-          fetchLetters(employeeRecord.id),
-        ]);
+      const [tasksRes, targetsRes, payrollRes, lettersRes] = await Promise.all([
+        fetch(`/api/promoters/${promoterId}/tasks`),
+        fetch(`/api/promoters/${promoterId}/targets`),
+        fetch(`/api/promoters/${promoterId}/payroll`),
+        fetch(`/api/promoters/${promoterId}/letters`),
+      ]);
+      if (tasksRes.status === 401 || targetsRes.status === 401) {
+        return; // Session expired, middleware will redirect
+      }
+      if (tasksRes.ok) {
+        const d = await tasksRes.json();
+        setTasks(d.tasks || []);
+      }
+      if (targetsRes.ok) {
+        const d = await targetsRes.json();
+        setTargets(d.targets || []);
+      }
+      if (payrollRes.ok) {
+        const d = await payrollRes.json();
+        setPayrollEntries(d.entries || []);
+      }
+      if (lettersRes.ok) {
+        const d = await lettersRes.json();
+        setLetters(d.letters || []);
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load employee data',
-        variant: 'destructive',
-      });
+      console.error('Error fetching employee data:', error);
     } finally {
       setIsLoading(false);
     }

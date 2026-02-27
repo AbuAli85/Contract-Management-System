@@ -19,7 +19,6 @@ import {
   Users,
   BarChart3,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
 interface EmployeeTeamComparisonProps {
   promoterId: string;
@@ -52,91 +51,23 @@ export function EmployeeTeamComparison({
   const fetchTeamMetrics = async () => {
     setIsLoading(true);
     try {
-      const supabase = createClient();
-      if (!supabase || !employerId) {
-        // Mock data if no employer
-        setTeamMetrics({
-          averageScore: 75,
-          rank: 5,
-          totalTeamMembers: 12,
-          percentile: 58,
-          topPerformer: false,
-        });
+      if (!employerId) {
+        setTeamMetrics({ averageScore: 75, rank: 5, totalTeamMembers: 12, percentile: 58, topPerformer: false });
         setIsLoading(false);
         return;
       }
-
-      // Fetch all employees for this employer
-      const { data: teamMembers, error: teamError } = await supabase
-        .from('employer_employees')
-        .select('employee_id, promoters(id, contracts(status))')
-        .eq('employer_id', employerId)
-        .eq('employment_status', 'active');
-
-      if (teamError) {
-        // Show default metrics on error
-        setTeamMetrics({
-          averageScore: performanceScore,
-          rank: 1,
-          totalTeamMembers: 1,
-          percentile: 100,
-          topPerformer: true,
-        });
-        setIsLoading(false);
-        return;
+      const response = await fetch(`/api/promoters/${promoterId}/performance?employerId=${employerId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.teamMetrics) {
+          setTeamMetrics(data.teamMetrics);
+          setIsLoading(false);
+          return;
+        }
       }
-
-      if (teamMembers && teamMembers.length > 0) {
-        // Calculate metrics for each team member
-        const teamScores = teamMembers.map((member: any) => {
-          const memberContracts = member.promoters?.contracts || [];
-          const completed = memberContracts.filter(
-            (c: any) => c.status === 'completed'
-          ).length;
-          const total = memberContracts.length;
-          const score = total > 0 ? (completed / total) * 100 : 0;
-          return { id: member.employee_id, score };
-        });
-
-        // Calculate average
-        const averageScore =
-          teamScores.reduce((sum: number, m: any) => sum + m.score, 0) /
-          teamScores.length;
-
-        // Find current employee's rank
-        const sortedScores = [...teamScores].sort((a, b) => b.score - a.score);
-        const rank = sortedScores.findIndex(s => s.id === promoterId) + 1;
-
-        // Calculate percentile
-        const percentile =
-          rank > 0
-            ? Math.round(((teamScores.length - rank) / teamScores.length) * 100)
-            : 50;
-
-        setTeamMetrics({
-          averageScore: Math.round(averageScore),
-          rank: rank || teamScores.length,
-          totalTeamMembers: teamScores.length,
-          percentile,
-          topPerformer: rank === 1,
-        });
-      } else {
-        setTeamMetrics({
-          averageScore: performanceScore,
-          rank: 1,
-          totalTeamMembers: 1,
-          percentile: 100,
-          topPerformer: true,
-        });
-      }
-    } catch (error) {
-      setTeamMetrics({
-        averageScore: 75,
-        rank: 5,
-        totalTeamMembers: 12,
-        percentile: 58,
-        topPerformer: false,
-      });
+      setTeamMetrics({ averageScore: performanceScore, rank: 1, totalTeamMembers: 1, percentile: 100, topPerformer: true });
+    } catch {
+      setTeamMetrics({ averageScore: performanceScore, rank: 1, totalTeamMembers: 1, percentile: 100, topPerformer: true });
     } finally {
       setIsLoading(false);
     }

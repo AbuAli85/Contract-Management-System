@@ -35,7 +35,6 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import type { DashboardPromoter } from './types';
 
 interface Party {
@@ -91,23 +90,15 @@ export function PartyAssignmentDialog({
   const loadParties = async () => {
     setIsLoading(true);
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize Supabase client');
+      const response = await fetch('/api/parties?type=Employer,Client&status=Active&limit=500');
+      if (response.status === 401) {
+        toast({ title: 'Session expired', description: 'Please refresh the page.', variant: 'destructive' });
+        return;
       }
-
-      const { data, error } = await supabase
-        .from('parties')
-        .select(
-          'id, name_en, name_ar, type, status, contact_email, contact_phone, address_en, crn'
-        )
-        .in('type', ['Employer', 'Client'])
-        .eq('status', 'Active')
-        .order('name_en');
-
-      if (error) throw error;
-      setParties(data || []);
-    } catch (error) {
+      if (!response.ok) throw new Error('Failed to load parties');
+      const data = await response.json();
+      setParties(data.parties || data || []);
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to load parties. Please try again.',
@@ -134,34 +125,30 @@ export function PartyAssignmentDialog({
 
     setIsUpdating(true);
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize Supabase client');
+      const response = await fetch(`/api/promoters/${promoter.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employer_id: selectedPartyId }),
+      });
+      if (response.status === 401) {
+        throw new Error('Session expired. Please refresh the page.');
       }
-
-      const { error } = await supabase
-        .from('promoters')
-        .update({
-          employer_id: selectedPartyId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', promoter.id);
-
-      if (error) throw error;
-
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to update party assignment');
+      }
       toast({
         title: 'Success',
         description: selectedPartyId
           ? 'Party assignment updated successfully'
           : 'Promoter unassigned from party',
       });
-
       onAssignmentUpdate(promoter.id, selectedPartyId);
       onClose();
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to update party assignment. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to update party assignment. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -181,46 +168,32 @@ export function PartyAssignmentDialog({
 
     setIsUpdating(true);
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize Supabase client');
+      const response = await fetch('/api/parties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newPartyData, status: 'Active' }),
+      });
+      if (response.status === 401) {
+        throw new Error('Session expired. Please refresh the page.');
       }
-
-      const { data, error } = await supabase
-        .from('parties')
-        .insert([
-          {
-            ...newPartyData,
-            status: 'Active',
-            created_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to create party');
+      }
+      const data = await response.json();
+      const newParty = data.party || data;
       toast({
         title: 'Success',
-        description: `New party "${data.name_en}" created successfully.`,
+        description: `New party "${newParty.name_en}" created successfully.`,
       });
-
-      // Add to parties list and select it
-      setParties(prev => [...prev, data]);
-      setSelectedPartyId(data.id);
+      setParties(prev => [...prev, newParty]);
+      setSelectedPartyId(newParty.id);
       setShowNewPartyForm(false);
-      setNewPartyData({
-        name_en: '',
-        name_ar: '',
-        type: 'Employer',
-        contact_email: '',
-        contact_phone: '',
-        address_en: '',
-      });
+      setNewPartyData({ name_en: '', name_ar: '', type: 'Employer', contact_email: '', contact_phone: '', address_en: '' });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to create new party. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to create new party. Please try again.',
         variant: 'destructive',
       });
     } finally {

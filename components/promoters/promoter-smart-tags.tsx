@@ -26,7 +26,6 @@ import {
   Search,
   Hash,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
 interface SmartTag {
   id: string;
@@ -220,39 +219,17 @@ export function PromoterSmartTags({
 
   const initializeTags = async () => {
     try {
-      const supabase = createClient();
-
-      if (!supabase) {
-        // Use library tags only
-        setTags(
-          tagLibrary.map((t, i) => ({
-            ...t,
-            id: `library-${i}`,
-            count: Math.floor(Math.random() * 10),
-            isAIGenerated: false,
-          }))
-        );
-        return;
-      }
-
-      // Try to fetch existing tags from database
-      // Note: Only select 'tag' as 'count' column may not exist in all schemas
-      const { data, error } = await supabase
-        .from('promoter_tags')
-        .select('tag')
-        .eq('promoter_id', promoterId);
-
-      if (!error && data) {
-        const dbTags = data.map((t: any) => ({
+      const response = await fetch(`/api/promoters/${promoterId}/tags`);
+      if (response.ok) {
+        const data = await response.json();
+        const dbTags = (data.tags || []).map((t: { tag: string; count?: number }) => ({
           id: t.tag || 'unknown',
           label: t.tag || 'Unknown',
           color: getTagColor(t.tag || ''),
           category: 'custom' as const,
-          count: t.count || 1, // Default to 1 if count column doesn't exist
+          count: t.count || 1,
           isAIGenerated: false,
         }));
-
-        // Merge with library tags
         const allTags = [
           ...tagLibrary.map((t, i) => ({
             ...t,
@@ -262,29 +239,22 @@ export function PromoterSmartTags({
           })),
           ...dbTags,
         ];
-
         setTags(allTags);
       } else {
-        // Use library tags only
-        setTags(
-          tagLibrary.map((t, i) => ({
-            ...t,
-            id: `library-${i}`,
-            count: Math.floor(Math.random() * 10),
-            isAIGenerated: false,
-          }))
-        );
-      }
-    } catch (error) {
-      // Use library tags as fallback
-      setTags(
-        tagLibrary.map((t, i) => ({
+        setTags(tagLibrary.map((t, i) => ({
           ...t,
           id: `library-${i}`,
           count: Math.floor(Math.random() * 10),
           isAIGenerated: false,
-        }))
-      );
+        })));
+      }
+    } catch {
+      setTags(tagLibrary.map((t, i) => ({
+        ...t,
+        id: `library-${i}`,
+        count: Math.floor(Math.random() * 10),
+        isAIGenerated: false,
+      })));
     }
   };
 
@@ -400,29 +370,13 @@ export function PromoterSmartTags({
 
   const saveTagsToDatabase = async (tagsList: string[]) => {
     try {
-      const supabase = createClient();
-
-      if (!supabase) return;
-
-      // Delete existing tags
-      await supabase
-        .from('promoter_tags')
-        .delete()
-        .eq('promoter_id', promoterId);
-
-      // Insert new tags
-      // Note: Only insert tag and promoter_id, as count column may not exist
-      if (tagsList.length > 0) {
-        await supabase.from('promoter_tags').insert(
-          tagsList.map(tag => ({
-            promoter_id: promoterId,
-            tag,
-            // Only include count if the column exists in your schema
-            // count: 1,
-          }))
-        );
-      }
-    } catch (error) {
+      await fetch(`/api/promoters/${promoterId}/tags`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: tagsList }),
+      });
+    } catch {
+      // Silent fail - tags saved locally
     }
   };
 

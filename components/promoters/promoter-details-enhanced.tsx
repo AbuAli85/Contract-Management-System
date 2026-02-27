@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -133,380 +132,58 @@ export function PromoterDetailsEnhanced({
   }, [promoterDetails, promoterId]);
 
   // Fetch performance metrics
+  // Fetch performance metrics via API
   const fetchPerformanceMetrics = useCallback(async () => {
     if (!promoterId) return;
-
     setIsLoadingMetrics(true);
     setMetricsError(null);
-
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize database connection');
+      const response = await fetch(`/api/promoters/${promoterId}/performance`);
+      if (response.status === 401) {
+        setMetricsError('Session expired. Please refresh the page.');
+        return;
       }
-
-      // Fetch real-time data in parallel
-      const [
-        contractsResponse,
-        tasksResponse,
-        attendanceResponse,
-        ratingsResponse,
-      ] = await Promise.allSettled([
-        // Get contract metrics
-        supabase
-          .from('contracts')
-          .select('id, status, start_date, end_date, created_at')
-          .eq('promoter_id', promoterId),
-
-        // Get task metrics (if tasks table exists)
-        supabase
-          .from('promoter_tasks')
-          .select('id, status, created_at, completed_at')
-          .eq('promoter_id', promoterId),
-
-        // Get attendance data (if attendance table exists)
-        supabase
-          .from('promoter_attendance')
-          .select('id, date, status')
-          .eq('promoter_id', promoterId)
-          .gte(
-            'date',
-            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-          ),
-
-        // Get ratings/feedback (if feedback table exists)
-        supabase
-          .from('promoter_feedback')
-          .select('id, rating, created_at')
-          .eq('promoter_id', promoterId),
-      ]);
-
-      // Process contracts data
-      const contracts =
-        contractsResponse.status === 'fulfilled'
-          ? contractsResponse.value.data || []
-          : [];
-      const totalContracts = contracts.length;
-      const activeContracts = contracts.filter(
-        (c: any) => c.status === 'active'
-      ).length;
-      const completedContracts = contracts.filter(
-        (c: any) => c.status === 'completed'
-      ).length;
-
-      // Process tasks data
-      const tasks =
-        tasksResponse.status === 'fulfilled'
-          ? tasksResponse.value.data || []
-          : [];
-      const totalTasks = tasks.length;
-      const completedTasks = tasks.filter(
-        (t: any) => t.status === 'completed'
-      ).length;
-      const pendingTasks = tasks.filter(
-        (t: any) => t.status === 'pending'
-      ).length;
-      const overdueTasks = tasks.filter((t: any) => {
-        if (!t.created_at) return false;
-        const createdDate = new Date(t.created_at);
-        const daysSinceCreated = Math.floor(
-          (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        return daysSinceCreated > 7 && t.status !== 'completed';
-      }).length;
-
-      // Calculate monthly tasks
-      const now = new Date();
-      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-
-      const thisMonthTasks = tasks.filter(
-        (t: any) => t.created_at && new Date(t.created_at) >= thisMonthStart
-      ).length;
-
-      const lastMonthTasks = tasks.filter(
-        (t: any) =>
-          t.created_at &&
-          new Date(t.created_at) >= lastMonthStart &&
-          new Date(t.created_at) <= lastMonthEnd
-      ).length;
-
-      // Process attendance data
-      const attendance =
-        attendanceResponse.status === 'fulfilled'
-          ? attendanceResponse.value.data || []
-          : [];
-      const attendanceRate =
-        attendance.length > 0
-          ? Math.round(
-              (attendance.filter((a: any) => a.status === 'present').length /
-                attendance.length) *
-                100
-            )
-          : 95; // Default high attendance if no data
-
-      // Process ratings data
-      const ratings =
-        ratingsResponse.status === 'fulfilled'
-          ? ratingsResponse.value.data || []
-          : [];
-      const averageRating =
-        ratings.length > 0
-          ? ratings.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) /
-            ratings.length
-          : 4.2; // Default rating if no data
-
-      // Calculate overall score based on multiple factors
-      const taskCompletionRate =
-        totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 90;
-      const contractSuccessRate =
-        totalContracts > 0 ? (completedContracts / totalContracts) * 100 : 85;
-      const overallScore = Math.round(
-        attendanceRate * 0.3 +
-          taskCompletionRate * 0.3 +
-          contractSuccessRate * 0.2 +
-          averageRating * 20 * 0.2
-      );
-
-      const metrics: PerformanceMetrics = {
-        overallScore: Math.min(100, Math.max(0, overallScore)),
-        attendanceRate,
-        taskCompletion: Math.round(taskCompletionRate),
-        customerSatisfaction: Math.round(averageRating * 20), // Convert 5-star to percentage
-        responseTime: 2.5, // This would need actual response time tracking
-        totalTasks,
-        completedTasks,
-        pendingTasks,
-        overdueTasks,
-        thisMonthTasks,
-        lastMonthTasks,
-        averageRating: Number(averageRating.toFixed(1)),
-        totalContracts,
-        activeContracts,
-        completedContracts,
-      };
-
-      setPerformanceMetrics(metrics);
-    } catch (error) {
-      // Error handled by UI empty state
-      setMetricsError(
-        error instanceof Error
-          ? error.message
-          : 'Failed to load performance metrics'
-      );
-      // Set fallback metrics
-      const fallbackMetrics: PerformanceMetrics = {
-        overallScore: 75,
-        attendanceRate: 90,
-        taskCompletion: 80,
-        customerSatisfaction: 85,
-        responseTime: 3.0,
-        totalTasks: 0,
-        completedTasks: 0,
-        pendingTasks: 0,
-        overdueTasks: 0,
-        thisMonthTasks: 0,
-        lastMonthTasks: 0,
-        averageRating: 4.0,
-        totalContracts: promoterDetails?.contracts?.length || 0,
-        activeContracts:
-          promoterDetails?.contracts?.filter((c: any) => c.status === 'active')
-            .length || 0,
-        completedContracts:
-          promoterDetails?.contracts?.filter(
-            (c: any) => c.status === 'completed'
-          ).length || 0,
-      };
-      setPerformanceMetrics(fallbackMetrics);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to load performance metrics');
+      }
+      const data = await response.json();
+      if (data.success && data.metrics) {
+        setPerformanceMetrics(data.metrics);
+      }
+    } catch (err) {
+      setMetricsError(err instanceof Error ? err.message : 'Failed to load metrics');
     } finally {
       setIsLoadingMetrics(false);
     }
-  }, [promoterId, promoterDetails?.contracts]);
+  }, [promoterId]);
 
   // Fetch activities
+  // Fetch activities via API
   const fetchActivities = useCallback(async () => {
     if (!promoterId) return;
-
     setIsLoadingActivities(true);
     setActivitiesError(null);
-
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize database connection');
+      const response = await fetch(`/api/promoters/${promoterId}/activity`);
+      if (response.status === 401) {
+        setActivitiesError('Session expired. Please refresh the page.');
+        return;
       }
-
-      // Fetch real-time activities in parallel
-      const [
-        auditLogsResponse,
-        contractsResponse,
-        documentsResponse,
-        communicationsResponse,
-      ] = await Promise.allSettled([
-        // Get audit logs for this promoter
-        supabase
-          .from('audit_logs')
-          .select(
-            'id, action, table_name, record_id, new_values, old_values, created_at, user_id'
-          )
-          .eq('table_name', 'promoters')
-          .eq('record_id', promoterId)
-          .order('created_at', { ascending: false })
-          .limit(20),
-
-        // Get recent contract activities
-        supabase
-          .from('contracts')
-          .select('id, title, status, created_at, updated_at, contract_number')
-          .eq('promoter_id', promoterId)
-          .order('updated_at', { ascending: false })
-          .limit(10),
-
-        // Get document activities via API route to avoid RLS issues
-        fetch(`/api/promoters/${promoterId}/documents`)
-          .then(res => (res.ok ? res.json() : { documents: [] }))
-          .then(result => ({ data: result.documents || [], error: null }))
-          .catch(error => {
-            return { data: [], error: null };
-          }),
-
-        // Get communications (if communications table exists)
-        supabase
-          .from('promoter_communications')
-          .select('id, type, subject, communication_time')
-          .eq('promoter_id', promoterId)
-          .order('communication_time', { ascending: false })
-          .limit(10),
-      ]);
-
-      const activities: ActivityItem[] = [];
-
-      // Process audit logs
-      if (
-        auditLogsResponse.status === 'fulfilled' &&
-        auditLogsResponse.value.data
-      ) {
-        auditLogsResponse.value.data.forEach((log: any) => {
-          activities.push({
-            id: `audit-${log.id}`,
-            type: 'system',
-            action: `${log.action.charAt(0).toUpperCase() + log.action.slice(1)} Promoter`,
-            description: `Promoter profile was ${log.action}d`,
-            timestamp: log.created_at,
-            user: 'System',
-            metadata: {
-              action: log.action,
-              newValues: log.new_values,
-              oldValues: log.old_values,
-            },
-            status: 'info',
-          });
-        });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to load activity timeline');
       }
-
-      // Process contract activities
-      if (
-        contractsResponse.status === 'fulfilled' &&
-        contractsResponse.value.data
-      ) {
-        contractsResponse.value.data.forEach((contract: any) => {
-          const isNew = contract.created_at === contract.updated_at;
-          activities.push({
-            id: `contract-${contract.id}`,
-            type: 'contract',
-            action: isNew ? 'Contract Created' : 'Contract Updated',
-            description: `${contract.title || 'Untitled Contract'} (${contract.contract_number || contract.id})`,
-            timestamp: isNew ? contract.created_at : contract.updated_at,
-            user: 'System',
-            metadata: {
-              contractId: contract.id,
-              contractTitle: contract.title,
-              contractNumber: contract.contract_number,
-              status: contract.status,
-            },
-            status: contract.status === 'active' ? 'success' : 'info',
-          });
-        });
+      const data = await response.json();
+      if (data.success && Array.isArray(data.activities)) {
+        setActivities(data.activities);
       }
-
-      // Process document activities
-      if (
-        documentsResponse.status === 'fulfilled' &&
-        documentsResponse.value.data
-      ) {
-        documentsResponse.value.data.forEach((doc: any) => {
-          activities.push({
-            id: `document-${doc.id}`,
-            type: 'document',
-            action: 'Document Uploaded',
-            description: `${doc.document_type || 'Document'} was uploaded`,
-            timestamp: doc.created_at,
-            user: 'System',
-            metadata: {
-              documentType: doc.document_type,
-              documentId: doc.id,
-              status: doc.status,
-            },
-            status: doc.status === 'approved' ? 'success' : 'warning',
-          });
-        });
-      }
-
-      // Process communication activities
-      if (
-        communicationsResponse.status === 'fulfilled' &&
-        communicationsResponse.value.data
-      ) {
-        communicationsResponse.value.data.forEach((comm: any) => {
-          activities.push({
-            id: `comm-${comm.id}`,
-            type: 'system',
-            action: 'Communication Sent',
-            description: `${comm.type || 'Message'} sent: ${comm.subject || 'No subject'}`,
-            timestamp: comm.communication_time,
-            user: 'System',
-            metadata: {
-              communicationType: comm.type,
-              subject: comm.subject,
-            },
-            status: 'info',
-          });
-        });
-      }
-
-      // Sort activities by timestamp (most recent first)
-      activities.sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-
-      // Limit to 20 most recent activities
-      const limitedActivities = activities.slice(0, 20);
-
-      setActivities(limitedActivities);
-    } catch (error) {
-      // Error handled by UI empty state
-      setActivitiesError(
-        error instanceof Error ? error.message : 'Failed to load activities'
-      );
-      // Set fallback activities
-      const fallbackActivities: ActivityItem[] = [
-        {
-          id: 'fallback-1',
-          type: 'system',
-          action: 'Profile Created',
-          description: 'Promoter profile was created',
-          timestamp: promoterDetails?.created_at || new Date().toISOString(),
-          user: 'System',
-          status: 'info',
-        },
-      ];
-      setActivities(fallbackActivities);
+    } catch (err) {
+      setActivitiesError(err instanceof Error ? err.message : 'Failed to load activities');
     } finally {
       setIsLoadingActivities(false);
     }
-  }, [promoterId, promoterDetails?.created_at]);
+  }, [promoterId]);
 
   // Refresh data
   const handleRefresh = useCallback(async () => {

@@ -85,7 +85,7 @@ export function PromoterDocumentUploadDialog({
   const documentLabel = DOCUMENT_LABELS[documentType] || 'Document';
 
   // Dropzone configuration
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: { errors: { code: string }[] }[]) => {
     if (rejectedFiles.length > 0) {
       const rejection = rejectedFiles[0];
       if (rejection.errors?.[0]?.code === 'file-too-large') {
@@ -198,7 +198,7 @@ export function PromoterDocumentUploadDialog({
       setUploadProgress(75);
 
       // Update promoter record with document info
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
 
       if (documentType === 'id_card') {
         updateData.id_card_url = publicUrl;

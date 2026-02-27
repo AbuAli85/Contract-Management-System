@@ -51,7 +51,6 @@ import {
   Info,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@/lib/supabase/client';
 import { formatDateForDatabase } from '@/lib/date-utils';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import DocumentUpload from '@/components/document-upload';
@@ -294,35 +293,21 @@ export default function PromoterFormProfessional(
     }, 10000); // 10 second timeout
 
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        clearTimeout(timeoutId);
-        setEmployers([]);
-        setEmployersLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('parties')
-        .select('id, name_en, name_ar')
-        .eq('type', 'Employer')
-        .order('name_en');
-
+      const response = await fetch('/api/parties?type=Employer&limit=500');
       clearTimeout(timeoutId);
-
-      if (error) {
-        // Check for common error types
-        if (error.code === '42501' || error.message?.includes('permission')) {
-        }
-        // Set empty employers instead of throwing
+      if (!response.ok) {
         setEmployers([]);
         return;
       }
-
-      setEmployers(data || []);
-    } catch (error) {
+      const data = await response.json();
+      const parties = data.parties || data || [];
+      setEmployers(parties.map((emp: { id: string; name_en: string; name_ar: string }) => ({
+        id: emp.id,
+        name_en: emp.name_en,
+        name_ar: emp.name_ar,
+      })));
+    } catch {
       clearTimeout(timeoutId);
-      // Error fetching employers - handled gracefully
       setEmployers([]);
     } finally {
       setEmployersLoading(false);
@@ -770,13 +755,8 @@ export default function PromoterFormProfessional(
     setIsLoading(true);
 
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to create Supabase client');
-      }
-
-      // Map form data to database schema - include only existing fields
-      const promoterData: any = {
+      // Map form data to database schema
+      const promoterData: Record<string, unknown> = {
         name_en: formData.full_name?.trim() || '',
         name_ar: formData.name_ar?.trim() || '',
         id_card_number: formData.id_number?.trim() || '',
@@ -787,7 +767,7 @@ export default function PromoterFormProfessional(
         passport_expiry_date: formData.passport_expiry_date
           ? formatDateForDatabase(formData.passport_expiry_date)
           : null,
-        email: formData.email?.trim() || '',
+        email: formData.email?.trim().toLowerCase() || '',
         phone: formData.phone?.trim() || '',
         status: formData.status || 'active',
         notes: formData.notes?.trim() || '',
@@ -795,155 +775,46 @@ export default function PromoterFormProfessional(
         passport_url: formData.passport_url?.trim() || null,
         passport_number: formData.passport_number?.trim() || null,
         profile_picture_url: formData.profile_picture_url?.trim() || null,
-        notify_days_before_id_expiry: parseInt(
-          String(formData.notify_days_before_id_expiry || 90)
-        ),
-        notify_days_before_passport_expiry: parseInt(
-          String(formData.notify_days_before_passport_expiry || 210)
-        ),
-
-        // Personal Information
-        date_of_birth: formData.date_of_birth
-          ? formatDateForDatabase(formData.date_of_birth)
-          : null,
+        notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 90)),
+        notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 210)),
+        date_of_birth: formData.date_of_birth ? formatDateForDatabase(formData.date_of_birth) : null,
         gender: formData.gender?.trim() || null,
         marital_status: formData.marital_status?.trim() || null,
         nationality: formData.nationality?.trim() || null,
-
-        // Address Information
         address: formData.address?.trim() || null,
         city: formData.city?.trim() || null,
-        state: formData.state?.trim() || null,
         country: formData.country?.trim() || null,
-        postal_code: formData.postal_code?.trim() || null,
-        emergency_contact: formData.emergency_contact?.trim() || null,
-        emergency_phone: formData.emergency_phone?.trim() || null,
-
-        // Document Information
-        visa_number: formData.visa_number?.trim() || null,
-        visa_expiry_date: formData.visa_expiry_date
-          ? formatDateForDatabase(formData.visa_expiry_date)
-          : null,
-        work_permit_number: formData.work_permit_number?.trim() || null,
-        work_permit_expiry_date: formData.work_permit_expiry_date
-          ? formatDateForDatabase(formData.work_permit_expiry_date)
-          : null,
-
-        // Professional Information
-        job_title: formData.job_title?.trim() || null,
-        employer_id:
-          formData.employer_id && formData.employer_id.trim() !== ''
-            ? formData.employer_id
-            : null,
-        company: formData.company?.trim() || null,
-        department: formData.department?.trim() || null,
-        specialization: formData.specialization?.trim() || null,
-        experience_years: formData.experience_years
-          ? parseInt(String(formData.experience_years))
-          : null,
-        education_level: formData.education_level?.trim() || null,
-        university: formData.university?.trim() || null,
-        graduation_year: formData.graduation_year
-          ? parseInt(String(formData.graduation_year))
-          : null,
-        skills: formData.skills?.trim() || null,
-        certifications: formData.certifications?.trim() || null,
-
-        // Financial Information
-        bank_name: formData.bank_name?.trim() || null,
-        account_number: formData.account_number?.trim() || null,
-        iban: formData.iban?.trim() || null,
-        swift_code: formData.swift_code?.trim() || null,
-        tax_id: formData.tax_id?.trim() || null,
-
-        // Preferences and Ratings
-        rating: formData.rating ? parseFloat(String(formData.rating)) : null,
-        availability: formData.availability?.trim() || null,
-        preferred_language: formData.preferred_language?.trim() || null,
-        timezone: formData.timezone?.trim() || null,
-        special_requirements: formData.special_requirements?.trim() || null,
-        // Contract & Work Details
-        work_location: formData.work_location?.trim() || null,
-        contract_start_date: formData.contract_start_date
-          ? formatDateForDatabase(formData.contract_start_date)
-          : null,
-        contract_end_date: formData.contract_end_date
-          ? formatDateForDatabase(formData.contract_end_date)
-          : null,
-        salary: formData.salary ? parseFloat(String(formData.salary)) : null,
-        currency: formData.currency?.trim() || 'OMR',
-        tags: formData.tags.length > 0 ? formData.tags : null,
+        employer_id: (formData.employer_id && formData.employer_id !== 'none') ? formData.employer_id : null,
         emergency_contact_name: formData.emergency_contact_name?.trim() || null,
         emergency_contact_phone: formData.emergency_contact_phone?.trim() || null,
         photo_url: formData.photo_url?.trim() || null,
+        tags: formData.tags.length > 0 ? formData.tags : null,
       };
 
-      // Add employer_id if selected (but not "none")
-      if (formData.employer_id && formData.employer_id !== 'none') {
-        promoterData.employer_id = formData.employer_id;
-      } else {
-        // Set to null if "none" is selected or no employer is selected
-        promoterData.employer_id = null;
-      }
-
-      let result;
+      let response: Response;
       if (isEditMode && promoterToEdit) {
-        const idCardNumberChanged =
-          formData.id_number !== safeGetValue(promoterToEdit, 'id_card_number');
-
-        if (idCardNumberChanged && formData.id_number) {
-          const { data: existingPromoter, error: checkError } = await supabase
-            .from('promoters')
-            .select('id')
-            .eq('id_card_number', formData.id_number)
-            .neq('id', promoterToEdit.id)
-            .single();
-
-          if (checkError && checkError.code !== 'PGRST116') {
-            throw new Error(checkError.message);
-          }
-
-          if (existingPromoter) {
-            throw new Error(
-              `ID card number ${formData.id_number} already exists for another promoter`
-            );
-          }
-        }
-
-        result = await supabase
-          .from('promoters')
-          .update(promoterData)
-          .eq('id', promoterToEdit.id);
+        response = await fetch(`/api/promoters/${promoterToEdit.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoterData),
+        });
       } else {
-        // For new promoters, check if ID card number already exists
-        if (formData.id_number) {
-          const { data: existingPromoter, error: checkError } = await supabase
-            .from('promoters')
-            .select('id')
-            .eq('id_card_number', formData.id_number)
-            .single();
-
-          if (checkError && checkError.code !== 'PGRST116') {
-            throw new Error(checkError.message);
-          }
-
-          if (existingPromoter) {
-            throw new Error(
-              `ID card number ${formData.id_number} already exists for another promoter`
-            );
-          }
-        }
-
-        result = await supabase
-          .from('promoters')
-          .insert([{ ...promoterData, created_at: new Date().toISOString() }]);
+        response = await fetch('/api/promoters', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoterData),
+        });
       }
 
-      if (result.error) {
-        throw new Error(result.error.message);
+      if (response.status === 401) {
+        throw new Error('Session expired. Please log in again.');
+      }
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Failed to save promoter: ${response.statusText}`);
       }
 
-       toast({
+      toast({
         title: isEditMode ? 'Promoter Updated' : 'Promoter Added',
         description: isEditMode
           ? 'Promoter details have been updated successfully.'
@@ -952,26 +823,16 @@ export default function PromoterFormProfessional(
       setIsDirty(false);
       onFormSubmit();
     } catch (error) {
-      // Error saving promoter - error message shown to user via toast
-
       let errorMessage = 'Failed to save promoter';
       if (error instanceof Error) {
-        if (
-          error.message.includes('column') &&
-          error.message.includes('does not exist')
-        ) {
-          errorMessage =
-            'Database schema is not up to date. Please contact administrator to apply database migrations.';
-        } else if (
-          error.message.includes('permission') ||
-          error.message.includes('unauthorized')
-        ) {
+        if (error.message.includes('column') && error.message.includes('does not exist')) {
+          errorMessage = 'Database schema is not up to date. Please contact administrator to apply database migrations.';
+        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
           errorMessage = 'Permission denied. Please check your access rights.';
         } else {
           errorMessage = error.message;
         }
       }
-
       toast({
         title: 'Error',
         description: errorMessage,
@@ -980,6 +841,7 @@ export default function PromoterFormProfessional(
     } finally {
       setIsLoading(false);
     }
+  };
   };
 
   // Show loading state during SSR or when formData is not initialized

@@ -31,7 +31,6 @@ import {
   Filter,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { createClient } from '@/lib/supabase/client';
 
 interface Note {
   id: string;
@@ -88,27 +87,18 @@ export function PromoterNotesComments({
   const fetchNotes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const supabase = createClient();
-
-      if (!supabase) {
+      const response = await fetch(`/api/promoters/${promoterId}/notes`);
+      if (response.status === 401) {
         setNotes(getSampleNotes());
         return;
       }
-
-      // Try to fetch from database
-      const { data, error } = await supabase
-        .from('promoter_notes')
-        .select('*')
-        .eq('promoter_id', promoterId)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        setNotes(data as Note[]);
-      } else {
-        // Fallback to sample data if table doesn't exist
+      if (!response.ok) {
         setNotes(getSampleNotes());
+        return;
       }
-    } catch (error) {
+      const data = await response.json();
+      setNotes(data.notes || getSampleNotes());
+    } catch {
       setNotes(getSampleNotes());
     } finally {
       setIsLoading(false);
@@ -193,19 +183,25 @@ export function PromoterNotesComments({
         updated_at: new Date().toISOString(),
       };
 
-      // Try to save to database
-      const supabase = createClient();
-
-      if (supabase) {
-        const { error } = await supabase
-          .from('promoter_notes')
-          .insert([newNoteObj]);
-
-        if (error) {
+      // Save to database via API
+      try {
+        const response = await fetch(`/api/promoters/${promoterId}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newNoteObj),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.note) {
+            setNotes(prev => [data.note, ...prev]);
+            return;
+          }
         }
+      } catch {
+        // Fall through to local state update
       }
 
-      // Update local state regardless
+      // Update local state as fallback
       setNotes(prev => [newNoteObj, ...prev]);
 
       // Reset form
@@ -224,12 +220,13 @@ export function PromoterNotesComments({
     if (!confirm('Are you sure you want to delete this note?')) return;
 
     try {
-      const supabase = createClient();
-
-      if (supabase) {
-        await supabase.from('promoter_notes').delete().eq('id', noteId);
+      const response = await fetch(`/api/promoters/${promoterId}/notes?noteId=${noteId}`, {
+        method: 'DELETE',
+      });
+      if (response.status === 401) {
+        toast({ title: 'Session expired', description: 'Please refresh the page.', variant: 'destructive' });
+        return;
       }
-
       setNotes(prev => prev.filter(note => note.id !== noteId));
     } catch (error) {
       setNotes(prev => prev.filter(note => note.id !== noteId));
@@ -241,14 +238,11 @@ export function PromoterNotesComments({
       const note = notes.find(n => n.id === noteId);
       if (!note) return;
 
-      const supabase = createClient();
-
-      if (supabase) {
-        await supabase
-          .from('promoter_notes')
-          .update({ is_pinned: !note.is_pinned })
-          .eq('id', noteId);
-      }
+      await fetch(`/api/promoters/${promoterId}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ noteId, is_pinned: !note.is_pinned }),
+      });
 
       setNotes(prev =>
         prev.map(n => (n.id === noteId ? { ...n, is_pinned: !n.is_pinned } : n))
@@ -269,14 +263,10 @@ export function PromoterNotesComments({
     if (!editContent.trim()) return;
 
     try {
-      const supabase = createClient();
-
-      if (supabase) {
-        await supabase
-          .from('promoter_notes')
-          .update({
-            content: editContent,
-            updated_at: new Date().toISOString(),
+      await fetch(`/api/promoters/${promoterId}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ noteId: editingNoteId, content: editContent, updated_at: new Date().toISOString(),
           })
           .eq('id', noteId);
       }

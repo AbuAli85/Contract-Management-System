@@ -441,27 +441,15 @@ export default function PromoterForm(props: PromoterFormProps) {
   const fetchCompanies = async () => {
     setLoadingCompanies(true);
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to create Supabase client');
-      }
-
-      const { data, error } = await supabase
-        .from('parties')
-        .select('name_en, name_ar')
-        .eq('type', 'Employer')
-        .order('name_en');
-
-      if (error) {
-        throw error;
-      }
-
-      const companyNames: string[] =
-        data
-          ?.map(party => party.name_en || party.name_ar)
-          .filter((name): name is string => Boolean(name)) || [];
+      const response = await fetch('/api/parties?type=Employer&limit=500');
+      if (!response.ok) return;
+      const data = await response.json();
+      const parties = data.parties || data || [];
+      const companyNames: string[] = parties
+        .map((p: { name_en?: string; name_ar?: string }) => p.name_en || p.name_ar)
+        .filter((name: string | undefined): name is string => Boolean(name));
       setCompanies(companyNames);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to load companies',
@@ -482,103 +470,45 @@ export default function PromoterForm(props: PromoterFormProps) {
     setIsLoading(true);
 
     try {
-      const supabase = createClient();
-
-      if (!supabase) {
-        throw new Error('Failed to create Supabase client');
-      }
-
-      // Map form data to database schema - only include fields that exist in the database
-      // Available fields in promoters table:
-      // - id, name_en, name_ar, id_card_number, id_card_url, passport_url
-      // - passport_number, mobile_number, profile_picture_url
-      // - status, id_card_expiry_date, passport_expiry_date
-      // - notify_days_before_*, notes, created_at, email, phone
-      const promoterData: any = {
+      const promoterData: Record<string, unknown> = {
         name_en: formData.full_name,
         name_ar: formData.name_ar,
         id_card_number: formData.id_number,
         passport_number: formData.passport_number,
         mobile_number: formData.mobile_number,
         id_card_expiry_date: formatDateForDatabase(formData.id_expiry_date),
-        passport_expiry_date: formatDateForDatabase(
-          formData.passport_expiry_date
-        ),
-        email: formData.email,
+        passport_expiry_date: formatDateForDatabase(formData.passport_expiry_date),
+        email: formData.email?.toLowerCase().trim(),
         phone: formData.phone,
         status: formData.status,
         notes: formData.notes,
-        profile_picture_url: formData.profile_picture_url,
-        notify_days_before_id_expiry:
-          formData.notify_days_before_id_expiry ||
-          PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY,
-        notify_days_before_passport_expiry:
-          formData.notify_days_before_passport_expiry ||
-          PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY,
+        id_card_url: uploadedDocuments.id_document?.url || formData.id_card_url || null,
+        passport_url: uploadedDocuments.passport_document?.url || formData.passport_url || null,
+        notify_days_before_id_expiry: formData.notify_days_before_id_expiry || 90,
+        notify_days_before_passport_expiry: formData.notify_days_before_passport_expiry || 210,
       };
 
-      let result;
-      if (isEditMode) {
-        // Check if ID card number has changed
-        const idCardNumberChanged =
-          formData.id_number !== promoterToEdit.id_card_number;
-
-        if (idCardNumberChanged) {
-          // Check if the new ID card number already exists for another promoter
-          const { data: existingPromoter, error: checkError } = await supabase
-            .from('promoters')
-            .select('id')
-            .eq('id_card_number', formData.id_number)
-            .neq('id', promoterToEdit.id) // Exclude current promoter
-            .single();
-
-          if (checkError && checkError.code !== 'PGRST116') {
-            // PGRST116 = no rows returned
-            throw new Error(checkError.message);
-          }
-
-          if (existingPromoter) {
-            throw new Error(
-              `ID card number ${formData.id_number} already exists for another promoter`
-            );
-          }
-
-          // Add ID card number to update data only if it has changed
-          promoterData.id_card_number = formData.id_number;
-        }
-        // If ID card number hasn't changed, don't include it in the update to avoid constraint issues
-
-        // Use API route instead of direct Supabase call for better error handling
-        const response = await fetch(`/api/promoters/${promoterToEdit.id}`, {
+      let response: Response;
+      if (isEditMode && promoterToEdit) {
+        response = await fetch(`/api/promoters/${(promoterToEdit as { id: string }).id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(promoterData),
         });
-
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ error: 'Unknown error' }));
-          throw new Error(
-            errorData.error ||
-              errorData.message ||
-              `Failed to update promoter: ${response.statusText}`
-          );
-        }
-
-        const responseData = await response.json();
-        result = { data: responseData.promoter || responseData, error: null };
       } else {
-        // For new promoters, always include the ID card number
-        promoterData.id_card_number = formData.id_number;
-
-        result = await supabase
-          .from('promoters')
-          .insert([{ ...promoterData, created_at: new Date().toISOString() }]);
+        response = await fetch('/api/promoters', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoterData),
+        });
       }
 
-      if (result.error) {
-        throw new Error(result.error.message);
+      if (response.status === 401) {
+        throw new Error('Session expired. Please log in again.');
+      }
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to save promoter');
       }
 
       toast({
@@ -587,23 +517,17 @@ export default function PromoterForm(props: PromoterFormProps) {
           ? 'Promoter details have been updated successfully.'
           : 'New promoter has been added successfully.',
       });
-
-      // Clear draft after successful submission
-      if (!isEditMode) {
-        autoSave.clearDraft();
-      }
-
       onFormSubmit();
     } catch (error) {
       toast({
         title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to save promoter',
+        description: error instanceof Error ? error.message : 'Failed to save promoter',
         variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
+  };
   };
 
   return (

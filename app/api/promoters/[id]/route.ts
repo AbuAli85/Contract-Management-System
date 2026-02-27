@@ -152,15 +152,15 @@ export const GET = withAnyRBAC(
 
       // Get user session
       const {
-        data: { session },
+        data: { user: sessionUser },
         error: sessionError,
-      } = await supabase.auth.getSession();
+      } = await supabase.auth.getUser();
 
-      if (sessionError || !session?.user) {
+      if (sessionError || !sessionUser) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
-      const userId = session.user.id;
+      const userId = sessionUser.id;
 
       // Handle both UUID and slug-based lookups
       const isFullUUID = isUUID(id);
@@ -216,14 +216,14 @@ export const GET = withAnyRBAC(
             // Use upsert to handle case where record might already exist
             const promoterData = {
               id: userId,
-              email: userProfile.email || session.user.email || '',
+              email: userProfile.email || sessionUser.email || '',
               name_en:
                 userProfile.full_name ||
-                session.user.user_metadata?.full_name ||
+                sessionUser.user_metadata?.full_name ||
                 'User',
               name_ar:
                 userProfile.full_name ||
-                session.user.user_metadata?.full_name ||
+                sessionUser.user_metadata?.full_name ||
                 'User',
               phone: userProfile.phone || null,
               status: 'active',
@@ -409,11 +409,11 @@ export const PUT = withRBAC(
 
       // Get user session
       const {
-        data: { session },
+        data: { user: sessionUser },
         error: sessionError,
-      } = await supabase.auth.getSession();
+      } = await supabase.auth.getUser();
 
-      if (sessionError || !session?.user) {
+      if (sessionError || !sessionUser) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
@@ -529,7 +529,7 @@ export const PUT = withRBAC(
       // After successful update, create audit log
       try {
         await supabase.from('audit_logs').insert({
-          user_id: session.user.id,
+          user_id: sessionUser.id,
           action: 'update',
           table_name: 'promoters',
           record_id: id,
@@ -610,11 +610,11 @@ export const PATCH = withRBAC(
 
       // Get user session
       const {
-        data: { session },
+        data: { user: sessionUser },
         error: sessionError,
-      } = await supabase.auth.getSession();
+      } = await supabase.auth.getUser();
 
-      if (sessionError || !session?.user) {
+      if (sessionError || !sessionUser) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
@@ -730,7 +730,7 @@ export const PATCH = withRBAC(
       // After successful update, create audit log
       try {
         await supabase.from('audit_logs').insert({
-          user_id: session.user.id,
+          user_id: sessionUser.id,
           action: 'update',
           table_name: 'promoters',
           record_id: id,
@@ -808,11 +808,11 @@ export const DELETE = withRBAC(
 
       // Get user session
       const {
-        data: { session },
+        data: { user: sessionUser },
         error: sessionError,
-      } = await supabase.auth.getSession();
+      } = await supabase.auth.getUser();
 
-      if (sessionError || !session?.user) {
+      if (sessionError || !sessionUser) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
@@ -820,7 +820,7 @@ export const DELETE = withRBAC(
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', sessionUser.id)
         .single();
 
       if (!userProfile || !['admin', 'manager'].includes(userProfile.role)) {
@@ -876,7 +876,7 @@ export const DELETE = withRBAC(
       // After successful delete, create audit log
       try {
         await supabase.from('audit_logs').insert({
-          user_id: session.user.id,
+          user_id: user.id,
           action: 'delete',
           table_name: 'promoters',
           record_id: id,

@@ -80,7 +80,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   const queryResult = useQuery<Promoter[], Error>({
     queryKey,
     queryFn: fetchPromoters,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2, // 2 minutes - balance freshness vs API calls
     retry: 3, // Retry 3 times
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: user !== null, // Only run query when we know auth status
@@ -89,7 +89,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   // Handle query errors
   useEffect(() => {
     if (queryResult.error) {
-      console.error('Error fetching promoters:', queryResult.error);
+      devLog('Error fetching promoters:', queryResult.error);
       toast({
         title: 'Error loading promoters',
         description:

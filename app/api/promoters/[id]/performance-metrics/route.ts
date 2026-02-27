@@ -1,76 +1,72 @@
-import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { z } from 'zod';
-import { PromoterPerformanceMetric } from '@/lib/types';
-import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-
-const metricSchema = z.object({
-  metric_type: z.string(),
-  value: z.number(),
-  period_start: z.string(),
-  period_end: z.string(),
-  target_value: z.number().optional(),
-});
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: promoter_id } = await params;
-  const { searchParams } = new URL(req.url);
-  const metric_type = searchParams.get('metric_type');
-  // Note: promoter_performance_metrics table not yet in schema
-  // Returns empty array with metadata for graceful UI handling
-  return NextResponse.json([], {
-    headers: { 'X-Data-Source': 'pending-migration' },
-  });
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { id: promoterId } = await params;
+    const { searchParams } = new URL(request.url);
+    const period = searchParams.get('period') || 'month';
+
+    const { data, error } = await supabase
+      .from('promoter_performance_metrics')
+      .select('*')
+      .eq('promoter_id', promoterId)
+      .eq('period', period)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      if (error.code === '42P01') return NextResponse.json({ metrics: null });
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ metrics: data });
+  } catch (error) {
+    console.error('Error fetching performance metrics:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: promoter_id } = await params;
-  const body = await req.json();
-  const parsed = metricSchema.safeParse(body);
-  if (!parsed.success)
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
-  // Placeholder response since promoter_performance_metrics table doesn't exist yet
-  return NextResponse.json({
-    id: 'placeholder',
-    promoter_id,
-    ...parsed.data,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-}
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const body = await req.json();
-  const { id, ...updateData } = body;
-  if (!id)
-    return NextResponse.json({ error: 'Metric ID required' }, { status: 400 });
-  // Placeholder response since promoter_performance_metrics table doesn't exist yet
-  return NextResponse.json({
-    id,
-    promoter_id,
-    ...updateData,
-    updated_at: new Date().toISOString(),
-  });
-}
+    const { id: promoterId } = await params;
+    const body = await request.json();
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const { id } = await req.json();
-  if (!id)
-    return NextResponse.json({ error: 'Metric ID required' }, { status: 400 });
-  // Placeholder response since promoter_performance_metrics table doesn't exist yet
-  return NextResponse.json({ success: true });
+    const { data, error } = await supabase
+      .from('promoter_performance_metrics')
+      .upsert([{
+        promoter_id: promoterId,
+        period: body.period || 'month',
+        contracts_count: body.contracts_count || 0,
+        active_contracts: body.active_contracts || 0,
+        completed_contracts: body.completed_contracts || 0,
+        total_value: body.total_value || 0,
+        performance_score: body.performance_score || 0,
+        recorded_by: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }], { onConflict: 'promoter_id,period' })
+      .select()
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ metrics: data }, { status: 201 });
+  } catch (error) {
+    console.error('Error recording performance metrics:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

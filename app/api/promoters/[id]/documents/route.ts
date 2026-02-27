@@ -367,13 +367,23 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 400 });
     }
 
-    // Optionally, delete the file from storage
-    // You can add storage deletion logic here if needed
-    // Example:
-    // if (document.file_path) {
-    //   const filePath = document.file_path.split('/').pop();
-    //   await supabase.storage.from('documents').remove([filePath]);
-    // }
+    // Delete the file from storage if a file_path exists
+    if ((document as any).file_path) {
+      try {
+        const filePath = (document as any).file_path;
+        // Extract the path relative to the bucket
+        const bucketPath = filePath.includes('/storage/v1/object/public/')
+          ? filePath.split('/storage/v1/object/public/').pop()?.split('/').slice(1).join('/')
+          : filePath;
+        if (bucketPath) {
+          const bucket = filePath.includes('promoter-documents') ? 'promoter-documents' : 'documents';
+          await supabase.storage.from(bucket).remove([bucketPath]);
+        }
+      } catch (storageError) {
+        // Log but don't fail the request if storage cleanup fails
+        logger.warn('Storage cleanup failed for document:', (document as any).id, storageError);
+      }
+    }
 
     return NextResponse.json(
       {

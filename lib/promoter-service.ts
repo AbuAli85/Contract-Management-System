@@ -113,7 +113,7 @@ async function withRetry<T>(
 }
 
 // Check if an error is retryable
-function isRetryableError(error: any): boolean {
+function isRetryableError(error: unknown): boolean {
   if (!error) return false;
 
   // Network errors are retryable
