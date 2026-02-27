@@ -12,6 +12,22 @@ export function upsertInputFromTask(
   const normalizedStatus = (task.status || '').toLowerCase();
   const isDone = normalizedStatus === 'done';
 
+  // SLA: prefer explicit due_date; otherwise fall back to created_at + 48h
+  let slaDueAt: string | null = null;
+  if (task.due_date) {
+    slaDueAt = task.due_date;
+  } else if (task.created_at) {
+    const created = new Date(task.created_at);
+    if (!Number.isNaN(created.getTime())) {
+      created.setHours(created.getHours() + 48);
+      slaDueAt = created.toISOString();
+    }
+  } else {
+    const now = new Date();
+    now.setHours(now.getHours() + 48);
+    slaDueAt = now.toISOString();
+  }
+
   return {
     companyId: task.company_id,
     workType: 'task',
@@ -21,6 +37,7 @@ export function upsertInputFromTask(
     title: task.title,
     dueAt: task.due_date ?? null,
     assigneeId: task.assigned_to ?? null,
+    slaDueAt,
     source: 'tasks',
     metadata: task.related_contract_id
       ? { related_contract_id: task.related_contract_id }

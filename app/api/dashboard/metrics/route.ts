@@ -1,14 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Run all queries in parallel for performance
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { companyId } = await getCompanyRole(supabase);
+
+    if (!companyId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active company set. Please select an active company first.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Run all queries in parallel for performance, scoped by company
     const [
       promotersResult,
       contractsResult,
@@ -18,18 +43,22 @@ export async function GET(request: NextRequest) {
       supabase
         .from('promoters')
         .select('id, status', { count: 'exact', head: false })
+        .eq('company_id', companyId)
         .limit(1000),
       supabase
         .from('contracts')
         .select('id, status, created_at', { count: 'exact', head: false })
+        .eq('company_id', companyId)
         .limit(1000),
       supabase
         .from('tasks')
         .select('id, status', { count: 'exact', head: false })
+        .eq('company_id', companyId)
         .limit(1000),
       supabase
         .from('contracts')
         .select('id, status, created_at, contract_number')
+        .eq('company_id', companyId)
         .order('created_at', { ascending: false })
         .limit(5),
     ]);

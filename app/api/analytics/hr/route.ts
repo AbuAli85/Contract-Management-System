@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withAnyRBAC } from '@/lib/rbac/guard';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 import {
   startOfMonth,
   endOfMonth,
@@ -36,16 +37,16 @@ export const GET = withAnyRBAC(
 
       const { searchParams } = new URL(request.url);
       const period = searchParams.get('period') || 'month'; // month, quarter, year
-      const companyId = searchParams.get('company_id');
 
-      // Get user's company context
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('active_company_id, role')
-        .eq('id', user.id)
-        .single();
+      // Resolve canonical company context
+      const { companyId: targetCompanyId } = await getCompanyRole(supabase);
 
-      const targetCompanyId = companyId || profile?.active_company_id;
+      if (!targetCompanyId) {
+        return NextResponse.json(
+          { error: 'No active company selected' },
+          { status: 400 }
+        );
+      }
 
       // Calculate date range
       const now = new Date();
@@ -75,9 +76,7 @@ export const GET = withAnyRBAC(
         { count: 'exact' }
       );
 
-      if (targetCompanyId) {
-        employeesQuery = employeesQuery.eq('company_id', targetCompanyId);
-      }
+      employeesQuery = employeesQuery.eq('company_id', targetCompanyId);
 
       const { data: employees, count: totalEmployees } = await employeesQuery;
 
@@ -131,12 +130,10 @@ export const GET = withAnyRBAC(
         .gte('attendance_date', format(startDate, 'yyyy-MM-dd'))
         .lte('attendance_date', format(endDate, 'yyyy-MM-dd'));
 
-      if (targetCompanyId) {
-        attendanceQuery = attendanceQuery.eq(
-          'employer_employee.company_id',
-          targetCompanyId
-        );
-      }
+      attendanceQuery = attendanceQuery.eq(
+        'employer_employee.company_id',
+        targetCompanyId
+      );
 
       const { data: attendanceRecords } = await attendanceQuery;
 
@@ -219,12 +216,10 @@ export const GET = withAnyRBAC(
         )
         .eq('status', 'verified');
 
-      if (targetCompanyId) {
-        documentsQuery = documentsQuery.eq(
-          'employer_employee.company_id',
-          targetCompanyId
-        );
-      }
+      documentsQuery = documentsQuery.eq(
+        'employer_employee.company_id',
+        targetCompanyId
+      );
 
       const { data: documents } = await documentsQuery;
 

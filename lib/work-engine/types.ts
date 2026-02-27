@@ -27,6 +27,7 @@ export interface TaskLike {
   company_id: string;
   title: string;
   status: string;
+  created_at?: string | null;
   priority?: string | null;
   due_date?: string | null;
   assigned_to?: string | null;

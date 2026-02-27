@@ -90,19 +90,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Optional HR profile lookup to enforce "self-only" rule for non-admins
+    // Self-only: non-admin, non-manager may only submit for their own employee_id
     const { data: hrProfile } = await supabase
       .from('hr.user_profiles')
       .select('employee_id, role')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    const isCompanyAdmin = companyRole === 'admin';
-    const isHrManagerOrStaff =
-      hrProfile && ['hr_admin', 'hr_staff', 'manager'].includes(hrProfile.role);
+    const isCompanyAdminOrManager =
+      companyRole === 'admin' || companyRole === 'manager';
 
-    if (!isCompanyAdmin && !isHrManagerOrStaff) {
-      // Regular employee: can only submit requests for themselves
+    if (!isCompanyAdminOrManager) {
       if (!hrProfile?.employee_id || hrProfile.employee_id !== employee_id) {
         return NextResponse.json(
           {

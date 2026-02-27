@@ -70,91 +70,14 @@ export const GET = withRBAC('analytics:read:own', async (_request: NextRequest) 
   }
 });
 
-export const POST = withRBAC('analytics:read:own', async (request: NextRequest) => {
-  try {
-    const supabase = await createClient();
-    const body = await request.json();
-    const { definition, save_as }: { definition: ReportDefinition; save_as?: string } = body;
-
-    if (!definition?.entity || !definition?.fields?.length) {
-      return NextResponse.json(
-        { error: 'entity and fields are required' },
-        { status: 400 }
-      );
-    }
-
-    const table = ENTITY_TABLES[definition.entity];
-    if (!table) {
-      return NextResponse.json({ error: 'Invalid entity' }, { status: 400 });
-    }
-
-    // Validate fields against allowlist to prevent injection
-    const allowedFields = ALLOWED_FIELDS[definition.entity];
-    const safeFields = definition.fields.filter(f => allowedFields.includes(f));
-    if (safeFields.length === 0) {
-      return NextResponse.json({ error: 'No valid fields selected' }, { status: 400 });
-    }
-
-    let query = supabase
-      .from(table)
-      .select(safeFields.join(', '), { count: 'exact' })
-      .limit(definition.limit ?? 500);
-
-    // Apply date range
-    if (definition.date_range) {
-      const { from, to, field } = definition.date_range;
-      if (allowedFields.includes(field)) {
-        query = query.gte(field, from).lte(field, to);
-      }
-    }
-
-    // Apply filters
-    if (definition.filters) {
-      for (const filter of definition.filters) {
-        if (!allowedFields.includes(filter.field)) continue;
-        switch (filter.operator) {
-          case 'eq': query = query.eq(filter.field, filter.value as string); break;
-          case 'neq': query = query.neq(filter.field, filter.value as string); break;
-          case 'gt': query = query.gt(filter.field, filter.value as string); break;
-          case 'gte': query = query.gte(filter.field, filter.value as string); break;
-          case 'lt': query = query.lt(filter.field, filter.value as string); break;
-          case 'lte': query = query.lte(filter.field, filter.value as string); break;
-          case 'like': query = query.ilike(filter.field, '%' + filter.value + '%'); break;
-          case 'in': query = query.in(filter.field, filter.value as string[]); break;
-        }
-      }
-    }
-
-    // Apply ordering
-    if (definition.order_by && allowedFields.includes(definition.order_by)) {
-      query = query.order(definition.order_by, { ascending: definition.order_dir !== 'desc' });
-    } else {
-      query = query.order('created_at', { ascending: false });
-    }
-
-    const { data, error, count } = await query;
-    if (error) throw error;
-
-    // Optionally save the report definition
-    if (save_as) {
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('saved_reports').insert({
-        name: save_as,
-        definition,
-        created_by: user?.id,
-      }).select().single();
-    }
-
-    return NextResponse.json({
-      data: data ?? [],
-      total: count ?? 0,
-      entity: definition.entity,
-      fields: safeFields,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to run report' },
-      { status: 500 }
-    );
-  }
+export const POST = withRBAC('analytics:read:own', async (_request: NextRequest) => {
+  // For multi-tenant safety, the generic report builder is temporarily disabled
+  // until all entity queries are fully scoped by company_id.
+  return NextResponse.json(
+    {
+      error:
+        'The report builder is temporarily disabled while we finalize tenant-safe scoping for all entities.',
+    },
+    { status: 501 }
+  );
 });

@@ -69,7 +69,7 @@ export async function POST(_request: NextRequest) {
     }
 
     const rawItems = data || [];
-    const candidates = rawItems; // already filtered server-side by metadata->>escalated IS NULL
+    const candidates = rawItems;
 
     let escalatedCount = 0;
     // Audit log for the escalation batch (best-effort)
@@ -95,22 +95,66 @@ export async function POST(_request: NextRequest) {
     for (let i = 0; i < candidates.length; i += concurrency) {
       const batch = candidates.slice(i, i + concurrency);
       await Promise.all(
-        batch.map(async item => {
+        batch.map(async (item: any) => {
           try {
             const metadata = ((item as any).metadata ?? {}) as Record<string, any>;
             const entityType: string = item.entity_type;
             const entityId: string = item.entity_id;
+            const workType: string | undefined = (item as any).work_type;
+            const source: string | undefined = (item as any).source;
+            const currentAssignee: string | null =
+              ((item as any).assignee_id as string | null) ?? null;
             const currentState: string = metadata.current_state ?? '';
 
-            const resolvedAssignee =
-              entityType &&
-              (await resolveApprovalAssignee(supabase as any, {
+            let resolvedAssignee: string | null = null;
+
+            const isTaskItem =
+              entityType === 'task' || workType === 'task' || source === 'tasks';
+
+            if (isTaskItem) {
+              // Always resolve a company admin for task escalation (reassign deterministically).
+              const { data: admins, error: adminError } = await supabase
+                .from('user_roles')
+                .select('user_id')
+                .eq('company_id', companyId)
+                .eq('is_active', true)
+                .eq('role', 'admin')
+                .order('user_id', { ascending: true });
+
+              if (adminError) {
+                logger.error(
+                  'Failed to resolve admin assignee for task escalation',
+                  { error: adminError, companyId, workItemId: item.id },
+                  'api/inbox/escalate-overdue'
+                );
+                return;
+              }
+
+              if (!admins || admins.length === 0) {
+                logger.error(
+                  'No admin found for company; skipping task escalation to avoid no-op',
+                  { companyId, workItemId: item.id },
+                  'api/inbox/escalate-overdue'
+                );
+                return;
+              }
+
+              const adminAssignee = admins[0].user_id as string;
+              resolvedAssignee = adminAssignee;
+
+              if (currentAssignee && currentAssignee !== adminAssignee) {
+                metadata.escalated_from = currentAssignee;
+              }
+            } else if (entityType) {
+              // For non-task items (approvals, etc.), reuse centralized approver resolution.
+              resolvedAssignee = await resolveApprovalAssignee(supabase as any, {
                 companyId,
                 entityType,
                 entityId,
                 currentState,
                 requestedBy: null,
-              }));
+              });
+            }
 
             if (!resolvedAssignee) {
               return;

@@ -51,9 +51,9 @@ function buildLink(item: any): string | null {
     return '/hr/leave-requests';
   }
 
-  // Attendance / other HR requests (best-effort mapping)
+  // Attendance correction / HR attendance requests
   if (entityType === 'attendance_request') {
-    return '/employer/team?tab=attendance';
+    return '/hr/attendance';
   }
 
   // Workflow approvals where metadata points to a contract
