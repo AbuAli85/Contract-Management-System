@@ -109,16 +109,18 @@ export const DEFAULT_WORKFLOW_DEFINITIONS = {
     states: [
       { name: 'draft',      label: 'Draft',      isInitial: true,  isTerminal: false, slaHours: null, notifyRoles: [] },
       { name: 'submitted',  label: 'Submitted',  isInitial: false, isTerminal: false, slaHours: 48,   notifyRoles: ['manager'] },
+      { name: 'pending_hr', label: 'Pending HR', isInitial: false, isTerminal: false, slaHours: 48,   notifyRoles: ['admin'] },
       { name: 'approved',   label: 'Approved',   isInitial: false, isTerminal: true,  slaHours: null, notifyRoles: [] },
       { name: 'rejected',   label: 'Rejected',   isInitial: false, isTerminal: true,  slaHours: null, notifyRoles: [] },
       { name: 'cancelled',  label: 'Cancelled',  isInitial: false, isTerminal: true,  slaHours: null, notifyRoles: [] },
     ],
     transitions: [
-      { fromState: 'draft',     toState: 'submitted', triggerName: 'submit',   allowedRoles: null,                    requiresComment: false },
-      { fromState: 'submitted', toState: 'approved',  triggerName: 'approve',  allowedRoles: ['manager', 'admin'],    requiresComment: false },
-      { fromState: 'submitted', toState: 'rejected',  triggerName: 'reject',   allowedRoles: ['manager', 'admin'],    requiresComment: true },
-      { fromState: 'submitted', toState: 'cancelled', triggerName: 'cancel',   allowedRoles: null,                    requiresComment: false },
-      { fromState: 'approved',  toState: 'cancelled', triggerName: 'cancel',   allowedRoles: ['admin'],               requiresComment: true },
+      { fromState: 'draft',      toState: 'submitted',  triggerName: 'submit',          allowedRoles: null,                     requiresComment: false },
+      { fromState: 'submitted',  toState: 'pending_hr', triggerName: 'manager_approve', allowedRoles: ['manager', 'admin'],     requiresComment: false },
+      { fromState: 'pending_hr', toState: 'approved',   triggerName: 'approve',         allowedRoles: ['admin'],                requiresComment: false },
+      { fromState: 'pending_hr', toState: 'rejected',   triggerName: 'reject',          allowedRoles: ['admin'],                requiresComment: true },
+      { fromState: 'submitted',  toState: 'cancelled',  triggerName: 'cancel',          allowedRoles: null,                     requiresComment: false },
+      { fromState: 'approved',   toState: 'cancelled',  triggerName: 'cancel',          allowedRoles: ['admin'],                requiresComment: true },
     ],
   },
 

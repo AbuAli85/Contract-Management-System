@@ -77,10 +77,10 @@ export async function POST(
       );
     }
 
-    // Check if user has permission to approve in HR context
+    // Check if user has permission to approve in HR context (hr.user_profiles role)
     if (!['hr_admin', 'hr_staff', 'manager'].includes(hrProfile.role)) {
       return NextResponse.json(
-        { error: 'Insufficient permissions' },
+        { error: 'Insufficient HR permissions' },
         { status: 403 }
       );
     }
@@ -90,7 +90,7 @@ export async function POST(
       .from('hr.leave_requests')
       .select(
         `
-        id, employee_id, leave_type, start_date, end_date, total_days,
+        id, workflow_entity_id, employee_id, leave_type, start_date, end_date, total_days,
         reason, approval_status, approval_stage, company_id, created_at,
         employees!inner(full_name, employee_code)
       `
@@ -111,11 +111,17 @@ export async function POST(
     const updateData: any = {};
     let triggerName: string | null = null;
 
-    // Stage 1: manager approves -> pending_hr
+    // Stage 1: manager approves -> pending_hr (requires tenant manager role + HR manager role)
     if (leaveRequest.approval_stage === 'pending_manager') {
-      if (hrProfile.role !== 'manager') {
+      if (
+        hrProfile.role !== 'manager' ||
+        !['manager', 'admin'].includes(companyRole)
+      ) {
         return NextResponse.json(
-          { error: 'Only managers can perform the first-stage approval' },
+          {
+            error:
+              'Only company managers with HR manager role can perform the first-stage approval',
+          },
           { status: 403 }
         );
       }
@@ -144,6 +150,8 @@ export async function POST(
         updateData.manager_approved_by = user.id;
         // Keep overall approval_status as pending
         updateData.approval_status = 'pending';
+        // Drive workflow state to pending_hr
+        triggerName = 'manager_approve';
       } else {
         // Manager rejection is terminal
         updateData.approval_stage = 'rejected';
@@ -156,10 +164,13 @@ export async function POST(
         triggerName = 'reject';
       }
     } else if (leaveRequest.approval_stage === 'pending_hr') {
-      // Stage 2: HR approves/rejects
-      if (!['hr_admin', 'hr_staff'].includes(hrProfile.role)) {
+      // Stage 2: HR approves/rejects (requires company admin + HR admin/staff)
+      if (
+        !['hr_admin', 'hr_staff'].includes(hrProfile.role) ||
+        companyRole !== 'admin'
+      ) {
         return NextResponse.json(
-          { error: 'Only HR staff can perform second-stage approval' },
+          { error: 'Only company admins with HR staff/admin role can approve at stage 2' },
           { status: 403 }
         );
       }
@@ -187,7 +198,7 @@ export async function POST(
       );
     }
 
-    const { data, error } = await supabase
+    const { data: updatedLeave, error } = await supabase
       .from('hr.leave_requests')
       .update(updateData)
       .eq('id', leaveRequestId)
@@ -206,7 +217,7 @@ export async function POST(
       )
       .single();
 
-    if (error || !data) {
+    if (error || !updatedLeave) {
       return NextResponse.json(
         { error: 'Failed to update leave request' },
         { status: 500 }
@@ -219,7 +230,7 @@ export async function POST(
       if (triggerName) {
         const wfResult = await wf.transition(
           'leave_request',
-          String(leaveRequest.id),
+          String(leaveRequest.workflow_entity_id),
           triggerName,
           rejection_reason
         );
@@ -234,27 +245,76 @@ export async function POST(
 
       const instance = await wf.getInstance(
         'leave_request',
-        String(leaveRequest.id)
+        String(leaveRequest.workflow_entity_id)
       );
       if (instance) {
         let assigneeId: string | null = null;
-        if (data.approval_stage === 'pending_hr') {
-          // Reassign to HR for second stage
+        if (updatedLeave.approval_stage === 'pending_hr') {
+          // Determine requester auth uid for manager-based routing
+          let requesterUserId: string | null = null;
+          try {
+            const { data: requester } = await supabase
+              .from('hr.user_profiles')
+              .select('user_id')
+              .eq('employee_id', leaveRequest.employee_id)
+              .maybeSingle();
+            if (requester?.user_id) {
+              requesterUserId = requester.user_id as string;
+            }
+          } catch {
+            requesterUserId = null;
+          }
+
+          // Reassign to HR for second stage (or appropriate HR approver)
           assigneeId = await resolveApprovalAssignee(supabase as any, {
             companyId,
             entityType: 'leave_request',
-            entityId: String(leaveRequest.id),
+            entityId: String(leaveRequest.workflow_entity_id),
             currentState: instance.currentState,
-            requestedBy: leaveRequest.employee_id ? null : null,
+            requestedBy: requesterUserId,
           });
         }
 
-        await upsertWorkItem(
-          upsertInputFromWorkflowInstance(instance as any, {
-            createdBy: profileId ?? undefined,
-            ...(instance.assignedTo ? {} : { assigneeId }),
-          } as any)
-        );
+        // Persist assignee into workflow_instances when moving to pending_hr.
+        // Use auth UID directly (matches assignee_id domain in work_items).
+        if (updatedLeave.approval_stage === 'pending_hr' && assigneeId) {
+          try {
+            await supabase
+              .from('workflow_instances')
+              .update({ assigned_to: assigneeId })
+              .eq('company_id', companyId)
+              .eq('entity_type', 'leave_request')
+              .eq('entity_id', leaveRequest.workflow_entity_id);
+          } catch (assignErr) {
+            logger.error(
+              'Failed to persist HR assignee in workflow_instances',
+              { error: assignErr, companyId, leaveRequestId },
+              'api/hr/leave-requests/[id]/approve'
+            );
+          }
+        }
+
+        const baseInput = upsertInputFromWorkflowInstance(instance as any, {
+          createdBy: profileId ?? undefined,
+          ...(instance.assignedTo ? {} : { assigneeId }),
+        } as any);
+
+        // Enrich metadata with approval_stage and optionally adjust title
+        const enrichedInput = {
+          ...baseInput,
+          title:
+            updatedLeave.approval_stage === 'pending_hr'
+              ? 'Leave approval (HR stage)'
+              : updatedLeave.approval_stage === 'pending_manager'
+                ? 'Leave approval (manager stage)'
+                : baseInput.title,
+          metadata: {
+            ...(baseInput.metadata ?? {}),
+            approval_stage: updatedLeave.approval_stage,
+          },
+        };
+
+        await upsertWorkItem(enrichedInput as any);
       }
     } catch (wfError) {
       logger.error(

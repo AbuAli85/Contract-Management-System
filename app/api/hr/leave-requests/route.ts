@@ -233,8 +233,9 @@ export async function POST(request: NextRequest) {
       } as any)
       .select(
         `
-        id, employee_id, leave_type, start_date, end_date, total_days,
-        reason, approval_status, created_at, updated_at
+        id, workflow_entity_id, employee_id, leave_type, start_date, end_date,
+        total_days, reason, approval_status, approval_stage, company_id,
+        created_at, updated_at
       `
       )
       .single();
@@ -248,9 +249,17 @@ export async function POST(request: NextRequest) {
 
     // Start workflow instance and mirror into work_items (best-effort)
     try {
-      const wf = new WorkflowService(supabase, companyId, (await supabase.auth.getUser()).data.user!.id);
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) {
+        throw new Error('Missing auth user for workflow start');
+      }
+      const wf = new WorkflowService(supabase, companyId, authUser.id);
       // Start leave workflow as draft->submitted
-      const startResult = await wf.startLeaveRequest(String(data.id));
+      const startResult = await wf.startLeaveRequest(
+        String(data.workflow_entity_id)
+      );
       if (!startResult.success) {
         logger.error(
           'Failed to start leave workflow',
@@ -259,23 +268,53 @@ export async function POST(request: NextRequest) {
         );
       } else {
         // Fetch latest workflow instance
-        const instance = await wf.getInstance('leave_request', String(data.id));
+        const instance = await wf.getInstance(
+          'leave_request',
+          String(data.workflow_entity_id)
+        );
         if (instance) {
           // Resolve initial assignee (line manager or HR fallback)
           const assigneeId = await resolveApprovalAssignee(supabase as any, {
             companyId,
             entityType: 'leave_request',
-            entityId: String(data.id),
+            entityId: String(data.workflow_entity_id),
             currentState: instance.currentState,
             requestedBy: employee.user_id ?? null,
           });
 
-          await upsertWorkItem(
-            upsertInputFromWorkflowInstance(instance as any, {
-              createdBy: profileId ?? undefined,
-              ...(instance.assignedTo ? {} : { assigneeId }),
-            } as any)
-          );
+          // Persist initial assignee in workflow_instances for determinism
+          if (assigneeId) {
+            try {
+              await supabase
+                .from('workflow_instances')
+                .update({ assigned_to: assigneeId })
+                .eq('company_id', companyId)
+                .eq('entity_type', 'leave_request')
+                .eq('entity_id', data.workflow_entity_id);
+            } catch (assignErr) {
+              logger.error(
+                'Failed to persist initial leave assignee in workflow_instances',
+                { error: assignErr, companyId, leaveRequestId: data.id },
+                'api/hr/leave-requests'
+              );
+            }
+          }
+
+          const baseInput = upsertInputFromWorkflowInstance(instance as any, {
+            createdBy: profileId ?? undefined,
+            ...(instance.assignedTo ? {} : { assigneeId }),
+          } as any);
+
+          const enrichedInput = {
+            ...baseInput,
+            title: 'Leave approval (manager stage)',
+            metadata: {
+              ...(baseInput.metadata ?? {}),
+              approval_stage: data.approval_stage,
+            },
+          };
+
+          await upsertWorkItem(enrichedInput as any);
         }
       }
     } catch (wfError) {

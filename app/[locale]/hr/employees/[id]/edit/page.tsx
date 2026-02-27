@@ -58,7 +58,7 @@ export default function EditEmployeePage() {
         );
 
         // Load potential managers (same company; API already tenant-scoped)
-        const listRes = await fetch('/api/hr/employees?page=1&limit=100');
+        const listRes = await fetch('/api/hr/employees?page=1&limit=500');
         const listData = await listRes.json();
         if (listRes.ok) {
           const emps = (listData.data || []) as Employee[];

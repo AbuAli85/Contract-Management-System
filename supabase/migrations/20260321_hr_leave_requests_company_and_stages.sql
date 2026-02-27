@@ -98,6 +98,17 @@ BEGIN
       ALTER TABLE hr.leave_requests
         ADD COLUMN rejected_by UUID;
     END IF;
+    -- Canonical UUID identifier for workflow + work_items integration
+    IF NOT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'hr'
+        AND table_name = 'leave_requests'
+        AND column_name = 'workflow_entity_id'
+    ) THEN
+      ALTER TABLE hr.leave_requests
+        ADD COLUMN workflow_entity_id UUID NOT NULL DEFAULT gen_random_uuid();
+    END IF;
   END IF;
 END $$;
 
@@ -129,4 +140,7 @@ END $$;
 -- 3. Index for tenant-scoped leave queries
 CREATE INDEX IF NOT EXISTS idx_hr_leave_requests_company
   ON hr.leave_requests (company_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_hr_leave_requests_workflow_entity
+  ON hr.leave_requests (workflow_entity_id);
 

@@ -46,9 +46,9 @@ function buildLink(item: any): string | null {
     }
   }
 
-  // Leave requests
+  // Leave requests (HR leave management)
   if (entityType === 'leave_request') {
-    return '/employer/team?tab=leave';
+    return '/hr/leave-requests';
   }
 
   // Attendance / other HR requests (best-effort mapping)
