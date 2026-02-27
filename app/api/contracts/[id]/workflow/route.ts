@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCompanyRole } from '@/lib/auth/get-company-role';
 import { WorkflowService } from '@/lib/workflow/workflow-service';
+import { upsertWorkItemFromWorkflowInstance } from '@/lib/work-engine/upsertWorkItemFromWorkflowInstance';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,23 @@ export async function POST(
         { error: result.error ?? 'Transition failed' },
         { status: 422 }
       );
+    }
+
+    // Best-effort: mirror workflow instance into Work Engine
+    try {
+      const { data: instance } = await supabase
+        .from('workflow_instances')
+        .select('*')
+        .eq('company_id', companyId)
+        .eq('entity_type', 'contract')
+        .eq('entity_id', contractId)
+        .single();
+
+      if (instance) {
+        await upsertWorkItemFromWorkflowInstance(instance);
+      }
+    } catch {
+      // Do not fail workflow transition on work engine sync issues
     }
 
     return NextResponse.json({
