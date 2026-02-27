@@ -7,13 +7,18 @@ import {
   getClientIdentifier,
 } from '@/lib/security/upstash-rate-limiter';
 import { createAuditLog, logAuditEvent } from '@/lib/security';
+import {
+  checkBruteForce,
+  recordFailedAttempt,
+  clearFailedAttempts,
+  getClientIP,
+} from '@/lib/auth/brute-force-protection';
 
-// Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // ✅ SECURITY: Apply strict rate limiting for login (5 requests per minute per IP)
+    // Rate limiting via Upstash Redis
     const identifier = getClientIdentifier(request);
     const rateLimitResult = await rateLimiters.login.limit(identifier);
 
@@ -25,115 +30,141 @@ export async function POST(request: NextRequest) {
         reset: rateLimitResult.reset,
         retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
       });
-
-      // Log rate limit violation
-      const violation = {
-        timestamp: new Date().toISOString(),
-        endpoint: '/api/auth/login',
-        method: 'POST',
-        ip: identifier.split(':')[0],
-        limit: rateLimitResult.limit,
-        remaining: rateLimitResult.remaining,
-      };
-
-      // Log audit event
       const auditEntry = createAuditLog(request, 'LOGIN_RATE_LIMITED', false, {
         identifier,
         attemptsRemaining: rateLimitResult.remaining,
         retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
       });
       logAuditEvent(auditEntry);
-
       return NextResponse.json(
         {
           success: false,
           error: 'Rate limit exceeded',
-          message: `Too many login attempts. Please wait ${Math.ceil((rateLimitResult.reset - Date.now()) / 1000)} seconds before trying again.`,
+          message: `Too many login attempts. Please wait ${Math.ceil(
+            (rateLimitResult.reset - Date.now()) / 1000
+          )} seconds before trying again.`,
           retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
         },
-        {
-          status: 429,
-          headers,
-        }
+        { status: 429, headers }
       );
     }
 
+    // Parse and validate input
+    let body: { email?: string; password?: string };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
 
-    const { email, password } = await request.json();
+    const { email, password } = body;
 
     if (!email || !password) {
-      const error = AuthErrorHandler.createError(
-        'Email and password are required',
-        'VALIDATION_ERROR'
-      );
-
-      // Log failed validation attempt
-      const auditEntry = createAuditLog(
-        request,
-        'LOGIN_VALIDATION_FAILED',
-        false,
-        { email: email || 'missing', reason: 'missing_credentials' }
-      );
+      const auditEntry = createAuditLog(request, 'LOGIN_VALIDATION_FAILED', false, {
+        email: email || 'missing',
+        reason: 'missing_credentials',
+      });
       logAuditEvent(auditEntry);
-
-      return NextResponse.json(error, { status: 400 });
+      return NextResponse.json(
+        AuthErrorHandler.createError('Email and password are required', 'VALIDATION_ERROR'),
+        { status: 400 }
+      );
     }
 
+    // Normalize email to prevent case-sensitivity attacks
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Server-side brute-force protection
     const supabase = await createClient();
+    const ipAddress = getClientIP(request);
 
+    const bruteForceCheck = await checkBruteForce(supabase, normalizedEmail, ipAddress);
+    if (bruteForceCheck.isBlocked) {
+      const auditEntry = createAuditLog(request, 'LOGIN_BLOCKED_BRUTE_FORCE', false, {
+        email: normalizedEmail,
+        ip: ipAddress,
+        blockedUntil: bruteForceCheck.blockedUntil?.toISOString(),
+      });
+      logAuditEvent(auditEntry);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Account temporarily locked',
+          message: `Too many failed login attempts. Please try again in ${Math.ceil(
+            bruteForceCheck.retryAfterSeconds / 60
+          )} minute(s).`,
+          retryAfter: bruteForceCheck.retryAfterSeconds,
+        },
+        { status: 429 }
+      );
+    }
 
+    // Supabase authentication
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password,
     });
 
-    if (error) {
-
-      // Log failed login attempt
+    if (error || !data.user) {
+      await recordFailedAttempt(supabase, normalizedEmail, ipAddress);
       const auditEntry = createAuditLog(request, 'LOGIN_FAILED', false, {
-        email,
-        error: error.message,
-        errorCode: error.status,
+        email: normalizedEmail,
+        error: error?.message,
+        errorCode: error?.status,
       });
       logAuditEvent(auditEntry);
-
-      // SECURITY FIX: Return generic error message
+      // SECURITY: Generic message — do NOT reveal whether email exists
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { success: false, error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    if (!data.user) {
+    // Check account status
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('status, role')
+      .eq('id', data.user.id)
+      .single();
 
-      // Log authentication failure
-      const auditEntry = createAuditLog(request, 'LOGIN_AUTH_FAILED', false, {
-        email,
-        reason: 'no_user_returned',
+    if (userProfile?.status && userProfile.status !== 'active') {
+      await supabase.auth.signOut();
+      const auditEntry = createAuditLog(request, 'LOGIN_REJECTED_INACTIVE', false, {
+        userId: data.user.id,
+        email: normalizedEmail,
+        status: userProfile.status,
       });
       logAuditEvent(auditEntry);
-
-      // SECURITY FIX: Return generic error message
+      const statusMessages: Record<string, string> = {
+        pending: 'Your account is pending approval. Please contact an administrator.',
+        suspended: 'Your account has been suspended. Please contact an administrator.',
+        deactivated: 'Your account has been deactivated. Please contact an administrator.',
+      };
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { success: false, error: statusMessages[userProfile.status] ?? 'Account is not active' },
+        { status: 403 }
       );
     }
 
+    // Successful login — clear brute-force record
+    await clearFailedAttempts(supabase, normalizedEmail, ipAddress);
 
-    // Log successful login
     const auditEntry = createAuditLog(request, 'LOGIN_SUCCESS', true, {
       userId: data.user.id,
       email: data.user.email,
-      sessionId: `${data.session?.access_token?.substring(0, 10)}...`,
     });
     logAuditEvent(auditEntry);
 
-    // Debug: Log session details
-    if (data.session) {
-    }
-
-    // Add rate limit headers to response
     const responseHeaders = getRateLimitHeaders({
       success: rateLimitResult.success,
       limit: rateLimitResult.limit,
@@ -142,68 +173,24 @@ export async function POST(request: NextRequest) {
       retryAfter: undefined,
     });
 
-    // CRITICAL: Force setSession to ensure cookies are set on the response
-    // The signInWithPassword should have set cookies, but we explicitly set them again
-    if (data.session) {
-      const { error: setError } = await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-      });
-
-      if (setError) {
-      } else {
-      }
-    }
-
-    // Create response with success
-    // The cookies should now be set via the Supabase client's cookie handlers
-    const response = NextResponse.json(
+    return NextResponse.json(
       AuthErrorHandler.createSuccess(
         {
           user: {
             id: data.user.id,
             email: data.user.email,
+            role: userProfile?.role ?? data.user.user_metadata?.role ?? 'user',
           },
         },
         'Login successful'
       ),
-      {
-        headers: responseHeaders,
-      }
+      { headers: responseHeaders }
     );
-
-    // Verify cookies were set
-    const cookieStore = await import('next/headers').then(m => m.cookies());
-    const allCookies = cookieStore.getAll();
-    const authCookies = allCookies.filter(
-      c => c.name.includes('sb-') && c.name.includes('auth-token')
-    );
-
-    if (authCookies.length > 0) {
-      // Copy cookies from cookieStore to response
-      authCookies.forEach(cookie => {
-        response.cookies.set(cookie.name, cookie.value, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-        });
-      });
-    } else {
-    }
-
-
-    return response;
   } catch (error) {
-
-    // Log unexpected error
     const auditEntry = createAuditLog(request, 'LOGIN_ERROR', false, {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
     logAuditEvent(auditEntry);
-
     const apiError = AuthErrorHandler.handleGenericError(error);
     return NextResponse.json(apiError, { status: 500 });
   }

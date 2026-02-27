@@ -329,20 +329,21 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith(path)
       );
 
-      if (
-        !shouldSkipCSRF &&
-        csrfToken &&
-        sessionToken &&
-        csrfToken !== sessionToken
-      ) {
-        return new NextResponse(JSON.stringify({ error: 'Invalid CSRF token' }), {
-          status: 403,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': corsOrigin,
-            'Access-Control-Allow-Credentials': 'true',
-          },
-        });
+      // FIX: Block if CSRF token is missing OR if tokens don't match.
+      // Previous logic only blocked when both tokens existed AND differed,
+      // allowing requests with no CSRF token to pass through unchecked.
+      if (!shouldSkipCSRF && sessionToken) {
+        // A session cookie exists — require a valid CSRF token
+        if (!csrfToken || csrfToken !== sessionToken) {
+          return new NextResponse(JSON.stringify({ error: 'Invalid or missing CSRF token' }), {
+            status: 403,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': corsOrigin,
+              'Access-Control-Allow-Credentials': 'true',
+            },
+          });
+        }
       }
     }
 
@@ -402,6 +403,22 @@ export async function middleware(request: NextRequest) {
 
   // For non-API paths, refresh Supabase session and continue
   response = await refreshSupabaseSession(request, response);
+
+  // Ensure CSRF token is set for all page responses
+  // This allows client-side JS to read it and include in subsequent API calls
+  const existingCsrf = request.cookies.get('csrf-token')?.value;
+  if (!existingCsrf || existingCsrf.length !== 64) {
+    const { randomBytes } = await import('crypto');
+    const newToken = randomBytes(32).toString('hex');
+    response.cookies.set('csrf-token', newToken, {
+      httpOnly: false, // Must be readable by JS
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24, // 24 hours
+    });
+  }
+
   return response;
 }
 
