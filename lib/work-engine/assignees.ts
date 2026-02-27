@@ -30,8 +30,12 @@ export async function resolveApprovalAssignee(
     const normalizedEntityType = entityType.toLowerCase();
     const state = currentState.toLowerCase();
 
-    // 1. Leave approvals: route to the requester's line manager when possible
-    if (normalizedEntityType === 'leave_request' && requestedBy) {
+    // 1. Leave / attendance approvals: route to the requester's line manager when possible
+    if (
+      (normalizedEntityType === 'leave_request' ||
+        normalizedEntityType === 'attendance_request') &&
+      requestedBy
+    ) {
       try {
         const { data: userProfile } = await db
           .from('hr.user_profiles')
