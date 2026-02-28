@@ -138,7 +138,37 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       if (response.status === 401) {
         setCompany(null);
         setRawCompanies([]);
-        if (!silent) setLoadError(null);
+        if (!silent) {
+          // One automatic retry after re-ensuring session (cookie race after login)
+          if (!forceRefresh) {
+            await new Promise(r => setTimeout(r, 800));
+            await ensureSessionInCookies();
+            const retryRes = await fetch(`/api/user/companies?t=${Date.now()}`, {
+              cache: 'no-store',
+              credentials: 'include',
+              headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+            });
+            if (retryRes.ok) {
+              const retryData = await retryRes.json();
+              if (retryData.success && Array.isArray(retryData.companies)) {
+                hasFetchedRef.current = true;
+                setLoadError(null);
+                setRawCompanies(retryData.companies);
+                const activeId = retryData.active_company_id ?? null;
+                const allRaw = retryData.companies;
+                if (activeId) {
+                  const activeRaw = allRaw.find((c: RawCompany) => c.company_id === activeId);
+                  setCompany(activeRaw ? toCompany(activeRaw) : allRaw.length > 0 ? toCompany(allRaw[0]) : null);
+                } else {
+                  setCompany(allRaw.length > 0 ? toCompany(allRaw[0]) : null);
+                }
+                setIsLoading(false);
+                return;
+              }
+            }
+          }
+          setLoadError('Session expired or not found. Sign in again or retry.');
+        }
         return;
       }
 
