@@ -87,10 +87,12 @@ export function CompanySwitcher() {
     try {
       await switchCompany(companyId);
     } catch (error: any) {
+      const message = error?.message || 'Failed to switch company';
       toast({
-        title: 'Switch Failed',
-        description: error.message || 'Failed to switch company',
+        title: 'Switch failed',
+        description: message,
         variant: 'destructive',
+        duration: 5000,
       });
     } finally {
       setSwitchingToId(null);
@@ -196,13 +198,15 @@ export function CompanySwitcher() {
             variant='ghost'
             className='gap-2 px-3 h-10 hover:bg-gray-100 dark:hover:bg-gray-800'
             disabled={isAnySwitching}
+            aria-label={activeCompany ? `Current company: ${activeCompany.name}. Switch company` : 'Select company'}
+            aria-busy={isAnySwitching}
           >
             {isAnySwitching ? (
-              <Loader2 className='h-4 w-4 animate-spin text-blue-500' />
+              <Loader2 className='h-4 w-4 animate-spin text-blue-500 shrink-0' aria-hidden />
             ) : (
-              <Avatar className='h-6 w-6'>
+              <Avatar className='h-6 w-6 shrink-0'>
                 {activeCompany?.logo_url ? (
-                  <AvatarImage src={activeCompany.logo_url} alt={activeCompany.name} />
+                  <AvatarImage src={activeCompany.logo_url} alt="" />
                 ) : null}
                 <AvatarFallback className='text-xs bg-gradient-to-br from-blue-500 to-indigo-600 text-white'>
                   {activeCompany ? getInitials(activeCompany.name) : '?'}
@@ -212,7 +216,7 @@ export function CompanySwitcher() {
             <span className='hidden md:inline max-w-[150px] truncate font-medium text-sm'>
               {activeCompany?.name || 'Select Company'}
             </span>
-            <ChevronDown className='h-4 w-4 text-gray-500' />
+            <ChevronDown className='h-4 w-4 text-gray-500 shrink-0' />
           </Button>
         </DropdownMenuTrigger>
 

@@ -118,7 +118,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10_000);
+      const timeoutId = setTimeout(() => controller.abort(), 15_000);
 
       const response = await fetch(`/api/user/companies${cacheBuster}`, {
         cache: 'no-store',
@@ -138,8 +138,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       if (response.ok && data.success) {
         hasFetchedRef.current = true;
-        const allRaw: RawCompany[] = data.companies ?? [];
-        // No client-side filtering — data quality is managed in the database
+        const allRaw: RawCompany[] = Array.isArray(data.companies) ? data.companies : [];
         setRawCompanies(allRaw);
 
         const activeId: string | null = data.active_company_id ?? null;
@@ -191,12 +190,11 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to switch company');
+        const message = data.error || data.details || 'Failed to switch company';
+        throw new Error(typeof message === 'string' ? message : 'Failed to switch company');
       }
 
-      // FIX: No optimistic update — fetch confirmed state from server to avoid race condition.
-      // The previous code set state optimistically then re-fetched 300ms later, causing
-      // components to render with stale company context between the two state updates.
+      // Refetch companies so context and UI show the new active company
       await fetchActiveCompany(true);
 
       // Invalidate React Query caches so all components re-fetch with new company context
