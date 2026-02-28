@@ -327,7 +327,7 @@ export function withRBAC<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-    // 1. Apply rate limiting first
+    // 1. Rate limiting: /api/auth/* enforced by middleware only (single Redis call)
     const {
       applyRateLimit,
       getRateLimitConfigForEndpoint,
@@ -336,29 +336,22 @@ export function withRBAC<T extends any[]>(
 
     const pathname = request.nextUrl.pathname;
     const method = request.method;
-    const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
-    const alreadyChecked = request.headers.get('x-ratelimit-checked') === '1';
+    const isAuthPath = pathname.startsWith('/api/auth');
 
     let rateLimitResult;
-    if (alreadyChecked) {
+    if (isAuthPath) {
+      // Middleware already enforced — no second Redis call
       rateLimitResult = {
         success: true,
-        limit: 1000,
-        remaining: 999,
+        limit: 5,
+        remaining: 4,
         reset: Date.now() + 60000,
         retryAfter: undefined,
       };
     } else {
       try {
-        rateLimitResult = await applyRateLimit(request, rateLimitConfig);
+        rateLimitResult = await applyRateLimit(request, getRateLimitConfigForEndpoint(pathname, method));
       } catch (err) {
-        const isAuthPath = pathname.startsWith('/api/auth');
-        if (isAuthPath) {
-          return NextResponse.json(
-            { success: false, error: 'Authentication temporarily unavailable' },
-            { status: 503 }
-          );
-        }
         throw err;
       }
     }
@@ -410,7 +403,7 @@ export function withAnyRBAC<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-    // 1. Apply rate limiting first
+    // 1. Rate limiting: /api/auth/* enforced by middleware only (single Redis call)
     const {
       applyRateLimit,
       getRateLimitConfigForEndpoint,
@@ -419,20 +412,23 @@ export function withAnyRBAC<T extends any[]>(
 
     const pathname = request.nextUrl.pathname;
     const method = request.method;
-    const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
+    const isAuthPath = pathname.startsWith('/api/auth');
 
     let rateLimitResult;
-    try {
-      rateLimitResult = await applyRateLimit(request, rateLimitConfig);
-    } catch (err) {
-      const isAuthPath = pathname.startsWith('/api/auth');
-      if (isAuthPath) {
-        return NextResponse.json(
-          { success: false, error: 'Authentication temporarily unavailable' },
-          { status: 503 }
-        );
+    if (isAuthPath) {
+      rateLimitResult = {
+        success: true,
+        limit: 5,
+        remaining: 4,
+        reset: Date.now() + 60000,
+        retryAfter: undefined,
+      };
+    } else {
+      try {
+        rateLimitResult = await applyRateLimit(request, getRateLimitConfigForEndpoint(pathname, method));
+      } catch (err) {
+        throw err;
       }
-      throw err;
     }
 
     if (!rateLimitResult.success) {

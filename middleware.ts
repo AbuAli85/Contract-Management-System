@@ -331,11 +331,12 @@ export async function middleware(request: NextRequest) {
       const csrfToken = request.headers.get('X-CSRF-Token');
       const sessionToken = request.cookies.get('csrf-token')?.value;
 
-      // Skip CSRF check for auth endpoints during login/signup
+      // Skip CSRF check for auth endpoints and browser-initiated reports
       const skipCSRFPaths = [
         '/api/auth/signin',
         '/api/auth/signup',
         '/api/auth/callback',
+        '/api/csp-report', // Browser sends reports without custom headers
       ];
       const shouldSkipCSRF = skipCSRFPaths.some(path =>
         pathname.startsWith(path)
