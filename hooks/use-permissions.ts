@@ -202,8 +202,12 @@ export function usePermissions() {
     return []; // Add specific actions based on role and resource
   };
 
-  // Specific permission checks for common actions
-  const canAddPromoter = () => can('promoter:create') || role === 'admin';
+  // Specific permission checks for common actions (aligned with API: POST uses promoter:manage:own)
+  const canAddPromoter = () =>
+    can('promoter:create') ||
+    can('promoter:manage:own') ||
+    role === 'admin' ||
+    role === 'manager';
   const canEditPromoter = () => can('promoter:update') || role === 'admin';
   const canDeletePromoter = () => can('promoter:delete') || role === 'admin';
   const canBulkDeletePromoters = () =>

@@ -277,7 +277,7 @@ export function PromotersTable({
               }}
               secondaryAction={{
                 label: 'Import CSV',
-                href: `/${locale}/manage-promoters/import`,
+                href: `/${locale}/csv-import`,
               }}
               quickTips={[
                 'Add individual promoters with the form above',

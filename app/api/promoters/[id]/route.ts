@@ -297,6 +297,41 @@ export const GET = withAnyRBAC(
         );
       }
 
+      // ✅ COMPANY SCOPE: Non-admins may only view promoters in their active company (or their own record)
+      const { data: scopeProfile } = await supabase
+        .from('profiles')
+        .select('active_company_id, role')
+        .eq('id', userId)
+        .single();
+      const isAdmin = (scopeProfile as { role?: string } | null)?.role === 'admin';
+      if (!isAdmin && scopeProfile) {
+        const viewingOwn = promoter.id === userId;
+        let activePartyId: string | null = null;
+        if (scopeProfile.active_company_id) {
+          const { data: partyCheck } = await supabase
+            .from('parties')
+            .select('id, type')
+            .eq('id', scopeProfile.active_company_id)
+            .maybeSingle();
+          if (partyCheck?.type === 'Employer') {
+            activePartyId = scopeProfile.active_company_id;
+          } else {
+            const { data: company } = await supabase
+              .from('companies')
+              .select('party_id')
+              .eq('id', scopeProfile.active_company_id)
+              .maybeSingle();
+            if (company?.party_id) activePartyId = company.party_id;
+          }
+        }
+        if (!viewingOwn && activePartyId && promoter.employer_id !== activePartyId) {
+          return NextResponse.json(
+            { error: 'Promoter not found' },
+            { status: 404 }
+          );
+        }
+      }
+
       // Fetch employer data separately
       let employer = null;
       if (promoter.employer_id) {

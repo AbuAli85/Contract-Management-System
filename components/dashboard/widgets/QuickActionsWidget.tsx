@@ -1,5 +1,8 @@
 'use client';
+
+import React from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 
 import { BaseWidget } from '../BaseWidget';
 import { Button } from '@/components/ui/button';
@@ -12,7 +15,6 @@ import {
   BarChart,
   Settings,
 } from 'lucide-react';
-import Link from 'next/link';
 import type { WidgetProps } from '@/lib/types/dashboard';
 
 interface QuickAction {
@@ -24,12 +26,11 @@ interface QuickAction {
   color: 'default' | 'primary' | 'secondary' | 'success' | 'warning';
 }
 
-const DEFAULT_ACTIONS: QuickAction[] = [
+const DEFAULT_ACTION_DEFS: Omit<QuickAction, 'href'>[] = [
   {
     id: 'create_contract',
     label: 'New Contract',
     icon: <Plus className='h-4 w-4' />,
-    href: `/${locale}/contracts/create`,
     description: 'Create a new contract',
     color: 'primary',
   },
@@ -37,7 +38,6 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'add_promoter',
     label: 'Add Promoter',
     icon: <Users className='h-4 w-4' />,
-    href: `/${locale}/promoters/create`,
     description: 'Register new promoter',
     color: 'default',
   },
@@ -45,7 +45,6 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'add_party',
     label: 'Add Party',
     icon: <Building className='h-4 w-4' />,
-    href: `/${locale}/parties/create`,
     description: 'Create new party',
     color: 'default',
   },
@@ -53,7 +52,6 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'search_contracts',
     label: 'Search',
     icon: <Search className='h-4 w-4' />,
-    href: `/${locale}/contracts`,
     description: 'Search contracts',
     color: 'default',
   },
@@ -61,7 +59,6 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'view_reports',
     label: 'Reports',
     icon: <BarChart className='h-4 w-4' />,
-    href: `/${locale}/reports`,
     description: 'View analytics',
     color: 'default',
   },
@@ -69,16 +66,28 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     id: 'settings',
     label: 'Settings',
     icon: <Settings className='h-4 w-4' />,
-    href: `/${locale}/settings`,
     description: 'System settings',
     color: 'default',
   },
 ];
 
+const DEFAULT_HREFS: Record<string, string> = {
+  create_contract: '/contracts/create',
+  add_promoter: '/manage-promoters/new',
+  add_party: '/parties/create',
+  search_contracts: '/contracts',
+  view_reports: '/reports',
+  settings: '/settings',
+};
+
 export function QuickActionsWidget(props: WidgetProps) {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
-  const actions = props.config.customSettings?.actions || DEFAULT_ACTIONS;
+  const defaultActions: QuickAction[] = DEFAULT_ACTION_DEFS.map((def) => ({
+    ...def,
+    href: `/${locale}${DEFAULT_HREFS[def.id] ?? '/dashboard'}`,
+  }));
+  const actions = props.config.customSettings?.actions || defaultActions;
   const layout = props.config.displayOptions?.theme || 'grid'; // 'grid' or 'list'
 
   const getButtonVariant = (color: string) => {
@@ -96,47 +105,49 @@ export function QuickActionsWidget(props: WidgetProps) {
     }
   };
 
+  const content =
+    layout === 'grid' ? (
+      <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
+        {actions.map((action: QuickAction) => (
+          <Link key={action.id} href={action.href}>
+            <Button
+              variant={getButtonVariant(action.color)}
+              className='w-full h-auto py-4 flex-col gap-2'
+            >
+              {action.icon}
+              <span className='text-xs font-medium'>{action.label}</span>
+            </Button>
+          </Link>
+        ))}
+      </div>
+    ) : (
+      <div className='space-y-2'>
+        {actions.map((action: QuickAction) => (
+          <Link key={action.id} href={action.href}>
+            <Button
+              variant='outline'
+              className='w-full justify-start gap-3 h-auto py-3'
+            >
+              {action.icon}
+              <div className='flex-1 text-left'>
+                <div className='font-medium'>{action.label}</div>
+                <div className='text-xs text-muted-foreground'>
+                  {action.description}
+                </div>
+              </div>
+            </Button>
+          </Link>
+        ))}
+      </div>
+    );
+
   return (
     <BaseWidget
       {...props}
       title='Quick Actions'
       description='Common tasks and shortcuts'
       icon={<FileText className='h-4 w-4' />}
-    >
-      {layout === 'grid' ? (
-        <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
-          {actions.map((action: QuickAction) => (
-            <Link key={action.id} href={action.href}>
-              <Button
-                variant={getButtonVariant(action.color)}
-                className='w-full h-auto py-4 flex-col gap-2'
-              >
-                {action.icon}
-                <span className='text-xs font-medium'>{action.label}</span>
-              </Button>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className='space-y-2'>
-          {actions.map((action: QuickAction) => (
-            <Link key={action.id} href={action.href}>
-              <Button
-                variant='outline'
-                className='w-full justify-start gap-3 h-auto py-3'
-              >
-                {action.icon}
-                <div className='flex-1 text-left'>
-                  <div className='font-medium'>{action.label}</div>
-                  <div className='text-xs text-muted-foreground'>
-                    {action.description}
-                  </div>
-                </div>
-              </Button>
-            </Link>
-          ))}
-        </div>
-      )}
-    </BaseWidget>
+      children={content}
+    />
   );
 }

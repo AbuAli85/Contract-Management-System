@@ -1,7 +1,8 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { withRBAC } from '@/lib/rbac/guard';
 import {
   ratelimitStrict,
   getClientIdentifier,
@@ -35,9 +36,8 @@ const importRequestSchema = z.object({
     .max(500, 'Cannot import more than 500 promoters at once'),
 });
 
-export async function POST(request: Request) {
+async function handleImport(request: NextRequest) {
   try {
-    // ✅ SECURITY: Apply rate limiting
     const identifier = getClientIdentifier(request);
     const rateLimitResult = await ratelimitStrict.limit(identifier);
     if (!rateLimitResult.success) {
@@ -101,24 +101,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // ✅ SECURITY: Check user role — only admins and managers can import
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const allowedRoles = ['admin', 'manager', 'employer'];
-    if (!userProfile || !allowedRoles.includes(userProfile.role)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Insufficient permissions',
-          details: 'Only admins and managers can import promoters',
-        },
-        { status: 403 }
-      );
-    }
+    // RBAC enforced by withRBAC('promoter:manage:own') — same as POST /api/promoters
 
     // Parse and validate request body
     const body = await request.json();
@@ -230,3 +213,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withRBAC('promoter:manage:own', handleImport);

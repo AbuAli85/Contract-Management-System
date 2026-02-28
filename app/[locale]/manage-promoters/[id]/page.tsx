@@ -46,6 +46,7 @@ import {
   Archive,
   Building2,
   Activity,
+  UserX,
 } from 'lucide-react';
 import { format, parseISO, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
@@ -779,13 +780,27 @@ export default function PromoterDetailPage() {
 
   if (error || !promoterDetails) {
     return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <div className='text-center'>
-          <p className='mb-4 text-red-600'>{error || 'Promoter not found'}</p>
-          <Button onClick={() => router.push(`/${locale}/promoters`)}>
-            Back to Promoters
-          </Button>
-        </div>
+      <div className='flex min-h-screen items-center justify-center p-4'>
+        <Card className='w-full max-w-md border-destructive/30'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-destructive'>
+              <UserX className='h-5 w-5' />
+              Promoter not found
+            </CardTitle>
+            <CardDescription>
+              {error || 'The promoter may not exist or you may not have permission to view it.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => router.push(`/${locale}/promoters`)}
+              className='gap-2'
+            >
+              <ArrowLeft className='h-4 w-4' />
+              Back to Promoters
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

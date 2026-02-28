@@ -204,7 +204,7 @@ export function PromotersStaticView({
             <RefreshCw className='mr-2 h-4 w-4' />
             Refresh
           </Button>
-          <Button onClick={() => router.push(`/${locale}/promoters/new`)}>
+          <Button onClick={() => router.push(`/${locale}/manage-promoters/new`)}>
             <Plus className='mr-2 h-4 w-4' />
             Add Promoter
           </Button>
@@ -378,7 +378,7 @@ export function PromotersStaticView({
                         <DropdownMenuContent align='end'>
                           <DropdownMenuItem
                             onClick={() =>
-                              router.push(`/${locale}/promoters/${promoter.id}`)
+                              router.push(`/${locale}/manage-promoters/${promoter.id}`)
                             }
                           >
                             <Eye className='mr-2 h-4 w-4' />
@@ -387,7 +387,7 @@ export function PromotersStaticView({
                           <DropdownMenuItem
                             onClick={() =>
                               router.push(
-                                `/${locale}/promoters/${promoter.id}/edit`
+                                `/${locale}/manage-promoters/${promoter.id}/edit`
                               )
                             }
                           >

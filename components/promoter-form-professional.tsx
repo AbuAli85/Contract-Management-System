@@ -587,6 +587,29 @@ export default function PromoterFormProfessional(
     }
   }, [promoterToEdit, fetchEmployers]);
 
+  // Pre-fill employer from active company when adding (not editing) and employers have loaded
+  useEffect(() => {
+    if (promoterToEdit || employersLoading || employers.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/user/active-company-party');
+        if (cancelled || !res.ok) return;
+        const data = await res.json();
+        const partyId = data?.party_id;
+        if (!partyId || typeof partyId !== 'string') return;
+        setFormData(prev => {
+          if (prev.employer_id) return prev;
+          const inList = employers.some(e => e.id === partyId);
+          return inList ? { ...prev, employer_id: partyId } : prev;
+        });
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [promoterToEdit, employersLoading, employers]);
+
    const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsDirty(true);

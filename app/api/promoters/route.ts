@@ -611,9 +611,44 @@ export const POST = withRBAC(
         }
       }
 
+      // Default employer_id from active company when not provided (so new promoters are under current company)
+      let employerId = validatedData.employer_id ?? null;
+      if (!employerId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('active_company_id')
+          .eq('id', user.id)
+          .single();
+        if (profile?.active_company_id) {
+          const { createAdminClient } = await import('@/lib/supabase/server');
+          let adminClient = supabase;
+          try {
+            adminClient = createAdminClient();
+          } catch {
+            // use supabase when service role not available
+          }
+          const { data: partyCheck } = await adminClient
+            .from('parties')
+            .select('id, type')
+            .eq('id', profile.active_company_id)
+            .maybeSingle();
+          if (partyCheck?.type === 'Employer') {
+            employerId = profile.active_company_id;
+          } else {
+            const { data: company } = await adminClient
+              .from('companies')
+              .select('party_id')
+              .eq('id', profile.active_company_id)
+              .maybeSingle();
+            if (company?.party_id) employerId = company.party_id;
+          }
+        }
+      }
+
       // ✅ AUDIT: Track who created this promoter
       const promoterData = {
         ...validatedData,
+        employer_id: employerId ?? validatedData.employer_id ?? null,
         created_by: user.id, // User scoping for non-admins
       };
 
