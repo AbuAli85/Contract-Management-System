@@ -201,12 +201,12 @@ export function CompanySwitcher() {
               <ChevronDown className='h-4 w-4 text-gray-500 shrink-0' />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-[300px]'>
-            <DropdownMenuLabel className='font-normal'>
+          <DropdownMenuContent align='end' className='w-[320px] max-w-[90vw]'>
+            <DropdownMenuLabel className='font-normal space-y-1.5'>
               <p className='text-sm font-medium'>
                 {loadError ? 'Couldn’t load companies' : 'No company selected'}
               </p>
-              <p className='text-xs text-muted-foreground mt-1'>
+              <p className='text-xs text-muted-foreground break-words min-w-0'>
                 {loadError
                   ? loadError
                   : canCreateCompany
