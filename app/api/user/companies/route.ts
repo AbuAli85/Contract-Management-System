@@ -230,6 +230,145 @@ export async function GET(request: NextRequest) {
       adminClient = supabase;
     }
 
+    const minimal =
+      request.nextUrl?.searchParams?.get('minimal') === '1' ||
+      request.nextUrl?.searchParams?.get('minimal') === 'true';
+
+    // Fast path for ?minimal=1: only batched queries, no per-row work (avoids timeout when many employer parties exist)
+    if (minimal) {
+      const fastCompanies: any[] = [];
+
+      const [membershipRes, ownedRes, profileRes] = await Promise.all([
+        adminClient
+          .from('company_members')
+          .select('company_id, role, is_primary, company:companies(id, name, logo_url)')
+          .eq('user_id', user.id)
+          .in('status', ['active', 'invited']),
+        adminClient
+          .from('companies')
+          .select('id, name, logo_url, party_id')
+          .eq('owner_id', user.id),
+        adminClient
+          .from('profiles')
+          .select('active_company_id')
+          .eq('id', user.id)
+          .single(),
+      ]);
+
+      const membershipData = membershipRes.data || [];
+      const ownedData = ownedRes.data || [];
+      const existingIds = new Set<string>();
+
+      for (const cm of membershipData as any[]) {
+        const company = cm.company;
+        if (!company?.id || !company?.name || isInvalidCompany(company.name)) continue;
+        if (existingIds.has(company.id)) continue;
+        existingIds.add(company.id);
+        fastCompanies.push({
+          company_id: company.id,
+          company_name: company.name,
+          company_logo: company.logo_url ?? null,
+          user_role: cm.role || 'member',
+          is_primary: !!cm.is_primary,
+          group_name: null,
+        });
+      }
+      for (const c of ownedData as any[]) {
+        if (!c?.id || !c?.name || isInvalidCompany(c.name) || existingIds.has(c.id)) continue;
+        existingIds.add(c.id);
+        fastCompanies.push({
+          company_id: c.id,
+          company_name: c.name,
+          company_logo: c.logo_url ?? null,
+          user_role: 'owner',
+          is_primary: fastCompanies.length === 0,
+          group_name: null,
+        });
+      }
+
+      const { data: roleRows } = await adminClient
+        .from('user_roles')
+        .select('company_id, role')
+        .eq('user_id', user.id);
+      const roleRowsWithCompany = (roleRows || []).filter((r: any) => r?.company_id);
+      if (roleRowsWithCompany.length > 0) {
+        const ids = [...new Set(roleRowsWithCompany.map((r: any) => r.company_id).filter(Boolean))];
+        const { data: companiesFromRoles } = await adminClient
+          .from('companies')
+          .select('id, name, logo_url')
+          .in('id', ids);
+        for (const c of companiesFromRoles || []) {
+          if (!c?.id || !c?.name || isInvalidCompany(c.name) || existingIds.has(c.id)) continue;
+          existingIds.add(c.id);
+          const roleRow = roleRowsWithCompany.find((r: any) => r.company_id === c.id);
+          fastCompanies.push({
+            company_id: c.id,
+            company_name: c.name,
+            company_logo: c.logo_url ?? null,
+            user_role: roleRow?.role || 'member',
+            is_primary: false,
+            group_name: null,
+          });
+        }
+      }
+
+      const { data: promoterEmployers } = await adminClient
+        .from('promoters')
+        .select('employer_id')
+        .not('employer_id', 'is', null)
+        .eq('created_by', user.id);
+      const employerPartyIds = [...new Set((promoterEmployers || []).map((p: any) => p.employer_id).filter(Boolean))];
+      if (employerPartyIds.length > 0) {
+        const { data: parties } = await adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, logo_url')
+          .in('id', employerPartyIds)
+          .eq('type', 'Employer');
+        for (const party of parties || []) {
+          if (!party?.id || existingIds.has(party.id)) continue;
+          const name = party.name_en || party.name_ar || 'Unknown Company';
+          if (isInvalidCompany(name)) continue;
+          existingIds.add(party.id);
+          fastCompanies.push({
+            company_id: party.id,
+            company_name: name,
+            company_logo: party.logo_url ?? null,
+            user_role: 'member',
+            is_primary: false,
+            group_name: null,
+          });
+        }
+      }
+
+      let activeCompanyId = profileRes.data?.active_company_id ?? null;
+      if (!activeCompanyId && fastCompanies.length > 0) {
+        activeCompanyId = fastCompanies[0].company_id;
+        await adminClient
+          .from('profiles')
+          .update({ active_company_id: activeCompanyId })
+          .eq('id', user.id);
+      }
+
+      const minimalList = fastCompanies.map((c: any) => ({
+        company_id: c.company_id,
+        company_name: c.company_name,
+        company_logo: c.company_logo ?? null,
+        user_role: c.user_role || 'member',
+        is_primary: c.company_id === activeCompanyId,
+        group_name: null,
+      }));
+
+      return NextResponse.json(
+        {
+          success: true,
+          companies: minimalList,
+          active_company_id: activeCompanyId,
+          correlationId,
+        },
+        { headers: withCorrelationId({}, correlationId) }
+      );
+    }
+
     let allCompanies: any[] = [];
     let membershipCompanies: any[] = []; // Track for logging
 
@@ -802,29 +941,7 @@ export async function GET(request: NextRequest) {
       new Map(allCompanies.map(c => [c.company_id, c])).values()
     ).filter(c => c.company_id && c.company_name); // Ensure company has ID and name
 
-    // Fast path: ?minimal=1 returns core list without heavy enrichment (avoids timeout / "Retry" in switcher)
-    const minimal =
-      request.nextUrl?.searchParams?.get('minimal') === '1' ||
-      request.nextUrl?.searchParams?.get('minimal') === 'true';
-    if (minimal) {
-      const minimalCompanies = uniqueCompanies.map((c: any) => ({
-        company_id: c.company_id,
-        company_name: c.company_name,
-        company_logo: c.company_logo ?? null,
-        user_role: c.user_role || 'member',
-        is_primary: c.is_primary ?? false,
-        group_name: null,
-      }));
-      return NextResponse.json(
-        {
-          success: true,
-          companies: minimalCompanies,
-          active_company_id: activeCompanyId,
-          correlationId,
-        },
-        { headers: withCorrelationId({}, correlationId) }
-      );
-    }
+    // (minimal=1 is handled by the fast path at the start of the handler and returns above)
 
     // Fetch group names for all companies
     // Companies can be linked to groups via:
