@@ -124,21 +124,26 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const hasFetchedRef = useRef(false);
   const autoRetryDoneRef = useRef(false);
 
-  // Fallback: same data as Manage Parties (GET /api/parties?type=Employer) when list endpoint fails
-  const fetchCompaniesFromPartiesFallback = useCallback(async (): Promise<boolean> => {
+  // Primary source: same API as Manage Parties (GET /api/parties?type=Employer). No list endpoint.
+  const fetchCompaniesFromParties = useCallback(async (): Promise<boolean> => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20_000);
       const [partiesRes, currentRes] = await Promise.all([
-        fetch('/api/parties?type=Employer&limit=500', {
+        fetch(`/api/parties?type=Employer&limit=500&t=${Date.now()}`, {
           cache: 'no-store',
           credentials: 'include',
-          headers: { 'Cache-Control': 'no-cache' },
+          signal: controller.signal,
+          headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
         }),
         fetch('/api/user/companies/current', {
           cache: 'no-store',
           credentials: 'include',
+          signal: controller.signal,
           headers: { 'Cache-Control': 'no-cache' },
         }),
       ]);
+      clearTimeout(timeoutId);
       const partiesData = await partiesRes.json().catch(() => ({}));
       const currentData = await currentRes.json().catch(() => ({}));
       const parties = Array.isArray(partiesData.parties) ? partiesData.parties : [];
@@ -164,134 +169,44 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // ─── Fetch companies list ──────────────────────────────────────────────────
+  // ─── Fetch companies list (same source as Manage Parties) ───────────────────
   const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
     let loadingGuardId: ReturnType<typeof setTimeout> | null = null;
     try {
       if (!silent) {
         setIsLoading(true);
         setLoadError(null);
-        // Hard cap: never show loading longer than fetch timeout (in case ensureSessionInCookies or fetch hangs)
         loadingGuardId = setTimeout(() => {
           setIsLoading(false);
           setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
-        }, 18_000); // Slightly longer than fetch timeout (15s) so we don't show timeout before request can complete
+        }, 25_000);
       }
 
       await ensureSessionInCookies();
 
-      // Use list endpoint: same employer parties as Manage Parties, 2 queries only, no timeout
-      const url = `/api/user/companies/list${forceRefresh ? `?t=${Date.now()}` : ''}`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15_000); // 15s is enough for 2 queries
-
-      const response = await fetch(url, {
-        cache: 'no-store',
-        signal: controller.signal,
-        credentials: 'include',
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-      });
-      clearTimeout(timeoutId);
-
-      if (response.status === 401) {
-        setCompany(null);
-        setRawCompanies([]);
-        if (!silent) {
-          // One automatic retry after re-ensuring session (cookie race after login)
-          if (!forceRefresh) {
-            await new Promise(r => setTimeout(r, 800));
-            await ensureSessionInCookies();
-            const retryRes = await fetch(`/api/user/companies/list?t=${Date.now()}`, {
-              cache: 'no-store',
-              credentials: 'include',
-              headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-            });
-            if (retryRes.ok) {
-              const retryData = await retryRes.json();
-              if (retryData.success && Array.isArray(retryData.companies)) {
-                hasFetchedRef.current = true;
-                setLoadError(null);
-                setCurrentCompanyDisplay(null);
-                setRawCompanies(retryData.companies);
-                const activeId = retryData.active_company_id ?? null;
-                const allRaw = retryData.companies;
-                if (activeId) {
-                  const activeRaw = allRaw.find((c: RawCompany) => c.company_id === activeId);
-                  setCompany(activeRaw ? toCompany(activeRaw) : allRaw.length > 0 ? toCompany(allRaw[0]) : null);
-                } else {
-                  setCompany(allRaw.length > 0 ? toCompany(allRaw[0]) : null);
-                }
-                if (loadingGuardId) clearTimeout(loadingGuardId);
-                setIsLoading(false);
-                return;
-              }
-            }
-          }
-          setLoadError('Session expired or not found. Sign in again or retry.');
-        }
-        if (!silent && loadingGuardId) clearTimeout(loadingGuardId);
+      const used = await fetchCompaniesFromParties();
+      if (used) {
+        if (loadingGuardId) clearTimeout(loadingGuardId);
+        if (!silent) setIsLoading(false);
         return;
       }
 
-      let data: { success?: boolean; companies?: RawCompany[]; active_company_id?: string | null };
-      try {
-        data = await response.json();
-      } catch {
-        if (!silent) setLoadError('Invalid response from server');
-        setCompany(null);
-        setRawCompanies([]);
-        if (!silent && loadingGuardId) clearTimeout(loadingGuardId);
-        return;
-      }
-
-      if (response.ok && data.success) {
-        const allRaw: RawCompany[] = Array.isArray(data.companies) ? data.companies : [];
-        if (allRaw.length > 0) {
-          hasFetchedRef.current = true;
-          setLoadError(null);
-          setCurrentCompanyDisplay(null);
-          setRawCompanies(allRaw);
-          const activeId: string | null = data.active_company_id ?? null;
-          if (activeId) {
-            const activeRaw = allRaw.find(c => c.company_id === activeId);
-            setCompany(
-              activeRaw
-                ? toCompany(activeRaw)
-                : allRaw.length > 0
-                  ? toCompany(allRaw[0])
-                  : null
-            );
-          } else {
-            setCompany(allRaw.length > 0 ? toCompany(allRaw[0]) : null);
-          }
-        } else {
-          const used = await fetchCompaniesFromPartiesFallback();
-          if (!used && !silent) setLoadError('No companies found. Retry or add employers in Manage Parties.');
-        }
-      } else {
-        setCompany(null);
-        setRawCompanies([]);
-        if (!silent) setLoadError((data as any)?.message || 'Failed to load companies');
-        const used = await fetchCompaniesFromPartiesFallback();
-        if (used && loadingGuardId) clearTimeout(loadingGuardId);
-      }
+      if (!silent) setLoadError('No companies found. Add employers in Manage Parties or retry.');
+      setCompany(null);
+      setRawCompanies([]);
     } catch (err: any) {
       if (!silent) {
-        if (err.name === 'AbortError') {
-          setLoadError('Request timed out. Click to retry.');
-        } else {
-          setLoadError(err?.message || 'Failed to load companies');
-        }
+        setLoadError(err?.message || 'Failed to load companies');
         setCompany(null);
         setRawCompanies([]);
       }
-      const used = await fetchCompaniesFromPartiesFallback();
+      const used = await fetchCompaniesFromParties();
       if (used && loadingGuardId) clearTimeout(loadingGuardId);
     } finally {
       if (loadingGuardId) clearTimeout(loadingGuardId);
       if (!silent) setIsLoading(false);
     }
-  }, [fetchCompaniesFromPartiesFallback]);
+  }, [fetchCompaniesFromParties]);
 
   // ─── Switch company ────────────────────────────────────────────────────────
   const switchCompany = useCallback(async (companyId: string): Promise<void> => {
