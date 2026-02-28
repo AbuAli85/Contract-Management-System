@@ -67,6 +67,7 @@ export function CompanySwitcher() {
     rawCompanies,
     switchCompany,
     isLoading: providerLoading,
+    loadError,
     isSwitching,
     refreshCompany,
   } = useCompany();
@@ -159,18 +160,75 @@ export function CompanySwitcher() {
     );
   }
 
-  // No companies — show create button for eligible roles
-  if (rawCompanies.length === 0 && canCreateCompany) {
+  // No companies — show create button for eligible roles, or error/empty with Retry
+  if (rawCompanies.length === 0) {
+    if (canCreateCompany && !loadError) {
+      return (
+        <>
+          <Button
+            variant='outline'
+            onClick={() => setCreateDialogOpen(true)}
+            className='gap-2'
+          >
+            <Plus className='h-4 w-4' />
+            Create Company
+          </Button>
+          <CreateCompanyDialog
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            newCompany={newCompany}
+            setNewCompany={setNewCompany}
+            onSubmit={handleCreateCompany}
+            creating={creating}
+          />
+        </>
+      );
+    }
+    // No companies and not eligible to create, or load error: show Company dropdown with Retry
     return (
       <>
-        <Button
-          variant='outline'
-          onClick={() => setCreateDialogOpen(true)}
-          className='gap-2'
-        >
-          <Plus className='h-4 w-4' />
-          Create Company
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant='ghost'
+              className='gap-2 px-3 h-10 hover:bg-gray-100 dark:hover:bg-gray-800'
+              aria-label='Company'
+            >
+              <Building2 className='h-4 w-4 shrink-0 text-muted-foreground' />
+              <span className='hidden md:inline max-w-[150px] truncate text-sm text-muted-foreground'>
+                {loadError ? 'Retry' : 'No company'}
+              </span>
+              <ChevronDown className='h-4 w-4 text-gray-500 shrink-0' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-[280px]'>
+            <DropdownMenuLabel className='font-normal'>
+              <p className='text-sm font-medium'>
+                {loadError ? 'Couldn’t load companies' : 'No company selected'}
+              </p>
+              {loadError && (
+                <p className='text-xs text-muted-foreground mt-1'>{loadError}</p>
+              )}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => refreshCompany()}
+              className='flex items-center gap-2 cursor-pointer'
+            >
+              <RefreshCw className='h-4 w-4' />
+              <span>Retry</span>
+            </DropdownMenuItem>
+            {canCreateCompany && (
+              <DropdownMenuItem
+                onClick={() => setCreateDialogOpen(true)}
+                className='flex items-center gap-2 cursor-pointer'
+              >
+                <Plus className='h-4 w-4' />
+                <span>Create company</span>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <CreateCompanyDialog
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
@@ -181,11 +239,6 @@ export function CompanySwitcher() {
         />
       </>
     );
-  }
-
-  // No companies and not eligible to create
-  if (rawCompanies.length === 0) {
-    return null;
   }
 
   const isAnySwitching = isSwitching || switchingToId !== null;

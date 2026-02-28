@@ -53,6 +53,8 @@ interface CompanyContextType {
   /** Full enriched list of all companies — use this in CompanySwitcher */
   rawCompanies: RawCompany[];
   isLoading: boolean;
+  /** Error message when companies failed to load (e.g. network) — show Retry in UI */
+  loadError: string | null;
   /** True while a company switch is in progress — use to disable the switcher UI */
   isSwitching: boolean;
   switchCompany: (companyId: string) => Promise<void>;
@@ -100,6 +102,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [company, setCompany] = useState<Company | null>(null);
   const [rawCompanies, setRawCompanies] = useState<RawCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isSwitching, setIsSwitching] = useState(false);
   const params = useParams();
   const pathname = usePathname();
@@ -113,12 +116,16 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   // ─── Fetch companies list ──────────────────────────────────────────────────
   const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
     try {
-      if (!silent) setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+        setLoadError(null);
+      }
       await ensureSessionInCookies();
 
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15_000);
+      // 8s timeout so UI doesn't show "Loading..." for too long; matches safety timeout
+      const timeoutId = setTimeout(() => controller.abort(), 8_000);
 
       const response = await fetch(`/api/user/companies${cacheBuster}`, {
         cache: 'no-store',
@@ -131,13 +138,23 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       if (response.status === 401) {
         setCompany(null);
         setRawCompanies([]);
+        if (!silent) setLoadError(null);
         return;
       }
 
-      const data = await response.json();
+      let data: { success?: boolean; companies?: RawCompany[]; active_company_id?: string | null };
+      try {
+        data = await response.json();
+      } catch {
+        if (!silent) setLoadError('Invalid response from server');
+        setCompany(null);
+        setRawCompanies([]);
+        return;
+      }
 
       if (response.ok && data.success) {
         hasFetchedRef.current = true;
+        if (!silent) setLoadError(null);
         const allRaw: RawCompany[] = Array.isArray(data.companies) ? data.companies : [];
         setRawCompanies(allRaw);
 
@@ -157,9 +174,15 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       } else {
         setCompany(null);
         setRawCompanies([]);
+        if (!silent) setLoadError((data as any)?.message || 'Failed to load companies');
       }
     } catch (err: any) {
-      if (err.name !== 'AbortError' && !silent) {
+      if (!silent) {
+        if (err.name === 'AbortError') {
+          setLoadError('Request timed out. Click to retry.');
+        } else {
+          setLoadError(err?.message || 'Failed to load companies');
+        }
         setCompany(null);
         setRawCompanies([]);
       }
@@ -282,10 +305,10 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
     init();
 
-    // Hard safety timeout: never block the UI for more than 8 s
+    // Hard safety timeout: never block the UI for more than 10 s (backstop if fetch hangs)
     const safetyTimeout = setTimeout(() => {
       setIsLoading(current => (current ? false : current));
-    }, 8_000);
+    }, 10_000);
 
     return () => {
       clearTimeout(safetyTimeout);
@@ -300,6 +323,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         companyId: company?.id ?? null,
         rawCompanies,
         isLoading,
+        loadError,
         isSwitching,
         switchCompany,
         refreshCompany,
