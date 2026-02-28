@@ -28,6 +28,14 @@ jobs:
       - name: Check pages/ freeze (routing policy)
         run: npm run routing:check-pages-freeze
 
+      - name: Check API RBAC guards
+        run: npm run api:check-guards
+
+      # RBAC_LINT_STRICT: set repo variable RBAC_LINT_STRICT=1 to make blocking. Default: advisory.
+      - name: Run RBAC lint
+        run: npm run rbac:lint
+        continue-on-error: ${{ vars.RBAC_LINT_STRICT != '1' }}
+
       - name: Run linter
         run: npm run lint
         continue-on-error: true
@@ -37,7 +45,23 @@ jobs:
       - name: Run unit tests
         run: npm run test:coverage
         continue-on-error: true
+
+      # TENANT_TEST_STRICT=1: make blocking. When strict, also set TENANT_TEST_ENFORCE_404=1 for 404-only policy.
+      - name: Integration tests (tenant isolation + non-admin denied)
+        run: npm run test:integration
+        continue-on-error: ${{ vars.TENANT_TEST_STRICT != '1' }}
         env:
+          CI: 'true'
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          TEST_TENANT_A_EMAIL: ${{ secrets.TEST_TENANT_A_EMAIL }}
+          TEST_TENANT_A_PASSWORD: ${{ secrets.TEST_TENANT_A_PASSWORD }}
+          TEST_TENANT_B_EMAIL: ${{ secrets.TEST_TENANT_B_EMAIL }}
+          TEST_TENANT_B_PASSWORD: ${{ secrets.TEST_TENANT_B_PASSWORD }}
+          CONTRACT_ID_TENANT_A: ${{ secrets.CONTRACT_ID_TENANT_A }}
+          TEST_NON_ADMIN_EMAIL: ${{ secrets.TEST_NON_ADMIN_EMAIL }}
+          TEST_NON_ADMIN_PASSWORD: ${{ secrets.TEST_NON_ADMIN_PASSWORD }}
+          TENANT_TEST_ENFORCE_404: ${{ vars.TENANT_TEST_STRICT == '1' && '1' || vars.TENANT_TEST_ENFORCE_404 }}
           NODE_OPTIONS: '--max-old-space-size=6144'
 
       - name: Upload coverage to Codecov

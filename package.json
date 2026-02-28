@@ -80,10 +80,14 @@
     "test:validation": "node tests/performance-validation.js",
     "test:validation:prod": "API_BASE_URL=https://portal.thesmartpro.io node tests/performance-validation.js",
     "test:get-token": "node tests/get-auth-token.js",
+    "test:tenant-isolation": "node tests/tenant-isolation.test.js",
+    "test:integration": "npm run test:tenant-isolation && npm run test:non-admin-denied",
+    "test:non-admin-denied": "node tests/non-admin-denied.test.js",
     "test:data-consistency": "node tests/performance-validation.js",
     "test:email": "tsx scripts/test-email.ts",
     "supabase:validate-migrations": "node scripts/validate-migrations.js",
-    "routing:check-pages-freeze": "node scripts/check-pages-freeze.js"
+    "routing:check-pages-freeze": "node scripts/check-pages-freeze.js",
+    "api:check-guards": "node scripts/check-api-guards.js"
   },
   "dependencies": {
     "@e965/xlsx": "^0.20.3",

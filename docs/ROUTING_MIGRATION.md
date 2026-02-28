@@ -85,6 +85,15 @@ Client components receive `authorized={true}` from the server page when the gate
 
 Adjust for your deployment (Vercel env names, etc.).
 
+## RBAC Lint Enforcement
+
+Set `RBAC_LINT_STRICT=1` as a repo variable in GitHub to make `rbac:lint` blocking. Default: advisory (continue-on-error).
+
 ## Next Migration Target
 
 **Recommended:** RBAC centralization for API routes — ensure all sensitive `/api/*` endpoints use a single guard contract; tenant isolation consistent and test-covered.
+
+See `docs/API_RBAC_GUARD_MAPPING.md` for:
+- Top 10 sensitive routes + guard mapping
+- CI script outline (`check-api-guards.js`)
+- 3 integration test assertions (cross-tenant, non-admin, role matrix)
