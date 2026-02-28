@@ -115,17 +115,23 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
   // ─── Fetch companies list ──────────────────────────────────────────────────
   const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
+    let loadingGuardId: ReturnType<typeof setTimeout> | null = null;
     try {
       if (!silent) {
         setIsLoading(true);
         setLoadError(null);
+        // Hard cap: never show loading longer than 9s (in case ensureSessionInCookies or fetch hangs)
+        loadingGuardId = setTimeout(() => {
+          setIsLoading(false);
+          setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
+        }, 9_000);
       }
+
       await ensureSessionInCookies();
 
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
       const controller = new AbortController();
-      // 8s timeout so UI doesn't show "Loading..." for too long; matches safety timeout
-      const timeoutId = setTimeout(() => controller.abort(), 8_000);
+      const timeoutId = setTimeout(() => controller.abort(), 6_000);
 
       const response = await fetch(`/api/user/companies${cacheBuster}`, {
         cache: 'no-store',
@@ -162,6 +168,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
                 } else {
                   setCompany(allRaw.length > 0 ? toCompany(allRaw[0]) : null);
                 }
+                if (loadingGuardId) clearTimeout(loadingGuardId);
                 setIsLoading(false);
                 return;
               }
@@ -169,6 +176,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           }
           setLoadError('Session expired or not found. Sign in again or retry.');
         }
+        if (!silent && loadingGuardId) clearTimeout(loadingGuardId);
         return;
       }
 
@@ -179,6 +187,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         if (!silent) setLoadError('Invalid response from server');
         setCompany(null);
         setRawCompanies([]);
+        if (!silent && loadingGuardId) clearTimeout(loadingGuardId);
         return;
       }
 
@@ -217,6 +226,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         setRawCompanies([]);
       }
     } finally {
+      if (loadingGuardId) clearTimeout(loadingGuardId);
       if (!silent) setIsLoading(false);
     }
   }, []);

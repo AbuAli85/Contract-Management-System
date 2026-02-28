@@ -57,13 +57,13 @@ export function PromotersSimpleHeader({
   const { isLoading: companyLoading, refreshCompany } = useCompany();
   const [showRetryHint, setShowRetryHint] = useState(false);
 
-  // If company has been loading for a few seconds, show Retry so user isn't stuck
+  // If company has been loading for a moment, show Retry so user isn't stuck
   useEffect(() => {
     if (!companyLoading) {
       setShowRetryHint(false);
       return;
     }
-    const t = setTimeout(() => setShowRetryHint(true), 4000);
+    const t = setTimeout(() => setShowRetryHint(true), 2000);
     return () => clearTimeout(t);
   }, [companyLoading]);
 
