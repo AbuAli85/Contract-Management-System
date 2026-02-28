@@ -128,7 +128,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const fetchCompaniesFromParties = useCallback(async (): Promise<boolean> => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20_000);
+      const timeoutId = setTimeout(() => controller.abort(), 40_000); // 40s for cold start / slow host
       const [partiesRes, currentRes] = await Promise.all([
         fetch(`/api/parties?type=Employer&limit=500&t=${Date.now()}`, {
           cache: 'no-store',
@@ -179,12 +179,16 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         loadingGuardId = setTimeout(() => {
           setIsLoading(false);
           setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
-        }, 25_000);
+        }, 45_000); // slightly longer than fetch timeout
       }
 
       await ensureSessionInCookies();
 
-      const used = await fetchCompaniesFromParties();
+      let used = await fetchCompaniesFromParties();
+      if (!used && !forceRefresh) {
+        await new Promise(r => setTimeout(r, 1500)); // retry once after 1.5s (cold start)
+        used = await fetchCompaniesFromParties();
+      }
       if (used) {
         if (loadingGuardId) clearTimeout(loadingGuardId);
         if (!silent) setIsLoading(false);
