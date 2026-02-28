@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,7 +54,18 @@ export function PromotersSimpleHeader({
   }, [locale]);
 
   const router = useRouter();
-  const { isLoading: companyLoading } = useCompany();
+  const { isLoading: companyLoading, refreshCompany } = useCompany();
+  const [showRetryHint, setShowRetryHint] = useState(false);
+
+  // If company has been loading for a few seconds, show Retry so user isn't stuck
+  useEffect(() => {
+    if (!companyLoading) {
+      setShowRetryHint(false);
+      return;
+    }
+    const t = setTimeout(() => setShowRetryHint(true), 4000);
+    return () => clearTimeout(t);
+  }, [companyLoading]);
 
   const handleAdd = () => {
     if (onAddPromoter) {
@@ -91,9 +102,20 @@ export function PromotersSimpleHeader({
           <div className="flex items-center gap-2 pt-1">
             <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
             {companyLoading ? (
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Loading company…
+              <span className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                <span className="flex items-center gap-1.5">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading company…
+                </span>
+                {showRetryHint && (
+                  <button
+                    type="button"
+                    onClick={() => refreshCompany()}
+                    className="text-xs text-primary hover:underline focus:outline-none focus:underline"
+                  >
+                    Retry
+                  </button>
+                )}
               </span>
             ) : (
               <>
