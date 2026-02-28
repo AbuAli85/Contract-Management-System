@@ -186,9 +186,12 @@ export function CompanySwitcher() {
       );
     }
     // No companies and not eligible to create, or load error: show Company dropdown with Retry (and current name if available)
+    const handleDropdownOpen = (open: boolean) => {
+      if (open) refreshCompany(); // Refetch when user opens dropdown to change company
+    };
     return (
       <>
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={handleDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant='ghost'
@@ -220,13 +223,20 @@ export function CompanySwitcher() {
               </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => refreshCompany()}
-              className='flex items-center gap-2 cursor-pointer'
-            >
-              <RefreshCw className='h-4 w-4' />
-              <span>Retry</span>
-            </DropdownMenuItem>
+            {providerLoading ? (
+              <DropdownMenuItem disabled className='flex items-center gap-2'>
+                <Loader2 className='h-4 w-4 animate-spin' />
+                <span>Loading companies…</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={() => refreshCompany()}
+                className='flex items-center gap-2 cursor-pointer'
+              >
+                <RefreshCw className='h-4 w-4' />
+                <span>Retry</span>
+              </DropdownMenuItem>
+            )}
             {canCreateCompany && (
               <DropdownMenuItem
                 onClick={() => setCreateDialogOpen(true)}
