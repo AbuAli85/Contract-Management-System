@@ -374,22 +374,20 @@ export function withRBAC<T extends any[]>(
     const guardResult = await guardPermission(requiredPermission, request);
 
     if (guardResult) {
-      // Add rate limit headers even to failed permission checks
-      const headers = getRateLimitHeaders(rateLimitResult);
-      const response = guardResult;
-      Object.entries(headers).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      return response;
+      // Add rate limit headers only when we actually ran RL (not auth passthrough)
+      if (!isAuthPath) {
+        const headers = getRateLimitHeaders(rateLimitResult);
+        Object.entries(headers).forEach(([key, value]) => guardResult.headers.set(key, value));
+      }
+      return guardResult;
     }
 
-    // 3. Execute handler with rate limit headers
+    // 3. Execute handler
     const response = await handler(request, ...args);
-    const headers = getRateLimitHeaders(rateLimitResult);
-    Object.entries(headers).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-
+    if (!isAuthPath) {
+      const headers = getRateLimitHeaders(rateLimitResult);
+      Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
+    }
     return response;
   };
 }
@@ -449,22 +447,19 @@ export function withAnyRBAC<T extends any[]>(
     const guardResult = await guardAnyPermission(requiredPermissions, request);
 
     if (guardResult) {
-      // Add rate limit headers even to failed permission checks
-      const headers = getRateLimitHeaders(rateLimitResult);
-      const response = guardResult;
-      Object.entries(headers).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      return response;
+      if (!isAuthPath) {
+        const headers = getRateLimitHeaders(rateLimitResult);
+        Object.entries(headers).forEach(([key, value]) => guardResult.headers.set(key, value));
+      }
+      return guardResult;
     }
 
-    // 3. Execute handler with rate limit headers
+    // 3. Execute handler
     const response = await handler(request, ...args);
-    const headers = getRateLimitHeaders(rateLimitResult);
-    Object.entries(headers).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-
+    if (!isAuthPath) {
+      const headers = getRateLimitHeaders(rateLimitResult);
+      Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
+    }
     return response;
   };
 }

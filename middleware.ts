@@ -31,23 +31,23 @@ const ratelimit = redis
     })
   : null;
 
-// Rate limiting configuration for specific endpoints
-const RATE_LIMIT_CONFIG = {
-  '/api/auth/check-session': {
-    windowMs: 60000, // 1 minute
-    maxRequests: 5, // 5 requests per minute
-    skipSuccessfulRequests: true,
-  },
-  '/api/auth/login': {
-    windowMs: 900000, // 15 minutes
-    maxRequests: 5, // 5 login attempts per 15 minutes
-    skipSuccessfulRequests: false,
-  },
-  '/api/auth/signup': {
-    windowMs: 3600000, // 1 hour
-    maxRequests: 3, // 3 signup attempts per hour
-    skipSuccessfulRequests: false,
-  },
+// Rate limiting: identity/session endpoints (single Redis call per request)
+const RATE_LIMIT_CONFIG: Record<string, { windowMs: number; maxRequests: number; skipSuccessfulRequests: boolean }> = {
+  '/api/auth/check-session': { windowMs: 60000, maxRequests: 5, skipSuccessfulRequests: true },
+  '/api/auth/login': { windowMs: 900000, maxRequests: 5, skipSuccessfulRequests: false },
+  '/api/auth/simple-login': { windowMs: 900000, maxRequests: 5, skipSuccessfulRequests: false },
+  '/api/auth/production-login': { windowMs: 900000, maxRequests: 5, skipSuccessfulRequests: false },
+  '/api/auth/signup': { windowMs: 3600000, maxRequests: 3, skipSuccessfulRequests: false },
+  '/api/auth/register': { windowMs: 3600000, maxRequests: 3, skipSuccessfulRequests: false },
+  '/api/auth/register-new': { windowMs: 3600000, maxRequests: 3, skipSuccessfulRequests: false },
+  '/api/auth/simple-register': { windowMs: 3600000, maxRequests: 3, skipSuccessfulRequests: false },
+  '/api/auth/production-register': { windowMs: 3600000, maxRequests: 3, skipSuccessfulRequests: false },
+  '/api/auth/refresh-session': { windowMs: 60000, maxRequests: 10, skipSuccessfulRequests: true },
+  '/api/auth/logout': { windowMs: 60000, maxRequests: 20, skipSuccessfulRequests: true },
+  '/api/auth/forgot-password': { windowMs: 3600000, maxRequests: 3, skipSuccessfulRequests: false },
+  '/api/auth/change-password': { windowMs: 60000, maxRequests: 5, skipSuccessfulRequests: false },
+  '/api/auth/callback': { windowMs: 60000, maxRequests: 10, skipSuccessfulRequests: true },
+  '/api/auth/mfa': { windowMs: 60000, maxRequests: 10, skipSuccessfulRequests: false },
 };
 
 // ========================================
@@ -118,7 +118,7 @@ async function isRateLimitedDistributed(path: string, ip: string): Promise<boole
   } catch (error) {
     console.error('Rate limiting error:', error);
     // Auth paths: fail closed — do not allow request when rate limiter fails
-    const isAuthPath = Object.keys(RATE_LIMIT_CONFIG).some(p => path.startsWith(p));
+    const isAuthPath = Object.keys(RATE_LIMIT_CONFIG).some(p => pathMatchesRateLimitPrefix(path.replace(/\/$/, ''), p));
     if (isAuthPath) {
       throw error;
     }
@@ -126,8 +126,25 @@ async function isRateLimitedDistributed(path: string, ip: string): Promise<boole
   }
 }
 
+// Safe prefix match: path === prefix OR path.startsWith(prefix + "/")
+// Prevents /api/auth/login-foo matching /api/auth/login
+function pathMatchesRateLimitPrefix(path: string, prefix: string): boolean {
+  const normalized = path.replace(/\/$/, '');
+  return normalized === prefix || normalized.startsWith(prefix + '/');
+}
+
+function getRateLimitConfigForPath(pathname: string): (typeof RATE_LIMIT_CONFIG)[string] | undefined {
+  const normalized = pathname.replace(/\/$/, '');
+  const exact = RATE_LIMIT_CONFIG[normalized as keyof typeof RATE_LIMIT_CONFIG];
+  if (exact) return exact;
+  const matches = Object.keys(RATE_LIMIT_CONFIG)
+    .filter(p => pathMatchesRateLimitPrefix(normalized, p))
+    .sort((a, b) => b.length - a.length);
+  return matches[0] ? RATE_LIMIT_CONFIG[matches[0]] : undefined;
+}
+
 function isRateLimitedInMemory(path: string, ip: string): boolean {
-  const config = RATE_LIMIT_CONFIG[path as keyof typeof RATE_LIMIT_CONFIG];
+  const config = getRateLimitConfigForPath(path);
   if (!config) return false;
 
   const now = Date.now();
@@ -390,7 +407,8 @@ export async function middleware(request: NextRequest) {
 
     // Rate limiting for auth paths — fail closed on Redis error
     const rateLimitedPaths = Object.keys(RATE_LIMIT_CONFIG);
-    if (rateLimitedPaths.some(path => pathname.startsWith(path))) {
+    const normalizedPath = pathname.replace(/\/$/, '');
+    if (rateLimitedPaths.some(path => pathMatchesRateLimitPrefix(normalizedPath, path))) {
       try {
         const isLimited = await isRateLimitedDistributed(pathname, ip);
         if (isLimited) {
