@@ -1,25 +1,25 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Promoters Management | Smart Pro Portal',
+  title: 'Workforce Management | Smart Pro Portal',
   description:
-    'Manage and track all your promoters. View promoter details, document status, and performance metrics.',
+    'Workforce management: promoters, compliance, documents, and analytics.',
   keywords: [
+    'workforce',
     'promoters',
     'management',
-    'employees',
-    'staff',
-    'human resources',
-    'tracking',
+    'compliance',
+    'documents',
+    'analytics',
   ],
   openGraph: {
-    title: 'Promoters Management | Smart Pro Portal',
+    title: 'Workforce Management | Smart Pro Portal',
     description:
-      'Manage and track all your promoters with comprehensive tools and insights.',
+      'Manage workforce, compliance, and analytics in one place.',
     type: 'website',
   },
   robots: {
-    index: false, // Don't index promoter pages for privacy
+    index: false,
     follow: false,
   },
 };

@@ -53,6 +53,7 @@ import { PromotersEnhancedCharts } from './promoters-enhanced-charts';
 import { RoleContextProvider, useRoleContext } from './promoters-role-context';
 import { PromotersEmployeeView } from './promoters-employee-view';
 import { PromotersEmployerDashboard } from './promoters-employer-dashboard';
+import { PromotersBusinessHeader } from './promoters-business-header';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '../ui/button';
 
@@ -2001,19 +2002,27 @@ function EnhancedPromotersViewRefactoredContent({
               </CardHeader>
             </Card>
           ) : (
-            // Employer/Admin View - Show full dashboard header
-            <PromotersPremiumHeader
-              metrics={metrics}
-              promoters={dashboardPromoters}
-              isFetching={isDataFetching}
+            // Employer/Admin View - Business header with tabs
+            <PromotersBusinessHeader
+              activeTab={
+                viewMode === 'analytics' ? 'analytics' : 'workforce'
+              }
+              onTabChange={tab =>
+                setViewMode(tab === 'analytics' ? 'analytics' : 'table')
+              }
+              locale={derivedLocale}
+              totalCount={pagination?.total ?? promoters.length}
+              isRefreshing={isDataFetching}
               onRefresh={handleRefresh}
               onAddPromoter={
                 roleContext.canCreate ? handleAddPromoter : undefined
               }
-              locale={derivedLocale}
-              autoRefreshEnabled={autoRefreshEnabled}
-              onToggleAutoRefresh={setAutoRefreshEnabled}
-              dataUpdatedAt={dataUpdatedAt}
+              onImport={handleImportPromoters}
+              onExport={roleContext.canExport ? handleExport : undefined}
+              canCreate={roleContext.canCreate}
+              canExport={roleContext.canExport}
+              canViewAnalytics={roleContext.canViewAnalytics}
+              showTabs={true}
             />
           )}
         </header>

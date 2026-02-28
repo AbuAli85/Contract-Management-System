@@ -2,21 +2,22 @@ import type { Metadata } from 'next';
 import { PromotersPageClient } from './promoters-client';
 
 export const metadata: Metadata = {
-  title: 'Promoters | Workforce Management',
+  title: 'Workforce Management | SmartPRO',
   description:
-    'Manage promoters and staff members with advanced analytics, document tracking, and real-time notifications. View workforce status, track document expirations, and manage assignments.',
+    'Manage your workforce: promoters and staff. Track compliance, document expirations, assignments, and performance. Add, import, export, and run analytics in one place.',
   keywords: [
-    'promoters',
     'workforce management',
+    'promoters',
     'staff management',
+    'compliance',
     'document tracking',
     'analytics',
-    'HR management',
+    'HR',
   ],
   openGraph: {
-    title: 'Promoters | Workforce Management',
+    title: 'Workforce Management | SmartPRO',
     description:
-      'Manage promoters and staff members with advanced analytics and notifications',
+      'Manage workforce, track compliance, and run analytics.',
     type: 'website',
   },
 };

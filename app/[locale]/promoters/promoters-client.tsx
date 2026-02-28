@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { EnhancedPromotersViewRefactored } from '@/components/promoters/enhanced-promoters-view-refactored';
 import { PromotersDebugInfo } from '@/components/promoters-debug-info';
+import { PromotersSkeleton } from '@/components/promoters/promoters-skeleton';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useAuth } from '@/lib/auth-service';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -16,7 +17,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Shield, AlertTriangle, Lock } from 'lucide-react';
+import { Shield, AlertTriangle, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 interface PromotersPageClientProps {
@@ -47,15 +48,14 @@ export function PromotersPageClient({
   // Show loading state while checking authentication
   if (authLoading || isCheckingPermissions || permissionsLoading) {
     return (
-      <div className='flex min-h-[60vh] items-center justify-center'>
-        <Card className='w-full max-w-md'>
-          <CardContent className='flex flex-col items-center justify-center space-y-4 pt-6'>
-            <Loader2 className='h-8 w-8 animate-spin text-primary' />
-            <p className='text-sm text-muted-foreground'>
-              Loading promoters page...
-            </p>
-          </CardContent>
-        </Card>
+      <div className='space-y-6' role='region' aria-label='Loading workforce'>
+        <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
+          <div>
+            <div className='h-8 w-24 animate-pulse rounded bg-muted' />
+            <div className='mt-2 h-4 w-64 animate-pulse rounded bg-muted' />
+          </div>
+        </div>
+        <PromotersSkeleton />
       </div>
     );
   }
@@ -158,7 +158,7 @@ export function PromotersPageClient({
   // User is authenticated and has permissions - show the promoters view
   return (
     <ErrorBoundary componentName='Promoters Page'>
-      <div className='space-y-6'>
+      <div className='space-y-6' data-page='workforce-management'>
         {isDevelopment && <PromotersDebugInfo />}
         <EnhancedPromotersViewRefactored locale={locale} />
       </div>
