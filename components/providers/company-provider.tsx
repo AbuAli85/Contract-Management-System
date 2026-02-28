@@ -124,6 +124,46 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const hasFetchedRef = useRef(false);
   const autoRetryDoneRef = useRef(false);
 
+  // Fallback: same data as Manage Parties (GET /api/parties?type=Employer) when list endpoint fails
+  const fetchCompaniesFromPartiesFallback = useCallback(async (): Promise<boolean> => {
+    try {
+      const [partiesRes, currentRes] = await Promise.all([
+        fetch('/api/parties?type=Employer&limit=500', {
+          cache: 'no-store',
+          credentials: 'include',
+          headers: { 'Cache-Control': 'no-cache' },
+        }),
+        fetch('/api/user/companies/current', {
+          cache: 'no-store',
+          credentials: 'include',
+          headers: { 'Cache-Control': 'no-cache' },
+        }),
+      ]);
+      const partiesData = await partiesRes.json().catch(() => ({}));
+      const currentData = await currentRes.json().catch(() => ({}));
+      const parties = Array.isArray(partiesData.parties) ? partiesData.parties : [];
+      const activeId = currentData.company_id ?? null;
+      if (parties.length === 0) return false;
+      const allRaw: RawCompany[] = parties.map((p: any) => ({
+        company_id: p.id,
+        company_name: p.name_en || p.name_ar || 'Company',
+        company_logo: p.logo_url ?? null,
+        user_role: 'member',
+        is_primary: p.id === activeId,
+        group_name: null,
+      }));
+      hasFetchedRef.current = true;
+      setLoadError(null);
+      setCurrentCompanyDisplay(null);
+      setRawCompanies(allRaw);
+      const activeRaw = allRaw.find(c => c.company_id === activeId);
+      setCompany(activeRaw ? toCompany(activeRaw) : allRaw.length > 0 ? toCompany(allRaw[0]) : null);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   // ─── Fetch companies list ──────────────────────────────────────────────────
   const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
     let loadingGuardId: ReturnType<typeof setTimeout> | null = null;
@@ -205,29 +245,35 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       }
 
       if (response.ok && data.success) {
-        hasFetchedRef.current = true;
-        setLoadError(null); // Always clear error on success (including after silent retry)
-        setCurrentCompanyDisplay(null); // Full list loaded; no need for fallback
         const allRaw: RawCompany[] = Array.isArray(data.companies) ? data.companies : [];
-        setRawCompanies(allRaw);
-
-        const activeId: string | null = data.active_company_id ?? null;
-        if (activeId) {
-          const activeRaw = allRaw.find(c => c.company_id === activeId);
-          setCompany(
-            activeRaw
-              ? toCompany(activeRaw)
-              : allRaw.length > 0
-                ? toCompany(allRaw[0])
-                : null
-          );
+        if (allRaw.length > 0) {
+          hasFetchedRef.current = true;
+          setLoadError(null);
+          setCurrentCompanyDisplay(null);
+          setRawCompanies(allRaw);
+          const activeId: string | null = data.active_company_id ?? null;
+          if (activeId) {
+            const activeRaw = allRaw.find(c => c.company_id === activeId);
+            setCompany(
+              activeRaw
+                ? toCompany(activeRaw)
+                : allRaw.length > 0
+                  ? toCompany(allRaw[0])
+                  : null
+            );
+          } else {
+            setCompany(allRaw.length > 0 ? toCompany(allRaw[0]) : null);
+          }
         } else {
-          setCompany(allRaw.length > 0 ? toCompany(allRaw[0]) : null);
+          const used = await fetchCompaniesFromPartiesFallback();
+          if (!used && !silent) setLoadError('No companies found. Retry or add employers in Manage Parties.');
         }
       } else {
         setCompany(null);
         setRawCompanies([]);
         if (!silent) setLoadError((data as any)?.message || 'Failed to load companies');
+        const used = await fetchCompaniesFromPartiesFallback();
+        if (used && loadingGuardId) clearTimeout(loadingGuardId);
       }
     } catch (err: any) {
       if (!silent) {
@@ -239,11 +285,13 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         setCompany(null);
         setRawCompanies([]);
       }
+      const used = await fetchCompaniesFromPartiesFallback();
+      if (used && loadingGuardId) clearTimeout(loadingGuardId);
     } finally {
       if (loadingGuardId) clearTimeout(loadingGuardId);
       if (!silent) setIsLoading(false);
     }
-  }, []);
+  }, [fetchCompaniesFromPartiesFallback]);
 
   // ─── Switch company ────────────────────────────────────────────────────────
   const switchCompany = useCallback(async (companyId: string): Promise<void> => {
