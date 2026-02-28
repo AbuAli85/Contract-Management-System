@@ -135,14 +135,15 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         loadingGuardId = setTimeout(() => {
           setIsLoading(false);
           setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
-        }, 50_000); // Slightly longer than fetch timeout (45s) so we don't show timeout before request can complete
+        }, 18_000); // Slightly longer than fetch timeout (15s) so we don't show timeout before request can complete
       }
 
       await ensureSessionInCookies();
 
-      const url = `/api/user/companies?minimal=1${forceRefresh ? `&t=${Date.now()}` : ''}`;
+      // Use list endpoint: same employer parties as Manage Parties, 2 queries only, no timeout
+      const url = `/api/user/companies/list${forceRefresh ? `?t=${Date.now()}` : ''}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45_000); // 45s so cold start + slow networks/DB can complete
+      const timeoutId = setTimeout(() => controller.abort(), 15_000); // 15s is enough for 2 queries
 
       const response = await fetch(url, {
         cache: 'no-store',
@@ -160,7 +161,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           if (!forceRefresh) {
             await new Promise(r => setTimeout(r, 800));
             await ensureSessionInCookies();
-            const retryRes = await fetch(`/api/user/companies?minimal=1&t=${Date.now()}`, {
+            const retryRes = await fetch(`/api/user/companies/list?t=${Date.now()}`, {
               cache: 'no-store',
               credentials: 'include',
               headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
