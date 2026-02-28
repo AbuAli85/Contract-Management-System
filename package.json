@@ -82,7 +82,8 @@
     "test:get-token": "node tests/get-auth-token.js",
     "test:data-consistency": "node tests/performance-validation.js",
     "test:email": "tsx scripts/test-email.ts",
-    "supabase:validate-migrations": "node scripts/validate-migrations.js"
+    "supabase:validate-migrations": "node scripts/validate-migrations.js",
+    "routing:check-pages-freeze": "node scripts/check-pages-freeze.js"
   },
   "dependencies": {
     "@e965/xlsx": "^0.20.3",

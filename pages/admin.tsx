@@ -1,41 +1,19 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { GetServerSideProps } from 'next';
 
-export default function AdminPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+/**
+ * Legacy /admin — redirects to app route (Phase 3 cutover).
+ * Uses 307 Temporary during burn-in.
+ */
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const locale = context.req.headers['accept-language']?.includes('ar') ? 'ar' : 'en';
+  return {
+    redirect: {
+      destination: `/${locale}/admin`,
+      permanent: false, // 307 Temporary
+    },
+  };
+};
 
-  useEffect(() => {
-    // Check authentication and role on client side
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/check-session');
-        const data = await response.json();
-
-        if (!data.success || !data.hasSession) {
-          router.replace('/auth/login');
-          return;
-        }
-
-        // Check if user has admin role
-        const roleResponse = await fetch('/api/auth/get-user-role');
-        const roleData = await roleResponse.json();
-
-        if (!roleData.success || roleData.role?.value !== 'admin') {
-          router.replace('/not-authorized');
-          return;
-        }
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        router.replace('/auth/login');
-      }
-    };
-
-    checkAuth();
-  }, [router]);
-
-  if (isLoading) return <div>Loading...</div>;
-  return <div>Welcome, admin!</div>;
+export default function AdminRedirect() {
+  return null;
 }

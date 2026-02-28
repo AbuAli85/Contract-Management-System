@@ -49,6 +49,7 @@
 - [ ] Add real-time dashboard refresh via Supabase subscriptions
 
 ## Phase 6: Code Quality & Testing
+- [ ] **Routing consolidation:** Phased cutover pages/ → app/ (see `docs/ROUTING_MIGRATION.md`)
 - [ ] Reduce `any` type usage in critical paths (auth, contracts, RBAC)
 - [ ] Consolidate 9 login form components into 1 unified component
 - [ ] Consolidate multiple dashboard variants into role-based single component

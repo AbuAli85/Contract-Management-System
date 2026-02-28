@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check pages/ freeze (routing policy)
+        run: npm run routing:check-pages-freeze
+
       - name: Run linter
         run: npm run lint
         continue-on-error: true
