@@ -65,6 +65,7 @@ export function CompanySwitcher() {
   const {
     company: activeCompany,
     rawCompanies,
+    currentCompanyDisplay,
     switchCompany,
     isLoading: providerLoading,
     loadError,
@@ -184,7 +185,7 @@ export function CompanySwitcher() {
         </>
       );
     }
-    // No companies and not eligible to create, or load error: show Company dropdown with Retry
+    // No companies and not eligible to create, or load error: show Company dropdown with Retry (and current name if available)
     return (
       <>
         <DropdownMenu>
@@ -196,7 +197,11 @@ export function CompanySwitcher() {
             >
               <Building2 className='h-4 w-4 shrink-0 text-muted-foreground' />
               <span className='hidden md:inline max-w-[150px] truncate text-sm text-muted-foreground'>
-                {loadError ? 'Retry' : 'No company'}
+                {currentCompanyDisplay?.company_name
+                  ? currentCompanyDisplay.company_name
+                  : loadError
+                    ? 'Retry'
+                    : 'No company'}
               </span>
               <ChevronDown className='h-4 w-4 text-gray-500 shrink-0' />
             </Button>

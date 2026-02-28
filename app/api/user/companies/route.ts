@@ -735,6 +735,47 @@ export async function GET(request: NextRequest) {
       // user_roles may not have company_id in some environments
     }
 
+    // Include employer parties where user has promoters (data belongs to these parties)
+    try {
+      const { data: promoterEmployers } = await adminClient
+        .from('promoters')
+        .select('employer_id')
+        .not('employer_id', 'is', null)
+        .eq('created_by', user.id);
+      const employerPartyIds = [
+        ...new Set(
+          (promoterEmployers || [])
+            .map((p: any) => p.employer_id)
+            .filter(Boolean)
+        ),
+      ];
+      if (employerPartyIds.length > 0) {
+        const { data: parties } = await adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, logo_url')
+          .in('id', employerPartyIds)
+          .eq('type', 'Employer');
+        const existingIds = new Set(allCompanies.map((c: any) => c.company_id));
+        for (const party of parties || []) {
+          if (!party?.id || existingIds.has(party.id)) continue;
+          const name = party.name_en || party.name_ar || 'Unknown Company';
+          if (isInvalidCompany(name)) continue;
+          allCompanies.push({
+            company_id: party.id,
+            company_name: name,
+            company_logo: party.logo_url ?? null,
+            user_role: 'member',
+            is_primary: allCompanies.length === 0,
+            group_name: null,
+            party_id: party.id,
+            source: 'promoters_employer',
+          });
+        }
+      }
+    } catch (e) {
+      // Non-fatal
+    }
+
     // Get active company from profile using admin client
     const { data: profile } = await adminClient
       .from('profiles')

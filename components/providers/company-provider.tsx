@@ -21,6 +21,13 @@ export interface Company {
   role: string;
 }
 
+/** Current company display when full list failed — from GET /api/user/companies/current */
+export interface CurrentCompanyDisplay {
+  company_id: string;
+  company_name: string;
+  company_logo: string | null;
+}
+
 /** Full enriched company shape returned by /api/user/companies */
 export interface RawCompany {
   company_id: string;
@@ -55,6 +62,8 @@ interface CompanyContextType {
   isLoading: boolean;
   /** Error message when companies failed to load (e.g. network) — show Retry in UI */
   loadError: string | null;
+  /** When list failed or empty, display name for "Showing for: [name]" from /api/user/companies/current */
+  currentCompanyDisplay: CurrentCompanyDisplay | null;
   /** True while a company switch is in progress — use to disable the switcher UI */
   isSwitching: boolean;
   switchCompany: (companyId: string) => Promise<void>;
@@ -103,6 +112,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [rawCompanies, setRawCompanies] = useState<RawCompany[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [currentCompanyDisplay, setCurrentCompanyDisplay] = useState<CurrentCompanyDisplay | null>(null);
   const [isSwitching, setIsSwitching] = useState(false);
   const params = useParams();
   const pathname = usePathname();
@@ -160,6 +170,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
               if (retryData.success && Array.isArray(retryData.companies)) {
                 hasFetchedRef.current = true;
                 setLoadError(null);
+                setCurrentCompanyDisplay(null);
                 setRawCompanies(retryData.companies);
                 const activeId = retryData.active_company_id ?? null;
                 const allRaw = retryData.companies;
@@ -195,6 +206,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       if (response.ok && data.success) {
         hasFetchedRef.current = true;
         setLoadError(null); // Always clear error on success (including after silent retry)
+        setCurrentCompanyDisplay(null); // Full list loaded; no need for fallback
         const allRaw: RawCompany[] = Array.isArray(data.companies) ? data.companies : [];
         setRawCompanies(allRaw);
 
@@ -323,6 +335,40 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [loadError, rawCompanies.length, fetchActiveCompany]);
 
+  // When list is empty or failed, fetch current company so UI can show "Showing for: [Name]"
+  useEffect(() => {
+    if (isLoading || (rawCompanies.length > 0 && !loadError)) {
+      if (rawCompanies.length > 0) setCurrentCompanyDisplay(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/user/companies/current', {
+          cache: 'no-store',
+          credentials: 'include',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (data.company_id && data.company_name) {
+          setCurrentCompanyDisplay({
+            company_id: data.company_id,
+            company_name: data.company_name,
+            company_logo: data.company_logo ?? null,
+          });
+        } else {
+          setCurrentCompanyDisplay(null);
+        }
+      } catch {
+        if (!cancelled) setCurrentCompanyDisplay(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoading, loadError, rawCompanies.length]);
+
   // ─── Initial load with auth-state awareness ────────────────────────────────
   useEffect(() => {
     const supabase = createClient();
@@ -379,6 +425,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         rawCompanies,
         isLoading,
         loadError,
+        currentCompanyDisplay,
         isSwitching,
         switchCompany,
         refreshCompany,
