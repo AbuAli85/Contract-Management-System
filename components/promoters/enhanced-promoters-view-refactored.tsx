@@ -23,8 +23,6 @@ import type {
 } from './types';
 
 // Import the new modular components
-import { PromotersHeader } from './promoters-header';
-import { PromotersPremiumHeader } from './promoters-premium-header';
 import { PromotersMetricsCards } from './promoters-metrics-cards';
 import { PromotersFilters } from './promoters-filters';
 import { PromotersBulkActions } from './promoters-bulk-actions';
@@ -44,8 +42,6 @@ import { WorkforceAnalyticsSummary } from './workforce-analytics-summary';
 import { AnalyticsLoadingSkeleton } from './analytics-loading-skeleton';
 import { AnalyticsToolbar } from './analytics-toolbar';
 import { AnalyticsInsightsPanel } from './analytics-insights-panel';
-import { PromotersSmartInsights } from './promoters-smart-insights';
-import { PromotersQuickActionsPanel } from './promoters-quick-actions-panel';
 import { PromotersAdvancedExport } from './promoters-advanced-export';
 import { PromotersErrorBoundary } from './promoters-error-boundary';
 import { PromotersAdvancedFilters } from './promoters-advanced-filters';
@@ -53,7 +49,7 @@ import { PromotersEnhancedCharts } from './promoters-enhanced-charts';
 import { RoleContextProvider, useRoleContext } from './promoters-role-context';
 import { PromotersEmployeeView } from './promoters-employee-view';
 import { PromotersEmployerDashboard } from './promoters-employer-dashboard';
-import { PromotersBusinessHeader } from './promoters-business-header';
+import { PromotersSimpleHeader } from './promoters-simple-header';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '../ui/button';
 
@@ -2002,14 +1998,8 @@ function EnhancedPromotersViewRefactoredContent({
               </CardHeader>
             </Card>
           ) : (
-            // Employer/Admin View - Business header with tabs
-            <PromotersBusinessHeader
-              activeTab={
-                viewMode === 'analytics' ? 'analytics' : 'workforce'
-              }
-              onTabChange={tab =>
-                setViewMode(tab === 'analytics' ? 'analytics' : 'table')
-              }
+            // Employer/Admin View - Simple header: features + link to analytics
+            <PromotersSimpleHeader
               locale={derivedLocale}
               totalCount={pagination?.total ?? promoters.length}
               isRefreshing={isDataFetching}
@@ -2019,10 +2009,14 @@ function EnhancedPromotersViewRefactoredContent({
               }
               onImport={handleImportPromoters}
               onExport={roleContext.canExport ? handleExport : undefined}
+              onViewAnalytics={
+                roleContext.canViewAnalytics
+                  ? () => setViewMode('analytics')
+                  : undefined
+              }
               canCreate={roleContext.canCreate}
               canExport={roleContext.canExport}
               canViewAnalytics={roleContext.canViewAnalytics}
-              showTabs={true}
             />
           )}
         </header>
@@ -2052,56 +2046,6 @@ function EnhancedPromotersViewRefactoredContent({
             )}
           </section>
         )}
-
-        {/* AI-Powered Smart Insights - Only for Employers/Admins */}
-        {!isLoading &&
-          dashboardPromoters.length > 0 &&
-          !roleContext.isEmployee && (
-            <section aria-labelledby='smart-insights-heading' className='mt-6'>
-              <h2 id='smart-insights-heading' className='sr-only'>
-                AI-Powered Smart Insights
-              </h2>
-              <PromotersSmartInsights
-                promoters={dashboardPromoters}
-                metrics={metrics}
-                onActionClick={action => {
-                  // Handle smart insight actions
-                  if (action.startsWith('filter:')) {
-                    const [, type, value] = action.split(':');
-                    if (type === 'documents') {
-                      setDocumentFilter(
-                        value as 'all' | 'expired' | 'expiring' | 'missing'
-                      );
-                    } else if (type === 'status') {
-                      setStatusFilter(value as OverallStatus | 'all');
-                    } else if (type === 'assignment') {
-                      setAssignmentFilter(
-                        value as 'all' | 'assigned' | 'unassigned'
-                      );
-                    }
-                  } else if (action === 'view:analytics') {
-                    setViewMode('analytics');
-                  }
-                }}
-              />
-            </section>
-          )}
-
-        {/* Data Insights & Charts - Only for Employers/Admins */}
-        {!isLoading &&
-          dashboardPromoters.length > 0 &&
-          !roleContext.isEmployee && (
-            <section aria-labelledby='insights-heading' className='mt-6'>
-              <h2 id='insights-heading' className='sr-only'>
-                Data Insights and Analytics
-              </h2>
-              <PromotersStatsCharts
-                metrics={metrics}
-                promoters={dashboardPromoters}
-                hasFiltersApplied={hasFiltersApplied}
-              />
-            </section>
-          )}
 
         {/* Bulk Assign Company Dialog */}
         {showAssignDialog && (
@@ -2164,59 +2108,7 @@ function EnhancedPromotersViewRefactoredContent({
           showFloating={true}
         />
 
-        {/* Quick Actions Panel - Only for Employers/Admins */}
-        {!isLoading && !roleContext.isEmployee && (
-          <section aria-labelledby='quick-actions-heading' className='mt-6'>
-            <h2 id='quick-actions-heading' className='sr-only'>
-              Quick Actions
-            </h2>
-            <PromotersQuickActionsPanel
-              onAddPromoter={
-                roleContext.canCreate ? handleAddPromoter : undefined
-              }
-              onImport={
-                roleContext.canCreate ? handleImportPromoters : undefined
-              }
-              onExport={roleContext.canExport ? handleExport : undefined}
-              onViewAnalytics={
-                roleContext.canViewAnalytics
-                  ? () => setViewMode('analytics')
-                  : undefined
-              }
-              onSendNotification={
-                roleContext.canBulkActions
-                  ? () => {
-                      toast({
-                        title: 'Notification Sent',
-                        description: `Sending notifications to ${selectedPromoters.size} selected promoters`,
-                      });
-                    }
-                  : undefined
-              }
-              onScheduleMeeting={
-                roleContext.canBulkActions
-                  ? () => {
-                      toast({
-                        title: 'Meeting Scheduled',
-                        description:
-                          'Scheduling meeting with selected promoters',
-                      });
-                    }
-                  : undefined
-              }
-              onBulkAction={
-                roleContext.canBulkActions
-                  ? action => {
-                      handleBulkAction(action);
-                    }
-                  : undefined
-              }
-              selectedCount={selectedPromoters.size}
-            />
-          </section>
-        )}
-
-        {/* Enhanced Filters - Only for Employers/Admins */}
+        {/* Filters - search, status, documents, assignment */}
         {!roleContext.isEmployee && (
           <section aria-labelledby='filters-heading'>
             <h2 id='filters-heading' className='sr-only'>
