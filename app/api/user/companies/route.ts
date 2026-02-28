@@ -79,31 +79,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Debug: Log all cookies to diagnose cookie naming issue
-    const cookieStore = await cookies();
-    const allCookies = cookieStore.getAll();
-    const supabaseCookies = allCookies.filter(
-      c =>
-        c.name.includes('sb-') ||
-        c.name.includes('auth-token') ||
-        c.name.includes('supabase')
-    );
-    logWithCorrelation(correlationId, 'debug', 'Cookie check', {
-      allCookies: allCookies.map(c => c.name),
-      supabaseCookies: supabaseCookies.map(c => ({
-        name: c.name,
-        hasValue: !!c.value,
-        valueLength: c.value?.length || 0,
-      })),
-    });
+    const minimal =
+      request.nextUrl?.searchParams?.get('minimal') === '1' ||
+      request.nextUrl?.searchParams?.get('minimal') === 'true';
 
-    // Extract project reference from Supabase URL (already checked above)
-    const projectRef = supabaseUrl.match(
-      /https?:\/\/([^.]+)\.supabase\.co/
-    )?.[1];
-    logWithCorrelation(correlationId, 'debug', 'Expected cookie prefix', {
-      prefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
-    });
+    // Skip verbose cookie logging for minimal=1 to reach fast path sooner
+    if (!minimal) {
+      const cookieStore = await cookies();
+      const allCookies = cookieStore.getAll();
+      const supabaseCookies = allCookies.filter(
+        c =>
+          c.name.includes('sb-') ||
+          c.name.includes('auth-token') ||
+          c.name.includes('supabase')
+      );
+      logWithCorrelation(correlationId, 'debug', 'Cookie check', {
+        allCookies: allCookies.map(c => c.name),
+        supabaseCookies: supabaseCookies.map(c => ({
+          name: c.name,
+          hasValue: !!c.value,
+          valueLength: c.value?.length || 0,
+        })),
+      });
+      const projectRef = supabaseUrl.match(
+        /https?:\/\/([^.]+)\.supabase\.co/
+      )?.[1];
+      logWithCorrelation(correlationId, 'debug', 'Expected cookie prefix', {
+        prefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
+      });
+    }
 
     const supabase = await createClient();
 
@@ -229,10 +233,6 @@ export async function GET(request: NextRequest) {
     } catch (e) {
       adminClient = supabase;
     }
-
-    const minimal =
-      request.nextUrl?.searchParams?.get('minimal') === '1' ||
-      request.nextUrl?.searchParams?.get('minimal') === 'true';
 
     // Fast path for ?minimal=1: only batched queries, no per-row work (avoids timeout when many employer parties exist)
     if (minimal) {
