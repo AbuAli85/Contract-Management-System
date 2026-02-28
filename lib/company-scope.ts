@@ -6,6 +6,50 @@ import { createAdminClient } from '@/lib/supabase/server';
  * Use these functions to automatically filter queries by the active company
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+/**
+ * Resolve the user's active_company_id to the party_id used for scoping (promoters.employer_id, contracts first_party_id/second_party_id).
+ * Handles both: regular company (companies.party_id) and party-as-company (parties_employer_direct).
+ * Use this in API routes that already have supabase and user.
+ */
+export async function resolveActiveCompanyToPartyId(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<string | null> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('active_company_id')
+    .eq('id', userId)
+    .single();
+
+  if (!profile?.active_company_id) return null;
+
+  const activeId = profile.active_company_id;
+  let adminClient: SupabaseClient;
+  try {
+    adminClient = createAdminClient();
+  } catch {
+    adminClient = supabase;
+  }
+
+  const { data: partyRow } = await adminClient
+    .from('parties')
+    .select('id, type')
+    .eq('id', activeId)
+    .maybeSingle();
+
+  if (partyRow?.type === 'Employer') return activeId;
+
+  const { data: company } = await adminClient
+    .from('companies')
+    .select('party_id')
+    .eq('id', activeId)
+    .maybeSingle();
+
+  return company?.party_id ?? null;
+}
+
 export interface CompanyScope {
   companyId: string | null;
   partyId: string | null;
@@ -42,7 +86,7 @@ export async function getCompanyScope(): Promise<CompanyScope | null> {
       };
     }
 
-    // Get company's party_id
+    const activeId = profile.active_company_id;
     let adminClient;
     try {
       adminClient = createAdminClient();
@@ -50,15 +94,31 @@ export async function getCompanyScope(): Promise<CompanyScope | null> {
       adminClient = supabase;
     }
 
+    // Handle party-as-company (parties_employer_direct): active_company_id can be a party id
+    const { data: partyRow } = await adminClient
+      .from('parties')
+      .select('id, type')
+      .eq('id', activeId)
+      .maybeSingle();
+
+    if (partyRow?.type === 'Employer') {
+      return {
+        companyId: activeId,
+        partyId: activeId,
+        userId: user.id,
+      };
+    }
+
+    // Resolve company's party_id from companies table
     const { data: company } = await adminClient
       .from('companies')
       .select('id, party_id')
-      .eq('id', profile.active_company_id)
-      .single();
+      .eq('id', activeId)
+      .maybeSingle();
 
     return {
-      companyId: profile.active_company_id,
-      partyId: company?.party_id || null,
+      companyId: activeId,
+      partyId: company?.party_id ?? null,
       userId: user.id,
     };
   } catch (error) {

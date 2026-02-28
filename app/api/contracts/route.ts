@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { permissionCache } from '@/lib/permission-cache';
 import { assertEntitlement } from '@/lib/billing/entitlements';
 import { getCompanyRole } from '@/lib/auth/get-company-role';
+import { resolveActiveCompanyToPartyId } from '@/lib/company-scope';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -159,43 +160,16 @@ async function handleContractsRequest(
     throw new Error(`Unauthorized: ${userError?.message || 'No user found'}`);
   }
 
-  // ✅ COMPANY SCOPE: Get active company's party_id
-  let activePartyId: string | null = partyId; // Use provided partyId if available
+  // ✅ COMPANY SCOPE: Get active company's party_id (handles company + party-as-company)
+  let activePartyId: string | null = partyId ?? null;
   if (!activePartyId) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_company_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.active_company_id) {
-      // Get company's party_id
-      const { createAdminClient } = await import('@/lib/supabase/server');
-      let adminClient;
-      try {
-        adminClient = createAdminClient();
-      } catch (e) {
-        adminClient = supabase;
-      }
-
-      const { data: company } = await adminClient
-        .from('companies')
-        .select('party_id')
-        .eq('id', profile.active_company_id)
-        .single();
-
-      if (company?.party_id) {
-        activePartyId = company.party_id;
-        logger.debug(
-          'Using company party_id for contract filtering',
-          {
-            companyId: profile.active_company_id,
-            partyId: activePartyId,
-            requestId,
-          },
-          'ContractsAPI'
-        );
-      }
+    activePartyId = await resolveActiveCompanyToPartyId(supabase, user.id);
+    if (activePartyId) {
+      logger.debug(
+        'Using company party_id for contract filtering',
+        { partyId: activePartyId, requestId },
+        'ContractsAPI'
+      );
     }
   }
 

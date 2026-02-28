@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnhancedPromoterMetrics } from '@/lib/services/promoter-metrics.service';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { resolveActiveCompanyToPartyId } from '@/lib/company-scope';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,33 +23,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ✅ COMPANY SCOPE: Get active company's party_id
-    let partyId: string | null = null;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_company_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.active_company_id) {
-      // Get company's party_id
-      let adminClient;
-      try {
-        adminClient = createAdminClient();
-      } catch (e) {
-        adminClient = supabase;
-      }
-
-      const { data: company } = await adminClient
-        .from('companies')
-        .select('party_id')
-        .eq('id', profile.active_company_id)
-        .single();
-
-      if (company?.party_id) {
-        partyId = company.party_id;
-      }
-    }
+    // ✅ COMPANY SCOPE: Get active company's party_id (handles company + party-as-company)
+    const partyId = await resolveActiveCompanyToPartyId(supabase, user.id);
 
     // Get force refresh from query params
     const { searchParams } = new URL(request.url);
