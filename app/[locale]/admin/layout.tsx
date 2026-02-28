@@ -1,5 +1,7 @@
 import { requireAdminAccess } from '@/lib/auth/server-auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin layout: single RBAC gate for all admin routes.
  * Protects /admin, /admin/users, /admin/permissions, etc.
