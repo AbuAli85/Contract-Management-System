@@ -761,6 +761,30 @@ export async function GET(request: NextRequest) {
       new Map(allCompanies.map(c => [c.company_id, c])).values()
     ).filter(c => c.company_id && c.company_name); // Ensure company has ID and name
 
+    // Fast path: ?minimal=1 returns core list without heavy enrichment (avoids timeout / "Retry" in switcher)
+    const minimal =
+      request.nextUrl?.searchParams?.get('minimal') === '1' ||
+      request.nextUrl?.searchParams?.get('minimal') === 'true';
+    if (minimal) {
+      const minimalCompanies = uniqueCompanies.map((c: any) => ({
+        company_id: c.company_id,
+        company_name: c.company_name,
+        company_logo: c.company_logo ?? null,
+        user_role: c.user_role || 'member',
+        is_primary: c.is_primary ?? false,
+        group_name: null,
+      }));
+      return NextResponse.json(
+        {
+          success: true,
+          companies: minimalCompanies,
+          active_company_id: activeCompanyId,
+          correlationId,
+        },
+        { headers: withCorrelationId({}, correlationId) }
+      );
+    }
+
     // Fetch group names for all companies
     // Companies can be linked to groups via:
     // 1. companies.group_id (direct reference to holding_groups)

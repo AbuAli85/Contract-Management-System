@@ -130,11 +130,11 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       await ensureSessionInCookies();
 
-      const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
+      const url = `/api/user/companies?minimal=1${forceRefresh ? `&t=${Date.now()}` : ''}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12_000); // Allow slow API (enrichment) to finish
+      const timeoutId = setTimeout(() => controller.abort(), 12_000);
 
-      const response = await fetch(`/api/user/companies${cacheBuster}`, {
+      const response = await fetch(url, {
         cache: 'no-store',
         signal: controller.signal,
         credentials: 'include',
@@ -150,7 +150,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           if (!forceRefresh) {
             await new Promise(r => setTimeout(r, 800));
             await ensureSessionInCookies();
-            const retryRes = await fetch(`/api/user/companies?t=${Date.now()}`, {
+            const retryRes = await fetch(`/api/user/companies?minimal=1&t=${Date.now()}`, {
               cache: 'no-store',
               credentials: 'include',
               headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
