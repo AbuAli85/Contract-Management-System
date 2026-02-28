@@ -31,7 +31,8 @@ function isInvalidCompany(companyName: string): boolean {
   );
 }
 
-// GET: Fetch user's companies
+// GET: Fetch all companies the user can access (under their profile).
+// Returns: company_members, owned companies, party-linked, employer parties, and user_roles.
 export async function GET(request: NextRequest) {
   // Extract or generate correlation ID
   const correlationId =
@@ -687,6 +688,51 @@ export async function GET(request: NextRequest) {
         }
       } catch (e) {
       }
+    }
+
+    // Include all companies from user_roles (RBAC) so user can access every company under their profile
+    try {
+      const { data: roleRows } = await adminClient
+        .from('user_roles')
+        .select('company_id, role')
+        .eq('user_id', user.id);
+      const roleRowsWithCompany = (roleRows || []).filter(
+        (r: any) => r && r.company_id != null
+      );
+      if (roleRowsWithCompany.length > 0) {
+        const companyIdsFromRoles = [
+          ...new Set(
+            roleRowsWithCompany.map((r: any) => r.company_id).filter(Boolean)
+          ),
+        ];
+        if (companyIdsFromRoles.length > 0) {
+          const { data: companiesFromRoles } = await adminClient
+            .from('companies')
+            .select('id, name, logo_url, group_id, party_id')
+            .in('id', companyIdsFromRoles);
+          const existingIds = new Set(allCompanies.map((c: any) => c.company_id));
+          for (const c of companiesFromRoles || []) {
+            if (!c?.id || !c?.name) continue;
+            if (existingIds.has(c.id)) continue;
+            if (isInvalidCompany(c.name)) continue;
+            const roleRow = roleRowsWithCompany.find(
+              (r: any) => r.company_id === c.id
+            );
+            allCompanies.push({
+              company_id: c.id,
+              company_name: c.name,
+              company_logo: c.logo_url,
+              user_role: roleRow?.role || 'member',
+              is_primary: allCompanies.length === 0,
+              group_name: null,
+              party_id: c.party_id,
+              source: 'user_roles',
+            });
+          }
+        }
+      }
+    } catch (e) {
+      // user_roles may not have company_id in some environments
     }
 
     // Get active company from profile using admin client

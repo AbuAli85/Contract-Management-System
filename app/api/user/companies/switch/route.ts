@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       companyLogo = (companyData as any)?.logo_url ?? null;
       userRole = membership.role ?? 'member';
     } else {
-      // 2b) Fallback: user is owner of this company
+      // 2b) User is owner of this company
       const { data: ownedCompany, error: ownedError } = await adminClient
         .from('companies')
         .select('id, name, logo_url')
@@ -88,19 +88,39 @@ export async function POST(request: NextRequest) {
         .eq('owner_id', user.id)
         .maybeSingle();
 
-      if (ownedError || !ownedCompany) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'You do not have access to this company',
-            code: 'NO_ACCESS',
-          },
-          { status: 403 }
-        );
+      if (!ownedError && ownedCompany) {
+        companyName = ownedCompany.name ?? companyName;
+        companyLogo = ownedCompany.logo_url ?? null;
+        userRole = 'owner';
+      } else {
+        // 2c) User has access via user_roles (all companies under their profile)
+        const { data: roleRow } = await adminClient
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('company_id', company_id)
+          .maybeSingle();
+        const { data: companyRow } = await adminClient
+          .from('companies')
+          .select('id, name, logo_url')
+          .eq('id', company_id)
+          .maybeSingle();
+
+        if (roleRow && companyRow) {
+          companyName = companyRow.name ?? companyName;
+          companyLogo = companyRow.logo_url ?? null;
+          userRole = (roleRow as any).role ?? 'member';
+        } else {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'You do not have access to this company',
+              code: 'NO_ACCESS',
+            },
+            { status: 403 }
+          );
+        }
       }
-      companyName = ownedCompany.name ?? companyName;
-      companyLogo = ownedCompany.logo_url ?? null;
-      userRole = 'owner';
     }
 
     // 3) Update profile.active_company_id (use admin client so RLS cannot block)

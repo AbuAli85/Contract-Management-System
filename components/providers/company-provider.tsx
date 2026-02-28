@@ -170,7 +170,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
   // ─── Switch company ────────────────────────────────────────────────────────
   const switchCompany = useCallback(async (companyId: string): Promise<void> => {
-    // Guard against concurrent switches and no-op switches
     if (isSwitching) return;
     if (companyId === company?.id) return;
 
@@ -178,7 +177,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/api/user/companies/switch', {
         method: 'POST',
-        credentials: 'include',           // FIX: was missing — session cookie not sent
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache',
@@ -194,13 +193,18 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         throw new Error(typeof message === 'string' ? message : 'Failed to switch company');
       }
 
-      // Refetch companies so context and UI show the new active company
-      await fetchActiveCompany(true);
+      // Optimistic update: set active company immediately so UI leaves loading state
+      setCompany({
+        id: data.company_id,
+        name: data.company_name ?? 'Company',
+        logo_url: data.company_logo ?? null,
+        role: data.user_role ?? 'member',
+      });
+      setIsSwitching(false);
 
-      // Invalidate React Query caches so all components re-fetch with new company context
+      // Invalidate React Query so data views refetch with new company
       queryClient.invalidateQueries();
 
-      // Notify listeners (e.g. use-company-data-refresh hook)
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('company-switched', {
@@ -209,7 +213,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      // Stay on promoters/employees page when switching there so list refetches for new company
       const stayOnPromoters =
         typeof pathname === 'string' && pathname.includes('/promoters');
       if (stayOnPromoters) {
@@ -223,16 +226,17 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         title: 'Company Switched',
         description: `Now viewing ${data.company_name}.`,
       });
+
+      // Refetch companies list in background (do not block — was causing stuck loading)
+      fetchActiveCompany(true).catch(() => {});
     } catch (error: any) {
-      // Re-fetch to restore consistent state on failure
-      await fetchActiveCompany(true);
+      setIsSwitching(false);
+      fetchActiveCompany(true).catch(() => {});
       toast({
         title: 'Switch Failed',
         description: error.message || 'Failed to switch company',
         variant: 'destructive',
       });
-    } finally {
-      setIsSwitching(false);
     }
   }, [isSwitching, company?.id, fetchActiveCompany, queryClient, router, locale, toast, pathname]);
 
