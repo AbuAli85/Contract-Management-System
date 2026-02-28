@@ -112,6 +112,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   // Prevent duplicate fetches on TOKEN_REFRESHED events
   const hasFetchedRef = useRef(false);
+  const autoRetryDoneRef = useRef(false);
 
   // ─── Fetch companies list ──────────────────────────────────────────────────
   const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
@@ -131,7 +132,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6_000);
+      const timeoutId = setTimeout(() => controller.abort(), 12_000); // Allow slow API (enrichment) to finish
 
       const response = await fetch(`/api/user/companies${cacheBuster}`, {
         cache: 'no-store',
@@ -193,7 +194,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       if (response.ok && data.success) {
         hasFetchedRef.current = true;
-        if (!silent) setLoadError(null);
+        setLoadError(null); // Always clear error on success (including after silent retry)
         const allRaw: RawCompany[] = Array.isArray(data.companies) ? data.companies : [];
         setRawCompanies(allRaw);
 
@@ -307,6 +308,20 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const refreshCompany = useCallback(async () => {
     await fetchActiveCompany(true);
   }, [fetchActiveCompany]);
+
+  // When companies failed to load (e.g. cookie timing), auto-retry once after 2s so "Could not load" can resolve
+  useEffect(() => {
+    if (!loadError || rawCompanies.length > 0) {
+      autoRetryDoneRef.current = false;
+      return;
+    }
+    if (autoRetryDoneRef.current) return;
+    autoRetryDoneRef.current = true;
+    const t = setTimeout(() => {
+      fetchActiveCompany(true, true).catch(() => {});
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [loadError, rawCompanies.length, fetchActiveCompany]);
 
   // ─── Initial load with auth-state awareness ────────────────────────────────
   useEffect(() => {
