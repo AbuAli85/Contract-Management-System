@@ -311,18 +311,20 @@ export async function middleware(request: NextRequest) {
     const targetPath = LEGACY_REDIRECTS[pathname];
     if (targetPath) {
       const { locale, source } = getRedirectLocaleFromRequest(request);
-      // Lightweight redirect hit logging (sampled: log ~10% to reduce noise)
+      const target = `/${locale}${targetPath}`;
+      // Lightweight redirect hit logging (sampled ~10%). No IP/user identifiers.
       if (Math.random() < 0.1) {
         console.log(
           JSON.stringify({
             event: 'legacy_redirect',
             path: pathname,
+            target,
             locale_source: source,
             resolved_locale: locale,
           })
         );
       }
-      return NextResponse.redirect(new URL(`/${locale}${targetPath}`, request.url), 307);
+      return NextResponse.redirect(new URL(target, request.url), 307);
     }
   }
 
