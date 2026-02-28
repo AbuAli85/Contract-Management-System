@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withAnyRBAC } from '@/lib/rbac/guard';
+import { withAnyRBAC, withRBAC } from '@/lib/rbac/guard';
 
 export const GET = withAnyRBAC(
   ['company:read:own', 'company:read:organization', 'company:read:all'],
@@ -69,117 +69,95 @@ export const GET = withAnyRBAC(
   }
 );
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const body = await request.json();
+async function createCompanyHandler(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
 
-    // Get user session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+  const body = await request.json();
+  const { role } = body;
 
-    if (sessionError || !session) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-        },
-        { status: 401 }
-      );
-    }
+  const companyName = body.company_name || body.name || 'My Company';
+  const slug =
+    body.slug ||
+    companyName
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .slice(0, 50) +
+      '-' +
+      Date.now().toString(36);
 
-    // Extract role from the request body
-    const { role } = body;
+  const companyPayload = {
+    name: companyName,
+    slug,
+    owner_id: session.user.id,
+    email: body.email ?? null,
+    phone: body.phone ?? null,
+    address: body.address ?? null,
+    description: body.description ?? null,
+    website: body.website ?? null,
+    business_category: body.business_category ?? null,
+    country: body.country ?? null,
+    city: body.city ?? null,
+    postal_code: body.postal_code ?? null,
+    tax_number: body.tax_number ?? null,
+    commercial_registration: body.commercial_registration ?? null,
+    license_number: body.license_number ?? null,
+    logo_url: body.logo_url ?? null,
+    promoter_id: body.promoter_id ?? null,
+  };
 
-    // Prepare company data
-    const companyData = {
-      company_name: body.company_name,
-      company_number: body.company_number,
-      email: body.email,
-      phone: body.phone,
-      address: body.address,
-      promoter_id: body.promoter_id,
-      user_id: session.user.id,
-      role, // Include role in company data
-      business_category: body.business_category,
-      description: body.description,
-      website: body.website,
-      country: body.country,
-      city: body.city,
-      postal_code: body.postal_code,
-      tax_number: body.tax_number,
-      commercial_registration: body.commercial_registration,
-      license_number: body.license_number,
-      logo_url: body.logo_url,
-    };
+  const { data: company, error } = await supabase
+    .from('companies')
+    .insert(companyPayload)
+    .select()
+    .single();
 
-    // Insert the company
-    const { data: company, error } = await supabase
-      .from('companies')
-      .insert([companyData])
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to create company',
-          details: error.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    // If this is a provider registration, update the user's role
-    if (role === 'provider') {
-
-      // Update users table
-      const { error: userRoleError } = await supabase.from('users').upsert({
-        id: session.user.id,
-        email: session.user.email,
-        full_name: body.contact_name || session.user.user_metadata?.full_name,
-        role: 'provider',
-        status: 'active',
-        updated_at: new Date().toISOString(),
-      });
-
-      if (userRoleError) {
-      }
-
-      // Also update user_roles table for redundancy
-      const { error: userRolesError } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: session.user.id,
-          role: 'provider',
-          assigned_at: new Date().toISOString(),
-          assigned_by: session.user.id,
-        });
-
-      if (userRolesError) {
-      }
-
-    }
-
-    return NextResponse.json({
-      success: true,
-      company,
-      message:
-        role === 'provider'
-          ? 'Company registered and provider role assigned successfully'
-          : 'Company registered successfully',
-    });
-  } catch (error) {
+  if (error) {
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        details: (error as Error).message,
-      },
+      { success: false, error: 'Failed to create company', details: error.message },
       { status: 500 }
     );
   }
+
+  // Ensure membership: upsert for idempotency (retries, slug collision flows)
+  const { error: roleError } = await supabase
+    .from('user_roles')
+    .upsert(
+      {
+        user_id: session.user.id,
+        company_id: company.id,
+        role: role === 'provider' ? 'provider' : 'admin',
+        is_active: true,
+        assigned_at: new Date().toISOString(),
+        assigned_by: session.user.id,
+      },
+      {
+        onConflict: 'user_id,company_id',
+      }
+    );
+
+  if (roleError) {
+    // Non-fatal: company created; membership may exist or RLS may block
+  }
+
+  // Set active_company_id so getCompanyRole() works immediately
+  await supabase
+    .from('profiles')
+    .update({ active_company_id: company.id })
+    .eq('id', session.user.id);
+
+  return NextResponse.json({
+    success: true,
+    company,
+    message:
+      role === 'provider'
+        ? 'Company registered and provider role assigned successfully'
+        : 'Company registered successfully',
+  });
 }
+
+export const POST = withRBAC('companies:create:own', createCompanyHandler);

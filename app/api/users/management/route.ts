@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
+import { withRBAC } from '@/lib/rbac/guard';
 import {
-  ensureUserCanManageUsers,
   getAuthenticatedUser,
   getServiceRoleClient,
   type ServiceClient,
@@ -19,6 +21,14 @@ const SORTABLE_FIELDS = new Set([
   'full_name',
 ]);
 
+/** Allowed tenant membership roles (user_roles.role) - never touch user_role_assignments */
+const TENANT_MEMBERSHIP_ROLES = ['admin', 'manager', 'provider', 'client'] as const;
+type TenantRole = (typeof TENANT_MEMBERSHIP_ROLES)[number];
+
+function isValidTenantRole(role: string): role is TenantRole {
+  return TENANT_MEMBERSHIP_ROLES.includes(role as TenantRole);
+}
+
 function sanitizeSearchTerm(raw: string) {
   return raw.replace(/[%_]/g, '').trim();
 }
@@ -27,89 +37,125 @@ async function refreshPermissionsCache(adminClient: ServiceClient) {
   try {
     const { error } = await adminClient.rpc('refresh_user_permissions_cache');
     if (error) {
+      // Non-fatal; cache will refresh eventually
     }
-  } catch (refreshError) {
+  } catch {
+    // Ignore
   }
 }
 
-async function assignRoleToUser(
+/**
+ * Upsert tenant membership in user_roles. Does NOT touch user_role_assignments.
+ * companyId MUST come from getCompanyRole (server context), never from request.
+ */
+async function upsertTenantMembership(
   adminClient: ServiceClient,
   userId: string,
-  roleName: string,
-  actorId: string
+  companyId: string,
+  role: TenantRole,
+  actorId: string,
+  isActive: boolean
 ) {
-  const { data: roleRecord, error: roleLookupError } = await adminClient
-    .from('roles')
-    .select('id')
-    .eq('name', roleName)
-    .single();
-
-  if (roleLookupError || !roleRecord) {
-    throw new Error(`Role "${roleName}" not found`);
-  }
-
   const now = new Date().toISOString();
-
-  const { error: upsertError } = await adminClient
-    .from('user_role_assignments')
+  const { error } = await adminClient
+    .from('user_roles')
     .upsert(
       {
         user_id: userId,
-        role_id: roleRecord.id,
+        company_id: companyId,
+        role,
+        is_active: isActive,
         assigned_by: actorId,
-        is_active: true,
-        valid_from: now,
-        updated_at: now,
+        assigned_at: now,
       },
       {
-        onConflict: 'user_id,role_id',
+        onConflict: 'user_id,company_id',
       }
     );
 
-  if (upsertError) {
-    throw new Error(`Failed to assign role: ${upsertError.message}`);
+  if (error) {
+    throw new Error(`Failed to update tenant membership: ${error.message}`);
   }
 }
 
-async function deactivateOtherRoles(
+/**
+ * Update tenant membership role only. Does NOT touch user_role_assignments.
+ */
+async function updateTenantRole(
   adminClient: ServiceClient,
   userId: string,
-  roleNameToKeep: string
+  companyId: string,
+  role: TenantRole
 ) {
-  const { data: keepRole, error: lookupError } = await adminClient
-    .from('roles')
-    .select('id')
-    .eq('name', roleNameToKeep)
-    .single();
-
-  if (lookupError || !keepRole) {
-    throw new Error(`Role "${roleNameToKeep}" not found`);
-  }
-
   const { error } = await adminClient
-    .from('user_role_assignments')
+    .from('user_roles')
     .update({
-      is_active: false,
-      updated_at: new Date().toISOString(),
+      role,
+      assigned_at: new Date().toISOString(),
     })
     .eq('user_id', userId)
-    .neq('role_id', keepRole.id);
+    .eq('company_id', companyId);
 
   if (error) {
-    throw new Error(`Failed to deactivate previous roles: ${error.message}`);
+    throw new Error(`Failed to update role: ${error.message}`);
   }
 }
 
-export async function GET(request: NextRequest) {
+/**
+ * Deactivate tenant membership. Does NOT touch user_role_assignments.
+ */
+async function deactivateTenantMembership(
+  adminClient: ServiceClient,
+  userId: string,
+  companyId: string
+) {
+  const { error } = await adminClient
+    .from('user_roles')
+    .update({
+      is_active: false,
+      assigned_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('company_id', companyId);
+
+  if (error) {
+    throw new Error(`Failed to deactivate membership: ${error.message}`);
+  }
+}
+
+/** Ensure target user is a member of the company (for update/disable operations) */
+async function assertUserInCompany(
+  adminClient: ServiceClient,
+  userId: string,
+  companyId: string
+) {
+  const { data, error } = await adminClient
+    .from('user_roles')
+    .select('user_id')
+    .eq('user_id', userId)
+    .eq('company_id', companyId)
+    .single();
+
+  if (error || !data) {
+    throw new Error('User is not a member of this company');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET: List users in tenant (scoped by companyId from getCompanyRole)
+// ---------------------------------------------------------------------------
+async function getHandler(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { companyId } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'No active company selected' },
+        { status: 400 }
+      );
+    }
 
     const serviceClient = getServiceRoleClient();
-    const currentUser = await getAuthenticatedUser();
-    const adminContext = await ensureUserCanManageUsers(
-      currentUser.id,
-      serviceClient
-    );
-
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const statusFilter = searchParams.get('status');
@@ -136,9 +182,54 @@ export async function GET(request: NextRequest) {
 
     const searchTerm = search ? sanitizeSearchTerm(search) : '';
 
+    // Get user IDs in this company (tenant members only)
+    let memberUserIdsQuery = serviceClient
+      .from('user_roles')
+      .select('user_id')
+      .eq('company_id', companyId)
+      .eq('is_active', true);
+
+    if (roleFilter && roleFilter !== 'all' && isValidTenantRole(roleFilter)) {
+      memberUserIdsQuery = memberUserIdsQuery.eq('role', roleFilter);
+    }
+
+    const { data: memberRows, error: memberError } = await memberUserIdsQuery;
+
+    if (memberError) {
+      return NextResponse.json(
+        { error: 'Failed to fetch company members', details: memberError.message },
+        { status: 500 }
+      );
+    }
+
+    const memberUserIds =
+      memberRows?.map((r: { user_id: string }) => r.user_id).filter(Boolean) ||
+      [];
+
+    if (memberUserIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        users: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+        stats: { total: 0, active: 0, pending: 0, inactive: 0, admins: 0 },
+        context: {
+          roles: [...TENANT_MEMBERSHIP_ROLES],
+          permissions: [],
+        },
+        appliedFilters: {
+          search: searchTerm || undefined,
+          status: statusFilter && statusFilter !== 'all' ? statusFilter : undefined,
+          role: roleFilter && roleFilter !== 'all' ? roleFilter : undefined,
+          sortBy,
+          sortOrder,
+        },
+      });
+    }
+
     let profileQuery = serviceClient
       .from('profiles')
       .select('*', { count: 'exact' })
+      .in('id', memberUserIds)
       .order(sortBy, { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1);
 
@@ -152,54 +243,6 @@ export async function GET(request: NextRequest) {
       profileQuery = profileQuery.eq('status', statusFilter);
     }
 
-    let filteredByRoleUserIds: string[] | null = null;
-
-    if (roleFilter && roleFilter !== 'all') {
-      const { data: roleMatches, error: roleMatchError } = await serviceClient
-        .from('user_permissions_cache')
-        .select('user_id')
-        .contains('roles', [roleFilter]);
-
-      if (roleMatchError) {
-        return NextResponse.json(
-          {
-            error: 'Failed to apply role filter',
-            details: roleMatchError.message,
-          },
-          { status: 500 }
-        );
-      }
-
-      filteredByRoleUserIds =
-        roleMatches?.map(entry => entry.user_id).filter(Boolean) || [];
-
-      if (filteredByRoleUserIds.length === 0) {
-        return NextResponse.json({
-          success: true,
-          users: [],
-          pagination: {
-            page,
-            limit,
-            total: 0,
-            totalPages: 0,
-          },
-          stats: {
-            total: 0,
-            active: 0,
-            pending: 0,
-            inactive: 0,
-            admins: 0,
-          },
-          context: {
-            roles: adminContext.roles,
-            permissions: adminContext.permissions,
-          },
-        });
-      }
-
-      profileQuery = profileQuery.in('id', filteredByRoleUserIds);
-    }
-
     const [
       { data: profiles, error: profilesError, count },
       activeCountPromise,
@@ -211,109 +254,91 @@ export async function GET(request: NextRequest) {
       serviceClient
         .from('profiles')
         .select('id', { count: 'exact', head: true })
+        .in('id', memberUserIds)
         .eq('status', 'active'),
       serviceClient
         .from('profiles')
         .select('id', { count: 'exact', head: true })
+        .in('id', memberUserIds)
         .eq('status', 'pending'),
       serviceClient
         .from('profiles')
         .select('id', { count: 'exact', head: true })
+        .in('id', memberUserIds)
         .eq('status', 'inactive'),
       serviceClient
-        .from('user_permissions_cache')
+        .from('user_roles')
         .select('user_id', { count: 'exact', head: true })
-        .contains('roles', ['admin']),
+        .eq('company_id', companyId)
+        .eq('role', 'admin')
+        .eq('is_active', true),
     ]);
 
     if (profilesError) {
       return NextResponse.json(
-        {
-          error: 'Failed to fetch users',
-          details: profilesError.message,
-        },
+        { error: 'Failed to fetch users', details: profilesError.message },
         { status: 500 }
       );
     }
 
-    const userIds = profiles?.map(profile => profile.id) || [];
-    let permissionsByUser: Record<
-      string,
-      { roles: string[]; permissions: string[] }
-    > = {};
+    const userIds = profiles?.map((p: { id: string }) => p.id) || [];
+    let rolesByUser: Record<string, string[]> = {};
 
     if (userIds.length > 0) {
-      const { data: permissionsData, error: permissionsError } =
-        await serviceClient
-          .from('user_permissions_cache')
-          .select('user_id, roles, permissions')
-          .in('user_id', userIds);
+      const { data: roleData } = await serviceClient
+        .from('user_roles')
+        .select('user_id, role')
+        .eq('company_id', companyId)
+        .in('user_id', userIds);
 
-      if (permissionsError) {
-      } else if (permissionsData) {
-        permissionsByUser = permissionsData.reduce(
-          (acc, entry) => {
-            acc[entry.user_id] = {
-              roles: entry.roles || [],
-              permissions: entry.permissions || [],
-            };
+      if (roleData) {
+        rolesByUser = roleData.reduce(
+          (acc: Record<string, string[]>, r: { user_id: string; role: string }) => {
+            if (!acc[r.user_id]) acc[r.user_id] = [];
+            acc[r.user_id].push(r.role);
             return acc;
           },
-          {} as Record<string, { roles: string[]; permissions: string[] }>
+          {}
         );
       }
     }
 
     const sanitizedUsers =
-      profiles?.map(profile => {
-        const roleData = permissionsByUser[profile.id] || {
-          roles: [],
-          permissions: [],
-        };
-
-        return {
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.full_name,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          phone: profile.phone,
-          status: profile.status,
-          department: profile.department,
-          position: profile.position,
-          company: profile.company,
-          created_at: profile.created_at,
-          updated_at: profile.updated_at,
-          last_sign_in_at: profile.last_sign_in_at,
-          roles: roleData.roles,
-          permissions: roleData.permissions,
-        };
-      }) || [];
+      profiles?.map((profile: Record<string, unknown>) => ({
+        id: profile.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        phone: profile.phone,
+        status: profile.status,
+        department: profile.department,
+        position: profile.position,
+        company: profile.company,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        last_sign_in_at: profile.last_sign_in_at,
+        roles: rolesByUser[profile.id as string] || [],
+        permissions: [],
+      })) || [];
 
     const total = count || 0;
     const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
 
-    const stats = {
-      total,
-      active: activeCountPromise.count || 0,
-      pending: pendingCountPromise.count || 0,
-      inactive: inactiveCountPromise.count || 0,
-      admins: adminCountPromise.count || 0,
-    };
-
     return NextResponse.json({
       success: true,
       users: sanitizedUsers,
-      pagination: {
-        page,
-        limit,
+      pagination: { page, limit, total, totalPages },
+      stats: {
         total,
-        totalPages,
+        active: activeCountPromise?.count ?? 0,
+        pending: pendingCountPromise?.count ?? 0,
+        inactive: inactiveCountPromise?.count ?? 0,
+        admins: adminCountPromise?.count ?? 0,
       },
-      stats,
       context: {
-        roles: adminContext.roles,
-        permissions: adminContext.permissions,
+        roles: [...TENANT_MEMBERSHIP_ROLES],
+        permissions: [],
       },
       appliedFilters: {
         search: searchTerm || undefined,
@@ -332,22 +357,26 @@ export async function GET(request: NextRequest) {
         : message === 'Insufficient permissions'
           ? 403
           : 500;
-
-    return NextResponse.json(
-      {
-        error: message,
-      },
-      { status }
-    );
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
-export async function POST(request: NextRequest) {
+// ---------------------------------------------------------------------------
+// POST: Tenant membership operations only (user_roles). Never user_role_assignments.
+// ---------------------------------------------------------------------------
+async function postHandler(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { companyId } = await getCompanyRole(supabase);
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'No active company selected' },
+        { status: 400 }
+      );
+    }
 
     const serviceClient = getServiceRoleClient();
     const currentUser = await getAuthenticatedUser();
-    await ensureUserCanManageUsers(currentUser.id, serviceClient);
 
     const body = await request.json();
     const {
@@ -355,7 +384,7 @@ export async function POST(request: NextRequest) {
       userId,
       role,
       status,
-      permissions: requestedPermissions,
+      company_id: _ignoredCompanyId, // Never trust company_id from request
     } = body;
 
     if (!action || !userId) {
@@ -367,29 +396,30 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'approve': {
-        const updates = {
+        const membershipRole = role && isValidTenantRole(role) ? role : 'client';
+        const profileUpdates = {
           status: 'active',
           updated_at: new Date().toISOString(),
           updated_by: currentUser.id,
         };
 
-        const { error } = await serviceClient
+        const { error: profileError } = await serviceClient
           .from('profiles')
-          .update(updates)
+          .update(profileUpdates)
           .eq('id', userId);
 
-        if (error) {
-          throw new Error(`Failed to approve user: ${error.message}`);
+        if (profileError) {
+          throw new Error(`Failed to approve user: ${profileError.message}`);
         }
 
-        const targetRole = role || 'user';
-        await assignRoleToUser(
+        await upsertTenantMembership(
           serviceClient,
           userId,
-          targetRole,
-          currentUser.id
+          companyId,
+          membershipRole,
+          currentUser.id,
+          true
         );
-        await deactivateOtherRoles(serviceClient, userId, targetRole);
         await refreshPermissionsCache(serviceClient);
 
         return NextResponse.json({
@@ -399,21 +429,29 @@ export async function POST(request: NextRequest) {
       }
 
       case 'reject': {
-        const updates = {
+        const profileUpdates = {
           status: 'inactive',
           updated_at: new Date().toISOString(),
           updated_by: currentUser.id,
         };
 
-        const { error } = await serviceClient
+        const { error: profileError } = await serviceClient
           .from('profiles')
-          .update(updates)
+          .update(profileUpdates)
           .eq('id', userId);
 
-        if (error) {
-          throw new Error(`Failed to reject user: ${error.message}`);
+        if (profileError) {
+          throw new Error(`Failed to reject user: ${profileError.message}`);
         }
 
+        await upsertTenantMembership(
+          serviceClient,
+          userId,
+          companyId,
+          'client',
+          currentUser.id,
+          false
+        );
         await refreshPermissionsCache(serviceClient);
 
         return NextResponse.json({
@@ -423,15 +461,18 @@ export async function POST(request: NextRequest) {
       }
 
       case 'update_role': {
-        if (!role) {
+        if (!role || !isValidTenantRole(role)) {
           return NextResponse.json(
-            { error: 'Role is required for update_role action' },
+            {
+              error: 'Role is required and must be one of: ' +
+                TENANT_MEMBERSHIP_ROLES.join(', '),
+            },
             { status: 400 }
           );
         }
 
-        await assignRoleToUser(serviceClient, userId, role, currentUser.id);
-        await deactivateOtherRoles(serviceClient, userId, role);
+        await assertUserInCompany(serviceClient, userId, companyId);
+        await updateTenantRole(serviceClient, userId, companyId, role);
         await refreshPermissionsCache(serviceClient);
 
         return NextResponse.json({
@@ -448,20 +489,44 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const updates = {
+        await assertUserInCompany(serviceClient, userId, companyId);
+
+        if (status === 'inactive') {
+          await deactivateTenantMembership(serviceClient, userId, companyId);
+        } else if (status === 'active') {
+          const { data: existing } = await serviceClient
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('company_id', companyId)
+            .single();
+
+          await upsertTenantMembership(
+            serviceClient,
+            userId,
+            companyId,
+            (existing?.role as TenantRole) || 'client',
+            currentUser.id,
+            true
+          );
+        }
+
+        const profileUpdates = {
           status,
           updated_at: new Date().toISOString(),
           updated_by: currentUser.id,
         };
 
-        const { error } = await serviceClient
+        const { error: profileError } = await serviceClient
           .from('profiles')
-          .update(updates)
+          .update(profileUpdates)
           .eq('id', userId);
 
-        if (error) {
-          throw new Error(`Failed to update status: ${error.message}`);
+        if (profileError) {
+          throw new Error(`Failed to update status: ${profileError.message}`);
         }
+
+        await refreshPermissionsCache(serviceClient);
 
         return NextResponse.json({
           success: true,
@@ -470,158 +535,13 @@ export async function POST(request: NextRequest) {
       }
 
       case 'assign_permissions': {
-        if (
-          !Array.isArray(requestedPermissions) ||
-          requestedPermissions.length === 0
-        ) {
-          return NextResponse.json(
-            { error: 'At least one permission must be selected' },
-            { status: 400 }
-          );
-        }
-
-        const normalizedPermissions = Array.from(
-          new Set(
-            requestedPermissions
-              .map((perm: unknown) =>
-                typeof perm === 'string' ? perm.trim() : ''
-              )
-              .filter(Boolean)
-          )
+        return NextResponse.json(
+          {
+            error:
+              'assign_permissions is not available for tenant admins. Use platform admin API.',
+          },
+          { status: 405 }
         );
-
-        if (normalizedPermissions.length === 0) {
-          return NextResponse.json(
-            { error: 'At least one permission must be selected' },
-            { status: 400 }
-          );
-        }
-
-        const { data: permissionRecords, error: permissionLookupError } =
-          await serviceClient
-            .from('permissions')
-            .select('id, name')
-            .in('name', normalizedPermissions);
-
-        if (permissionLookupError) {
-          return NextResponse.json(
-            {
-              error: 'Failed to fetch permissions',
-              details: permissionLookupError.message,
-            },
-            { status: 500 }
-          );
-        }
-
-        if (
-          !permissionRecords ||
-          permissionRecords.length !== normalizedPermissions.length
-        ) {
-          const foundNames =
-            permissionRecords?.map(record => record.name) || [];
-          const missing = normalizedPermissions.filter(
-            name => !foundNames.includes(name)
-          );
-          return NextResponse.json(
-            {
-              error: 'Some permissions were not found',
-              details: { missing },
-            },
-            { status: 400 }
-          );
-        }
-
-        const roleName = `custom-${userId}`;
-        let roleId: string | null = null;
-
-        const { data: existingRole, error: roleLookupError } =
-          await serviceClient
-            .from('roles')
-            .select('id')
-            .eq('name', roleName)
-            .single();
-
-        if (roleLookupError && roleLookupError.code !== 'PGRST116') {
-          return NextResponse.json(
-            {
-              error: 'Failed to fetch custom role',
-              details: roleLookupError.message,
-            },
-            { status: 500 }
-          );
-        }
-
-        if (existingRole?.id) {
-          roleId = existingRole.id;
-        } else {
-          const { data: createdRole, error: roleCreateError } =
-            await serviceClient
-              .from('roles')
-              .insert({
-                name: roleName,
-                display_name: `Custom permissions for ${userId}`,
-                description: 'Per-user custom permission set',
-                category: 'custom',
-                is_system_role: false,
-              })
-              .select('id')
-              .single();
-
-          if (roleCreateError || !createdRole) {
-            return NextResponse.json(
-              { error: 'Failed to create custom role' },
-              { status: 500 }
-            );
-          }
-
-          roleId = createdRole.id;
-        }
-
-        const { error: clearPermissionsError } = await serviceClient
-          .from('role_permissions')
-          .delete()
-          .eq('role_id', roleId);
-
-        if (clearPermissionsError) {
-          return NextResponse.json(
-            {
-              error: 'Failed to reset custom role permissions',
-              details: clearPermissionsError.message,
-            },
-            { status: 500 }
-          );
-        }
-
-        const rolePermissionPayload = permissionRecords.map(record => ({
-          role_id: roleId,
-          permission_id: record.id,
-        }));
-
-        if (rolePermissionPayload.length > 0) {
-          const { error: assignmentError } = await serviceClient
-            .from('role_permissions')
-            .insert(rolePermissionPayload);
-
-          if (assignmentError) {
-            return NextResponse.json(
-              {
-                error: 'Failed to assign permissions',
-                details: assignmentError.message,
-              },
-              { status: 500 }
-            );
-          }
-        }
-
-        await assignRoleToUser(serviceClient, userId, roleName, currentUser.id);
-        await refreshPermissionsCache(serviceClient);
-
-        return NextResponse.json({
-          success: true,
-          message: 'Permissions assigned successfully',
-          role: roleName,
-          permissions: normalizedPermissions,
-        });
       }
 
       default:
@@ -638,12 +558,9 @@ export async function POST(request: NextRequest) {
         : message === 'Insufficient permissions'
           ? 403
           : 500;
-
-    return NextResponse.json(
-      {
-        error: message,
-      },
-      { status }
-    );
+    return NextResponse.json({ error: message }, { status });
   }
 }
+
+export const GET = withRBAC('users:manage:company', getHandler);
+export const POST = withRBAC('users:manage:company', postHandler);

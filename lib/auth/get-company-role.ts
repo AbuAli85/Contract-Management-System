@@ -40,10 +40,11 @@ export async function getCompanyRole(
   }
 
   // Resolve profile id and active_company_id in one query
+  // profiles.id = auth.users.id (consolidated schema)
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id, active_company_id')
-    .eq('user_id', user.id)
+    .eq('id', user.id)
     .single();
 
   if (profileError || !profile) {
@@ -115,4 +116,29 @@ export async function isAdmin(
 ): Promise<boolean> {
   const { authorized } = await requireCompanyRole(supabase, ['admin'], companyId);
   return authorized;
+}
+
+/**
+ * Returns all company IDs the current user belongs to (via user_roles).
+ * Use for tenant membership checks: if resource.company_id is not in this set → 404.
+ */
+export async function getUserCompanyIds(
+  supabase: SupabaseClient
+): Promise<string[]> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) return [];
+
+  const { data: rows } = await supabase
+    .from('user_roles')
+    .select('company_id')
+    .eq('user_id', user.id)
+    .eq('is_active', true);
+
+  return (rows ?? [])
+    .map((r) => r.company_id)
+    .filter((id): id is string => Boolean(id));
 }

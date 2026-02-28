@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withRBAC } from '@/lib/rbac/guard';
+import { getUserCompanyIds } from '@/lib/auth/get-company-role';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,6 @@ export const GET = withRBAC(
       const supabase = await createClient();
       const { id } = await params;
 
-      // Get current user to check permissions
       const {
         data: { user },
         error: authError,
@@ -26,16 +26,7 @@ export const GET = withRBAC(
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
-      // Get user role for scoping
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      const isAdmin = (userProfile as any)?.role === 'admin';
-
-      // Fetch contract with related data
+      // Fetch contract (include company_id for tenant check)
       const { data: contract, error } = await supabase
         .from('contracts')
         .select('*')
@@ -50,16 +41,24 @@ export const GET = withRBAC(
           );
         }
         return NextResponse.json(
-          {
-            error: 'Failed to fetch contract',
-            details: error.message,
-          },
+          { error: 'Failed to fetch contract', details: error.message },
           { status: 500 }
         );
       }
 
-      // ✅ SECURITY: Non-admin users can only see contracts they're involved in
-      if (!isAdmin) {
+      // Cross-tenant: not found OR not in tenant → 404 (no existence leakage)
+      const userCompanyIds = await getUserCompanyIds(supabase);
+      const contractCompanyId = contract.company_id;
+
+      if (contractCompanyId) {
+        if (!userCompanyIds.includes(contractCompanyId)) {
+          return NextResponse.json(
+            { error: 'Contract not found' },
+            { status: 404 }
+          );
+        }
+      } else {
+        // Legacy: no company_id — fall back to involvement check; if not involved → 404
         const isInvolved =
           contract.client_id === user.id ||
           contract.employer_id === user.id ||
@@ -68,8 +67,8 @@ export const GET = withRBAC(
 
         if (!isInvolved) {
           return NextResponse.json(
-            { error: 'Unauthorized to view this contract' },
-            { status: 403 }
+            { error: 'Contract not found' },
+            { status: 404 }
           );
         }
       }

@@ -1,162 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
-import { createClient as createServerClient } from '@/lib/supabase/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { withRBAC } from '@/lib/rbac/guard';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 import { assertEntitlement } from '@/lib/billing/entitlements';
 
-// GET - Fetch all users
+// GET - Fetch users in caller's company (tenant-scoped via user_roles)
 async function getUsersHandler(request: NextRequest) {
-  try {
+  const supabase = await createClient();
+  const { companyId } = await getCompanyRole(supabase);
+  if (!companyId) {
+    return NextResponse.json({ error: 'No company context' }, { status: 403 });
+  }
 
-    // For admin operations, use service role client
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serviceRoleKey || !supabaseUrl) {
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
 
-    if (!serviceRoleKey || !supabaseUrl) {
-      return NextResponse.json(
-        {
-          error: 'Server configuration error',
-        },
-        { status: 500 }
-      );
-    }
+  const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 
-    const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
+  // Scope by company_id via user_roles (membership table)
+  const { data: roleRows, error } = await adminSupabase
+    .from('user_roles')
+    .select('user_id, role')
+    .eq('company_id', companyId)
+    .eq('is_active', true);
 
-    // Try to get authenticated user
-    let user = null;
-    try {
-      const supabase = await createServerClient();
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-      user = authUser;
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-      if (!user) {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-        if (authUser) {
-          user = authUser;
-        }
-      }
-    } catch (authError) {
-    }
-
-    // ✅ SECURITY FIX: Removed dangerous admin fallback
-    // No authentication = NO ACCESS
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: 'Unauthorized',
-          message: 'Authentication required to access user data',
-        },
-        { status: 401 }
-      );
-    }
-
-    // Check user permissions
-    let userProfile = null;
-    try {
-      const { data: profileData, error: profileError } = await adminSupabase
-        .from('profiles')
-        .select('role, status')
-        .eq('id', user.id)
-        .single();
-
-      if (!profileError && profileData) {
-        userProfile = profileData;
-      }
-    } catch (error) {
-    }
-
-    // If no profile found, try users table
-    if (!userProfile) {
-      try {
-        const { data: userData, error: userError } = await adminSupabase
-          .from('users')
-          .select('role, status')
-          .eq('id', user.id)
-          .single();
-
-        if (!userError && userData) {
-          userProfile = userData;
-        }
-      } catch (error) {
-      }
-    }
-
-    // Check if user has admin permissions
-    if (
-      !userProfile ||
-      !userProfile.role ||
-      !['admin', 'manager'].includes(userProfile.role) ||
-      !['active', 'approved'].includes(userProfile.status)
-    ) {
-      return NextResponse.json(
-        {
-          error: 'Insufficient permissions',
-          details: 'Only active/approved admins or managers can view users',
-        },
-        { status: 403 }
-      );
-    }
-
-    // Fetch users from profiles table
-    let users: any[] = [];
-    try {
-      const { data: profilesData, error: profilesError } = await adminSupabase
-        .from('profiles')
-        .select('id, email, full_name, role, status, created_at, updated_at')
-        .order('created_at', { ascending: false });
-
-      if (!profilesError && profilesData) {
-        users = profilesData;
-      } else {
-      }
-    } catch (error) {
-    }
-
-    // If profiles table failed, try users table
-    if (users.length === 0) {
-      try {
-        const { data: usersData, error: usersError } = await adminSupabase
-          .from('users')
-          .select('id, email, full_name, role, status, created_at, updated_at')
-          .order('created_at', { ascending: false });
-
-        if (!usersError && usersData) {
-          users = usersData;
-        } else {
-        }
-      } catch (error) {
-      }
-    }
-
-
+  const userIds = (roleRows ?? []).map((r) => r.user_id).filter(Boolean);
+  if (userIds.length === 0) {
     return NextResponse.json({
       success: true,
-      data: users,
-      pagination: {
-        total: users.length,
-        page: 1,
-        limit: users.length,
-        totalPages: 1,
-      },
+      data: [],
+      pagination: { total: 0, page: 1, limit: 0, totalPages: 0 },
     });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
+
+  const { data: profiles, error: profilesError } = await adminSupabase
+    .from('profiles')
+    .select('id, email, full_name, role, status, created_at, updated_at')
+    .in('id', userIds)
+    .order('created_at', { ascending: false });
+
+  if (profilesError) {
+    return NextResponse.json({ error: profilesError.message }, { status: 500 });
+  }
+
+  const roleByUser = new Map((roleRows ?? []).map((r) => [r.user_id, r.role]));
+  const users = (profiles ?? []).map((p) => ({
+    ...p,
+    membership_role: roleByUser.get(p.id) ?? p.role,
+  }));
+
+  return NextResponse.json({
+    success: true,
+    data: users,
+    pagination: {
+      total: users.length,
+      page: 1,
+      limit: users.length,
+      totalPages: 1,
+    },
+  });
 }
+
+export const GET = withRBAC('users:read:company', getUsersHandler);
 
 // POST - Create new user
 async function createUserHandler(request: NextRequest) {
@@ -206,7 +122,7 @@ async function createUserHandler(request: NextRequest) {
       );
     }
 
-    const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
+    const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -367,4 +283,4 @@ async function createUserHandler(request: NextRequest) {
 }
 
 // Export with RBAC protection
-export const POST = withRBAC('user:create:all', createUserHandler);
+export const POST = withRBAC('users:create:company', createUserHandler);
