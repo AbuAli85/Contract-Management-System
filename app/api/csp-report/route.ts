@@ -1,71 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * CSP Violation Reporting Endpoint
- *
- * This endpoint receives and logs Content Security Policy violations
- * to help identify security issues and misconfigurations.
- *
- * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+ * CSP Report endpoint — receives violation reports from Content-Security-Policy-Report-Only header.
+ * Logs violated-directive, blocked-uri, source-file, line-number for debugging.
+ * Run in Report-Only mode for 48–72h before tightening enforced CSP.
  */
-
-interface CSPReport {
-  'csp-report': {
-    'document-uri': string;
-    referrer: string;
-    'violated-directive': string;
-    'effective-directive': string;
-    'original-policy': string;
-    'blocked-uri': string;
-    'status-code': number;
-    'source-file'?: string;
-    'line-number'?: number;
-    'column-number'?: number;
-  };
-}
-
 export async function POST(request: NextRequest) {
   try {
-    // Parse CSP violation report
-    const report: CSPReport = await request.json();
-    const violation = report['csp-report'];
+    const body = await request.json();
+    const report = body['csp-report'] ?? body;
 
-    // Log to database if configured
-    if (process.env.LOG_CSP_TO_DB === 'true') {
-      try {
-        const { createClient } = await import('@/lib/supabase/server');
-        const supabase = await createClient();
-        await supabase.from('csp_violations').insert({
-          document_uri: violation['document-uri'],
-          violated_directive: violation['violated-directive'],
-          blocked_uri: violation['blocked-uri'],
-          source_file: violation['source-file'],
-          line_number: violation['line-number'],
-          column_number: violation['column-number'],
-          created_at: new Date().toISOString(),
-        });
-      } catch {
-        // Do not fail the request if DB logging fails
-      }
-    }
+    const violatedDirective = report['violated-directive'] ?? report.violatedDirective ?? 'unknown';
+    const blockedUri = report['blocked-uri'] ?? report.blockedUri ?? 'unknown';
+    const sourceFile = report['source-file'] ?? report.sourceFile ?? '';
+    const lineNumber = report['line-number'] ?? report.lineNumber ?? 0;
+    const documentUri = report['document-uri'] ?? report.documentUri ?? '';
 
-    return NextResponse.json({ received: true }, { status: 204 });
+    // Log for monitoring (aggregate in production via your logging pipeline)
+    console.warn('[CSP Report]', {
+      violatedDirective,
+      blockedUri,
+      sourceFile,
+      lineNumber,
+      documentUri,
+      timestamp: new Date().toISOString(),
+    });
+
+    // TODO: Store aggregated counts in Supabase (e.g. csp_violations table) for dashboards
+    return new NextResponse(null, { status: 204 });
   } catch {
-    return NextResponse.json(
-      { error: 'Invalid report format' },
-      { status: 400 }
-    );
+    return new NextResponse(null, { status: 400 });
   }
-}
-
-// Handle OPTIONS for CORS preflight
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }

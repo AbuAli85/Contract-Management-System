@@ -49,6 +49,9 @@ const nextConfig = {
       "manifest-src 'self'",
     ].join('; ');
 
+    // CSP Report-Only: same directives + report-uri for safe rollout (gather violations before enforcing)
+    const cspReportOnlyDirectives = cspDirectives + "; report-uri /api/csp-report";
+
     return [
       {
         source: '/(.*)',
@@ -77,6 +80,10 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: cspDirectives,
+          },
+          {
+            key: 'Content-Security-Policy-Report-Only',
+            value: cspReportOnlyDirectives,
           },
           {
             key: 'Cross-Origin-Embedder-Policy',

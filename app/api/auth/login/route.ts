@@ -18,52 +18,46 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting: skip if middleware already enforced (avoids double Redis call)
-    const alreadyChecked = request.headers.get('x-ratelimit-checked') === '1';
+    // Rate limiting via Upstash Redis — fail closed on error (no skip header; client could spoof)
     const identifier = getClientIdentifier(request);
-    let rateLimitResult: { success: boolean; limit: number; remaining: number; reset: number } | null = null;
+    let rateLimitResult: { success: boolean; limit: number; remaining: number; reset: number };
+    try {
+      rateLimitResult = rateLimiters.login
+        ? await rateLimiters.login.limit(identifier)
+        : { success: true, limit: 5, remaining: 5, reset: Date.now() + 60000 };
+    } catch (err) {
+      console.error('Login rate limiter failure:', err);
+      return NextResponse.json(
+        { success: false, error: 'Authentication temporarily unavailable' },
+        { status: 503 }
+      );
+    }
 
-    if (!alreadyChecked) {
-      try {
-        rateLimitResult = rateLimiters.login
-          ? await rateLimiters.login.limit(identifier)
-          : { success: true, limit: 5, remaining: 5, reset: Date.now() + 60000 };
-      } catch (err) {
-        console.error('Login rate limiter failure:', err);
-        return NextResponse.json(
-          { success: false, error: 'Authentication temporarily unavailable' },
-          { status: 503 }
-        );
-      }
-
-      if (!rateLimitResult.success) {
-        const headers = getRateLimitHeaders({
-          success: rateLimitResult.success,
-          limit: rateLimitResult.limit,
-          remaining: rateLimitResult.remaining,
-          reset: rateLimitResult.reset,
+    if (!rateLimitResult.success) {
+      const headers = getRateLimitHeaders({
+        success: rateLimitResult.success,
+        limit: rateLimitResult.limit,
+        remaining: rateLimitResult.remaining,
+        reset: rateLimitResult.reset,
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      });
+      const auditEntry = createAuditLog(request, 'LOGIN_RATE_LIMITED', false, {
+        identifier,
+        attemptsRemaining: rateLimitResult.remaining,
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      });
+      logAuditEvent(auditEntry);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Rate limit exceeded',
+          message: `Too many login attempts. Please wait ${Math.ceil(
+            (rateLimitResult.reset - Date.now()) / 1000
+          )} seconds before trying again.`,
           retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
-        });
-        const auditEntry = createAuditLog(request, 'LOGIN_RATE_LIMITED', false, {
-          identifier,
-          attemptsRemaining: rateLimitResult.remaining,
-          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
-        });
-        logAuditEvent(auditEntry);
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Rate limit exceeded',
-            message: `Too many login attempts. Please wait ${Math.ceil(
-              (rateLimitResult.reset - Date.now()) / 1000
-            )} seconds before trying again.`,
-            retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
-          },
-          { status: 429, headers }
-        );
-      }
-    } else {
-      rateLimitResult = { success: true, limit: 5, remaining: 4, reset: Date.now() + 60000 };
+        },
+        { status: 429, headers }
+      );
     }
 
     // Parse and validate input

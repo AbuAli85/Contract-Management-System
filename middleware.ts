@@ -311,12 +311,14 @@ export async function middleware(request: NextRequest) {
     }
 
     // CORS headers only when Origin is present AND allowed (never when missing)
+    // Vary: Origin required when using per-origin headers to prevent cache poisoning
     const corsHeaders = setCors
       ? {
           'Access-Control-Allow-Origin': origin!,
           'Access-Control-Allow-Credentials': 'true',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
+          'Vary': 'Origin',
         }
       : {};
 
@@ -356,8 +358,19 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Handle preflight OPTIONS — reject untrusted origins
+    // Handle preflight OPTIONS — strict on Access-Control-Request-Method
     if (request.method === 'OPTIONS') {
+      const requestMethod = request.headers.get('Access-Control-Request-Method');
+      const allowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'];
+
+      if (!requestMethod || requestMethod.trim() === '') {
+        return new NextResponse('Bad Request: Access-Control-Request-Method required', { status: 400 });
+      }
+      const method = requestMethod.trim().toUpperCase();
+      if (!allowedMethods.includes(method)) {
+        return new NextResponse('Method Not Allowed', { status: 405 });
+      }
+
       // No Origin: allow (same-origin), return 204 without CORS headers
       if (origin === null) {
         return new NextResponse(null, { status: 204 });
@@ -376,7 +389,6 @@ export async function middleware(request: NextRequest) {
 
     // Rate limiting for auth paths — fail closed on Redis error
     const rateLimitedPaths = Object.keys(RATE_LIMIT_CONFIG);
-    let rateLimitChecked = false;
     if (rateLimitedPaths.some(path => pathname.startsWith(path))) {
       try {
         const isLimited = await isRateLimitedDistributed(pathname, ip);
@@ -399,7 +411,6 @@ export async function middleware(request: NextRequest) {
             }
           );
         }
-        rateLimitChecked = true; // Canonical enforcement done — route should skip
       } catch {
         return new NextResponse(
           JSON.stringify({ error: 'Authentication temporarily unavailable' }),
@@ -417,17 +428,6 @@ export async function middleware(request: NextRequest) {
 
     // For regular API requests, add CORS headers only when Origin present and allowed
     Object.entries(corsHeaders).forEach(([k, v]) => response.headers.set(k, v));
-
-    // Signal to route handlers that auth rate limit was already enforced (avoid double Redis calls)
-    if (rateLimitChecked) {
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('x-ratelimit-checked', '1');
-      response = NextResponse.next({
-        request: { headers: requestHeaders },
-      });
-      Object.entries(corsHeaders).forEach(([k, v]) => response.headers.set(k, v));
-      response.headers.set('X-Correlation-ID', correlationId);
-    }
     
     // Refresh Supabase session for API routes
     response = await refreshSupabaseSession(request, response);

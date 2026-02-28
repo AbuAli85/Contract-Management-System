@@ -73,16 +73,28 @@ export function getCorsHeaders(origin: string | null): Record<string, string> {
     'Access-Control-Allow-Headers':
       'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
   };
 }
 
+const ALLOWED_PREFLIGHT_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'];
+
 /**
  * Handle CORS preflight OPTIONS request
+ * Strict on Access-Control-Request-Method: missing → 400, disallowed → 405
  * No Origin: allow (204, no CORS headers). Origin "null"/""/disallowed: 403
  */
 export function handleCorsPreflightRequest(request: NextRequest): NextResponse {
-  const origin = request.headers.get('origin');
+  const requestMethod = request.headers.get('Access-Control-Request-Method');
+  if (!requestMethod || requestMethod.trim() === '') {
+    return new NextResponse('Bad Request: Access-Control-Request-Method required', { status: 400 });
+  }
+  const method = requestMethod.trim().toUpperCase();
+  if (!ALLOWED_PREFLIGHT_METHODS.includes(method)) {
+    return new NextResponse('Method Not Allowed', { status: 405 });
+  }
 
+  const origin = request.headers.get('origin');
   if (origin === null) {
     return new NextResponse(null, { status: 204 });
   }
