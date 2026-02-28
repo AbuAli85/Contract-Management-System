@@ -261,17 +261,43 @@ export async function GET(request: NextRequest) {
 
       for (const cm of membershipData as any[]) {
         const company = cm.company;
-        if (!company?.id || !company?.name || isInvalidCompany(company.name)) continue;
-        if (existingIds.has(company.id)) continue;
-        existingIds.add(company.id);
-        fastCompanies.push({
-          company_id: company.id,
-          company_name: company.name,
-          company_logo: company.logo_url ?? null,
-          user_role: cm.role || 'member',
-          is_primary: !!cm.is_primary,
-          group_name: null,
-        });
+        if (company?.id && company?.name && !isInvalidCompany(company.name) && !existingIds.has(company.id)) {
+          existingIds.add(company.id);
+          fastCompanies.push({
+            company_id: company.id,
+            company_name: company.name,
+            company_logo: company.logo_url ?? null,
+            user_role: cm.role || 'member',
+            is_primary: !!cm.is_primary,
+            group_name: null,
+          });
+        }
+      }
+      // If join returned null for some rows, batch-fetch those companies
+      const orphanIds = (membershipData as any[])
+        .map((cm: any) => cm.company_id)
+        .filter((id: string) => id && !existingIds.has(id));
+      if (orphanIds.length > 0) {
+        const { data: orphanCompanies } = await adminClient
+          .from('companies')
+          .select('id, name, logo_url')
+          .in('id', orphanIds);
+        const byId = new Map((orphanCompanies || []).map((c: any) => [c.id, c]));
+        for (const cm of membershipData as any[]) {
+          const id = cm.company_id;
+          if (!id || existingIds.has(id)) continue;
+          const company = byId.get(id);
+          if (!company?.name || isInvalidCompany(company.name)) continue;
+          existingIds.add(id);
+          fastCompanies.push({
+            company_id: id,
+            company_name: company.name,
+            company_logo: company.logo_url ?? null,
+            user_role: cm.role || 'member',
+            is_primary: !!cm.is_primary,
+            group_name: null,
+          });
+        }
       }
       for (const c of ownedData as any[]) {
         if (!c?.id || !c?.name || isInvalidCompany(c.name) || existingIds.has(c.id)) continue;

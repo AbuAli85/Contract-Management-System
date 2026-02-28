@@ -131,18 +131,18 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       if (!silent) {
         setIsLoading(true);
         setLoadError(null);
-        // Hard cap: never show loading longer than 9s (in case ensureSessionInCookies or fetch hangs)
+        // Hard cap: never show loading longer than fetch timeout (in case ensureSessionInCookies or fetch hangs)
         loadingGuardId = setTimeout(() => {
           setIsLoading(false);
           setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
-        }, 28_000); // Slightly longer than fetch timeout (25s) so we don't show timeout before request can complete
+        }, 50_000); // Slightly longer than fetch timeout (45s) so we don't show timeout before request can complete
       }
 
       await ensureSessionInCookies();
 
       const url = `/api/user/companies?minimal=1${forceRefresh ? `&t=${Date.now()}` : ''}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25_000); // 25s so slow networks/DB can complete
+      const timeoutId = setTimeout(() => controller.abort(), 45_000); // 45s so cold start + slow networks/DB can complete
 
       const response = await fetch(url, {
         cache: 'no-store',
