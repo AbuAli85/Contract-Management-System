@@ -31,17 +31,22 @@ import Link from 'next/link';
 
 interface AdminDashboardUnifiedProps {
   className?: string;
+  /** When true, server has already verified admin access. Skip client check and mount privileged queries. */
+  authorized?: boolean;
 }
 
 export function AdminDashboardUnified({
   className,
+  authorized = false,
 }: AdminDashboardUnifiedProps) {
   const { user } = useAuth();
   const { isAdmin, isManager } = usePermissions();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Check if user is admin
-  if (!isAdmin() && !isManager()) {
+  // Client-side fallback when not pre-authorized by server (e.g. used outside app router)
+  const hasAccess = authorized || isAdmin() || isManager();
+
+  if (!hasAccess) {
     return (
       <Card className='border-red-200 bg-red-50 dark:bg-red-950/20'>
         <CardHeader>

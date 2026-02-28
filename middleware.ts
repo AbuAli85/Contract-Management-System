@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getRedirectLocaleFromRequest } from '@/lib/locale-constants';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis/cloudflare';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
@@ -292,13 +293,42 @@ async function refreshSupabaseSession(request: NextRequest, response: NextRespon
 // MIDDLEWARE FUNCTION
 // ========================================
 
+const ENABLE_LEGACY_ROUTE_REDIRECTS =
+  process.env.ENABLE_LEGACY_ROUTE_REDIRECTS === '1' ||
+  process.env.ENABLE_LEGACY_ROUTE_REDIRECTS === 'true';
+
+const LEGACY_REDIRECTS: Record<string, string> = {
+  '/admin': '/admin',
+  '/not-authorized': '/auth/unauthorized',
+};
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIP(request);
-  
+
+  // Phase 4: Legacy route redirects (when enabled, replaces pages/ stubs)
+  if (ENABLE_LEGACY_ROUTE_REDIRECTS) {
+    const targetPath = LEGACY_REDIRECTS[pathname];
+    if (targetPath) {
+      const { locale, source } = getRedirectLocaleFromRequest(request);
+      // Lightweight redirect hit logging (sampled: log ~10% to reduce noise)
+      if (Math.random() < 0.1) {
+        console.log(
+          JSON.stringify({
+            event: 'legacy_redirect',
+            path: pathname,
+            locale_source: source,
+            resolved_locale: locale,
+          })
+        );
+      }
+      return NextResponse.redirect(new URL(`/${locale}${targetPath}`, request.url), 307);
+    }
+  }
+
   // Extract or generate correlation ID
   const correlationId = extractCorrelationId(request.headers) || generateCorrelationId();
-  
+
   // Create response early for Supabase session refresh
   let response = NextResponse.next();
   

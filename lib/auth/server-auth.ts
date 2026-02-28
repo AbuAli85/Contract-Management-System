@@ -13,11 +13,19 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
 import type { User, Session } from '@supabase/supabase-js';
 
 export interface AuthResult {
   user: User;
   session: Session | null;
+}
+
+/** Extended auth context from requireAdminAccess. Pass to child pages via context/props to avoid re-fetching. */
+export interface AdminAuthContext extends AuthResult {
+  companyId: string | null;
+  tenantRole: string | null;
+  platformRole: string | null;
 }
 
 /**
@@ -124,4 +132,48 @@ export async function requireRole(
   }
 
   return auth;
+}
+
+/**
+ * Canonical admin access gate for server components.
+ * Combines tenant role (getCompanyRole: admin/manager) and platform role (users.role: super_admin).
+ * Returns structured context so child pages can avoid re-fetching (pass via context/props).
+ */
+export async function requireAdminAccess(locale = 'en'): Promise<AdminAuthContext> {
+  const auth = await requireServerAuth(locale);
+
+  const supabase = await createClient();
+  const { role: tenantRole, companyId } = await getCompanyRole(supabase);
+  const isCompanyAdmin = tenantRole === 'admin' || tenantRole === 'manager';
+
+  if (isCompanyAdmin) {
+    return {
+      ...auth,
+      companyId,
+      tenantRole,
+      platformRole: null,
+    };
+  }
+
+  // Platform-level: users.role (super_admin, admin)
+  const { data: u } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', auth.user.id)
+    .single();
+
+  const platformRole = u?.role ?? null;
+  const isPlatformAdmin =
+    platformRole === 'super_admin' || platformRole === 'admin';
+
+  if (!isPlatformAdmin) {
+    redirect(`/${locale}/auth/unauthorized`);
+  }
+
+  return {
+    ...auth,
+    companyId,
+    tenantRole,
+    platformRole,
+  };
 }
