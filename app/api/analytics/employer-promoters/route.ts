@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { resolveActiveCompanyToPartyId } from '@/lib/company-scope';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -8,39 +9,13 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // ✅ COMPANY SCOPE: Get active company's party_id
+    // ✅ COMPANY SCOPE: Get active company's party_id (handles company + party-as-company)
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    let activePartyId: string | null = null;
-
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('active_company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.active_company_id) {
-        const { createAdminClient } = await import('@/lib/supabase/server');
-        let adminClient;
-        try {
-          adminClient = createAdminClient();
-        } catch (e) {
-          adminClient = supabase;
-        }
-
-        const { data: company } = await adminClient
-          .from('companies')
-          .select('party_id')
-          .eq('id', profile.active_company_id)
-          .single();
-
-        if (company?.party_id) {
-          activePartyId = company.party_id;
-        }
-      }
-    }
+    const activePartyId = user
+      ? await resolveActiveCompanyToPartyId(supabase, user.id)
+      : null;
 
     // Fetch employers - filter by active company if available
     let employersQuery = supabase

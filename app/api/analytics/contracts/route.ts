@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveActiveCompanyToPartyId } from '@/lib/company-scope';
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,33 +29,8 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // ✅ COMPANY SCOPE: Get active company's party_id
-    let activePartyId: string | null = null;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_company_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.active_company_id) {
-      const { createAdminClient } = await import('@/lib/supabase/server');
-      let adminClient;
-      try {
-        adminClient = createAdminClient();
-      } catch (e) {
-        adminClient = supabase;
-      }
-
-      const { data: company } = await adminClient
-        .from('companies')
-        .select('party_id')
-        .eq('id', profile.active_company_id)
-        .single();
-
-      if (company?.party_id) {
-        activePartyId = company.party_id;
-      }
-    }
+    // ✅ COMPANY SCOPE: Get active company's party_id (handles company + party-as-company)
+    const activePartyId = await resolveActiveCompanyToPartyId(supabase, user.id);
 
     // Fetch contracts in date range - filter by company if available
     let contractsQuery = supabase
