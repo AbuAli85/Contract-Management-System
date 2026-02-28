@@ -124,26 +124,21 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const hasFetchedRef = useRef(false);
   const autoRetryDoneRef = useRef(false);
 
-  // Primary source: same API as Manage Parties (GET /api/parties?type=Employer). No list endpoint.
+  // Primary source: same API as Manage Parties (GET /api/parties?type=Employer). No client abort — let server respond.
   const fetchCompaniesFromParties = useCallback(async (): Promise<boolean> => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 40_000); // 40s for cold start / slow host
       const [partiesRes, currentRes] = await Promise.all([
         fetch(`/api/parties?type=Employer&limit=500&t=${Date.now()}`, {
           cache: 'no-store',
           credentials: 'include',
-          signal: controller.signal,
           headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
         }),
         fetch('/api/user/companies/current', {
           cache: 'no-store',
           credentials: 'include',
-          signal: controller.signal,
           headers: { 'Cache-Control': 'no-cache' },
         }),
       ]);
-      clearTimeout(timeoutId);
       const partiesData = await partiesRes.json().catch(() => ({}));
       const currentData = await currentRes.json().catch(() => ({}));
       const parties = Array.isArray(partiesData.parties) ? partiesData.parties : [];
@@ -179,7 +174,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         loadingGuardId = setTimeout(() => {
           setIsLoading(false);
           setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
-        }, 45_000); // slightly longer than fetch timeout
+        }, 60_000); // 60s before showing timeout; fetch has no client abort so server can respond late
       }
 
       await ensureSessionInCookies();
