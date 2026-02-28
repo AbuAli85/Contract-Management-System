@@ -12,6 +12,7 @@ import {
   BarChart3,
   UserCircle,
   Building2,
+  Loader2,
 } from 'lucide-react';
 import { useCompany } from '@/components/providers/company-provider';
 import { CompanySwitcher } from '@/components/layout/company-switcher';
@@ -53,7 +54,7 @@ export function PromotersSimpleHeader({
   }, [locale]);
 
   const router = useRouter();
-  useCompany(); // Ensures company context is active so list is scoped to selected company
+  const { isLoading: companyLoading } = useCompany();
 
   const handleAdd = () => {
     if (onAddPromoter) {
@@ -89,8 +90,17 @@ export function PromotersSimpleHeader({
           </p>
           <div className="flex items-center gap-2 pt-1">
             <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="text-xs text-muted-foreground">Showing for:</span>
-            <CompanySwitcher />
+            {companyLoading ? (
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading company…
+              </span>
+            ) : (
+              <>
+                <span className="text-xs text-muted-foreground">Showing for:</span>
+                <CompanySwitcher />
+              </>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
