@@ -111,9 +111,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const hasFetchedRef = useRef(false);
 
   // ─── Fetch companies list ──────────────────────────────────────────────────
-  const fetchActiveCompany = useCallback(async (forceRefresh = false): Promise<void> => {
+  const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       await ensureSessionInCookies();
 
       const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
@@ -159,12 +159,12 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         setRawCompanies([]);
       }
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
+      if (err.name !== 'AbortError' && !silent) {
         setCompany(null);
         setRawCompanies([]);
       }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, []);
 
@@ -227,8 +227,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         description: `Now viewing ${data.company_name}.`,
       });
 
-      // Refetch companies list in background (do not block — was causing stuck loading)
-      fetchActiveCompany(true).catch(() => {});
+      // Refetch companies list in background without showing loading (avoids UI flash)
+      fetchActiveCompany(true, true).catch(() => {});
     } catch (error: any) {
       setIsSwitching(false);
       fetchActiveCompany(true).catch(() => {});

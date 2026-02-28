@@ -111,14 +111,30 @@ export async function POST(request: NextRequest) {
           companyLogo = companyRow.logo_url ?? null;
           userRole = (roleRow as any).role ?? 'member';
         } else {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'You do not have access to this company',
-              code: 'NO_ACCESS',
-            },
-            { status: 403 }
-          );
+          // 2d) company_id may be a party id (parties_employer_direct from GET /api/user/companies)
+          const { data: partyRow } = await adminClient
+            .from('parties')
+            .select('id, name_en, name_ar, logo_url, type')
+            .eq('id', company_id)
+            .maybeSingle();
+
+          if (partyRow?.type === 'Employer') {
+            companyName =
+              (partyRow as any).name_en ||
+              (partyRow as any).name_ar ||
+              'Company';
+            companyLogo = (partyRow as any).logo_url ?? null;
+            userRole = 'member';
+          } else {
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'You do not have access to this company',
+                code: 'NO_ACCESS',
+              },
+              { status: 403 }
+            );
+          }
         }
       }
     }
