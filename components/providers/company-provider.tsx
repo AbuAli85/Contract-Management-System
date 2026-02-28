@@ -8,7 +8,7 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
@@ -102,6 +102,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState(false);
   const params = useParams();
+  const pathname = usePathname();
   const locale = (params?.locale as string) || 'en';
   const router = useRouter();
   const { toast } = useToast();
@@ -210,8 +211,14 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      // Navigate to dashboard overview for a clean context in the new company
-      router.push(`/${locale}/dashboard/overview`);
+      // Stay on promoters/employees page when switching there so list refetches for new company
+      const stayOnPromoters =
+        typeof pathname === 'string' && pathname.includes('/promoters');
+      if (stayOnPromoters) {
+        router.push(`/${locale}/promoters`);
+      } else {
+        router.push(`/${locale}/dashboard/overview`);
+      }
       router.refresh();
 
       toast({
@@ -229,7 +236,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsSwitching(false);
     }
-  }, [isSwitching, company?.id, fetchActiveCompany, queryClient, router, locale, toast]);
+  }, [isSwitching, company?.id, fetchActiveCompany, queryClient, router, locale, toast, pathname]);
 
   // ─── Refresh ───────────────────────────────────────────────────────────────
   const refreshCompany = useCallback(async () => {

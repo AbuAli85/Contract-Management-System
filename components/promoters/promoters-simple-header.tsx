@@ -11,7 +11,10 @@ import {
   RefreshCw,
   BarChart3,
   UserCircle,
+  Building2,
 } from 'lucide-react';
+import { useCompany } from '@/components/providers/company-provider';
+import { CompanySwitcher } from '@/components/layout/company-switcher';
 
 interface PromotersSimpleHeaderProps {
   locale: string;
@@ -50,6 +53,7 @@ export function PromotersSimpleHeader({
   }, [locale]);
 
   const router = useRouter();
+  useCompany(); // Ensures company context is active so list is scoped to selected company
 
   const handleAdd = () => {
     if (onAddPromoter) {
@@ -70,7 +74,7 @@ export function PromotersSimpleHeader({
   return (
     <header className="border-b border-border/60 pb-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="space-y-2">
           <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl flex items-center gap-2">
             <UserCircle className="h-6 w-6 text-muted-foreground" />
             Promoters
@@ -83,6 +87,11 @@ export function PromotersSimpleHeader({
               </span>
             )}
           </p>
+          <div className="flex items-center gap-2 pt-1">
+            <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground">Showing for:</span>
+            <CompanySwitcher />
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canCreate && (
