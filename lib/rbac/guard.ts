@@ -327,7 +327,7 @@ export function withRBAC<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-    // 1. Apply rate limiting first
+    // 1. Apply rate limiting first (skip if middleware already enforced)
     const {
       applyRateLimit,
       getRateLimitConfigForEndpoint,
@@ -337,14 +337,34 @@ export function withRBAC<T extends any[]>(
     const pathname = request.nextUrl.pathname;
     const method = request.method;
     const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
+    const alreadyChecked = request.headers.get('x-ratelimit-checked') === '1';
 
-    const rateLimitResult = await applyRateLimit(request, rateLimitConfig);
+    let rateLimitResult;
+    if (alreadyChecked) {
+      rateLimitResult = {
+        success: true,
+        limit: 1000,
+        remaining: 999,
+        reset: Date.now() + 60000,
+        retryAfter: undefined,
+      };
+    } else {
+      try {
+        rateLimitResult = await applyRateLimit(request, rateLimitConfig);
+      } catch (err) {
+        const isAuthPath = pathname.startsWith('/api/auth');
+        if (isAuthPath) {
+          return NextResponse.json(
+            { success: false, error: 'Authentication temporarily unavailable' },
+            { status: 503 }
+          );
+        }
+        throw err;
+      }
+    }
 
     if (!rateLimitResult.success) {
-      // Log rate limit violation
-
       const headers = getRateLimitHeaders(rateLimitResult);
-
       return NextResponse.json(
         {
           success: false,
@@ -353,10 +373,7 @@ export function withRBAC<T extends any[]>(
           retryAfter: rateLimitResult.retryAfter,
           resetAt: new Date(rateLimitResult.reset).toISOString(),
         },
-        {
-          status: 429,
-          headers,
-        }
+        { status: 429, headers }
       );
     }
 
@@ -393,7 +410,7 @@ export function withAnyRBAC<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-    // 1. Apply rate limiting first
+    // 1. Apply rate limiting first (skip if middleware already enforced)
     const {
       applyRateLimit,
       getRateLimitConfigForEndpoint,
@@ -403,14 +420,34 @@ export function withAnyRBAC<T extends any[]>(
     const pathname = request.nextUrl.pathname;
     const method = request.method;
     const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
+    const alreadyChecked = request.headers.get('x-ratelimit-checked') === '1';
 
-    const rateLimitResult = await applyRateLimit(request, rateLimitConfig);
+    let rateLimitResult;
+    if (alreadyChecked) {
+      rateLimitResult = {
+        success: true,
+        limit: 1000,
+        remaining: 999,
+        reset: Date.now() + 60000,
+        retryAfter: undefined,
+      };
+    } else {
+      try {
+        rateLimitResult = await applyRateLimit(request, rateLimitConfig);
+      } catch (err) {
+        const isAuthPath = pathname.startsWith('/api/auth');
+        if (isAuthPath) {
+          return NextResponse.json(
+            { success: false, error: 'Authentication temporarily unavailable' },
+            { status: 503 }
+          );
+        }
+        throw err;
+      }
+    }
 
     if (!rateLimitResult.success) {
-      // Log rate limit violation
-
       const headers = getRateLimitHeaders(rateLimitResult);
-
       return NextResponse.json(
         {
           success: false,
@@ -419,10 +456,7 @@ export function withAnyRBAC<T extends any[]>(
           retryAfter: rateLimitResult.retryAfter,
           resetAt: new Date(rateLimitResult.reset).toISOString(),
         },
-        {
-          status: 429,
-          headers,
-        }
+        { status: 429, headers }
       );
     }
 

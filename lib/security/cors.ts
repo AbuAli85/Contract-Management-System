@@ -16,10 +16,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Get list of allowed origins from environment configuration
+ * Trims spaces and removes trailing slashes for exact matching
  */
 export function getAllowedOrigins(): string[] {
   const envOrigins =
-    process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+    process.env.ALLOWED_ORIGINS?.split(',')
+      .map(o => o.trim().replace(/\/$/, ''))
+      .filter(Boolean) || [];
   const defaultOrigins = [
     'https://portal.thesmartpro.io',
     'https://www.thesmartpro.io',
@@ -35,41 +38,55 @@ export function getAllowedOrigins(): string[] {
 
 /**
  * Validate if the request origin is allowed
+ * Treat null, "null", and empty string as NOT allowed (file://, sandboxed iframes)
  */
 export function isOriginAllowed(origin: string | null): boolean {
-  if (!origin) return true; // Same-origin requests don't have origin header
+  if (origin == null || origin === '' || origin === 'null') return false;
 
   const allowedOrigins = getAllowedOrigins();
-  return allowedOrigins.includes(origin);
+  const normalized = origin.replace(/\/$/, '').toLowerCase();
+  return allowedOrigins.some(a => a.toLowerCase() === normalized);
 }
 
 /**
  * Get CORS headers for API responses
+ * Only sets CORS headers when Origin is present AND allowed (never when missing)
+ * Credentials only when origin is allowed (never with wildcard)
  */
 export function getCorsHeaders(origin: string | null): Record<string, string> {
   const allowedOrigins = getAllowedOrigins();
-  const allowedOrigin =
-    origin && isOriginAllowed(origin)
-      ? origin
-      : allowedOrigins[0] || 'https://portal.thesmartpro.io';
+  const shouldSet = origin != null && origin !== '' && origin !== 'null' && isOriginAllowed(origin);
+
+  if (!shouldSet) {
+    return {
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers':
+        'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
+      'Access-Control-Max-Age': '86400',
+    };
+  }
 
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Origin': origin!,
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers':
       'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400', // 24 hours
+    'Access-Control-Max-Age': '86400',
   };
 }
 
 /**
  * Handle CORS preflight OPTIONS request
+ * No Origin: allow (204, no CORS headers). Origin "null"/""/disallowed: 403
  */
 export function handleCorsPreflightRequest(request: NextRequest): NextResponse {
   const origin = request.headers.get('origin');
 
-  if (origin && !isOriginAllowed(origin)) {
+  if (origin === null) {
+    return new NextResponse(null, { status: 204 });
+  }
+  if (origin === 'null' || origin === '' || !isOriginAllowed(origin)) {
     return new NextResponse('Forbidden: Origin not allowed', { status: 403 });
   }
 
@@ -82,19 +99,26 @@ export function handleCorsPreflightRequest(request: NextRequest): NextResponse {
 /**
  * Validate CORS for incoming request
  * Returns error response if origin is not allowed
+ * - No Origin header: allow (same-origin)
+ * - Origin "null" or "": reject
+ * - Origin not in allowlist: reject
  */
 export function validateCorsRequest(request: NextRequest): NextResponse | null {
   const origin = request.headers.get('origin');
 
-  // Only validate cross-origin requests
-  if (!origin) return null;
+  if (origin === null) return null; // Same-origin, no Origin header
+
+  if (origin === 'null' || origin === '') {
+    return new NextResponse('Forbidden: Origin not allowed', {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   if (!isOriginAllowed(origin)) {
     return new NextResponse('Forbidden: Origin not allowed', {
       status: 403,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 

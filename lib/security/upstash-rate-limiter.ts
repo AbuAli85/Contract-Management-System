@@ -158,9 +158,15 @@ export async function applyRateLimit(
         : Math.ceil((result.reset - Date.now()) / 1000),
     };
   } catch (error) {
+    console.error('Rate limiter failure:', error);
 
-    // In case of Redis failure, allow the request but log the error
-    // This prevents the entire system from failing due to rate limiting issues
+    // Auth endpoints: fail closed — never allow on Redis/Upstash error
+    const authTypes = ['login', 'registration', 'auth', 'passwordReset'];
+    if (authTypes.includes(config.type)) {
+      throw error;
+    }
+
+    // Non-auth: degrade gracefully to avoid breaking general API
     return {
       success: true,
       limit: 1000,

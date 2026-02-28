@@ -56,55 +56,50 @@ const RATE_LIMIT_CONFIG = {
 
 function getAllowedOrigins(): string[] {
   const envOrigins =
-    process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim().replace(/\/$/, '')) || [];
-  
-  // Production origins
-  const productionOrigins = [
-    'https://portal.thesmartpro.io',
-    'https://www.thesmartpro.io',
-    'https://thesmartpro.io',
-  ];
+    process.env.ALLOWED_ORIGINS?.split(',')
+      .map(o => o.trim().replace(/\/$/, ''))
+      .filter(Boolean) || [];
 
-  // Add localhost in development
-  if (process.env.NODE_ENV === 'development') {
-    productionOrigins.push('http://localhost:3000', 'http://localhost:3001');
+  if (envOrigins.length > 0) {
+    return envOrigins;
   }
 
-  return envOrigins.length > 0 ? envOrigins : productionOrigins;
+  // Explicit allowlist only — no wildcard subdomain matching
+  if (process.env.NODE_ENV === 'production') {
+    return [
+      'https://portal.thesmartpro.io',
+      'https://app.thesmartpro.io',
+      'https://insights.thesmartpro.io',
+      'https://sanad.thesmartpro.io',
+      'https://www.thesmartpro.io',
+      'https://thesmartpro.io',
+    ];
+  }
+
+  return [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    ...(process.env.NODE_ENV !== 'production' &&
+    process.env.ALLOWED_VERCEL_PREVIEWS
+      ? process.env.ALLOWED_VERCEL_PREVIEWS.split(',')
+          .map(o => o.trim().replace(/\/$/, ''))
+          .filter(Boolean)
+      : []),
+  ];
 }
 
-// Check if origin matches allowed patterns
+// Strict origin check — exact match only, no wildcard subdomains
+// Treat null, "null", and empty string as NOT allowed (file://, sandboxed iframes)
 function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boolean {
-  if (!origin) return true; // Same-origin requests don't include origin header
-  
-  // Normalize origin (remove trailing slash)
-  const normalizedOrigin = origin.replace(/\/$/, '').toLowerCase();
-  
-  // Check exact match
-  if (allowedOrigins.some(allowed => allowed.toLowerCase() === normalizedOrigin)) {
-    return true;
-  }
-  
-  // In production, be more restrictive with Vercel preview deployments
-  if (process.env.NODE_ENV === 'production') {
-    // Only allow specific Vercel preview URLs if configured
-    const allowedVercelPreviews = process.env.ALLOWED_VERCEL_PREVIEWS?.split(',') || [];
-    if (allowedVercelPreviews.some(preview => normalizedOrigin.includes(preview))) {
-      return true;
-    }
-  } else {
-    // In development, allow all Vercel preview deployments
-    if (normalizedOrigin.endsWith('.vercel.app')) {
-      return true;
-    }
-  }
-  
-  // Allow any thesmartpro.io subdomain
-  if (normalizedOrigin.endsWith('.thesmartpro.io') || normalizedOrigin === 'https://thesmartpro.io') {
-    return true;
-  }
-  
-  return false;
+  if (origin == null || origin === '' || origin === 'null') return false;
+
+  const normalized = origin.replace(/\/$/, '').toLowerCase();
+  return allowedOrigins.some(allowed => allowed.toLowerCase() === normalized);
+}
+
+// Whether to set CORS headers — only when Origin is present AND allowed
+function shouldSetCorsHeaders(origin: string | null, allowedOrigins: string[]): boolean {
+  return origin != null && origin !== '' && origin !== 'null' && isOriginAllowed(origin, allowedOrigins);
 }
 
 // ========================================
@@ -113,7 +108,6 @@ function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boole
 
 async function isRateLimitedDistributed(path: string, ip: string): Promise<boolean> {
   if (!ratelimit) {
-    // Fallback to in-memory rate limiting
     return isRateLimitedInMemory(path, ip);
   }
 
@@ -123,7 +117,11 @@ async function isRateLimitedDistributed(path: string, ip: string): Promise<boole
     return !success;
   } catch (error) {
     console.error('Rate limiting error:', error);
-    // On error, allow the request to proceed (fail open)
+    // Auth paths: fail closed — do not allow request when rate limiter fails
+    const isAuthPath = Object.keys(RATE_LIMIT_CONFIG).some(p => path.startsWith(p));
+    if (isAuthPath) {
+      throw error;
+    }
     return false;
   }
 }
@@ -294,21 +292,33 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/')) {
     const origin = request.headers.get('origin');
     const allowedOrigins = getAllowedOrigins();
+    const setCors = shouldSetCorsHeaders(origin, allowedOrigins);
 
-    // Determine the CORS origin to use in response headers
-    const corsOrigin = origin && isOriginAllowed(origin, allowedOrigins) 
-      ? origin 
-      : allowedOrigins[0] || 'https://portal.thesmartpro.io';
-
-    // Validate origin for cross-origin requests
-    if (!isOriginAllowed(origin, allowedOrigins)) {
+    // Reject null/"null"/empty origin (file://, sandboxed iframes)
+    if (origin !== null && (origin === 'null' || origin === '')) {
       return new NextResponse(JSON.stringify({ error: 'Origin not allowed' }), {
         status: 403,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    // Reject disallowed origins when Origin header is present
+    if (origin !== null && !isOriginAllowed(origin, allowedOrigins)) {
+      return new NextResponse(JSON.stringify({ error: 'Origin not allowed' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // CORS headers only when Origin is present AND allowed (never when missing)
+    const corsHeaders = setCors
+      ? {
+          'Access-Control-Allow-Origin': origin!,
+          'Access-Control-Allow-Credentials': 'true',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
+        }
+      : {};
 
     // CSRF Protection for state-changing requests
     if (
@@ -339,61 +349,85 @@ export async function middleware(request: NextRequest) {
             status: 403,
             headers: {
               'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': corsOrigin,
-              'Access-Control-Allow-Credentials': 'true',
+              ...corsHeaders,
             },
           });
         }
       }
     }
 
-    // Handle preflight OPTIONS requests
+    // Handle preflight OPTIONS — reject untrusted origins
     if (request.method === 'OPTIONS') {
+      // No Origin: allow (same-origin), return 204 without CORS headers
+      if (origin === null) {
+        return new NextResponse(null, { status: 204 });
+      }
+      if (!isOriginAllowed(origin, allowedOrigins)) {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
       return new NextResponse(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': corsOrigin,
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-          'Access-Control-Allow-Headers':
-            'Content-Type, Authorization, X-CSRF-Token, X-Requested-With',
-          'Access-Control-Allow-Credentials': 'true',
+          ...corsHeaders,
           'Access-Control-Max-Age': '86400',
         },
       });
     }
 
-    // Rate limiting for specific paths
+    // Rate limiting for auth paths — fail closed on Redis error
     const rateLimitedPaths = Object.keys(RATE_LIMIT_CONFIG);
+    let rateLimitChecked = false;
     if (rateLimitedPaths.some(path => pathname.startsWith(path))) {
-      const isLimited = await isRateLimitedDistributed(pathname, ip);
-      
-      if (isLimited) {
+      try {
+        const isLimited = await isRateLimitedDistributed(pathname, ip);
+        if (isLimited) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Rate limit exceeded',
+              message: 'Too many requests. Please wait and try again.',
+              retryAfter: 60,
+            }),
+            {
+              status: 429,
+              headers: {
+                'Content-Type': 'application/json',
+                'Retry-After': '60',
+                'X-RateLimit-Limit': '5',
+                'X-RateLimit-Window': '60',
+                ...corsHeaders,
+              },
+            }
+          );
+        }
+        rateLimitChecked = true; // Canonical enforcement done — route should skip
+      } catch {
         return new NextResponse(
-          JSON.stringify({
-            error: 'Rate limit exceeded',
-            message: 'Too many requests. Please wait and try again.',
-            retryAfter: 60,
-          }),
+          JSON.stringify({ error: 'Authentication temporarily unavailable' }),
           {
-            status: 429,
+            status: 503,
             headers: {
               'Content-Type': 'application/json',
               'Retry-After': '60',
-              'X-RateLimit-Limit': '5',
-              'X-RateLimit-Window': '60',
-              'Access-Control-Allow-Origin': corsOrigin,
-              'Access-Control-Allow-Credentials': 'true',
+              ...corsHeaders,
             },
           }
         );
       }
     }
 
-    // For regular API requests, add CORS headers to the response
-    response.headers.set('Access-Control-Allow-Origin', corsOrigin);
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token, X-Requested-With');
+    // For regular API requests, add CORS headers only when Origin present and allowed
+    Object.entries(corsHeaders).forEach(([k, v]) => response.headers.set(k, v));
+
+    // Signal to route handlers that auth rate limit was already enforced (avoid double Redis calls)
+    if (rateLimitChecked) {
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set('x-ratelimit-checked', '1');
+      response = NextResponse.next({
+        request: { headers: requestHeaders },
+      });
+      Object.entries(corsHeaders).forEach(([k, v]) => response.headers.set(k, v));
+      response.headers.set('X-Correlation-ID', correlationId);
+    }
     
     // Refresh Supabase session for API routes
     response = await refreshSupabaseSession(request, response);
