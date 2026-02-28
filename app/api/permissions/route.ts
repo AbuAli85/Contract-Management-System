@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withRBAC } from '@/lib/rbac/guard';
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     // Define available permissions based on the system's permission structure
     const permissions = [
@@ -198,3 +199,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRBAC('permissions:read:company', getHandler);

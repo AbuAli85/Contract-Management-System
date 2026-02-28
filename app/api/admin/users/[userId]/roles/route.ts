@@ -10,16 +10,15 @@ import { permissionCache } from '@/lib/rbac/cache';
 
 /**
  * GET /api/admin/users/[userId]/roles
- * Get user's current roles
- * Required permission: user:read:all
+ * Get user's current roles (platform RBAC — user_role_assignments only).
+ * Required permission: users:read:all
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Check permission
-    const guardResult = await guardPermission('user:read:all', request);
+    const guardResult = await guardPermission('users:read:all', request);
     if (guardResult) {
       return guardResult;
     }
@@ -103,16 +102,15 @@ export async function GET(
 
 /**
  * POST /api/admin/users/[userId]/roles
- * Assign role to user
- * Required permission: role:assign:all
+ * Assign role to user (platform RBAC — writes to user_role_assignments only).
+ * Required permission: users:manage:all
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Check permission
-    const guardResult = await guardPermission('role:assign:all', request);
+    const guardResult = await guardPermission('users:manage:all', request);
     if (guardResult) {
       return guardResult;
     }
@@ -297,16 +295,15 @@ export async function POST(
 
 /**
  * DELETE /api/admin/users/[userId]/roles
- * Remove role from user
- * Required permission: role:assign:all
+ * Remove role from user (platform RBAC).
+ * Required permission: users:manage:all
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Check permission
-    const guardResult = await guardPermission('role:assign:all', request);
+    const guardResult = await guardPermission('users:manage:all', request);
     if (guardResult) {
       return guardResult;
     }

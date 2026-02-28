@@ -1,24 +1,17 @@
 // ========================================
-// 🛡️ ADMIN ROLES API
+// 🛡️ ADMIN ROLES API (platform roles table only)
 // ========================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { guardPermission } from '@/lib/rbac/guard';
+import { withRBAC } from '@/lib/rbac/guard';
 
 /**
- * GET /api/admin/roles
- * List all roles with permissions and user counts
- * Required permission: role:read:all
+ * GET /api/admin/roles — list platform roles with permissions and user counts
+ * Required permission: roles:read:all
  */
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
-    // Check permission
-    const guardResult = await guardPermission('role:read:all', request);
-    if (guardResult) {
-      return guardResult;
-    }
-
     const supabase = await createClient();
 
     // Get all roles with their permissions
@@ -121,18 +114,11 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/admin/roles
- * Create a new role
- * Required permission: role:create:all
+ * POST /api/admin/roles — create platform role
+ * Required permission: roles:manage:all
  */
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
-    // Check permission
-    const guardResult = await guardPermission('role:create:all', request);
-    if (guardResult) {
-      return guardResult;
-    }
-
     const body = await request.json();
     const { name, category, description } = body;
 
@@ -211,3 +197,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRBAC('roles:read:all', getHandler);
+export const POST = withRBAC('roles:manage:all', postHandler);

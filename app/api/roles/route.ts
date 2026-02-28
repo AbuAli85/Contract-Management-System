@@ -1,129 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getCompanyRole } from '@/lib/auth/get-company-role';
+import { withRBAC } from '@/lib/rbac/guard';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
+import { getServiceRoleClient } from '@/app/api/users/admin-utils';
 
-export async function GET(request: NextRequest) {
+const TENANT_MEMBERSHIP_ROLES = ['admin', 'manager', 'provider', 'client'] as const;
+
+async function getHandler(request: NextRequest) {
   try {
     const supabase = await createClient();
-
-    // Get unique roles from users table
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('role');
-
-    if (usersError) {
+    const { companyId } = await getCompanyRole(supabase);
+    if (!companyId) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to fetch users',
-        },
+        { success: false, code: 'NO_ACTIVE_COMPANY', error: 'No active company selected' },
+        { status: 403 }
+      );
+    }
+
+    const serviceClient = getServiceRoleClient();
+    const { data: rows, error } = await serviceClient
+      .from('user_roles')
+      .select('role')
+      .eq('company_id', companyId)
+      .eq('is_active', true);
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch roles' },
         { status: 500 }
       );
     }
 
-    // Count users per role (filter out null roles)
-    const roleCounts = (users || []).reduce(
-      (acc, user) => {
-        if (user.role) {
-          acc[user.role] = (acc[user.role] || 0) + 1;
+    const roleCounts = (rows || []).reduce(
+      (acc: Record<string, number>, r: { role: string }) => {
+        if (r.role) {
+          acc[r.role] = (acc[r.role] || 0) + 1;
         }
         return acc;
       },
-      {} as Record<string, number>
+      {}
     );
 
-    // Create role objects
-    const roles = Object.entries(roleCounts).map(([roleName, userCount]) => ({
+    const roles = (TENANT_MEMBERSHIP_ROLES as readonly string[]).map((roleName) => ({
       id: roleName,
       name: roleName,
       description: `${getRoleDisplay(roleName).displayText} role`,
-      permissions: [], // Will be populated from permissions table
-      userCount,
+      permissions: [],
+      userCount: roleCounts[roleName] ?? 0,
       created_at: new Date().toISOString(),
-      is_system: roleName === 'admin' || roleName === 'user',
+      is_system: roleName === 'admin' || roleName === 'manager',
     }));
 
-    return NextResponse.json({
-      success: true,
-      roles,
-    });
+    return NextResponse.json({ success: true, roles });
   } catch (error) {
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-      },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const { name, description, permissions } = await request.json();
-
-    // Validate input
-    if (!name || !description) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Name and description are required',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Check if role already exists by checking if any users have this role
-    const { data: existingUsers, error: checkError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('role', name)
-      .limit(1);
-
-    if (checkError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to check existing role',
-        },
-        { status: 500 }
-      );
-    }
-
-    if (existingUsers && existingUsers.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Role with this name already exists',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Since we don't have a roles table, we'll just return success
-    // The role will be created when a user is assigned this role
-    const newRole = {
-      id: name,
-      name,
-      description,
-      permissions: permissions || [],
-      userCount: 0,
-      created_at: new Date().toISOString(),
-      is_system: false,
-    };
-
-    return NextResponse.json({
-      success: true,
-      role: newRole,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-      },
-      { status: 500 }
-    );
-  }
+async function postHandler(request: NextRequest) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: 'Creating roles via this endpoint is not supported. Use user management to assign tenant membership roles.',
+    },
+    { status: 405 }
+  );
 }
+
+export const GET = withRBAC('roles:read:company', getHandler);
+export const POST = withRBAC('roles:read:company', postHandler);

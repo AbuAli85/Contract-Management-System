@@ -33,3 +33,9 @@ BEGIN
 
   RAISE NOTICE 'users:manage:company attached to admin/manager roles';
 END $$;
+
+-- ============================================================================
+-- Post-migration runbook: after applying any permissions migration, run:
+--   SELECT refresh_user_permissions_cache();   (or your cache refresh RPC)
+-- so the RBAC evaluator and permission cache see the new permission.
+-- ============================================================================

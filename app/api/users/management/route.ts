@@ -150,8 +150,12 @@ async function getHandler(request: NextRequest) {
     const { companyId } = await getCompanyRole(supabase);
     if (!companyId) {
       return NextResponse.json(
-        { error: 'No active company selected' },
-        { status: 400 }
+        {
+          code: 'NO_ACTIVE_COMPANY',
+          error: 'No active company selected',
+          message: 'Please select a company from the switcher to manage users in that organization.',
+        },
+        { status: 403 }
       );
     }
 
@@ -370,8 +374,12 @@ async function postHandler(request: NextRequest) {
     const { companyId } = await getCompanyRole(supabase);
     if (!companyId) {
       return NextResponse.json(
-        { error: 'No active company selected' },
-        { status: 400 }
+        {
+          code: 'NO_ACTIVE_COMPANY',
+          error: 'No active company selected',
+          message: 'Please select a company from the switcher to manage users in that organization.',
+        },
+        { status: 403 }
       );
     }
 

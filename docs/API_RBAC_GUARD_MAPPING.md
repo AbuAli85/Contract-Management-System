@@ -22,7 +22,7 @@
 | Route | Methods | Current Guard | Recommended | Tenant Scoping |
 |-------|---------|---------------|-------------|----------------|
 | `/api/users` | GET, POST | `withRBAC` (POST) | `user:read:all` / `user:create:all` | Service role for admin; scope by company |
-| `/api/users/management` | * | Check | `user:read:all` or `user:manage:all` | company_id |
+| `/api/users/management` | GET, POST | `withRBAC('users:manage:company')` | ✅ Migrated | company_id from getCompanyRole |
 | `/api/users/roles`, `/api/users/permissions` | * | Check | `role:read:all` / `role:assign:all` | company_id |
 | `/api/contracts` | GET, POST, PUT, DELETE | `withRBAC`, `withAnyRBAC` | `contracts:read:own`, `contracts:write:own` | company_id via getCompanyRole |
 | `/api/contracts/templates` | GET, POST | `withRBAC` | `contracts:read:own`, `contracts:write:own` | company_id |
@@ -107,10 +107,19 @@ Run in CI before deploy. Prevents new sensitive routes from being added without 
 
 - Run: `npm run test:non-admin-denied`
 - Env: `TEST_NON_ADMIN_EMAIL`, `TEST_NON_ADMIN_PASSWORD` (user with role provider or client)
-- Endpoints: `/api/users/management`, `/api/audit-logs`, `/api/roles`
+- Endpoints: `/api/audit-logs`, `/api/roles` (and `/api/users/management` when user lacks `users:manage:company`)
 - **Policy:** Auth is validated first; 401 fails (broken token/auth). Authenticated user without permission → 403.
 
-### 3. Contracts export role-matrix test (next ROI)
+### 3. Tenant admin cannot grant global RBAC ✅ Implemented
+
+**`tests/tenant-admin-no-global-rbac.test.js`** — Tenant admin `update_role` only changes `user_roles`, not `user_role_assignments`.
+
+- Run: `npm run test:tenant-admin-no-global-rbac`
+- Env: `TEST_TENANT_ADMIN_EMAIL`, `TEST_TENANT_ADMIN_PASSWORD`, `TEST_TARGET_USER_EMAIL`, `TEST_TARGET_USER_PASSWORD` (target user in same company)
+- **Steps:** Tenant admin POSTs update_role → 200; then target user GETs platform admin endpoint → must still get 403.
+- **Policy:** Prevents privilege escalation via tenant admin path.
+
+### 4. Contracts export role-matrix test (next ROI)
 
 Export endpoints are common escalation targets. Minimal test:
 
