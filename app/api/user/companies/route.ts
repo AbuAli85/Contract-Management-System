@@ -253,7 +253,7 @@ export async function GET(request: NextRequest) {
           .eq('owner_id', user.id),
         adminClient
           .from('profiles')
-          .select('active_company_id')
+          .select('active_company_id, role')
           .eq('id', user.id)
           .single(),
       ]);
@@ -369,6 +369,31 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Platform admin: include all employer parties so they can switch to any company (e.g. luxsess2001@gmail.com)
+      const isPlatformAdmin = profileRes.data?.role === 'admin';
+      if (isPlatformAdmin) {
+        const { data: allEmployerParties } = await adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, logo_url')
+          .eq('type', 'Employer')
+          .order('name_en', { ascending: true })
+          .limit(500);
+        for (const party of allEmployerParties || []) {
+          if (!party?.id || existingIds.has(party.id)) continue;
+          const name = party.name_en || party.name_ar || 'Unknown Company';
+          if (isInvalidCompany(name)) continue;
+          existingIds.add(party.id);
+          fastCompanies.push({
+            company_id: party.id,
+            company_name: name,
+            company_logo: party.logo_url ?? null,
+            user_role: 'admin',
+            is_primary: false,
+            group_name: null,
+          });
+        }
+      }
+
       let activeCompanyId = profileRes.data?.active_company_id ?? null;
       if (!activeCompanyId && fastCompanies.length > 0) {
         activeCompanyId = fastCompanies[0].company_id;
@@ -400,6 +425,14 @@ export async function GET(request: NextRequest) {
 
     let allCompanies: any[] = [];
     let membershipCompanies: any[] = []; // Track for logging
+
+    // Resolve platform admin for non-minimal path (so admins see all employer parties)
+    const { data: profileForRole } = await adminClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    const isPlatformAdminFull = profileForRole?.role === 'admin';
 
     // First try: Get companies via company_members using admin client
     // Include both active and invited status to catch all memberships
@@ -942,6 +975,37 @@ export async function GET(request: NextRequest) {
       }
     } catch (e) {
       // Non-fatal
+    }
+
+    // Platform admin: include all employer parties so they can switch to any company
+    if (isPlatformAdminFull) {
+      try {
+        const { data: allEmployerPartiesFull } = await adminClient
+          .from('parties')
+          .select('id, name_en, name_ar, logo_url')
+          .eq('type', 'Employer')
+          .order('name_en', { ascending: true })
+          .limit(500);
+        const existingIdsFull = new Set(allCompanies.map((c: any) => c.company_id));
+        for (const party of allEmployerPartiesFull || []) {
+          if (!party?.id || existingIdsFull.has(party.id)) continue;
+          const name = party.name_en || party.name_ar || 'Unknown Company';
+          if (isInvalidCompany(name)) continue;
+          existingIdsFull.add(party.id);
+          allCompanies.push({
+            company_id: party.id,
+            company_name: name,
+            company_logo: party.logo_url ?? null,
+            user_role: 'admin',
+            is_primary: false,
+            group_name: null,
+            party_id: party.id,
+            source: 'platform_admin_all_employers',
+          });
+        }
+      } catch (e) {
+        // Non-fatal
+      }
     }
 
     // Get active company from profile using admin client
