@@ -168,7 +168,22 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      // 1) Try main companies API with minimal=1 (fast path: all sources, no per-row enrichment)
+      // 1) Try lightweight list first (single query, fastest) so we avoid timeout when possible
+      const listRes = await fetchWithTimeout(
+        `/api/user/companies/list?t=${Date.now()}`
+      );
+      const listData = await listRes.json().catch(() => ({}));
+      const listCompanies = Array.isArray(listData.companies)
+        ? listData.companies
+        : [];
+      const listActiveId =
+        listData.active_company_id ?? (listData as any).active_company_id ?? null;
+      if (listRes.ok && listData.success === true && listCompanies.length > 0) {
+        applyCompanies(listCompanies, listActiveId);
+        return true;
+      }
+
+      // 2) Try main companies API with minimal=1 (memberships, roles, admin-all-parties)
       const companiesRes = await fetchWithTimeout(
         `/api/user/companies?minimal=1&t=${Date.now()}`
       );
@@ -183,21 +198,6 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
       if (companiesRes.ok && companiesData.success === true) {
         applyCompanies(companies, activeId);
-        return true;
-      }
-
-      // 2) Fallback: lightweight list (parties only)
-      const listRes = await fetchWithTimeout(
-        `/api/user/companies/list?t=${Date.now()}`
-      );
-      const listData = await listRes.json().catch(() => ({}));
-      const listCompanies = Array.isArray(listData.companies)
-        ? listData.companies
-        : [];
-      const listActiveId =
-        listData.active_company_id ?? (listData as any).active_company_id ?? null;
-      if (listRes.ok && listData.success === true) {
-        applyCompanies(listCompanies, listActiveId);
         return true;
       }
 
@@ -263,13 +263,21 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       setCompany(null);
       setRawCompanies([]);
     } catch (err: any) {
+      const isTimeout = err?.message?.includes('timed out');
       if (!silent) {
         setLoadError(err?.message || 'Failed to load companies');
         setCompany(null);
         setRawCompanies([]);
       }
-      const isTimeout = err?.message?.includes('timed out');
-      if (!isTimeout) {
+      // On timeout (e.g. server cold start), retry once after a short delay before showing error
+      if (isTimeout && !silent) {
+        await new Promise(r => setTimeout(r, 2000));
+        const used = await fetchCompaniesFromParties();
+        if (used && loadingGuardId) {
+          clearTimeout(loadingGuardId);
+          setLoadError(null);
+        }
+      } else if (!isTimeout) {
         const used = await fetchCompaniesFromParties();
         if (used && loadingGuardId) clearTimeout(loadingGuardId);
       }
