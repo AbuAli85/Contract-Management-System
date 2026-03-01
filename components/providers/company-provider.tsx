@@ -124,45 +124,104 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const hasFetchedRef = useRef(false);
   const autoRetryDoneRef = useRef(false);
 
-  // Primary source: same API as Manage Parties (GET /api/parties?type=Employer). No client abort — let server respond.
+  // Request timeout so we don't wait 60s; fail fast and show Retry (list API is fast, parties can be slow).
+  const FETCH_TIMEOUT_MS = 20_000;
+
+  const fetchWithTimeout = useCallback(
+    (url: string, options?: RequestInit): Promise<Response> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      return fetch(url, {
+        ...options,
+        signal: controller.signal,
+        cache: 'no-store',
+        credentials: 'include',
+        headers: { 'Cache-Control': 'no-cache', ...options?.headers },
+      }).finally(() => clearTimeout(timeoutId));
+    },
+    []
+  );
+
+  // Prefer lightweight GET /api/user/companies/list (no contract counts). Fall back to /api/parties if list fails or is empty.
   const fetchCompaniesFromParties = useCallback(async (): Promise<boolean> => {
     try {
+      // 1) Try fast list endpoint first (all employers, no heavy contract counts)
+      const listRes = await fetchWithTimeout(
+        `/api/user/companies/list?t=${Date.now()}`
+      );
+      const listData = await listRes.json().catch(() => ({}));
+      const companies = Array.isArray(listData.companies)
+        ? listData.companies
+        : [];
+      const activeId =
+        listData.active_company_id ?? (listData as any).active_company_id ?? null;
+
+      if (listRes.ok && listData.success && companies.length > 0) {
+        const allRaw: RawCompany[] = companies.map((c: any) => ({
+          company_id: c.company_id,
+          company_name: c.company_name || 'Company',
+          company_logo: c.company_logo ?? null,
+          user_role: c.user_role || 'member',
+          is_primary: c.is_primary ?? c.company_id === activeId,
+          group_name: c.group_name ?? null,
+        }));
+        hasFetchedRef.current = true;
+        setLoadError(null);
+        setCurrentCompanyDisplay(null);
+        setRawCompanies(allRaw);
+        const activeRaw = allRaw.find(c => c.company_id === activeId);
+        setCompany(
+          activeRaw
+            ? toCompany(activeRaw)
+            : allRaw.length > 0
+              ? toCompany(allRaw[0])
+              : null
+        );
+        return true;
+      }
+
+      // 2) Fallback: parties API (slower due to contract counts)
       const [partiesRes, currentRes] = await Promise.all([
-        fetch(`/api/parties?type=Employer&limit=500&t=${Date.now()}`, {
-          cache: 'no-store',
-          credentials: 'include',
-          headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-        }),
-        fetch('/api/user/companies/current', {
-          cache: 'no-store',
-          credentials: 'include',
-          headers: { 'Cache-Control': 'no-cache' },
-        }),
+        fetchWithTimeout(
+          `/api/parties?type=Employer&limit=500&t=${Date.now()}`
+        ),
+        fetchWithTimeout('/api/user/companies/current'),
       ]);
       const partiesData = await partiesRes.json().catch(() => ({}));
       const currentData = await currentRes.json().catch(() => ({}));
-      const parties = Array.isArray(partiesData.parties) ? partiesData.parties : [];
-      const activeId = currentData.company_id ?? null;
+      const parties = Array.isArray(partiesData.parties)
+        ? partiesData.parties
+        : [];
+      const fallbackActiveId = currentData.company_id ?? null;
       if (parties.length === 0) return false;
       const allRaw: RawCompany[] = parties.map((p: any) => ({
         company_id: p.id,
         company_name: p.name_en || p.name_ar || 'Company',
         company_logo: p.logo_url ?? null,
         user_role: 'member',
-        is_primary: p.id === activeId,
+        is_primary: p.id === fallbackActiveId,
         group_name: null,
       }));
       hasFetchedRef.current = true;
       setLoadError(null);
       setCurrentCompanyDisplay(null);
       setRawCompanies(allRaw);
-      const activeRaw = allRaw.find(c => c.company_id === activeId);
-      setCompany(activeRaw ? toCompany(activeRaw) : allRaw.length > 0 ? toCompany(allRaw[0]) : null);
+      const activeRaw = allRaw.find(c => c.company_id === fallbackActiveId);
+      setCompany(
+        activeRaw
+          ? toCompany(activeRaw)
+          : allRaw.length > 0
+            ? toCompany(allRaw[0])
+            : null
+      );
       return true;
-    } catch {
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        throw new Error('Request timed out. Click to retry.');
+      }
       return false;
     }
-  }, []);
+  }, [fetchWithTimeout]);
 
   // ─── Fetch companies list (same source as Manage Parties) ───────────────────
   const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
@@ -174,7 +233,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         loadingGuardId = setTimeout(() => {
           setIsLoading(false);
           setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
-        }, 60_000); // 60s before showing timeout; fetch has no client abort so server can respond late
+        }, FETCH_TIMEOUT_MS + 5_000); // Slightly longer than fetch timeout so we show "timed out" after fetch aborts
       }
 
       await ensureSessionInCookies();
@@ -199,8 +258,11 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         setCompany(null);
         setRawCompanies([]);
       }
-      const used = await fetchCompaniesFromParties();
-      if (used && loadingGuardId) clearTimeout(loadingGuardId);
+      const isTimeout = err?.message?.includes('timed out');
+      if (!isTimeout) {
+        const used = await fetchCompaniesFromParties();
+        if (used && loadingGuardId) clearTimeout(loadingGuardId);
+      }
     } finally {
       if (loadingGuardId) clearTimeout(loadingGuardId);
       if (!silent) setIsLoading(false);
