@@ -116,27 +116,28 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Try getUser() with retry logic (most reliable)
+    // Auth: minimal=1 uses single getUser (no retries/fallback) for speed; full path uses retries + getSession fallback
     let user = null;
     let authError = null;
 
     try {
+      const authOptions = minimal
+        ? { maxRetries: 1, initialDelayMs: 0 }
+        : {
+            maxRetries: 2,
+            initialDelayMs: 50,
+            onRetry: (attempt: number, error: Error) => {
+              logWithCorrelation(
+                correlationId,
+                'warn',
+                `getUser() retry ${attempt}`,
+                { error: error.message }
+              );
+            },
+          };
       const authResult = await retrySupabaseOperation(
         () => supabase.auth.getUser(),
-        {
-          maxRetries: 2,
-          initialDelayMs: 50,
-          onRetry: (attempt, error) => {
-            logWithCorrelation(
-              correlationId,
-              'warn',
-              `getUser() retry ${attempt}`,
-              {
-                error: error.message,
-              }
-            );
-          },
-        }
+        authOptions
       );
 
       user = authResult.data?.user || null;
@@ -148,8 +149,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Fallback: Try getSession() if getUser() fails
-    if (!user && authError) {
+    // Fallback: getSession() only for non-minimal path (saves a round trip for minimal when auth fails)
+    if (!user && authError && !minimal) {
       logWithCorrelation(
         correlationId,
         'debug',
@@ -161,14 +162,12 @@ export async function GET(request: NextRequest) {
           {
             maxRetries: 2,
             initialDelayMs: 50,
-            onRetry: (attempt, error) => {
+            onRetry: (attempt: number, error: Error) => {
               logWithCorrelation(
                 correlationId,
                 'warn',
                 `getSession() retry ${attempt}`,
-                {
-                  error: error.message,
-                }
+                { error: error.message }
               );
             },
           }
@@ -185,7 +184,7 @@ export async function GET(request: NextRequest) {
         }
       } catch (sessionError: any) {
         logWithCorrelation(correlationId, 'error', 'getSession() also failed', {
-          error: sessionError.message || String(sessionError),
+          error: (sessionError as Error).message || String(sessionError),
         });
       }
     }
