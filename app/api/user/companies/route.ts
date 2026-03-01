@@ -83,11 +83,17 @@ export async function GET(request: NextRequest) {
       request.nextUrl?.searchParams?.get('minimal') === '1' ||
       request.nextUrl?.searchParams?.get('minimal') === 'true';
 
+    let allCookies: { name: string; value: string }[] = [];
+    let supabaseCookies: { name: string; value: string }[] = [];
+    const projectRef = supabaseUrl?.match(
+      /https?:\/\/([^.]+)\.supabase\.co/
+    )?.[1] ?? null;
+
     // Skip verbose cookie logging for minimal=1 to reach fast path sooner
     if (!minimal) {
       const cookieStore = await cookies();
-      const allCookies = cookieStore.getAll();
-      const supabaseCookies = allCookies.filter(
+      allCookies = cookieStore.getAll();
+      supabaseCookies = allCookies.filter(
         c =>
           c.name.includes('sb-') ||
           c.name.includes('auth-token') ||
@@ -101,9 +107,6 @@ export async function GET(request: NextRequest) {
           valueLength: c.value?.length || 0,
         })),
       });
-      const projectRef = supabaseUrl.match(
-        /https?:\/\/([^.]+)\.supabase\.co/
-      )?.[1];
       logWithCorrelation(correlationId, 'debug', 'Expected cookie prefix', {
         prefix: projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token',
       });

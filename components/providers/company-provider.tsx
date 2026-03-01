@@ -142,45 +142,66 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  // Prefer lightweight GET /api/user/companies/list (no contract counts). Fall back to /api/parties if list fails or is empty.
+  // Primary: GET /api/user/companies?minimal=1 (all sources: memberships, owned, user_roles, parties). Fallback: list then parties.
   const fetchCompaniesFromParties = useCallback(async (): Promise<boolean> => {
+    const applyCompanies = (companies: any[], activeId: string | null) => {
+      const allRaw: RawCompany[] = companies.map((c: any) => ({
+        company_id: c.company_id,
+        company_name: c.company_name || 'Company',
+        company_logo: c.company_logo ?? null,
+        user_role: c.user_role || 'member',
+        is_primary: c.is_primary ?? c.company_id === activeId,
+        group_name: c.group_name ?? null,
+      }));
+      hasFetchedRef.current = true;
+      setLoadError(null);
+      setCurrentCompanyDisplay(null);
+      setRawCompanies(allRaw);
+      const activeRaw = allRaw.find(c => c.company_id === activeId);
+      setCompany(
+        activeRaw
+          ? toCompany(activeRaw)
+          : allRaw.length > 0
+            ? toCompany(allRaw[0])
+            : null
+      );
+    };
+
     try {
-      // 1) Try fast list endpoint first (all employers, no heavy contract counts)
+      // 1) Try main companies API with minimal=1 (fast path: all sources, no per-row enrichment)
+      const companiesRes = await fetchWithTimeout(
+        `/api/user/companies?minimal=1&t=${Date.now()}`
+      );
+      const companiesData = await companiesRes.json().catch(() => ({}));
+      const companies = Array.isArray(companiesData.companies)
+        ? companiesData.companies
+        : [];
+      const activeId =
+        companiesData.active_company_id ??
+        (companiesData as any).active_company_id ??
+        null;
+
+      if (companiesRes.ok && companiesData.success === true) {
+        applyCompanies(companies, activeId);
+        return true;
+      }
+
+      // 2) Fallback: lightweight list (parties only)
       const listRes = await fetchWithTimeout(
         `/api/user/companies/list?t=${Date.now()}`
       );
       const listData = await listRes.json().catch(() => ({}));
-      const companies = Array.isArray(listData.companies)
+      const listCompanies = Array.isArray(listData.companies)
         ? listData.companies
         : [];
-      const activeId =
+      const listActiveId =
         listData.active_company_id ?? (listData as any).active_company_id ?? null;
-
-      if (listRes.ok && listData.success && companies.length > 0) {
-        const allRaw: RawCompany[] = companies.map((c: any) => ({
-          company_id: c.company_id,
-          company_name: c.company_name || 'Company',
-          company_logo: c.company_logo ?? null,
-          user_role: c.user_role || 'member',
-          is_primary: c.is_primary ?? c.company_id === activeId,
-          group_name: c.group_name ?? null,
-        }));
-        hasFetchedRef.current = true;
-        setLoadError(null);
-        setCurrentCompanyDisplay(null);
-        setRawCompanies(allRaw);
-        const activeRaw = allRaw.find(c => c.company_id === activeId);
-        setCompany(
-          activeRaw
-            ? toCompany(activeRaw)
-            : allRaw.length > 0
-              ? toCompany(allRaw[0])
-              : null
-        );
+      if (listRes.ok && listData.success === true) {
+        applyCompanies(listCompanies, listActiveId);
         return true;
       }
 
-      // 2) Fallback: parties API (slower due to contract counts)
+      // 3) Fallback: parties API (slow, contract counts)
       const [partiesRes, currentRes] = await Promise.all([
         fetchWithTimeout(
           `/api/parties?type=Employer&limit=500&t=${Date.now()}`
@@ -194,7 +215,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         : [];
       const fallbackActiveId = currentData.company_id ?? null;
       if (parties.length === 0) return false;
-      const allRaw: RawCompany[] = parties.map((p: any) => ({
+      const fallbackCompanies = parties.map((p: any) => ({
         company_id: p.id,
         company_name: p.name_en || p.name_ar || 'Company',
         company_logo: p.logo_url ?? null,
@@ -202,18 +223,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         is_primary: p.id === fallbackActiveId,
         group_name: null,
       }));
-      hasFetchedRef.current = true;
-      setLoadError(null);
-      setCurrentCompanyDisplay(null);
-      setRawCompanies(allRaw);
-      const activeRaw = allRaw.find(c => c.company_id === fallbackActiveId);
-      setCompany(
-        activeRaw
-          ? toCompany(activeRaw)
-          : allRaw.length > 0
-            ? toCompany(allRaw[0])
-            : null
-      );
+      applyCompanies(fallbackCompanies, fallbackActiveId);
       return true;
     } catch (e: any) {
       if (e?.name === 'AbortError') {
