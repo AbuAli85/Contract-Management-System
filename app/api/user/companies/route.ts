@@ -369,28 +369,32 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Platform admin: include all employer parties so they can switch to any company (e.g. luxsess2001@gmail.com)
+      // Platform admin: include all employer parties (non-blocking; on failure return companies we already have)
       const isPlatformAdmin = profileRes.data?.role === 'admin';
       if (isPlatformAdmin) {
-        const { data: allEmployerParties } = await adminClient
-          .from('parties')
-          .select('id, name_en, name_ar, logo_url')
-          .eq('type', 'Employer')
-          .order('name_en', { ascending: true })
-          .limit(500);
-        for (const party of allEmployerParties || []) {
-          if (!party?.id || existingIds.has(party.id)) continue;
-          const name = party.name_en || party.name_ar || 'Unknown Company';
-          if (isInvalidCompany(name)) continue;
-          existingIds.add(party.id);
-          fastCompanies.push({
-            company_id: party.id,
-            company_name: name,
-            company_logo: party.logo_url ?? null,
-            user_role: 'admin',
-            is_primary: false,
-            group_name: null,
-          });
+        try {
+          const { data: allEmployerParties } = await adminClient
+            .from('parties')
+            .select('id, name_en, name_ar, logo_url')
+            .eq('type', 'Employer')
+            .order('name_en', { ascending: true })
+            .limit(500);
+          for (const party of allEmployerParties || []) {
+            if (!party?.id || existingIds.has(party.id)) continue;
+            const name = party.name_en || party.name_ar || 'Unknown Company';
+            if (isInvalidCompany(name)) continue;
+            existingIds.add(party.id);
+            fastCompanies.push({
+              company_id: party.id,
+              company_name: name,
+              company_logo: party.logo_url ?? null,
+              user_role: 'admin',
+              is_primary: false,
+              group_name: null,
+            });
+          }
+        } catch {
+          // Return whatever we have (memberships, roles, etc.) so the UI doesn't time out
         }
       }
 

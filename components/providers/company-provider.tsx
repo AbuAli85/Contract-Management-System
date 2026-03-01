@@ -124,8 +124,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const hasFetchedRef = useRef(false);
   const autoRetryDoneRef = useRef(false);
 
-  // Request timeout so we don't wait 60s; fail fast and show Retry (list API is fast, parties can be slow).
-  const FETCH_TIMEOUT_MS = 20_000;
+  // Request timeout: allow enough time for minimal=1 (including admin's all-employer-parties query).
+  const FETCH_TIMEOUT_MS = 40_000;
 
   const fetchWithTimeout = useCallback(
     (url: string, options?: RequestInit): Promise<Response> => {
