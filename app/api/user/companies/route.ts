@@ -10,6 +10,8 @@ import {
 } from '@/lib/utils/correlation';
 
 export const dynamic = 'force-dynamic';
+// Allow up to 60s so minimal=1 (and admin all-parties) can complete on slow/cold starts
+export const maxDuration = 60;
 
 // Helper function to check if a company is invalid/mock
 function isInvalidCompany(companyName: string): boolean {

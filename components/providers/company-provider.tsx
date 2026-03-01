@@ -72,6 +72,9 @@ interface CompanyContextType {
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
+const COMPANIES_CACHE_KEY = 'cms_companies_cache';
+const COMPANIES_CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
 function toCompany(raw: RawCompany): Company {
   return {
     id: raw.company_id,
@@ -142,9 +145,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  // Primary: GET /api/user/companies?minimal=1 (all sources: memberships, owned, user_roles, parties). Fallback: list then parties.
-  const fetchCompaniesFromParties = useCallback(async (): Promise<boolean> => {
-    const applyCompanies = (companies: any[], activeId: string | null) => {
+  const setCompaniesState = useCallback(
+    (companies: any[], activeId: string | null) => {
       const allRaw: RawCompany[] = companies.map((c: any) => ({
         company_id: c.company_id,
         company_name: c.company_name || 'Company',
@@ -165,7 +167,44 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
             ? toCompany(allRaw[0])
             : null
       );
-    };
+      try {
+        sessionStorage.setItem(
+          COMPANIES_CACHE_KEY,
+          JSON.stringify({
+            companies: allRaw,
+            active_company_id: activeId,
+            ts: Date.now(),
+          })
+        );
+      } catch {
+        // ignore
+      }
+    },
+    []
+  );
+
+  const restoreFromCache = useCallback((): boolean => {
+    try {
+      const raw = sessionStorage.getItem(COMPANIES_CACHE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (
+        !data.ts ||
+        Date.now() - data.ts > COMPANIES_CACHE_TTL_MS ||
+        !Array.isArray(data.companies)
+      )
+        return false;
+      const activeId = data.active_company_id ?? null;
+      setCompaniesState(data.companies, activeId);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [setCompaniesState]);
+
+  // Primary: list (fast), then minimal=1, then parties fallback.
+  const fetchCompaniesFromParties = useCallback(async (): Promise<boolean> => {
+    const applyCompanies = setCompaniesState;
 
     try {
       // 1) Try lightweight list first (single query, fastest) so we avoid timeout when possible
@@ -178,7 +217,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         : [];
       const listActiveId =
         listData.active_company_id ?? (listData as any).active_company_id ?? null;
-      if (listRes.ok && listData.success === true && listCompanies.length > 0) {
+      if (listRes.ok && listData.success === true) {
         applyCompanies(listCompanies, listActiveId);
         return true;
       }
@@ -231,7 +270,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       }
       return false;
     }
-  }, [fetchWithTimeout]);
+  }, [fetchWithTimeout, setCompaniesState]);
 
   // ─── Fetch companies list (same source as Manage Parties) ───────────────────
   const fetchActiveCompany = useCallback(async (forceRefresh = false, silent = false): Promise<void> => {
@@ -244,6 +283,12 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
           setLoadError(prev => (prev ? prev : 'Request timed out. Click to retry.'));
         }, FETCH_TIMEOUT_MS + 5_000); // Slightly longer than fetch timeout so we show "timed out" after fetch aborts
+      }
+
+      if (restoreFromCache()) {
+        if (loadingGuardId) clearTimeout(loadingGuardId);
+        if (!silent) setIsLoading(false);
+        return;
       }
 
       await ensureSessionInCookies();
@@ -285,7 +330,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       if (loadingGuardId) clearTimeout(loadingGuardId);
       if (!silent) setIsLoading(false);
     }
-  }, [fetchCompaniesFromParties]);
+  }, [fetchCompaniesFromParties, restoreFromCache]);
 
   // ─── Switch company ────────────────────────────────────────────────────────
   const switchCompany = useCallback(async (companyId: string): Promise<void> => {

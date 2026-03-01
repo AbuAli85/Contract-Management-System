@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
+// Allow up to 60s on Vercel Pro so company list doesn't get killed by 10s default
+export const maxDuration = 60;
 
 /**
  * GET /api/user/companies/list
