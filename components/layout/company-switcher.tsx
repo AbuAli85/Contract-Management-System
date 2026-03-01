@@ -212,14 +212,22 @@ export function CompanySwitcher() {
           <DropdownMenuContent align='end' className='w-[320px] max-w-[90vw]'>
             <DropdownMenuLabel className='font-normal space-y-1.5'>
               <p className='text-sm font-medium'>
-                {loadError ? 'Couldn’t load companies' : 'No company selected'}
+                {loadError
+                  ? 'Couldn’t load companies'
+                  : currentCompanyDisplay?.company_name
+                    ? 'Access no longer available'
+                    : 'No company selected'}
               </p>
               <p className='text-xs text-muted-foreground break-words min-w-0'>
                 {loadError
                   ? loadError
-                  : canCreateCompany
-                    ? 'You don’t have access to any company yet. Create one below or ask an admin to add you.'
-                    : 'You don’t have access to any company yet. Ask an admin to add you to a company.'}
+                  : currentCompanyDisplay?.company_name
+                    ? canCreateCompany
+                      ? `You no longer have access to ${currentCompanyDisplay.company_name}. Create a company below or ask an admin to add you.`
+                      : `You no longer have access to ${currentCompanyDisplay.company_name}. Ask an admin to add you to a company.`
+                    : canCreateCompany
+                      ? 'You don’t have access to any company yet. Create one below or ask an admin to add you.'
+                      : 'You don’t have access to any company yet. Ask an admin to add you to a company.'}
               </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
